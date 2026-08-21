@@ -1,0 +1,573 @@
+.bons-container {
+  padding: 24px;
+  animation: bonsFadeIn 0.4s ease-out;
+}
+
+@keyframes bonsFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.bons-header-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 24px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.bons-header-title-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.bons-header-icon {
+  width: 24px;
+  height: 24px;
+  color: #0f766e;
+}
+
+.bons-header-title-box h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.bons-header-subtitle {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 2px 0 0;
+}
+
+.bons-badge-total {
+  background: #eefaf8;
+  color: #0f766e;
+  border: 1.5px solid #a8ddd6;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.bons-actions-bar {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.bons-actions-divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+  margin: 0 4px;
+}
+
+.bons-action-btn {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bons-action-icon {
+  font-size: 1.05rem;
+}
+
+.bons-action-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bons-action-btn.ajouter { color: #10b981; }
+.bons-action-btn.ajouter:hover { background: #f0fdf4; }
+
+.bons-action-btn.modifier { color: #ea580c; }
+.bons-action-btn.modifier:hover:not(.disabled) { background: #fff7ed; }
+
+.bons-action-btn.details { color: #2563eb; }
+.bons-action-btn.details:hover:not(.disabled) { background: #eff6ff; }
+
+.bons-action-btn.supprimer { color: #e11d48; }
+.bons-action-btn.supprimer:hover:not(.disabled) { background: #fff1f2; }
+
+.bons-action-btn.encours { color: #2563eb; }
+.bons-action-btn.encours:hover:not(.disabled) { background: #eff6ff; }
+
+.bons-action-btn.suspendre { color: #b45309; }
+.bons-action-btn.suspendre:hover:not(.disabled) { background: #fff8eb; }
+
+.bons-action-btn.effectuer { color: #16a34a; }
+.bons-action-btn.effectuer:hover:not(.disabled) { background: #f0fdf4; }
+
+.bons-action-btn.annuler { color: #64748b; }
+.bons-action-btn.annuler:hover:not(.disabled) { background: #f1f5f9; }
+
+.bons-filter-panel {
+  display: flex;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.bons-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 220px;
+}
+
+.bons-filter-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.bons-filter-input-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 38px;
+  padding: 0 12px;
+  gap: 8px;
+}
+
+.bons-filter-input-wrap svg {
+  width: 15px;
+  height: 15px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.bons-filter-input-wrap input,
+.bons-filter-input-wrap select {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.85rem;
+  color: #1e293b;
+  height: 100%;
+  background: transparent;
+}
+
+.bons-filter-reset {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #64748b;
+  padding: 8px 14px;
+  border-radius: 8px;
+  transition: background 0.2s ease, color 0.2s ease;
+  white-space: nowrap;
+}
+
+.bons-filter-reset:hover {
+  background: #fff1f2;
+  color: #e11d48;
+}
+
+.bons-table-wrap {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.bons-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.bons-table thead {
+  background: #f8fafc;
+}
+
+.bons-table th {
+  text-align: left;
+  padding: 11px 16px;
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  border-bottom: 1.5px solid #e2e8f0;
+}
+
+.bons-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.bons-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.bons-table-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.bons-error-banner {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.bons-row {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bons-row:hover td {
+  background: #f8fafc;
+}
+
+.bons-row.selected td {
+  background: #eefaf8;
+}
+
+.bons-row.selected {
+  box-shadow: inset 4px 0 0 #0f766e;
+}
+
+.bons-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.bons-badge--nouveau {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.bons-badge--suspendu {
+  background: #fff8eb;
+  color: #b45309;
+}
+
+.bons-badge--encours {
+  background: #eefaf8;
+  color: #0f766e;
+}
+
+.bons-badge--effectue {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.bons-badge--annule {
+  background: #f1f5f9;
+  color: #64748b;
+}
+.bons-action-btn.demander {
+    color: #0284c7;
+}
+
+.bons-action-btn.demander:hover:not(.disabled) {
+    background: #eff6ff;
+}
+
+.bons-action-btn.commander {
+    color: #0f766e;
+}
+
+.bons-action-btn.commander:hover:not(.disabled) {
+    background: #f0fdfa;
+}
+
+
+.bons-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 0 0 12px 12px;
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.bons-pagination-info {
+  white-space: nowrap;
+  color: #64748b;
+}
+
+.bons-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bons-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.bons-pagination-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.bons-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.bons-pagination-page {
+  margin: 0 8px;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.bons-pagination-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.bons-pagination-size label {
+  color: #64748b;
+}
+
+.bons-pagination-size select {
+  padding: 6px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.bons-pagination-size select:focus,
+.bons-pagination-btn:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 1px;
+}
+
+@media (max-width: 640px) {
+  .bons-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .bons-pagination-controls {
+    justify-content: center;
+  }
+
+  .bons-pagination-size {
+    justify-content: center;
+  }
+}
+.bons-action-btn.demander {
+    color: #0284c7;
+}
+
+.bons-action-btn.demander:hover:not(.disabled) {
+    background: #eff6ff;
+}
+
+.bons-action-btn.commander {
+    color: #0f766e;
+}
+
+.bons-action-btn.commander:hover:not(.disabled) {
+    background: #f0fdfa;
+}
+
+/* État "allumé" : au moins une tâche concernée (Demander) / quantité insuffisante en stock (Commander) */
+.bons-action-btn.demander.allume {
+    background: #dbeafe;
+    color: #1d4ed8;
+    box-shadow: 0 0 0 2px #93c5fd, 0 0 10px rgba(29, 78, 216, 0.35);
+}
+
+.bons-action-btn.demander.allume:hover:not(.disabled) {
+    background: #bfdbfe;
+}
+
+.bons-action-btn.commander.allume {
+    background: #ccfbf1;
+    color: #0d5f58;
+    box-shadow: 0 0 0 2px #5eead4, 0 0 10px rgba(15, 118, 110, 0.4);
+}
+
+.bons-action-btn.commander.allume:hover:not(.disabled) {
+    background: #99f6e4;
+}
+
+.bons-th-sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+}
+
+.bons-th-sortable:hover {
+    color: #0f766e;
+}
+
+/* Ligne : au moins une tâche a une quantité demandée supérieure au stock disponible */
+.bons-row.stock-insuffisant td {
+    background: #fef2f2 !important;
+    color: #991b1b;
+}
+
+.bons-row.stock-insuffisant:hover td {
+    background: #fee2e2 !important;
+}
+
+.bons-row.stock-insuffisant.selected {
+    box-shadow: inset 4px 0 0 #dc2626;
+}
+
+.bons-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 4px 4px;
+}
+
+.bons-pagination-info {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.bons-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.bons-pagination-btn {
+    min-width: 34px;
+    padding: 6px 10px;
+    border: 1px solid #dbe4e2;
+    border-radius: 7px;
+    background: #fff;
+    color: #334155;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.bons-pagination-btn:hover:not(:disabled) {
+    border-color: #0f766e;
+    color: #0f766e;
+}
+
+.bons-pagination-btn.active {
+    background: #0f766e;
+    border-color: #0f766e;
+    color: #fff;
+}
+
+.bons-pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+.bons-action-btn.demander {
+    color: #0284c7;
+}
+
+.bons-action-btn.demander:hover:not(.disabled) {
+    background: #eff6ff;
+}
+
+.bons-action-btn.commander {
+    color: #0f766e;
+}
+
+.bons-action-btn.commander:hover:not(.disabled) {
+    background: #f0fdfa;
+}
+
+/* État "allumé" : au moins une tâche concernée (Demander) / quantité insuffisante en stock (Commander) */
+.bons-action-btn.demander.allume {
+    background: #dbeafe;
+    color: #1d4ed8;
+    box-shadow: 0 0 0 2px #93c5fd, 0 0 10px rgba(29, 78, 216, 0.35);
+}
+
+.bons-action-btn.demander.allume:hover:not(.disabled) {
+    background: #bfdbfe;
+}
+
+.bons-action-btn.commander.allume {
+    background: #ccfbf1;
+    color: #0d5f58;
+    box-shadow: 0 0 0 2px #5eead4, 0 0 10px rgba(15, 118, 110, 0.4);
+}
+
+.bons-action-btn.commander.allume:hover:not(.disabled) {
+    background: #99f6e4;
+}

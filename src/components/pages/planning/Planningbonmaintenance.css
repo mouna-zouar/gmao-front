@@ -1,0 +1,374 @@
+.planning-bm-container {
+  padding: 24px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.planning-bm-filters-bar {
+  background-color: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.planning-bm-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.planning-bm-filter-group label {
+  font-weight: 500;
+  color: #334155;
+  font-size: 14px;
+}
+
+.planning-bm-select,
+.planning-bm-date-input {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: white;
+  color: #1e293b;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.planning-bm-select {
+  min-width: 220px;
+}
+
+.planning-bm-date-input {
+  min-width: 150px;
+}
+
+.planning-bm-select:focus,
+.planning-bm-date-input:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.1);
+}
+
+.planning-bm-today-btn {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-left: auto;
+}
+
+.planning-bm-today-btn:hover {
+  background-color: #ccfbf1;
+}
+
+.planning-bm-error-banner {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.planning-bm-calendar-card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.planning-bm-calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.planning-bm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.planning-bm-nav-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.planning-bm-icon-btn {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
+}
+
+.planning-bm-icon-btn:hover {
+  background-color: #f8fafc;
+  color: #0f766e;
+}
+
+.planning-bm-header-center h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.planning-bm-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.planning-bm-view-tabs {
+  display: flex;
+  background-color: #f1f5f9;
+  border-radius: 8px;
+  padding: 4px;
+}
+
+.planning-bm-view-tabs .planning-bm-tab {
+  background: transparent;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.planning-bm-view-tabs .planning-bm-tab.active {
+  background-color: white;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.planning-bm-grid {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.planning-bm-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: 1px solid #f1f5f9;
+  background-color: #f8fafc;
+}
+
+.planning-bm-weekday {
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-align: left;
+}
+
+.planning-bm-grid.view-month .planning-bm-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: 120px;
+}
+
+.planning-bm-grid.view-week .planning-bm-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: minmax(400px, auto);
+}
+
+.planning-bm-grid.view-day .planning-bm-days {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-auto-rows: minmax(400px, auto);
+}
+
+.planning-bm-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.planning-bm-day-cell {
+  border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: background-color 0.2s;
+}
+
+.planning-bm-day-cell.clickable {
+  cursor: pointer;
+}
+
+.planning-bm-day-cell.clickable:hover {
+  background-color: #f8fafc;
+}
+
+.planning-bm-grid.view-month .planning-bm-day-cell:nth-child(7n),
+.planning-bm-grid.view-week .planning-bm-day-cell:nth-child(7n) {
+  border-right: none;
+}
+
+.planning-bm-day-cell.other-month {
+  background-color: #f8fafc;
+}
+
+.planning-bm-day-cell.is-today {
+  background-color: #f0fdfa;
+}
+
+.planning-bm-day-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.planning-bm-day-number {
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.is-today .planning-bm-day-number {
+  background-color: #0f766e;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.planning-bm-day-name {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.other-month .planning-bm-day-number {
+  color: #cbd5e1;
+}
+
+.planning-bm-events-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.planning-bm-events-container::-webkit-scrollbar {
+  display: none;
+}
+
+.planning-bm-no-events {
+  color: #94a3b8;
+  font-size: 14px;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.planning-bm-event-pill {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.planning-bm-event-pill:hover {
+  transform: translateY(-1px);
+}
+
+.planning-bm-event-color-bar {
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.planning-bm-event-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Couleurs par état du bon (cohérent avec BonsMaintenance / FicheBonMaintenance) ── */
+.event-etat-nouveau {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+.event-etat-nouveau .planning-bm-event-color-bar {
+  background-color: #2563eb;
+}
+
+.event-etat-suspendu {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+.event-etat-suspendu .planning-bm-event-color-bar {
+  background-color: #b45309;
+}
+
+.event-etat-encours {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+.event-etat-encours .planning-bm-event-color-bar {
+  background-color: #059669;
+}
+
+.event-etat-effectue {
+  background-color: #f0fdfa;
+  color: #0f766e;
+}
+.event-etat-effectue .planning-bm-event-color-bar {
+  background-color: #0f766e;
+}
+
+.event-etat-annule {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+.event-etat-annule .planning-bm-event-color-bar {
+  background-color: #dc2626;
+}

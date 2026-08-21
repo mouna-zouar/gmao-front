@@ -1,0 +1,50 @@
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.input-group.full {
+    grid-column: span 2;
+}
+
+.input-group label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.input-group input {
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    background: #f9f9f9;
+    color: var(--text-main);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input-group input:focus {
+    border-color: #00e5ff;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.1);
+}
+
+.input-with-suffix {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.input-suffix {
+    position: absolute;
+    right: 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 2px 6px;
+    background: #f1f5f9;
+    border-radius: 4px;
+}
