@@ -1,0 +1,671 @@
+/* ============================================================
+   VEHICULE MAINTENANCE PANEL — version moderne premium
+   Glass subtil · Ombres douces · Sans rouge
+   ============================================================ */
+
+.vmp-panel {
+  --primary: #0d9488;
+  --primary-dark: #0f766e;
+  --primary-darker: #115e59;
+  --primary-light: #ccfbf1;
+  --primary-soft: #e6faf6;
+  --primary-glow: rgba(13, 148, 136, 0.14);
+
+  --ink-900: #0c2320;
+  --ink-800: #1a3330;
+  --ink-700: #2a4643;
+  --ink-600: #3e5e59;
+  --ink-500: #5c7f79;
+  --ink-400: #7ba39c;
+  --ink-300: #a3c4be;
+  --ink-200: #c9e0dc;
+  --ink-100: #dfeeeb;
+  --ink-50: #eef7f5;
+
+  --surface: #ffffff;
+  --surface-2: #fafdfc;
+  --surface-3: #f4fbf9;
+
+  --line: #e8f1ef;
+  --line-2: #dcebe7;
+  --line-soft: #f1f8f6;
+
+  /* Slate (remplace le rouge) */
+  --slate-soft: #e2e8f0;
+  --slate-text: #1e293b;
+  --slate-border: #94a3b8;
+
+  --warning-soft: #fef3c7;
+  --warning-text: #b45309;
+  --warning-border: #fcd34d;
+
+  --info-text: #1d4ed8;
+
+  --radius: 16px;
+  --radius-sm: 11px;
+  --radius-xs: 8px;
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --shadow-xs: 0 1px 2px rgba(15, 92, 86, 0.04);
+  --shadow-sm: 0 1px 2px rgba(15, 92, 86, 0.04),
+               0 4px 12px -4px rgba(15, 92, 86, 0.08);
+  --shadow-md: 0 1px 2px rgba(15, 92, 86, 0.04),
+               0 8px 24px -8px rgba(15, 92, 86, 0.12);
+  --shadow-lg: 0 22px 46px -22px rgba(13, 148, 136, 0.35);
+
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(204, 251, 241, 0.55) 0%, transparent 42%),
+    radial-gradient(circle at 100% 0%, rgba(230, 250, 246, 0.5) 0%, transparent 45%),
+    var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-md);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-800);
+  -webkit-font-smoothing: antialiased;
+  animation: vmpFadeIn 0.35s var(--ease);
+}
+
+@keyframes vmpFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.vmp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.vmp-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.vmp-header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.25),
+    0 6px 14px -6px rgba(13, 148, 136, 0.55);
+}
+
+.vmp-header h3 {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--ink-900);
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.vmp-km {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--ink-500);
+  font-weight: 500;
+}
+
+.vmp-km svg { color: var(--primary); }
+
+.vmp-km strong {
+  color: var(--ink-900);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   BOUTONS D'EN-TÊTE
+   ============================================================ */
+.vmp-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.vmp-creer-bon {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  border: 1px solid var(--primary-dark);
+  border-radius: var(--radius-xs);
+  background: linear-gradient(180deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: transform 0.15s var(--ease), box-shadow 0.2s var(--ease), filter 0.2s var(--ease);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 4px 12px -4px rgba(13, 148, 136, 0.45);
+}
+
+.vmp-creer-bon:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 6px 16px -4px rgba(13, 148, 136, 0.5);
+}
+
+.vmp-creer-bon:active { transform: translateY(0); }
+
+.vmp-creer-bon svg { flex-shrink: 0; }
+
+.vmp-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--ink-600);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease), color 0.2s var(--ease), transform 0.15s var(--ease);
+}
+
+.vmp-refresh:hover:not(:disabled) {
+  background: var(--primary-soft);
+  border-color: var(--primary-light);
+  color: var(--primary-darker);
+  transform: translateY(-1px);
+}
+
+.vmp-refresh:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.vmp-refresh:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.vmp-spin { animation: vmp-rotate 1s linear infinite; }
+@keyframes vmp-rotate { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   KPI CARDS
+   ============================================================ */
+.vmp-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.vmp-kpi {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-xs);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.vmp-kpi::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--kpi-accent, var(--primary));
+  border-radius: 3px 0 0 3px;
+  transition: width 0.2s var(--ease);
+}
+
+.vmp-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--line-2);
+}
+
+.vmp-kpi:hover::before { width: 5px; }
+
+.vmp-kpi-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  color: var(--kpi-accent, var(--primary));
+  background: color-mix(in srgb, var(--kpi-accent, var(--primary)) 12%, white);
+  border: 1px solid color-mix(in srgb, var(--kpi-accent, var(--primary)) 22%, transparent);
+}
+
+.vmp-kpi-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.vmp-kpi-value {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink-900);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.vmp-kpi-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-500);
+}
+
+.vmp-kpi.kpi-ok    { --kpi-accent: #10b981; }
+.vmp-kpi.kpi-soon  { --kpi-accent: #3b82f6; }
+.vmp-kpi.kpi-late  { --kpi-accent: #d97706; }
+.vmp-kpi.kpi-total { --kpi-accent: var(--primary); }
+
+/* ============================================================
+   ALERTES
+   ============================================================ */
+.vmp-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.vmp-alert svg { flex-shrink: 0; }
+
+.vmp-alert.danger {
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+
+.vmp-alert.warning {
+  background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+
+.vmp-alert.error {
+  background: var(--slate-soft);
+  color: var(--slate-text);
+  border-color: var(--slate-border);
+}
+
+.vmp-alert.success {
+  background: linear-gradient(180deg, #ecfdf5 0%, var(--primary-soft) 100%);
+  color: var(--primary-darker);
+  border-color: var(--primary-light);
+}
+
+.vmp-alert.success .vmp-link {
+  color: var(--primary-darker);
+  font-weight: 700;
+}
+
+/* ============================================================
+   SECTIONS
+   ============================================================ */
+.vmp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vmp-section-head {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-500);
+  padding-left: 2px;
+}
+
+.vmp-section-head svg { color: var(--primary); }
+
+.vmp-section-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-darker);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  border: 1px solid var(--primary-light);
+}
+
+/* ============================================================
+   TABLES — modernes et épurées
+   ============================================================ */
+.vmp-table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.vmp-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.85rem;
+}
+
+.vmp-table th {
+  text-align: left;
+  padding: 11px 14px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-500);
+  background: linear-gradient(180deg, var(--surface-3) 0%, var(--surface-2) 100%);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.vmp-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--ink-800);
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.vmp-table tbody tr {
+  transition: background 0.12s var(--ease);
+}
+
+.vmp-table tbody tr:hover td {
+  background: var(--surface-3);
+}
+
+.vmp-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.vmp-cell-op {
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.01em;
+}
+
+.vmp-cell-num {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-600);
+}
+
+.vmp-muted { color: var(--ink-300); }
+
+/* ============================================================
+   CELLULE VIDE
+   ============================================================ */
+.vmp-empty {
+  text-align: center;
+  color: var(--ink-300);
+  font-style: italic;
+  padding: 28px 16px !important;
+  font-weight: 500;
+}
+
+/* ============================================================
+   COLONNE "RESTANT" — texte + barre de progression
+   ============================================================ */
+.vmp-restant {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 130px;
+}
+
+.vmp-restant-text {
+  font-weight: 700;
+  color: var(--ink-800);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.83rem;
+}
+
+.vmp-restant-text.is-late { color: var(--warning-text); }
+
+.vmp-restant-bar {
+  position: relative;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--line);
+  overflow: hidden;
+}
+
+.vmp-restant-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s var(--ease);
+}
+
+.vmp-restant-fill.is-ok   { background: linear-gradient(90deg, #34d399 0%, #10b981 100%); }
+.vmp-restant-fill.is-soon { background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 100%); }
+.vmp-restant-fill.is-late { background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%); }
+
+/* ============================================================
+   BADGE STATUT
+   ============================================================ */
+.vmp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  border: 1.5px solid transparent;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.vmp-badge svg { flex-shrink: 0; }
+
+.vmp-badge-ok         { background: #dcfce7; color: #166534; border-color: #86efac; }
+.vmp-badge-a-venir    { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.vmp-badge-atteint    { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.vmp-badge-en-retard  { background: #fef3c7; color: #78350f; border-color: #f59e0b; }
+.vmp-badge-en-cours   { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc; }
+
+/* ============================================================
+   LIEN "Voir le bon"
+   ============================================================ */
+.vmp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius-xs);
+  background: var(--surface);
+  color: var(--primary-dark);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s var(--ease), border-color 0.15s var(--ease), color 0.15s var(--ease), transform 0.1s var(--ease);
+  white-space: nowrap;
+}
+
+.vmp-link:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary-light);
+  color: var(--primary-darker);
+  transform: translateY(-1px);
+}
+
+.vmp-link svg { flex-shrink: 0; }
+
+/* ============================================================
+   TAG "×2" (échéances cumulées) — ambre
+   ============================================================ */
+.vmp-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  border: 1px solid var(--warning-border);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+/* ============================================================
+   ORIGINE (auto / manuelle)
+   ============================================================ */
+.vmp-origine {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.vmp-origine.auto {
+  background: var(--ink-50);
+  border-color: var(--line-2);
+  color: var(--ink-600);
+}
+
+.vmp-origine.manuelle {
+  background: var(--primary-soft);
+  border-color: var(--primary-light);
+  color: var(--primary-darker);
+}
+
+/* ============================================================
+   ÉTAT DÉCLENCHEMENT
+   ============================================================ */
+.vmp-etat {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--slate-soft);
+  color: var(--slate-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 760px) {
+  .vmp-header-actions { width: 100%; }
+  .vmp-creer-bon { flex: 1; justify-content: center; }
+}
+
+@media (max-width: 640px) {
+  .vmp-panel {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .vmp-header { gap: 10px; }
+  .vmp-header h3 { font-size: 0.98rem; }
+  .vmp-header-icon { width: 38px; height: 38px; border-radius: 10px; }
+
+  .vmp-refresh {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .vmp-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .vmp-table { font-size: 0.8rem; }
+
+  .vmp-table th,
+  .vmp-table td {
+    padding: 9px 10px;
+  }
+
+  .vmp-table th { font-size: 0.62rem; }
+
+  .vmp-restant { min-width: 90px; }
+}
+
+/* ============================================================
+   ACCESSIBILITÉ
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .vmp-panel,
+  .vmp-kpi,
+  .vmp-kpi::before,
+  .vmp-restant-fill,
+  .vmp-link,
+  .vmp-refresh,
+  .vmp-creer-bon {
+    animation: none !important;
+    transition: none !important;
+  }
+}

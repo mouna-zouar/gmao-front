@@ -1,0 +1,822 @@
+/* ============================================================
+   ANOMALIES — mêmes couleurs que Bon de Maintenance · SANS ROUGE
+   Header teal · Critique en violet · Erreurs en violet
+   ============================================================ */
+
+.anomalies-page {
+  --primary: #0d9488;
+  --primary-dark: #0f766e;
+  --primary-darker: #115e59;
+  --primary-light: #ccfbf1;
+  --primary-soft: #e6faf6;
+
+  /* Gris teintés teal */
+  --gray-50: #eef7f5;
+  --gray-100: #dfeeeb;
+  --gray-200: #c9e0dc;
+  --gray-300: #a3c4be;
+  --gray-400: #7ba39c;
+  --gray-500: #5c7f79;
+  --gray-600: #3e5e59;
+  --gray-700: #2a4643;
+  --gray-800: #1a3330;
+  --gray-900: #0c2320;
+
+  /* Sémantiques */
+  --success: #10b981;
+  --success-soft: #d1fae5;
+  --warning: #f59e0b;
+  --warning-soft: #fef3c7;
+  --warning-border: #fcd34d;
+  --info: #3b82f6;
+  --info-soft: #dbeafe;
+  --info-border: #93c5fd;
+
+  /* Ambre / Orange / Violet (remplace rouge) */
+  --amber-soft: #fef3c7;
+  --amber-text: #b45309;
+  --amber-border: #fcd34d;
+
+  --orange-soft: #ffedd5;
+  --orange-text: #c2410c;
+  --orange-border: #fdba74;
+
+  --violet-soft: #ede9fe;
+  --violet-text: #6d28d9;
+  --violet-border: #c4b5fd;
+
+  --radius: 10px;
+  --radius-sm: 8px;
+
+  --shadow-xs: 0 1px 2px rgba(15, 92, 86, 0.05);
+  --shadow-sm: 0 1px 3px rgba(15, 92, 86, 0.08);
+  --shadow-md: 0 4px 12px rgba(15, 92, 86, 0.10);
+
+  width: 100%;
+  padding: 24px;
+  margin: 0 auto;
+  max-width: 1500px;
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--gray-800);
+  background: #e8f4f1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================================
+   HEADER — carte teal solide (comme BonsMaintenance)
+   ============================================================ */
+.anomalies-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  background: var(--primary-dark);
+  border-radius: var(--radius);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.anomalies-header__text {
+  max-width: 720px;
+  min-width: 0;
+}
+
+.anomalies-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 10px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+}
+
+.anomalies-eyebrow::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.anomalies-header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #fff;
+  margin: 0 0 4px;
+}
+
+.anomalies-header p {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* ============================================================
+   BOUTON ANALYSER — ghost blanc sur teal
+   ============================================================ */
+.anomalies-analyser-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.anomalies-analyser-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.40);
+}
+
+.anomalies-analyser-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.anomalies-analyser-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.anomalies-spinner { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   STATS — blanches avec bordure gauche colorée
+   ============================================================ */
+.anomalies-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.anomalies-stat {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--stat-accent, var(--primary));
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.anomalies-stat:hover {
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.anomalies-stat--total    { --stat-accent: var(--gray-700); }
+.anomalies-stat--moderee  { --stat-accent: var(--warning); }
+.anomalies-stat--elevee   { --stat-accent: #f97316; }
+.anomalies-stat--critique { --stat-accent: #8b5cf6; }  /* violet */
+
+.anomalies-stat__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.anomalies-stat__label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+}
+
+.anomalies-stat__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--gray-500);
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+}
+
+.anomalies-stat--moderee  .anomalies-stat__icon { color: var(--amber-text);   background: var(--amber-soft);   border-color: var(--amber-border); }
+.anomalies-stat--elevee   .anomalies-stat__icon { color: var(--orange-text);  background: var(--orange-soft);  border-color: var(--orange-border); }
+.anomalies-stat--critique .anomalies-stat__icon { color: var(--violet-text);  background: var(--violet-soft);  border-color: var(--violet-border); }
+
+.anomalies-stat__value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--gray-900);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.anomalies-stat--moderee  .anomalies-stat__value { color: var(--amber-text); }
+.anomalies-stat--elevee   .anomalies-stat__value { color: var(--orange-text); }
+.anomalies-stat--critique .anomalies-stat__value { color: var(--violet-text); }
+
+/* ============================================================
+   MESSAGE
+   ============================================================ */
+.anomalies-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary-darker);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-light);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.anomalies-message svg { flex-shrink: 0; color: var(--primary); }
+
+/* ============================================================
+   FILTRES
+   ============================================================ */
+.anomalies-filtres {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: #f5fbf9;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+
+.anomalies-filtre-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--gray-600);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.anomalies-filtre-btn:hover {
+  color: var(--gray-900);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.anomalies-filtre-btn--active {
+  background: var(--primary-dark);
+  color: #fff;
+}
+
+.anomalies-filtre-btn--active:hover {
+  background: var(--primary-darker);
+  color: #fff;
+}
+
+/* ============================================================
+   ÉTATS VIDES / ERREURS — erreur en violet (plus de rouge)
+   ============================================================ */
+.anomalies-empty,
+.anomalies-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 60px 20px;
+  background: #f5fbf9;
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--radius);
+  margin: 0;
+}
+
+.anomalies-empty svg,
+.anomalies-error svg { color: var(--gray-400); }
+
+.anomalies-error {
+  color: var(--violet-text);
+  background: var(--violet-soft);
+  border-color: var(--violet-border);
+  border-style: solid;
+  font-weight: 600;
+}
+
+.anomalies-error svg { color: #8b5cf6; }
+
+/* ============================================================
+   LISTE + CARTES
+   ============================================================ */
+.anomalies-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.anomalies-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--card-accent, var(--primary));
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-xs);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.anomalies-card--moderee  { --card-accent: var(--warning); }
+.anomalies-card--elevee   { --card-accent: #f97316; }
+.anomalies-card--critique { --card-accent: #8b5cf6; }  /* violet */
+
+.anomalies-card:hover {
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow-sm);
+}
+
+/* --- En-tête de carte --- */
+.anomalies-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.anomalies-card__head-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.anomalies-card__head-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+/* ---------- Badges sévérité ---------- */
+.anomalies-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.anomalies-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.anomalies-badge--moderee {
+  color: var(--amber-text);
+  background: var(--amber-soft);
+  border-color: var(--amber-border);
+}
+
+.anomalies-badge--elevee {
+  color: var(--orange-text);
+  background: var(--orange-soft);
+  border-color: var(--orange-border);
+}
+
+.anomalies-badge--critique {
+  color: var(--violet-text);
+  background: var(--violet-soft);
+  border-color: var(--violet-border);
+}
+
+/* ---------- Type — teal ---------- */
+.anomalies-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--primary-darker);
+  background: var(--primary-soft);
+  border: 1px solid var(--primary-light);
+  border-radius: 6px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+
+.anomalies-type svg { color: var(--primary); }
+
+/* ---------- Statut ---------- */
+.anomalies-statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 6px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.anomalies-statut__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.anomalies-statut--nouvelle {
+  color: #1d4ed8;
+  background: var(--info-soft);
+  border-color: var(--info-border);
+}
+
+.anomalies-statut--vue {
+  color: var(--gray-600);
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+}
+
+.anomalies-statut--ignoree {
+  color: var(--gray-500);
+  background: var(--gray-50);
+  border-color: var(--gray-200);
+}
+
+/* ---------- Titre ---------- */
+.anomalies-card__titre {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  margin: 0 0 12px;
+}
+
+/* ---------- Compteur principal ---------- */
+.anomalies-card__count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.anomalies-card__count-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--primary-darker);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.anomalies-card__count-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+/* ---------- Métadonnées ---------- */
+.anomalies-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 40px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gray-100);
+}
+
+.anomalies-card__meta-item { min-width: 0; }
+
+.anomalies-card__meta-label {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+}
+
+.anomalies-card__meta-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gray-900);
+  font-variant-numeric: tabular-nums;
+}
+
+.anomalies-card__meta-value--muted {
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
+/* ---------- Actions ---------- */
+.anomalies-card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.anomalies-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  background: var(--primary-dark);
+  color: #fff;
+}
+
+.anomalies-action-btn:hover {
+  background: var(--primary-darker);
+}
+
+.anomalies-action-btn--ghost {
+  background: #fff;
+  border-color: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.anomalies-action-btn--ghost:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+  color: var(--gray-900);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .anomalies-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .anomalies-page { padding: 16px; }
+
+  .anomalies-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 18px;
+  }
+  .anomalies-header h1 { font-size: 1.15rem; }
+
+  .anomalies-analyser-btn { width: 100%; justify-content: center; }
+
+  .anomalies-stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .anomalies-stat { padding: 14px 14px; }
+  .anomalies-stat__value { font-size: 1.4rem; }
+
+  .anomalies-filtres {
+    display: flex;
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .anomalies-filtres::-webkit-scrollbar { display: none; }
+
+  .anomalies-card { padding: 16px; }
+  .anomalies-card__head { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .anomalies-card__head-right { margin-left: 0; }
+  .anomalies-card__meta { gap: 12px 24px; }
+}
+
+/* ============================================================
+   MODE MODALE
+   ============================================================ */
+.anomalies-page--modal {
+  padding: 20px 22px 24px;
+  min-height: auto;
+  background: transparent;
+}
+
+.anomalies-modal-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.anomalies-page--modal .anomalies-analyser-btn {
+  background: var(--primary-dark);
+  border-color: transparent;
+  color: #fff;
+}
+
+.anomalies-page--modal .anomalies-analyser-btn:hover:not(:disabled) {
+  background: var(--primary-darker);
+}
+
+@media (max-width: 768px) {
+  .anomalies-page--modal { padding: 16px 14px 18px; }
+  .anomalies-modal-toolbar { justify-content: stretch; }
+  .anomalies-modal-toolbar .anomalies-analyser-btn { width: 100%; justify-content: center; }
+}
+/* ============================================================
+   MODALE (PageModal) — header teal solide
+   Mêmes couleurs que BonsMaintenance / Anomalies
+   ============================================================ */
+
+/* --- Overlay --- */
+.page-modal-overlay,
+.pagemodal-overlay {
+  background: rgba(12, 35, 32, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* --- Conteneur --- */
+.page-modal,
+.pagemodal {
+  border-radius: 12px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.20);
+  overflow: hidden;
+}
+
+/* --- Header de la modale : barre teal solide --- */
+.page-modal-header,
+.pagemodal-header,
+.pagemodal__header,
+.page-modal__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: #0f766e;   /* teal foncé — identique au header BonsMaintenance */
+  color: #fff;
+  border-bottom: none;
+}
+
+/* Barre d'accent (fine ligne) en haut si tu veux garder un liseré */
+.page-modal-header::before,
+.pagemodal-header::before,
+.pagemodal__header::before,
+.page-modal__header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #14b8a6, #0d9488, #0f766e);
+}
+
+/* --- Titre de la modale --- */
+.page-modal-header h2,
+.page-modal-header h3,
+.page-modal-header .page-modal-title,
+.pagemodal-header h2,
+.pagemodal-header h3,
+.pagemodal__header h2,
+.pagemodal__header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+/* --- Sous-titre --- */
+.page-modal-header p,
+.page-modal-header .page-modal-subtitle,
+.pagemodal-header p,
+.pagemodal__header p {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
+}
+
+/* --- Icône de la modale (badge translucide blanc) --- */
+.page-modal-header .page-modal-icon,
+.pagemodal-header .page-modal-icon,
+.pagemodal__header .pagemodal-icon,
+.page-modal__header .page-modal__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* --- Bouton de fermeture (croix) --- */
+.page-modal-close,
+.pagemodal-close,
+.pagemodal__close,
+.page-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  margin-left: auto;
+}
+
+.page-modal-close:hover,
+.pagemodal-close:hover,
+.pagemodal__close:hover,
+.page-modal__close:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* --- Corps de la modale --- */
+.page-modal-body,
+.pagemodal-body,
+.pagemodal__body,
+.page-modal__body {
+  background: #f5fbf9;   /* teal pâle — identique aux pages internes */
+  padding: 20px 22px;
+  overflow-y: auto;
+}
+
+/* Scrollbar du body */
+.page-modal-body::-webkit-scrollbar,
+.pagemodal-body::-webkit-scrollbar,
+.pagemodal__body::-webkit-scrollbar,
+.page-modal__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.page-modal-body::-webkit-scrollbar-thumb,
+.pagemodal-body::-webkit-scrollbar-thumb,
+.pagemodal__body::-webkit-scrollbar-thumb,
+.page-modal__body::-webkit-scrollbar-thumb {
+  background: #c9e0dc;
+  border-radius: 8px;
+}
+
+.page-modal-body::-webkit-scrollbar-thumb:hover,
+.pagemodal-body::-webkit-scrollbar-thumb:hover,
+.pagemodal__body::-webkit-scrollbar-thumb:hover,
+.page-modal__body::-webkit-scrollbar-thumb:hover {
+  background: #0d9488;
+}

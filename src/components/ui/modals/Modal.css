@@ -81,33 +81,69 @@
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px 20px;
+  gap: 18px 20px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 .form-group label {
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #2d3748;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: 0.2px;
 }
+
+/* ─── Nouveau style des champs texte / select / textarea ─── */
 .form-group input,
-.form-group select {
-  padding: 10px 14px;
-  border: 1px solid #d0d7e2;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  background: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
+.form-group select,
+.form-group textarea,
+.bmd-inline-form input,
+.bmd-inline-form select {
+  padding: 11px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.92rem;
+  color: #1e293b;
+  background: #f8fafc;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
 }
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.bmd-inline-form input::placeholder {
+  color: #94a3b8;
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover,
+.bmd-inline-form input:hover,
+.bmd-inline-form select:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
 .form-group input:focus,
-.form-group select:focus {
-  border-color: #4361ee;
-  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+.form-group select:focus,
+.form-group textarea:focus,
+.bmd-inline-form input:focus,
+.bmd-inline-form select:focus {
+  border-color: #0f766e;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
+.form-group input:disabled,
+.form-group select:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
 }
 
 .checkbox-group {
@@ -130,7 +166,7 @@
 .checkbox-label input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: #4361ee;
+  accent-color: #0f766e;
   cursor: pointer;
 }
 
@@ -260,20 +296,6 @@
   padding: 14px;
   margin-bottom: 14px;
   align-items: center;
-}
-
-.bmd-inline-form input,
-.bmd-inline-form select {
-  padding: 8px 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-size: 0.82rem;
-  outline: none;
-}
-
-.bmd-inline-form input:focus,
-.bmd-inline-form select:focus {
-  border-color: #0f766e;
 }
 
 .bmd-empty {

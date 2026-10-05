@@ -1,0 +1,348 @@
+/* ============================================================
+   INTELLIGENCE — Dashboard unifié (étape ⑧ de la roadmap métier)
+   ============================================================ */
+
+.intel-page {
+  --ink-950: #06060a;
+  --ink-900: #0e0e14;
+  --ink-500: #61616e;
+  --ink-400: #8c8c98;
+  --ink-300: #b6b6c2;
+
+  --line: #e9eaf0;
+  --line-soft: #f2f3f7;
+  --surface: #ffffff;
+  --canvas: #f6f7f9;
+
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --green-700: #15803d;
+  --green-50: #f0fdf4;
+  --green-100: #dcfce7;
+
+  --red-500: #ef4444;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --red-50: #fef2f2;
+  --red-100: #fee2e2;
+
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+  --orange-700: #c2410c;
+  --orange-50: #fff7ed;
+  --orange-100: #ffedd5;
+
+  --amber-50: #fefce8;
+  --amber-600: #ca8a04;
+  --amber-700: #a16207;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-sm: 0 1px 2px rgba(11, 11, 15, 0.04), 0 4px 12px -6px rgba(11, 11, 15, 0.08);
+  --shadow-md: 0 2px 4px rgba(11, 11, 15, 0.04), 0 12px 28px -12px rgba(11, 11, 15, 0.14);
+
+  width: 100%;
+  padding: 56px 48px 120px;
+  min-height: 100vh;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-900);
+  background-color: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Header ---------- */
+.intel-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  animation: fadeUp 0.5s var(--ease-out) both;
+}
+
+.intel-header__text { max-width: 640px; }
+
+.intel-eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+  margin-bottom: 8px;
+}
+
+.intel-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  color: var(--ink-950);
+}
+
+.intel-header p {
+  margin: 0;
+  color: var(--ink-500);
+  font-size: 13.5px;
+  max-width: 600px;
+}
+
+.intel-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-900);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s var(--ease-out);
+}
+
+.intel-refresh-btn:hover:not(:disabled) { border-color: var(--ink-300); transform: translateY(-1px); }
+.intel-refresh-btn:disabled { opacity: 0.6; cursor: default; }
+
+.intel-spinner { animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.intel-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--red-600);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ---------- KPIs ---------- */
+.intel-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.intel-kpi {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.intel-kpi__icon {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--line-soft);
+  color: var(--ink-500);
+}
+
+.intel-kpi--bon .intel-kpi__icon { background: var(--green-100); color: var(--green-600); }
+.intel-kpi--eleve .intel-kpi__icon { background: var(--orange-100); color: var(--orange-600); }
+.intel-kpi--critique .intel-kpi__icon { background: var(--red-100); color: var(--red-600); }
+
+.intel-kpi__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.intel-kpi__label {
+  font-size: 11px;
+  color: var(--ink-500);
+  font-weight: 600;
+}
+
+.intel-kpi__valeur {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink-950);
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Panneaux ---------- */
+.intel-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 18px;
+}
+
+.intel-panel--chauds {
+  border: 1.5px solid var(--orange-500);
+  background: linear-gradient(180deg, #fff 0%, var(--orange-50) 200%);
+}
+
+.intel-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink-950);
+  margin: 0 0 4px;
+}
+
+.intel-panel__subtitle {
+  font-size: 12.5px;
+  color: var(--ink-500);
+  margin: 0 0 14px;
+}
+
+.intel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.intel-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 12px;
+  color: var(--ink-400);
+  text-align: center;
+  font-size: 12.5px;
+}
+
+/* ---------- Points chauds ---------- */
+.intel-chauds-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.intel-chaud-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--orange-100);
+  border-radius: var(--r-md);
+}
+
+.intel-chaud-score {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.intel-chaud-score--critique { background: var(--red-50); color: var(--red-700); }
+.intel-chaud-score--eleve { background: var(--orange-50); color: var(--orange-700); }
+
+.intel-chaud-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+.intel-chaud-titre {
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--ink-950);
+}
+
+.intel-chaud-meta {
+  font-size: 12px;
+  color: var(--ink-500);
+}
+
+/* ---------- Listes génériques ---------- */
+.intel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.intel-list-item {
+  padding: 10px 12px;
+  background: var(--canvas);
+  border-radius: var(--r-sm);
+  border-left: 3px solid var(--ink-300);
+}
+
+.intel-list-item--critique { border-left-color: var(--red-500); }
+.intel-list-item--elevee, .intel-list-item--eleve { border-left-color: var(--orange-500); }
+.intel-list-item--moderee, .intel-list-item--modere { border-left-color: var(--amber-600); }
+.intel-list-item--faible { border-left-color: var(--green-500); }
+
+.intel-list-item__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.intel-list-item__titre {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-900);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.intel-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--line-soft);
+  color: var(--ink-500);
+  white-space: nowrap;
+}
+
+.intel-list-item__meta {
+  font-size: 11.5px;
+  color: var(--ink-400);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1100px) {
+  .intel-kpis { grid-template-columns: repeat(2, 1fr); }
+  .intel-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 720px) {
+  .intel-page { padding: 32px 18px 80px; }
+  .intel-kpis { grid-template-columns: 1fr; }
+}
+
+/* ---------- Variante modale (ouverte depuis le dashboard des bons) ---------- */
+.intel-page--modal {
+  padding: 20px 22px 24px;
+  min-height: auto;
+  background: transparent;
+}
+
+@media (max-width: 720px) {
+  .intel-page--modal { padding: 16px 14px 18px; }
+}

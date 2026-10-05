@@ -19,8 +19,12 @@
   font-size: 2rem;
   font-weight: 800;
   margin-bottom: 6px;
-  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
-  -webkit-background-clip: text;
+background: linear-gradient(
+    135deg,
+    #1b648f 0%,
+    #287da8 55%,
+    #5ba8c9 100%
+  );   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }

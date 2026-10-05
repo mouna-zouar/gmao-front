@@ -27,7 +27,6 @@ const ChildEntityFormModal = ({ show, onClose, title, fields, initialValues, onS
       .catch(() => { if (!cancelled) setDisponible(null); })
       .finally(() => { if (!cancelled) setCheckingDisponible(false); });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [articleId]);
 
   if (!show) return null;
@@ -43,7 +42,6 @@ const ChildEntityFormModal = ({ show, onClose, title, fields, initialValues, onS
       alert(
         `Quantité demandée (${qteSaisie}) supérieure à la quantité disponible (${disponible}).`
       );
-      // Non bloquant : on continue quand même l'enregistrement.
     }
     onSave(values);
   };

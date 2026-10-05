@@ -3,7 +3,7 @@ import api from './api';
 const prestataireService = {
   async getAll(page = 0, size = 200) {
     const { data } = await api.get('/prestataire', { params: { page, size } });
-    return data; // Page<PrestataireSummaryDTO>
+    return data; 
   },
 
   async getById(id) {

@@ -1,206 +1,353 @@
+/* ============================================================
+   PLANNING BON MAINTENANCE — Style Bento / Kanban 2025
+   Cartes flottantes · Pas de grille classique · Soft UI
+   ============================================================ */
+
 .planning-bm-container {
-  padding: 24px;
-  background-color: #f8fafc;
-  min-height: 100vh;
+  --primary: #14b8a6;
+  --primary-dark: #0d9488;
+  --primary-darker: #0f766e;
+  --primary-light: #99f6e4;
+  --primary-soft: #e6faf6;
+  --primary-glow: rgba(20, 184, 166, 0.2);
+
+  --ink-900: #0a1f1c;
+  --ink-800: #123330;
+  --ink-700: #1f4a45;
+  --ink-600: #2f6159;
+  --ink-500: #4f7d76;
+  --ink-400: #759e98;
+  --ink-300: #a4c2bd;
+  --ink-200: #cde1dd;
+  --ink-100: #e2efec;
+
+  --bg-app: #eef4f3;
+  --surface: #ffffff;
+  --surface-soft: #f8fbfa;
+
+  --line: rgba(15, 92, 86, 0.08);
+  --line-soft: rgba(15, 92, 86, 0.05);
+
+  --info-text: #1d4ed8;
+  --info-soft: #e0eaff;
+  --warning-text: #b45309;
+  --warning-soft: #fff3d6;
+  --success-text: #047857;
+  --success-soft: #d9f7e6;
+  --slate-text: #334155;
+  --slate-soft: #e7ebf0;
+
+  --radius-xs: 10px;
+  --radius-sm: 14px;
+  --radius: 18px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-card:
+    0 1px 2px rgba(15, 92, 86, 0.04),
+    0 4px 12px -4px rgba(15, 92, 86, 0.08);
+  --shadow-card-hover:
+    0 2px 4px rgba(15, 92, 86, 0.05),
+    0 12px 28px -10px rgba(15, 92, 86, 0.16);
+  --shadow-float:
+    0 2px 4px rgba(15, 92, 86, 0.06),
+    0 20px 44px -18px rgba(15, 92, 86, 0.25);
+
+  padding: 32px 28px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-800);
+  background:
+    radial-gradient(1000px 500px at 10% -10%, rgba(20, 184, 166, 0.10), transparent 60%),
+    radial-gradient(800px 500px at 90% 10%, rgba(45, 212, 191, 0.08), transparent 55%),
+    linear-gradient(180deg, #eef4f3 0%, #e6efed 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+  min-height: 100%;
 }
 
+/* ============================================================
+   FILTRES BAR — pilule flottante
+   ============================================================ */
 .planning-bm-filters-bar {
-  background-color: white;
-  padding: 16px 24px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 18px;
   flex-wrap: wrap;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 999px;
+  box-shadow:
+    0 1px 2px rgba(15, 92, 86, 0.04),
+    0 8px 24px -10px rgba(15, 92, 86, 0.10);
 }
 
 .planning-bm-filter-group {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  padding-left: 8px;
 }
 
 .planning-bm-filter-group label {
-  font-weight: 500;
-  color: #334155;
-  font-size: 14px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--ink-500);
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
 }
 
 .planning-bm-select,
 .planning-bm-date-input {
-  padding: 8px 12px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background-color: white;
-  color: #1e293b;
-  font-size: 14px;
+  padding: 9px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink-900);
+  font-size: 0.82rem;
+  font-family: inherit;
+  font-weight: 600;
   outline: none;
-  transition: border-color 0.2s;
+  transition:
+    border-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease),
+    background 0.2s var(--ease);
 }
 
-.planning-bm-select {
-  min-width: 220px;
-}
+.planning-bm-select { min-width: 190px; cursor: pointer; }
+.planning-bm-date-input { min-width: 150px; cursor: pointer; }
 
-.planning-bm-date-input {
-  min-width: 150px;
+.planning-bm-select:hover,
+.planning-bm-date-input:hover {
+  background: #fff;
+  border-color: var(--primary-light);
 }
 
 .planning-bm-select:focus,
 .planning-bm-date-input:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.1);
+  background: #fff;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-glow);
 }
 
 .planning-bm-today-btn {
-  background: #f0fdfa;
-  color: #0f766e;
-  border: 1px solid #99f6e4;
-  border-radius: 8px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition:
+    transform 0.18s var(--ease-out),
+    box-shadow 0.2s var(--ease);
   margin-left: auto;
+  margin-right: 4px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 6px 16px -6px rgba(15, 118, 110, 0.5);
 }
 
 .planning-bm-today-btn:hover {
-  background-color: #ccfbf1;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 10px 22px -8px rgba(15, 118, 110, 0.55);
 }
 
+.planning-bm-today-btn:active { transform: translateY(0); }
+
+/* ============================================================
+   ERROR BANNER
+   ============================================================ */
 .planning-bm-error-banner {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: 12px 16px;
-  border-radius: 10px;
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  background: var(--slate-soft);
+  border: 1px solid rgba(51, 65, 85, 0.15);
+  color: var(--slate-text);
   font-size: 0.85rem;
   font-weight: 600;
 }
 
+/* ============================================================
+   CALENDAR CARD — conteneur principal
+   ============================================================ */
 .planning-bm-calendar-card {
-  background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-xl);
   overflow: hidden;
+  box-shadow:
+    0 2px 6px rgba(15, 92, 86, 0.04),
+    0 24px 48px -24px rgba(15, 92, 86, 0.18);
   display: flex;
   flex-direction: column;
 }
 
+/* ============================================================
+   HEADER
+   ============================================================ */
 .planning-bm-calendar-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #f1f5f9;
+  padding: 22px 26px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 14px;
 }
 
 .planning-bm-header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .planning-bm-nav-buttons {
   display: flex;
-  gap: 8px;
+  gap: 2px;
+  padding: 3px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(15, 92, 86, 0.04);
 }
 
 .planning-bm-icon-btn {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  width: 36px;
-  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-500);
   cursor: pointer;
-  color: #64748b;
-  transition: all 0.2s;
+  transition:
+    background 0.18s var(--ease),
+    color 0.18s var(--ease),
+    transform 0.15s var(--ease-out);
 }
 
 .planning-bm-icon-btn:hover {
-  background-color: #f8fafc;
-  color: #0f766e;
+  background: var(--primary-soft);
+  color: var(--primary-darker);
 }
 
+.planning-bm-icon-btn:active { transform: scale(0.92); }
+
 .planning-bm-header-center h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1e293b;
   margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  letter-spacing: -0.03em;
   text-transform: capitalize;
 }
 
-.planning-bm-header-right {
-  display: flex;
-  align-items: center;
-}
+.planning-bm-header-right { display: flex; align-items: center; }
 
+/* ============================================================
+   ONGLETS VUE — pilules
+   ============================================================ */
 .planning-bm-view-tabs {
-  display: flex;
-  background-color: #f1f5f9;
-  border-radius: 8px;
+  display: inline-flex;
+  gap: 2px;
   padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(15, 92, 86, 0.04);
 }
 
 .planning-bm-view-tabs .planning-bm-tab {
-  background: transparent;
+  padding: 7px 18px;
   border: none;
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: #64748b;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-500);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    color 0.2s var(--ease),
+    background 0.25s var(--ease-out),
+    box-shadow 0.2s var(--ease);
+  white-space: nowrap;
 }
+
+.planning-bm-view-tabs .planning-bm-tab:hover { color: var(--ink-900); }
 
 .planning-bm-view-tabs .planning-bm-tab.active {
-  background-color: white;
-  color: #0f172a;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
+  color: #fff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 4px 10px -3px rgba(15, 118, 110, 0.4);
 }
 
+/* ============================================================
+   GRILLE — espacée, cartes flottantes
+   ============================================================ */
 .planning-bm-grid {
   display: flex;
   flex-direction: column;
-  position: relative;
+  padding: 0 20px 20px;
 }
 
 .planning-bm-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border-bottom: 1px solid #f1f5f9;
-  background-color: #f8fafc;
+  gap: 10px;
+  padding: 0 4px 10px;
 }
 
 .planning-bm-weekday {
-  padding: 12px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #94a3b8;
-  text-align: left;
+  padding: 8px 4px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  color: var(--ink-400);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
 }
 
-.planning-bm-grid.view-month .planning-bm-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: 120px;
-}
-
+.planning-bm-grid.view-month .planning-bm-days,
 .planning-bm-grid.view-week .planning-bm-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.planning-bm-grid.view-month .planning-bm-days {
+  grid-auto-rows: 148px;
+}
+
+.planning-bm-grid.view-week .planning-bm-days {
   grid-auto-rows: minmax(400px, auto);
 }
 
@@ -208,167 +355,525 @@
   display: grid;
   grid-template-columns: 1fr;
   grid-auto-rows: minmax(400px, auto);
+  gap: 10px;
 }
 
 .planning-bm-loading {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 40px;
-  color: #64748b;
-  font-size: 14px;
+  padding: 80px 20px;
+  color: var(--ink-400);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
 }
 
+/* ============================================================
+   CARTES JOUR — chaque jour = carte flottante
+   ============================================================ */
 .planning-bm-day-cell {
-  border-right: 1px solid #f1f5f9;
-  border-bottom: 1px solid #f1f5f9;
-  padding: 12px;
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 10px 12px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: background-color 0.2s;
+  transition:
+    transform 0.22s var(--ease-out),
+    box-shadow 0.22s var(--ease),
+    background 0.22s var(--ease);
+  position: relative;
+  box-shadow: var(--shadow-card);
+  min-height: 0;
+  overflow: hidden;
 }
 
-.planning-bm-day-cell.clickable {
-  cursor: pointer;
-}
+.planning-bm-day-cell.clickable { cursor: pointer; }
 
 .planning-bm-day-cell.clickable:hover {
-  background-color: #f8fafc;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-hover);
 }
 
-.planning-bm-grid.view-month .planning-bm-day-cell:nth-child(7n),
-.planning-bm-grid.view-week .planning-bm-day-cell:nth-child(7n) {
-  border-right: none;
-}
-
+/* Autres mois — quasi invisibles */
 .planning-bm-day-cell.other-month {
-  background-color: #f8fafc;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: none;
+}
+.planning-bm-day-cell.other-month .planning-bm-day-number { color: var(--ink-300); }
+.planning-bm-day-cell.other-month .planning-bm-event-pill { opacity: 0.55; }
+.planning-bm-day-cell.other-month:hover {
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: var(--shadow-card);
 }
 
+/* Weekend — très léger tint */
+.planning-bm-day-cell.is-weekend:not(.is-today) {
+  background: linear-gradient(180deg, #fbfdfd 0%, #f6faf9 100%);
+}
+
+/* Empty — plus discret */
+.planning-bm-day-cell.is-empty:not(.is-today) {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+/* Aujourd'hui — carte mise en avant */
 .planning-bm-day-cell.is-today {
-  background-color: #f0fdfa;
+  background: linear-gradient(160deg, #ffffff 0%, #f0fdfa 100%);
+  box-shadow:
+    0 0 0 2px var(--primary),
+    0 1px 2px rgba(15, 92, 86, 0.06),
+    0 12px 28px -8px rgba(13, 148, 136, 0.25);
 }
 
+.planning-bm-day-cell.is-today:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 2px var(--primary),
+    0 2px 4px rgba(15, 92, 86, 0.06),
+    0 16px 34px -10px rgba(13, 148, 136, 0.32);
+}
+
+/* ============================================================
+   DAY HEADER
+   ============================================================ */
 .planning-bm-day-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 24px;
+}
+
+.planning-bm-day-title {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
 }
 
 .planning-bm-day-number {
-  font-size: 14px;
-  font-weight: 500;
-  color: #334155;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--ink-800);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
 }
 
-.is-today .planning-bm-day-number {
-  background-color: #0f766e;
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+.planning-bm-day-cell.other-month .planning-bm-day-number {
+  font-weight: 500;
+}
+
+.planning-bm-day-cell.is-today .planning-bm-day-number {
+  color: var(--primary-darker);
 }
 
 .planning-bm-day-name {
-  font-size: 14px;
-  color: #64748b;
-  font-weight: 500;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--ink-500);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.other-month .planning-bm-day-number {
-  color: #cbd5e1;
+/* Compteur — petit pill */
+.planning-bm-day-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink-500);
+  font-size: 0.66rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--line);
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
 }
 
+.planning-bm-day-cell.clickable:hover .planning-bm-day-count {
+  background: var(--primary-soft);
+  color: var(--primary-darker);
+  border-color: var(--primary-light);
+}
+
+.planning-bm-day-cell.is-today .planning-bm-day-count {
+  background: var(--primary-dark);
+  color: #fff;
+  border-color: var(--primary-dark);
+}
+
+/* Badge "Aujourd'hui" en bas de la carte */
+.planning-bm-today-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary-darker);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
 .planning-bm-events-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.planning-bm-events-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-
-.planning-bm-events-container::-webkit-scrollbar {
-  display: none;
-}
+.planning-bm-events-list::-webkit-scrollbar { display: none; }
 
 .planning-bm-no-events {
-  color: #94a3b8;
-  font-size: 14px;
+  color: var(--ink-300);
+  font-size: 0.78rem;
+  font-style: italic;
   text-align: center;
-  margin-top: 20px;
+  margin-top: 28px;
+  font-weight: 500;
 }
 
+/* Event pill — style "chip" moderne avec point coloré */
 .planning-bm-event-pill {
   display: flex;
   align-items: center;
-  padding: 6px 10px;
-  border-radius: 6px;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: transform 0.1s;
+  transition:
+    transform 0.15s var(--ease-out),
+    background 0.15s var(--ease),
+    box-shadow 0.15s var(--ease);
+  overflow: hidden;
+  position: relative;
+  letter-spacing: -0.005em;
+  flex-shrink: 0;
+  background: var(--surface-soft);
+  border: 1px solid transparent;
 }
 
 .planning-bm-event-pill:hover {
-  transform: translateY(-1px);
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px -2px rgba(15, 92, 86, 0.15);
 }
 
-.planning-bm-event-color-bar {
-  width: 3px;
-  height: 12px;
-  border-radius: 2px;
+/* Point coloré à la place de la barre latérale */
+.planning-bm-event-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
   flex-shrink: 0;
+  background: currentColor;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
 }
 
 .planning-bm-event-title {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
-/* ── Couleurs par état du bon (cohérent avec BonsMaintenance / FicheBonMaintenance) ── */
+.planning-bm-event-etat {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 800;
+  opacity: 0.7;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  padding-left: 8px;
+}
+
+/* ============================================================
+   COULEURS ÉTAT
+   ============================================================ */
+
 .event-etat-nouveau {
-  background-color: #eff6ff;
-  color: #2563eb;
+  background: var(--info-soft);
+  color: var(--info-text);
 }
-.event-etat-nouveau .planning-bm-event-color-bar {
-  background-color: #2563eb;
-}
+.event-etat-nouveau .planning-bm-event-dot { background: var(--info-text); }
 
 .event-etat-suspendu {
-  background-color: #fef3c7;
-  color: #b45309;
+  background: var(--warning-soft);
+  color: var(--warning-text);
 }
-.event-etat-suspendu .planning-bm-event-color-bar {
-  background-color: #b45309;
-}
+.event-etat-suspendu .planning-bm-event-dot { background: var(--warning-text); }
 
 .event-etat-encours {
-  background-color: #ecfdf5;
-  color: #059669;
+  background: var(--success-soft);
+  color: var(--success-text);
 }
-.event-etat-encours .planning-bm-event-color-bar {
-  background-color: #059669;
-}
+.event-etat-encours .planning-bm-event-dot { background: var(--success-text); }
 
 .event-etat-effectue {
-  background-color: #f0fdfa;
-  color: #0f766e;
+  background: var(--primary-soft);
+  color: var(--primary-darker);
 }
-.event-etat-effectue .planning-bm-event-color-bar {
-  background-color: #0f766e;
-}
+.event-etat-effectue .planning-bm-event-dot { background: var(--primary-darker); }
 
 .event-etat-annule {
-  background-color: #fef2f2;
-  color: #dc2626;
+  background: var(--slate-soft);
+  color: var(--slate-text);
 }
-.event-etat-annule .planning-bm-event-color-bar {
-  background-color: #dc2626;
+.event-etat-annule .planning-bm-event-dot { background: var(--slate-text); }
+
+/* ============================================================
+   BOUTON "+N autres"
+   ============================================================ */
+.planning-bm-more-events {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 2px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-500);
+  font-family: inherit;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 0.16s var(--ease),
+    color 0.16s var(--ease);
+  flex-shrink: 0;
+}
+
+.planning-bm-more-events:hover {
+  background: var(--primary-soft);
+  color: var(--primary-darker);
+}
+
+/* ============================================================
+   POPOVER
+   ============================================================ */
+.planning-bm-popover-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 31, 28, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: pbFadeIn 0.18s var(--ease-out);
+}
+
+@keyframes pbFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pbSlideIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.planning-bm-popover {
+  width: 100%;
+  max-width: 440px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+  animation: pbSlideIn 0.22s var(--ease-out);
+}
+
+.planning-bm-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.planning-bm-popover-date {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink-900);
+  text-transform: capitalize;
+  letter-spacing: -0.02em;
+}
+
+.planning-bm-popover-count {
+  margin-top: 2px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ink-400);
+  letter-spacing: 0.02em;
+}
+
+.planning-bm-popover-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-500);
+  cursor: pointer;
+  transition:
+    background 0.16s var(--ease),
+    color 0.16s var(--ease),
+    transform 0.16s var(--ease-out);
+}
+
+.planning-bm-popover-close:hover {
+  background: var(--primary-soft);
+  color: var(--primary-darker);
+}
+.planning-bm-popover-close:active { transform: scale(0.92); }
+
+.planning-bm-popover-body {
+  padding: 14px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.planning-bm-popover-body .planning-bm-event-pill {
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  border-radius: 10px;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1024px) {
+  .planning-bm-grid.view-month .planning-bm-days { grid-auto-rows: 130px; }
+}
+
+@media (max-width: 768px) {
+  .planning-bm-container { padding: 18px; gap: 14px; }
+
+  .planning-bm-filters-bar {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: var(--radius);
+  }
+
+  .planning-bm-filter-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    flex: 1;
+    min-width: 130px;
+    padding-left: 0;
+  }
+
+  .planning-bm-select,
+  .planning-bm-date-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .planning-bm-today-btn {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .planning-bm-calendar-header { padding: 16px; }
+
+  .planning-bm-header-center h2 { font-size: 1.1rem; }
+
+  .planning-bm-grid { padding: 0 12px 14px; }
+
+  .planning-bm-weekdays { gap: 6px; }
+
+  .planning-bm-weekday { font-size: 0.6rem; letter-spacing: 0.12em; }
+
+  .planning-bm-grid.view-month .planning-bm-days,
+  .planning-bm-grid.view-week .planning-bm-days {
+    gap: 6px;
+  }
+
+  .planning-bm-grid.view-month .planning-bm-days { grid-auto-rows: 110px; }
+
+  .planning-bm-day-cell { padding: 8px; border-radius: var(--radius-sm); }
+
+  .planning-bm-event-pill { padding: 4px 7px; font-size: 0.66rem; gap: 5px; }
+
+  .planning-bm-view-tabs .planning-bm-tab { padding: 6px 14px; font-size: 0.72rem; }
+}
+
+@media (max-width: 480px) {
+  .planning-bm-grid.view-month .planning-bm-days { grid-auto-rows: 92px; }
+
+  .planning-bm-day-number { font-size: 0.82rem; }
+
+  .planning-bm-icon-btn { width: 30px; height: 30px; }
+
+  .planning-bm-header-center h2 { font-size: 1rem; }
+
+  .planning-bm-event-pill { padding: 3px 6px; font-size: 0.6rem; gap: 4px; }
+
+  .planning-bm-event-dot { width: 6px; height: 6px; }
+
+  .planning-bm-view-tabs .planning-bm-tab { padding: 5px 10px; font-size: 0.68rem; }
+
+  .planning-bm-day-count { display: none; }
+
+  .planning-bm-today-badge { display: none; }
+
+  .planning-bm-popover { max-width: 100%; max-height: 88vh; }
+}
+
+/* ============================================================
+   PRINT
+   ============================================================ */
+@media print {
+  .planning-bm-container { padding: 0; background: #fff; }
+
+  .planning-bm-filters-bar,
+  .planning-bm-today-btn,
+  .planning-bm-nav-buttons,
+  .planning-bm-view-tabs,
+  .planning-bm-today-badge { display: none !important; }
+
+  .planning-bm-calendar-card { box-shadow: none; border: 1px solid #cbd5e1; }
+
+  .planning-bm-day-cell { box-shadow: none; border: 1px solid #e2e8f0; }
+  .planning-bm-day-cell.is-today { box-shadow: 0 0 0 2px var(--primary); }
 }

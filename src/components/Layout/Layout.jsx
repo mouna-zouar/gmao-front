@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_ITEMS } from '../../constants/navigation';
+import notificationService from '../../services/notificationService';
+import { useAuth } from '../../constants/Authcontext';
 import './Layout.css';
 
 export default function Layout({ children }) {
@@ -9,8 +11,18 @@ export default function Layout({ children }) {
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [activePopup, setActivePopup] = useState(null);
   const [notifDropOpen, setNotifDropOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifCount, setNotifCount] = useState(0);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const currentPath = location.pathname;
 
@@ -25,6 +37,70 @@ export default function Layout({ children }) {
       setOpenSubmenu(activeNavItem.id);
     }
   }, [activeNavItem, sidebarOpen]);
+
+  const loadCount = () => {
+    notificationService.countNonLues()
+      .then(setNotifCount)
+      .catch((err) => console.error('Erreur chargement compteur notifications :', err));
+  };
+
+  useEffect(() => {
+    loadCount();
+    const interval = setInterval(loadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadNotifications = () => {
+    setNotifLoading(true);
+    notificationService.getAll(0, 20)
+      .then((page) => setNotifications(page.content ?? []))
+      .catch((err) => console.error('Erreur chargement notifications :', err))
+      .finally(() => setNotifLoading(false));
+  };
+
+  const toggleNotifDrop = () => {
+    const opening = !notifDropOpen;
+    setNotifDropOpen(opening);
+    if (opening) loadNotifications();
+  };
+
+  const handleNotifClick = async (notif) => {
+    if (!notif.lue) {
+      try {
+        await notificationService.marquerLue(notif.id);
+        setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+        setNotifCount((prev) => Math.max(0, prev - 1));
+      } catch (err) {
+        console.error('Erreur marquage notification lue :', err);
+      }
+    }
+    setNotifDropOpen(false);
+    if (notif.lien) navigate(notif.lien);
+  };
+
+  const handleMarquerToutesLues = async (e) => {
+    e.stopPropagation();
+    try {
+      await notificationService.marquerToutesLues();
+      setNotifications([]);
+      setNotifCount(0);
+    } catch (err) {
+      console.error('Erreur marquage toutes notifications lues :', err);
+    }
+  };
+
+  function formatNotifDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const diffMs = Date.now() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "à l'instant";
+    if (diffMin < 60) return `il y a ${diffMin} min`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `il y a ${diffH} h`;
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  }
 
   return (
     <div className="app-shell">
@@ -89,12 +165,18 @@ export default function Layout({ children }) {
                 {item.badge && !sidebarOpen && <span className="nav-item__badge-dot" />}
               </button>
 
-              {/* Popup (collapsed) */}
+              {/* Popup (collapsed) — scroll si > 6 enfants */}
               {!sidebarOpen && activePopup === item.id && (
                 <div className="nav-popup">
                   <span className="nav-popup__title">{item.label}</span>
                   {item.children ? (
-                    <div className={`nav-popup__grid ${item.children.length > 3 ? 'nav-popup__grid--many' : 'nav-popup__grid--few'}`}>
+                    <div
+                      className={`nav-popup__grid ${item.children.length > 3 ? 'nav-popup__grid--many' : 'nav-popup__grid--few'}`}
+                      style={{
+                        maxHeight: item.children.length > 6 ? '320px' : 'none',
+                        overflowY: item.children.length > 6 ? 'auto' : 'visible'
+                      }}
+                    >
                       {item.children.map(child => (
                         <Link key={child.label} to={child.path || '#'} className="nav-popup__card"
                           onClick={() => setActivePopup(null)}>
@@ -118,10 +200,17 @@ export default function Layout({ children }) {
                   )}
                 </div>
               )}
-              {/* Submenu (expanded) */}
+
+              {/* Submenu (expanded) — 6 items max visibles, puis ascenseur */}
               {sidebarOpen && item.children && (
-                <div className={`submenu ${openSubmenu === item.id ? 'submenu--open' : ''}`}
-                  style={{ maxHeight: openSubmenu === item.id ? `${item.children.length * 40}px` : '0' }}>
+                <div
+                  className={`submenu ${openSubmenu === item.id ? 'submenu--open' : ''}`}
+                  style={{
+                    maxHeight: openSubmenu === item.id
+                      ? (item.children.length > 6 ? '240px' : `${item.children.length * 40}px`)
+                      : '0'
+                  }}
+                >
                   {item.children.map(child => (
                     <Link key={child.label} to={child.path || '#'}
                       className={`submenu__link--${item.id} ${currentPath === child.path ? 'submenu__link--active' : ''}`}>
@@ -136,9 +225,10 @@ export default function Layout({ children }) {
             </div>
           ))}
         </nav>
+
         {/* Logout */}
         <div className="sidebar__footer">
-          <button className={`nav-item nav-item--logout ${!sidebarOpen ? 'nav-item--icon-only' : ''}`}>
+          <button className={`nav-item nav-item--logout ${!sidebarOpen ? 'nav-item--icon-only' : ''}`} onClick={handleLogout}>
             <span className="nav-item__icon">
               <svg className="nav-icon-svg" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 12H4m12 0-4 4m4-4-4-4m3-4h2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-2" />
@@ -148,6 +238,7 @@ export default function Layout({ children }) {
           </button>
         </div>
       </aside>
+
       <header className={`navbar ${sidebarOpen ? 'navbar--shifted' : ''}`}>
         <div className="navbar__left">
           <button className="navbar__mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -157,7 +248,7 @@ export default function Layout({ children }) {
           </button>
           {!sidebarOpen && (
             <Link to="/" onClick={() => { setActivePopup(null); setOpenSubmenu(null); }} className="navbar__logo-link">
-              <span style={{ fontWeight: 800, fontSize: '18px', color: '#0f172a' }}>GMAO</span>
+              <img src="../src/assets/logo_SoftSys.png" className="navbar__logo-img" />
             </Link>
           )}
           <div className="navbar__breadcrumb">
@@ -188,25 +279,48 @@ export default function Layout({ children }) {
         </div>
 
         <div className="navbar__right">
-          <button className="navbar__icon-btn">
-            <svg fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16 10.5h.01m-4.01 0h.01M8 10.5h.01M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-6.6a1 1 0 0 0-.69.275l-2.866 2.723A.5.5 0 0 1 8 18.635V17a1 1 0 0 0-1-1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
-            </svg>
-          </button>
+
           <div className="navbar__notif-container" style={{ position: 'relative' }}>
-            <button className="navbar__icon-btn navbar__icon-btn--notif" onClick={() => setNotifDropOpen(!notifDropOpen)}>
+            <button className="navbar__icon-btn navbar__icon-btn--notif" onClick={toggleNotifDrop}>
               <svg fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 5.365V3m0 2.365a5.338 5.338 0 0 1 5.133 5.368v1.8c0 2.386 1.867 2.982 1.867 4.175 0 .593 0 1.292-.538 1.292H5.538C5 18 5 17.301 5 16.708c0-1.193 1.867-1.789 1.867-4.175v-1.8A5.338 5.338 0 0 1 12 5.365ZM8.733 18c.094.852.306 1.54.944 2.112a3.48 3.48 0 0 0 4.646 0c.638-.572.85-1.26.944-2.112H8.733Z" />
               </svg>
+              {notifCount > 0 && (
+                <span className="navbar__notif-badge">{notifCount > 99 ? '99+' : notifCount}</span>
+              )}
             </button>
 
             {notifDropOpen && (
               <div className="user-dropdown notif-dropdown" style={{ right: 0, width: '350px' }}>
                 <div className="user-dropdown__header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <p className="user-dropdown__name">Notifications</p>
+                  {notifCount > 0 && (
+                    <button className="notif-dropdown__mark-all" onClick={handleMarquerToutesLues}>
+                      Tout marquer lu
+                    </button>
+                  )}
                 </div>
                 <div className="user-dropdown__menu" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                  <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>Aucune notification</div>
+                  {notifLoading ? (
+                    <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>Chargement...</div>
+                  ) : notifications.length === 0 ? (
+                    <div style={{ padding: '16px', textAlign: 'center', color: '#666' }}>Aucune notification</div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <button
+                        key={notif.id}
+                        className={`notif-dropdown__item ${!notif.lue ? 'notif-dropdown__item--non-lue' : ''}`}
+                        onClick={() => handleNotifClick(notif)}
+                      >
+                        <span className="notif-dropdown__icon">{notif.icone || '🔔'}</span>
+                        <span className="notif-dropdown__body">
+                          <span className="notif-dropdown__message">{notif.message}</span>
+                          <span className="notif-dropdown__date">{formatNotifDate(notif.dateCreation)}</span>
+                        </span>
+                        {!notif.lue && <span className="notif-dropdown__dot" />}
+                      </button>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -217,8 +331,8 @@ export default function Layout({ children }) {
           <div className="navbar__user">
             <button className="user-btn" onClick={() => setUserDropOpen(!userDropOpen)}>
               <div className="user-btn__info">
-                <span className="user-btn__name">Administrateur système</span>
-                <span className="user-btn__role">Administrateur</span>
+                <span className="user-btn__name">{user?.login || 'Utilisateur'}</span>
+                <span className="user-btn__role">{user?.admin ? 'Administrateur' : 'Utilisateur'}</span>
               </div>
               <svg className={`user-btn__chevron ${userDropOpen ? 'user-btn__chevron--open' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
@@ -228,23 +342,25 @@ export default function Layout({ children }) {
             {userDropOpen && (
               <div className="user-dropdown">
                 <div className="user-dropdown__header">
-                  <p className="user-dropdown__name">Administrateur système</p>
-                  <p className="user-dropdown__email">admin@gmao.com</p>
+                  <p className="user-dropdown__name">{user?.login || 'Utilisateur'}</p>
+                  <p className="user-dropdown__email">{user?.admin ? 'Administrateur' : 'Utilisateur'}</p>
                 </div>
                 <div className="user-dropdown__menu">
                   <Link to="/" className="user-dropdown__link" onClick={() => setUserDropOpen(false)}>Dashboard</Link>
                   <a href="#" className="user-dropdown__link">Paramètres</a>
                   <div className="user-dropdown__separator" />
-                  <a href="#" className="user-dropdown__link user-dropdown__link--danger">Déconnexion</a>
+                  <a href="#" className="user-dropdown__link user-dropdown__link--danger" onClick={(e) => { e.preventDefault(); handleLogout(); }}>Déconnexion</a>
                 </div>
               </div>
             )}
           </div>
         </div>
       </header>
+
       <main className={`main-content ${sidebarOpen ? 'main-content--shifted' : ''}`} onClick={() => setActivePopup(null)}>
         {children}
       </main>
+
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
     </div>
   );

@@ -39,6 +39,7 @@ const ArticlePickerModal = ({ isOpen, onClose, onValidate, initialSelectedIds = 
       || a.code?.toLowerCase().includes(term)
       || a.marque?.toLowerCase().includes(term)
       || a.modele?.toLowerCase().includes(term)
+      || a.articleFamille?.nom?.toLowerCase().includes(term)
     );
   }, [articles, searchTerm]);
 
@@ -101,7 +102,7 @@ const ArticlePickerModal = ({ isOpen, onClose, onValidate, initialSelectedIds = 
                   <div className="article-picker-item-info">
                     <span className="article-picker-item-title">{a.designation || `Article #${a.id}`}</span>
                     <span className="article-picker-item-subtitle">
-                      {[a.code, a.marque, a.modele].filter(Boolean).join(' · ') || '—'}
+                      {[a.code, a.marque, a.modele, a.articleFamille?.nom].filter(Boolean).join(' · ') || '—'}
                     </span>
                   </div>
                 </label>

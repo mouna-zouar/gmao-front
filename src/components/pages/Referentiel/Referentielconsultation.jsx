@@ -5,6 +5,13 @@ import lotArticleImmobilistationService from '../../../services/lotArticleImmobi
 import pieceService from '../../../services/pieceService';
 import pieceLigneService from '../../../services/pieceLigneService';
 import calendrierService from '../../../services/calendrierService';
+import serviceService from '../../../services/Serviceservice';
+import cliniqueService from '../../../services/cliniqueService';
+import prestataireDepotService from '../../../services/Prestatairedepotservice';
+import depotQteService from '../../../services/depotQteService';
+import depotQteLotService from '../../../services/depotQteLotService';
+import articleStockDepotService from '../../../services/articleStockDepotService';
+import cliniqueStockDepotService from '../../../services/cliniqueStockDepotService';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import './ReferentielConsultation.css';
 
@@ -15,7 +22,6 @@ function formatDate(iso) {
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-// Config déclarative : un seul composant générique pilote les 4 référentiels.
 const ENTITY_CONFIG = {
   personnel: {
     title: 'Personnel',
@@ -96,10 +102,93 @@ const ENTITY_CONFIG = {
       { key: 'dayClick', label: 'Clic sur jour', searchable: false, format: (v) => (v ? 'Oui' : 'Non') },
     ],
   },
+  service: {
+    title: 'Services',
+    service: serviceService,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5" /></svg>,
+    columns: [
+      { key: 'code', label: 'Code', searchable: true },
+      { key: 'description', label: 'Description', searchable: true },
+      { key: 'typeService', label: 'Type', searchable: false },
+      { key: 'estServiceParDefault', label: 'Par défaut', searchable: false, format: (v) => (v ? 'Oui' : 'Non') },
+      { key: 'estBE', label: 'Biomédical', searchable: false, format: (v) => (v ? 'Oui' : 'Non') },
+    ],
+  },
+  clinique: {
+    title: 'Cliniques',
+    service: cliniqueService,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" /></svg>,
+    columns: [
+      { key: 'nom', label: 'Nom', searchable: true },
+      { key: 'adresse', label: 'Adresse', searchable: true },
+      { key: 'telephone', label: 'Téléphone', searchable: false },
+      { key: 'mail', label: 'Email', searchable: true },
+    ],
+  },
+  prestataireDepot: {
+    title: 'Dépôts',
+    service: prestataireDepotService,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" /></svg>,
+    columns: [
+      { key: 'nom', label: 'Nom', searchable: true },
+      { key: 'codeDepots', label: 'Code', searchable: true },
+      { key: 'estPrincipal', label: 'Principal', searchable: false, format: (v) => (v ? 'Oui' : 'Non') },
+      { key: 'estExterne', label: 'Externe', searchable: false, format: (v) => (v ? 'Oui' : 'Non') },
+      { key: 'controlerStock', label: 'Contrôle stock', searchable: false, format: (v) => (v ? 'Oui' : 'Non') },
+    ],
+  },
+  articleStockDepot: {
+    title: 'Articles de stock',
+    service: articleStockDepotService,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25-2.25M12 13.875V7.5m-8.25 0h16.5" /></svg>,
+    columns: [
+      { key: 'nom', label: 'Nom', searchable: true },
+      { key: 'description', label: 'Description', searchable: true },
+      { key: 'unite', label: 'Unité', searchable: true },
+    ],
+  },
+  depotQte: {
+    title: 'Quantités en dépôt',
+    service: depotQteService,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25-2.25M12 13.875V7.5m-8.25 0h16.5" /></svg>,
+    columns: [
+      { key: 'prestataireArticleId', label: 'Article (ID)', searchable: false },
+      { key: 'depotId', label: 'Dépôt (ID)', searchable: false },
+      { key: 'qte', label: 'Quantité', searchable: false },
+      { key: 'seuil', label: 'Seuil', searchable: false },
+      { key: 'emplacement', label: 'Emplacement', searchable: true },
+      { key: 'qteMax', label: 'Qté max', searchable: false },
+      { key: 'dateExpiration', label: 'Expiration', searchable: false, format: formatDate },
+    ],
+  },
+  depotQteLot: {
+    title: 'Lots / N° série',
+    service: depotQteLotService,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /></svg>,
+    columns: [
+      { key: 'depotQteId', label: 'Ligne stock (ID)', searchable: false },
+      { key: 'nSerie', label: 'N° série / lot', searchable: true },
+      { key: 'qte', label: 'Quantité', searchable: false },
+      { key: 'dateExpiration', label: 'Expiration', searchable: false, format: formatDate },
+    ],
+  },
+  cliniqueStockDepot: {
+    title: 'Stock clinique',
+    service: cliniqueStockDepotService,
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" /></svg>,
+    columns: [
+      { key: 'cliniqueId', label: 'Clinique (ID)', searchable: false },
+      { key: 'articleStockDepotId', label: 'Article (ID)', searchable: false },
+      { key: 'qte', label: 'Quantité', searchable: false },
+      { key: 'emplacement', label: 'Emplacement', searchable: true },
+      { key: 'datePeremption', label: 'Péremption', searchable: false, format: formatDate },
+      { key: 'dateMiseEnDepot', label: 'Mise en dépôt', searchable: false, format: formatDate },
+    ],
+  },
 };
 
 const PAGE_SIZE = 10;
-const FETCH_SIZE = 200; // taille du batch chargé depuis le backend, paginé ensuite côté client
+const FETCH_SIZE = 200;
 
 export default function ReferentielConsultation() {
   const [activeView, setActiveView] = useState(null);

@@ -9,7 +9,10 @@ const ConfirmModal = ({
     message = 'Êtes-vous sûr de vouloir effectuer cette action ?',
     confirmText = 'Confirmer',
     cancelText = 'Annuler',
-    type = 'warning' 
+    type = 'warning',
+    error = null,
+    confirming = false,
+    children,
 }) => {
     if (!show) return null;
 
@@ -54,12 +57,24 @@ const ConfirmModal = ({
                         <p>{message}</p>
                     </div>
                 </div>
+
+                {children}
+
+                {error && (
+                    <div className="confirm-modal-error">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>{error}</span>
+                    </div>
+                )}
+
                 <div className="confirm-modal-footer">
-                    <button type="button" className="confirm-btn secondary" onClick={onClose}>
+                    <button type="button" className="confirm-btn secondary" onClick={onClose} disabled={confirming}>
                         {cancelText}
                     </button>
-                    <button type="button" className={`confirm-btn primary ${type}`} onClick={onConfirm}>
-                        {confirmText}
+                    <button type="button" className={`confirm-btn primary ${type}`} onClick={onConfirm} disabled={confirming}>
+                        {confirming ? 'Patientez...' : confirmText}
                     </button>
                 </div>
             </div>

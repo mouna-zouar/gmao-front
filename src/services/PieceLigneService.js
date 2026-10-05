@@ -17,9 +17,12 @@ const pieceLigneService = {
   },
 
   async getQuantiteDisponible(prestataireArticlesId) {
-    const { data } = await api.get(`/piece-ligne/article/${prestataireArticlesId}/quantite-disponible`);
-    return data;
+    const { data } = await api.get(
+      `/stock-articles/${prestataireArticlesId}/quantite-disponible`
+    );
+    return data === '' || data == null ? 0 : Number(data);
   },
+
 };
 
 export default pieceLigneService;

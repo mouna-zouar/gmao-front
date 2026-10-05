@@ -2,20 +2,47 @@ import React, { useState, useEffect, useMemo } from 'react';
 import bonMaintenanceCommandeService from '../../../services/bonMaintenanceCommandeService';
 import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenancedocumentachatservice';
 import pieceLigneService from '../../../services/pieceLigneService';
-import './Modal.css';
+import { repartirStock } from '../../../services/Stockallocation';
 import './CommanderModal.css';
 
+/* ============================================================
+   ICÔNES SVG
+   ============================================================ */
+const IconX = () => (
+  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+  </svg>
+);
+
+const IconCheck = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2"
+       strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
+const IconMinus = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <path d="M5 12h14" />
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+/* ============================================================
+   COMPOSANT
+   ============================================================ */
 const CommanderModal = ({ isOpen, onClose, bonMaintenance, onCommandeCreee }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [articles, setArticles] = useState([]);
-  // disponible[bonMaintenanceTacheId] = quantité disponible en stock pour l'article de cette tâche
   const [disponible, setDisponible] = useState({});
-  // qte[bonMaintenanceTacheId] = quantité à commander (éditable)
   const [qte, setQte] = useState({});
-
   const [sousTraitantId, setSousTraitantId] = useState('');
-  // checked[bonMaintenanceTacheId] = booléen
   const [checked, setChecked] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -26,37 +53,60 @@ const CommanderModal = ({ isOpen, onClose, bonMaintenance, onCommandeCreee }) =>
     const load = async () => {
       setLoading(true);
       setError(null);
+      setSubmitError(null);
+
       try {
         const data = await bonMaintenanceCommandeService.getArticlesDisponibles(bonMaintenance.id);
         setArticles(data ?? []);
 
-        // Quantité disponible en stock par article, puis quantité par défaut à commander =
-        // le manquant (besoin - disponible), c-à-d ce que le stock ne peut pas couvrir.
-        // Coché uniquement si un manquant existe réellement (sinon rien à commander, Demander suffit).
         const disponibleParTache = {};
         const qteParTache = {};
         const initialChecked = {};
 
+        // Un seul appel par article (plusieurs tâches peuvent partager le même article)
+        const idsArticles = [
+          ...new Set(
+            (data ?? []).map((a) => a.prestataireArticlesId).filter(Boolean)
+          ),
+        ];
+        const stockParArticle = {};
+
         await Promise.all(
-          (data ?? []).map(async (a) => {
-            let dispo = null;
+          idsArticles.map(async (articleId) => {
             try {
-              dispo = await pieceLigneService.getQuantiteDisponible(a.prestataireArticlesId);
+              stockParArticle[articleId] =
+                await pieceLigneService.getQuantiteDisponible(articleId);
             } catch (err) {
-              console.error('Erreur quantité disponible', a.prestataireArticlesId, err);
+              console.error('Erreur quantité disponible', articleId, err);
+              stockParArticle[articleId] = null;
             }
-            disponibleParTache[a.bonMaintenanceTacheId] = dispo;
-            const manquant = dispo != null ? Math.max(0, a.qteRestante - dispo) : a.qteRestante;
-            qteParTache[a.bonMaintenanceTacheId] = manquant;
-            initialChecked[a.bonMaintenanceTacheId] = manquant > 0;
           })
         );
+
+        // Quantité manquante par tâche, le stock étant partagé entre les tâches du même article
+        const repartitionInitiale = repartirStock(
+          (data ?? []).map((a) => ({
+            key: a.bonMaintenanceTacheId,
+            articleId: a.prestataireArticlesId,
+            qte: a.qteRestante,
+            dispo: stockParArticle[a.prestataireArticlesId] ?? null,
+            actif: true,
+          }))
+        );
+
+        (data ?? []).forEach((a) => {
+          const key = a.bonMaintenanceTacheId;
+          const dispo = stockParArticle[a.prestataireArticlesId] ?? null;
+          disponibleParTache[key] = dispo;
+          const manquant = dispo != null ? repartitionInitiale[key].manque : a.qteRestante;
+          qteParTache[key] = manquant;
+          initialChecked[key] = manquant > 0;
+        });
 
         setDisponible(disponibleParTache);
         setQte(qteParTache);
         setChecked(initialChecked);
 
-        // Sous-traitant par défaut : le premier trouvé
         const premierSousTraitant = data?.[0]?.sousTraitantId;
         setSousTraitantId(premierSousTraitant != null ? String(premierSousTraitant) : '');
       } catch (err) {
@@ -71,7 +121,6 @@ const CommanderModal = ({ isOpen, onClose, bonMaintenance, onCommandeCreee }) =>
     load();
   }, [isOpen, bonMaintenance?.id]);
 
-  // Liste des sous-traitants distincts présents dans les articles disponibles
   const sousTraitants = useMemo(() => {
     const map = new Map();
     articles.forEach((a) => {
@@ -82,7 +131,6 @@ const CommanderModal = ({ isOpen, onClose, bonMaintenance, onCommandeCreee }) =>
     return Array.from(map.entries()).map(([id, nom]) => ({ id, nom }));
   }, [articles]);
 
-  // Articles filtrés pour le sous-traitant sélectionné
   const articlesFiltres = useMemo(() => {
     if (!sousTraitantId) return [];
     return articles.filter((a) => String(a.sousTraitantId) === String(sousTraitantId));
@@ -96,7 +144,31 @@ const CommanderModal = ({ isOpen, onClose, bonMaintenance, onCommandeCreee }) =>
     setQte((prev) => ({ ...prev, [bonMaintenanceTacheId]: value === '' ? '' : Number(value) }));
   };
 
+  const handleQteStep = (bonMaintenanceTacheId, delta) => {
+    const current = Number(qte[bonMaintenanceTacheId]) || 0;
+    const next = Math.max(0, current + delta);
+    handleQteChange(bonMaintenanceTacheId, next);
+  };
+
   const articlesACommander = articlesFiltres.filter((a) => checked[a.bonMaintenanceTacheId]);
+
+  const toggleAll = () => {
+    const allChecked = articlesFiltres.length > 0 &&
+      articlesFiltres.every((a) => checked[a.bonMaintenanceTacheId]);
+    const next = { ...checked };
+    articlesFiltres.forEach((a) => {
+      next[a.bonMaintenanceTacheId] = !allChecked;
+    });
+    setChecked(next);
+  };
+
+  const totalQte = articlesACommander.reduce(
+    (sum, a) => sum + (Number(qte[a.bonMaintenanceTacheId]) || 0),
+    0
+  );
+
+  const allChecked = articlesFiltres.length > 0 &&
+    articlesFiltres.every((a) => checked[a.bonMaintenanceTacheId]);
 
   const handleCommander = async () => {
     if (articlesACommander.length === 0) {
@@ -142,79 +214,244 @@ const CommanderModal = ({ isOpen, onClose, bonMaintenance, onCommandeCreee }) =>
     onClose();
   };
 
+  const handleClose = () => {
+    if (submitting) return;
+    setSubmitError(null);
+    setError(null);
+    onClose();
+  };
+
   if (!isOpen) return null;
 
+  // Stock partagé entre les lignes d'un même article (ordre d'affichage)
+  const repartition = repartirStock(
+    articlesFiltres.map((a) => ({
+      key: a.bonMaintenanceTacheId,
+      articleId: a.prestataireArticlesId,
+      qte: qte[a.bonMaintenanceTacheId],
+      dispo: disponible[a.bonMaintenanceTacheId],
+      actif: !!checked[a.bonMaintenanceTacheId],
+    }))
+  );
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container commander-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Commander — {bonMaintenance?.num || bonMaintenance?.titre || `Bon #${bonMaintenance?.id}`}</h2>
-          <button type="button" className="close-btn" onClick={onClose}>
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+    <div className="cmd-overlay" onClick={handleClose}>
+      <div className="cmd-modal" onClick={(e) => e.stopPropagation()}>
+
+        {/* ============================== */}
+        {/* HEADER                          */}
+        {/* ============================== */}
+        <div className="cmd-header">
+          <div className="cmd-header__text">
+            <span className="cmd-header__eyebrow">Bon de maintenance</span>
+            <h2>
+              Commander — {bonMaintenance?.num || bonMaintenance?.titre || `Bon #${bonMaintenance?.id}`}
+            </h2>
+            <p className="cmd-header__subtitle">
+              Sélectionne les articles à commander chez le sous-traitant et ajuste les quantités.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="cmd-close-btn"
+            onClick={handleClose}
+            disabled={submitting}
+            aria-label="Fermer"
+          >
+            <IconX />
           </button>
         </div>
 
-        <div className="modal-body">
+        {/* ============================== */}
+        {/* BODY                            */}
+        {/* ============================== */}
+        <div className="cmd-body">
+
           {loading ? (
             <p className="cmd-empty">Chargement des articles disponibles...</p>
+
           ) : error ? (
             <p className="cmd-empty cmd-error">{error}</p>
+
           ) : sousTraitants.length === 0 ? (
             <p className="cmd-empty">
               Aucun article restant à commander pour ce bon (aucune tâche avec article + sous-traitant assignés, ou tout est déjà commandé).
             </p>
+
           ) : (
             <>
+              {/* -------- Sélecteur sous-traitant -------- */}
               <div className="cmd-field">
                 <label>Sous-traitant</label>
-                <select value={sousTraitantId} onChange={(e) => setSousTraitantId(e.target.value)}>
-                  {sousTraitants.map((s) => (
-                    <option key={s.id} value={s.id}>{s.nom}</option>
-                  ))}
-                </select>
+                <div className="cmd-select-wrap">
+                  <select
+                    value={sousTraitantId}
+                    onChange={(e) => setSousTraitantId(e.target.value)}
+                  >
+                    {sousTraitants.map((s) => (
+                      <option key={s.id} value={s.id}>{s.nom}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
+              {/* -------- Toolbar sélection -------- */}
+              {articlesFiltres.length > 0 && (
+                <div className="cmd-toolbar">
+                  <div className="cmd-toolbar__count">
+                    <span
+                      className={`cmd-toolbar__count-num ${
+                        articlesACommander.length === 0
+                          ? 'cmd-toolbar__count-num--zero'
+                          : ''
+                      }`}
+                    >
+                      {articlesACommander.length}
+                    </span>
+                    <span>
+                      sélectionné{articlesACommander.length > 1 ? 's' : ''}
+                    </span>
+                    <span className="cmd-toolbar__sep">·</span>
+                    <span className="cmd-toolbar__hint">
+                      sur {articlesFiltres.length} au total
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="cmd-toolbar__toggle"
+                    onClick={toggleAll}
+                  >
+                    {allChecked ? 'Tout désélectionner' : 'Tout sélectionner'}
+                  </button>
+                </div>
+              )}
+
+              {/* -------- Tableau -------- */}
               <div className="cmd-table-wrap">
                 <table className="cmd-table">
                   <thead>
                     <tr>
-                      <th style={{ width: 36 }}></th>
+                      <th style={{ width: 44 }}></th>
                       <th>Article</th>
-                      <th style={{ width: 80 }}>Besoin</th>
-                      <th style={{ width: 90 }}>Stock dispo</th>
-                      <th style={{ width: 100 }}>Qté à commander</th>
+                      <th style={{ width: 90, textAlign: 'center' }}>Besoin</th>
+                      <th style={{ width: 100, textAlign: 'center' }}>Stock dispo</th>
+                      <th style={{ width: 110, textAlign: 'center' }}>Stock restant</th>
+                      <th style={{ width: 140, textAlign: 'center' }}>Qté à commander</th>
                     </tr>
                   </thead>
                   <tbody>
                     {articlesFiltres.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="cmd-empty-cell">Aucun article pour ce sous-traitant.</td>
+                        <td colSpan={6} className="cmd-empty-cell">
+                          Aucun article pour ce sous-traitant.
+                        </td>
                       </tr>
                     ) : (
                       articlesFiltres.map((a) => {
                         const dispo = disponible[a.bonMaintenanceTacheId];
+                        const quantite = qte[a.bonMaintenanceTacheId];
+                        const isChecked = !!checked[a.bonMaintenanceTacheId];
+
+                        // Stock restant, en tenant compte des autres lignes du même article
+                        const { restant: stockRestant } =
+                          repartition[a.bonMaintenanceTacheId] ?? { restant: null };
+
                         return (
-                          <tr key={a.bonMaintenanceTacheId}>
+                          <tr key={a.bonMaintenanceTacheId} className={!isChecked ? 'is-unchecked' : ''}>
+                            {/* Checkbox premium */}
                             <td>
-                              <input
-                                type="checkbox"
-                                checked={!!checked[a.bonMaintenanceTacheId]}
-                                onChange={() => toggleArticle(a.bonMaintenanceTacheId)}
-                              />
+                              <label className="cmd-check">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleArticle(a.bonMaintenanceTacheId)}
+                                />
+                                <span className="cmd-check__box">
+                                  <IconCheck />
+                                </span>
+                              </label>
                             </td>
-                            <td>{a.designation}</td>
-                            <td>{a.qteRestante}</td>
-                            <td>{dispo != null ? dispo : '—'}</td>
+
+                            {/* Article */}
+                            <td className="cmd-cell-article">
+                              {a.designation || `Article #${a.prestataireArticlesId}`}
+                              {a.prestataireArticlesId && a.designation && (
+                                <span className="cmd-cell-article__ref">
+                                  Réf. #{a.prestataireArticlesId}
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Besoin */}
+                            <td className="cmd-cell-num">
+                              <span className="cmd-cell-besoin__pill">{a.qteRestante}</span>
+                            </td>
+
+                            {/* Stock dispo */}
+                            <td className="cmd-cell-num cmd-cell-stock">
+                              {dispo != null ? (
+                                <span className="cmd-cell-stock__pill">{dispo}</span>
+                              ) : (
+                                <span className="cmd-cell-stock__pill cmd-cell-stock__pill--empty">
+                                  —
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Stock restant */}
+                            <td className="cmd-cell-num cmd-cell-stock">
+                              {stockRestant != null ? (
+                                <span
+                                  className={`cmd-cell-stock__pill${
+                                    stockRestant < 0 ? ' cmd-cell-stock__pill--negatif' : ''
+                                  }`}
+                                  title={
+                                    stockRestant < 0
+                                      ? 'Stock insuffisant'
+                                      : 'Stock restant après la quantité saisie'
+                                  }
+                                >
+                                  {stockRestant}
+                                </span>
+                              ) : (
+                                <span className="cmd-cell-stock__pill cmd-cell-stock__pill--empty">
+                                  —
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Quantité avec stepper */}
                             <td>
-                              <input
-                                type="number"
-                                min="0"
-                                value={qte[a.bonMaintenanceTacheId] ?? ''}
-                                onChange={(e) => handleQteChange(a.bonMaintenanceTacheId, e.target.value)}
-                                style={{ width: '70px', padding: '5px 8px', borderRadius: '6px', border: '1px solid #dbe4e2' }}
-                              />
+                              <div className="cmd-qte">
+                                <button
+                                  type="button"
+                                  className="cmd-qte__step cmd-qte__step--minus"
+                                  onClick={() => handleQteStep(a.bonMaintenanceTacheId, -1)}
+                                  disabled={Number(quantite || 0) <= 0}
+                                  aria-label="Diminuer"
+                                >
+                                  <IconMinus />
+                                </button>
+
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="1"
+                                  value={quantite ?? ''}
+                                  onChange={(e) => handleQteChange(a.bonMaintenanceTacheId, e.target.value)}
+                                />
+
+                                <button
+                                  type="button"
+                                  className="cmd-qte__step cmd-qte__step--plus"
+                                  onClick={() => handleQteStep(a.bonMaintenanceTacheId, 1)}
+                                  aria-label="Augmenter"
+                                >
+                                  <IconPlus />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -224,24 +461,56 @@ const CommanderModal = ({ isOpen, onClose, bonMaintenance, onCommandeCreee }) =>
                 </table>
               </div>
 
-              {submitError && <div className="form-error">{submitError}</div>}
+              {/* -------- Récapitulatif -------- */}
+              {articlesACommander.length > 0 && (
+                <div className="cmd-summary">
+                  <span className="cmd-summary__item cmd-summary__item--accent">
+                    <strong>{articlesACommander.length}</strong> article
+                    {articlesACommander.length > 1 ? 's' : ''} à commander
+                  </span>
+                  <span className="cmd-summary__item">
+                    Quantité totale : <strong>{totalQte}</strong>
+                  </span>
+                </div>
+              )}
+
+              {/* -------- Erreur de soumission -------- */}
+              {submitError && (
+                <div className="cmd-form-error">{submitError}</div>
+              )}
             </>
           )}
         </div>
 
-        <div className="navigation-footer">
-          <div className="nav-buttons">
+        {/* ============================== */}
+        {/* FOOTER                          */}
+        {/* ============================== */}
+        <div className="cmd-footer">
+          <div className="cmd-nav-buttons">
             <button
               type="button"
               className="cmd-submit-btn"
               onClick={handleCommander}
               disabled={submitting || loading || articlesACommander.length === 0}
             >
-              {submitting ? 'Commande en cours...' : `Commander (${articlesACommander.length})`}
+              {submitting && <span className="cmd-spinner" aria-hidden="true" />}
+              <span>{submitting ? 'Commande en cours...' : 'Commander'}</span>
+              {!submitting && (
+                <span className="cmd-submit-btn__count">
+                  {articlesACommander.length}
+                </span>
+              )}
             </button>
           </div>
-          <button type="button" className="cmd-cancel-btn" onClick={onClose} disabled={submitting}>
-            Annuler
+
+          <button
+            type="button"
+            className="cmd-cancel-btn"
+            onClick={handleClose}
+            disabled={submitting}
+          >
+            <span>Annuler</span>
+            <kbd>ESC</kbd>
           </button>
         </div>
       </div>

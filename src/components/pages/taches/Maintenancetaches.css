@@ -195,3 +195,52 @@
   color: #94a3b8;
   font-style: italic;
 }
+/* ── Pile Export / Imprimer / Stats ── */
+.mtaches-filter-panel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.mtaches-filter-input-wrap {
+  flex: 1;
+  min-width: 200px;
+}
+
+.mtaches-export-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.mtaches-export-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.mtaches-export-btn:hover {
+  opacity: 0.9;
+}
+
+.mtaches-export-btn.excel {
+  background: #10b981;
+}
+
+.mtaches-export-btn.print {
+  background: #0d9488;
+}
+
+.mtaches-export-btn.stats {
+  background: #f59e0b;
+}

@@ -1,0 +1,75 @@
+.locpicker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.locpicker-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.locpicker-input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 0.88rem;
+  color: #0f172a;
+  padding: 10px 12px;
+  border: 1px solid #dbe4e2;
+  border-radius: 9px;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.locpicker-input:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+}
+
+.locpicker-search-btn,
+.locpicker-geo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid #99f6e4;
+  background: #f0fdfa;
+  color: #0f766e;
+  font-size: 1rem;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+.locpicker-search-btn:hover,
+.locpicker-geo-btn:hover {
+  background: #ccfbf1;
+  transform: translateY(-1px);
+}
+
+.locpicker-search-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.locpicker-map {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.locpicker-coords {
+  margin: 2px 0 0;
+  font-size: 0.76rem;
+  color: #64748b;
+}
+
+.locpicker-coords strong {
+  color: #0f766e;
+  font-weight: 700;
+}

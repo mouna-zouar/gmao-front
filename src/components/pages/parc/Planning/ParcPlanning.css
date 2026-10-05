@@ -1,0 +1,209 @@
+:root {
+  --pp-primary: #0d9488;
+  --pp-primary-dark: #0f766e;
+  --pp-blue: #3b82f6;
+  --pp-blue-soft: #dbeafe;
+  --pp-teal: #0d9488;
+  --pp-teal-soft: #ccfbf1;
+  --pp-amber: #f59e0b;
+  --pp-amber-soft: #fef3c7;
+  --pp-red: #ef4444;
+  --pp-red-soft: #fee2e2;
+  --pp-slate: #64748b;
+  --pp-slate-soft: #f1f5f9;
+  --pp-gray-200: #e2e8f0;
+  --pp-gray-500: #64748b;
+  --pp-gray-900: #0f172a;
+  --pp-radius: 12px;
+  --pp-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
+}
+
+.parcplan-container {
+  padding: 24px;
+  margin: 0 auto;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--pp-gray-900);
+}
+
+.parcplan-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--pp-primary-dark), var(--pp-primary));
+  border-radius: var(--pp-radius);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  color: #fff;
+  box-shadow: var(--pp-shadow);
+  flex-wrap: wrap;
+}
+
+.parcplan-header-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.parcplan-header-text { flex: 1; min-width: 200px; }
+.parcplan-header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+.parcplan-header p { margin: 3px 0 0; font-size: 0.82rem; color: rgba(255, 255, 255, 0.85); }
+
+.parcplan-nav { display: flex; align-items: center; gap: 6px; }
+
+.parcplan-nav-btn,
+.parcplan-nav-today {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease;
+}
+.parcplan-nav-btn { width: 34px; height: 34px; }
+.parcplan-nav-today { padding: 0 14px; height: 34px; font-size: 0.82rem; font-weight: 600; }
+.parcplan-nav-btn:hover, .parcplan-nav-today:hover { background: rgba(255, 255, 255, 0.28); }
+
+.parcplan-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.parcplan-week-label { font-size: 0.95rem; font-weight: 700; color: var(--pp-gray-900); }
+
+.parcplan-toggles { display: flex; gap: 16px; }
+.parcplan-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: var(--pp-gray-500);
+  cursor: pointer;
+}
+.parcplan-toggle input { cursor: pointer; }
+
+.parcplan-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+.color-blue  { background: var(--pp-blue); }
+.color-teal  { background: var(--pp-teal); }
+.color-amber { background: var(--pp-amber); }
+.color-red   { background: var(--pp-red); }
+.color-slate { background: var(--pp-slate); }
+
+.parcplan-error-banner {
+  background: var(--pp-red-soft);
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.parcplan-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  gap: 14px;
+  color: var(--pp-gray-500);
+}
+.parcplan-spin { animation: parcplan-spin 0.8s linear infinite; color: var(--pp-primary); }
+@keyframes parcplan-spin { to { transform: rotate(360deg); } }
+
+/* GRID */
+.parcplan-grid-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--pp-gray-200);
+  border-radius: var(--pp-radius);
+  background: #fff;
+  box-shadow: var(--pp-shadow);
+}
+
+.parcplan-grid { width: 100%; border-collapse: collapse; min-width: 900px; }
+
+.parcplan-grid thead th {
+  background: #f8fafc;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--pp-gray-500);
+  border-bottom: 1.5px solid var(--pp-gray-200);
+  border-left: 1px solid #f1f5f9;
+}
+
+.parcplan-jour-nom { display: block; text-transform: uppercase; letter-spacing: 0.04em; }
+.parcplan-jour-date { display: block; font-size: 0.78rem; font-weight: 800; color: var(--pp-gray-900); margin-top: 2px; }
+
+.parcplan-col-vehicule {
+  text-align: left !important;
+  padding: 10px 14px !important;
+  min-width: 150px;
+  background: #fff;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  border-right: 1.5px solid var(--pp-gray-200);
+}
+
+.parcplan-matricule { display: block; font-weight: 700; font-size: 0.85rem; color: var(--pp-gray-900); }
+.parcplan-marque { display: block; font-size: 0.72rem; color: var(--pp-gray-500); }
+
+.parcplan-col-today { background: var(--pp-primary-soft, #f0fdfa) !important; }
+
+.parcplan-grid tbody tr { border-bottom: 1px solid #f1f5f9; }
+.parcplan-grid tbody tr:hover td:not(.parcplan-col-vehicule) { background: #fafbfc; }
+
+.parcplan-cell {
+  vertical-align: top;
+  padding: 6px;
+  border-left: 1px solid #f1f5f9;
+  min-width: 120px;
+}
+
+.parcplan-cell-empty { color: #cbd5e1; display: block; text-align: center; padding: 6px 0; }
+
+.parcplan-cell-events { display: flex; flex-direction: column; gap: 3px; }
+
+.parcplan-event {
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.parcplan-empty { text-align: center; padding: 40px; color: var(--pp-gray-500); }
+
+.parcplan-note {
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: var(--pp-gray-500);
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .parcplan-container { padding: 16px; }
+  .parcplan-header { flex-direction: column; align-items: stretch; }
+  .parcplan-nav { justify-content: center; }
+}

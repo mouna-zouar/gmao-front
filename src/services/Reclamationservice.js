@@ -34,6 +34,16 @@ const reclamationService = {
     const { data } = await api.get('/reclamation/dashboard');
     return data;
   },
+
+  async valider(id, payload) {
+    const { data } = await api.patch(`/reclamation/${id}/valider`, payload);
+    return data;
+  },
+
+  async rejeter(id, payload) {
+    const { data } = await api.patch(`/reclamation/${id}/rejeter`, payload);
+    return data;
+  },
 };
 
 export default reclamationService;

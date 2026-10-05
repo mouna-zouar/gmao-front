@@ -1,11 +1,18 @@
 import React from 'react';
-import './Modal.css';
+import {
+  X,
+  FileText,
+  AlertCircle,
+  Calendar,
+  User,
+  Wrench,
+  Inbox,
+  Hash,
+  Flag,
+} from 'lucide-react';
+import './ReclamationDetailsModal.css';
 
-const ETAT_LABELS = {
-  0: 'Ouverte',
-  1: 'En cours',
-  2: 'Clôturée',
-};
+const ETAT_LABELS = { 0: 'Ouverte', 1: 'En cours', 2: 'Clôturée' };
 
 const BON_ETAT_LABELS = {
   1: 'Nouveau',
@@ -15,136 +22,329 @@ const BON_ETAT_LABELS = {
   10: 'Annulé',
 };
 
-const NIVEAU_LABELS = {
-  1: 'Faible',
-  2: 'Moyenne',
-  3: 'Élevée',
-};
-
-function etatLabel(etat) {
-  return ETAT_LABELS[etat] ?? `État ${etat}`;
-}
-
-function bonEtatLabel(etat) {
-  if (etat == null) return '—';
-  return BON_ETAT_LABELS[etat] ?? `État ${etat}`;
-}
-
-function niveauLabel(niveau) {
-  if (niveau == null) return '—';
-  return NIVEAU_LABELS[niveau] ?? `Niveau ${niveau}`;
-}
+const etatLabel = (e) => ETAT_LABELS[e] ?? `État ${e}`;
+const bonEtatLabel = (e) =>
+  e == null ? '—' : BON_ETAT_LABELS[e] ?? `État ${e}`;
 
 function formatDate(iso) {
-  if (!iso) return '—';
+  if (!iso) return null;
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
-function InfoRow({ label, value }) {
+function getEtatClass(etat, prefix) {
+  const map = {
+    reclamation: { 0: 'etat-ouvert', 1: 'etat-encours', 2: 'etat-cloture' },
+    bon: {
+      1: 'bon-nouveau',
+      2: 'bon-suspendu',
+      3: 'bon-encours',
+      4: 'bon-effectue',
+      10: 'bon-annule',
+    },
+  };
+  return map[prefix]?.[etat] || '';
+}
+
+/* ─────────── Sous-composants ─────────── */
+
+function Cell({ label, value, children, full, muted, icon: Icon }) {
+  const isEmpty = !children && (value == null || value === '');
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f1f5f9' }}>
-      <span style={{ color: '#64748b', fontSize: '0.85rem' }}>{label}</span>
-      <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#0f172a', textAlign: 'right' }}>{value ?? '—'}</span>
+    <div className={`rdm-cell ${full ? 'full' : ''}`}>
+      <div className="rdm-cell-label">
+        {Icon && <Icon size={11} strokeWidth={2.4} />}
+        {label}
+      </div>
+      <div className={`rdm-cell-value ${isEmpty || muted ? 'muted' : ''}`}>
+        {children ?? (isEmpty ? '—' : value)}
+      </div>
     </div>
   );
 }
 
-function SectionTitle({ children }) {
+function Section({ title, count, accent, children }) {
   return (
-    <h3 style={{ fontSize: '0.95rem', color: '#0f766e', margin: '18px 0 8px', fontWeight: 700 }}>
+    <section className="rdm-section">
+      <div className={`rdm-section-head ${accent ? `is-${accent}` : ''}`}>
+        <span className="rdm-section-line" />
+        <h3 className="rdm-section-title">{title}</h3>
+        {count != null && <span className="rdm-section-count">{count}</span>}
+      </div>
       {children}
-    </h3>
+    </section>
   );
 }
+
+function Niveau({ value, labels }) {
+  if (value == null) return <span className="muted">—</span>;
+  return (
+    <span className={`niveau is-${value}`}>
+      <span className="niveau-dots">
+        <span />
+        <span />
+        <span />
+      </span>
+      {labels[value] ?? `Niveau ${value}`}
+    </span>
+  );
+}
+
+function TimelineItem({ label, value, pending }) {
+  return (
+    <div className={`rdm-timeline-item ${pending ? 'is-pending' : ''}`}>
+      <div className="rdm-timeline-dot" />
+      <div className="rdm-timeline-content">
+        <span className="rdm-timeline-label">{label}</span>
+        <span className="rdm-timeline-value">{value ?? '—'}</span>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ message, inline }) {
+  if (inline)
+    return <div className="rdm-empty rdm-empty-inline">{message}</div>;
+  return (
+    <div className="rdm-empty">
+      <div className="rdm-empty-icon">
+        <Inbox size={24} strokeWidth={1.6} />
+      </div>
+      <span>{message}</span>
+    </div>
+  );
+}
+
+function Skeleton() {
+  return (
+    <div className="rdm-skeleton">
+      <div className="rdm-skel rdm-skel-block tall" />
+      <div className="rdm-skel rdm-skel-block" />
+    </div>
+  );
+}
+
+/* ─────────── Composant principal ─────────── */
 
 const ReclamationDetailsModal = ({ isOpen, onClose, loading, data }) => {
   if (!isOpen) return null;
 
   const reclamation = data?.reclamation;
   const bonMaintenance = data?.bonMaintenance;
-  const immobilisation = data?.immobilisation;
+
+  const NIVEAUX = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
+
+  const dateCrea = formatDate(bonMaintenance?.dateCreation);
+  const dateInter = formatDate(bonMaintenance?.dateIntervention);
+  const dateClot = formatDate(bonMaintenance?.dateCloture);
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-container reclamation-details-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>Détails de la réclamation</h2>
-          <button type="button" className="close-btn" onClick={onClose}>
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rdm-title"
+    >
+      <div
+        className="modal-container rdm-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* HERO */}
+        <header className="rdm-hero">
+          <div className="rdm-hero-main">
+            <div className="rdm-hero-eyebrow">Réclamation</div>
+            <h2 id="rdm-title" className="rdm-hero-ref">
+              {reclamation?.num || (reclamation ? `#${reclamation.id}` : '—')}
+            </h2>
+            {reclamation && (
+              <p className="rdm-hero-sub">
+                <span
+                  className={`badge-etat ${getEtatClass(
+                    reclamation.etat,
+                    'reclamation'
+                  )}`}
+                >
+                  {etatLabel(reclamation.etat)}
+                </span>
+                {reclamation.personnelAffecteNom && (
+                  <>
+                    <span className="divider" />
+                    <span>{reclamation.personnelAffecteNom}</span>
+                  </>
+                )}
+                {reclamation.date && (
+                  <>
+                    <span className="divider" />
+                    <span>{formatDate(reclamation.date)}</span>
+                  </>
+                )}
+              </p>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="rdm-close-btn"
+            onClick={onClose}
+            aria-label="Fermer"
+          >
+            <X size={18} />
           </button>
-        </div>
+        </header>
 
-        <div className="modal-body">
+        {/* BODY */}
+        <div className="rdm-body">
           {loading ? (
-            <p style={{ padding: '20px', color: '#64748b' }}>Chargement...</p>
+            <Skeleton />
           ) : !reclamation ? (
-            <p style={{ padding: '20px', color: '#64748b' }}>Aucune donnée disponible.</p>
+            <EmptyState message="Aucune donnée disponible." />
           ) : (
-            <div style={{ padding: '4px 2px' }}>
-              <SectionTitle>Réclamation</SectionTitle>
-              <InfoRow label="Numéro" value={reclamation.num || `#${reclamation.id}`} />
-              <InfoRow label="Description" value={reclamation.description} />
-              <InfoRow label="État" value={etatLabel(reclamation.etat)} />
-              <InfoRow label="Criticité" value={niveauLabel(reclamation.criticite)} />
-              <InfoRow label="Urgence" value={niveauLabel(reclamation.urgence)} />
-              <InfoRow
-                label="Personnel affecté"
-                value={reclamation.personnelAffecteNom || '— Non affecté —'}
-              />
-              <InfoRow label="Date" value={formatDate(reclamation.date)} />
-
-              <SectionTitle>Bon de maintenance</SectionTitle>
-              {bonMaintenance ? (
-                <>
-                  <InfoRow label="Numéro" value={bonMaintenance.num || `#${bonMaintenance.id}`} />
-                  <InfoRow label="Titre" value={bonMaintenance.titre} />
-                  <InfoRow label="État" value={bonEtatLabel(bonMaintenance.etat)} />
-                  <InfoRow label="Urgence" value={niveauLabel(bonMaintenance.urgence)} />
-                  <InfoRow label="Date de création" value={formatDate(bonMaintenance.dateCreation)} />
-                  <InfoRow label="Date d'intervention" value={formatDate(bonMaintenance.dateIntervention)} />
-                  <InfoRow label="Date de clôture" value={formatDate(bonMaintenance.dateCloture)} />
-                  <InfoRow label="Personnel demandant" value={bonMaintenance.personnelDemandantNom} />
-                  <InfoRow label="Coût total" value={bonMaintenance.coutTotal != null ? `${bonMaintenance.coutTotal} DT` : '—'} />
-                </>
-              ) : (
-                <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Aucun bon de maintenance associé.</p>
-              )}
-
-              <SectionTitle>Immobilisation</SectionTitle>
-              {immobilisation?.lotArticleImmobilistation ? (
-                <>
-                  <InfoRow
-                    label="Lot article immobilisé"
-                    value={immobilisation.lotArticleImmobilistation.designation
-                      || `#${immobilisation.lotArticleImmobilistation.id}`}
+            <>
+              {/* Réclamation */}
+              <Section title="Informations" accent="amber">
+                <div className="rdm-grid">
+                  <Cell
+                    label="Numéro"
+                    icon={Hash}
+                    value={reclamation.num || `#${reclamation.id}`}
                   />
-                  {immobilisation.lotArticle && (
-                    <InfoRow
-                      label="Lot article"
-                      value={immobilisation.lotArticle.designation || `#${immobilisation.lotArticle.id}`}
-                    />
-                  )}
-                </>
-              ) : (
-                <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>Aucune immobilisation liée.</p>
-              )}
-            </div>
+                  <Cell
+                    label="Date"
+                    icon={Calendar}
+                    value={formatDate(reclamation.date) || '—'}
+                  />
+                  <Cell
+                    label="Criticité"
+                    icon={Flag}
+                    value={
+                      <Niveau value={reclamation.criticite} labels={NIVEAUX} />
+                    }
+                  />
+                  <Cell
+                    label="Urgence"
+                    icon={Flag}
+                    value={
+                      <Niveau value={reclamation.urgence} labels={NIVEAUX} />
+                    }
+                  />
+                  <Cell
+                    label="Personnel affecté"
+                    icon={User}
+                    full
+                    muted={!reclamation.personnelAffecteNom}
+                    value={reclamation.personnelAffecteNom || 'Non affecté'}
+                  />
+                  <Cell
+                    label="Description"
+                    full
+                    muted={!reclamation.description}
+                    value={reclamation.description || 'Aucune description'}
+                  />
+                </div>
+              </Section>
+
+              {/* Bon de maintenance */}
+              <Section title="Bon de maintenance" accent="sky">
+                {bonMaintenance ? (
+                  <>
+                    <div className="rdm-grid">
+                      <Cell
+                        label="Numéro"
+                        icon={Hash}
+                        value={bonMaintenance.num || `#${bonMaintenance.id}`}
+                      />
+                      <Cell
+                        label="État"
+                        value={
+                          <span
+                            className={`badge-etat ${getEtatClass(
+                              bonMaintenance.etat,
+                              'bon'
+                            )}`}
+                          >
+                            {bonEtatLabel(bonMaintenance.etat)}
+                          </span>
+                        }
+                      />
+                      <Cell label="Titre" icon={Wrench} full value={bonMaintenance.titre} />
+                      <Cell
+                        label="Urgence"
+                        value={
+                          <Niveau
+                            value={bonMaintenance.urgence}
+                            labels={NIVEAUX}
+                          />
+                        }
+                      />
+                      <Cell
+                        label="Personnel demandant"
+                        icon={User}
+                        value={bonMaintenance.personnelDemandantNom || '—'}
+                      />
+                      <Cell
+                        label="Coût total"
+                        full
+                        muted={bonMaintenance.coutTotal == null}
+                        value={
+                          bonMaintenance.coutTotal != null ? (
+                            <span className="money">
+                              {bonMaintenance.coutTotal}
+                            </span>
+                          ) : (
+                            'Non renseigné'
+                          )
+                        }
+                      />
+                    </div>
+
+                    {/* Timeline */}
+                    {(dateCrea || dateInter || dateClot) && (
+                      <div className="rdm-timeline" style={{ marginTop: 14 }}>
+                        <TimelineItem
+                          label="Création"
+                          value={dateCrea}
+                          pending={!dateCrea}
+                        />
+                        <TimelineItem
+                          label="Intervention"
+                          value={dateInter}
+                          pending={!dateInter}
+                        />
+                        <TimelineItem
+                          label="Clôture"
+                          value={dateClot}
+                          pending={!dateClot}
+                        />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <EmptyState
+                    inline
+                    message="Aucun bon de maintenance associé."
+                  />
+                )}
+              </Section>
+            </>
           )}
         </div>
 
-        <div className="navigation-footer">
-          <div className="nav-buttons" />
-          <button type="button" className="close-btn-secondary" onClick={onClose} style={{
-            padding: '9px 16px', border: '1px solid #cbd5e1', borderRadius: '8px',
-            background: '#fff', color: '#334155', fontWeight: 600, cursor: 'pointer',
-          }}>
+        {/* FOOTER */}
+        <footer className="rdm-footer">
+          <button
+            type="button"
+            className="rdm-footer-close-btn"
+            onClick={onClose}
+          >
             Fermer
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );

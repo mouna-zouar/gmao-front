@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import compteurService from '../../../services/compteurService';
 import CompteurModal from '../../ui/modals/Compteurmodal';
+import ConfirmModal from '../../ui/modals/ConfirmModal';
 import './Compteurs.css';
 
 const NATURE_LABELS = {
@@ -11,6 +12,13 @@ const NATURE_LABELS = {
 
 function natureLabel(nature) {
   return NATURE_LABELS[nature] ?? `Code ${nature}`;
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 export default function Compteurs() {
@@ -24,6 +32,15 @@ export default function Compteurs() {
   const [selectedCompteur, setSelectedCompteur] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const [confirmModal, setConfirmModal] = useState({
+    show: false,
+    type: 'warning',
+    title: '',
+    message: '',
+    confirmText: 'Confirmer',
+    onConfirm: null,
+  });
 
   const load = async () => {
     setLoading(true);
@@ -89,21 +106,62 @@ export default function Compteurs() {
     await load();
   };
 
-  const handleDelete = async () => {
-    if (!selectedCompteur || isDeleting) return;
-    if (!window.confirm(`Supprimer le compteur "${selectedCompteur.nom}" ?`)) return;
+  const closeConfirmModal = () => setConfirmModal((prev) => ({ ...prev, show: false }));
 
-    setIsDeleting(true);
-    try {
-      await compteurService.remove(selectedCompteur.id);
-      setCompteurs((prev) => prev.filter((c) => c.id !== selectedCompteur.id));
-      setSelectedCompteur(null);
-    } catch (err) {
-      console.error(err);
-      alert("Échec de la suppression de ce compteur.");
-    } finally {
-      setIsDeleting(false);
-    }
+  const handleDelete = () => {
+    if (!selectedCompteur || isDeleting) return;
+    setConfirmModal({
+      show: true,
+      type: 'danger',
+      title: 'Supprimer le compteur',
+      message: `Supprimer le compteur "${selectedCompteur.nom}" ? Cette action est irréversible.`,
+      confirmText: 'Supprimer',
+      onConfirm: async () => {
+        closeConfirmModal();
+        setIsDeleting(true);
+        try {
+          await compteurService.remove(selectedCompteur.id);
+          setCompteurs((prev) => prev.filter((c) => c.id !== selectedCompteur.id));
+          setSelectedCompteur(null);
+        } catch (err) {
+          console.error(err);
+          alert("Échec de la suppression de ce compteur.");
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
+  };
+
+  const handleExportExcel = () => {
+    const entetes = ['Nom', 'Unité', 'Nature'];
+    const lignes = filteredCompteurs.map((c) => [
+      (c.nom || '').replace(/"/g, '""'),
+      (c.unite || '—').replace(/"/g, '""'),
+      c.nature != null ? natureLabel(c.nature) : '—',
+    ]);
+
+    const csv = [entetes, ...lignes]
+      .map((ligne) => ligne.map((cellule) => `"${cellule}"`).join(';'))
+      .join('\r\n');
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const lien = document.createElement('a');
+    lien.href = url;
+    lien.download = `compteurs-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(lien);
+    lien.click();
+    document.body.removeChild(lien);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleStats = () => {
+    alert('Ouvre le dashboard des compteurs pour les statistiques détaillées.');
   };
 
   return (
@@ -184,6 +242,25 @@ export default function Compteurs() {
         <button className="compteurs-filter-reset" onClick={handleResetFilters}>
           Réinitialiser
         </button>
+
+        {/* Pile Export / Imprimer / Stats */}
+        <div className="compteurs-export-stack">
+          <button className="compteurs-export-btn excel" title="Exporter en Excel (CSV)" onClick={handleExportExcel}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </button>
+          <button className="compteurs-export-btn print" title="Imprimer" onClick={handlePrint}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zM9 9V5a2 2 0 012-2h2a2 2 0 012 2v4M7 13h10" />
+            </svg>
+          </button>
+          <button className="compteurs-export-btn stats" title="Statistiques" onClick={handleStats}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {error && <div className="compteurs-error-banner">{error}</div>}
@@ -233,6 +310,16 @@ export default function Compteurs() {
         onSave={handleSave}
         compteur={selectedCompteur}
         isEditing={!!selectedCompteur}
+      />
+
+      <ConfirmModal
+        show={confirmModal.show}
+        onClose={closeConfirmModal}
+        onConfirm={confirmModal.onConfirm}
+        type={confirmModal.type}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmText={confirmModal.confirmText}
       />
     </div>
   );

@@ -1,0 +1,716 @@
+/* ============================================================
+   MAINTENANCE PRÉDICTIVE — version moderne alignée teal
+   Sans rouge · Sans violet · Critique = slate foncé
+   ============================================================ */
+
+.risque-page {
+  --primary: #0d9488;
+  --primary-dark: #0f766e;
+  --primary-darker: #115e59;
+  --primary-light: #ccfbf1;
+  --primary-soft: #e6faf6;
+
+  /* Gris teintés teal */
+  --gray-50: #eef7f5;
+  --gray-100: #dfeeeb;
+  --gray-200: #c9e0dc;
+  --gray-300: #a3c4be;
+  --gray-400: #7ba39c;
+  --gray-500: #5c7f79;
+  --gray-600: #3e5e59;
+  --gray-700: #2a4643;
+  --gray-800: #1a3330;
+  --gray-900: #0c2320;
+
+  /* Slate foncé — pour Critique */
+  --slate-soft: #e2e8f0;
+  --slate-text: #1e293b;
+  --slate-border: #94a3b8;
+  --slate-solid: #334155;
+
+  /* Sémantiques */
+  --success-soft: #d1fae5;
+  --success-text: #047857;
+  --success-border: #6ee7b7;
+
+  --warning-soft: #fef3c7;
+  --warning-text: #b45309;
+  --warning-border: #fcd34d;
+
+  --orange-soft: #ffedd5;
+  --orange-text: #c2410c;
+  --orange-border: #fdba74;
+
+  --radius: 10px;
+  --radius-sm: 8px;
+
+  --shadow-xs: 0 1px 2px rgba(15, 92, 86, 0.05);
+  --shadow-sm: 0 1px 3px rgba(15, 92, 86, 0.08);
+  --shadow-md: 0 4px 12px rgba(15, 92, 86, 0.10);
+
+  padding: 24px;
+  margin: 0 auto;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--gray-800);
+  background: #e8f4f1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   HEADER — carte teal solide
+   ============================================================ */
+.risque-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  background: var(--primary-dark);
+  border-radius: var(--radius);
+  color: #fff;
+  box-shadow: var(--shadow-md);
+}
+
+.risque-header > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.risque-header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: #fff;
+  margin: 0 0 4px;
+}
+
+.risque-header p {
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  max-width: 640px;
+}
+
+/* ============================================================
+   BOUTON RECALCULER — ghost blanc sur teal
+   ============================================================ */
+.risque-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.risque-refresh-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.40);
+}
+
+.risque-refresh-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.risque-refresh-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ============================================================
+   RÉSUMÉ — 3 cartes avec bordure gauche sémantique
+   ============================================================ */
+.risque-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.risque-summary__item {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-left: 3px solid var(--gray-700);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  overflow: hidden;
+}
+
+.risque-summary__item:hover {
+  border-color: var(--gray-300);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Critique — SLATE FONCÉ */
+.risque-summary__item--critique {
+  border-left-color: var(--slate-solid);
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+}
+
+/* Élevé — orange */
+.risque-summary__item--eleve {
+  border-left-color: #f97316;
+  background: linear-gradient(180deg, #fff 0%, #fffcf8 100%);
+}
+
+.risque-summary__nombre {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.risque-summary__item--critique .risque-summary__nombre { color: var(--slate-text); }
+.risque-summary__item--eleve   .risque-summary__nombre { color: var(--orange-text); }
+
+.risque-summary__label {
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+/* ============================================================
+   FILTRES
+   ============================================================ */
+.risque-filtres {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.risque-recherche {
+  flex: 1;
+  min-width: 240px;
+  max-width: 400px;
+  height: 40px;
+  padding: 0 14px 0 40px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--gray-200);
+  font-size: 0.85rem;
+  font-family: inherit;
+  background: #fff;
+  color: var(--gray-900);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%237ba39c' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 14px center;
+}
+
+.risque-recherche::placeholder {
+  color: var(--gray-400);
+}
+
+.risque-recherche:hover {
+  border-color: var(--gray-300);
+}
+
+.risque-recherche:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+}
+
+.risque-filtres-niveau {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: #f5fbf9;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.risque-filtre-btn {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.risque-filtre-btn:hover {
+  color: var(--gray-900);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.risque-filtre-btn--active {
+  background: var(--primary-dark);
+  color: #fff;
+}
+
+.risque-filtre-btn--active:hover {
+  background: var(--primary-darker);
+  color: #fff;
+}
+
+/* ============================================================
+   ÉTATS VIDES / ERREURS — erreur en slate (pas de rouge/violet)
+   ============================================================ */
+.risque-empty,
+.risque-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 60px 20px;
+  background: #f5fbf9;
+  border: 1px dashed var(--gray-300);
+  border-radius: var(--radius);
+  margin: 0;
+}
+
+.risque-empty::before {
+  content: '📊';
+  font-size: 32px;
+  opacity: 0.5;
+  line-height: 1;
+}
+
+.risque-error {
+  color: var(--slate-text);
+  background: var(--slate-soft);
+  border-color: var(--slate-border);
+  border-style: solid;
+  font-weight: 600;
+}
+
+.risque-error::before {
+  content: '⚠️';
+}
+
+/* ============================================================
+   TABLE WRAPPER — blanc neutre
+   ============================================================ */
+.risque-table-wrapper {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.risque-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+}
+
+.risque-table th {
+  text-align: left;
+  padding: 12px 16px;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1.5px solid #e2e8f0;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.risque-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  vertical-align: middle;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.risque-table tbody tr:nth-child(even) td {
+  background: #fafbfc;
+}
+
+.risque-table tbody tr:hover td {
+  background: #f8fafc !important;
+}
+
+.risque-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================================
+   COLONNE ÉQUIPEMENT
+   ============================================================ */
+.risque-equipement-nom {
+  font-weight: 700;
+  color: var(--gray-900);
+  white-space: normal;
+  font-size: 0.85rem;
+  line-height: 1.35;
+}
+
+.risque-equipement-sub {
+  font-size: 0.72rem;
+  color: var(--gray-400);
+  margin-top: 2px;
+  font-weight: 500;
+}
+
+/* ============================================================
+   BARRE DE SCORE
+   ============================================================ */
+.risque-score-bar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 120px;
+}
+
+.risque-score-bar {
+  width: 80px;
+  height: 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+.risque-score-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.risque-score-valeur {
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: var(--gray-900);
+  min-width: 28px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   BADGES NIVEAU
+   ============================================================ */
+.risque-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 6px;
+  padding: 4px 10px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.risque-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Faible — vert */
+.risque-badge--faible {
+  color: var(--success-text);
+  background: var(--success-soft);
+  border-color: var(--success-border);
+}
+
+/* Modéré — ambre */
+.risque-badge--modere {
+  color: var(--warning-text);
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+}
+
+/* Élevé — orange */
+.risque-badge--eleve {
+  color: var(--orange-text);
+  background: var(--orange-soft);
+  border-color: var(--orange-border);
+}
+
+/* Critique — SLATE FONCÉ (pas de rouge/purple) */
+.risque-badge--critique {
+  color: var(--slate-text);
+  background: var(--slate-soft);
+  border-color: var(--slate-border);
+}
+
+/* ============================================================
+   FILL DE BARRE DE SCORE (assorti aux badges)
+   ============================================================ */
+.risque-score-bar__fill.risque-badge--faible {
+  background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
+}
+
+.risque-score-bar__fill.risque-badge--modere {
+  background: linear-gradient(90deg, #fcd34d 0%, #f59e0b 100%);
+}
+
+.risque-score-bar__fill.risque-badge--eleve {
+  background: linear-gradient(90deg, #fb923c 0%, #f97316 100%);
+}
+
+.risque-score-bar__fill.risque-badge--critique {
+  background: linear-gradient(90deg, #64748b 0%, #334155 100%);
+}
+
+/* ============================================================
+   TENDANCES
+   ============================================================ */
+.tendance {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-variant-numeric: tabular-nums;
+}
+
+.tendance--hausse {
+  color: var(--orange-text);
+  background: var(--orange-soft);
+  border-color: var(--orange-border);
+}
+
+.tendance--baisse {
+  color: var(--success-text);
+  background: var(--success-soft);
+  border-color: var(--success-border);
+}
+
+.tendance--stable {
+  color: var(--gray-600);
+  background: var(--gray-100);
+  border-color: var(--gray-200);
+}
+
+/* ============================================================
+   GARANTIE
+   ============================================================ */
+.garantie {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.garantie::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Expirée — ambre */
+.garantie--expiree {
+  color: var(--warning-text);
+  background: var(--warning-soft);
+  border-color: var(--warning-border);
+}
+
+/* Active — vert */
+.garantie--active {
+  color: var(--success-text);
+  background: var(--success-soft);
+  border-color: var(--success-border);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .risque-page {
+    padding: 16px;
+  }
+
+  .risque-header {
+    padding: 18px;
+  }
+
+  .risque-header h1 {
+    font-size: 1.15rem;
+  }
+
+  .risque-refresh-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .risque-table th,
+  .risque-table td {
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+
+  .risque-score-bar {
+    width: 60px;
+  }
+}
+
+@media (max-width: 640px) {
+  .risque-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .risque-filtres {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .risque-recherche {
+    max-width: 100%;
+  }
+
+  .risque-filtres-niveau {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .risque-filtres-niveau::-webkit-scrollbar {
+    display: none;
+  }
+}
+/* ============================================================
+   PAGINATION
+   ============================================================ */
+.risque-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 4px 4px;
+}
+
+.risque-pagination-info {
+  font-size: 0.8rem;
+  color: var(--primary-darker);
+  font-weight: 600;
+  padding: 5px 12px;
+  background: var(--primary-soft);
+  border-radius: 999px;
+  border: 1px solid var(--primary-light);
+}
+
+.risque-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.risque-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--gray-700);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.risque-pagination-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+  background: var(--primary-soft);
+}
+
+.risque-pagination-btn.active {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  color: #fff;
+}
+
+.risque-pagination-btn.active:hover {
+  background: var(--primary-darker);
+  border-color: var(--primary-darker);
+}
+
+.risque-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .risque-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .risque-pagination-controls {
+    justify-content: center;
+  }
+
+  .risque-pagination-btn {
+    min-width: 32px;
+    height: 32px;
+    padding: 0 9px;
+    font-size: 0.75rem;
+  }
+}

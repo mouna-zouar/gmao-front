@@ -1,0 +1,332 @@
+.wf-container {
+  padding: 24px;
+  margin: 0 auto;
+}
+
+.wf-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 18px 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+}
+
+.wf-header-icon {
+  color: #0f766e;
+  flex-shrink: 0;
+}
+
+.wf-header h1 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.wf-header p {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.wf-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* ── Étape ── */
+.wf-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  flex: 1;
+}
+
+.wf-step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.wf-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.wf-step-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.wf-step-subtitle {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Teintes */
+.wf-step--teal .wf-step-icon { background: #f0fdfa; color: #0f766e; }
+.wf-step--teal { border-color: #99f6e4; }
+
+.wf-step--green .wf-step-icon { background: #ecfdf5; color: #059669; }
+.wf-step--green { border-color: #a7f3d0; }
+
+.wf-step--amber .wf-step-icon { background: #fffbeb; color: #b45309; }
+.wf-step--amber { border-color: #fde68a; }
+
+.wf-step--blue .wf-step-icon { background: #eff6ff; color: #2563eb; }
+.wf-step--blue { border-color: #bfdbfe; }
+
+.wf-step--muted .wf-step-icon { background: #f8fafc; color: #94a3b8; }
+.wf-step--muted { border-style: dashed; }
+
+/* ── Flèche verticale ── */
+.wf-arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 0;
+  position: relative;
+}
+
+.wf-arrow-line {
+  width: 2px;
+  height: 22px;
+  background: #cbd5e1;
+  position: relative;
+}
+
+.wf-arrow-line::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid #cbd5e1;
+}
+
+.wf-arrow-label {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-style: italic;
+  margin-top: 2px;
+  text-align: center;
+  max-width: 320px;
+}
+
+/* ── Étapes parallèles côte à côte ── */
+.wf-parallel {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.wf-parallel--tight {
+  gap: 10px;
+}
+
+.wf-parallel .wf-step {
+  flex: 1;
+}
+
+/* ── Embranchement (Oui/Non) ── */
+.wf-branch {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.wf-branch-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.wf-branch-col .wf-step {
+  width: 100%;
+}
+
+/* ── Mini-embranchement à l'intérieur d'une étape (Valider/Rejeter) ── */
+.wf-mini-branches {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.wf-mini-branch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.wf-mini-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.wf-mini-branch--ok {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.wf-mini-branch--no {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ── Note d'avertissement dans une étape ── */
+.wf-note {
+  margin: 8px 0 0;
+  font-size: 0.76rem;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.4;
+}
+
+.wf-note--ai {
+  color: #5b21b6;
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+}
+
+.wf-note--equip {
+  color: #334155;
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+/* ── Processus intelligents en arrière-plan ── */
+.wf-background {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-top: 20px;
+}
+
+.wf-background h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.wf-background-intro {
+  margin: 0 0 14px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.wf-background-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.wf-background-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.wf-background-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.wf-background-desc {
+  font-size: 0.74rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* ── Légende ── */
+.wf-legend {
+  margin-top: 28px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.wf-legend h3 {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.wf-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px 16px;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.wf-legend-grid > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wf-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.wf-legend-dot--rec-ouverte { background: #e03131; }
+.wf-legend-dot--rec-encours { background: #b45309; }
+.wf-legend-dot--rec-cloturee { background: #16a34a; }
+.wf-legend-dot--rec-attente { background: #7c3aed; }
+.wf-legend-dot--rec-rejetee { background: #64748b; }
+
+.wf-legend-dot--bon-nouveau { background: #2563eb; }
+.wf-legend-dot--bon-encours { background: #059669; }
+.wf-legend-dot--bon-suspendu { background: #b45309; }
+.wf-legend-dot--bon-effectue { background: #0f766e; }
+.wf-legend-dot--bon-annule { background: #dc2626; }
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .wf-parallel,
+  .wf-branch {
+    flex-direction: column;
+  }
+}

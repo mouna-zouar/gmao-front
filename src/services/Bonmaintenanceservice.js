@@ -35,6 +35,11 @@ const bonMaintenanceService = {
     return data;
   },
 
+  async reprendre(id) {
+    const { data } = await api.patch(`/bon-maintenance/${id}/reprendre`);
+    return data;
+  },
+
   async suspendre(id, motif) {
     const { data } = await api.patch(`/bon-maintenance/${id}/suspendre`, { motif });
     return data;
@@ -50,6 +55,16 @@ const bonMaintenanceService = {
     const { data } = await api.patch(`/bon-maintenance/${id}/annuler`);
     return data;
   },
+
+  /**
+   * Recalcule la priorité (Criticité + urgence + disponibilité d'alternative).
+   * POST /api/bon-maintenance/{id}/recalculer-priorite
+   */
+  async recalculerPriorite(id) {
+    const { data } = await api.post(`/bon-maintenance/${id}/recalculer-priorite`);
+    return data;
+  },
+
     async getDashboard() {
     const { data } = await api.get('/bon-maintenance/dashboard');
     return data;
