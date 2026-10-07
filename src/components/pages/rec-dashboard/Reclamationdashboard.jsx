@@ -9,8 +9,8 @@ const MOIS_LABELS = {
   '07': 'Juil', '08': 'Août', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Déc',
 };
 
-const STATS_STORAGE_KEY = 'rdash.cards.order.v1';
-const CHARTS_STORAGE_KEY = 'rdash.charts.order.v1';
+const STATS_STORAGE_KEY = 'reclamation-dashboard.cards.order.v1';
+const CHARTS_STORAGE_KEY = 'reclamation-dashboard.charts.order.v1';
 
 function formatMoisLabel(cle) {
   const [, mm] = cle.split('-');
@@ -39,14 +39,14 @@ const ICONS = {
 
 /* ─── Définition des cartes de stats (ordre par défaut) ─── */
 const CARD_DEFS = [
-  { id: 'total',    label: 'Total réclamations',         field: 'totalReclamations',          colorClass: 'rdash-stat--neutral',  icon: ICONS.total, featured: true },
-  { id: 'ouverte',  label: 'Ouvertes',                    field: 'ouvertes',                   colorClass: 'rdash-stat--ouverte',  icon: ICONS.ouverte },
-  { id: 'encours',  label: 'En cours',                    field: 'enCours',                    colorClass: 'rdash-stat--encours',  icon: ICONS.encours },
-  { id: 'cloturee', label: 'Clôturées',                   field: 'cloturees',                  colorClass: 'rdash-stat--cloturee', icon: ICONS.cloturee },
-  { id: 'attente',  label: 'En attente de validation',    field: 'enAttenteValidation',        colorClass: 'rdash-stat--attente',  icon: ICONS.attente },
-  { id: 'rejetee',  label: 'Rejetées',                    field: 'rejetees',                   colorClass: 'rdash-stat--rejetee',  icon: ICONS.rejetee },
-  { id: 'alerte',   label: 'Non affectées',               field: 'nonAffectees',               colorClass: 'rdash-stat--alerte',   icon: ICONS.alerte },
-  { id: 'delai',    label: 'Délai moyen résolution',      field: 'delaiMoyenResolutionJours',  colorClass: 'rdash-stat--neutral',  icon: ICONS.delai },
+  { id: 'total',    label: 'Total réclamations',         field: 'totalReclamations',          colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.total, featured: true },
+  { id: 'ouverte',  label: 'Ouvertes',                    field: 'ouvertes',                   colorClass: 'reclamation-dashboard-stat--ouverte',  icon: ICONS.ouverte },
+  { id: 'encours',  label: 'En cours',                    field: 'enCours',                    colorClass: 'reclamation-dashboard-stat--encours',  icon: ICONS.encours },
+  { id: 'cloturee', label: 'Clôturées',                   field: 'cloturees',                  colorClass: 'reclamation-dashboard-stat--cloturee', icon: ICONS.cloturee },
+  { id: 'attente',  label: 'En attente de validation',    field: 'enAttenteValidation',        colorClass: 'reclamation-dashboard-stat--attente',  icon: ICONS.attente },
+  { id: 'rejetee',  label: 'Rejetées',                    field: 'rejetees',                   colorClass: 'reclamation-dashboard-stat--rejetee',  icon: ICONS.rejetee },
+  { id: 'alerte',   label: 'Non affectées',               field: 'nonAffectees',               colorClass: 'reclamation-dashboard-stat--alerte',   icon: ICONS.alerte },
+  { id: 'delai',    label: 'Délai moyen résolution',      field: 'delaiMoyenResolutionJours',  colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.delai },
 ];
 
 /* ─── Définition des cartes de graphiques (ordre par défaut) ─── */
@@ -83,20 +83,20 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
 
   return (
     <div
-      className={`rdash-stat-card ${def.colorClass} ${def.featured ? 'rdash-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
+      className={`reclamation-dashboard-stat-card ${def.colorClass} ${def.featured ? 'reclamation-dashboard-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
       draggable
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="rdash-stat-drag-handle" title="Glisser pour réorganiser" aria-hidden="true">
+      <div className="reclamation-dashboard-stat-drag-handle" title="Glisser pour réorganiser" aria-hidden="true">
         {ICONS.grip}
       </div>
-      <div className="rdash-stat-icon">{def.icon}</div>
-      <div className="rdash-stat-body">
-        <div className="rdash-stat-value">{displayValue}</div>
-        <div className="rdash-stat-label">{def.label}</div>
+      <div className="reclamation-dashboard-stat-icon">{def.icon}</div>
+      <div className="reclamation-dashboard-stat-body">
+        <div className="reclamation-dashboard-stat-value">{displayValue}</div>
+        <div className="reclamation-dashboard-stat-label">{def.label}</div>
       </div>
     </div>
   );
@@ -106,14 +106,14 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
 function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, children }) {
   return (
     <div
-      className={`rdash-chart-drag-wrap ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
+      className={`reclamation-dashboard-chart-drag-wrap ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
       draggable
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="rdash-chart-drag-handle" title="Glisser pour échanger" aria-hidden="true">
+      <div className="reclamation-dashboard-chart-drag-handle" title="Glisser pour échanger" aria-hidden="true">
         {ICONS.grip}
       </div>
       {children}
@@ -225,9 +225,9 @@ export default function ReclamationDashboard() {
 
   if (loading) {
     return (
-      <div className="rdash-container">
-        <div className="rdash-loading">
-          <div className="rdash-spinner" />
+      <div className="reclamation-dashboard-container">
+        <div className="reclamation-dashboard-loading">
+          <div className="reclamation-dashboard-spinner" />
           <p>Chargement du dashboard...</p>
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function ReclamationDashboard() {
   }
 
   if (error || !data) {
-    return <div className="rdash-container"><p className="rdash-error">{error || 'Aucune donnée disponible.'}</p></div>;
+    return <div className="reclamation-dashboard-container"><p className="reclamation-dashboard-error">{error || 'Aucune donnée disponible.'}</p></div>;
   }
 
   const moisEntries = Object.entries(data.parMois || {});
@@ -252,21 +252,21 @@ export default function ReclamationDashboard() {
   const renderChart = (id) => {
     if (id === 'mois') {
       return (
-        <div className="rdash-chart-card">
-          <div className="rdash-chart-head">
+        <div className="reclamation-dashboard-chart-card">
+          <div className="reclamation-dashboard-chart-head">
             <h3>Réclamations par mois</h3>
-            <span className="rdash-chart-sub">12 derniers mois</span>
+            <span className="reclamation-dashboard-chart-sub">12 derniers mois</span>
           </div>
-          <div className="rdash-bar-chart">
+          <div className="reclamation-dashboard-bar-chart">
             {moisEntries.map(([cle, valeur]) => (
-              <div key={cle} className="rdash-bar-col">
-                <div className="rdash-bar-value">{valeur > 0 ? valeur : ''}</div>
+              <div key={cle} className="reclamation-dashboard-bar-col">
+                <div className="reclamation-dashboard-bar-value">{valeur > 0 ? valeur : ''}</div>
                 <div
-                  className="rdash-bar"
+                  className="reclamation-dashboard-bar"
                   style={{ height: `${Math.max(4, (valeur / maxMois) * 100)}%` }}
                   title={`${formatMoisLabel(cle)} : ${valeur}`}
                 />
-                <div className="rdash-bar-label">{formatMoisLabel(cle)}</div>
+                <div className="reclamation-dashboard-bar-label">{formatMoisLabel(cle)}</div>
               </div>
             ))}
           </div>
@@ -276,49 +276,49 @@ export default function ReclamationDashboard() {
 
     if (id === 'niveau') {
       return (
-        <div className="rdash-chart-card">
-          <div className="rdash-chart-head">
+        <div className="reclamation-dashboard-chart-card">
+          <div className="reclamation-dashboard-chart-head">
             <h3>Répartition par niveau</h3>
-            <span className="rdash-chart-sub">Criticité & urgence</span>
+            <span className="reclamation-dashboard-chart-sub">Criticité & urgence</span>
           </div>
 
-          <div className="rdash-niveau-section">
-            <div className="rdash-niveau-title">
+          <div className="reclamation-dashboard-niveau-section">
+            <div className="reclamation-dashboard-niveau-title">
               <span>Criticité</span>
-              <span className="rdash-niveau-total">{totalCriticite}</span>
+              <span className="reclamation-dashboard-niveau-total">{totalCriticite}</span>
             </div>
-            <div className="rdash-hbar-list">
+            <div className="reclamation-dashboard-hbar-list">
               {criticiteEntries.map(([niveau, valeur]) => (
-                <div key={niveau} className="rdash-hbar-row">
-                  <span className="rdash-hbar-label">{NIVEAU_LABELS[niveau]}</span>
-                  <div className="rdash-hbar-track">
+                <div key={niveau} className="reclamation-dashboard-hbar-row">
+                  <span className="reclamation-dashboard-hbar-label">{NIVEAU_LABELS[niveau]}</span>
+                  <div className="reclamation-dashboard-hbar-track">
                     <div
-                      className={`rdash-hbar-fill rdash-hbar-fill--niveau${niveau}`}
+                      className={`reclamation-dashboard-hbar-fill reclamation-dashboard-hbar-fill--niveau${niveau}`}
                       style={{ width: `${Math.max(2, (valeur / maxNiveau) * 100)}%` }}
                     />
                   </div>
-                  <span className="rdash-hbar-value">{valeur}</span>
+                  <span className="reclamation-dashboard-hbar-value">{valeur}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rdash-niveau-section">
-            <div className="rdash-niveau-title">
+          <div className="reclamation-dashboard-niveau-section">
+            <div className="reclamation-dashboard-niveau-title">
               <span>Urgence</span>
-              <span className="rdash-niveau-total">{totalUrgence}</span>
+              <span className="reclamation-dashboard-niveau-total">{totalUrgence}</span>
             </div>
-            <div className="rdash-hbar-list">
+            <div className="reclamation-dashboard-hbar-list">
               {urgenceEntries.map(([niveau, valeur]) => (
-                <div key={niveau} className="rdash-hbar-row">
-                  <span className="rdash-hbar-label">{NIVEAU_LABELS[niveau]}</span>
-                  <div className="rdash-hbar-track">
+                <div key={niveau} className="reclamation-dashboard-hbar-row">
+                  <span className="reclamation-dashboard-hbar-label">{NIVEAU_LABELS[niveau]}</span>
+                  <div className="reclamation-dashboard-hbar-track">
                     <div
-                      className={`rdash-hbar-fill rdash-hbar-fill--niveau${niveau}`}
+                      className={`reclamation-dashboard-hbar-fill reclamation-dashboard-hbar-fill--niveau${niveau}`}
                       style={{ width: `${Math.max(2, (valeur / maxNiveau) * 100)}%` }}
                     />
                   </div>
-                  <span className="rdash-hbar-value">{valeur}</span>
+                  <span className="reclamation-dashboard-hbar-value">{valeur}</span>
                 </div>
               ))}
             </div>
@@ -331,21 +331,21 @@ export default function ReclamationDashboard() {
   };
 
   return (
-    <div className="rdash-container">
+    <div className="reclamation-dashboard-container">
       {/* Header */}
-      <div className="rdash-header">
-        <div className="rdash-header-icon-wrap">
+      <div className="reclamation-dashboard-header">
+        <div className="reclamation-dashboard-header-icon-wrap">
           <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
           </svg>
         </div>
-        <div className="rdash-header-text">
+        <div className="reclamation-dashboard-header-text">
           <h1>Tableau de Bord des Réclamations</h1>
           <p>Vue d'ensemble et indicateurs clés — glisse les cartes pour les réorganiser</p>
         </div>
         <button
           type="button"
-          className="rdash-reset-order"
+          className="reclamation-dashboard-reset-order"
           onClick={resetOrder}
           title="Rétablir l'ordre par défaut"
         >
@@ -357,7 +357,7 @@ export default function ReclamationDashboard() {
       </div>
 
       {/* Cartes de stats (drag & drop) */}
-      <div className="rdash-stats-grid">
+      <div className="reclamation-dashboard-stats-grid">
         {order.map((id) => {
           const def = cardsById[id];
           if (!def) return null;
@@ -379,7 +379,7 @@ export default function ReclamationDashboard() {
       </div>
 
       {/* Graphiques (drag & drop) — la grille s'adapte à l'ordre */}
-      <div className={`rdash-charts-row ${chartOrder[0] === 'niveau' ? 'is-swapped' : ''}`}>
+      <div className={`reclamation-dashboard-charts-row ${chartOrder[0] === 'niveau' ? 'is-swapped' : ''}`}>
         {chartOrder.map((id) => (
           <DraggableChart
             key={id}
@@ -396,19 +396,19 @@ export default function ReclamationDashboard() {
       </div>
 
       {/* Réclamations récentes */}
-      <div className="rdash-recent-card">
-        <div className="rdash-chart-head">
+      <div className="reclamation-dashboard-recent-card">
+        <div className="reclamation-dashboard-chart-head">
           <h3>Réclamations récentes</h3>
           {data.reclamationsRecentes?.length > 0 && (
-            <span className="rdash-chart-sub">{data.reclamationsRecentes.length} dernières</span>
+            <span className="reclamation-dashboard-chart-sub">{data.reclamationsRecentes.length} dernières</span>
           )}
         </div>
 
         {(!data.reclamationsRecentes || data.reclamationsRecentes.length === 0) ? (
-          <p className="rdash-empty">Aucune réclamation pour l'instant.</p>
+          <p className="reclamation-dashboard-empty">Aucune réclamation pour l'instant.</p>
         ) : (
-          <div className="rdash-table-wrap">
-            <table className="rdash-table">
+          <div className="reclamation-dashboard-table-wrap">
+            <table className="reclamation-dashboard-table">
               <thead>
                 <tr>
                   <th>Numéro</th>
@@ -423,20 +423,20 @@ export default function ReclamationDashboard() {
                 {data.reclamationsRecentes.map((r) => (
                   <tr key={r.id}>
                     <td style={{ fontWeight: 700 }}>{r.num || `#${r.id}`}</td>
-                    <td className="rdash-desc-cell">{r.description}</td>
+                    <td className="reclamation-dashboard-desc-cell">{r.description}</td>
                     <td>
-                      <span className={`rdash-niveau-badge rdash-niveau-badge--${r.criticite}`}>
+                      <span className={`reclamation-dashboard-niveau-badge reclamation-dashboard-niveau-badge--${r.criticite}`}>
                         {NIVEAU_LABELS[r.criticite] || '—'}
                       </span>
                     </td>
                     <td>
-                      <span className={`rdash-niveau-badge rdash-niveau-badge--${r.urgence}`}>
+                      <span className={`reclamation-dashboard-niveau-badge reclamation-dashboard-niveau-badge--${r.urgence}`}>
                         {NIVEAU_LABELS[r.urgence] || '—'}
                       </span>
                     </td>
                     <td>{formatDate(r.date)}</td>
                     <td>
-                      <span className={`rdash-etat-badge rdash-etat-badge--${r.etat}`}>
+                      <span className={`reclamation-dashboard-etat-badge reclamation-dashboard-etat-badge--${r.etat}`}>
                         {ETAT_LABELS[r.etat] || `État ${r.etat}`}
                       </span>
                     </td>

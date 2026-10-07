@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   History, ChevronLeft, ChevronRight, Gauge, Calendar, Activity,
-  TrendingUp, Inbox,
+  TrendingUp, Inbox, FileText, Link2, ArrowUpRight, ArrowRight,
+  RefreshCw, Milestone,
 } from 'lucide-react';
 import vehiculeService from '../../../../services/vehiculeService';
 import './VehiculeKilometrageHistorique.css';
@@ -14,21 +15,21 @@ const SOURCE_LABELS = {
   INCIDENT: 'Incident',
 };
 
-/** Classe CSS correspondant à une source (ex: BON_CARBURANT → bon-carburant). */
+const SOURCE_ICONS = {
+  MISSION: Milestone,
+  BON_CARBURANT: FileText,
+  SAISIE_ADMINISTRATEUR: Activity,
+  MAINTENANCE: RefreshCw,
+  INCIDENT: Activity,
+};
+
 const sourceClass = (source) =>
   String(source ?? '').toLowerCase().replace(/_/g, '-');
 
 const fmtKm = (v) => (v == null ? '—' : `${Number(v).toLocaleString('fr-FR')} km`);
 const fmtDate = (d) =>
   d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-const fmtDateShort = (d) =>
-  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
-/**
- * Historique complet des relevés kilométriques d'un véhicule
- * (vehicule_kilometrage_releve) : une ligne par mise à jour réelle du
- * compteur, quelle qu'en soit la source.
- */
 export default function VehiculeKilometrageHistorique({ vehiculeId }) {
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(0);
@@ -58,10 +59,8 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
     load(0);
   }, [vehiculeId, load]);
 
-  // ── Résumé mémoïsé (le plus ancien et le plus récent de la page) ────────
   const resume = useMemo(() => {
     if (!rows.length) return null;
-    // La liste arrive du plus récent au plus ancien (ordre backend classique).
     const dernier = rows[0];
     const plusAncien = rows[rows.length - 1];
     const progression =
@@ -71,7 +70,6 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
     return { dernier, plusAncien, progression };
   }, [rows]);
 
-  // ── Delta entre chaque ligne et la ligne suivante (plus ancienne) ───────
   const deltas = useMemo(() => {
     const map = new Map();
     for (let i = 0; i < rows.length - 1; i += 1) {
@@ -80,6 +78,17 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
       map.set(rows[i].id, current - next);
     }
     return map;
+  }, [rows]);
+
+  const sourcesSummary = useMemo(() => {
+    const map = new Map();
+    rows.forEach((r) => {
+      const key = r.source ?? 'AUTRE';
+      map.set(key, (map.get(key) ?? 0) + 1);
+    });
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4);
   }, [rows]);
 
   if (!vehiculeId) return null;
@@ -100,154 +109,160 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
 
   return (
     <section className="vkh-panel">
-
-      {/* ═══════════════ HEADER ═══════════════ */}
-      <header className="vkh-header">
-        <div className="vkh-header-left">
-          <div className="vkh-header-icon">
-            <History size={20} strokeWidth={2.2} />
-          </div>
-          <div>
-            <h4>Historique du compteur</h4>
-            <p className="vkh-header-sub">
-              Relevés kilométriques et leurs sources
-            </p>
-          </div>
-        </div>
-
-        {totalElements > 0 && (
-          <span className="vkh-badge-count">
-            {totalElements} relevé{totalElements > 1 ? 's' : ''}
-          </span>
-        )}
-      </header>
-
-      {/* ═══════════════ RÉSUMÉ (page courante) ═══════════════ */}
       {resume && (
-        <div className="vkh-kpi-grid">
+        <div className="vkh-kpis">
           <div className="vkh-kpi kpi-current">
-            <span className="vkh-kpi-icon">
-              <Gauge size={18} strokeWidth={2.2} />
-            </span>
-            <div className="vkh-kpi-body">
-              <span className="vkh-kpi-value">{fmtKm(resume.dernier.kilometrage)}</span>
-              <span className="vkh-kpi-label">Dernier relevé</span>
-            </div>
+            <Gauge size={16} />
+            <span className="vkh-kpi-value">{fmtKm(resume.dernier.kilometrage)}</span>
+            <span className="vkh-kpi-label">Dernier relevé</span>
           </div>
 
           <div className="vkh-kpi kpi-date">
-            <span className="vkh-kpi-icon">
-              <Calendar size={18} strokeWidth={2.2} />
+            <Calendar size={16} />
+            <span className="vkh-kpi-value vkh-kpi-value-sm">
+              {resume.dernier.date
+                ? new Date(resume.dernier.date).toLocaleDateString('fr-FR', {
+                    day: '2-digit', month: 'short', year: 'numeric',
+                  })
+                : '—'}
             </span>
-            <div className="vkh-kpi-body">
-              <span className="vkh-kpi-value vkh-kpi-value-sm">
-                {fmtDateShort(resume.dernier.date)}
-              </span>
-              <span className="vkh-kpi-label">Date du relevé</span>
-            </div>
+            <span className="vkh-kpi-label">Date du relevé</span>
           </div>
 
           {resume.progression != null && resume.progression > 0 && (
             <div className="vkh-kpi kpi-delta">
-              <span className="vkh-kpi-icon">
-                <TrendingUp size={18} strokeWidth={2.2} />
+              <TrendingUp size={16} />
+              <span className="vkh-kpi-value">
+                +{Number(resume.progression).toLocaleString('fr-FR')} km
               </span>
-              <div className="vkh-kpi-body">
-                <span className="vkh-kpi-value">
-                  +{Number(resume.progression).toLocaleString('fr-FR')} km
-                </span>
-                <span className="vkh-kpi-label">Progression sur la page</span>
-              </div>
+              <span className="vkh-kpi-label">Progression page</span>
+            </div>
+          )}
+
+          {sourcesSummary.length > 0 && (
+            <div className="vkh-kpi kpi-sources">
+              <Activity size={16} />
+              <span className="vkh-kpi-value">{sourcesSummary.length}</span>
+              <span className="vkh-kpi-label">
+                Source{sourcesSummary.length > 1 ? 's' : ''}
+              </span>
             </div>
           )}
         </div>
       )}
 
+      {/* ═══════════════ ERREUR ═══════════════ */}
       {error && (
-        <div className="vkh-alert">
-          <Activity size={16} strokeWidth={2.4} />
+        <div className="vkh-alert error">
+          <Activity size={16} />
           <span>{error}</span>
         </div>
       )}
 
-      {/* ═══════════════ TABLE ═══════════════ */}
-      <div className="vkh-table-wrap">
-        <table className="vkh-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Relevé</th>
-              <th>Delta</th>
-              <th>Source</th>
-              <th>Référence</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && rows.length === 0 && (
-              <tr>
-                <td colSpan={5} className="vkh-empty">Chargement…</td>
-              </tr>
-            )}
+      {/* ═══════════════ LISTE — cartes empilées ═══════════════ */}
+      <div className="vkh-section">
+        <div className="vkh-section-head">
+          <Activity size={14} />
+          <span>Relevés kilométriques</span>
+          <span className="vkh-count">{totalElements}</span>
+        </div>
 
-            {!loading && rows.length === 0 && (
-              <tr>
-                <td colSpan={5} className="vkh-empty">
-                  <Inbox size={22} strokeWidth={1.8} />
-                  <span>Aucun relevé enregistré.</span>
-                </td>
-              </tr>
-            )}
+        {rows.length === 0 && !loading && (
+          <div className="vkh-empty">
+            <Inbox size={24} />
+            <p>Aucun relevé enregistré pour ce véhicule.</p>
+          </div>
+        )}
 
-            {rows.map((r) => {
+        {rows.length > 0 && (
+          <div className="vkh-historique">
+            {rows.map((r, idx) => {
               const delta = deltas.get(r.id);
+              const SourceIcon = SOURCE_ICONS[r.source] ?? Gauge;
+              const d = r.date ? new Date(r.date) : null;
+
               return (
-                <tr key={r.id}>
-                  <td className="vkh-cell-date">{fmtDate(r.date)}</td>
-                  <td className="vkh-km">
-                    <Gauge size={13} strokeWidth={2.4} />
-                    {fmtKm(r.kilometrage)}
-                  </td>
-                  <td>
-                    {delta != null ? (
-                      <span className={`vkh-delta ${delta > 0 ? 'is-up' : 'is-flat'}`}>
-                        {delta > 0 ? '+' : ''}
-                        {Number(delta).toLocaleString('fr-FR')} km
-                      </span>
-                    ) : (
-                      <span className="vkh-muted">—</span>
-                    )}
-                  </td>
-                  <td>
-                    <span className={`vkh-source vkh-source-${sourceClass(r.source)}`}>
-                      {SOURCE_LABELS[r.source] ?? r.source}
+                <article key={r.id} className="vkh-hist-card">
+                  {/* Bloc date */}
+                  <div className="vkh-hist-date">
+                    <span className="vkh-hist-day">
+                      {d ? d.toLocaleDateString('fr-FR', { day: '2-digit' }) : '—'}
                     </span>
-                  </td>
-                  <td>
-                    {r.sourceId != null ? (
-                      <span className="vkh-ref">#{r.sourceId}</span>
-                    ) : (
-                      <span className="vkh-muted">—</span>
-                    )}
-                  </td>
-                </tr>
+                    <span className="vkh-hist-month">
+                      {d ? d.toLocaleDateString('fr-FR', { month: 'short' }) : ''}
+                    </span>
+                    <span className="vkh-hist-year">
+                      {d ? d.getFullYear() : ''}
+                    </span>
+                  </div>
+
+                  {/* Contenu */}
+                  <div className="vkh-hist-body">
+                    <div className="vkh-hist-head">
+                      <h4 className="vkh-hist-title">
+                        {fmtKm(r.kilometrage)}
+                        {idx === 0 && (
+                          <span className="vkh-tag" title="Relevé le plus récent">
+                            Récent
+                          </span>
+                        )}
+                      </h4>
+                      <div className="vkh-hist-tags">
+                        <span className={`vkh-source vkh-source-${sourceClass(r.source)}`}>
+                          <SourceIcon size={11} strokeWidth={2.6} />
+                          {SOURCE_LABELS[r.source] ?? r.source}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="vkh-hist-km">
+                      <div className="vkh-hist-km-item">
+                        <span className="vkh-hist-km-label">Relevé</span>
+                        <span className="vkh-hist-km-value">
+                          {fmtKm(r.kilometrage)}
+                        </span>
+                      </div>
+
+                      {delta != null && (
+                        <div className="vkh-hist-km-item">
+                          <span className="vkh-hist-km-label">Variation</span>
+                          <span className={`vkh-delta ${delta > 0 ? 'is-up' : 'is-flat'}`}>
+                            {delta > 0 ? '+' : ''}
+                            {Number(delta).toLocaleString('fr-FR')} km
+                          </span>
+                        </div>
+                      )}
+
+                      {r.sourceId != null && (
+                        <div className="vkh-hist-km-item">
+                          <span className="vkh-hist-km-label">Référence</span>
+                          <span className="vkh-ref">#{r.sourceId}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="vkh-hist-time">
+                      <Calendar size={11} />
+                      {fmtDate(r.date)}
+                    </div>
+                  </div>
+                </article>
               );
             })}
-          </tbody>
-        </table>
+          </div>
+        )}
       </div>
 
-      {/* ═══════════════ PAGINATION ═══════════════ */}
+      {/* ═══════════════ PAGINATION BAS ═══════════════ */}
       {totalPages > 1 && (
         <div className="vkh-pagination">
           <button
             type="button"
-            className="vkh-page-btn"
+            className="vkh-btn vkh-btn-ghost"
             disabled={page === 0 || loading}
             onClick={goPrev}
-            aria-label="Page précédente"
           >
-            <ChevronLeft size={14} strokeWidth={2.6} />
-            Précédent
+            <ChevronLeft size={15} /> Précédent
           </button>
 
           <span className="vkh-page-info">
@@ -256,13 +271,11 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
 
           <button
             type="button"
-            className="vkh-page-btn"
+            className="vkh-btn vkh-btn-ghost"
             disabled={page >= totalPages - 1 || loading}
             onClick={goNext}
-            aria-label="Page suivante"
           >
-            Suivant
-            <ChevronRight size={14} strokeWidth={2.6} />
+            Suivant <ChevronRight size={15} />
           </button>
         </div>
       )}

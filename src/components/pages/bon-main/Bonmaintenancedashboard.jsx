@@ -9,8 +9,8 @@ const MOIS_LABELS = {
   '07': 'Juil', '08': 'Août', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Déc',
 };
 
-const STATS_STORAGE_KEY = 'bmdash.cards.order.v1';
-const CHARTS_STORAGE_KEY = 'bmdash.charts.order.v1';
+const STATS_STORAGE_KEY = 'bon-maintenance-dashboard.cards.order.v1';
+const CHARTS_STORAGE_KEY = 'bon-maintenance-dashboard.charts.order.v1';
 
 function formatMoisLabel(cle) {
   const [, mm] = cle.split('-');
@@ -36,18 +36,18 @@ const ICONS = {
   grip: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="18" r="1" /></svg>,
 };
 
-/* ─── Définition des cartes de stats (ordre par défaut) ─── */
+/* ─── Définition des cartes de stats ─── */
 const CARD_DEFS = [
-  { id: 'total',    label: 'Total bons',                    field: 'totalBons',                  colorClass: 'bmdash-stat--neutral',  icon: ICONS.total,    featured: true },
-  { id: 'encours',  label: 'En cours',                      field: 'parEtat.3',                  colorClass: 'bmdash-stat--encours',  icon: ICONS.encours },
-  { id: 'suspendu', label: 'Suspendus',                     field: 'parEtat.2',                  colorClass: 'bmdash-stat--suspendu', icon: ICONS.suspendu },
-  { id: 'effectue', label: 'Effectués',                     field: 'parEtat.4',                  colorClass: 'bmdash-stat--effectue', icon: ICONS.effectue },
-  { id: 'alerte',   label: 'Arrêts obligatoires en cours',  field: 'arretsObligatoiresEnCours',  colorClass: 'bmdash-stat--alerte',   icon: ICONS.alerte },
-  { id: 'cout',     label: 'Coût total cumulé',             field: 'coutTotalCumule',            colorClass: 'bmdash-stat--neutral',  icon: ICONS.cout,     unit: 'DT',   decimals: 0 },
-  { id: 'delai',    label: 'Délai moyen résolution',        field: 'delaiMoyenResolutionJours',  colorClass: 'bmdash-stat--neutral',  icon: ICONS.delai,    unit: 'j',    decimals: 1 },
+  { id: 'total',    label: 'Total bons',                    field: 'totalBons',                  colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.total,    featured: true },
+  { id: 'encours',  label: 'En cours',                      field: 'parEtat.3',                  colorClass: 'bon-maintenance-dashboard-stat--encours',  icon: ICONS.encours },
+  { id: 'suspendu', label: 'Suspendus',                     field: 'parEtat.2',                  colorClass: 'bon-maintenance-dashboard-stat--suspendu', icon: ICONS.suspendu },
+  { id: 'effectue', label: 'Effectués',                     field: 'parEtat.4',                  colorClass: 'bon-maintenance-dashboard-stat--effectue', icon: ICONS.effectue },
+  { id: 'alerte',   label: 'Arrêts obligatoires en cours',  field: 'arretsObligatoiresEnCours',  colorClass: 'bon-maintenance-dashboard-stat--alerte',   icon: ICONS.alerte },
+  { id: 'cout',     label: 'Coût total cumulé',             field: 'coutTotalCumule',            colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.cout,     unit: 'DT',   decimals: 0 },
+  { id: 'delai',    label: 'Délai moyen résolution',        field: 'delaiMoyenResolutionJours',  colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.delai,    unit: 'j',    decimals: 1 },
 ];
 
-/* ─── Définition des cartes de graphiques (ordre par défaut) ─── */
+/* ─── Définition des cartes de graphiques ─── */
 const CHART_DEFS = [
   { id: 'mois',  label: 'Bons créés par mois' },
   { id: 'etats', label: 'Par état / urgence' },
@@ -72,7 +72,7 @@ function saveOrder(storageKey, order) {
   try { localStorage.setItem(storageKey, JSON.stringify(order)); } catch { /* ignore */ }
 }
 
-/* ─── Accès valeur imbriquée (ex: "parEtat.3") ─── */
+/* ─── Accès valeur imbriquée ─── */
 function getFieldValue(data, field) {
   if (!data || !field) return undefined;
   return field.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), data);
@@ -91,20 +91,20 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
 
   return (
     <div
-      className={`bmdash-stat-card ${def.colorClass} ${def.featured ? 'bmdash-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
+      className={`bon-maintenance-dashboard-stat-card ${def.colorClass} ${def.featured ? 'bon-maintenance-dashboard-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
       draggable
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="bmdash-stat-drag-handle" title="Glisser pour réorganiser" aria-hidden="true">
+      <div className="bon-maintenance-dashboard-stat-drag-handle" title="Glisser pour réorganiser" aria-hidden="true">
         {ICONS.grip}
       </div>
-      <div className="bmdash-stat-icon">{def.icon}</div>
-      <div className="bmdash-stat-body">
-        <div className="bmdash-stat-value">{displayValue}</div>
-        <div className="bmdash-stat-label">{def.label}</div>
+      <div className="bon-maintenance-dashboard-stat-icon">{def.icon}</div>
+      <div className="bon-maintenance-dashboard-stat-body">
+        <div className="bon-maintenance-dashboard-stat-value">{displayValue}</div>
+        <div className="bon-maintenance-dashboard-stat-label">{def.label}</div>
       </div>
     </div>
   );
@@ -114,14 +114,14 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
 function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, children }) {
   return (
     <div
-      className={`bmdash-chart-drag-wrap ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
+      className={`bon-maintenance-dashboard-chart-drag-wrap ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
       draggable
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="bmdash-chart-drag-handle" title="Glisser pour échanger" aria-hidden="true">
+      <div className="bon-maintenance-dashboard-chart-drag-handle" title="Glisser pour échanger" aria-hidden="true">
         {ICONS.grip}
       </div>
       {children}
@@ -226,8 +226,8 @@ export default function BonMaintenanceDashboard() {
 
   if (loading) {
     return (
-      <div className="bmdash-container">
-        <div className="bmdash-loading">
+      <div className="bon-maintenance-dashboard-container">
+        <div className="bon-maintenance-dashboard-loading">
           <p>Chargement du dashboard...</p>
         </div>
       </div>
@@ -236,8 +236,8 @@ export default function BonMaintenanceDashboard() {
 
   if (error || !data) {
     return (
-      <div className="bmdash-container">
-        <p className="bmdash-error">{error || 'Aucune donnée disponible.'}</p>
+      <div className="bon-maintenance-dashboard-container">
+        <p className="bon-maintenance-dashboard-error">{error || 'Aucune donnée disponible.'}</p>
       </div>
     );
   }
@@ -251,25 +251,24 @@ export default function BonMaintenanceDashboard() {
   const urgenceEntries = [1, 2, 3].map((niveau) => [niveau, data.parUrgence?.[niveau] ?? 0]);
   const maxUrgence = Math.max(1, ...urgenceEntries.map(([, v]) => v));
 
-  /* ─── Rendu de chaque graphique ─── */
   const renderChart = (id) => {
     if (id === 'mois') {
       return (
-        <div className="bmdash-chart-card">
-          <div className="bmdash-chart-head">
+        <div className="bon-maintenance-dashboard-chart-card">
+          <div className="bon-maintenance-dashboard-chart-head">
             <h3>Bons créés par mois</h3>
-            <span className="bmdash-chart-sub">12 derniers mois</span>
+            <span className="bon-maintenance-dashboard-chart-sub">12 derniers mois</span>
           </div>
-          <div className="bmdash-bar-chart">
+          <div className="bon-maintenance-dashboard-bar-chart">
             {moisEntries.map(([cle, valeur]) => (
-              <div key={cle} className="bmdash-bar-col">
-                <div className="bmdash-bar-value">{valeur > 0 ? valeur : ''}</div>
+              <div key={cle} className="bon-maintenance-dashboard-bar-col">
+                <div className="bon-maintenance-dashboard-bar-value">{valeur > 0 ? valeur : ''}</div>
                 <div
-                  className="bmdash-bar"
+                  className="bon-maintenance-dashboard-bar"
                   style={{ height: `${Math.max(4, (valeur / maxMois) * 100)}%` }}
                   title={`${formatMoisLabel(cle)} : ${valeur}`}
                 />
-                <div className="bmdash-bar-label">{formatMoisLabel(cle)}</div>
+                <div className="bon-maintenance-dashboard-bar-label">{formatMoisLabel(cle)}</div>
               </div>
             ))}
           </div>
@@ -279,47 +278,47 @@ export default function BonMaintenanceDashboard() {
 
     if (id === 'etats') {
       return (
-        <div className="bmdash-chart-card">
-          <div className="bmdash-chart-head">
+        <div className="bon-maintenance-dashboard-chart-card">
+          <div className="bon-maintenance-dashboard-chart-head">
             <h3>Répartition</h3>
-            <span className="bmdash-chart-sub">État & urgence</span>
+            <span className="bon-maintenance-dashboard-chart-sub">État & urgence</span>
           </div>
 
-          <div className="bmdash-niveau-section">
-            <div className="bmdash-niveau-title">
+          <div className="bon-maintenance-dashboard-niveau-section">
+            <div className="bon-maintenance-dashboard-niveau-title">
               <span>Par état</span>
             </div>
-            <div className="bmdash-hbar-list">
+            <div className="bon-maintenance-dashboard-hbar-list">
               {etats.map((etat) => (
-                <div key={etat} className="bmdash-hbar-row">
-                  <span className="bmdash-hbar-label">{ETAT_LABELS[etat]}</span>
-                  <div className="bmdash-hbar-track">
+                <div key={etat} className="bon-maintenance-dashboard-hbar-row">
+                  <span className="bon-maintenance-dashboard-hbar-label">{ETAT_LABELS[etat]}</span>
+                  <div className="bon-maintenance-dashboard-hbar-track">
                     <div
-                      className={`bmdash-hbar-fill bmdash-hbar-fill--etat${etat}`}
+                      className={`bon-maintenance-dashboard-hbar-fill bon-maintenance-dashboard-hbar-fill--etat${etat}`}
                       style={{ width: `${Math.max(2, ((data.parEtat?.[etat] ?? 0) / maxEtat) * 100)}%` }}
                     />
                   </div>
-                  <span className="bmdash-hbar-value">{data.parEtat?.[etat] ?? 0}</span>
+                  <span className="bon-maintenance-dashboard-hbar-value">{data.parEtat?.[etat] ?? 0}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bmdash-niveau-section">
-            <div className="bmdash-niveau-title">
+          <div className="bon-maintenance-dashboard-niveau-section">
+            <div className="bon-maintenance-dashboard-niveau-title">
               <span>Par urgence</span>
             </div>
-            <div className="bmdash-hbar-list">
+            <div className="bon-maintenance-dashboard-hbar-list">
               {urgenceEntries.map(([niveau, valeur]) => (
-                <div key={niveau} className="bmdash-hbar-row">
-                  <span className="bmdash-hbar-label">{NIVEAU_LABELS[niveau]}</span>
-                  <div className="bmdash-hbar-track">
+                <div key={niveau} className="bon-maintenance-dashboard-hbar-row">
+                  <span className="bon-maintenance-dashboard-hbar-label">{NIVEAU_LABELS[niveau]}</span>
+                  <div className="bon-maintenance-dashboard-hbar-track">
                     <div
-                      className={`bmdash-hbar-fill bmdash-hbar-fill--niveau${niveau}`}
+                      className={`bon-maintenance-dashboard-hbar-fill bon-maintenance-dashboard-hbar-fill--niveau${niveau}`}
                       style={{ width: `${Math.max(2, (valeur / maxUrgence) * 100)}%` }}
                     />
                   </div>
-                  <span className="bmdash-hbar-value">{valeur}</span>
+                  <span className="bon-maintenance-dashboard-hbar-value">{valeur}</span>
                 </div>
               ))}
             </div>
@@ -332,21 +331,21 @@ export default function BonMaintenanceDashboard() {
   };
 
   return (
-    <div className="bmdash-container">
+    <div className="bon-maintenance-dashboard-container">
       {/* Header */}
-      <div className="bmdash-header">
-        <div className="bmdash-header-icon-wrap">
+      <div className="bon-maintenance-dashboard-header">
+        <div className="bon-maintenance-dashboard-header-icon-wrap">
           <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
           </svg>
         </div>
-        <div className="bmdash-header-text">
+        <div className="bon-maintenance-dashboard-header-text">
           <h1>Tableau de Bord des Bons de Maintenance</h1>
           <p>Vue d'ensemble et indicateurs clés — glisse les cartes pour les réorganiser</p>
         </div>
         <button
           type="button"
-          className="bmdash-reset-order"
+          className="bon-maintenance-dashboard-reset-order"
           onClick={resetOrder}
           title="Rétablir l'ordre par défaut"
         >
@@ -357,8 +356,8 @@ export default function BonMaintenanceDashboard() {
         </button>
       </div>
 
-      {/* Cartes de stats (drag & drop) */}
-      <div className="bmdash-stats-grid">
+      {/* Cartes de stats */}
+      <div className="bon-maintenance-dashboard-stats-grid">
         {order.map((id) => {
           const def = cardsById[id];
           if (!def) return null;
@@ -379,8 +378,8 @@ export default function BonMaintenanceDashboard() {
         })}
       </div>
 
-      {/* Graphiques (drag & drop) */}
-      <div className="bmdash-charts-row">
+      {/* Graphiques */}
+      <div className="bon-maintenance-dashboard-charts-row">
         {chartOrder.map((id) => (
           <DraggableChart
             key={id}
@@ -397,19 +396,19 @@ export default function BonMaintenanceDashboard() {
       </div>
 
       {/* Bons récents */}
-      <div className="bmdash-recent-card">
-        <div className="bmdash-chart-head">
+      <div className="bon-maintenance-dashboard-recent-card">
+        <div className="bon-maintenance-dashboard-chart-head">
           <h3>Bons de maintenance récents</h3>
           {data.bonsRecents?.length > 0 && (
-            <span className="bmdash-chart-sub">{data.bonsRecents.length} derniers</span>
+            <span className="bon-maintenance-dashboard-chart-sub">{data.bonsRecents.length} derniers</span>
           )}
         </div>
 
         {(!data.bonsRecents || data.bonsRecents.length === 0) ? (
-          <p className="bmdash-empty">Aucun bon de maintenance pour l'instant.</p>
+          <p className="bon-maintenance-dashboard-empty">Aucun bon de maintenance pour l'instant.</p>
         ) : (
-          <div className="bmdash-table-wrap">
-            <table className="bmdash-table">
+          <div className="bon-maintenance-dashboard-table-wrap">
+            <table className="bon-maintenance-dashboard-table">
               <thead>
                 <tr>
                   <th>Numéro</th>
@@ -425,17 +424,17 @@ export default function BonMaintenanceDashboard() {
                 {data.bonsRecents.map((b) => (
                   <tr key={b.id}>
                     <td style={{ fontWeight: 700 }}>{b.num || `#${b.id}`}</td>
-                    <td className="bmdash-desc-cell">{b.titre}</td>
+                    <td className="bon-maintenance-dashboard-desc-cell">{b.titre}</td>
                     <td>{b.prestataire?.raisonSociale || b.prestataire?.nom || '—'}</td>
                     <td>{b.serviceNom || b.service?.description || '—'}</td>
                     <td>
-                      <span className={`bmdash-niveau-badge bmdash-niveau-badge--${b.urgence}`}>
+                      <span className={`bon-maintenance-dashboard-niveau-badge bon-maintenance-dashboard-niveau-badge--${b.urgence}`}>
                         {NIVEAU_LABELS[b.urgence] || '—'}
                       </span>
                     </td>
                     <td>{formatDate(b.dateCreation)}</td>
                     <td>
-                      <span className={`bmdash-etat-badge bmdash-etat-badge--${b.etat}`}>
+                      <span className={`bon-maintenance-dashboard-etat-badge bon-maintenance-dashboard-etat-badge--${b.etat}`}>
                         {ETAT_LABELS[b.etat] || `État ${b.etat}`}
                       </span>
                     </td>

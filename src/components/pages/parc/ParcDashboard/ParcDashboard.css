@@ -1,7 +1,7 @@
 :root {
-  --pd-primary: #0d9488;
-  --pd-primary-dark: #0f766e;
-  --pd-primary-soft: #f0fdfa;
+  --pd-primary: #0794a4;
+  --pd-primary-dark: #067a87;
+  --pd-primary-soft: #e9f8fa;
   --pd-green: #10b981;
   --pd-green-soft: #d1fae5;
   --pd-red: #ef4444;
@@ -21,7 +21,6 @@
 
 .parcdash-container {
   padding: 24px;
-  max-width: 1400px;
   margin: 0 auto;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--pd-gray-900);
@@ -47,12 +46,12 @@
 }
 @keyframes parcdash-spin { to { transform: rotate(360deg); } }
 
-/* HEADER */
+/* HEADER — teal foncé uni */
 .parcdash-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: linear-gradient(135deg, var(--pd-primary-dark), var(--pd-primary));
+  background: #067a87;
   border-radius: var(--pd-radius);
   padding: 22px 26px;
   margin-bottom: 20px;
@@ -131,8 +130,9 @@
 .parcdash-stat-unit { font-size: 0.85rem; font-weight: 600; color: var(--pd-gray-500); }
 .parcdash-stat-label { font-size: 0.74rem; font-weight: 600; color: var(--pd-gray-500); text-transform: uppercase; letter-spacing: 0.03em; }
 
+/* Carte mise en avant → teal foncé uni */
 .parcdash-stat--featured {
-  background: linear-gradient(135deg, var(--pd-primary-dark), var(--pd-primary));
+  background: #067a87;
   color: #fff;
   grid-column: span 1;
 }

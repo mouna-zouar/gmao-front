@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   IdCard, Plus, Pencil, Trash2, Search, Filter, RotateCcw,
   Download, Printer, BarChart3, Loader2, AlertTriangle,
-  User, Calendar, CheckCircle2, XCircle,
+  User, Calendar, CheckCircle2, XCircle, CreditCard, X,
+  ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
 import permisConduiteService from '../../../../services/permisConduiteService';
 import personnelService from '../../../../services/personnelService';
 import PermisConduiteModal from '../../../ui/modals/PermisConduiteModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import './PermisConduite.css';
 
 // Référentiel de secours des catégories (au cas où l'appel API échoue avant chargement).
@@ -35,6 +37,16 @@ function isExpire(dateExpiration) {
   return d < today;
 }
 
+/* Colonnes paramétrables (affichage + recherche) */
+const PC_COLUMNS_DEFAULT = [
+  { key: 'conducteur', label: 'Conducteur',  visible: true, searchable: true  },
+  { key: 'numero',     label: 'N° permis',   visible: true, searchable: true  },
+  { key: 'categories', label: 'Catégories',  visible: true, searchable: false },
+  { key: 'delivrance', label: 'Délivrance',  visible: true, searchable: true  },
+  { key: 'expiration', label: 'Expiration',  visible: true, searchable: false },
+  { key: 'statut',     label: 'Statut',      visible: true, searchable: false },
+];
+
 export default function PermisConduite() {
   const [permis, setPermis] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -46,9 +58,20 @@ export default function PermisConduite() {
 
   const [personnelsMap, setPersonnelsMap] = useState({});
 
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const [columnSettings, setColumnSettings] = useState(PC_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
+
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // ─── Popup détails du permis ────────────────────────────────────────
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsPermis, setDetailsPermis] = useState(null);
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
@@ -79,6 +102,14 @@ export default function PermisConduite() {
 
   useEffect(() => { load(); }, []);
 
+  // ─── Échap ferme la popup détails ───────────────────────────────────
+  useEffect(() => {
+    if (!detailsOpen) return;
+    const onKey = (e) => { if (e.key === 'Escape') setDetailsOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [detailsOpen]);
+
   const stats = useMemo(() => {
     const total = permis.length;
     const valides = permis.filter((p) => !isExpire(p.dateExpiration)).length;
@@ -89,15 +120,41 @@ export default function PermisConduite() {
     return { total, valides, expires, poidsLourd };
   }, [permis]);
 
+  // Texte de recherche d'une colonne
+  const getColumnSearchValue = (p, key) => {
+    const pers = personnelsMap[p.personnelId];
+    switch (key) {
+      case 'conducteur': return [pers?.nom, pers?.prenom, pers?.matricule].filter(Boolean).join(' ');
+      case 'numero':     return p.numero || '';
+      case 'categories': return (p.categories ?? []).map(categorieLabel).join(' ');
+      case 'delivrance': return [formatDate(p.dateDelivrance), p.lieuDelivrance].filter(Boolean).join(' ');
+      case 'expiration': return p.dateExpiration ? formatDate(p.dateExpiration) : 'Sans expiration';
+      case 'statut':     return isExpire(p.dateExpiration) ? 'Expiré' : 'Valide';
+      default:           return '';
+    }
+  };
+
+  // Valeur utilisée pour trier une colonne
+  const getSortValue = (p, key) => {
+    const pers = personnelsMap[p.personnelId];
+    switch (key) {
+      case 'conducteur': return pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '';
+      case 'numero':     return p.numero || '';
+      case 'categories': return (p.categories ?? []).map(categorieLabel).join(' ');
+      case 'delivrance': return p.dateDelivrance ? new Date(p.dateDelivrance).getTime() : 0;
+      case 'expiration': return p.dateExpiration ? new Date(p.dateExpiration).getTime() : Number.MAX_SAFE_INTEGER;
+      case 'statut':     return isExpire(p.dateExpiration) ? 1 : 0;
+      default:           return '';
+    }
+  };
+
   const filtered = useMemo(() => {
-    return permis.filter((p) => {
-      const pers = personnelsMap[p.personnelId];
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
 
-      const haystack = [
-        pers?.nom, pers?.prenom, pers?.matricule, p.numero, p.lieuDelivrance,
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
+    const result = permis.filter((p) => {
+      const matchesSearch = !term
+        || searchableCols.some((key) => getColumnSearchValue(p, key).toLowerCase().includes(term));
       const matchesCategorie = categorieFilter === 'all' || (p.categories ?? []).includes(categorieFilter);
       const expire = isExpire(p.dateExpiration);
       const matchesStatut =
@@ -107,7 +164,130 @@ export default function PermisConduite() {
 
       return matchesSearch && matchesCategorie && matchesStatut;
     });
-  }, [permis, searchTerm, categorieFilter, statutFilter, personnelsMap]);
+
+    if (!sortColumn) return result;
+
+    const sorted = [...result].sort((x, y) => {
+      const vx = getSortValue(x, sortColumn);
+      const vy = getSortValue(y, sortColumn);
+      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      return vx - vy;
+    });
+    return sortDirection === 'desc' ? sorted.reverse() : sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permis, searchTerm, categorieFilter, statutFilter, personnelsMap, columnSettings, sortColumn, sortDirection]);
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="pc-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="pc-sort-icon active" />
+      : <ArrowDown size={13} className="pc-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const renderCell = (key, p) => {
+    const pers = personnelsMap[p.personnelId];
+    const expire = isExpire(p.dateExpiration);
+
+    switch (key) {
+      case 'conducteur':
+        return (
+          <td key="conducteur">
+            {pers ? (
+              <div className="pc-cell-driver">
+                <div className="pc-cell-driver-avatar">
+                  <User size={14} strokeWidth={2.2} />
+                </div>
+                <div className="pc-cell-driver-text">
+                  <span className="pc-cell-main">
+                    {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
+                  </span>
+                  {pers.matricule && <span className="pc-cell-sub">{pers.matricule}</span>}
+                </div>
+              </div>
+            ) : (
+              <span className="pc-cell-empty">—</span>
+            )}
+          </td>
+        );
+      case 'numero':
+        return (
+          <td key="numero">
+            <span className="pc-cell-main">{p.numero || '—'}</span>
+          </td>
+        );
+      case 'categories':
+        return (
+          <td key="categories">
+            <div className="pc-cat-list">
+              {(p.categories ?? []).length === 0 ? (
+                <span className="pc-cell-empty">—</span>
+              ) : (
+                (p.categories ?? []).map((c) => (
+                  <span key={c} className="pc-cat-chip">{categorieLabel(c)}</span>
+                ))
+              )}
+            </div>
+          </td>
+        );
+      case 'delivrance':
+        return (
+          <td key="delivrance">
+            <span className="pc-date-badge">
+              <Calendar size={11} strokeWidth={2.5} />
+              {formatDate(p.dateDelivrance)}
+            </span>
+          </td>
+        );
+      case 'expiration':
+        return (
+          <td key="expiration">
+            <span className="pc-date-badge">
+              <Calendar size={11} strokeWidth={2.5} />
+              {p.dateExpiration ? formatDate(p.dateExpiration) : 'Sans expiration'}
+            </span>
+          </td>
+        );
+      case 'statut':
+        return (
+          <td key="statut">
+            <span className={`pc-pill ${expire ? 'expire' : 'valide'}`}>
+              {expire ? (
+                <XCircle size={11} strokeWidth={2.5} />
+              ) : (
+                <CheckCircle2 size={11} strokeWidth={2.5} />
+              )}
+              {expire ? 'Expiré' : 'Valide'}
+            </span>
+          </td>
+        );
+      default:
+        return null;
+    }
+  };
 
   const handleResetFilters = () => {
     setSearchTerm('');
@@ -121,6 +301,21 @@ export default function PermisConduite() {
 
   const openCreate = () => { setSelected(null); setModalOpen(true); };
   const openEdit = () => { if (selected) setModalOpen(true); };
+
+  const openDetails = (p) => {
+    setDetailsPermis(p);
+    setDetailsOpen(true);
+  };
+
+  const handleViewDetails = () => {
+    if (selected) openDetails(selected);
+  };
+
+  const closeDetails = () => {
+    setDetailsOpen(false);
+    // petite temporisation pour éviter le flash pendant l'animation de sortie
+    setTimeout(() => setDetailsPermis(null), 220);
+  };
 
   const handleSave = async (payload) => {
     if (selected) await permisConduiteService.update(selected.id, payload);
@@ -191,15 +386,27 @@ export default function PermisConduite() {
   const handlePrint = () => window.print();
   const handleStats = () => alert('Dashboard à venir.');
 
+  // ════════════════════════════════════════════════════════════════
+  //  RENDU
+  // ════════════════════════════════════════════════════════════════
+  const detailsPers = detailsPermis ? personnelsMap[detailsPermis.personnelId] : null;
+  const detailsExpire = detailsPermis ? isExpire(detailsPermis.dateExpiration) : false;
+
   return (
     <div className="pc-container">
 
       {/* HEADER */}
       <div className="pc-header-card">
         <div className="pc-header-left">
-          <div className="pc-header-icon-wrap">
+          <button
+            type="button"
+            className="pc-header-icon-wrap pc-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <IdCard size={24} strokeWidth={2} />
-          </div>
+          </button>
           <div>
             <h2>Permis de conduire</h2>
             <p className="pc-header-subtitle">
@@ -236,6 +443,19 @@ export default function PermisConduite() {
         </button>
 
         <button
+          className={`pc-action-btn details ${!selected ? 'disabled' : ''}`}
+          disabled={!selected}
+          onClick={handleViewDetails}
+          style={{
+            color: '#0284c7',
+            borderColor: 'rgba(2, 132, 199, 0.2)',
+          }}
+        >
+          <CreditCard size={18} strokeWidth={2.2} />
+          <span>Voir le permis</span>
+        </button>
+
+        <button
           className={`pc-action-btn modifier ${!selected ? 'disabled' : ''}`}
           disabled={!selected}
           onClick={openEdit}
@@ -265,7 +485,7 @@ export default function PermisConduite() {
             <Search size={16} strokeWidth={2.2} className="pc-filter-icon" />
             <input
               type="text"
-              placeholder="Conducteur, numéro, lieu..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -331,18 +551,26 @@ export default function PermisConduite() {
         <table className="pc-table">
           <thead>
             <tr>
-              <th>Conducteur</th>
-              <th>N° permis</th>
-              <th>Catégories</th>
-              <th>Délivrance</th>
-              <th>Expiration</th>
-              <th>Statut</th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`pc-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="pc-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="pc-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="pc-table-empty">
                   <div className="pc-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="pc-spin" />
                     <span>Chargement des permis...</span>
@@ -351,7 +579,7 @@ export default function PermisConduite() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="pc-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="pc-table-empty">
                   <div className="pc-empty-state">
                     <IdCard size={32} strokeWidth={1.6} />
                     <span>
@@ -363,90 +591,267 @@ export default function PermisConduite() {
                 </td>
               </tr>
             ) : (
-              filtered.map((p) => {
-                const pers = personnelsMap[p.personnelId];
-                const expire = isExpire(p.dateExpiration);
-
-                return (
-                  <tr
-                    key={p.id}
-                    className={`pc-row ${selected?.id === p.id ? 'selected' : ''}`}
-                    onClick={() => handleRowClick(p)}
-                  >
-                    <td>
-                      {pers ? (
-                        <div className="pc-cell-driver">
-                          <div className="pc-cell-driver-avatar">
-                            <User size={14} strokeWidth={2.2} />
-                          </div>
-                          <div className="pc-cell-driver-text">
-                            <span className="pc-cell-main">
-                              {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
-                            </span>
-                            {pers.matricule && (
-                              <span className="pc-cell-sub">{pers.matricule}</span>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="pc-cell-empty">—</span>
-                      )}
-                    </td>
-
-                    <td>
-                      <span className="pc-cell-main">{p.numero || '—'}</span>
-                    </td>
-
-                    <td>
-                      <div className="pc-cat-list">
-                        {(p.categories ?? []).length === 0 ? (
-                          <span className="pc-cell-empty">—</span>
-                        ) : (
-                          (p.categories ?? []).map((c) => (
-                            <span key={c} className="pc-cat-chip">{categorieLabel(c)}</span>
-                          ))
-                        )}
-                      </div>
-                    </td>
-
-                    <td>
-                      <span className="pc-date-badge">
-                        <Calendar size={11} strokeWidth={2.5} />
-                        {formatDate(p.dateDelivrance)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="pc-date-badge">
-                        <Calendar size={11} strokeWidth={2.5} />
-                        {p.dateExpiration ? formatDate(p.dateExpiration) : 'Sans expiration'}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className={`pc-pill ${expire ? 'expire' : 'valide'}`}>
-                        {expire ? (
-                          <XCircle size={11} strokeWidth={2.5} />
-                        ) : (
-                          <CheckCircle2 size={11} strokeWidth={2.5} />
-                        )}
-                        {expire ? 'Expiré' : 'Valide'}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
+              filtered.map((p) => (
+                <tr
+                  key={p.id}
+                  className={`pc-row ${selected?.id === p.id ? 'selected' : ''}`}
+                  onClick={() => handleRowClick(p)}
+                  onDoubleClick={() => openDetails(p)}
+                >
+                  {visibleColumns.map((c) => renderCell(c.key, p))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
       </div>
 
+      {/* ═══════════════════════════════════════════════════════════
+          POPUP DÉTAILS — Permis format tunisien 3D
+          ═══════════════════════════════════════════════════════════ */}
+      {detailsOpen && detailsPermis && (
+        <div
+          className="pcd-overlay"
+          onClick={closeDetails}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Détails du permis de conduire"
+        >
+          <div
+            className="pcd-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Barre d'actions de la popup */}
+            <div className="pcd-modal-bar">
+              <div className="pcd-modal-bar-left">
+                <CreditCard size={16} strokeWidth={2.4} />
+                <span>Permis de conduire</span>
+              </div>
+              <div className="pcd-modal-bar-right">
+                <button
+                  type="button"
+                  className="pcd-modal-btn"
+                  onClick={() => {
+                    setSelected(detailsPermis);
+                    setTimeout(() => setModalOpen(true), 0);
+                  }}
+                  title="Modifier ce permis"
+                >
+                  <Pencil size={14} strokeWidth={2.4} />
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  className="pcd-modal-btn"
+                  onClick={handlePrint}
+                  title="Imprimer"
+                >
+                  <Printer size={14} strokeWidth={2.4} />
+                  Imprimer
+                </button>
+                <button
+                  type="button"
+                  className="pcd-modal-close"
+                  onClick={closeDetails}
+                  aria-label="Fermer"
+                >
+                  <X size={18} strokeWidth={2.6} />
+                </button>
+              </div>
+            </div>
+
+            {/* Scène 3D */}
+            <div className="pcd-permis-stage">
+              <div className="pcd-permis-3d">
+                <div className="pcd-permis">
+                  <div className="pcd-permis-face">
+
+                    {/* ─── EN-TÊTE ─── */}
+                    <div className="pcd-permis-header">
+                      <div className="pcd-header-fr">
+                        <div className="pcd-country-fr">REPUBLIQUE TUNISIENNE</div>
+                        <div className="pcd-title-fr">PERMIS DE CONDUIRE</div>
+                      </div>
+
+                      <div className="pcd-flag">
+                        <div className="pcd-flag-circle">
+                          <span className="pcd-flag-crescent">☪</span>
+                          <span className="pcd-flag-star">★</span>
+                        </div>
+                      </div>
+
+                      <div className="pcd-header-ar">
+                        <div className="pcd-country-ar">الجمهورية التونسية</div>
+                        <div className="pcd-title-ar">رخصة سياقة</div>
+                      </div>
+                    </div>
+
+                    {/* ─── CORPS ─── */}
+                    <div className="pcd-permis-body">
+
+                      {/* Photo */}
+                      <div className="pcd-photo-col">
+                        <div className="pcd-photo">
+                          {detailsPers ? (
+                            <div className="pcd-photo-initials">
+                              {(detailsPers.nom?.[0] || '').toUpperCase()}
+                              {(detailsPers.prenom?.[0] || '').toUpperCase()}
+                            </div>
+                          ) : (
+                            <User size={40} strokeWidth={1.5} />
+                          )}
+                        </div>
+                        <div className="pcd-photo-footer">
+                          <div className="pcd-photo-badge">
+                            <span className="pcd-photo-badge-icon">🅱</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Lignes */}
+                      <div className="pcd-lines">
+
+                        <div className="pcd-line">
+                          <span className="pcd-line-num">1.</span>
+                          <span className="pcd-line-fr">
+                            <strong>{detailsPers?.nom || '—'}</strong>
+                            {detailsPers?.prenom ? ` ${detailsPers.prenom}` : ''}
+                          </span>
+                          <span className="pcd-line-ar">بن فلان</span>
+                        </div>
+
+                        <div className="pcd-line">
+                          <span className="pcd-line-num">2.</span>
+                          <span className="pcd-line-fr">
+                            <strong>{detailsPers?.prenom || '—'}</strong>
+                          </span>
+                          <span className="pcd-line-ar">فلان</span>
+                        </div>
+
+                        <div className="pcd-line">
+                          <span className="pcd-line-num">3.</span>
+                          <span className="pcd-line-fr">
+                            <strong>{detailsPers?.lieuNaissance || detailsPermis.lieuDelivrance || '—'}</strong>
+                            <span className="pcd-line-date">
+                              {detailsPers?.dateNaissance ? formatDate(detailsPers.dateNaissance) : '—'}
+                            </span>
+                          </span>
+                          <span className="pcd-line-ar">البطان</span>
+                        </div>
+
+                        <div className="pcd-line">
+                          <span className="pcd-line-num">4a.</span>
+                          <span className="pcd-line-fr">
+                            {formatDate(detailsPermis.dateDelivrance)}
+                          </span>
+                          <span className="pcd-line-ar">تاريخ</span>
+                        </div>
+
+                        <div className="pcd-line">
+                          <span className="pcd-line-num">4b.</span>
+                          <span className={`pcd-line-fr ${detailsExpire ? 'pcd-expired' : ''}`}>
+                            {detailsPermis.dateExpiration ? formatDate(detailsPermis.dateExpiration) : '—'}
+                          </span>
+                          <span className="pcd-line-ar">ينتهي</span>
+                        </div>
+
+                        <div className="pcd-line">
+                          <span className="pcd-line-num">4c.</span>
+                          <span className="pcd-line-fr">
+                            {detailsPermis.lieuDelivrance || 'A.T.T.T.'}
+                          </span>
+                          <span className="pcd-line-ar">السلطة</span>
+                        </div>
+
+                        <div className="pcd-line">
+                          <span className="pcd-line-num">5.</span>
+                          <span className="pcd-line-fr pcd-mono">
+                            <strong>{detailsPermis.numero || '—'}</strong>
+                          </span>
+                          <span className="pcd-line-ar">رقم</span>
+                        </div>
+
+                        <div className="pcd-line">
+                          <span className="pcd-line-num">7.</span>
+                          <span className="pcd-line-fr pcd-mono">
+                            {detailsPermis.reference || `${detailsPermis.id} / 270${String(detailsPermis.id).padStart(3, '0')}`}
+                          </span>
+                          <span className="pcd-line-ar">مرجع</span>
+                        </div>
+
+                        <div className="pcd-line pcd-line-signature">
+                          <span className="pcd-line-num" />
+                          <span className="pcd-signature">
+                            <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+                              <path
+                                d="M10,28 C25,10 40,35 55,20 C70,5 85,32 100,18 C115,4 130,30 145,22 C160,14 175,28 190,20"
+                                fill="none"
+                                stroke="#831843"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                          </span>
+                        </div>
+
+                        <div className="pcd-line pcd-line-categories">
+                          <span className="pcd-line-num">9.</span>
+                          <span className="pcd-line-cat-label">A A B B E C C E D D E G H</span>
+                          <span className="pcd-line-cat-ar">أ ب ج د هـ و ز ح ط ي</span>
+                        </div>
+
+                        <div className="pcd-categories-bar">
+                          {['A', 'A1', 'B', 'B_E', 'C', 'C_E', 'D', 'D_E', 'F'].map((code) => {
+                            const active = (detailsPermis.categories ?? []).includes(code);
+                            return (
+                              <div
+                                key={code}
+                                className={`pcd-cat-cell ${active ? 'is-active' : ''}`}
+                                title={categorieLabel(code)}
+                              >
+                                {code.replace('_E', 'E')}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Filigrane */}
+                    <div className="pcd-watermark" aria-hidden="true">
+                      <div className="pcd-watermark-circle" />
+                      <div className="pcd-watermark-shield">🛡</div>
+                    </div>
+
+                    {/* Reflet */}
+                    <div className="pcd-permis-shine" aria-hidden="true" />
+                  </div>
+                </div>
+
+                <div className="pcd-permis-shadow" aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modales édition / confirmation */}
       <PermisConduiteModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSave={handleSave}
         permis={selected}
         isEditing={!!selected}
+      />
+
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="permis"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
 
       <ConfirmModal

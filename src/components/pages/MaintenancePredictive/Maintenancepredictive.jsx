@@ -10,10 +10,10 @@ const NIVEAU_LABELS = {
 };
 
 const NIVEAU_CLASS = {
-  FAIBLE: 'risque-badge--faible',
-  MODERE: 'risque-badge--modere',
-  ELEVE: 'risque-badge--eleve',
-  CRITIQUE: 'risque-badge--critique',
+  FAIBLE: 'mp-badge--faible',
+  MODERE: 'mp-badge--modere',
+  ELEVE: 'mp-badge--eleve',
+  CRITIQUE: 'mp-badge--critique',
 };
 
 const TENDANCE_ICON = {
@@ -23,9 +23,9 @@ const TENDANCE_ICON = {
 };
 
 const TENDANCE_CLASS = {
-  HAUSSE: 'tendance--hausse',
-  BAISSE: 'tendance--baisse',
-  STABLE: 'tendance--stable',
+  HAUSSE: 'mp-tendance--hausse',
+  BAISSE: 'mp-tendance--baisse',
+  STABLE: 'mp-tendance--stable',
 };
 
 const PAGE_SIZE = 10;
@@ -96,46 +96,46 @@ export default function MaintenancePredictive() {
   const nbEleves = risques.filter((r) => r.niveauRisque === 'ELEVE').length;
 
   return (
-    <div className="risque-page">
-      <div className="risque-header">
+    <div className="mp-page">
+      <div className="mp-header">
         <div>
           <h1>Maintenance prédictive</h1>
         </div>
-        <button className="risque-refresh-btn" onClick={charger} disabled={loading}>
+        <button className="mp-refresh-btn" onClick={charger} disabled={loading}>
           {loading ? 'Calcul...' : '🔄 Recalculer'}
         </button>
       </div>
 
       {!loading && risques.length > 0 && (
-        <div className="risque-summary">
-          <div className="risque-summary__item risque-summary__item--critique">
-            <span className="risque-summary__nombre">{nbCritiques}</span>
-            <span className="risque-summary__label">équipement{nbCritiques > 1 ? 's' : ''} à risque critique</span>
+        <div className="mp-summary">
+          <div className="mp-summary__item mp-summary__item--critique">
+            <span className="mp-summary__nombre">{nbCritiques}</span>
+            <span className="mp-summary__label">équipement{nbCritiques > 1 ? 's' : ''} à risque critique</span>
           </div>
-          <div className="risque-summary__item risque-summary__item--eleve">
-            <span className="risque-summary__nombre">{nbEleves}</span>
-            <span className="risque-summary__label">à risque élevé</span>
+          <div className="mp-summary__item mp-summary__item--eleve">
+            <span className="mp-summary__nombre">{nbEleves}</span>
+            <span className="mp-summary__label">à risque élevé</span>
           </div>
-          <div className="risque-summary__item">
-            <span className="risque-summary__nombre">{risques.length}</span>
-            <span className="risque-summary__label">équipements analysés</span>
+          <div className="mp-summary__item">
+            <span className="mp-summary__nombre">{risques.length}</span>
+            <span className="mp-summary__label">équipements analysés</span>
           </div>
         </div>
       )}
 
-      <div className="risque-filtres">
+      <div className="mp-filtres">
         <input
           type="text"
           placeholder="Rechercher un équipement..."
           value={recherche}
           onChange={(e) => setRecherche(e.target.value)}
-          className="risque-recherche"
+          className="mp-recherche"
         />
-        <div className="risque-filtres-niveau">
+        <div className="mp-filtres-niveau">
           {['TOUS', 'CRITIQUE', 'ELEVE', 'MODERE', 'FAIBLE'].map((n) => (
             <button
               key={n}
-              className={`risque-filtre-btn ${filtreNiveau === n ? 'risque-filtre-btn--active' : ''}`}
+              className={`mp-filtre-btn ${filtreNiveau === n ? 'mp-filtre-btn--active' : ''}`}
               onClick={() => setFiltreNiveau(n)}
             >
               {n === 'TOUS' ? 'Tous' : NIVEAU_LABELS[n]}
@@ -145,15 +145,15 @@ export default function MaintenancePredictive() {
       </div>
 
       {loading ? (
-        <p className="risque-empty">Calcul des scores en cours...</p>
+        <p className="mp-empty">Calcul des scores en cours...</p>
       ) : error ? (
-        <p className="risque-error">{error}</p>
+        <p className="mp-error">{error}</p>
       ) : risquesFiltres.length === 0 ? (
-        <p className="risque-empty">Aucun équipement ne correspond à ce filtre.</p>
+        <p className="mp-empty">Aucun équipement ne correspond à ce filtre.</p>
       ) : (
         <>
-          <div className="risque-table-wrapper">
-            <table className="risque-table">
+          <div className="mp-table-wrapper">
+            <table className="mp-table">
               <thead>
                 <tr>
                   <th>Équipement</th>
@@ -170,39 +170,39 @@ export default function MaintenancePredictive() {
                 {risquesAffiches.map((r) => (
                   <tr key={r.lotArticleImmobilistationId}>
                     <td>
-                      <div className="risque-equipement-nom">{r.designation || `Équipement #${r.lotArticleImmobilistationId}`}</div>
+                      <div className="mp-equipement-nom">{r.designation || `Équipement #${r.lotArticleImmobilistationId}`}</div>
                       {(r.marque || r.modele) && (
-                        <div className="risque-equipement-sub">{[r.marque, r.modele].filter(Boolean).join(' · ')}</div>
+                        <div className="mp-equipement-sub">{[r.marque, r.modele].filter(Boolean).join(' · ')}</div>
                       )}
                     </td>
                     <td>
-                      <div className="risque-score-bar-wrapper">
-                        <div className="risque-score-bar">
+                      <div className="mp-score-bar-wrapper">
+                        <div className="mp-score-bar">
                           <div
-                            className={`risque-score-bar__fill ${NIVEAU_CLASS[r.niveauRisque] || ''}`}
+                            className={`mp-score-bar__fill ${NIVEAU_CLASS[r.niveauRisque] || ''}`}
                             style={{ width: `${r.scoreRisque}%` }}
                           />
                         </div>
-                        <span className="risque-score-valeur">{r.scoreRisque}</span>
+                        <span className="mp-score-valeur">{r.scoreRisque}</span>
                       </div>
                     </td>
                     <td>
-                      <span className={`risque-badge ${NIVEAU_CLASS[r.niveauRisque] || ''}`}>
+                      <span className={`mp-badge ${NIVEAU_CLASS[r.niveauRisque] || ''}`}>
                         {NIVEAU_LABELS[r.niveauRisque] || r.niveauRisque}
                       </span>
                     </td>
                     <td>{r.nbPannes12Mois}</td>
                     <td>
-                      <span className={`tendance ${TENDANCE_CLASS[r.tendance] || ''}`}>
+                      <span className={`mp-tendance ${TENDANCE_CLASS[r.tendance] || ''}`}>
                         {TENDANCE_ICON[r.tendance] || ''} {r.nbPannesTrimestreRecent}/{r.nbPannesTrimestrePrecedent}
                       </span>
                     </td>
                     <td>{r.ageAnnees != null ? `${r.ageAnnees} ans` : '—'}</td>
                     <td>
                       {r.garantieExpiree === null ? '—' : r.garantieExpiree ? (
-                        <span className="garantie garantie--expiree">Expirée</span>
+                        <span className="mp-garantie mp-garantie--expiree">Expirée</span>
                       ) : (
-                        <span className="garantie garantie--active">Active</span>
+                        <span className="mp-garantie mp-garantie--active">Active</span>
                       )}
                     </td>
                     <td>{formatDate(r.derniereIntervention)}</td>
@@ -213,14 +213,14 @@ export default function MaintenancePredictive() {
           </div>
 
           {/* PAGINATION */}
-          <div className="risque-pagination">
-            <span className="risque-pagination-info">
+          <div className="mp-pagination">
+            <span className="mp-pagination-info">
               {risquesFiltres.length} résultat{risquesFiltres.length > 1 ? 's' : ''} — page {currentPage} / {totalPages}
             </span>
-            <div className="risque-pagination-controls">
+            <div className="mp-pagination-controls">
               <button
                 type="button"
-                className="risque-pagination-btn"
+                className="mp-pagination-btn"
                 onClick={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
               >
@@ -231,7 +231,7 @@ export default function MaintenancePredictive() {
                 <button
                   key={p}
                   type="button"
-                  className={`risque-pagination-btn ${p === currentPage ? 'active' : ''}`}
+                  className={`mp-pagination-btn ${p === currentPage ? 'active' : ''}`}
                   onClick={() => goToPage(p)}
                 >
                   {p}
@@ -240,7 +240,7 @@ export default function MaintenancePredictive() {
 
               <button
                 type="button"
-                className="risque-pagination-btn"
+                className="mp-pagination-btn"
                 onClick={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >

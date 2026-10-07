@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { NAV_ITEMS } from '../../constants/navigation';
+import { NAV_ITEMS, NAV_SECTIONS } from '../../constants/navigation';
 import notificationService from '../../services/notificationService';
 import { useAuth } from '../../constants/Authcontext';
 import './Layout.css';
@@ -141,8 +141,14 @@ export default function Layout({ children }) {
 
         {/* Nav */}
         <nav className="sidebar__nav">
-          {sidebarOpen && <span className="sidebar__section-label">Menu principal</span>}
-          {NAV_ITEMS.map((item) => (
+          {NAV_SECTIONS.map((section) => (
+          <div key={section.id} className={`sidebar__section sidebar__section--${section.id}`}>
+          {sidebarOpen ? (
+            <span className={`sidebar__section-label sidebar__section-label--${section.id}`}>{section.label}</span>
+          ) : (
+            <div className="sidebar__section-mini"><span>{section.label}</span></div>
+          )}
+          {section.items.map((item) => (
             <div key={item.id} className="nav-item-wrap">
               <button
                 className={`nav-item nav-item--${item.id} ${activeNavItem?.id === item.id ? 'nav-item--active' : ''} ${!sidebarOpen ? 'nav-item--icon-only' : ''}`}
@@ -223,6 +229,8 @@ export default function Layout({ children }) {
                 </div>
               )}
             </div>
+          ))}
+          </div>
           ))}
         </nav>
 

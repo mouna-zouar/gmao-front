@@ -37,7 +37,7 @@ const IconSearch = (props) => (
 );
 
 const IconSpinner = () => (
-  <svg className="blocages-spinner" width="15" height="15" viewBox="0 0 24 24"
+  <svg className="blocages-immob-spinner" width="15" height="15" viewBox="0 0 24 24"
        fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
     <path d="M12 3a9 9 0 1 0 9 9" />
   </svg>
@@ -195,12 +195,12 @@ export default function BlocagesImmobilisation({ isModal = false }) {
   });
 
   return (
-    <div className={`blocages-page ${isModal ? 'blocages-page--modal' : ''}`}>
+    <div className={`blocages-immob-page ${isModal ? 'blocages-immob-page--modal' : ''}`}>
       {/* ---------- Header (masqué en mode modale) ---------- */}
       {!isModal && (
-        <header className="blocages-header">
-          <div className="blocages-header__text">
-            <span className="blocages-eyebrow">Maintenance · Surveillance</span>
+        <header className="blocages-immob-header">
+          <div className="blocages-immob-header__text">
+            <span className="blocages-immob-eyebrow">Maintenance · Surveillance</span>
             <h1>Blocages d'équipement</h1>
             <p>
               Équipements dont le dernier arrêt obligatoire est resté sans suite — pas de bon
@@ -208,7 +208,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
             </p>
           </div>
 
-          <button className="blocages-analyser-btn" onClick={lancerAnalyse} disabled={analysing}>
+          <button className="blocages-immob-analyser-btn" onClick={lancerAnalyse} disabled={analysing}>
             {analysing ? <IconSpinner /> : <IconSearch />}
             <span>{analysing ? 'Analyse en cours' : "Lancer l'analyse"}</span>
           </button>
@@ -217,8 +217,8 @@ export default function BlocagesImmobilisation({ isModal = false }) {
 
       {/* ---------- Bouton analyse en mode modale ---------- */}
       {isModal && (
-        <div className="blocages-modal-toolbar">
-          <button className="blocages-analyser-btn" onClick={lancerAnalyse} disabled={analysing}>
+        <div className="blocages-immob-modal-toolbar">
+          <button className="blocages-immob-analyser-btn" onClick={lancerAnalyse} disabled={analysing}>
             {analysing ? <IconSpinner /> : <IconSearch />}
             <span>{analysing ? 'Analyse en cours' : "Lancer l'analyse"}</span>
           </button>
@@ -227,55 +227,55 @@ export default function BlocagesImmobilisation({ isModal = false }) {
 
       {/* ---------- Stats ---------- */}
       {!error && (
-        <section className="blocages-stats">
-          <div className="blocages-stat blocages-stat--total">
-            <div className="blocages-stat__head">
-              <span className="blocages-stat__label">Total</span>
-              <span className="blocages-stat__icon"><IconLayers /></span>
+        <section className="blocages-immob-stats">
+          <div className="blocages-immob-stat blocages-immob-stat--total">
+            <div className="blocages-immob-stat__head">
+              <span className="blocages-immob-stat__label">Total</span>
+              <span className="blocages-immob-stat__icon"><IconLayers /></span>
             </div>
-            <span className="blocages-stat__value">{stats.total}</span>
+            <span className="blocages-immob-stat__value">{stats.total}</span>
           </div>
 
-          <div className="blocages-stat blocages-stat--nouveau">
-            <div className="blocages-stat__head">
-              <span className="blocages-stat__label">Nouveaux</span>
-              <span className="blocages-stat__icon"><IconFlame /></span>
+          <div className="blocages-immob-stat blocages-immob-stat--nouveau">
+            <div className="blocages-immob-stat__head">
+              <span className="blocages-immob-stat__label">Nouveaux</span>
+              <span className="blocages-immob-stat__icon"><IconFlame /></span>
             </div>
-            <span className="blocages-stat__value">{stats.nouveaux}</span>
+            <span className="blocages-immob-stat__value">{stats.nouveaux}</span>
           </div>
 
-          <div className="blocages-stat blocages-stat--actif">
-            <div className="blocages-stat__head">
-              <span className="blocages-stat__label">Actifs</span>
-              <span className="blocages-stat__icon"><IconPulse /></span>
+          <div className="blocages-immob-stat blocages-immob-stat--actif">
+            <div className="blocages-immob-stat__head">
+              <span className="blocages-immob-stat__label">Actifs</span>
+              <span className="blocages-immob-stat__icon"><IconPulse /></span>
             </div>
-            <span className="blocages-stat__value">{stats.actifs}</span>
+            <span className="blocages-immob-stat__value">{stats.actifs}</span>
           </div>
 
-          <div className="blocages-stat blocages-stat--resolu">
-            <div className="blocages-stat__head">
-              <span className="blocages-stat__label">Résolus</span>
-              <span className="blocages-stat__icon"><IconShieldCheck /></span>
+          <div className="blocages-immob-stat blocages-immob-stat--resolu">
+            <div className="blocages-immob-stat__head">
+              <span className="blocages-immob-stat__label">Résolus</span>
+              <span className="blocages-immob-stat__icon"><IconShieldCheck /></span>
             </div>
-            <span className="blocages-stat__value">{stats.resolus}</span>
+            <span className="blocages-immob-stat__value">{stats.resolus}</span>
           </div>
         </section>
       )}
 
       {/* ---------- Message d'analyse ---------- */}
       {analyseMessage && (
-        <div className="blocages-message">
+        <div className="blocages-immob-message">
           <IconInfo />
           <span>{analyseMessage}</span>
         </div>
       )}
 
       {/* ---------- Filtres ---------- */}
-      <div className="blocages-filtres">
+      <div className="blocages-immob-filtres">
         {FILTRES.map(({ key, label }) => (
           <button
             key={key}
-            className={`blocages-filtre-btn ${filtreStatut === key ? 'blocages-filtre-btn--active' : ''}`}
+            className={`blocages-immob-filtre-btn ${filtreStatut === key ? 'blocages-immob-filtre-btn--active' : ''}`}
             onClick={() => setFiltreStatut(key)}
           >
             {label}
@@ -285,64 +285,64 @@ export default function BlocagesImmobilisation({ isModal = false }) {
 
       {/* ---------- Liste ---------- */}
       {loading ? (
-        <p className="blocages-empty">Chargement...</p>
+        <p className="blocages-immob-empty">Chargement...</p>
       ) : error ? (
-        <p className="blocages-error">
+        <p className="blocages-immob-error">
           <IconAlert />
           <span>{error}</span>
         </p>
       ) : blocagesAffiches.length === 0 ? (
-        <p className="blocages-empty">
+        <p className="blocages-immob-empty">
           <IconInbox />
           <span>Aucun blocage pour ce filtre.</span>
         </p>
       ) : (
-        <ul className="blocages-list">
+        <ul className="blocages-immob-list">
           {blocagesAffiches.map((b) => {
             const statutKey = b.statut?.toLowerCase();
             return (
-              <li key={b.id} className={`blocages-card blocages-card--${statutKey}`}>
-                <div className="blocages-card__head">
-                  <div className="blocages-card__head-left">
-                    <h3 className="blocages-card__titre">{b.cibleNom}</h3>
-                    <span className={`blocages-statut blocages-statut--${statutKey}`}>
-                      <span className="blocages-statut__dot" />
+              <li key={b.id} className={`blocages-immob-card blocages-immob-card--${statutKey}`}>
+                <div className="blocages-immob-card__head">
+                  <div className="blocages-immob-card__head-left">
+                    <h3 className="blocages-immob-card__titre">{b.cibleNom}</h3>
+                    <span className={`blocages-immob-statut blocages-immob-statut--${statutKey}`}>
+                      <span className="blocages-immob-statut__dot" />
                       {STATUT_LABELS[b.statut] || b.statut}
                     </span>
                   </div>
-                  <span className="blocages-jours">
+                  <span className="blocages-immob-jours">
                     <IconClock />
                     {b.joursBlocage} j sans suite
                   </span>
                 </div>
 
-                <div className="blocages-card__meta">
-                  <div className="blocages-card__meta-item">
-                    <span className="blocages-card__meta-label">Arrêté depuis</span>
-                    <span className="blocages-card__meta-value">{formatDate(b.dateArret)}</span>
+                <div className="blocages-immob-card__meta">
+                  <div className="blocages-immob-card__meta-item">
+                    <span className="blocages-immob-card__meta-label">Arrêté depuis</span>
+                    <span className="blocages-immob-card__meta-value">{formatDate(b.dateArret)}</span>
                   </div>
-                  <div className="blocages-card__meta-item">
-                    <span className="blocages-card__meta-label">Bon d'arrêt</span>
-                    <span className="blocages-card__meta-value">{b.bonMaintenanceArretNum}</span>
+                  <div className="blocages-immob-card__meta-item">
+                    <span className="blocages-immob-card__meta-label">Bon d'arrêt</span>
+                    <span className="blocages-immob-card__meta-value">{b.bonMaintenanceArretNum}</span>
                   </div>
-                  <div className="blocages-card__meta-item">
-                    <span className="blocages-card__meta-label">Détecté le</span>
-                    <span className="blocages-card__meta-value">{formatDate(b.dateDetection)}</span>
+                  <div className="blocages-immob-card__meta-item">
+                    <span className="blocages-immob-card__meta-label">Détecté le</span>
+                    <span className="blocages-immob-card__meta-value">{formatDate(b.dateDetection)}</span>
                   </div>
                 </div>
 
                 {b.statut === 'RESOLU' && b.personnelTraitantNom === 'Résolution automatique' && (
-                  <p className="blocages-card__auto">
+                  <p className="blocages-immob-card__auto">
                     <IconCheck />
                     Résolu automatiquement — bon rouvert ou remise en service enregistrée.
                   </p>
                 )}
 
                 {(b.statut === 'NOUVELLE' || b.statut === 'VUE') && (
-                  <div className="blocages-card__actions">
+                  <div className="blocages-immob-card__actions">
                     {b.statut === 'NOUVELLE' && (
                       <button
-                        className="blocages-action-btn"
+                        className="blocages-immob-action-btn"
                         onClick={() => changerStatut(b.id, 'VUE')}
                       >
                         <IconEye />
@@ -350,7 +350,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
                       </button>
                     )}
                     <button
-                      className="blocages-action-btn blocages-action-btn--ghost"
+                      className="blocages-immob-action-btn blocages-immob-action-btn--ghost"
                       onClick={() => changerStatut(b.id, 'IGNOREE')}
                     >
                       <IconBan />

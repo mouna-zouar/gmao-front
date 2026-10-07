@@ -3,12 +3,14 @@ import {
   Fuel, Plus, Pencil, Trash2, Search, Filter, RotateCcw,
   Download, Printer, BarChart3, Loader2, AlertTriangle,
   Car, User, Calendar, Gauge, Coins,
+  ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
 import vehiculeBonCarburantService from '../../../../services/vehiculeBonCarburantService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
 import VehiculeBonCarburantModal from '../../../ui/modals/VehiculeBonCarburantModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import './VehiculeBonsCarburant.css';
 
 function formatDate(iso) {
@@ -28,6 +30,15 @@ function formatKm(v) {
   return `${Number(v).toLocaleString('fr-FR')} km`;
 }
 
+/* Colonnes paramétrables (affichage + recherche) */
+const VBC_COLUMNS_DEFAULT = [
+  { key: 'vehicule',    label: 'Véhicule',     visible: true, searchable: true  },
+  { key: 'conducteur',  label: 'Conducteur',   visible: true, searchable: true  },
+  { key: 'date',        label: 'Date',         visible: true, searchable: false },
+  { key: 'montant',     label: 'Montant',      visible: true, searchable: false },
+  { key: 'kilometrage', label: 'Kilométrage',  visible: true, searchable: false },
+];
+
 export default function VehiculeBonsCarburant() {
   const [bons, setBons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +46,13 @@ export default function VehiculeBonsCarburant() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [vehiculeFilter, setVehiculeFilter] = useState('all');
+
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const [columnSettings, setColumnSettings] = useState(VBC_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const [vehiculesMap, setVehiculesMap] = useState({});
   const [personnelsMap, setPersonnelsMap] = useState({});
@@ -91,22 +109,160 @@ export default function VehiculeBonsCarburant() {
     return { total, montantTotal, kmTotal, montantMois };
   }, [bons]);
 
+  // Texte de recherche d'une colonne
+  const getColumnSearchValue = (b, key) => {
+    const veh = vehiculesMap[b.vehiculeId];
+    const pers = personnelsMap[b.personnelId];
+    switch (key) {
+      case 'vehicule':    return [veh?.matricule, veh?.marque].filter(Boolean).join(' ');
+      case 'conducteur':  return [pers?.nom, pers?.prenom, pers?.matricule].filter(Boolean).join(' ');
+      case 'date':        return formatDate(b.date);
+      case 'montant':     return b.montant != null ? String(b.montant) : '';
+      case 'kilometrage': return b.kilometrage != null ? String(b.kilometrage) : '';
+      default:            return '';
+    }
+  };
+
+  // Valeur utilisée pour trier une colonne
+  const getSortValue = (b, key) => {
+    const veh = vehiculesMap[b.vehiculeId];
+    const pers = personnelsMap[b.personnelId];
+    switch (key) {
+      case 'vehicule':    return veh?.matricule || '';
+      case 'conducteur':  return pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '';
+      case 'date':        return b.date ? new Date(b.date).getTime() || 0 : 0;
+      case 'montant':     return Number(b.montant ?? -1);
+      case 'kilometrage': return Number(b.kilometrage ?? -1);
+      default:            return '';
+    }
+  };
+
   const filtered = useMemo(() => {
-    return bons.filter((b) => {
-      const veh = vehiculesMap[b.vehiculeId];
-      const pers = personnelsMap[b.personnelId];
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
 
-      const haystack = [
-        veh?.matricule, veh?.marque,
-        pers?.nom, pers?.prenom, pers?.matricule,
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
+    const result = bons.filter((b) => {
+      const matchesSearch = !term
+        || searchableCols.some((key) => getColumnSearchValue(b, key).toLowerCase().includes(term));
       const matchesVehicule = vehiculeFilter === 'all' || String(b.vehiculeId) === vehiculeFilter;
-
       return matchesSearch && matchesVehicule;
     });
-  }, [bons, searchTerm, vehiculeFilter, vehiculesMap, personnelsMap]);
+
+    if (!sortColumn) return result;
+
+    const sorted = [...result].sort((x, y) => {
+      const vx = getSortValue(x, sortColumn);
+      const vy = getSortValue(y, sortColumn);
+      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      return vx - vy;
+    });
+    return sortDirection === 'desc' ? sorted.reverse() : sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bons, searchTerm, vehiculeFilter, vehiculesMap, personnelsMap, columnSettings, sortColumn, sortDirection]);
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="vbc-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="vbc-sort-icon active" />
+      : <ArrowDown size={13} className="vbc-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const renderCell = (key, b) => {
+    const veh = vehiculesMap[b.vehiculeId];
+    const pers = personnelsMap[b.personnelId];
+
+    switch (key) {
+      case 'vehicule':
+        return (
+          <td key="vehicule">
+            <div className="vbc-cell-vehicle">
+              <div className="vbc-cell-vehicle-icon">
+                <Car size={14} strokeWidth={2.2} />
+              </div>
+              <div className="vbc-cell-vehicle-text">
+                <span className="vbc-cell-main">
+                  {veh?.matricule || `Véhicule #${b.vehiculeId}`}
+                </span>
+                {veh?.marque && <span className="vbc-cell-sub">{veh.marque}</span>}
+              </div>
+            </div>
+          </td>
+        );
+      case 'conducteur':
+        return (
+          <td key="conducteur">
+            {pers ? (
+              <div className="vbc-cell-driver">
+                <div className="vbc-cell-driver-avatar">
+                  <User size={14} strokeWidth={2.2} />
+                </div>
+                <div className="vbc-cell-driver-text">
+                  <span className="vbc-cell-main">
+                    {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
+                  </span>
+                  {pers.matricule && <span className="vbc-cell-sub">{pers.matricule}</span>}
+                </div>
+              </div>
+            ) : (
+              <span className="vbc-cell-empty">—</span>
+            )}
+          </td>
+        );
+      case 'date':
+        return (
+          <td key="date">
+            <span className="vbc-cell-date">
+              <Calendar size={12} strokeWidth={2.5} />
+              {formatDate(b.date)}
+            </span>
+          </td>
+        );
+      case 'montant':
+        return (
+          <td key="montant">
+            <span className="vbc-cell-amount">
+              <Coins size={13} strokeWidth={2.5} />
+              {formatMontant(b.montant)}
+            </span>
+          </td>
+        );
+      case 'kilometrage':
+        return (
+          <td key="kilometrage">
+            <span className="vbc-cell-km">
+              <Gauge size={13} strokeWidth={2.5} />
+              {formatKm(b.kilometrage)}
+            </span>
+          </td>
+        );
+      default:
+        return null;
+    }
+  };
 
   const handleResetFilters = () => {
     setSearchTerm('');
@@ -192,9 +348,15 @@ export default function VehiculeBonsCarburant() {
       {/* HEADER */}
       <div className="vbc-header-card">
         <div className="vbc-header-left">
-          <div className="vbc-header-icon-wrap">
+          <button
+            type="button"
+            className="vbc-header-icon-wrap vbc-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <Fuel size={24} strokeWidth={2} />
-          </div>
+          </button>
           <div>
             <h2>Bons carburant</h2>
             <p className="vbc-header-subtitle">
@@ -260,7 +422,7 @@ export default function VehiculeBonsCarburant() {
             <Search size={16} strokeWidth={2.2} className="vbc-filter-icon" />
             <input
               type="text"
-              placeholder="Véhicule, conducteur..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -314,17 +476,26 @@ export default function VehiculeBonsCarburant() {
         <table className="vbc-table">
           <thead>
             <tr>
-              <th>Véhicule</th>
-              <th>Conducteur</th>
-              <th>Date</th>
-              <th>Montant</th>
-              <th>Kilométrage</th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`vbc-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="vbc-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="vbc-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vbc-table-empty">
                   <div className="vbc-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vbc-spin" />
                     <span>Chargement des bons...</span>
@@ -333,7 +504,7 @@ export default function VehiculeBonsCarburant() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="vbc-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vbc-table-empty">
                   <div className="vbc-empty-state">
                     <Fuel size={32} strokeWidth={1.6} />
                     <span>
@@ -345,74 +516,15 @@ export default function VehiculeBonsCarburant() {
                 </td>
               </tr>
             ) : (
-              filtered.map((b) => {
-                const veh = vehiculesMap[b.vehiculeId];
-                const pers = personnelsMap[b.personnelId];
-                return (
-                  <tr
-                    key={b.id}
-                    className={`vbc-row ${selected?.id === b.id ? 'selected' : ''}`}
-                    onClick={() => handleRowClick(b)}
-                  >
-                    <td>
-                      <div className="vbc-cell-vehicle">
-                        <div className="vbc-cell-vehicle-icon">
-                          <Car size={14} strokeWidth={2.2} />
-                        </div>
-                        <div className="vbc-cell-vehicle-text">
-                          <span className="vbc-cell-main">
-                            {veh?.matricule || `Véhicule #${b.vehiculeId}`}
-                          </span>
-                          {veh?.marque && (
-                            <span className="vbc-cell-sub">{veh.marque}</span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      {pers ? (
-                        <div className="vbc-cell-driver">
-                          <div className="vbc-cell-driver-avatar">
-                            <User size={14} strokeWidth={2.2} />
-                          </div>
-                          <div className="vbc-cell-driver-text">
-                            <span className="vbc-cell-main">
-                              {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
-                            </span>
-                            {pers.matricule && (
-                              <span className="vbc-cell-sub">{pers.matricule}</span>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="vbc-cell-empty">—</span>
-                      )}
-                    </td>
-
-                    <td>
-                      <span className="vbc-cell-date">
-                        <Calendar size={12} strokeWidth={2.5} />
-                        {formatDate(b.date)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="vbc-cell-amount">
-                        <Coins size={13} strokeWidth={2.5} />
-                        {formatMontant(b.montant)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="vbc-cell-km">
-                        <Gauge size={13} strokeWidth={2.5} />
-                        {formatKm(b.kilometrage)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
+              filtered.map((b) => (
+                <tr
+                  key={b.id}
+                  className={`vbc-row ${selected?.id === b.id ? 'selected' : ''}`}
+                  onClick={() => handleRowClick(b)}
+                >
+                  {visibleColumns.map((c) => renderCell(c.key, b))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -425,6 +537,16 @@ export default function VehiculeBonsCarburant() {
         onSave={handleSave}
         bonCarburant={selected}
         isEditing={!!selected}
+      />
+
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="bonCarburant"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
 
       <ConfirmModal

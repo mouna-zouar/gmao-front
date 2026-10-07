@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   UserCheck, Plus, Pencil, Trash2, Search, Filter, RotateCcw,
   Download, Printer, BarChart3, Loader2, AlertTriangle,
-  Car, User, Calendar, Settings2, Info,
+  Car, User, Calendar, Settings2, Info, ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
 import VehiculeConducteurModal from '../../../ui/modals/VehiculeConducteurModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import './VehiculeConducteurs.css';
 
 const MODE_LABELS = {
@@ -32,6 +33,14 @@ function formatDateTime(iso) {
   });
 }
 
+/* Colonnes paramétrables (affichage + recherche) */
+const VC_COLUMNS_DEFAULT = [
+  { key: 'vehicule',   label: 'Véhicule',          visible: true, searchable: true  },
+  { key: 'conducteur', label: 'Conducteur',        visible: true, searchable: true  },
+  { key: 'date',       label: "Date d'affectation", visible: true, searchable: false },
+  { key: 'mode',       label: 'Mode',              visible: true, searchable: false },
+];
+
 export default function VehiculeConducteurs() {
   const [affectations, setAffectations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +51,13 @@ export default function VehiculeConducteurs() {
 
   const [vehiculesMap, setVehiculesMap] = useState({});
   const [personnelsMap, setPersonnelsMap] = useState({});
+
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const [columnSettings, setColumnSettings] = useState(VC_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -90,22 +106,152 @@ export default function VehiculeConducteurs() {
     return { total, principaux, temporaires, remplacements };
   }, [affectations]);
 
+  // Texte de recherche d'une colonne
+  const getColumnSearchValue = (a, key) => {
+    const veh = vehiculesMap[a.vehiculeId];
+    const pers = personnelsMap[a.personnelId];
+    switch (key) {
+      case 'vehicule':   return [veh?.matricule, veh?.marque, veh?.numChassis].filter(Boolean).join(' ');
+      case 'conducteur': return [pers?.nom, pers?.prenom, pers?.matricule].filter(Boolean).join(' ');
+      case 'date':       return formatDateTime(a.dateAffectation);
+      case 'mode':       return modeLabel(a.modeAffectation);
+      default:           return '';
+    }
+  };
+
+  // Valeur utilisée pour trier une colonne
+  const getSortValue = (a, key) => {
+    const veh = vehiculesMap[a.vehiculeId];
+    const pers = personnelsMap[a.personnelId];
+    switch (key) {
+      case 'vehicule':   return veh?.matricule || '';
+      case 'conducteur': return pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '';
+      case 'date':       return a.dateAffectation ? new Date(a.dateAffectation).getTime() : 0;
+      case 'mode':       return Number(a.modeAffectation ?? -1);
+      default:           return '';
+    }
+  };
+
   const filtered = useMemo(() => {
-    return affectations.filter((a) => {
-      const veh = vehiculesMap[a.vehiculeId];
-      const pers = personnelsMap[a.personnelId];
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
 
-      const haystack = [
-        veh?.matricule, veh?.marque, veh?.numChassis,
-        pers?.nom, pers?.prenom, pers?.matricule,
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
+    const result = affectations.filter((a) => {
+      const matchesSearch = !term
+        || searchableCols.some((key) => getColumnSearchValue(a, key).toLowerCase().includes(term));
       const matchesMode = modeFilter === 'all' || String(a.modeAffectation) === modeFilter;
-
       return matchesSearch && matchesMode;
     });
-  }, [affectations, searchTerm, modeFilter, vehiculesMap, personnelsMap]);
+
+    if (!sortColumn) return result;
+
+    const sorted = [...result].sort((x, y) => {
+      const vx = getSortValue(x, sortColumn);
+      const vy = getSortValue(y, sortColumn);
+      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      return vx - vy;
+    });
+    return sortDirection === 'desc' ? sorted.reverse() : sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [affectations, searchTerm, modeFilter, vehiculesMap, personnelsMap, columnSettings, sortColumn, sortDirection]);
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="vcd-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="vcd-sort-icon active" />
+      : <ArrowDown size={13} className="vcd-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const renderCell = (key, a) => {
+    const veh = vehiculesMap[a.vehiculeId];
+    const pers = personnelsMap[a.personnelId];
+
+    switch (key) {
+      case 'vehicule':
+        return (
+          <td key="vehicule">
+            <div className="vcd-cell-vehicle">
+              <div className="vcd-cell-vehicle-icon">
+                <Car size={14} strokeWidth={2.2} />
+              </div>
+              <div className="vcd-cell-vehicle-text">
+                <span className="vcd-cell-main">
+                  {veh?.matricule || `Véhicule #${a.vehiculeId}`}
+                </span>
+                {veh?.marque && <span className="vcd-cell-sub">{veh.marque}</span>}
+              </div>
+            </div>
+          </td>
+        );
+      case 'conducteur':
+        return (
+          <td key="conducteur">
+            {pers ? (
+              <div className="vcd-cell-driver">
+                <div className="vcd-cell-driver-avatar">
+                  <User size={14} strokeWidth={2.2} />
+                </div>
+                <div className="vcd-cell-driver-text">
+                  <span className="vcd-cell-main">
+                    {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
+                  </span>
+                  {pers.matricule && <span className="vcd-cell-sub">{pers.matricule}</span>}
+                </div>
+              </div>
+            ) : (
+              <span className="vcd-cell-empty">—</span>
+            )}
+          </td>
+        );
+      case 'date':
+        return (
+          <td key="date">
+            <span className="vcd-date-badge">
+              <Calendar size={11} strokeWidth={2.5} />
+              {formatDateTime(a.dateAffectation)}
+            </span>
+          </td>
+        );
+      case 'mode': {
+        const modeNum = Number(a.modeAffectation);
+        const modeCls = modeNum === 0 ? 'principal' : modeNum === 1 ? 'secondary' : modeNum === 2 ? 'temporary' : 'replacement';
+        return (
+          <td key="mode">
+            <span className={`vcd-pill ${modeCls}`}>
+              <Settings2 size={11} strokeWidth={2.5} />
+              {modeLabel(a.modeAffectation)}
+            </span>
+          </td>
+        );
+      }
+      default:
+        return null;
+    }
+  };
 
   const handleResetFilters = () => {
     setSearchTerm('');
@@ -192,9 +338,15 @@ export default function VehiculeConducteurs() {
       {/* HEADER */}
       <div className="vcd-header-card">
         <div className="vcd-header-left">
-          <div className="vcd-header-icon-wrap">
+          <button
+            type="button"
+            className="vcd-header-icon-wrap vcd-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <UserCheck size={24} strokeWidth={2} />
-          </div>
+          </button>
           <div>
             <h2>Véhicules / Conducteurs</h2>
             <p className="vcd-header-subtitle">
@@ -260,7 +412,7 @@ export default function VehiculeConducteurs() {
             <Search size={16} strokeWidth={2.2} className="vcd-filter-icon" />
             <input
               type="text"
-              placeholder="Véhicule, conducteur, matricule..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -312,16 +464,26 @@ export default function VehiculeConducteurs() {
         <table className="vcd-table">
           <thead>
             <tr>
-              <th>Véhicule</th>
-              <th>Conducteur</th>
-              <th>Date d'affectation</th>
-              <th>Mode</th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`vcd-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="vcd-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="vcd-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vcd-table-empty">
                   <div className="vcd-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vcd-spin" />
                     <span>Chargement des affectations...</span>
@@ -330,7 +492,7 @@ export default function VehiculeConducteurs() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={4} className="vcd-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vcd-table-empty">
                   <div className="vcd-empty-state">
                     <UserCheck size={32} strokeWidth={1.6} />
                     <span>
@@ -342,71 +504,15 @@ export default function VehiculeConducteurs() {
                 </td>
               </tr>
             ) : (
-              filtered.map((a) => {
-                const veh = vehiculesMap[a.vehiculeId];
-                const pers = personnelsMap[a.personnelId];
-
-                const modeNum = Number(a.modeAffectation);
-                const modeCls = modeNum === 0 ? 'principal' : modeNum === 1 ? 'secondary' : modeNum === 2 ? 'temporary' : 'replacement';
-
-                return (
-                  <tr
-                    key={a.id}
-                    className={`vcd-row ${selected?.id === a.id ? 'selected' : ''}`}
-                    onClick={() => handleRowClick(a)}
-                  >
-                    <td>
-                      <div className="vcd-cell-vehicle">
-                        <div className="vcd-cell-vehicle-icon">
-                          <Car size={14} strokeWidth={2.2} />
-                        </div>
-                        <div className="vcd-cell-vehicle-text">
-                          <span className="vcd-cell-main">
-                            {veh?.matricule || `Véhicule #${a.vehiculeId}`}
-                          </span>
-                          {veh?.marque && (
-                            <span className="vcd-cell-sub">{veh.marque}</span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      {pers ? (
-                        <div className="vcd-cell-driver">
-                          <div className="vcd-cell-driver-avatar">
-                            <User size={14} strokeWidth={2.2} />
-                          </div>
-                          <div className="vcd-cell-driver-text">
-                            <span className="vcd-cell-main">
-                              {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
-                            </span>
-                            {pers.matricule && (
-                              <span className="vcd-cell-sub">{pers.matricule}</span>
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="vcd-cell-empty">—</span>
-                      )}
-                    </td>
-
-                    <td>
-                      <span className="vcd-date-badge">
-                        <Calendar size={11} strokeWidth={2.5} />
-                        {formatDateTime(a.dateAffectation)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className={`vcd-pill ${modeCls}`}>
-                        <Settings2 size={11} strokeWidth={2.5} />
-                        {modeLabel(a.modeAffectation)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
+              filtered.map((a) => (
+                <tr
+                  key={a.id}
+                  className={`vcd-row ${selected?.id === a.id ? 'selected' : ''}`}
+                  onClick={() => handleRowClick(a)}
+                >
+                  {visibleColumns.map((c) => renderCell(c.key, a))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -418,6 +524,16 @@ export default function VehiculeConducteurs() {
         onSave={handleSave}
         vehiculeConducteur={selected}
         isEditing={!!selected}
+      />
+
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="vehiculeConducteur"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
 
       <ConfirmModal

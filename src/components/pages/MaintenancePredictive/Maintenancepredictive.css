@@ -1,390 +1,450 @@
-/* ============================================================
-   MAINTENANCE PRÉDICTIVE — version moderne alignée teal
-   Sans rouge · Sans violet · Critique = slate foncé
-   ============================================================ */
 
-.risque-page {
-  --primary: #0d9488;
-  --primary-dark: #0f766e;
-  --primary-darker: #115e59;
-  --primary-light: #ccfbf1;
-  --primary-soft: #e6faf6;
+.mp-page {
+  /* Palette TEAL (alignée FicheEmploye) */
+  --teal-900: #054e57;
+  --teal-800: #066470;
+  --teal-700: #067a87;
+  --teal-600: #0794a4;
+  --teal-500: #0aa8ba;
+  --teal-400: #3dbcc9;
+  --teal-200: #a8e0e6;
+  --teal-100: #d5f0f3;
+  --teal-50: #e9f8fa;
+  --teal-25: #f3fcfd;
 
-  /* Gris teintés teal */
-  --gray-50: #eef7f5;
-  --gray-100: #dfeeeb;
-  --gray-200: #c9e0dc;
-  --gray-300: #a3c4be;
-  --gray-400: #7ba39c;
-  --gray-500: #5c7f79;
-  --gray-600: #3e5e59;
-  --gray-700: #2a4643;
-  --gray-800: #1a3330;
-  --gray-900: #0c2320;
+  --cyan-600: #0891b2;
+  --cyan-100: #cffafe;
 
-  /* Slate foncé — pour Critique */
-  --slate-soft: #e2e8f0;
-  --slate-text: #1e293b;
-  --slate-border: #94a3b8;
-  --slate-solid: #334155;
+  --blue-600: #2563eb;
+  --blue-100: #dbeafe;
 
-  /* Sémantiques */
-  --success-soft: #d1fae5;
+  --indigo-600: #6366f1;
+  --indigo-100: #e0e7ff;
+
+  --violet-600: #8b5cf6;
+  --violet-100: #ede9fe;
+
+  --green-600: #10b981;
+  --green-100: #d1fae5;
+
+  --red-600: #dc2626;
+  --red-100: #fee2e2;
+
+  --amber-500: #f59e0b;
+  --amber-700: #b45309;
+  --amber-50: #fffbeb;
+  --amber-200: #fde68a;
+
+  --orange-500: #f97316;
+  --orange-700: #c2410c;
+  --orange-50: #fff7ed;
+  --orange-200: #fdba74;
+
+  --slate-900: #0f172a;
+  --slate-700: #334155;
+  --slate-500: #64748b;
+  --slate-400: #94a3b8;
+  --slate-300: #cbd5e1;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50: #f8fafc;
+
+  /* Alias compatibilité */
+  --primary: var(--teal-600);
+  --primary-dark: var(--teal-700);
+  --primary-darker: var(--teal-800);
+  --primary-light: var(--teal-100);
+  --primary-soft: var(--teal-50);
+
+  --gray-50: var(--slate-50);
+  --gray-100: var(--slate-100);
+  --gray-200: var(--slate-200);
+  --gray-300: var(--slate-300);
+  --gray-400: var(--slate-400);
+  --gray-500: var(--slate-500);
+  --gray-600: var(--slate-700);
+  --gray-700: var(--slate-700);
+  --gray-800: var(--slate-900);
+  --gray-900: var(--slate-900);
+
+  --success-soft: var(--green-100);
   --success-text: #047857;
   --success-border: #6ee7b7;
 
-  --warning-soft: #fef3c7;
-  --warning-text: #b45309;
-  --warning-border: #fcd34d;
+  --warning-soft: var(--amber-50);
+  --warning-text: var(--amber-700);
+  --warning-border: var(--amber-200);
 
-  --orange-soft: #ffedd5;
-  --orange-text: #c2410c;
-  --orange-border: #fdba74;
+  --slate-soft: var(--slate-200);
+  --slate-text: var(--slate-900);
+  --slate-border: var(--slate-400);
+  --slate-solid: var(--slate-700);
 
-  --radius: 10px;
-  --radius-sm: 8px;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
 
-  --shadow-xs: 0 1px 2px rgba(15, 92, 86, 0.05);
-  --shadow-sm: 0 1px 3px rgba(15, 92, 86, 0.08);
-  --shadow-md: 0 4px 12px rgba(15, 92, 86, 0.10);
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
 
   padding: 24px;
   margin: 0 auto;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.55;
-  color: var(--gray-800);
-  background: #e8f4f1;
+  color: var(--slate-700);
+  background: var(--slate-50);
+  min-height: calc(100vh - 80px);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   box-sizing: border-box;
+  animation: mpFadeIn 0.4s ease-out;
+}
+
+@keyframes mpFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ============================================================
-   HEADER — carte teal solide
+   HEADER — carte blanche style FicheEmploye
    ============================================================ */
-.risque-header {
+.mp-header {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
-  padding: 20px 24px;
-  margin-bottom: 16px;
-  background: var(--primary-dark);
-  border-radius: var(--radius);
-  color: #fff;
-  box-shadow: var(--shadow-md);
+  padding: 16px 24px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 16px;
+  color: var(--slate-900);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
+  transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.risque-header > div:first-child {
+.mp-header:hover {
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
+}
+
+.mp-header > div:first-child {
   min-width: 0;
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-.risque-header h1 {
-  font-size: 1.35rem;
-  font-weight: 700;
+.mp-header h1 {
+  font-size: 1.45rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
-  color: #fff;
-  margin: 0 0 4px;
+  color: var(--slate-900);
+  margin: 0;
 }
 
-.risque-header p {
-  font-size: 0.84rem;
+.mp-header p {
+  font-size: 0.85rem;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.85);
-  margin: 0;
+  color: var(--slate-500);
+  margin: 3px 0 0;
   max-width: 640px;
 }
 
 /* ============================================================
-   BOUTON RECALCULER — ghost blanc sur teal
+   BOUTON RECALCULER
    ============================================================ */
-.risque-refresh-btn {
+.mp-refresh-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  padding: 9px 16px;
+  border: 1px solid var(--slate-200);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--teal-700);
   font-family: inherit;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.risque-refresh-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.40);
+.mp-refresh-btn:hover:not(:disabled) {
+  background: var(--teal-50);
+  border-color: var(--teal-100);
+  transform: translateY(-1px);
 }
 
-.risque-refresh-btn:active:not(:disabled) {
-  transform: translateY(1px);
+.mp-refresh-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-.risque-refresh-btn:disabled {
+.mp-refresh-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
 /* ============================================================
-   RÉSUMÉ — 3 cartes avec bordure gauche sémantique
+   RÉSUMÉ — cartes blanches avec bordure gauche sémantique
    ============================================================ */
-.risque-summary {
+.mp-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
-.risque-summary__item {
+.mp-summary__item {
   position: relative;
-  background: #fff;
-  border: 1px solid var(--gray-200);
-  border-left: 3px solid var(--gray-700);
-  border-radius: var(--radius);
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-left: 3px solid var(--slate-700);
+  border-radius: 14px;
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: box-shadow 0.2s, border-color 0.2s;
   overflow: hidden;
 }
 
-.risque-summary__item:hover {
-  border-color: var(--gray-300);
-  box-shadow: var(--shadow-sm);
+.mp-summary__item:hover {
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
-/* Critique — SLATE FONCÉ */
-.risque-summary__item--critique {
-  border-left-color: var(--slate-solid);
-  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+/* Critique — slate foncé */
+.mp-summary__item--critique {
+  border-left-color: var(--slate-700);
+  background: linear-gradient(180deg, #ffffff 0%, var(--slate-50) 100%);
 }
 
 /* Élevé — orange */
-.risque-summary__item--eleve {
-  border-left-color: #f97316;
-  background: linear-gradient(180deg, #fff 0%, #fffcf8 100%);
+.mp-summary__item--eleve {
+  border-left-color: var(--orange-500);
+  background: linear-gradient(180deg, #ffffff 0%, var(--orange-50) 100%);
 }
 
-.risque-summary__nombre {
+.mp-summary__nombre {
   font-size: 1.75rem;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--slate-900);
   letter-spacing: -0.03em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 
-.risque-summary__item--critique .risque-summary__nombre { color: var(--slate-text); }
-.risque-summary__item--eleve   .risque-summary__nombre { color: var(--orange-text); }
+.mp-summary__item--critique .mp-summary__nombre { color: var(--slate-700); }
+.mp-summary__item--eleve    .mp-summary__nombre { color: var(--orange-700); }
 
-.risque-summary__label {
+.mp-summary__label {
   font-size: 0.78rem;
-  color: var(--gray-600);
+  color: var(--slate-500);
   font-weight: 600;
   line-height: 1.35;
 }
 
 /* ============================================================
-   FILTRES
+   FILTRES — carte blanche style FicheEmploye
    ============================================================ */
-.risque-filtres {
+.mp-filtres {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding: 12px 20px;
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
   flex-wrap: wrap;
 }
 
-.risque-recherche {
+.mp-recherche {
   flex: 1;
   min-width: 240px;
   max-width: 400px;
-  height: 40px;
+  height: 38px;
   padding: 0 14px 0 40px;
-  border-radius: var(--radius-sm);
-  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  border: 1px solid var(--slate-200);
   font-size: 0.85rem;
   font-family: inherit;
-  background: #fff;
-  color: var(--gray-900);
+  background: #ffffff;
+  color: var(--slate-900);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%237ba39c' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2394a3b8' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: 14px center;
 }
 
-.risque-recherche::placeholder {
-  color: var(--gray-400);
+.mp-recherche::placeholder {
+  color: var(--slate-400);
 }
 
-.risque-recherche:hover {
-  border-color: var(--gray-300);
+.mp-recherche:hover {
+  border-color: var(--slate-400);
 }
 
-.risque-recherche:focus {
+.mp-recherche:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%230794a4' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
 }
 
-.risque-filtres-niveau {
+.mp-filtres-niveau {
   display: inline-flex;
   gap: 4px;
   padding: 4px;
-  background: #f5fbf9;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
   flex-wrap: wrap;
   max-width: 100%;
 }
 
-.risque-filtre-btn {
-  padding: 8px 14px;
-  border-radius: var(--radius-sm);
+.mp-filtre-btn {
+  padding: 7px 14px;
+  border-radius: 6px;
   border: none;
   background: transparent;
-  color: var(--gray-600);
+  color: var(--slate-500);
   font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.risque-filtre-btn:hover {
-  color: var(--gray-900);
-  background: rgba(255, 255, 255, 0.7);
+.mp-filtre-btn:hover {
+  color: var(--slate-700);
+  background: rgba(255, 255, 255, 0.9);
 }
 
-.risque-filtre-btn--active {
-  background: var(--primary-dark);
-  color: #fff;
+.mp-filtre-btn--active {
+  background: var(--teal-600);
+  color: #ffffff;
 }
 
-.risque-filtre-btn--active:hover {
-  background: var(--primary-darker);
-  color: #fff;
+.mp-filtre-btn--active:hover {
+  background: var(--teal-700);
+  color: #ffffff;
 }
 
 /* ============================================================
-   ÉTATS VIDES / ERREURS — erreur en slate (pas de rouge/violet)
+   ÉTATS VIDES / ERREURS
    ============================================================ */
-.risque-empty,
-.risque-error {
+.mp-empty,
+.mp-error {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   text-align: center;
-  color: var(--gray-500);
+  color: var(--slate-400);
   font-size: 0.9rem;
   font-weight: 500;
   padding: 60px 20px;
-  background: #f5fbf9;
-  border: 1px dashed var(--gray-300);
-  border-radius: var(--radius);
+  background: #ffffff;
+  border: 1px dashed var(--slate-300);
+  border-radius: 14px;
   margin: 0;
 }
 
-.risque-empty::before {
+.mp-empty::before {
   content: '📊';
   font-size: 32px;
   opacity: 0.5;
   line-height: 1;
 }
 
-.risque-error {
-  color: var(--slate-text);
-  background: var(--slate-soft);
-  border-color: var(--slate-border);
+.mp-error {
+  color: #991b1b;
+  background: var(--red-100);
+  border-color: #fca5a5;
   border-style: solid;
   font-weight: 600;
 }
 
-.risque-error::before {
+.mp-error::before {
   content: '⚠️';
 }
 
 /* ============================================================
-   TABLE WRAPPER — blanc neutre
+   TABLE — style modern-table
    ============================================================ */
-.risque-table-wrapper {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius);
+.mp-table-wrapper {
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+  margin-bottom: 20px;
 }
 
-.risque-table {
+.mp-table {
   width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  font-size: 13px;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  background: #ffffff;
 }
 
-.risque-table th {
+.mp-table th {
   text-align: left;
   padding: 12px 16px;
-  background: #f8fafc;
-  color: #64748b;
+  background: var(--slate-50);
+  color: var(--teal-700);
   font-weight: 700;
-  font-size: 11px;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-bottom: 1.5px solid #e2e8f0;
+  letter-spacing: 0.02em;
+  border-top: 1px solid var(--slate-200);
+  border-bottom: 1.5px solid var(--teal-100);
   white-space: nowrap;
   position: sticky;
   top: 0;
   z-index: 1;
 }
 
-.risque-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #334155;
+.mp-table td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--slate-100);
+  color: var(--slate-700);
   vertical-align: middle;
   white-space: nowrap;
   transition: background 0.15s ease;
 }
 
-.risque-table tbody tr:nth-child(even) td {
-  background: #fafbfc;
+.mp-table tbody tr:hover td {
+  background: var(--slate-50) !important;
 }
 
-.risque-table tbody tr:hover td {
-  background: #f8fafc !important;
-}
-
-.risque-table tbody tr:last-child td {
+.mp-table tbody tr:last-child td {
   border-bottom: none;
 }
 
 /* ============================================================
    COLONNE ÉQUIPEMENT
    ============================================================ */
-.risque-equipement-nom {
+.mp-equipement-nom {
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--slate-900);
   white-space: normal;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
   line-height: 1.35;
 }
 
-.risque-equipement-sub {
+.mp-equipement-sub {
   font-size: 0.72rem;
-  color: var(--gray-400);
+  color: var(--slate-400);
   margin-top: 2px;
   font-weight: 500;
 }
@@ -392,31 +452,31 @@
 /* ============================================================
    BARRE DE SCORE
    ============================================================ */
-.risque-score-bar-wrapper {
+.mp-score-bar-wrapper {
   display: flex;
   align-items: center;
   gap: 10px;
   min-width: 120px;
 }
 
-.risque-score-bar {
+.mp-score-bar {
   width: 80px;
   height: 8px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--slate-100);
   overflow: hidden;
 }
 
-.risque-score-bar__fill {
+.mp-score-bar__fill {
   height: 100%;
   border-radius: 999px;
   transition: width 0.4s ease;
 }
 
-.risque-score-valeur {
+.mp-score-valeur {
   font-weight: 800;
   font-size: 0.82rem;
-  color: var(--gray-900);
+  color: var(--slate-900);
   min-width: 28px;
   font-variant-numeric: tabular-nums;
 }
@@ -424,7 +484,7 @@
 /* ============================================================
    BADGES NIVEAU
    ============================================================ */
-.risque-badge {
+.mp-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -432,13 +492,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  border-radius: 6px;
-  padding: 4px 10px;
+  border-radius: 999px;
+  padding: 4px 12px;
   border: 1px solid transparent;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
-.risque-badge::before {
+.mp-badge::before {
   content: '';
   width: 6px;
   height: 6px;
@@ -448,103 +509,104 @@
 }
 
 /* Faible — vert */
-.risque-badge--faible {
+.mp-badge--faible {
   color: var(--success-text);
-  background: var(--success-soft);
+  background: var(--green-100);
   border-color: var(--success-border);
 }
 
 /* Modéré — ambre */
-.risque-badge--modere {
-  color: var(--warning-text);
-  background: var(--warning-soft);
-  border-color: var(--warning-border);
+.mp-badge--modere {
+  color: var(--amber-700);
+  background: var(--amber-50);
+  border-color: var(--amber-200);
 }
 
 /* Élevé — orange */
-.risque-badge--eleve {
-  color: var(--orange-text);
-  background: var(--orange-soft);
-  border-color: var(--orange-border);
+.mp-badge--eleve {
+  color: var(--orange-700);
+  background: var(--orange-50);
+  border-color: var(--orange-200);
 }
 
-/* Critique — SLATE FONCÉ (pas de rouge/purple) */
-.risque-badge--critique {
-  color: var(--slate-text);
-  background: var(--slate-soft);
-  border-color: var(--slate-border);
+/* Critique — slate foncé */
+.mp-badge--critique {
+  color: var(--slate-900);
+  background: var(--slate-200);
+  border-color: var(--slate-400);
 }
 
 /* ============================================================
-   FILL DE BARRE DE SCORE (assorti aux badges)
+   FILL DE BARRE DE SCORE
    ============================================================ */
-.risque-score-bar__fill.risque-badge--faible {
+.mp-score-bar__fill.mp-badge--faible {
   background: linear-gradient(90deg, #34d399 0%, #10b981 100%);
 }
 
-.risque-score-bar__fill.risque-badge--modere {
+.mp-score-bar__fill.mp-badge--modere {
   background: linear-gradient(90deg, #fcd34d 0%, #f59e0b 100%);
 }
 
-.risque-score-bar__fill.risque-badge--eleve {
+.mp-score-bar__fill.mp-badge--eleve {
   background: linear-gradient(90deg, #fb923c 0%, #f97316 100%);
 }
 
-.risque-score-bar__fill.risque-badge--critique {
+.mp-score-bar__fill.mp-badge--critique {
   background: linear-gradient(90deg, #64748b 0%, #334155 100%);
 }
 
 /* ============================================================
    TENDANCES
    ============================================================ */
-.tendance {
+.mp-tendance {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   font-weight: 700;
   font-size: 0.78rem;
   padding: 4px 9px;
-  border-radius: 6px;
+  border-radius: 999px;
   border: 1px solid transparent;
   font-variant-numeric: tabular-nums;
 }
 
-.tendance--hausse {
-  color: var(--orange-text);
-  background: var(--orange-soft);
-  border-color: var(--orange-border);
+.mp-tendance--hausse {
+  color: var(--orange-700);
+  background: var(--orange-50);
+  border-color: var(--orange-200);
 }
 
-.tendance--baisse {
+.mp-tendance--baisse {
   color: var(--success-text);
-  background: var(--success-soft);
+  background: var(--green-100);
   border-color: var(--success-border);
 }
 
-.tendance--stable {
-  color: var(--gray-600);
-  background: var(--gray-100);
-  border-color: var(--gray-200);
+.mp-tendance--stable {
+  color: var(--slate-500);
+  background: var(--slate-100);
+  border-color: var(--slate-200);
 }
 
 /* ============================================================
    GARANTIE
    ============================================================ */
-.garantie {
+.mp-garantie {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: 0.7rem;
   font-weight: 700;
-  border-radius: 6px;
+  border-radius: 999px;
   padding: 4px 10px;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   border: 1px solid transparent;
   white-space: nowrap;
+  line-height: 1.2;
 }
 
-.garantie::before {
+.mp-garantie::before {
   content: '';
   width: 6px;
   height: 6px;
@@ -553,67 +615,135 @@
   flex-shrink: 0;
 }
 
-/* Expirée — ambre */
-.garantie--expiree {
-  color: var(--warning-text);
-  background: var(--warning-soft);
-  border-color: var(--warning-border);
+.mp-garantie--expiree {
+  color: var(--amber-700);
+  background: var(--amber-50);
+  border-color: var(--amber-200);
 }
 
-/* Active — vert */
-.garantie--active {
+.mp-garantie--active {
   color: var(--success-text);
-  background: var(--success-soft);
+  background: var(--green-100);
   border-color: var(--success-border);
+}
+
+/* ============================================================
+   PAGINATION — carte blanche style FicheEmploye
+   ============================================================ */
+.mp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 20px;
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+}
+
+.mp-pagination-info {
+  font-size: 0.82rem;
+  color: var(--slate-500);
+  font-weight: 500;
+}
+
+.mp-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.mp-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--slate-200);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--slate-500);
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mp-pagination-btn:hover:not(:disabled) {
+  background: var(--slate-100);
+  border-color: var(--slate-300);
+  color: var(--slate-700);
+}
+
+.mp-pagination-btn.active {
+  background: var(--teal-600);
+  border-color: var(--teal-600);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.mp-pagination-btn.active:hover {
+  background: var(--teal-700);
+  border-color: var(--teal-700);
+}
+
+.mp-pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ============================================================
    RESPONSIVE
    ============================================================ */
 @media (max-width: 900px) {
-  .risque-page {
+  .mp-page {
     padding: 16px;
   }
 
-  .risque-header {
+  .mp-header {
     padding: 18px;
   }
 
-  .risque-header h1 {
+  .mp-header h1 {
     font-size: 1.15rem;
   }
 
-  .risque-refresh-btn {
+  .mp-refresh-btn {
     width: 100%;
     justify-content: center;
   }
 
-  .risque-table th,
-  .risque-table td {
+  .mp-table th,
+  .mp-table td {
     padding: 10px 12px;
     font-size: 12.5px;
   }
 
-  .risque-score-bar {
+  .mp-score-bar {
     width: 60px;
   }
 }
 
 @media (max-width: 640px) {
-  .risque-summary {
+  .mp-summary {
     grid-template-columns: 1fr;
   }
 
-  .risque-filtres {
+  .mp-filtres {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .risque-recherche {
+  .mp-recherche {
     max-width: 100%;
   }
 
-  .risque-filtres-niveau {
+  .mp-filtres-niveau {
     width: 100%;
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -621,93 +751,21 @@
     -ms-overflow-style: none;
   }
 
-  .risque-filtres-niveau::-webkit-scrollbar {
+  .mp-filtres-niveau::-webkit-scrollbar {
     display: none;
   }
-}
-/* ============================================================
-   PAGINATION
-   ============================================================ */
-.risque-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px 4px 4px;
-}
 
-.risque-pagination-info {
-  font-size: 0.8rem;
-  color: var(--primary-darker);
-  font-weight: 600;
-  padding: 5px 12px;
-  background: var(--primary-soft);
-  border-radius: 999px;
-  border: 1px solid var(--primary-light);
-}
-
-.risque-pagination-controls {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-
-.risque-pagination-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  min-width: 36px;
-  height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  background: #fff;
-  color: var(--gray-700);
-  font-size: 0.82rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-}
-
-.risque-pagination-btn:hover:not(:disabled) {
-  border-color: var(--primary);
-  color: var(--primary-dark);
-  background: var(--primary-soft);
-}
-
-.risque-pagination-btn.active {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
-  color: #fff;
-}
-
-.risque-pagination-btn.active:hover {
-  background: var(--primary-darker);
-  border-color: var(--primary-darker);
-}
-
-.risque-pagination-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-/* Responsive */
-@media (max-width: 640px) {
-  .risque-pagination {
+  .mp-pagination {
     flex-direction: column;
     align-items: stretch;
     text-align: center;
   }
 
-  .risque-pagination-controls {
+  .mp-pagination-controls {
     justify-content: center;
   }
 
-  .risque-pagination-btn {
+  .mp-pagination-btn {
     min-width: 32px;
     height: 32px;
     padding: 0 9px;

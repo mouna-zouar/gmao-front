@@ -33,8 +33,8 @@ const VUES = [
 ];
 
 /* ---------- Pagination ---------- */
-const TAILLES_PAGE = [7, 14, 21, 50];
-const TAILLE_PAGE_DEFAUT = 7;
+const TAILLES_PAGE = [5, 10, 20, 50];
+const TAILLE_PAGE_DEFAUT = 5;
 
 /* ---------- Utils ---------- */
 function calculerBornes(periodeKey) {
@@ -126,7 +126,6 @@ const IconChevron = ({ direction = 'right' }) => (
   </Svg>
 );
 
-/* Icône du header */
 const IconClipboardCheck = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -289,16 +288,20 @@ export default function Sla() {
     return bonsAffiches.slice(debut, debut + taillePage);
   }, [bonsAffiches, pageCourante, taillePage]);
 
-  // Reset page à 1 sur changement de filtre
   useEffect(() => { setPage(1); }, [recherche]);
   useEffect(() => { setPage(1); }, [vue]);
   useEffect(() => { setPage(1); }, [periodeKey]);
   useEffect(() => { setPage(1); }, [taillePage]);
 
-  // Borne la page courante si le total baisse
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
+
+  /* ---------- Helper pour classer les taux ---------- */
+  const getTauxClass = (t) =>
+    t >= 90 ? 'sla-prio-bar--bon'
+    : t >= 70 ? 'sla-prio-bar--moyen'
+    : 'sla-prio-bar--critique';
 
   return (
     <div className="sla-page">
@@ -349,7 +352,7 @@ export default function Sla() {
         </div>
       </header>
 
-      {/* ---------- KPIs (vue période uniquement) ---------- */}
+      {/* ---------- KPIs ---------- */}
       {vue === 'PERIODE' && !loading && bilan && (
         <section className="sla-kpis">
           <div className={`sla-kpi ${(bilan.tauxRespectReponsePct ?? 100) >= 90 ? 'sla-kpi--bon' : (bilan.tauxRespectReponsePct ?? 100) >= 70 ? 'sla-kpi--moyen' : 'sla-kpi--critique'}`}>
@@ -386,22 +389,69 @@ export default function Sla() {
         </section>
       )}
 
-      {/* ---------- Répartition par priorité ---------- */}
+      {/* ---------- Répartition par priorité — cartes ---------- */}
       {vue === 'PERIODE' && !loading && bilan && bilan.parPriorite?.length > 0 && (
-        <section className="sla-parpriorite">
-          <div className="sla-parpriorite__title">Répartition par priorité</div>
-          <div className="sla-parpriorite__list">
-            {bilan.parPriorite.map((p) => (
-              <div key={p.priorite} className="sla-parpriorite__item">
-                <span className="sla-priorite-dot" style={{ backgroundColor: PRIORITE_HEX[p.priorite] }} />
-                <span className="sla-parpriorite__label">{prioriteLabel(p.priorite)}</span>
-                <span className="sla-parpriorite__nb">{p.nbBons} bon{p.nbBons > 1 ? 's' : ''}</span>
-                <span className="sla-parpriorite__sep">·</span>
-                <span className="sla-parpriorite__taux">Réponse {formatTaux(p.tauxRespectReponsePct)}</span>
-                <span className="sla-parpriorite__sep">·</span>
-                <span className="sla-parpriorite__taux">Résolution {formatTaux(p.tauxRespectResolutionPct)}</span>
-              </div>
-            ))}
+        <section className="sla-priorites">
+          <div className="sla-priorites__header">
+            <h3 className="sla-priorites__title">Répartition par priorité</h3>
+            <span className="sla-priorites__sub">
+              {bilan.parPriorite.reduce((s, p) => s + p.nbBons, 0)} bons analysés
+            </span>
+          </div>
+
+          <div className="sla-priorites__grid">
+            {bilan.parPriorite.map((p) => {
+              const tauxRep = p.tauxRespectReponsePct ?? 100;
+              const tauxRes = p.tauxRespectResolutionPct ?? 100;
+
+              return (
+                <div
+                  key={p.priorite}
+                  className="sla-prio-card"
+                  style={{ '--prio-color': PRIORITE_HEX[p.priorite] }}
+                >
+                  <div className="sla-prio-card__head">
+                    <div className="sla-prio-card__badge">
+                      <span className="sla-prio-card__dot" />
+                      <span className="sla-prio-card__label">{p.priorite}</span>
+                    </div>
+                    <span className="sla-prio-card__nb">
+                      {p.nbBons} bon{p.nbBons > 1 ? 's' : ''}
+                    </span>
+                  </div>
+
+                  <div className="sla-prio-card__name">{prioriteLabel(p.priorite)}</div>
+
+                  <div className="sla-prio-card__bars">
+                    <div className="sla-prio-bar">
+                      <div className="sla-prio-bar__head">
+                        <span className="sla-prio-bar__label">Réponse</span>
+                        <span className="sla-prio-bar__value">{formatTaux(tauxRep)}</span>
+                      </div>
+                      <div className="sla-prio-bar__track">
+                        <div
+                          className={`sla-prio-bar__fill ${getTauxClass(tauxRep)}`}
+                          style={{ width: `${Math.min(100, Math.max(0, tauxRep))}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="sla-prio-bar">
+                      <div className="sla-prio-bar__head">
+                        <span className="sla-prio-bar__label">Résolution</span>
+                        <span className="sla-prio-bar__value">{formatTaux(tauxRes)}</span>
+                      </div>
+                      <div className="sla-prio-bar__track">
+                        <div
+                          className={`sla-prio-bar__fill ${getTauxClass(tauxRes)}`}
+                          style={{ width: `${Math.min(100, Math.max(0, tauxRes))}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

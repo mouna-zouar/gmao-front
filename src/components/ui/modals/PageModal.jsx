@@ -7,7 +7,7 @@ export default function PageModal({
   title,
   subtitle,
   icon,
-  accent = '#0d9488',
+  accent = '#0794a4',
   size = 'xl',
   children,
 }) {
@@ -30,32 +30,32 @@ export default function PageModal({
 
   return (
     <div
-      className="page-modal-overlay"
+      className="pmodal-overlay"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       <div
-        className={`page-modal page-modal--${size}`}
+        className={`pmodal pmodal--${size}`}
         onClick={(e) => e.stopPropagation()}
         style={{ '--modal-accent': accent }}
       >
-        <header className="page-modal__header">
-          <div className="page-modal__title-wrap">
+        <header className="pmodal__header">
+          <div className="pmodal__title-wrap">
             {Icon && (
-              <span className="page-modal__icon">
+              <span className="pmodal__icon">
                 <Icon size={22} />
               </span>
             )}
-            <div className="page-modal__title-text">
-              <h2 className="page-modal__title">{title}</h2>
-              {subtitle && <p className="page-modal__subtitle">{subtitle}</p>}
+            <div className="pmodal__title-text">
+              <h2 className="pmodal__title">{title}</h2>
+              {subtitle && <p className="pmodal__subtitle">{subtitle}</p>}
             </div>
           </div>
 
           <button
             type="button"
-            className="page-modal__close"
+            className="pmodal__close"
             onClick={onClose}
             aria-label="Fermer"
             title="Fermer (Échap)"
@@ -75,7 +75,7 @@ export default function PageModal({
           </button>
         </header>
 
-        <div className="page-modal__body">
+        <div className="pmodal__body">
           {children}
         </div>
       </div>

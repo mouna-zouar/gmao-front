@@ -22,6 +22,9 @@ import {
   Clock,
   XCircle,
   Navigation,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
 } from 'lucide-react';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeService from '../../../../services/vehiculeService';
@@ -30,6 +33,7 @@ import VehiculeMissionModal from '../../../ui/modals/VehiculeMissionModal';
 import PageModal from '../../../ui/modals/PageModal';
 import VehiculeTracage from './VehiculeTracage';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import './VehiculeMissions.css';
 import TerminerMissionModal from '../../../ui/modals/TerminerMissionModal';
 
@@ -68,6 +72,18 @@ function formatDateTime(iso) {
   });
 }
 
+/* Colonnes paramétrables (affichage + recherche) */
+const VMS_COLUMNS_DEFAULT = [
+  { key: 'num',         label: 'N°',          visible: true, searchable: true  },
+  { key: 'vehicule',    label: 'Véhicule',    visible: true, searchable: true  },
+  { key: 'conducteur',  label: 'Conducteur',  visible: true, searchable: true  },
+  { key: 'depart',      label: 'Départ',      visible: true, searchable: false },
+  { key: 'retour',      label: 'Retour',      visible: true, searchable: false },
+  { key: 'destination', label: 'Destination', visible: true, searchable: true  },
+  { key: 'parcourus',   label: 'Parcourus',   visible: true, searchable: false },
+  { key: 'etat',        label: 'État',        visible: true, searchable: false },
+];
+
 export default function VehiculeMissions() {
   const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,6 +91,13 @@ export default function VehiculeMissions() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
+
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const [columnSettings, setColumnSettings] = useState(VMS_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const [vehiculesMap, setVehiculesMap] = useState({});
   const [personnelsMap, setPersonnelsMap] = useState({});
@@ -140,24 +163,200 @@ export default function VehiculeMissions() {
     return Array.from(set).sort((a, b) => a - b);
   }, [missions]);
 
+  // Texte de recherche d'une colonne
+  const getColumnSearchValue = (m, key) => {
+    const veh = vehiculesMap[m.vehiculeId];
+    const pers = personnelsMap[m.conducteurId ?? m.personnelId];
+    switch (key) {
+      case 'num':         return [m.num, m.numero, m.libelle, m.description].filter(Boolean).join(' ');
+      case 'vehicule':    return [veh?.nom, veh?.immatriculation].filter(Boolean).join(' ');
+      case 'conducteur':  return [pers?.nom, pers?.prenom, pers?.matricule].filter(Boolean).join(' ');
+      case 'depart':      return formatDateTime(m.dateDepart || m.dateDebut);
+      case 'retour':      return formatDateTime(m.dateRetour || m.dateFin);
+      case 'destination': return [m.destination, m.lieu, m.localisation].filter(Boolean).join(' ');
+      case 'parcourus':   return m.kilometrageParcouru != null ? String(m.kilometrageParcouru) : '';
+      case 'etat':        return etatLabel(m.etat);
+      default:            return '';
+    }
+  };
+
+  // Valeur utilisée pour trier une colonne
+  const getSortValue = (m, key) => {
+    const veh = vehiculesMap[m.vehiculeId];
+    const pers = personnelsMap[m.conducteurId ?? m.personnelId];
+    const time = (iso) => (iso ? new Date(iso).getTime() || 0 : 0);
+    switch (key) {
+      case 'num':         return String(m.num || m.numero || '');
+      case 'vehicule':    return veh?.nom || '';
+      case 'conducteur':  return pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '';
+      case 'depart':      return time(m.dateDepart || m.dateDebut);
+      case 'retour':      return time(m.dateRetour || m.dateFin);
+      case 'destination': return m.destination || m.lieu || '';
+      case 'parcourus':   return Number(m.kilometrageParcouru ?? m.kilometrageDepart ?? -1);
+      case 'etat':        return Number(m.etat ?? -1);
+      default:            return '';
+    }
+  };
+
   const filtered = useMemo(() => {
-    return missions.filter((m) => {
-      const veh = vehiculesMap[m.vehiculeId];
-      const pers = personnelsMap[m.conducteurId ?? m.personnelId];
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
 
-      const haystack = [
-        m.num, m.numero, m.libelle, m.description,
-        veh?.nom, veh?.immatriculation,
-        pers?.nom, pers?.prenom, pers?.matricule,
-        m.destination, m.lieu, m.localisation,
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
+    const result = missions.filter((m) => {
+      const matchesSearch = !term
+        || searchableCols.some((key) => getColumnSearchValue(m, key).toLowerCase().includes(term));
       const matchesEtat = etatFilter === 'all' || String(m.etat) === etatFilter;
-
       return matchesSearch && matchesEtat;
     });
-  }, [missions, searchTerm, etatFilter, vehiculesMap, personnelsMap]);
+
+    if (!sortColumn) return result;
+
+    const sorted = [...result].sort((x, y) => {
+      const vx = getSortValue(x, sortColumn);
+      const vy = getSortValue(y, sortColumn);
+      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      return vx - vy;
+    });
+    return sortDirection === 'desc' ? sorted.reverse() : sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [missions, searchTerm, etatFilter, vehiculesMap, personnelsMap, columnSettings, sortColumn, sortDirection]);
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="vms-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="vms-sort-icon active" />
+      : <ArrowDown size={13} className="vms-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const renderCell = (key, m) => {
+    const veh = vehiculesMap[m.vehiculeId];
+    const pers = personnelsMap[m.conducteurId ?? m.personnelId];
+    const meta = ETAT_META[m.etat] ?? ETAT_META[0];
+    const EtatIcon = meta.Icon;
+    const hasCoords = m.latitude != null && m.longitude != null;
+
+    switch (key) {
+      case 'num':
+        return (
+          <td key="num">
+            <span className="vms-cell-num">{m.num || m.numero || `#${m.id}`}</span>
+          </td>
+        );
+      case 'vehicule':
+        return (
+          <td key="vehicule">
+            <div className="vms-cell-vehicle">
+              <div className="vms-cell-vehicle-icon">
+                <Car size={14} strokeWidth={2.2} />
+              </div>
+              <div className="vms-cell-vehicle-text">
+                <span className="vms-cell-main">
+                  {veh?.nom || `Véhicule #${m.vehiculeId}`}
+                </span>
+                {veh?.immatriculation && (
+                  <span className="vms-cell-sub">{veh.immatriculation}</span>
+                )}
+              </div>
+            </div>
+          </td>
+        );
+      case 'conducteur':
+        return (
+          <td key="conducteur">
+            {pers ? (
+              <div className="vms-cell-driver">
+                <User size={14} strokeWidth={2.2} className="vms-cell-driver-icon" />
+                <span>{`${pers.nom || ''} ${pers.prenom || ''}`.trim()}</span>
+              </div>
+            ) : (
+              <span className="vms-cell-empty">—</span>
+            )}
+          </td>
+        );
+      case 'depart':
+        return (
+          <td key="depart">
+            <span className="vms-cell-date">{formatDateTime(m.dateDepart || m.dateDebut)}</span>
+          </td>
+        );
+      case 'retour':
+        return (
+          <td key="retour">
+            <span className="vms-cell-date">{formatDateTime(m.dateRetour || m.dateFin)}</span>
+          </td>
+        );
+      case 'destination':
+        return (
+          <td key="destination">
+            <div className="vms-cell-destination">
+              <span>{m.destination || m.lieu || '—'}</span>
+              {hasCoords && (
+                <a
+                  href={`https://www.google.com/maps?q=${m.latitude},${m.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="vms-cell-map-link"
+                  title="Voir sur Google Maps"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MapPin size={13} strokeWidth={2.5} />
+                  <ExternalLink size={11} strokeWidth={2.5} />
+                </a>
+              )}
+            </div>
+          </td>
+        );
+      case 'parcourus':
+        return (
+          <td key="parcourus">
+            {m.kilometrageParcouru != null
+              ? `${Number(m.kilometrageParcouru).toLocaleString('fr-FR')} km`
+              : m.kilometrageDepart != null
+                ? `${Number(m.kilometrageDepart).toLocaleString('fr-FR')} km →`
+                : '—'}
+          </td>
+        );
+      case 'etat':
+        return (
+          <td key="etat">
+            <span className={`vms-pill ${meta.class}`}>
+              <EtatIcon
+                size={12}
+                strokeWidth={2.5}
+                className={m.etat === 1 ? 'vms-spin' : ''}
+              />
+              {etatLabel(m.etat)}
+            </span>
+          </td>
+        );
+      default:
+        return null;
+    }
+  };
 
   const handleResetFilters = () => {
     setSearchTerm('');
@@ -285,9 +484,15 @@ export default function VehiculeMissions() {
       {/* ── HEADER ── */}
       <div className="vms-header-card">
         <div className="vms-header-left">
-          <div className="vms-header-icon-wrap">
+          <button
+            type="button"
+            className="vms-header-icon-wrap vms-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <Route size={24} strokeWidth={2} />
-          </div>
+          </button>
           <div>
             <h2>Missions véhicules</h2>
             <p className="vms-header-subtitle">
@@ -384,7 +589,7 @@ export default function VehiculeMissions() {
             <Search size={16} strokeWidth={2.2} className="vms-filter-icon" />
             <input
               type="text"
-              placeholder="N°, véhicule, conducteur, destination..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -436,20 +641,26 @@ export default function VehiculeMissions() {
         <table className="vms-table">
           <thead>
             <tr>
-              <th>N°</th>
-              <th>Véhicule</th>
-              <th>Conducteur</th>
-              <th>Départ</th>
-              <th>Retour</th>
-              <th>Destination</th>
-              <th>Parcourus</th>
-              <th>État</th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`vms-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="vms-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="vms-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vms-table-empty">
                   <div className="vms-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vms-spin" />
                     <span>Chargement des missions...</span>
@@ -458,7 +669,7 @@ export default function VehiculeMissions() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="vms-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vms-table-empty">
                   <div className="vms-empty-state">
                     <Route size={32} strokeWidth={1.6} />
                     <span>
@@ -470,95 +681,15 @@ export default function VehiculeMissions() {
                 </td>
               </tr>
             ) : (
-              filtered.map((m) => {
-                const veh = vehiculesMap[m.vehiculeId];
-                const pers = personnelsMap[m.conducteurId ?? m.personnelId];
-                const meta = ETAT_META[m.etat] ?? ETAT_META[0];
-                const EtatIcon = meta.Icon;
-                const hasCoords = m.latitude != null && m.longitude != null;
-
-                return (
-                  <tr
-                    key={m.id}
-                    className={`vms-row ${selected?.id === m.id ? 'selected' : ''}`}
-                    onClick={() => handleRowClick(m)}
-                  >
-                    <td>
-                      <span className="vms-cell-num">{m.num || m.numero || `#${m.id}`}</span>
-                    </td>
-                    <td>
-                      <div className="vms-cell-vehicle">
-                        <div className="vms-cell-vehicle-icon">
-                          <Car size={14} strokeWidth={2.2} />
-                        </div>
-                        <div className="vms-cell-vehicle-text">
-                          <span className="vms-cell-main">
-                            {veh?.nom || `Véhicule #${m.vehiculeId}`}
-                          </span>
-                          {veh?.immatriculation && (
-                            <span className="vms-cell-sub">{veh.immatriculation}</span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      {pers ? (
-                        <div className="vms-cell-driver">
-                          <User size={14} strokeWidth={2.2} className="vms-cell-driver-icon" />
-                          <span>{`${pers.nom || ''} ${pers.prenom || ''}`.trim()}</span>
-                        </div>
-                      ) : (
-                        <span className="vms-cell-empty">—</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className="vms-cell-date">
-                        {formatDateTime(m.dateDepart || m.dateDebut)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="vms-cell-date">
-                        {formatDateTime(m.dateRetour || m.dateFin)}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="vms-cell-destination">
-                        <span>{m.destination || m.lieu || '—'}</span>
-                        {hasCoords && (
-                          <a
-                            href={`https://www.google.com/maps?q=${m.latitude},${m.longitude}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="vms-cell-map-link"
-                            title="Voir sur Google Maps"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MapPin size={13} strokeWidth={2.5} />
-                            <ExternalLink size={11} strokeWidth={2.5} />
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                    <td>
-                      {m.kilometrageParcouru != null
-                        ? `${Number(m.kilometrageParcouru).toLocaleString('fr-FR')} km`
-                        : m.kilometrageDepart != null
-                          ? `${Number(m.kilometrageDepart).toLocaleString('fr-FR')} km →`
-                          : '—'}
-                    </td>
-                    <td>
-                      <span className={`vms-pill ${meta.class}`}>
-                        <EtatIcon
-                          size={12}
-                          strokeWidth={2.5}
-                          className={m.etat === 1 ? 'vms-spin' : ''}
-                        />
-                        {etatLabel(m.etat)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
+              filtered.map((m) => (
+                <tr
+                  key={m.id}
+                  className={`vms-row ${selected?.id === m.id ? 'selected' : ''}`}
+                  onClick={() => handleRowClick(m)}
+                >
+                  {visibleColumns.map((c) => renderCell(c.key, m))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -597,6 +728,17 @@ export default function VehiculeMissions() {
         mission={selected}
         vehicule={selected ? vehiculesMap[selected.vehiculeId] : null}
         onConfirm={confirmTerminer}
+      />
+
+      {/* ── PARAMÈTRES DES COLONNES ── */}
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="mission"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
 
       {/* ── CONFIRMATION ── */}

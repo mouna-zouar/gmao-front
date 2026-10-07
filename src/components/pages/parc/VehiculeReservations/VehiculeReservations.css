@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   VehiculeReservations.css
-   ═══════════════════════════════════════════════════════════ */
+
 
 .vrs-container {
   padding: 24px;
@@ -15,113 +13,127 @@
 @keyframes vrsSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 .vrs-spin { animation: vrsSpin 1s linear infinite; }
 
-/* HEADER */
 .vrs-header-card {
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   border-radius: 20px;
-  padding: 22px 26px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 24px;
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
   flex-wrap: wrap;
-  box-shadow: 0 20px 50px -20px rgba(67, 56, 202, 0.4);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
   position: relative;
-  overflow: hidden;
-  color: #ffffff;
-}
-
-.vrs-header-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 15% 15%, rgba(255,255,255,0.18) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(255,255,255,0.1) 0%, transparent 40%);
-  pointer-events: none;
 }
 
 .vrs-header-left {
   display: flex;
   align-items: center;
   gap: 14px;
-  position: relative;
-  z-index: 1;
 }
 
 .vrs-header-icon-wrap {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: #e9f8fa;
+  border: 1px solid #d5f0f3;
+  color: #0794a4;
+  flex-shrink: 0;
+}
+
+/* Icône d'en-tête = bouton « paramètres des colonnes » */
+.vrs-header-icon-btn {
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.vrs-header-icon-btn:hover {
+  background: #d5f0f3;
+  border-color: #a8e0e6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -6px rgba(7, 148, 164, 0.45);
+}
+
+.vrs-header-icon-btn:active { transform: translateY(0); }
+
+.vrs-header-icon-btn:focus-visible {
+  outline: 2px solid #0794a4;
+  outline-offset: 2px;
 }
 
 .vrs-header-left h2 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0f172a;
   letter-spacing: -0.02em;
 }
 
 .vrs-header-subtitle {
   margin: 3px 0 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: #64748b;
+  font-weight: 500;
 }
 
+/* Stats : badges clairs en ligne */
 .vrs-stats {
   display: flex;
-  gap: 10px;
-  position: relative;
-  z-index: 1;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
 .vrs-stat {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
-  min-width: 80px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #e9f8fa;
+  border: 1.5px solid #d5f0f3;
 }
 
 .vrs-stat-value {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: #ffffff;
   line-height: 1;
+  color: #067a87;
 }
 
 .vrs-stat-label {
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.9);
-  text-align: center;
+  letter-spacing: 0.05em;
+  color: #067a87;
 }
 
-.vrs-stat.stat-pending { background: rgba(245, 158, 11, 0.28); border-color: rgba(253, 224, 71, 0.5); }
-.vrs-stat.stat-confirmed { background: rgba(34, 197, 94, 0.25); border-color: rgba(134, 239, 172, 0.5); }
-.vrs-stat.stat-running { background: rgba(59, 130, 246, 0.25); border-color: rgba(147, 197, 253, 0.5); }
-.vrs-stat.stat-done { background: rgba(100, 116, 139, 0.28); border-color: rgba(203, 213, 225, 0.5); }
+.vrs-stat.stat-pending { background: #fffbeb; border-color: #fde68a; }
+.vrs-stat.stat-pending .vrs-stat-value,
+.vrs-stat.stat-pending .vrs-stat-label { color: #b45309; }
+
+.vrs-stat.stat-confirmed { background: #d1fae5; border-color: #6ee7b7; }
+.vrs-stat.stat-confirmed .vrs-stat-value,
+.vrs-stat.stat-confirmed .vrs-stat-label { color: #047857; }
+
+/* En cours → teal uni */
+.vrs-stat.stat-running { background: #e9f8fa; border-color: #a8e0e6; }
+.vrs-stat.stat-running .vrs-stat-value,
+.vrs-stat.stat-running .vrs-stat-label { color: #067a87; }
+
+.vrs-stat.stat-done { background: #f1f5f9; border-color: #cbd5e1; }
+.vrs-stat.stat-done .vrs-stat-value,
+.vrs-stat.stat-done .vrs-stat-label { color: #475569; }
 
 /* ACTIONS */
 .vrs-actions-bar {
@@ -156,14 +168,15 @@ background: linear-gradient(
 .vrs-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
 .vrs-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* Bouton principal → teal uni */
 .vrs-action-btn.ajouter {
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   color: #ffffff;
-  box-shadow: 0 6px 16px -6px rgba(67, 56, 202, 0.5);
+  background: #0794a4;
+  color: #ffffff;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
+}
+
+.vrs-action-btn.ajouter:hover:not(.disabled) {
+  background: #067a87;
 }
 
 .vrs-action-btn.modifier { color: #ea580c; }
@@ -180,7 +193,7 @@ background: linear-gradient(
   margin: 2px 4px;
 }
 
-/* Boutons rapides de changement d'état, dans la barre d'action */
+/* Boutons rapides de changement d'état */
 .vrs-action-btn.etat-quick.accept { color: #166534; }
 .vrs-action-btn.etat-quick.accept:hover:not(.disabled) { background: #f0fdf4; border-color: #86efac; }
 
@@ -224,7 +237,7 @@ background: linear-gradient(
   white-space: nowrap;
 }
 
-.vrs-filter-label svg { color: #1b648f; }
+.vrs-filter-label svg { color: #0794a4; }
 
 .vrs-filter-input-wrap {
   display: flex;
@@ -241,8 +254,8 @@ background: linear-gradient(
 }
 
 .vrs-filter-input-wrap:focus-within {
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(67, 56, 202, 0.12);
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
 }
 
 .vrs-filter-icon { color: #94a3b8; }
@@ -303,16 +316,22 @@ background: linear-gradient(
 }
 
 .vrs-export-btn:hover { transform: translateY(-2px); }
-.vrs-export-btn.excel { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-.vrs-export-btn.print { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); }
-.vrs-export-btn.stats { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+
+.vrs-export-btn.excel { background: #10b981; }
+.vrs-export-btn.excel:hover { background: #059669; }
+
+.vrs-export-btn.print { background: #0794a4; }
+.vrs-export-btn.print:hover { background: #067a87; }
+
+.vrs-export-btn.stats { background: #f59e0b; }
+.vrs-export-btn.stats:hover { background: #d97706; }
 
 /* ERREUR */
 .vrs-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  background: #fef2f2;
   border: 1.5px solid #fecaca;
   color: #b91c1c;
   font-size: 0.86rem;
@@ -337,8 +356,9 @@ background: linear-gradient(
   font-size: 13.5px;
 }
 
+/* En-tête du tableau → teal clair uni */
 .vrs-table thead {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #e9f8fa;
 }
 
 .vrs-table th {
@@ -348,8 +368,8 @@ background: linear-gradient(
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
-  border-bottom: 1.5px solid #e2e8f0;
+  color: #067a87;
+  border-bottom: 1.5px solid #d5f0f3;
   white-space: nowrap;
 }
 
@@ -365,8 +385,33 @@ background: linear-gradient(
 .vrs-table tbody tr:hover { background: #fafbfd; }
 
 .vrs-row { cursor: pointer; }
-.vrs-row.selected td { background: #eef2ff; }
-.vrs-row.selected { box-shadow: inset 4px 0 0 #1b648f; }
+.vrs-row.selected td { background: #e9f8fa; }
+.vrs-row.selected { box-shadow: inset 4px 0 0 #0794a4; }
+
+/* TRI DES COLONNES */
+.vrs-th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.vrs-th-sortable:hover { background: #d5f0f3; color: #066470; }
+.vrs-th-sortable.is-sorted { background: #d5f0f3; color: #066470; }
+
+.vrs-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vrs-sort-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.vrs-th-sortable:hover .vrs-sort-icon,
+.vrs-sort-icon.active { color: #0794a4; }
 
 /* CELLULES */
 .vrs-cell-vehicle { display: flex; align-items: center; gap: 10px; }
@@ -378,8 +423,8 @@ background: linear-gradient(
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: #eef2ff;
-  color: #1b648f;
+  background: #e9f8fa;
+  color: #0794a4;
   flex-shrink: 0;
 }
 
@@ -390,6 +435,7 @@ background: linear-gradient(
 
 .vrs-cell-driver { display: flex; align-items: center; gap: 10px; }
 
+/* Avatar conducteur → teal uni */
 .vrs-cell-driver-avatar {
   display: flex;
   align-items: center;
@@ -397,13 +443,8 @@ background: linear-gradient(
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );
-    color: #ffffff;
+  background: #0794a4;
+  color: #ffffff;
   flex-shrink: 0;
 }
 
@@ -420,7 +461,7 @@ background: linear-gradient(
   align-items: center;
   gap: 5px;
   font-size: 12px;
-  color: #1b648f;
+  color: #0794a4;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -461,7 +502,8 @@ background: linear-gradient(
 
 .vrs-pill.pending { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
 .vrs-pill.confirmed { background: #dcfce7; color: #166534; border-color: #86efac; }
-.vrs-pill.running { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+/* En cours → teal uni */
+.vrs-pill.running { background: #e9f8fa; color: #067a87; border-color: #a8e0e6; }
 .vrs-pill.done { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
 .vrs-pill.cancelled { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
 
@@ -491,7 +533,7 @@ background: linear-gradient(
 
 @media (max-width: 768px) {
   .vrs-container { padding: 16px; }
-  .vrs-header-card { padding: 18px; }
+  .vrs-header-card { padding: 14px 16px; }
   .vrs-header-left h2 { font-size: 1.1rem; }
   .vrs-actions-bar { padding: 10px 12px; gap: 6px; }
   .vrs-action-btn { padding: 8px 11px; font-size: 0.8rem; }

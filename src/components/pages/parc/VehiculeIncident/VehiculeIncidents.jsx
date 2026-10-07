@@ -4,12 +4,14 @@ import {
   Download, Printer, BarChart3, Loader2,
   Car, User, Calendar, Gauge, Coins, MapPin,
   ShieldAlert, Activity, XCircle, Clock,
+  ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
 import vehiculeIncidentService from '../../../../services/vehiculeIncidentService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
 import VehiculeIncidentModal from '../../../ui/modals/VehiculeIncidentModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import './VehiculeIncidents.css';
 
 // Codes alignés sur le backend (voir commentaires sur les champs
@@ -63,6 +65,17 @@ function typeLabel(t) { return TYPE_LABELS[t] ?? `Type ${t}`; }
 function graviteLabel(g) { return GRAVITE_LABELS[g] ?? `Gravité ${g}`; }
 function etatLabel(e) { return ETAT_LABELS[e] ?? `État ${e}`; }
 
+/* Colonnes paramétrables (affichage + recherche) */
+const VIN_COLUMNS_DEFAULT = [
+  { key: 'vehicule',   label: 'Véhicule',   visible: true, searchable: true  },
+  { key: 'conducteur', label: 'Conducteur', visible: true, searchable: true  },
+  { key: 'type',       label: 'Type',       visible: true, searchable: true  },
+  { key: 'date',       label: 'Date',       visible: true, searchable: false },
+  { key: 'gravite',    label: 'Gravité',    visible: true, searchable: false },
+  { key: 'cout',       label: 'Coût',       visible: true, searchable: false },
+  { key: 'etat',       label: 'État',       visible: true, searchable: false },
+];
+
 export default function VehiculeIncidents() {
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -71,6 +84,13 @@ export default function VehiculeIncidents() {
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
   const [graviteFilter, setGraviteFilter] = useState('all');
+
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const [columnSettings, setColumnSettings] = useState(VIN_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const [vehiculesMap, setVehiculesMap] = useState({});
   const [personnelsMap, setPersonnelsMap] = useState({});
@@ -132,24 +152,182 @@ export default function VehiculeIncidents() {
     return { total, declares, enCours, resolus, coutTotal };
   }, [incidents]);
 
+  // Texte de recherche d'une colonne
+  const getColumnSearchValue = (i, key) => {
+    const veh = vehiculesMap[i.vehiculeId];
+    const pers = personnelsMap[i.conducteurId];
+    switch (key) {
+      case 'vehicule':   return [veh?.matricule, veh?.marque].filter(Boolean).join(' ');
+      case 'conducteur': return [pers?.nom, pers?.prenom, pers?.matricule].filter(Boolean).join(' ');
+      case 'type':       return [typeLabel(i.type), i.description].filter(Boolean).join(' ');
+      case 'date':       return formatDate(i.dateIncident);
+      case 'gravite':    return graviteLabel(i.gravite);
+      case 'cout':       return i.cout != null ? String(i.cout) : '';
+      case 'etat':       return etatLabel(i.etat);
+      default:           return '';
+    }
+  };
+
+  // Valeur utilisée pour trier une colonne
+  const getSortValue = (i, key) => {
+    const veh = vehiculesMap[i.vehiculeId];
+    const pers = personnelsMap[i.conducteurId];
+    switch (key) {
+      case 'vehicule':   return veh?.matricule || '';
+      case 'conducteur': return pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '';
+      case 'type':       return Number(i.type ?? -1);
+      case 'date':       return i.dateIncident ? new Date(i.dateIncident).getTime() || 0 : 0;
+      case 'gravite':    return Number(i.gravite ?? -1);
+      case 'cout':       return Number(i.cout ?? -1);
+      case 'etat':       return Number(i.etat ?? -1);
+      default:           return '';
+    }
+  };
+
   const filtered = useMemo(() => {
-    return incidents.filter((i) => {
-      const veh = vehiculesMap[i.vehiculeId];
-      const pers = personnelsMap[i.conducteurId];
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
 
-      const haystack = [
-        veh?.matricule, veh?.marque,
-        pers?.nom, pers?.prenom, pers?.matricule,
-        i.description,
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
+    const result = incidents.filter((i) => {
+      const matchesSearch = !term
+        || searchableCols.some((key) => getColumnSearchValue(i, key).toLowerCase().includes(term));
       const matchesEtat = etatFilter === 'all' || String(i.etat) === etatFilter;
       const matchesGravite = graviteFilter === 'all' || String(i.gravite) === graviteFilter;
-
       return matchesSearch && matchesEtat && matchesGravite;
     });
-  }, [incidents, searchTerm, etatFilter, graviteFilter, vehiculesMap, personnelsMap]);
+
+    if (!sortColumn) return result;
+
+    const sorted = [...result].sort((x, y) => {
+      const vx = getSortValue(x, sortColumn);
+      const vy = getSortValue(y, sortColumn);
+      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      return vx - vy;
+    });
+    return sortDirection === 'desc' ? sorted.reverse() : sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incidents, searchTerm, etatFilter, graviteFilter, vehiculesMap, personnelsMap, columnSettings, sortColumn, sortDirection]);
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="vin-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="vin-sort-icon active" />
+      : <ArrowDown size={13} className="vin-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const renderCell = (key, i) => {
+    const veh = vehiculesMap[i.vehiculeId];
+    const pers = personnelsMap[i.conducteurId];
+    const meta = ETAT_META[i.etat] ?? ETAT_META[0];
+    const EtatIcon = meta.Icon;
+
+    switch (key) {
+      case 'vehicule':
+        return (
+          <td key="vehicule">
+            <div className="vin-cell-vehicle">
+              <div className="vin-cell-vehicle-icon">
+                <Car size={14} strokeWidth={2.2} />
+              </div>
+              <div className="vin-cell-vehicle-text">
+                <span className="vin-cell-main">
+                  {veh?.matricule || `Véhicule #${i.vehiculeId}`}
+                </span>
+                {veh?.marque && <span className="vin-cell-sub">{veh.marque}</span>}
+              </div>
+            </div>
+          </td>
+        );
+      case 'conducteur':
+        return (
+          <td key="conducteur">
+            {pers ? (
+              <div className="vin-cell-driver">
+                <div className="vin-cell-driver-avatar">
+                  <User size={14} strokeWidth={2.2} />
+                </div>
+                <span className="vin-cell-main">
+                  {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
+                </span>
+              </div>
+            ) : (
+              <span className="vin-cell-empty">—</span>
+            )}
+          </td>
+        );
+      case 'type':
+        return (
+          <td key="type">
+            <span className="vin-tag">{typeLabel(i.type)}</span>
+          </td>
+        );
+      case 'date':
+        return (
+          <td key="date">
+            <span className="vin-cell-date">
+              <Calendar size={12} strokeWidth={2.5} />
+              {formatDate(i.dateIncident)}
+            </span>
+          </td>
+        );
+      case 'gravite':
+        return (
+          <td key="gravite">
+            <span className={`vin-gravite gravite-${i.gravite}`}>
+              {graviteLabel(i.gravite)}
+            </span>
+          </td>
+        );
+      case 'cout':
+        return (
+          <td key="cout">
+            <span className="vin-cell-amount">
+              <Coins size={13} strokeWidth={2.5} />
+              {formatMontant(i.cout)}
+            </span>
+          </td>
+        );
+      case 'etat':
+        return (
+          <td key="etat">
+            <span className={`vin-pill ${meta.class}`}>
+              <EtatIcon
+                size={12}
+                strokeWidth={2.5}
+                className={i.etat === 1 ? 'vin-spin' : ''}
+              />
+              {etatLabel(i.etat)}
+            </span>
+          </td>
+        );
+      default:
+        return null;
+    }
+  };
 
   const handleResetFilters = () => {
     setSearchTerm('');
@@ -279,9 +457,15 @@ export default function VehiculeIncidents() {
       {/* HEADER */}
       <div className="vin-header-card">
         <div className="vin-header-left">
-          <div className="vin-header-icon-wrap">
+          <button
+            type="button"
+            className="vin-header-icon-wrap vin-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <AlertTriangle size={24} strokeWidth={2} />
-          </div>
+          </button>
           <div>
             <h2>Incidents véhicule</h2>
             <p className="vin-header-subtitle">
@@ -379,7 +563,7 @@ export default function VehiculeIncidents() {
             <Search size={16} strokeWidth={2.2} className="vin-filter-icon" />
             <input
               type="text"
-              placeholder="Véhicule, conducteur, description..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -446,19 +630,26 @@ export default function VehiculeIncidents() {
         <table className="vin-table">
           <thead>
             <tr>
-              <th>Véhicule</th>
-              <th>Conducteur</th>
-              <th>Type</th>
-              <th>Date</th>
-              <th>Gravité</th>
-              <th>Coût</th>
-              <th>État</th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`vin-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="vin-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={7} className="vin-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vin-table-empty">
                   <div className="vin-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vin-spin" />
                     <span>Chargement des incidents...</span>
@@ -467,7 +658,7 @@ export default function VehiculeIncidents() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="vin-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vin-table-empty">
                   <div className="vin-empty-state">
                     <AlertTriangle size={32} strokeWidth={1.6} />
                     <span>
@@ -479,85 +670,15 @@ export default function VehiculeIncidents() {
                 </td>
               </tr>
             ) : (
-              filtered.map((i) => {
-                const veh = vehiculesMap[i.vehiculeId];
-                const pers = personnelsMap[i.conducteurId];
-                const meta = ETAT_META[i.etat] ?? ETAT_META[0];
-                const EtatIcon = meta.Icon;
-                return (
-                  <tr
-                    key={i.id}
-                    className={`vin-row ${selected?.id === i.id ? 'selected' : ''}`}
-                    onClick={() => handleRowClick(i)}
-                  >
-                    <td>
-                      <div className="vin-cell-vehicle">
-                        <div className="vin-cell-vehicle-icon">
-                          <Car size={14} strokeWidth={2.2} />
-                        </div>
-                        <div className="vin-cell-vehicle-text">
-                          <span className="vin-cell-main">
-                            {veh?.matricule || `Véhicule #${i.vehiculeId}`}
-                          </span>
-                          {veh?.marque && (
-                            <span className="vin-cell-sub">{veh.marque}</span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      {pers ? (
-                        <div className="vin-cell-driver">
-                          <div className="vin-cell-driver-avatar">
-                            <User size={14} strokeWidth={2.2} />
-                          </div>
-                          <span className="vin-cell-main">
-                            {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="vin-cell-empty">—</span>
-                      )}
-                    </td>
-
-                    <td>
-                      <span className="vin-tag">{typeLabel(i.type)}</span>
-                    </td>
-
-                    <td>
-                      <span className="vin-cell-date">
-                        <Calendar size={12} strokeWidth={2.5} />
-                        {formatDate(i.dateIncident)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className={`vin-gravite gravite-${i.gravite}`}>
-                        {graviteLabel(i.gravite)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className="vin-cell-amount">
-                        <Coins size={13} strokeWidth={2.5} />
-                        {formatMontant(i.cout)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <span className={`vin-pill ${meta.class}`}>
-                        <EtatIcon
-                          size={12}
-                          strokeWidth={2.5}
-                          className={i.etat === 1 ? 'vin-spin' : ''}
-                        />
-                        {etatLabel(i.etat)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
+              filtered.map((i) => (
+                <tr
+                  key={i.id}
+                  className={`vin-row ${selected?.id === i.id ? 'selected' : ''}`}
+                  onClick={() => handleRowClick(i)}
+                >
+                  {visibleColumns.map((c) => renderCell(c.key, i))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -570,6 +691,16 @@ export default function VehiculeIncidents() {
         onSave={handleSave}
         incident={selected}
         isEditing={!!selected}
+      />
+
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="incident"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
 
       <ConfirmModal

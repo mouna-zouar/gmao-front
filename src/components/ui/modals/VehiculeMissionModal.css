@@ -1,8 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   VehiculeMissionModal.css — Layout split (comme Réclamation / BM)
-   ═══════════════════════════════════════════════════════════ */
 
-/* ═══════════ MODAL CONTAINER ═══════════ */
 .bmm-modal {
   width: 900px;
   max-width: 96vw;
@@ -43,34 +39,21 @@
   75% { transform: translateX(4px); }
 }
 
-/* ═══════════ HEADER ═══════════ */
+/* ═══════════ HEADER — teal foncé uni ═══════════ */
 .bmm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 18px 24px;
-  background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );
+  background: #067a87;
   color: #ffffff;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
 }
 
-.bmm-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.12) 0%, transparent 40%);
-  pointer-events: none;
-}
+.bmm-header::before { display: none; }
 
 .bmm-header-left {
   display: flex;
@@ -88,10 +71,10 @@
   height: 42px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
   flex-shrink: 0;
+  backdrop-filter: none;
 }
 
 .bmm-eyebrow {
@@ -120,6 +103,7 @@
   z-index: 1;
 }
 
+/* Badge état → variantes claires unies */
 .bmm-etat-badge {
   display: inline-block;
   padding: 5px 12px;
@@ -129,7 +113,6 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.9);
 }
 
 .bmm-etat-badge.etat-0 { color: #075985; background: #e0f2fe; border-color: #7dd3fc; }
@@ -168,7 +151,7 @@
 .bmm-nav {
   width: 220px;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f8fafc;
   border-right: 1px solid #e2e8f0;
   padding: 18px 12px;
   overflow-y: auto;
@@ -220,22 +203,19 @@
   width: 100%;
 }
 
+/* Hover → teal clair uni */
 .bmm-nav-item:hover {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  color: #1b648f;
+  background: #e9f8fa;
+  border-color: #d5f0f3;
+  color: #0794a4;
 }
 
+/* Item actif → teal uni */
 .bmm-nav-item.active {
-  background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );
+  background: #0794a4;
   color: #ffffff;
-  border-color: #1b648f;
-  box-shadow: 0 6px 16px -6px rgba(15, 118, 110, 0.5);
+  border-color: #067a87;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.5);
 }
 
 .bmm-nav-item-icon {
@@ -263,6 +243,7 @@
   text-overflow: ellipsis;
 }
 
+/* Compteur → teal clair */
 .bmm-nav-item-count {
   display: inline-flex;
   align-items: center;
@@ -271,8 +252,8 @@
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #1b648f;
-  color: #ffffff;
+  background: #e9f8fa;
+  color: #0794a4;
   font-size: 10.5px;
   font-weight: 800;
 }
@@ -301,14 +282,15 @@
   margin: 8px 0;
 }
 .bmm-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+  background: #94a3b8;
   border-radius: 10px;
   border: 2px solid #f1f5f9;
   transition: all 0.2s ease;
 }
+
 .bmm-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #1b648f 0%, #14b8a6 100%);
-  border-color: #f0fdfa;
+  background: #0794a4;
+  border-color: #e9f8fa;
 }
 
 /* ═══════════ PANE ═══════════ */
@@ -379,16 +361,17 @@
 
 .bmm-field input:hover,
 .bmm-field select:hover,
-.bmm-field textarea:hover { border-color: #a7d5ce; }
+.bmm-field textarea:hover { border-color: #a8e0e6; }
 
 .bmm-field textarea { resize: vertical; min-height: 80px; }
 
+/* Focus → teal */
 .bmm-field input:focus,
 .bmm-field select:focus,
 .bmm-field textarea:focus {
   outline: none;
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
 
 .bmm-field input:disabled,
@@ -429,7 +412,7 @@
   border-radius: 50%;
   margin-top: 32px;
   flex-shrink: 0;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
 
 .bmm-timeline-dot.start { background: #10b981; }
@@ -438,7 +421,7 @@
 .bmm-timeline-line {
   flex: 0 0 32px;
   height: 2px;
-  background: linear-gradient(90deg, #10b981 0%, #f59e0b 100%);
+  background: #cbd5e1;
   margin-top: 38px;
   border-radius: 2px;
 }
@@ -455,15 +438,16 @@
   min-width: 0;
 }
 
+/* Bouton géoloc → teal clair uni */
 .bmm-geo-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 42px;
   height: 42px;
-  border: 1.5px solid #99f6e4;
-  background: #f0fdfa;
-  color: #1b648f;
+  border: 1.5px solid #d5f0f3;
+  background: #e9f8fa;
+  color: #0794a4;
   font-size: 1rem;
   border-radius: 10px;
   cursor: pointer;
@@ -472,10 +456,10 @@
 }
 
 .bmm-geo-btn:hover:not(:disabled) {
-  background: #ccfbf1;
-  border-color: #5eead4;
+  background: #d5f0f3;
+  border-color: #a8e0e6;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px -4px rgba(15, 118, 110, 0.3);
+  box-shadow: 0 4px 12px -4px rgba(7, 148, 164, 0.3);
 }
 
 .bmm-geo-btn:active:not(:disabled) { transform: translateY(0); }
@@ -514,9 +498,9 @@
 }
 
 .bmm-km-card:focus-within {
-  border-color: #1b648f;
-  background: #f0fdfa;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: #0794a4;
+  background: #e9f8fa;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
 
 .bmm-km-label {
@@ -546,10 +530,11 @@
   color: #94a3b8;
 }
 
+/* Flèche km → teal */
 .bmm-km-arrow {
   font-size: 1.2rem;
   font-weight: 800;
-  color: #1b648f;
+  color: #0794a4;
   text-align: center;
 }
 
@@ -613,9 +598,9 @@
   margin-top: 10px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: #f0fdfa;
-  border: 1.5px solid #99f6e4;
-  color: #1b648f;
+  background: #e9f8fa;
+  border: 1.5px solid #d5f0f3;
+  color: #067a87;
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -627,7 +612,7 @@
   margin-top: 14px;
   padding: 12px 16px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  background: #fef2f2;
   border: 1.5px solid #fecaca;
   color: #b91c1c;
   font-size: 0.85rem;
@@ -688,13 +673,13 @@
 }
 
 .bmm-searchable-input-wrap:hover {
-  border-color: #a7d5ce;
+  border-color: #a8e0e6;
 }
 
 .bmm-searchable-input-wrap.is-open,
 .bmm-searchable-input-wrap:focus-within {
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
 
 .bmm-searchable-icon {
@@ -704,7 +689,7 @@
 }
 
 .bmm-searchable-input-wrap.is-open .bmm-searchable-icon {
-  color: #1b648f;
+  color: #0794a4;
 }
 
 .bmm-searchable-input {
@@ -749,8 +734,8 @@
 }
 
 .bmm-searchable-clear-inline:hover {
-  background: #cbd5e1;
-  color: #1b648f;
+  background: #d5f0f3;
+  color: #0794a4;
 }
 
 .bmm-searchable-chevron {
@@ -760,7 +745,7 @@
 }
 
 .bmm-searchable-input-wrap.is-open .bmm-searchable-chevron {
-  color: #1b648f;
+  color: #0794a4;
 }
 
 .bmm-searchable-chevron.rotated {
@@ -847,23 +832,21 @@
   text-overflow: ellipsis;
 }
 
+/* Hover option → teal clair uni */
 .bmm-searchable-option:hover:not(:disabled) {
-  background: #f0fdfa;
-  color: #1b648f;
+  background: #e9f8fa;
+  color: #0794a4;
 }
 
+/* Option sélectionnée → teal clair uni */
 .bmm-searchable-option.is-selected {
-  background: linear-gradient(
-    135deg,
-    rgba(27, 100, 143, 0.08) 0%,
-    rgba(91, 168, 201, 0.12) 100%
-  );
-  color: #1b648f;
+  background: #e9f8fa;
+  color: #0794a4;
   font-weight: 700;
 }
 
 .bmm-searchable-option.is-selected svg {
-  color: #1b648f;
+  color: #0794a4;
 }
 
 .bmm-searchable-option.is-disabled,
@@ -930,7 +913,7 @@
     width: 2px;
     height: 20px;
     margin: 0 auto;
-    background: linear-gradient(180deg, #10b981 0%, #f59e0b 100%);
+    background: #cbd5e1;
   }
 
   .bmm-km-grid { grid-template-columns: 1fr; }
@@ -965,7 +948,7 @@
 }
 
 .vmm-eligibilite.checking {
-  background: #f0f9ff;
-  border-color: #bae6fd;
-  color: #075985;
+  background: #e9f8fa;
+  border-color: #d5f0f3;
+  color: #067a87;
 }

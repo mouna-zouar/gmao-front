@@ -1,7 +1,6 @@
-/* ============================================================
-   MODALE PLEIN-ÉCRAN RÉUTILISABLE
-   ============================================================ */
-.page-modal-overlay {
+
+
+.pmodal-overlay {
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -9,140 +8,157 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(15, 23, 42, 0.58);
+  background: rgba(15, 23, 42, 0.55);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  animation: pageModalOverlayIn 0.2s ease-out;
+  animation: pmodalOverlayIn 0.2s ease-out;
 }
 
-.page-modal {
+.pmodal {
   display: flex;
   flex-direction: column;
   width: 100%;
   max-height: 92vh;
-  background: #fff;
-  border-radius: 18px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
   box-shadow:
-    0 25px 60px rgba(15, 23, 42, 0.25),
-    0 8px 20px rgba(15, 23, 42, 0.12);
+    0 4px 8px rgba(15, 23, 42, 0.05),
+    0 24px 48px -20px rgba(15, 23, 42, 0.2);
   overflow: hidden;
-  animation: pageModalIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: pmodalIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.page-modal--lg   { max-width: 900px; }
-.page-modal--xl   { max-width: 1200px; }
-.page-modal--full { max-width: 1400px; }
+.pmodal--lg   { max-width: 900px; }
+.pmodal--xl   { max-width: 1200px; }
+.pmodal--full { max-width: 1400px; }
 
-.page-modal__header {
+/* ============================================================
+   HEADER
+   ============================================================ */
+.pmodal__header {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e9f0;
-  background: linear-gradient(180deg, #fafcfc 0%, #ffffff 100%);
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
   flex-shrink: 0;
 }
 
-.page-modal__header::before {
+.pmodal__header::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg,
-    var(--modal-accent, #0d9488) 0%,
-    color-mix(in srgb, var(--modal-accent, #0d9488) 70%, black) 100%);
+  background: var(--modal-accent, #0794a4);
+  opacity: 0.9;
 }
 
-.page-modal__title-wrap {
+.pmodal__title-wrap {
   display: flex;
   align-items: center;
   gap: 14px;
   min-width: 0;
 }
 
-.page-modal__icon {
+.pmodal__icon {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 46px;
   height: 46px;
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--modal-accent, #0d9488) 12%, white);
-  color: var(--modal-accent, #0d9488);
-  border: 1px solid color-mix(in srgb, var(--modal-accent, #0d9488) 25%, white);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--modal-accent, #0794a4) 10%, white);
+  color: var(--modal-accent, #0794a4);
+  border: 1px solid color-mix(in srgb, var(--modal-accent, #0794a4) 25%, white);
   flex-shrink: 0;
 }
 
-.page-modal__title-text { min-width: 0; }
+.pmodal__title-text { min-width: 0; }
 
-.page-modal__title {
+.pmodal__title {
   margin: 0;
-  font-size: 19px;
-  font-weight: 700;
-  color: #0b1220;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 
-.page-modal__subtitle {
-  margin: 4px 0 0;
-  font-size: 13px;
+.pmodal__subtitle {
+  margin: 3px 0 0;
+  font-size: 0.85rem;
+  font-weight: 500;
   color: #64748b;
   line-height: 1.4;
 }
 
-.page-modal__close {
+/* ============================================================
+   BOUTON FERMER
+   ============================================================ */
+.pmodal__close {
   width: 38px;
   height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 10px;
-  background: transparent;
+  border-radius: 8px;
+  background: #f1f5f9;
   color: #64748b;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
-.page-modal__close:hover {
+.pmodal__close:hover {
   background: #fef2f2;
   color: #dc2626;
   transform: rotate(90deg);
 }
 
-.page-modal__body {
+.pmodal__close:active {
+  transform: rotate(90deg) scale(0.94);
+}
+
+/* ============================================================
+   BODY
+   ============================================================ */
+.pmodal__body {
   flex: 1;
   overflow-y: auto;
   background: #f8fafc;
   padding: 0;
 }
 
-.page-modal__body::-webkit-scrollbar {
+.pmodal__body::-webkit-scrollbar {
   width: 8px;
 }
-.page-modal__body::-webkit-scrollbar-track {
+.pmodal__body::-webkit-scrollbar-track {
   background: transparent;
 }
-.page-modal__body::-webkit-scrollbar-thumb {
+.pmodal__body::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
 }
-.page-modal__body::-webkit-scrollbar-thumb:hover {
+.pmodal__body::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
 
-@keyframes pageModalOverlayIn {
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes pmodalOverlayIn {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
-@keyframes pageModalIn {
+@keyframes pmodalIn {
   from {
     opacity: 0;
     transform: translateY(15px) scale(0.98);
@@ -153,30 +169,54 @@
   }
 }
 
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 @media (max-width: 768px) {
-  .page-modal-overlay {
+  .pmodal-overlay {
     padding: 10px;
   }
 
-  .page-modal {
+  .pmodal {
     max-height: 94vh;
     border-radius: 14px;
   }
 
-  .page-modal__header {
-    padding: 16px 18px;
+  .pmodal__header {
+    padding: 14px 18px;
   }
 
-  .page-modal__title {
-    font-size: 16px;
+  .pmodal__title {
+    font-size: 1.15rem;
   }
 
-  .page-modal__subtitle {
-    font-size: 12px;
+  .pmodal__subtitle {
+    font-size: 0.78rem;
   }
 
-  .page-modal__icon {
+  .pmodal__icon {
     width: 40px;
     height: 40px;
+    border-radius: 8px;
+  }
+
+  .pmodal__close {
+    width: 34px;
+    height: 34px;
+  }
+}
+
+/* ============================================================
+   ACCESSIBILITÉ
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .pmodal-overlay,
+  .pmodal,
+  .pmodal__close {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .pmodal__close:hover {
+    transform: none;
   }
 }

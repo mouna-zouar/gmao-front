@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
-  --sidebar-width: 72px;
+  --sidebar-width: 76px;
   --sidebar-width-open: 256px;
   --navbar-height: 64px;
 
@@ -74,11 +74,20 @@ button {
     opacity: 0;
     transform: translateY(4px)
   }
-
   to {
     opacity: 1;
     transform: translateY(0)
   }
+}
+
+@keyframes pulseBadge {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(239, 68, 68, .25); }
+  50%      { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);   }
+}
+
+@keyframes popupIn {
+  from { opacity: 0; transform: translateX(-6px) scale(.96); }
+  to   { opacity: 1; transform: translateX(0)   scale(1);   }
 }
 
 .app-shell {
@@ -98,11 +107,19 @@ button {
   transition: width var(--transition);
 }
 
+/* ============================================================
+   SIDEBAR FERMÉE — Taille compacte
+   ============================================================ */
 .sidebar--closed {
   width: var(--sidebar-width);
-  background: linear-gradient(179deg, #1b648f, #1b818fa3);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, .15);
-  border-radius: 0 20px 20px 0;
+  background:
+    radial-gradient(120% 55% at 50% 0%,   rgba(125, 211, 252, .28) 0%, transparent 55%),
+    radial-gradient(120% 60% at 50% 100%, rgba(13, 148, 136, .30) 0%, transparent 60%),
+    linear-gradient(180deg, #164e6b 0%, #1b648f 45%, #103049 100%);
+  box-shadow:
+    6px 0 28px rgba(0, 0, 0, .22),
+    inset -1px 0 0 rgba(255, 255, 255, .06);
+  border-radius: 0 22px 22px 0;
   overflow: visible;
 }
 
@@ -110,7 +127,7 @@ button {
   width: var(--sidebar-width-open);
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, .08)
+  box-shadow: 4px 0 24px rgba(0, 0, 0, .08);
 }
 
 .sidebar__header {
@@ -125,11 +142,14 @@ button {
 
 .sidebar--open .sidebar__header {
   justify-content: space-between;
-  border-color: var(--color-border)
+  border-color: var(--color-border);
 }
 
 .sidebar--closed .sidebar__header {
   justify-content: center;
+  height: auto;
+  padding: 16px 0 10px;
+  border-bottom: none;
 }
 
 .sidebar__logo {
@@ -163,21 +183,29 @@ button {
 }
 
 .sidebar__menu-btn {
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, .08);
-  color: rgba(255, 255, 255, .7);
-  border-radius: 12px;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, .10);
+  color: rgba(255, 255, 255, .88);
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .15),
+              inset 0 1px 0 rgba(255, 255, 255, .18);
+  transition: all .25s cubic-bezier(.4, 0, .2, 1);
 }
 
 .sidebar__menu-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
 }
 
 .sidebar__menu-btn:hover {
-  background: rgba(255, 255, 255, .15);
+  background: rgba(255, 255, 255, .22);
   color: #fff;
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .28),
+              inset 0 1px 0 rgba(255, 255, 255, .25);
 }
 
 .sidebar__search {
@@ -215,8 +243,6 @@ button {
 
 /* ============================================================
    NAV PRINCIPALE
-   - Ouverte  : scrollable si trop long
-   - Fermée   : overflow visible pour laisser sortir les popups
    ============================================================ */
 .sidebar__nav {
   flex: 1;
@@ -232,6 +258,8 @@ button {
 }
 
 .sidebar--closed .sidebar__nav {
+  gap: 6px;
+  padding: 10px 0 8px;
   overflow: visible;
   align-items: center;
 }
@@ -273,7 +301,9 @@ button {
 .sidebar--closed .sidebar__footer {
   display: flex;
   justify-content: center;
-  border-color: rgba(255, 255, 255, .08);
+  padding: 12px 0 16px;
+  border-top: 1px solid rgba(255, 255, 255, .10);
+  margin-top: 6px;
 }
 
 .nav-item-wrap {
@@ -281,6 +311,12 @@ button {
   width: 100%;
   padding-bottom: 20px;
   overflow: visible;
+}
+
+.sidebar--closed .nav-item-wrap {
+  padding-bottom: 0;
+  display: flex;
+  justify-content: center;
 }
 
 .nav-item {
@@ -314,6 +350,7 @@ button {
   color: #e5e5e5;
 }
 
+/* ── Item réduit : pastille compacte ── */
 .nav-item--icon-only {
   justify-content: center;
   width: 50px;
@@ -323,14 +360,60 @@ button {
   border-radius: 12px;
 }
 
+.sidebar--closed .nav-item--icon-only {
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 15px;
+  border: 1px solid transparent;
+  position: relative;
+  color: #fff;
+  box-shadow:
+    0 3px 8px rgba(0, 0, 0, .14),
+    inset 0 1px 0 rgba(255, 255, 255, .55);
+  transition: all .22s cubic-bezier(.4, 0, .2, 1);
+}
+
 .nav-item--icon-only:hover {
   background: rgba(255, 255, 255, .08);
   color: rgba(255, 255, 255, .9);
 }
 
+.sidebar--closed .nav-item--icon-only:hover {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, .28),
+    inset 0 1px 0 rgba(255, 255, 255, .65);
+  color: #fff;
+  background: inherit;
+}
+
 .nav-item--icon-only.nav-item--active {
   background: rgba(255, 255, 255, .12);
   color: #fff;
+}
+
+/* État actif : fond blanc + halo + barre latérale lumineuse */
+.sidebar--closed .nav-item--icon-only.nav-item--active {
+  background: rgba(255, 255, 255, .98) !important;
+  color: #0f172a !important;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, .45),
+    0 10px 22px rgba(0, 0, 0, .32);
+}
+
+.sidebar--closed .nav-item--icon-only.nav-item--active::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 26px;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 0 14px rgba(255, 255, 255, .95);
 }
 
 .nav-item__icon {
@@ -350,6 +433,20 @@ button {
   width: auto;
   height: auto;
   border-radius: 0;
+}
+
+.sidebar--closed .nav-item--icon-only .nav-item__icon {
+  background: none;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  color: inherit;
+}
+
+.sidebar--closed .nav-item--icon-only .nav-item__icon svg,
+.sidebar--closed .nav-item--icon-only .nav-icon-svg {
+  width: 24px;
+  height: 24px;
 }
 
 .nav-icon-svg {
@@ -466,6 +563,21 @@ button {
   color: var(--color-conges);
 }
 
+/* Déconnexion en mode réduit : rouge translucide */
+.sidebar--closed .nav-item--logout.nav-item--icon-only {
+  background: rgba(239, 68, 68, .12);
+  color: #fecaca;
+  box-shadow: none;
+  border: 1px solid rgba(239, 68, 68, .2);
+}
+
+.sidebar--closed .nav-item--logout.nav-item--icon-only:hover {
+  background: rgba(239, 68, 68, .28);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(239, 68, 68, .35);
+  transform: translateY(-2px) scale(1.06);
+}
+
 .nav-item__label {
   flex: 1;
   text-align: left;
@@ -490,6 +602,18 @@ button {
   height: 8px;
   border-radius: 50%;
   z-index: 1;
+}
+
+/* Badge dot en mode réduit */
+.sidebar--closed .nav-item__badge-dot {
+  top: 6px;
+  right: 6px;
+  width: 9px;
+  height: 9px;
+  background: #ef4444;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, .25);
+  animation: pulseBadge 1.8s ease-in-out infinite;
 }
 
 .nav-item__chevron--rh {
@@ -577,7 +701,7 @@ button {
 }
 
 /* ============================================================
-   SUBMENU — ascenseur si > 6 items
+   SUBMENU
    ============================================================ */
 .submenu {
   max-height: 0;
@@ -721,7 +845,6 @@ button {
 
 /* ============================================================
    HAUTEUR FIXE des items de sous-menu (40px)
-   → garantit un max-height fiable (6 × 40 = 240px)
    ============================================================ */
 .submenu__link--rh,
 .submenu__link--workflow,
@@ -739,7 +862,11 @@ button {
 .submenu__link--referentiels,
 .submenu__link--parametres,
 .submenu__link--blocages,
-.submenu__link--anomalies {
+.submenu__link--anomalies,
+.submenu__link--parc-dashboard,
+.submenu__link--parc-vehicules,
+.submenu__link--parc-activites,
+.submenu__link--parc-suivi {
   height: 40px;
   box-sizing: border-box;
 }
@@ -1101,31 +1228,37 @@ button {
 }
 
 /* ============================================================
-   NAV-POPUP (sidebar fermée)
+   NAV-POPUP (sidebar fermée) — raffiné
    ============================================================ */
 .nav-popup {
   position: absolute;
   left: calc(100% + 8px);
   top: 0;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, .97);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, .8);
+  border-radius: 18px;
   z-index: 60;
-  animation: fadeIn .15s ease-out both;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, .15), 0 4px 16px rgba(0, 0, 0, .08);
+  animation: popupIn .18s cubic-bezier(.34, 1.56, .64, 1) both;
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, .25),
+    0 6px 20px rgba(0, 0, 0, .12),
+    inset 0 1px 0 rgba(255, 255, 255, .9);
   min-width: 200px;
   overflow: hidden;
   pointer-events: auto;
+  transform-origin: left center;
 }
 
 .nav-popup__title {
   display: block;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--color-text);
   padding: 12px 14px 10px;
   border-bottom: 1px solid var(--color-border);
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+  letter-spacing: .02em;
 }
 
 .nav-popup__grid {
@@ -1417,7 +1550,6 @@ button {
   }
 }
 
-
 .nav-popup__card-icon svg {
   width: 22px;
   height: 22px;
@@ -1629,8 +1761,8 @@ button {
 
 
 .navbar__logo-img {
-  width: 80px;
-  height: 50px;
+  width: 70px;
+  height: 44px;
   object-fit: contain;
 }
 
@@ -1766,10 +1898,360 @@ button {
 
 .sidebar--closed .sidebar__nav::before,
 .sidebar--closed .sidebar__nav::after {
+  display: none;
+}
+
+/* ============================================================
+   SECTIONS GMAO / PARC
+   ============================================================ */
+
+.sidebar__section {
+  --section-color: #0f766e;
+  --section-tint: rgba(15, 118, 110, .06);
+  --section-line: rgba(15, 118, 110, .16);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__section--parc {
+  --section-color: #7c3aed;
+  --section-tint: rgba(124, 58, 237, .06);
+  --section-line: rgba(124, 58, 237, .16);
+}
+
+.sidebar__nav {
+  gap: 14px;
+}
+
+.sidebar--open .sidebar__section {
+  background: var(--section-tint);
+  border: 1px solid var(--section-line);
+  border-radius: 16px;
+  padding: 6px 6px 8px;
+}
+
+.sidebar--open .sidebar__section-label,
+.sidebar--open .sidebar__section-label:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 8px 8px;
+  border-left: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  color: var(--section-color);
+}
+
+.sidebar--open .sidebar__section-label::before {
   content: '';
-  display: block;
-  width: 40px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--section-color);
+  box-shadow: 0 0 0 3px var(--section-line);
+  flex-shrink: 0;
+}
+
+.sidebar--open .sidebar__section-label::after {
+  content: '';
+  flex: 1;
   height: 1px;
-  background: rgba(255, 255, 255, .15);
-  margin: 8px auto;
+  background: linear-gradient(90deg, var(--section-line), transparent);
+}
+
+.sidebar--closed .sidebar__section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 100%;
+}
+
+.sidebar--closed .sidebar__section-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 10px 0 6px;
+}
+
+.sidebar--closed .sidebar__section-mini span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .92);
+  background: rgba(255, 255, 255, .16);
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+.sidebar--open .sidebar__section-mini {
+  display: none;
+}
+
+/* ============================================================
+   PARC AUTO — 4 items de premier niveau
+   ============================================================ */
+
+:root {
+  --color-parc-dashboard: #1b648f;
+  --color-parc-dashboard-bg: #e6f4fb;
+  --color-parc-vehicules: #0ca678;
+  --color-parc-vehicules-bg: #e6fcf5;
+  --color-parc-activites: #7c3aed;
+  --color-parc-activites-bg: #f5f3ff;
+  --color-parc-suivi: #e67700;
+  --color-parc-suivi-bg: #fff8eb;
+}
+
+/* ── Sidebar fermée : fond blanc, couleur d'icône ── */
+.sidebar--closed .nav-item--parc-dashboard {
+  background: white !important;
+  color: var(--color-parc-dashboard) !important;
+}
+.sidebar--closed .nav-item--parc-vehicules {
+  background: white !important;
+  color: var(--color-parc-vehicules) !important;
+}
+.sidebar--closed .nav-item--parc-activites {
+  background: white !important;
+  color: var(--color-parc-activites) !important;
+}
+.sidebar--closed .nav-item--parc-suivi {
+  background: white !important;
+  color: var(--color-parc-suivi) !important;
+}
+
+/* ── Sidebar ouverte : tuile teintée ── */
+.nav-item--parc-dashboard .nav-item__icon { color: var(--color-parc-dashboard); }
+.nav-item--parc-dashboard,
+.nav-item--parc-dashboard:is(:hover, .nav-item--active) {
+  background: var(--color-parc-dashboard-bg);
+  color: var(--color-parc-dashboard);
+}
+
+.nav-item--parc-vehicules .nav-item__icon { color: var(--color-parc-vehicules); }
+.nav-item--parc-vehicules,
+.nav-item--parc-vehicules:is(:hover, .nav-item--active) {
+  background: var(--color-parc-vehicules-bg);
+  color: var(--color-parc-vehicules);
+}
+
+.nav-item--parc-activites .nav-item__icon { color: var(--color-parc-activites); }
+.nav-item--parc-activites,
+.nav-item--parc-activites:is(:hover, .nav-item--active) {
+  background: var(--color-parc-activites-bg);
+  color: var(--color-parc-activites);
+}
+
+.nav-item--parc-suivi .nav-item__icon { color: var(--color-parc-suivi); }
+.nav-item--parc-suivi,
+.nav-item--parc-suivi:is(:hover, .nav-item--active) {
+  background: var(--color-parc-suivi-bg);
+  color: var(--color-parc-suivi);
+}
+
+/* ── Chevrons ── */
+.nav-item__chevron--parc-dashboard,
+.nav-item__chevron--parc-vehicules,
+.nav-item__chevron--parc-activites,
+.nav-item__chevron--parc-suivi {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+.nav-item__chevron--parc-dashboard { color: var(--color-parc-dashboard); }
+.nav-item__chevron--parc-vehicules { color: var(--color-parc-vehicules); }
+.nav-item__chevron--parc-activites { color: var(--color-parc-activites); }
+.nav-item__chevron--parc-suivi { color: var(--color-parc-suivi); }
+
+/* ── Popup cards (sidebar fermée) ── */
+.nav-popup__card-icon--parc-dashboard {
+  background: var(--color-parc-dashboard-bg);
+  color: var(--color-parc-dashboard);
+  border-color: #b8def0;
+}
+.nav-popup__card-icon--parc-vehicules {
+  background: var(--color-parc-vehicules-bg);
+  color: var(--color-parc-vehicules);
+  border-color: #b2f0e0;
+}
+.nav-popup__card-icon--parc-activites {
+  background: var(--color-parc-activites-bg);
+  color: var(--color-parc-activites);
+  border-color: #d8cafc;
+}
+.nav-popup__card-icon--parc-suivi {
+  background: var(--color-parc-suivi-bg);
+  color: var(--color-parc-suivi);
+  border-color: #fde8b0;
+}
+
+.nav-popup__simple-link--parc-dashboard .nav-popup__card-icon {
+  background: var(--color-parc-dashboard-bg);
+  color: var(--color-parc-dashboard);
+}
+.nav-popup__simple-link--parc-vehicules .nav-popup__card-icon {
+  background: var(--color-parc-vehicules-bg);
+  color: var(--color-parc-vehicules);
+}
+.nav-popup__simple-link--parc-activites .nav-popup__card-icon {
+  background: var(--color-parc-activites-bg);
+  color: var(--color-parc-activites);
+}
+.nav-popup__simple-link--parc-suivi .nav-popup__card-icon {
+  background: var(--color-parc-suivi-bg);
+  color: var(--color-parc-suivi);
+}
+
+/* ── Submenu items (sidebar ouverte) ── */
+.submenu__link--parc-dashboard,
+.submenu__link--parc-vehicules,
+.submenu__link--parc-activites,
+.submenu__link--parc-suivi {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  height: 40px;
+  box-sizing: border-box;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: black;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.submenu__link--parc-dashboard  { background-color: var(--color-parc-dashboard-bg); }
+.submenu__link--parc-vehicules  { background-color: var(--color-parc-vehicules-bg); }
+.submenu__link--parc-activites  { background-color: var(--color-parc-activites-bg); }
+.submenu__link--parc-suivi      { background-color: var(--color-parc-suivi-bg); }
+
+.submenu__link--parc-dashboard:hover,
+.submenu__link--parc-vehicules:hover,
+.submenu__link--parc-activites:hover,
+.submenu__link--parc-suivi:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+  border-color: #94a3b8;
+}
+
+.submenu__link-icon--parc-dashboard { background: var(--color-parc-dashboard-bg); color: var(--color-parc-dashboard); }
+.submenu__link-icon--parc-vehicules { background: var(--color-parc-vehicules-bg); color: var(--color-parc-vehicules); }
+.submenu__link-icon--parc-activites { background: var(--color-parc-activites-bg); color: var(--color-parc-activites); }
+.submenu__link-icon--parc-suivi     { background: var(--color-parc-suivi-bg);     color: var(--color-parc-suivi); }
+
+/* ============================================================
+   SECTIONS — GMAO / PARC
+   ============================================================ */
+
+.sidebar__section {
+  --section-color: #0f766e;
+  --section-tint: rgba(15, 118, 110, .06);
+  --section-line: rgba(15, 118, 110, .16);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar__section--gmao {
+  --section-color: #0f766e;
+  --section-tint: rgba(15, 118, 110, .06);
+  --section-line: rgba(15, 118, 110, .16);
+}
+
+.sidebar__section--parc {
+  --section-color: #7c3aed;
+  --section-tint: rgba(124, 58, 237, .06);
+  --section-line: rgba(124, 58, 237, .16);
+}
+
+.sidebar__nav {
+  gap: 14px;
+}
+
+.sidebar--open .sidebar__section {
+  background: var(--section-tint);
+  border: 1px solid var(--section-line);
+  border-radius: 16px;
+  padding: 6px 6px 8px;
+}
+
+.sidebar--open .sidebar__section-label,
+.sidebar--open .sidebar__section-label:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 8px 8px;
+  border-left: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  color: var(--section-color);
+}
+
+.sidebar--open .sidebar__section-label::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--section-color);
+  box-shadow: 0 0 0 3px var(--section-line);
+  flex-shrink: 0;
+}
+
+.sidebar--open .sidebar__section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--section-line), transparent);
+}
+
+.sidebar__section-label--gmao { color: #0f766e; }
+.sidebar__section-label--parc { color: #7c3aed; }
+
+.sidebar--closed .sidebar__section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  width: 100%;
+}
+
+.sidebar--closed .sidebar__section-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin: 10px 0 6px;
+}
+
+.sidebar--closed .sidebar__section-mini span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, .92);
+  background: rgba(255, 255, 255, .16);
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+
+.sidebar--open .sidebar__section-mini {
+  display: none;
 }

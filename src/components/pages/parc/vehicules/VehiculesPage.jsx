@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   CheckCircle2, Bookmark, Navigation, Wrench, Ban, XCircle, Tag, Loader2,
   AlertTriangle, Settings, Truck, ShieldCheck, HardHat, AlertOctagon,
+  ChevronLeft, ChevronRight, ArrowLeft, Printer, FileText, Gauge,
+  Info, Activity, History as HistoryIcon,
 } from 'lucide-react';
 import vehiculeService from '../../../../services/vehiculeService';
 import vehiculeMaintenanceService from '../../../../services/vehiculeMaintenanceService';
@@ -10,6 +12,7 @@ import VehiculeModal from '../../../ui/modals/VehiculeModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import VehiculeMaintenanceTypesSettings from './VehiculeMaintenanceTypesSettings';
 import VehiculeKilometrageHistorique from './VehiculeKilometrageHistorique';
+import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import {
   ETAT_VEHICULE_LABELS,
   etatVehiculeLabel,
@@ -18,6 +21,8 @@ import {
 } from '../../../../constants/vehiculeEtat';
 import { criticiteLabel, criticiteColor } from '../../../../constants/Criticite';
 import './VehiculesPage.css';
+
+const PAGE_SIZE = 10;
 
 const TYPE_LABELS = {
   0: 'Véhicule léger',
@@ -31,8 +36,6 @@ function typeLabel(type) {
   return TYPE_LABELS[type] ?? `Type ${type}`;
 }
 
-// Icône affichée pour chaque état CIBLE dans les boutons d'action rapide
-// de la barre du haut (à côté de Modifier/Supprimer).
 const ETAT_TARGET_ICON = {
   0: CheckCircle2,
   1: Bookmark,
@@ -43,22 +46,73 @@ const ETAT_TARGET_ICON = {
   6: Tag,
 };
 
+// ─── Pagination : génère [1, '...', 4, 5, 6, '...', 20] ─────────────
+const getPageNumbers = (current, total) => {
+  const pages = [];
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i += 1) pages.push(i);
+    return pages;
+  }
+
+  pages.push(1);
+
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+
+  if (start > 2) pages.push('...');
+
+  for (let i = start; i <= end; i += 1) pages.push(i);
+
+  if (end < total - 1) pages.push('...');
+
+  pages.push(total);
+
+  return pages;
+};
+
+const VEHICULE_COLUMNS_DEFAULT = [
+  { key: 'matricule',   label: 'Matricule',   visible: true,  searchable: true  },
+  { key: 'marque',      label: 'Marque',      visible: true,  searchable: true  },
+  { key: 'numChassis',  label: 'N° Châssis',  visible: false, searchable: true  },
+  { key: 'type',        label: 'Type',        visible: true,  searchable: true  },
+  { key: 'kilometrage', label: 'Kilométrage', visible: true,  searchable: false },
+  { key: 'etat',        label: 'État',        visible: true,  searchable: true  },
+  { key: 'criticite',   label: 'Criticité',   visible: true,  searchable: true  },
+];
+
 export default function VehiculesPage() {
   const [vehicules, setVehicules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
+  // ─── Vue : 'list' ou 'details' ──────────────────────────────────────
+  const [viewMode, setViewMode] = useState('list');
+  const [activeTab, setActiveTab] = useState('infos');
+
+  // Filtres "brouillon"
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
+
+  // Filtres appliqués
+  const [appliedFilters, setAppliedFilters] = useState({
+    searchTerm: '',
+    etatFilter: 'all',
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [selectedVehicule, setSelectedVehicule] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdatingEtat, setIsUpdatingEtat] = useState(false);
 
-  /** { [vehiculeId]: { enRetard, aVenir } } — chargement non bloquant. */
   const [alertesMaintenance, setAlertesMaintenance] = useState({});
+
+  const [columnSettings, setColumnSettings] = useState(VEHICULE_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const [confirmModal, setConfirmModal] = useState({
     show: false,
@@ -83,9 +137,6 @@ export default function VehiculesPage() {
     }
   };
 
-  // Alertes de maintenance des véhicules affichés. Volontairement séparé du
-  // chargement principal : une erreur ici ne doit pas empêcher l'affichage de
-  // la liste des véhicules.
   useEffect(() => {
     if (!vehicules.length) {
       setAlertesMaintenance({});
@@ -125,9 +176,6 @@ export default function VehiculesPage() {
     load();
   }, []);
 
-  // Garde `selectedVehicule` synchronisé avec la liste rechargée (utile
-  // après un changement d'état rapide, pour que les boutons se
-  // mettent à jour sans perdre la sélection).
   useEffect(() => {
     if (!selectedVehicule) return;
     const fresh = vehicules.find((v) => v.id === selectedVehicule.id);
@@ -135,26 +183,106 @@ export default function VehiculesPage() {
     if (!fresh) setSelectedVehicule(null);
   }, [vehicules]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredVehicules = useMemo(() => {
-    return vehicules.filter((v) => {
-      const matchesSearch = !searchTerm
-        || v.matricule?.toLowerCase().includes(searchTerm.toLowerCase())
-        || v.marque?.toLowerCase().includes(searchTerm.toLowerCase())
-        || v.numChassis?.toLowerCase().includes(searchTerm.toLowerCase());
+  // ─── Helpers colonnes ────────────────────────────────────────────────
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
 
-      const matchesEtat = etatFilter === 'all' || String(v.etat ?? 0) === etatFilter;
+  const isColVisible = (key) => {
+    const col = columnSettings.find((c) => c.key === key);
+    return col ? col.visible : true;
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) =>
+      prev.map((col) => (col.key === key ? { ...col, visible: !col.visible } : col))
+    );
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) =>
+      prev.map((col) => (col.key === key ? { ...col, searchable: !col.searchable } : col))
+    );
+  };
+
+  const getColumnSearchValue = (v, key) => {
+    switch (key) {
+      case 'matricule':   return v.matricule || '';
+      case 'marque':      return v.marque || '';
+      case 'numChassis':  return v.numChassis || '';
+      case 'type':        return typeLabel(v.type);
+      case 'kilometrage': return v.kilometrage != null ? String(v.kilometrage) : '';
+      case 'etat':        return etatVehiculeLabel(v.etat);
+      case 'criticite':   return v.criticite
+        ? `${v.criticite} ${criticiteLabel(v.criticite)}`
+        : '';
+      default:            return '';
+    }
+  };
+
+  const filteredVehicules = useMemo(() => {
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = appliedFilters.searchTerm.toLowerCase();
+
+    return vehicules.filter((v) => {
+      const matchesSearch = !term
+        ? true
+        : searchableCols.some((key) => {
+            const val = getColumnSearchValue(v, key);
+            return val && val.toString().toLowerCase().includes(term);
+          });
+
+      const matchesEtat =
+        appliedFilters.etatFilter === 'all' ||
+        String(v.etat ?? 0) === appliedFilters.etatFilter;
 
       return matchesSearch && matchesEtat;
     });
-  }, [vehicules, searchTerm, etatFilter]);
+  }, [vehicules, appliedFilters, columnSettings]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredVehicules.length / PAGE_SIZE));
+  const currentPageSafe = Math.min(currentPage, totalPages);
+
+  const paginatedVehicules = useMemo(
+    () =>
+      filteredVehicules.slice(
+        (currentPageSafe - 1) * PAGE_SIZE,
+        currentPageSafe * PAGE_SIZE
+      ),
+    [filteredVehicules, currentPageSafe]
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [appliedFilters]);
+
+  // ─── Actions filtres ────────────────────────────────────────────────
+  const handleSearch = () => {
+    setAppliedFilters({ searchTerm, etatFilter });
+  };
 
   const handleResetFilters = () => {
     setSearchTerm('');
     setEtatFilter('all');
+    setAppliedFilters({ searchTerm: '', etatFilter: 'all' });
   };
 
+  // ─── Sélection / navigation vers détails ────────────────────────────
   const handleRowClick = (vehicule) => {
     setSelectedVehicule((prev) => (prev?.id === vehicule.id ? null : vehicule));
+  };
+
+  const handleViewDetails = () => {
+    if (selectedVehicule) {
+      setActiveTab('infos');
+      setViewMode('details');
+    }
+  };
+
+  const handleBackToList = () => {
+    setViewMode('list');
+    setActiveTab('infos');
   };
 
   const openCreate = () => {
@@ -177,10 +305,6 @@ export default function VehiculesPage() {
     await load();
   };
 
-  // Changement rapide d'état (cycle de vie) depuis la barre d'action.
-  // Le backend (VehiculeServiceImpl.changeEtat) revalide la transition ;
-  // ce front ne fait que proposer les boutons pertinents (UX), il ne
-  // remplace pas la validation serveur.
   const handleQuickEtat = async (newEtat) => {
     if (!selectedVehicule || isUpdatingEtat) return;
     setIsUpdatingEtat(true);
@@ -195,11 +319,6 @@ export default function VehiculesPage() {
     }
   };
 
-  /**
-   * Après une création manuelle de bon : on recharge la liste pour que les
-   * badges de maintenance (et l'état du véhicule si le bon l'a fait basculer)
-   * reflètent la nouvelle situation.
-   */
   const handleBonCree = () => {
     load();
   };
@@ -221,6 +340,7 @@ export default function VehiculesPage() {
           await vehiculeService.remove(selectedVehicule.id);
           setVehicules((prev) => prev.filter((v) => v.id !== selectedVehicule.id));
           setSelectedVehicule(null);
+          if (viewMode === 'details') setViewMode('list');
         } catch (err) {
           console.error(err);
           alert("Échec de la suppression de ce véhicule.");
@@ -267,7 +387,6 @@ export default function VehiculesPage() {
 
   const nextEtats = allowedNextEtats(selectedVehicule?.etat);
 
-  // ── Statistiques KPI (mémoïsées) ─────────────────────────────────────────
   const stats = useMemo(() => {
     const total = vehicules.length;
     const enService = vehicules.filter((v) => (v.etat ?? 0) === 0).length;
@@ -278,15 +397,388 @@ export default function VehiculesPage() {
     return { total, enService, enMaintenance, enAlerte };
   }, [vehicules, alertesMaintenance]);
 
+  const TABLE_COLUMNS_DEF = {
+    matricule: {
+      label: 'Matricule',
+      cell: (v) => (
+        <td key="matricule">
+          <span className="vehicules-matricule-badge">
+            {v.matricule || `#${v.id}`}
+          </span>
+        </td>
+      ),
+    },
+    marque: {
+      label: 'Marque',
+      cell: (v) => <td key="marque">{v.marque || '—'}</td>,
+    },
+    numChassis: {
+      label: 'N° Châssis',
+      cell: (v) => <td key="numChassis">{v.numChassis || '—'}</td>,
+    },
+    type: {
+      label: 'Type',
+      cell: (v) => <td key="type">{typeLabel(v.type)}</td>,
+    },
+    kilometrage: {
+      label: 'Kilométrage',
+      cell: (v) => (
+        <td key="kilometrage">
+          {v.kilometrage != null
+            ? `${Number(v.kilometrage).toLocaleString('fr-FR')} km`
+            : '—'}
+          {alertesMaintenance[v.id]?.enRetard > 0 && (
+            <span
+              className="vp-badge-retard"
+              title={`${alertesMaintenance[v.id].enRetard} maintenance(s) en retard`}
+            >
+              <AlertTriangle size={12} strokeWidth={2.5} />
+              {alertesMaintenance[v.id].enRetard}
+            </span>
+          )}
+        </td>
+      ),
+    },
+    etat: {
+      label: 'État',
+      cell: (v) => (
+        <td key="etat">
+          <span className={`vehicules-pill color-${etatVehiculeColor(v.etat)}`}>
+            {etatVehiculeLabel(v.etat)}
+          </span>
+        </td>
+      ),
+    },
+    criticite: {
+      label: 'Criticité',
+      cell: (v) => (
+        <td key="criticite">
+          <span className={`vehicules-pill color-${criticiteColor(v.criticite)}`}>
+            {v.criticite || 'C3'} · {criticiteLabel(v.criticite)}
+          </span>
+        </td>
+      ),
+    },
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  // ════════════════════════════════════════════════════════════════
+  //  VUE DÉTAILS (page séparée, avec onglets)
+  // ════════════════════════════════════════════════════════════════
+  if (viewMode === 'details' && selectedVehicule) {
+    const km = selectedVehicule.kilometrage != null
+      ? `${Number(selectedVehicule.kilometrage).toLocaleString('fr-FR')} km`
+      : '—';
+
+    const TABS = [
+      { key: 'infos',       label: 'Informations générales', icon: Info },
+      { key: 'maintenance', label: 'Maintenance préventive', icon: Wrench },
+      { key: 'historique',  label: 'Historique du compteur', icon: HistoryIcon },
+    ];
+
+    return (
+      <div className="vehicules-container">
+        <div className="vd-page">
+
+          {/* ═══════════════ HERO ═══════════════ */}
+          <header className="vd-hero">
+            <div className="vd-hero-bg" aria-hidden="true" />
+
+            <div className="vd-hero-content">
+              <div className="vd-hero-topbar">
+                <button
+                  type="button"
+                  className="vd-hero-back"
+                  onClick={handleBackToList}
+                >
+                  <ArrowLeft size={16} strokeWidth={2.4} />
+                  Retour à la liste
+                </button>
+
+                <div className="vd-hero-actions">
+                  <button
+                    type="button"
+                    className="vd-hero-btn"
+                    onClick={openEdit}
+                  >
+                    <FileText size={16} strokeWidth={2.4} />
+                    Modifier
+                  </button>
+                  <button
+                    type="button"
+                    className="vd-hero-btn"
+                    onClick={handlePrint}
+                  >
+                    <Printer size={16} strokeWidth={2.4} />
+                    Imprimer
+                  </button>
+                </div>
+              </div>
+
+              <div className="vd-hero-main">
+                <div className="vd-hero-left">
+                  <div className="vd-hero-icon">
+                    <Truck size={24} strokeWidth={2.2} />
+                  </div>
+
+                  <div className="vd-hero-text">
+                    <span className="vd-hero-eyebrow">Fiche détaillée</span>
+                    <h3 className="vd-hero-title">
+                      {selectedVehicule.matricule || `#${selectedVehicule.id}`}
+                    </h3>
+                    {selectedVehicule.marque && (
+                      <p className="vd-hero-sub">{selectedVehicule.marque}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="vd-hero-chips">
+                  <span className="vd-hero-chip">
+                    <Truck size={14} strokeWidth={2.4} />
+                    {typeLabel(selectedVehicule.type)}
+                  </span>
+                  <span className="vd-hero-chip">
+                    <Gauge size={14} strokeWidth={2.4} />
+                    <strong>{km}</strong>
+                  </span>
+                  <span className="vd-hero-chip vd-hero-chip-state">
+                    {etatVehiculeLabel(selectedVehicule.etat)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* ═══════════════ KPI CARDS ═══════════════ */}
+          <div className="vd-kpi-grid">
+            <div className="vd-kpi kpi-blue">
+              <div className="vd-kpi-icon">
+                <Truck size={20} strokeWidth={2.3} />
+              </div>
+              <div className="vd-kpi-body">
+                <span className="vd-kpi-value">{typeLabel(selectedVehicule.type)}</span>
+                <span className="vd-kpi-label">Type de véhicule</span>
+              </div>
+            </div>
+
+            <div className="vd-kpi kpi-teal">
+              <div className="vd-kpi-icon">
+                <Gauge size={20} strokeWidth={2.3} />
+              </div>
+              <div className="vd-kpi-body">
+                <span className="vd-kpi-value">{km}</span>
+                <span className="vd-kpi-label">Kilométrage actuel</span>
+              </div>
+            </div>
+
+            <div className="vd-kpi kpi-amber">
+              <div className="vd-kpi-icon">
+                <AlertOctagon size={20} strokeWidth={2.3} />
+              </div>
+              <div className="vd-kpi-body">
+                <span className="vd-kpi-value">
+                  {selectedVehicule.criticite || 'C3'}
+                </span>
+                <span className="vd-kpi-label">
+                  Criticité · {criticiteLabel(selectedVehicule.criticite)}
+                </span>
+              </div>
+            </div>
+
+            <div className="vd-kpi kpi-green">
+              <div className="vd-kpi-icon">
+                <CheckCircle2 size={20} strokeWidth={2.3} />
+              </div>
+              <div className="vd-kpi-body">
+                <span className="vd-kpi-value">
+                  {etatVehiculeLabel(selectedVehicule.etat)}
+                </span>
+                <span className="vd-kpi-label">État actuel</span>
+              </div>
+            </div>
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════
+              ONGLETS
+              ═══════════════════════════════════════════════════════════ */}
+          <div className="vd-tabs-container">
+            <nav className="vd-tabs" role="tablist">
+              {TABS.map((tab) => {
+                const TabIcon = tab.icon;
+                const isActive = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    aria-controls={`vd-tabpanel-${tab.key}`}
+                    className={`vd-tab ${isActive ? 'is-active' : ''}`}
+                    onClick={() => setActiveTab(tab.key)}
+                  >
+                    <span className="vd-tab-icon">
+                      <TabIcon size={16} strokeWidth={2.4} />
+                    </span>
+                    <span className="vd-tab-label">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            <div className="vd-tab-content">
+
+              {/* ═══════ ONGLET 1 : INFORMATIONS GÉNÉRALES ═══════ */}
+              {activeTab === 'infos' && (
+                <div
+                  className="vd-tabpanel"
+                  role="tabpanel"
+                  id="vd-tabpanel-infos"
+                >
+                  <div className="vd-card">
+                    <dl className="vd-dl">
+                      <div>
+                        <dt>
+                          <FileText size={13} strokeWidth={2.4} />
+                          Matricule
+                        </dt>
+                        <dd>
+                          <span className="vd-mono">
+                            {selectedVehicule.matricule || '—'}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <Truck size={13} strokeWidth={2.4} />
+                          Marque
+                        </dt>
+                        <dd>{selectedVehicule.marque || '—'}</dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <FileText size={13} strokeWidth={2.4} />
+                          N° Châssis
+                        </dt>
+                        <dd>
+                          <span className="vd-mono">
+                            {selectedVehicule.numChassis || '—'}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <Truck size={13} strokeWidth={2.4} />
+                          Type
+                        </dt>
+                        <dd>{typeLabel(selectedVehicule.type)}</dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <Gauge size={13} strokeWidth={2.4} />
+                          Kilométrage
+                        </dt>
+                        <dd>{km}</dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <AlertOctagon size={13} strokeWidth={2.4} />
+                          Criticité
+                        </dt>
+                        <dd>
+                          <span className={`vehicules-pill color-${criticiteColor(selectedVehicule.criticite)}`}>
+                            {selectedVehicule.criticite || 'C3'} · {criticiteLabel(selectedVehicule.criticite)}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <CheckCircle2 size={13} strokeWidth={2.4} />
+                          État actuel
+                        </dt>
+                        <dd>
+                          <span className={`vehicules-pill color-${etatVehiculeColor(selectedVehicule.etat)}`}>
+                            {etatVehiculeLabel(selectedVehicule.etat)}
+                          </span>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+              )}
+
+              {/* ═══════ ONGLET 2 : MAINTENANCE PRÉVENTIVE ═══════ */}
+              {activeTab === 'maintenance' && (
+                <div
+                  className="vd-tabpanel"
+                  role="tabpanel"
+                  id="vd-tabpanel-maintenance"
+                >
+                  <VehiculeMaintenancePanel
+                    vehicule={selectedVehicule}
+                    onOpenBon={(bonId) => { window.location.href = `/bons-maintenance?id=${bonId}`; }}
+                    onBonCree={handleBonCree}
+                  />
+                </div>
+              )}
+
+              {/* ═══════ ONGLET 3 : HISTORIQUE DU COMPTEUR ═══════ */}
+              {activeTab === 'historique' && (
+                <div
+                  className="vd-tabpanel"
+                  role="tabpanel"
+                  id="vd-tabpanel-historique"
+                >
+                  <VehiculeKilometrageHistorique vehiculeId={selectedVehicule.id} />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Modales accessibles depuis la vue détails */}
+        <VehiculeModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onSave={handleSave}
+          vehicule={selectedVehicule}
+          isEditing={!!selectedVehicule}
+        />
+
+        <ConfirmModal
+          show={confirmModal.show}
+          onClose={closeConfirmModal}
+          onConfirm={confirmModal.onConfirm}
+          type={confirmModal.type}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          confirmText={confirmModal.confirmText}
+        />
+      </div>
+    );
+  }
+
+  // ════════════════════════════════════════════════════════════════
+  //  VUE LISTE
+  // ════════════════════════════════════════════════════════════════
   return (
     <div className="vehicules-container">
 
       {/* ═══════════════ HEADER ═══════════════ */}
       <div className="vehicules-header-card">
         <div className="vehicules-header-title-box">
-          <svg className="vehicules-header-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-          </svg>
+          <button
+            type="button"
+            className="vehicules-header-icon vehicules-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
+            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 11h4v4h-4z" />
+            </svg>
+          </button>
           <div>
             <h2>Véhicules</h2>
             <p className="vehicules-header-subtitle">
@@ -346,6 +838,20 @@ export default function VehiculesPage() {
           <span className="vehicules-action-icon">+</span>
           <span>Ajouter</span>
         </button>
+
+        <button
+          className={`vehicules-action-btn details ${!selectedVehicule ? 'disabled' : ''}`}
+          disabled={!selectedVehicule}
+          onClick={handleViewDetails}
+          style={{
+            color: '#0284c7',
+            borderColor: 'rgba(2, 132, 199, 0.2)',
+          }}
+        >
+          <FileText size={16} strokeWidth={2.5} />
+          <span>Détails</span>
+        </button>
+
         <button
           className={`vehicules-action-btn modifier ${!selectedVehicule ? 'disabled' : ''}`}
           disabled={!selectedVehicule}
@@ -414,6 +920,9 @@ export default function VehiculesPage() {
               placeholder="Rechercher par matricule, marque, châssis..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearch();
+              }}
             />
           </div>
         </div>
@@ -430,9 +939,22 @@ export default function VehiculesPage() {
           </div>
         </div>
 
+        <button
+          type="button"
+          className="vehicules-search-btn"
+          onClick={handleSearch}
+          title="Appliquer les filtres"
+        >
+          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Chercher
+        </button>
+
         <button className="vehicules-filter-reset" onClick={handleResetFilters}>
           Réinitialiser
         </button>
+
         <button
           type="button"
           className="vp-settings-btn"
@@ -441,6 +963,7 @@ export default function VehiculesPage() {
         >
           <Settings size={16} /> Paramètres maintenance
         </button>
+
         <div className="vehicules-export-stack">
           <button className="vehicules-export-btn excel" title="Exporter en Excel (CSV)" onClick={handleExportExcel}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -467,120 +990,107 @@ export default function VehiculesPage() {
         <table className="vehicules-table">
           <thead>
             <tr>
-              <th>Matricule</th>
-              <th>Marque</th>
-              <th>Type</th>
-              <th>Kilométrage</th>
-              <th>État</th>
-              <th>Criticité</th>
+              {visibleColumns.map((c) => {
+                const def = TABLE_COLUMNS_DEF[c.key];
+                if (!def) return null;
+                return <th key={c.key}>{def.label}</th>;
+              })}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={6} className="vehicules-table-empty">Chargement...</td>
+                <td colSpan={visibleColumns.length || 1} className="vehicules-table-empty">
+                  Chargement...
+                </td>
               </tr>
-            ) : filteredVehicules.length === 0 ? (
+            ) : paginatedVehicules.length === 0 ? (
               <tr>
-                <td colSpan={6} className="vehicules-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vehicules-table-empty">
                   {vehicules.length === 0
                     ? "Aucun véhicule pour l'instant. Ajoute le premier avec le bouton ci-dessus."
                     : "Aucun véhicule ne correspond à ces filtres."}
                 </td>
               </tr>
             ) : (
-              filteredVehicules.map((v) => (
+              paginatedVehicules.map((v) => (
                 <tr
                   key={v.id}
                   className={`vehicules-row ${selectedVehicule?.id === v.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(v)}
+                  onDoubleClick={() => {
+                    setSelectedVehicule(v);
+                    setActiveTab('infos');
+                    setViewMode('details');
+                  }}
                 >
-                  <td>
-                    <span className="vehicules-matricule-badge">
-                      {v.matricule || `#${v.id}`}
-                    </span>
-                  </td>
-                  <td>{v.marque || '—'}</td>
-                  <td>{typeLabel(v.type)}</td>
-                  <td>
-                    {v.kilometrage != null
-                      ? `${Number(v.kilometrage).toLocaleString('fr-FR')} km`
-                      : '—'}
-                    {alertesMaintenance[v.id]?.enRetard > 0 && (
-                      <span
-                        className="vp-badge-retard"
-                        title={`${alertesMaintenance[v.id].enRetard} maintenance(s) en retard`}
-                      >
-                        <AlertTriangle size={12} strokeWidth={2.5} />
-                        {alertesMaintenance[v.id].enRetard}
-                      </span>
-                    )}
-                  </td>
-                  <td>
-                    <span className={`vehicules-pill color-${etatVehiculeColor(v.etat)}`}>
-                      {etatVehiculeLabel(v.etat)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`vehicules-pill color-${criticiteColor(v.criticite)}`}>
-                      {v.criticite || 'C3'} · {criticiteLabel(v.criticite)}
-                    </span>
-                  </td>
+                  {visibleColumns.map((c) => TABLE_COLUMNS_DEF[c.key]?.cell(v))}
                 </tr>
               ))
             )}
           </tbody>
         </table>
-      </div>
 
-      {/* ═══════════════ DETAIL ZONE (fiche sélectionnée) ═══════════════ */}
-      {selectedVehicule && (
-        <div className="vehicules-detail-zone">
+        {/* ═══════════════ PAGINATION ═══════════════ */}
+        <div className="table-footer-pagination">
+          <div className="pagination-left">
+            {filteredVehicules.length} véhicule(s)
+            {filteredVehicules.length > 0 ? (
+              <>
+                {' '}— {(currentPageSafe - 1) * PAGE_SIZE + 1}–
+                {Math.min(currentPageSafe * PAGE_SIZE, filteredVehicules.length)}{' '}
+                affiché(s)
+              </>
+            ) : (
+              <> — Page 1 / 1</>
+            )}
+          </div>
 
-          {/* Bandeau contextuel : rappelle quel véhicule est ouvert */}
-          <div className="vehicules-detail-header">
-            <div className="vehicules-detail-header-left">
-              <span className="vehicules-detail-accent" aria-hidden="true" />
-              <div>
-                <span className="vehicules-detail-eyebrow">
-                  Fiche détaillée
+          <div className="pagination-right">
+            <button
+              type="button"
+              className="pag-btn"
+              disabled={currentPageSafe <= 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              title="Page précédente"
+              aria-label="Page précédente"
+            >
+              <ChevronLeft size={14} />
+            </button>
+
+            {getPageNumbers(currentPageSafe, totalPages).map((p, i) =>
+              p === '...' ? (
+                <span key={`ellipsis-${i}`} className="pag-ellipsis">
+                  …
                 </span>
-                <h3 className="vehicules-detail-title">
-                  <span className="vehicules-matricule-badge">
-                    {selectedVehicule.matricule || `#${selectedVehicule.id}`}
-                  </span>
-                  {selectedVehicule.marque && (
-                    <span className="vehicules-detail-marque">
-                      {selectedVehicule.marque}
-                    </span>
-                  )}
-                </h3>
-              </div>
-            </div>
+              ) : (
+                <button
+                  key={p}
+                  type="button"
+                  className={`pag-btn ${p === currentPageSafe ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(p)}
+                  disabled={totalPages <= 1}
+                >
+                  {p}
+                </button>
+              )
+            )}
 
             <button
               type="button"
-              className="vehicules-detail-close"
-              onClick={() => setSelectedVehicule(null)}
-              title="Fermer la fiche"
-              aria-label="Fermer la fiche"
+              className="pag-btn"
+              disabled={currentPageSafe >= totalPages || totalPages <= 1}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              title="Page suivante"
+              aria-label="Page suivante"
             >
-              ×
+              <ChevronRight size={14} />
             </button>
           </div>
-
-          {/* Contenu : panneau maintenance + historique compteur */}
-          <div className="vehicules-detail-content">
-            <VehiculeMaintenancePanel
-              vehicule={selectedVehicule}
-              onOpenBon={(bonId) => { window.location.href = `/bons-maintenance?id=${bonId}`; }}
-              onBonCree={handleBonCree}
-            />
-            <VehiculeKilometrageHistorique vehiculeId={selectedVehicule.id} />
-          </div>
         </div>
-      )}
+      </div>
 
+      {/* ═══════════════ MODALES ═══════════════ */}
       {settingsOpen && (
         <div className="vp-settings-overlay" onClick={() => setSettingsOpen(false)}>
           <div className="vp-settings-modal" onClick={(e) => e.stopPropagation()}>
@@ -612,6 +1122,16 @@ export default function VehiculesPage() {
         title={confirmModal.title}
         message={confirmModal.message}
         confirmText={confirmModal.confirmText}
+      />
+
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="vehicule"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
     </div>
   );

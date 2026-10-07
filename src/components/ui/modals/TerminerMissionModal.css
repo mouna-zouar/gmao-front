@@ -34,7 +34,7 @@
   background: none; border: none; cursor: pointer; color: #64748b;
   display: flex; padding: 4px; border-radius: 6px;
 }
-.tmm-header button:hover { background: #f1f5f9; color: #0f172a; }
+.tmm-header button:hover { background: #e9f8fa; color: #0794a4; }
 
 .tmm-body {
   padding: 22px; overflow-y: auto;
@@ -79,8 +79,13 @@
 .tmm-field textarea {
   border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;
   font-size: 0.88rem; font-family: inherit; resize: vertical; outline: none;
+  transition: all 0.15s ease;
 }
-.tmm-field textarea:focus { border-color: #2563eb; }
+.tmm-field textarea:hover { border-color: #a8e0e6; }
+.tmm-field textarea:focus {
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
+}
 
 .tmm-footer {
   display: flex; justify-content: flex-end; gap: 10px;
@@ -90,9 +95,20 @@
 .tmm-btn {
   border: none; border-radius: 8px; padding: 9px 18px;
   font-size: 0.88rem; font-weight: 600; cursor: pointer;
+  transition: all 0.15s ease;
 }
 .tmm-btn.ghost { background: #f1f5f9; color: #475569; }
 .tmm-btn.ghost:hover { background: #e2e8f0; }
-.tmm-btn.primary { background: #2563eb; color: #fff; }
-.tmm-btn.primary:hover { background: #1d4ed8; }
+
+/* Bouton principal → teal uni */
+.tmm-btn.primary {
+  background: #0794a4;
+  color: #fff;
+  box-shadow: 0 4px 12px -4px rgba(7, 148, 164, 0.4);
+}
+.tmm-btn.primary:hover {
+  background: #067a87;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.5);
+}
+
 .tmm-btn:disabled { opacity: 0.55; cursor: not-allowed; }

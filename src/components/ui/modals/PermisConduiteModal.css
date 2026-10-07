@@ -1,6 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   PermisConduiteModal.css — overrides spécifiques
-   ═══════════════════════════════════════════════════════════ */
+
 
 .pcm-categories-grid {
   display: grid;
@@ -21,20 +19,23 @@
   background: #ffffff;
 }
 
+/* Hover → teal clair uni */
 .pcm-category-card:hover {
-  border-color: #7dd3fc;
-  background: #f0f9ff;
+  border-color: #a8e0e6;
+  background: #e9f8fa;
 }
 
+/* Carte cochée → teal */
 .pcm-category-card.checked {
-  border-color: #1b648f;
-  background: #eefaf8;
-  box-shadow: 0 0 0 3px rgba(27, 100, 143, 0.12);
+  border-color: #0794a4;
+  background: #e9f8fa;
+  box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
 }
 
+/* Checkbox → teal */
 .pcm-category-card input[type='checkbox'] {
   margin-top: 2px;
-  accent-color: #1b648f;
+  accent-color: #0794a4;
   width: 16px;
   height: 16px;
   flex-shrink: 0;

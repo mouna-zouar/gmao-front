@@ -7,11 +7,22 @@ const ColumnSettingsModal = ({ show, onClose, columns, onToggleVisibility, onTog
 
     const getTitle = () => {
         switch (type) {
-            case 'regime': return 'Colonnes - Régimes Horaires';
-            case 'prime': return 'Colonnes - Primes Globales';
+            case 'regime':   return 'Colonnes - Régimes Horaires';
+            case 'prime':    return 'Colonnes - Primes Globales';
             case 'fonction': return 'Colonnes - Fonctions';
-            case 'service': return 'Colonnes - Services';
-            default: return 'Gestion des colonnes';
+            case 'service':  return 'Colonnes - Services';
+            case 'vehicule': return 'Colonnes - Véhicules';
+            case 'bonCarburant': return 'Colonnes - Bons carburant';
+            case 'incident': return 'Colonnes - Incidents véhicule';
+            case 'mission':  return 'Colonnes - Missions véhicules';
+            case 'reservation': return 'Colonnes - Réservations véhicule';
+            case 'projet':   return 'Colonnes - Projets';
+            case 'emplacement': return 'Colonnes - Emplacements';
+            case 'permis':   return 'Colonnes - Permis de conduire';
+            case 'vehiculeConducteur': return 'Colonnes - Véhicules / Conducteurs';
+            case 'reclamation': return 'Colonnes - Réclamations';
+            case 'bon':      return 'Colonnes - Bons de maintenance';
+            default:         return 'Gestion des colonnes';
         }
     };
 

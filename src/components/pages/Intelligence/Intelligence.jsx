@@ -152,10 +152,8 @@ export default function Intelligence({ isModal = false }) {
 
   return (
     <div className={`intel-page ${isModal ? 'intel-page--modal' : ''}`}>
-      {/* ---------- Header ---------- */}
       <header className="intel-header">
         <div className="intel-header__text">
-          <span className="intel-eyebrow">Roadmap métier · Étape ⑧ · Vue consolidée</span>
           <h1>Intelligence</h1>
           <p>
             Croise les signaux des modules Risques, Anomalies et RCA/CAPA plutôt que de les

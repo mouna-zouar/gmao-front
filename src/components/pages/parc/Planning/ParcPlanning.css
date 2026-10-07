@@ -1,10 +1,11 @@
 :root {
-  --pp-primary: #0d9488;
-  --pp-primary-dark: #0f766e;
+  --pp-primary: #0794a4;
+  --pp-primary-dark: #067a87;
+  --pp-primary-soft: #e9f8fa;
   --pp-blue: #3b82f6;
   --pp-blue-soft: #dbeafe;
-  --pp-teal: #0d9488;
-  --pp-teal-soft: #ccfbf1;
+  --pp-teal: #0794a4;
+  --pp-teal-soft: #e9f8fa;
   --pp-amber: #f59e0b;
   --pp-amber-soft: #fef3c7;
   --pp-red: #ef4444;
@@ -25,11 +26,12 @@
   color: var(--pp-gray-900);
 }
 
+/* Header → teal foncé uni */
 .parcplan-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: linear-gradient(135deg, var(--pp-primary-dark), var(--pp-primary));
+  background: #067a87;
   border-radius: var(--pp-radius);
   padding: 20px 24px;
   margin-bottom: 16px;
@@ -165,7 +167,7 @@
 .parcplan-matricule { display: block; font-weight: 700; font-size: 0.85rem; color: var(--pp-gray-900); }
 .parcplan-marque { display: block; font-size: 0.72rem; color: var(--pp-gray-500); }
 
-.parcplan-col-today { background: var(--pp-primary-soft, #f0fdfa) !important; }
+.parcplan-col-today { background: var(--pp-primary-soft) !important; }
 
 .parcplan-grid tbody tr { border-bottom: 1px solid #f1f5f9; }
 .parcplan-grid tbody tr:hover td:not(.parcplan-col-vehicule) { background: #fafbfc; }

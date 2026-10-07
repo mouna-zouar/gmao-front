@@ -1,4 +1,5 @@
 
+
 .bmm-modal {
   width: 900px;
   max-width: 96vw;
@@ -42,33 +43,21 @@
   75% { transform: translateX(4px); }
 }
 
-/* ═══════════ HEADER ═══════════ */
+/* ═══════════ HEADER — teal foncé uni ═══════════ */
 .bmm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 18px 24px;
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );  color: #ffffff;
+  background: #067a87;
+  color: #ffffff;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
 }
 
-.bmm-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.12) 0%, transparent 40%);
-  pointer-events: none;
-}
+.bmm-header::before { display: none; }
 
 .bmm-header-left {
   display: flex;
@@ -86,7 +75,7 @@ background: linear-gradient(
   height: 42px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(8px);
+  backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
   flex-shrink: 0;
@@ -118,6 +107,7 @@ background: linear-gradient(
   z-index: 1;
 }
 
+/* Badge mode → teal clair uni */
 .bmm-mode-badge {
   display: inline-block;
   padding: 5px 12px;
@@ -126,8 +116,8 @@ background: linear-gradient(
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1b648f;
+  background: #e9f8fa;
+  color: #0794a4;
   white-space: nowrap;
 }
 
@@ -162,7 +152,7 @@ background: linear-gradient(
 .bmm-nav {
   width: 220px;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f8fafc;
   border-right: 1px solid #e2e8f0;
   padding: 18px 12px;
   overflow-y: auto;
@@ -214,21 +204,19 @@ background: linear-gradient(
   width: 100%;
 }
 
+/* Hover → teal clair uni */
 .bmm-nav-item:hover {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  color: #1b648f;
+  background: #e9f8fa;
+  border-color: #d5f0f3;
+  color: #0794a4;
 }
 
+/* Item actif → teal uni */
 .bmm-nav-item.active {
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   color: #ffffff;
-  border-color: #1b648f;
-  box-shadow: 0 6px 16px -6px rgba(15, 118, 110, 0.5);
+  background: #0794a4;
+  color: #ffffff;
+  border-color: #067a87;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.5);
 }
 
 .bmm-nav-item-icon {
@@ -264,8 +252,8 @@ background: linear-gradient(
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #1b648f;
-  color: #ffffff;
+  background: #e9f8fa;
+  color: #0794a4;
   font-size: 10.5px;
   font-weight: 800;
 }
@@ -294,14 +282,14 @@ background: linear-gradient(
   margin: 8px 0;
 }
 .bmm-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+  background: #94a3b8;
   border-radius: 10px;
   border: 2px solid #f1f5f9;
   transition: all 0.2s ease;
 }
 .bmm-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #1b648f 0%, #14b8a6 100%);
-  border-color: #f0fdfa;
+  background: #0794a4;
+  border-color: #e9f8fa;
 }
 
 /* ═══════════ PANE ═══════════ */
@@ -372,7 +360,7 @@ background: linear-gradient(
 
 .bmm-field input:hover,
 .bmm-field select:hover,
-.bmm-field textarea:hover { border-color: #a7d5ce; }
+.bmm-field textarea:hover { border-color: #a8e0e6; }
 
 .bmm-field textarea { resize: vertical; min-height: 80px; }
 
@@ -380,8 +368,8 @@ background: linear-gradient(
 .bmm-field select:focus,
 .bmm-field textarea:focus {
   outline: none;
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
 
 .bmm-field input:disabled,
@@ -443,7 +431,7 @@ background: linear-gradient(
   margin-top: 14px;
   padding: 12px 16px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  background: #fef2f2;
   border: 1.5px solid #fecaca;
   color: #b91c1c;
   font-size: 0.85rem;
@@ -538,6 +526,7 @@ background: linear-gradient(
   .bmm-footer-right { width: 100%; }
   .bmm-footer-right > button { flex: 1; }
 }
+
 /* ─────────── Contrôle éligibilité permis / véhicule ─────────── */
 .vcdm-eligibilite {
   display: flex;
@@ -553,7 +542,11 @@ background: linear-gradient(
   color: #475569;
 }
 
-.vcdm-eligibilite.checking { color: #64748b; }
+.vcdm-eligibilite.checking {
+  color: #067a87;
+  background: #e9f8fa;
+  border-color: #d5f0f3;
+}
 
 .vcdm-eligibilite.ok {
   background: #ecfdf5;

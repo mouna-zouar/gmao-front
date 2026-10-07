@@ -1,6 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   VehiculeMissions.css — Liste moderne des missions
-   ═══════════════════════════════════════════════════════════ */
 
 .vms-container {
   padding: 24px;
@@ -12,38 +9,24 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ─────────── HEADER ─────────── */
 .vms-header-card {
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );  border-radius: 20px;
-  padding: 22px 26px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 24px;
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
   flex-wrap: wrap;
-  box-shadow:
-    0 20px 50px -20px rgba(15, 118, 110, 0.4),
-    0 8px 20px -8px rgba(15, 118, 110, 0.2);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
   position: relative;
-  overflow: hidden;
-  color: #ffffff;
+  overflow: visible;
 }
 
-.vms-header-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 15% 15%, rgba(255,255,255,0.18) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(255,255,255,0.1) 0%, transparent 40%);
-  pointer-events: none;
-}
+.vms-header-card::before { display: none; }
 
 .vms-header-left {
   display: flex;
@@ -57,34 +40,35 @@ background: linear-gradient(
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: #e9f8fa;
+  border: 1px solid #d5f0f3;
+  color: #0794a4;
+  backdrop-filter: none;
   flex-shrink: 0;
 }
 
 .vms-header-left h2 {
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0f172a;
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .vms-header-subtitle {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: #64748b;
+  font-weight: 500;
   margin: 3px 0 0;
 }
 
-/* Stats rapides */
+/* Stats rapides : badges clairs en ligne */
 .vms-stats {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   z-index: 1;
   flex-wrap: wrap;
@@ -92,49 +76,73 @@ background: linear-gradient(
 
 .vms-stat {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
-  min-width: 74px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
-  transition: transform 0.2s ease, background 0.2s ease;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #e9f8fa;
+  border: 1.5px solid #d5f0f3;
+  backdrop-filter: none;
+  transition: none;
 }
 
 .vms-stat:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.22);
+  transform: none;
+  background: #e9f8fa;
 }
 
 .vms-stat-value {
-  font-size: 1.15rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #067a87;
   line-height: 1;
 }
 
 .vms-stat-label {
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.05em;
+  color: #067a87;
 }
 
-.vms-stat.stat-running {
-  background: rgba(245, 158, 11, 0.25);
-  border-color: rgba(253, 224, 71, 0.5);
+.vms-stat.stat-planned { background: #dbeafe; border-color: #93c5fd; }
+.vms-stat.stat-planned:hover { background: #dbeafe; }
+.vms-stat.stat-planned .vms-stat-value,
+.vms-stat.stat-planned .vms-stat-label { color: #1d4ed8; }
+
+.vms-stat.stat-running { background: #fffbeb; border-color: #fde68a; }
+.vms-stat.stat-running:hover { background: #fffbeb; }
+.vms-stat.stat-running .vms-stat-value,
+.vms-stat.stat-running .vms-stat-label { color: #b45309; }
+
+.vms-stat.stat-done { background: #d1fae5; border-color: #6ee7b7; }
+.vms-stat.stat-done:hover { background: #d1fae5; }
+.vms-stat.stat-done .vms-stat-value,
+.vms-stat.stat-done .vms-stat-label { color: #047857; }
+
+/* Icône d'en-tête = bouton « paramètres des colonnes » */
+.vms-header-icon-btn {
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
 }
-.vms-stat.stat-done {
-  background: rgba(34, 197, 94, 0.25);
-  border-color: rgba(134, 239, 172, 0.5);
+
+.vms-header-icon-btn:hover {
+  background: #d5f0f3;
+  border-color: #a8e0e6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -6px rgba(7, 148, 164, 0.45);
 }
-.vms-stat.stat-planned {
-  background: rgba(59, 130, 246, 0.22);
-  border-color: rgba(147, 197, 253, 0.5);
+
+.vms-header-icon-btn:active { transform: translateY(0); }
+
+.vms-header-icon-btn:focus-visible {
+  outline: 2px solid #0794a4;
+  outline-offset: 2px;
 }
 
 /* ─────────── BARRE D'ACTIONS ─────────── */
@@ -164,6 +172,7 @@ background: linear-gradient(
   border-radius: 10px;
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
   color: #475569;
+  font-family: inherit;
 }
 
 .vms-action-btn:hover:not(.disabled) {
@@ -175,18 +184,16 @@ background: linear-gradient(
   cursor: not-allowed;
 }
 
-/* Ajouter (bouton principal plein) */
+/* Ajouter (bouton principal teal uni) */
 .vms-action-btn.ajouter {
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   color: #ffffff;
-  box-shadow: 0 6px 16px -6px rgba(15, 118, 110, 0.5);
+  background: #0794a4;
+  color: #ffffff;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
 }
-.vms-action-btn.ajouter:hover {
-  box-shadow: 0 10px 22px -6px rgba(15, 118, 110, 0.6);
+
+.vms-action-btn.ajouter:hover:not(.disabled) {
+  background: #067a87;
+  box-shadow: 0 10px 22px -6px rgba(7, 148, 164, 0.6);
 }
 
 /* Modifier */
@@ -194,6 +201,13 @@ background: linear-gradient(
 .vms-action-btn.modifier:hover:not(.disabled) {
   background: #fff7ed;
   border-color: #fed7aa;
+}
+
+/* Traçage */
+.vms-action-btn.tracage { color: #0794a4; }
+.vms-action-btn.tracage:hover:not(.disabled) {
+  background: #e9f8fa;
+  border-color: #a8e0e6;
 }
 
 /* Démarrer */
@@ -248,9 +262,7 @@ background: linear-gradient(
   white-space: nowrap;
 }
 
-.vms-filter-label svg {
-  color: #1b648f;
-}
+.vms-filter-label svg { color: #0794a4; }
 
 .vms-filter-input-wrap {
   display: flex;
@@ -267,8 +279,8 @@ background: linear-gradient(
 }
 
 .vms-filter-input-wrap:focus-within {
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(27, 100, 143, 0.12);
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
 }
 
 .vms-filter-icon {
@@ -311,6 +323,59 @@ background: linear-gradient(
   color: #e11d48;
 }
 
+/* ─────────── EXPORT ─────────── */
+.vms-export-stack {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.vms-export-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 10px -4px rgba(15, 23, 42, 0.2);
+}
+
+.vms-export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px -6px rgba(15, 23, 42, 0.3);
+}
+
+.vms-export-btn:active { transform: translateY(0); }
+
+.vms-export-btn.excel { background: #10b981; }
+.vms-export-btn.excel:hover { background: #059669; }
+
+.vms-export-btn.print { background: #0794a4; }
+.vms-export-btn.print:hover { background: #067a87; }
+
+.vms-export-btn.stats { background: #f59e0b; }
+.vms-export-btn.stats:hover { background: #d97706; }
+
+/* ─────────── BANDEAU ERREUR ─────────── */
+.vms-error-banner {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.86rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* ─────────── TABLEAU ─────────── */
 .vms-table-wrap {
   background: #ffffff;
@@ -326,8 +391,9 @@ background: linear-gradient(
   font-size: 13.5px;
 }
 
+/* En-tête du tableau → teal clair uni */
 .vms-table thead {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #e9f8fa;
 }
 
 .vms-table th {
@@ -337,8 +403,8 @@ background: linear-gradient(
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
-  border-bottom: 1.5px solid #e2e8f0;
+  color: #067a87;
+  border-bottom: 1.5px solid #d5f0f3;
   white-space: nowrap;
 }
 
@@ -349,22 +415,43 @@ background: linear-gradient(
   vertical-align: middle;
 }
 
-.vms-table tbody tr:last-child td {
-  border-bottom: none;
+.vms-table tbody tr:last-child td { border-bottom: none; }
+.vms-table tbody tr { transition: background 0.15s ease; }
+.vms-table tbody tr:hover { background: #fafbfd; }
+
+.vms-row { cursor: pointer; }
+.vms-row.selected td { background: #e9f8fa; }
+.vms-row.selected { box-shadow: inset 4px 0 0 #0794a4; }
+
+/* ─────────── TRI DES COLONNES ─────────── */
+.vms-th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
 }
 
-.vms-table tbody tr {
-  transition: background 0.15s ease;
+.vms-th-sortable:hover { background: #d5f0f3; color: #066470; }
+.vms-th-sortable.is-sorted { background: #d5f0f3; color: #066470; }
+
+.vms-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.vms-table tbody tr:hover {
-  background: #fafbfd;
+.vms-sort-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.15s;
 }
 
-/* Cellules enrichies */
+.vms-th-sortable:hover .vms-sort-icon,
+.vms-sort-icon.active { color: #0794a4; }
+
+/* ─────────── CELLULES ─────────── */
 .vms-cell-num {
   font-weight: 800;
-  color: #1b648f;
+  color: #0794a4;
   font-family: 'Courier New', monospace;
   font-size: 12.5px;
   letter-spacing: 0.02em;
@@ -383,8 +470,8 @@ background: linear-gradient(
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: #ecfdf5;
-  color: #1b648f;
+  background: #e9f8fa;
+  color: #0794a4;
   flex-shrink: 0;
 }
 
@@ -416,9 +503,7 @@ background: linear-gradient(
   font-size: 13px;
 }
 
-.vms-cell-driver-icon {
-  color: #94a3b8;
-}
+.vms-cell-driver-icon { color: #94a3b8; }
 
 .vms-cell-empty {
   color: #cbd5e1;
@@ -446,16 +531,16 @@ background: linear-gradient(
   gap: 2px;
   padding: 3px 6px;
   border-radius: 6px;
-  background: #f0fdfa;
-  color: #1b648f;
+  background: #e9f8fa;
+  color: #0794a4;
   text-decoration: none;
-  border: 1px solid #99f6e4;
+  border: 1px solid #d5f0f3;
   transition: all 0.15s ease;
 }
 
 .vms-cell-map-link:hover {
-  background: #ccfbf1;
-  border-color: #5eead4;
+  background: #d5f0f3;
+  border-color: #a8e0e6;
   transform: translateY(-1px);
 }
 
@@ -474,9 +559,7 @@ background: linear-gradient(
   white-space: nowrap;
 }
 
-.vms-pill svg {
-  flex-shrink: 0;
-}
+.vms-pill svg { flex-shrink: 0; }
 
 .vms-pill.planned {
   background: #e0f2fe;
@@ -518,59 +601,7 @@ background: linear-gradient(
   color: #94a3b8;
 }
 
-.vms-empty-state svg {
-  color: #cbd5e1;
-}
-
-/* ─────────── BANDEAU ERREUR ─────────── */
-.vms-error-banner {
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border: 1.5px solid #fecaca;
-  color: #b91c1c;
-  font-size: 0.86rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* ─────────── EXPORT ─────────── */
-.vms-export-stack {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  margin-left: auto;
-}
-
-.vms-export-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  box-shadow: 0 4px 10px -4px rgba(15, 23, 42, 0.2);
-}
-
-.vms-export-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px -6px rgba(15, 23, 42, 0.3);
-}
-
-.vms-export-btn:active {
-  transform: translateY(0);
-}
-
-.vms-export-btn.excel { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-.vms-export-btn.print { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); }
-.vms-export-btn.stats { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.vms-empty-state svg { color: #cbd5e1; }
 
 /* ─────────── ANIMATIONS ─────────── */
 @keyframes vmsSpin {
@@ -597,9 +628,7 @@ background: linear-gradient(
 @media (max-width: 768px) {
   .vms-container { padding: 16px; }
 
-  .vms-header-card {
-    padding: 18px;
-  }
+  .vms-header-card { padding: 14px 16px; }
   .vms-header-left h2 { font-size: 1.1rem; }
   .vms-header-subtitle { font-size: 0.78rem; }
 
@@ -618,21 +647,15 @@ background: linear-gradient(
     gap: 10px;
   }
 
-  .vms-filter-group {
-    min-width: 100%;
-  }
+  .vms-filter-group { min-width: 100%; }
 
   .vms-export-stack {
     margin-left: 0;
     width: 100%;
   }
-  .vms-export-btn {
-    flex: 1;
-  }
+  .vms-export-btn { flex: 1; }
 
-  .vms-table {
-    font-size: 12.5px;
-  }
+  .vms-table { font-size: 12.5px; }
 
   .vms-table th,
   .vms-table td {
@@ -647,17 +670,6 @@ background: linear-gradient(
   .vms-stat-value { font-size: 1rem; }
   .vms-stat-label { font-size: 0.58rem; }
 
-  .vms-table-wrap {
-    overflow-x: auto;
-  }
-
-  .vms-table {
-    min-width: 820px;
-  }
-}
-/* ─────────── Bouton Traçage ─────────── */
-.vms-action-btn.tracage { color: #0891b2; }
-.vms-action-btn.tracage:hover:not(.disabled) {
-  background: #f0f9ff;
-  border-color: #bae6fd;
+  .vms-table-wrap { overflow-x: auto; }
+  .vms-table { min-width: 820px; }
 }

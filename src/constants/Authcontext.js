@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+} from 'react';
+
 import authService from '../services/Authservice';
 
 const AuthContext = createContext(null);
@@ -8,7 +15,9 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (loginValue, password) => {
     const session = await authService.login(loginValue, password);
+
     setUser(session);
+
     return session;
   }, []);
 
@@ -22,17 +31,29 @@ export function AuthProvider({ children }) {
     isAuthenticated: !!user,
     login,
     logout,
+    userId: user?.userId ?? null,
+    serviceId: user?.serviceId ?? null,
+    prestataireId: user?.prestataireId ?? null,
+    cliniqueId: user?.cliniqueId ?? null,
+    privileges: user?.privileges ?? [],
   };
 
-  // Pas de JSX ici : ce fichier reste en .js (Vite/oxc ne parse le JSX
-  // que dans les fichiers .jsx/.tsx par défaut), donc on passe par
-  // React.createElement au lieu de <AuthContext.Provider>...</AuthContext.Provider>.
-  return React.createElement(AuthContext.Provider, { value }, children);
+  return React.createElement(
+    AuthContext.Provider,
+    { value },
+    children
+  );
 }
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth doit être utilisé à l\'intérieur d\'un <AuthProvider>');
+
+  if (!ctx) {
+    throw new Error(
+      "useAuth doit être utilisé à l'intérieur d'un <AuthProvider>"
+    );
+  }
+
   return ctx;
 }
 

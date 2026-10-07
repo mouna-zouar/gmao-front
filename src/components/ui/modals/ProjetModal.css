@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   ProjetModal.css — TEAL EDITION + LAYOUT 3 COLONNES
-   Aligné sur VehiculeReservationModal / VehiculeIncidentModal
-   ═══════════════════════════════════════════════════════════ */
 
-/* ═══════════ MODAL CONTAINER ═══════════ */
 .prjm-modal {
   width: 900px;
   max-width: 96vw;
@@ -45,33 +40,21 @@
   50%      { opacity: 0.5; }
 }
 
-/* ═══════════ HEADER — GRADIENT TEAL ═══════════ */
+/* ═══════════ HEADER — teal foncé uni ═══════════ */
 .prjm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 18px 24px;
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );  color: #ffffff;
+  background: #067a87;
+  color: #ffffff;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
 }
 
-.prjm-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.12) 0%, transparent 40%);
-  pointer-events: none;
-}
+.prjm-header::before { display: none; }
 
 .prjm-header-left {
   display: flex;
@@ -89,7 +72,7 @@ background: linear-gradient(
   height: 42px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(8px);
+  backdrop-filter: none;
   border: 1px solid rgba(255, 255, 255, 0.25);
   color: #ffffff;
   flex-shrink: 0;
@@ -121,6 +104,7 @@ background: linear-gradient(
   z-index: 1;
 }
 
+/* Chip état → teal clair par défaut */
 .prjm-etat-chip {
   display: inline-flex;
   align-items: center;
@@ -131,8 +115,8 @@ background: linear-gradient(
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1b648f;
+  background: #e9f8fa;
+  color: #0794a4;
   border: 1px solid transparent;
 }
 
@@ -185,7 +169,7 @@ background: linear-gradient(
 /* ═══════════ NAVIGATION LATÉRALE ═══════════ */
 .prjm-nav {
   flex-shrink: 0;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  background: #f8fafc;
   border-right: 1px solid #e2e8f0;
   padding: 18px 12px;
   overflow-y: auto;
@@ -237,21 +221,19 @@ background: linear-gradient(
   width: 100%;
 }
 
+/* Hover → teal clair uni */
 .prjm-nav-item:hover {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  color: #1b648f;
+  background: #e9f8fa;
+  border-color: #d5f0f3;
+  color: #0794a4;
 }
 
+/* Item actif → teal uni */
 .prjm-nav-item.active {
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   color: #ffffff;
-  border-color: #1b648f;
-  box-shadow: 0 6px 16px -6px rgba(27, 100, 143, 0.5);
+  background: #0794a4;
+  color: #ffffff;
+  border-color: #067a87;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.5);
 }
 
 .prjm-nav-item-icon {
@@ -287,8 +269,8 @@ background: linear-gradient(
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #1b648f;
-  color: #ffffff;
+  background: #e9f8fa;
+  color: #0794a4;
   font-size: 10.5px;
   font-weight: 800;
 }
@@ -317,14 +299,14 @@ background: linear-gradient(
   margin: 8px 0;
 }
 .prjm-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+  background: #94a3b8;
   border-radius: 10px;
   border: 2px solid #f1f5f9;
   transition: all 0.2s ease;
 }
 .prjm-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #1b648f 0%, #287da8 100%);
-  border-color: #f0fdfa;
+  background: #0794a4;
+  border-color: #e9f8fa;
 }
 
 /* ═══════════ PANE ═══════════ */
@@ -390,10 +372,10 @@ background: linear-gradient(
   background: #ffffff;
 }
 
-.prjm-field textarea:hover { border-color: #a7d5ce; }
+.prjm-field textarea:hover { border-color: #a8e0e6; }
 .prjm-field textarea:focus {
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(27, 100, 143, 0.12);
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
 
 .prjm-input-icon {
@@ -406,15 +388,15 @@ background: linear-gradient(
   transition: all 0.15s ease;
 }
 
-.prjm-input-icon:hover { border-color: #a7d5ce; }
+.prjm-input-icon:hover { border-color: #a8e0e6; }
 .prjm-input-icon:focus-within {
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(27, 100, 143, 0.12);
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
 
 .prjm-input-icon > svg {
   margin-left: 13px;
-  color: #1b648f;
+  color: #0794a4;
   flex-shrink: 0;
 }
 
@@ -447,7 +429,7 @@ background: linear-gradient(
 }
 
 .prjm-hint--ok {
-  color: #1b648f;
+  color: #0794a4;
   font-style: normal;
   font-weight: 600;
   display: inline-flex;
@@ -509,7 +491,7 @@ background: linear-gradient(
   margin-top: 14px;
   padding: 12px 16px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  background: #fef2f2;
   border: 1.5px solid #fecaca;
   color: #b91c1c;
   font-size: 0.85rem;
@@ -517,8 +499,9 @@ background: linear-gradient(
   animation: prjmPop 0.3s ease;
 }
 
+/* ═══════════ APERÇU ═══════════ */
 .prjm-preview-wrap {
-  background: linear-gradient(180deg, #f0fdfa 0%, #fafbff 100%);
+  background: #f8fafc;
   border-left: 1.5px solid #e2e8f0;
   padding: 20px 18px;
   overflow-y: auto;
@@ -544,9 +527,10 @@ background: linear-gradient(
   align-items: center;
   gap: 10px;
   padding-bottom: 14px;
-  border-bottom: 1.5px dashed #e2e8f0;
+  border-bottom: 1.5px dashed #d5f0f3;
 }
 
+/* Icône head preview → teal plein */
 .prjm-preview-head-icon {
   display: flex;
   align-items: center;
@@ -554,21 +538,17 @@ background: linear-gradient(
   width: 34px;
   height: 34px;
   border-radius: 10px;
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   color: #ffffff;
+  background: #0794a4;
+  color: #ffffff;
   flex-shrink: 0;
-  box-shadow: 0 4px 10px -3px rgba(27, 100, 143, 0.4);
+  box-shadow: 0 4px 10px -3px rgba(7, 148, 164, 0.4);
 }
 
 .prjm-preview-head-title {
   display: block;
   font-size: 0.78rem;
   font-weight: 800;
-  color: #1b648f;
+  color: #067a87;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -583,23 +563,23 @@ background: linear-gradient(
 
 .prjm-preview-card {
   background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid #d5f0f3;
   border-radius: 14px;
   padding: 14px 16px;
-  box-shadow: 0 2px 10px -4px rgba(15, 118, 110, 0.08);
+  box-shadow: 0 2px 10px -4px rgba(7, 148, 164, 0.08);
   transition: all 0.2s ease;
 }
 
 .prjm-preview-card:hover {
-  border-color: #5eead4;
-  box-shadow: 0 6px 16px -6px rgba(15, 118, 110, 0.2);
+  border-color: #a8e0e6;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.2);
   transform: translateY(-1px);
 }
 
 .prjm-preview-label {
   font-size: 0.63rem;
   font-weight: 800;
-  color: #1b648f;
+  color: #067a87;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 10px;
@@ -612,6 +592,7 @@ background: linear-gradient(
   gap: 12px;
 }
 
+/* Icône projet → teal plein */
 .prjm-preview-projet-icon {
   display: flex;
   align-items: center;
@@ -619,14 +600,10 @@ background: linear-gradient(
   width: 42px;
   height: 42px;
   border-radius: 12px;
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   color: #ffffff;
+  background: #0794a4;
+  color: #ffffff;
   flex-shrink: 0;
-  box-shadow: 0 6px 14px -4px rgba(15, 118, 110, 0.4);
+  box-shadow: 0 6px 14px -4px rgba(7, 148, 164, 0.4);
 }
 
 .prjm-preview-projet-nom {
@@ -689,27 +666,29 @@ background: linear-gradient(
   margin-top: 1px;
 }
 
+/* Barre de durée → teal uni */
 .prjm-preview-bar {
   position: relative;
   height: 3px;
-  background: linear-gradient(90deg, #10b981 0%, #f59e0b 100%);
+  background: #0794a4;
   border-radius: 999px;
   margin: 4px 0 4px 20px;
 }
 
+/* Durée → teal uni */
 .prjm-preview-duration {
   position: absolute;
   top: -9px;
   left: 50%;
   transform: translateX(-50%);
   padding: 2px 10px;
-  background: #1b648f;
+  background: #0794a4;
   color: #ffffff;
   font-size: 10px;
   font-weight: 800;
   border-radius: 999px;
   white-space: nowrap;
-  box-shadow: 0 3px 8px -2px rgba(27, 100, 143, 0.4);
+  box-shadow: 0 3px 8px -2px rgba(7, 148, 164, 0.4);
 }
 
 /* Statut */
@@ -739,13 +718,13 @@ background: linear-gradient(
 }
 
 .prjm-preview-person + .prjm-preview-person {
-  border-top: 1px dashed #ccfbf1;
+  border-top: 1px dashed #d5f0f3;
   margin-top: 4px;
   padding-top: 10px;
 }
 
 .prjm-preview-person svg {
-  color: #1b648f;
+  color: #0794a4;
   flex-shrink: 0;
 }
 
@@ -767,7 +746,7 @@ background: linear-gradient(
 /* Récapitulatif */
 .prjm-preview-summary {
   background: #ffffff;
-  border: 1.5px dashed #99f6e4;
+  border: 1.5px dashed #d5f0f3;
   border-radius: 14px;
   padding: 14px 16px;
   display: flex;
@@ -781,15 +760,15 @@ background: linear-gradient(
   align-items: center;
   gap: 7px;
   padding-bottom: 8px;
-  border-bottom: 1px dashed #ccfbf1;
+  border-bottom: 1px dashed #d5f0f3;
   font-size: 0.72rem;
   font-weight: 800;
-  color: #1b648f;
+  color: #067a87;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
-.prjm-preview-summary-head svg { color: #1b648f; }
+.prjm-preview-summary-head svg { color: #0794a4; }
 
 .prjm-preview-summary-row {
   display: flex;
@@ -800,7 +779,7 @@ background: linear-gradient(
 }
 
 .prjm-preview-summary-row > span:first-child {
-  color: #1b648f;
+  color: #067a87;
   font-weight: 700;
   text-transform: uppercase;
   font-size: 0.68rem;

@@ -1,8 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   VehiculeModal.css — Layout split (comme Réclamation / BM / Mission)
-   ═══════════════════════════════════════════════════════════ */
 
-/* ═══════════ MODAL CONTAINER ═══════════ */
 .bmm-modal {
   width: 900px;
   max-width: 96vw;
@@ -12,7 +8,7 @@
   padding: 0;
   overflow: hidden;
   border-radius: 20px;
-  background: #ffffff;
+  background: #ffffff !important;
   box-shadow:
     0 30px 80px -25px rgba(15, 23, 42, 0.35),
     0 10px 30px -10px rgba(15, 23, 42, 0.2);
@@ -43,33 +39,27 @@
   75% { transform: translateX(4px); }
 }
 
-/* ═══════════ HEADER ═══════════ */
+/* ═══════════ HEADER — teal foncé uni + texte blanc ═══════════ */
 .bmm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 18px 24px;
-  background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );
-  color: #ffffff;
+  background: #067a87 !important;
+  background-color: #067a87 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-bottom: none !important;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
 }
 
-.bmm-header::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.12) 0%, transparent 40%);
-  pointer-events: none;
+.bmm-header::before,
+.bmm-header::after {
+  content: none !important;
+  display: none !important;
 }
 
 .bmm-header-left {
@@ -80,6 +70,7 @@
   z-index: 1;
 }
 
+/* Icône header → translucide sur teal */
 .bmm-header-icon-wrap {
   display: flex;
   align-items: center;
@@ -87,11 +78,13 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
   flex-shrink: 0;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
 }
 
 .bmm-eyebrow {
@@ -100,7 +93,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.85) !important;
   margin-bottom: 2px;
 }
 
@@ -108,8 +101,9 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #ffffff !important;
   letter-spacing: -0.01em;
+  text-shadow: none !important;
 }
 
 .bmm-header-right {
@@ -120,6 +114,7 @@
   z-index: 1;
 }
 
+/* Badge type → teal clair sur bandeau teal */
 .bmm-type-badge {
   display: inline-block;
   padding: 5px 12px;
@@ -128,9 +123,12 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  background: rgba(255, 255, 255, 0.9);
-  color: #1b648f;
+  background: #e9f8fa !important;
+  background-image: none !important;
+  border: none !important;
+  color: #0794a4 !important;
   white-space: nowrap;
+  box-shadow: none !important;
 }
 
 .bmm-close-btn {
@@ -139,16 +137,19 @@
   justify-content: center;
   width: 34px;
   height: 34px;
-  border: none;
+  border: none !important;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.15) !important;
+  background-image: none !important;
+  color: #ffffff !important;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: none !important;
 }
 
 .bmm-close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
   transform: rotate(90deg);
 }
 
@@ -164,8 +165,8 @@
 .bmm-nav {
   width: 220px;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-right: 1px solid #e2e8f0;
+  background: #f8fafc !important;
+  border-right: 1px solid #e2e8f0 !important;
   padding: 18px 12px;
   overflow-y: auto;
   display: flex;
@@ -206,7 +207,7 @@
   border-radius: 10px;
   border: 1.5px solid transparent;
   background: transparent;
-  color: #475569;
+  color: #475569 !important;
   font-size: 0.85rem;
   font-weight: 700;
   font-family: inherit;
@@ -216,22 +217,19 @@
   width: 100%;
 }
 
+/* Hover → teal clair uni */
 .bmm-nav-item:hover {
-  background: #ffffff;
-  border-color: #e2e8f0;
-  color: #1b648f;
+  background: #e9f8fa !important;
+  border-color: #d5f0f3 !important;
+  color: #0794a4 !important;
 }
 
+/* Item actif → teal uni */
 .bmm-nav-item.active {
-  background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );
-  color: #ffffff;
-  border-color: #1b648f;
-  box-shadow: 0 6px 16px -6px rgba(15, 118, 110, 0.5);
+  background: #0794a4 !important;
+  color: #ffffff !important;
+  border-color: #067a87 !important;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.5);
 }
 
 .bmm-nav-item-icon {
@@ -241,15 +239,15 @@
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: #ffffff;
-  color: #64748b;
+  background: #ffffff !important;
+  color: #64748b !important;
   flex-shrink: 0;
   transition: all 0.18s ease;
 }
 
 .bmm-nav-item.active .bmm-nav-item-icon {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
 }
 
 .bmm-nav-item-label {
@@ -259,6 +257,7 @@
   text-overflow: ellipsis;
 }
 
+/* Compteur → teal */
 .bmm-nav-item-count {
   display: inline-flex;
   align-items: center;
@@ -267,15 +266,15 @@
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #1b648f;
-  color: #ffffff;
+  background: #e9f8fa !important;
+  color: #0794a4 !important;
   font-size: 10.5px;
   font-weight: 800;
 }
 
 .bmm-nav-item.active .bmm-nav-item-count {
-  background: rgba(255, 255, 255, 0.3);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
 }
 
 /* ═══════════ CONTENU ═══════════ */
@@ -297,14 +296,15 @@
   margin: 8px 0;
 }
 .bmm-content::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+  background: #94a3b8;
   border-radius: 10px;
   border: 2px solid #f1f5f9;
   transition: all 0.2s ease;
 }
+
 .bmm-content::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #1b648f 0%, #14b8a6 100%);
-  border-color: #f0fdfa;
+  background: #0794a4;
+  border-color: #e9f8fa;
 }
 
 /* ═══════════ PANE ═══════════ */
@@ -358,7 +358,7 @@
   gap: 4px;
 }
 
-.bmm-required { color: #e11d48; font-weight: 900; }
+.bmm-required { color: #e11d48 !important; font-weight: 900; }
 
 .bmm-field input,
 .bmm-field select,
@@ -375,19 +375,16 @@
 
 .bmm-field input:hover,
 .bmm-field select:hover,
-.bmm-field textarea:hover { border-color: #a7d5ce; }
+.bmm-field textarea:hover { border-color: #a8e0e6; }
 
 .bmm-field textarea { resize: vertical; min-height: 80px; }
-.bmm-field input:focus{
-  border-color: #1b648f;
-  box-shadow: none !important;
-}
+
 .bmm-field input:focus,
 .bmm-field select:focus,
 .bmm-field textarea:focus {
   outline: none;
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: #0794a4 !important;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12) !important;
 }
 
 .bmm-field input:disabled,
@@ -426,9 +423,9 @@
 }
 
 .bmm-km-card:focus-within {
-  border-color: #1b648f;
-  background: #f0fdfa;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: #0794a4 !important;
+  background: #e9f8fa !important;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12) !important;
 }
 
 .bmm-km-label {
@@ -487,7 +484,7 @@
 .bmm-km-arrow {
   font-size: 1.2rem;
   font-weight: 800;
-  color: #1b648f;
+  color: #0794a4 !important;
   text-align: center;
 }
 
@@ -508,7 +505,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #1b648f;
+  color: #0794a4 !important;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -520,7 +517,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #0d9488;
+  background: #0794a4 !important;
 }
 
 /* ═══════════ INFO / ERREUR ═══════════ */
@@ -531,9 +528,9 @@
   margin-top: 10px;
   padding: 10px 14px;
   border-radius: 10px;
-  background: #f0fdfa;
-  border: 1.5px solid #99f6e4;
-  color: #1b648f;
+  background: #e9f8fa !important;
+  border: 1.5px solid #d5f0f3 !important;
+  color: #067a87 !important;
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -545,9 +542,9 @@
   margin-top: 14px;
   padding: 12px 16px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border: 1.5px solid #fecaca;
-  color: #b91c1c;
+  background: #fef2f2 !important;
+  border: 1.5px solid #fecaca !important;
+  color: #b91c1c !important;
   font-size: 0.85rem;
   font-weight: 600;
   animation: bmmShake 0.35s ease;
@@ -593,7 +590,6 @@
   width: 100%;
 }
 
-/* Wrapper de l'input avec icône + chevron + clear */
 .bmm-searchable-input-wrap {
   display: flex;
   align-items: center;
@@ -602,21 +598,20 @@
   height: 42px;
   border: 1.5px solid #e2e8f0;
   border-radius: 9px;
-  background: #ffffff;
+  background: #ffffff !important;
   transition: all 0.15s ease;
 }
 
 .bmm-searchable-input-wrap:hover {
-  border-color: #a7d5ce;
+  border-color: #a8e0e6;
 }
 
 .bmm-searchable-input-wrap.is-open,
 .bmm-searchable-input-wrap:focus-within {
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+  border-color: #0794a4 !important;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12) !important;
 }
 
-/* Icône loupe */
 .bmm-searchable-icon {
   flex-shrink: 0;
   color: #64748b;
@@ -624,10 +619,9 @@
 }
 
 .bmm-searchable-input-wrap.is-open .bmm-searchable-icon {
-  color: #1b648f;
+  color: #0794a4 !important;
 }
 
-/* Input transparent (l'input EST le champ de recherche) */
 .bmm-searchable-input {
   flex: 1;
   min-width: 0;
@@ -653,7 +647,6 @@
   color: #94a3b8;
 }
 
-/* Bouton clear inline */
 .bmm-searchable-clear-inline {
   display: inline-flex;
   align-items: center;
@@ -662,8 +655,8 @@
   height: 20px;
   border-radius: 50%;
   border: none;
-  background: #e2e8f0;
-  color: #475569;
+  background: #e2e8f0 !important;
+  color: #475569 !important;
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
@@ -671,11 +664,10 @@
 }
 
 .bmm-searchable-clear-inline:hover {
-  background: #cbd5e1;
-  color: #1b648f;
+  background: #d5f0f3 !important;
+  color: #0794a4 !important;
 }
 
-/* Chevron */
 .bmm-searchable-chevron {
   flex-shrink: 0;
   color: #64748b;
@@ -683,21 +675,20 @@
 }
 
 .bmm-searchable-input-wrap.is-open .bmm-searchable-chevron {
-  color: #1b648f;
+  color: #0794a4 !important;
 }
 
 .bmm-searchable-chevron.rotated {
   transform: rotate(180deg);
 }
 
-/* Menu déroulant */
 .bmm-searchable-menu {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
   right: 0;
   z-index: 50;
-  background: #ffffff;
+  background: #ffffff !important;
   border: 1.5px solid #e2e8f0;
   border-radius: 12px;
   box-shadow:
@@ -712,7 +703,6 @@
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Liste des options */
 .bmm-searchable-options {
   max-height: 240px;
   overflow-y: auto;
@@ -722,9 +712,7 @@
 }
 
 .bmm-searchable-options::-webkit-scrollbar { width: 8px; }
-.bmm-searchable-options::-webkit-scrollbar-track {
-  background: transparent;
-}
+.bmm-searchable-options::-webkit-scrollbar-track { background: transparent; }
 .bmm-searchable-options::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
@@ -754,22 +742,18 @@
 }
 
 .bmm-searchable-option:hover {
-  background: #f0fdfa;
-  color: #1b648f;
+  background: #e9f8fa !important;
+  color: #0794a4 !important;
 }
 
 .bmm-searchable-option.is-selected {
-  background: linear-gradient(
-    135deg,
-    rgba(27, 100, 143, 0.08) 0%,
-    rgba(91, 168, 201, 0.12) 100%
-  );
-  color: #1b648f;
+  background: #e9f8fa !important;
+  color: #0794a4 !important;
   font-weight: 700;
 }
 
 .bmm-searchable-option.is-selected svg {
-  color: #1b648f;
+  color: #0794a4 !important;
 }
 
 .bmm-searchable-empty {
@@ -784,9 +768,7 @@
 @media (max-width: 900px) {
   .bmm-modal { width: 100%; }
 
-  .bmm-layout {
-    flex-direction: column;
-  }
+  .bmm-layout { flex-direction: column; }
 
   .bmm-nav {
     width: 100%;
@@ -836,4 +818,74 @@
   }
   .bmm-footer-right { width: 100%; }
   .bmm-footer-right > button { flex: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   OVERRIDE FINAL — Header TEAL forcé (spécificité maximale)
+   ═══════════════════════════════════════════════════════════ */
+
+.bmm-modal .bmm-header,
+.modal-overlay .bmm-modal .bmm-header,
+.modal-overlay .bmm-modal form .bmm-header,
+div.bmm-modal > div.bmm-header {
+  background: #067a87 !important;
+  background-color: #067a87 !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.bmm-modal .bmm-header::before,
+.bmm-modal .bmm-header::after,
+.modal-overlay .bmm-modal .bmm-header::before,
+.modal-overlay .bmm-modal .bmm-header::after {
+  content: none !important;
+  display: none !important;
+  background: none !important;
+  background-image: none !important;
+}
+
+.bmm-modal .bmm-header .bmm-header-icon-wrap,
+.modal-overlay .bmm-modal .bmm-header .bmm-header-icon-wrap {
+  background: rgba(255, 255, 255, 0.18) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+.bmm-modal .bmm-header .bmm-eyebrow {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.bmm-modal .bmm-header h2,
+.bmm-modal .bmm-header h1,
+.bmm-modal .bmm-header h3 {
+  color: #ffffff !important;
+  text-shadow: none !important;
+}
+
+.bmm-modal .bmm-header .bmm-type-badge {
+  background: #e9f8fa !important;
+  background-image: none !important;
+  border: none !important;
+  color: #0794a4 !important;
+  box-shadow: none !important;
+}
+
+.bmm-modal .bmm-header .bmm-close-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  background-image: none !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.bmm-modal .bmm-header .bmm-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
 }

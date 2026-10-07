@@ -553,8 +553,8 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
             </div>
             {bon && (
               <div className="form-group-row">
-                <div className="input-group"><label>Créé par</label><input type="text" value={bon.personnelCreationNom || '—'} disabled /></div>
-                <div className="input-group"><label>Demandé par</label><input type="text" value={bon.personnelDemandantNom || '—'} disabled /></div>
+                <div className="input-group"><label>Créé par</label><input type="text" value={bon.personnelCreationNom || (bon.personnelCreation ? personnelLabel(bon.personnelCreation) : '—')} disabled /></div>
+                <div className="input-group"><label>Demandé par</label><input type="text" value={bon.personnelDemandantNom || (bon.personnelDemandant ? personnelLabel(bon.personnelDemandant) : '—')} disabled /></div>
                 <div className="input-group"><label>Coût total</label><input type="text" value={bon.coutTotal != null ? `${bon.coutTotal} DT` : '—'} disabled /></div>
               </div>
             )}

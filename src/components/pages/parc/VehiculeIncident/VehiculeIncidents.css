@@ -1,6 +1,3 @@
-/* ═══════════════════════════════════════════════════════════
-   VehiculeIncidents.css
-   ═══════════════════════════════════════════════════════════ */
 
 .vin-container {
   padding: 24px;
@@ -15,37 +12,24 @@
 @keyframes vinSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 .vin-spin { animation: vinSpin 1s linear infinite; }
 
-/* HEADER */
 .vin-header-card {
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   border-radius: 20px;
-  padding: 22px 26px;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 24px;
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 20px;
   flex-wrap: wrap;
-
-  box-shadow: 0 20px 50px -20px rgba(27, 100, 143, 0.4);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
   position: relative;
-  overflow: hidden;
-  color: #ffffff;
+  overflow: visible;
 }
 
-.vin-header-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 15% 15%, rgba(255,255,255,0.18) 0%, transparent 40%),
-    radial-gradient(circle at 85% 85%, rgba(255,255,255,0.1) 0%, transparent 40%);
-  pointer-events: none;
-}
+.vin-header-card::before { display: none; }
 
 .vin-header-left {
   display: flex;
@@ -59,32 +43,35 @@ background: linear-gradient(
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 50px;
-  height: 50px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: #e9f8fa;
+  border: 1px solid #d5f0f3;
+  color: #0794a4;
+  backdrop-filter: none;
+  flex-shrink: 0;
 }
 
 .vin-header-left h2 {
   margin: 0;
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0f172a;
   letter-spacing: -0.02em;
 }
 
 .vin-header-subtitle {
   margin: 3px 0 0;
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.85);
+  color: #64748b;
+  font-weight: 500;
 }
 
+/* Stats : badges clairs en ligne */
 .vin-stats {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   z-index: 1;
   flex-wrap: wrap;
@@ -92,39 +79,74 @@ background: linear-gradient(
 
 .vin-stat {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px;
-  min-width: 80px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 12px;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: #e9f8fa;
+  border: 1.5px solid #d5f0f3;
+  backdrop-filter: none;
 }
 
 .vin-stat-value {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #067a87;
   line-height: 1;
 }
 
 .vin-stat-label {
-  font-size: 0.62rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.05em;
+  color: #067a87;
   text-align: center;
 }
 
-.vin-stat.stat-declared { background: rgba(245, 158, 11, 0.28); border-color: rgba(253, 224, 71, 0.5); }
-.vin-stat.stat-progress { background: rgba(59, 130, 246, 0.25); border-color: rgba(147, 197, 253, 0.5); }
-.vin-stat.stat-resolved { background: rgba(34, 197, 94, 0.25); border-color: rgba(134, 239, 172, 0.5); }
-.vin-stat.stat-cost { background: rgba(139, 92, 246, 0.25); border-color: rgba(196, 181, 253, 0.5); }
+.vin-stat.stat-declared { background: #fffbeb; border-color: #fde68a; }
+.vin-stat.stat-declared .vin-stat-value,
+.vin-stat.stat-declared .vin-stat-label { color: #b45309; }
 
-/* ACTIONS */
+.vin-stat.stat-progress { background: #dbeafe; border-color: #93c5fd; }
+.vin-stat.stat-progress .vin-stat-value,
+.vin-stat.stat-progress .vin-stat-label { color: #1d4ed8; }
+
+.vin-stat.stat-resolved { background: #d1fae5; border-color: #6ee7b7; }
+.vin-stat.stat-resolved .vin-stat-value,
+.vin-stat.stat-resolved .vin-stat-label { color: #047857; }
+
+.vin-stat.stat-cost { background: #ede9fe; border-color: #c4b5fd; }
+.vin-stat.stat-cost .vin-stat-value,
+.vin-stat.stat-cost .vin-stat-label { color: #6d28d9; }
+
+/* Icône d'en-tête = bouton « paramètres des colonnes » */
+.vin-header-icon-btn {
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.vin-header-icon-btn:hover {
+  background: #d5f0f3;
+  border-color: #a8e0e6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -6px rgba(7, 148, 164, 0.45);
+}
+
+.vin-header-icon-btn:active { transform: translateY(0); }
+
+.vin-header-icon-btn:focus-visible {
+  outline: 2px solid #0794a4;
+  outline-offset: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACTIONS
+   ═══════════════════════════════════════════════════════════ */
 .vin-actions-bar {
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -157,14 +179,15 @@ background: linear-gradient(
 .vin-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
 .vin-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* Bouton principal → teal uni */
 .vin-action-btn.ajouter {
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );   color: #ffffff;
-  box-shadow: 0 6px 16px -6px rgba(27, 100, 143, 0.2);
+  background: #0794a4;
+  color: #ffffff;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
+}
+
+.vin-action-btn.ajouter:hover:not(.disabled) {
+  background: #067a87;
 }
 
 .vin-action-btn.modifier { color: #ea580c; }
@@ -173,340 +196,7 @@ background: linear-gradient(
 .vin-action-btn.supprimer { color: #e11d48; }
 .vin-action-btn.supprimer:hover:not(.disabled) { background: #fff1f2; border-color: #fecdd3; }
 
-/* FILTRES */
-.vin-filter-panel {
-  display: flex;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 14px 16px;
-  margin-bottom: 20px;
-  gap: 14px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.vin-filter-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 200px;
-}
-
-.vin-filter-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #334155;
-  white-space: nowrap;
-}
-
-.vin-filter-label svg { color: #1b648f; }
-
-.vin-filter-input-wrap {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 10px;
-  overflow: hidden;
-  height: 40px;
-  padding: 0 12px;
-  gap: 8px;
-  transition: all 0.15s ease;
-}
-
-.vin-filter-input-wrap:focus-within {
-  border-color: #1b648f;
-  box-shadow: 0 0 0 4px rgba(27, 100, 143, 0.12);
-}
-
-.vin-filter-icon { color: #94a3b8; }
-
-.vin-filter-input-wrap input,
-.vin-filter-input-wrap select {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-size: 0.86rem;
-  color: #1e293b;
-  height: 100%;
-  background: transparent;
-  font-family: inherit;
-  font-weight: 500;
-}
-
-.vin-filter-reset {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #64748b;
-  padding: 9px 14px;
-  border-radius: 10px;
-  border: 1.5px solid transparent;
-  background: transparent;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-.vin-filter-reset:hover {
-  background: #fff1f2;
-  border-color: #fecdd3;
-  color: #1b648f;
-}
-
-/* EXPORT */
-.vin-export-stack {
-  display: flex;
-  gap: 6px;
-  margin-left: auto;
-}
-
-.vin-export-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #ffffff;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  box-shadow: 0 4px 10px -4px rgba(15, 23, 42, 0.2);
-}
-
-.vin-export-btn:hover { transform: translateY(-2px); }
-.vin-export-btn.excel { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-.vin-export-btn.print { background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); }
-.vin-export-btn.stats { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-
-/* ERREUR */
-.vin-error-banner {
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border: 1.5px solid #fecaca;
-  color: #b91c1c;
-  font-size: 0.86rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* TABLEAU */
-.vin-table-wrap {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px -4px rgba(15, 23, 42, 0.06);
-}
-
-.vin-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13.5px;
-}
-
-.vin-table thead {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-}
-
-.vin-table th {
-  text-align: left;
-  padding: 13px 16px;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #64748b;
-  border-bottom: 1.5px solid #e2e8f0;
-  white-space: nowrap;
-}
-
-.vin-table td {
-  padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
-  vertical-align: middle;
-}
-
-.vin-table tbody tr:last-child td { border-bottom: none; }
-.vin-table tbody tr { transition: background 0.15s ease; }
-.vin-table tbody tr:hover { background: #fafbfd; }
-
-.vin-row { cursor: pointer; }
-.vin-row.selected td { background: #fef2f2; }
-.vin-row.selected { box-shadow: inset 4px 0 0 #1b648f; }
-
-/* CELLULES */
-.vin-cell-vehicle { display: flex; align-items: center; gap: 10px; }
-
-.vin-cell-vehicle-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: #fef2f2;
-  color: #1b648f;
-  flex-shrink: 0;
-}
-
-.vin-cell-vehicle-text { display: flex; flex-direction: column; gap: 1px; }
-
-.vin-cell-main { font-weight: 700; color: #0f172a; font-size: 13.5px; }
-.vin-cell-sub { font-size: 11.5px; color: #94a3b8; font-weight: 600; }
-
-.vin-cell-driver { display: flex; align-items: center; gap: 10px; }
-
-.vin-cell-driver-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );
-  color: #ffffff;
-  flex-shrink: 0;
-}
-
-.vin-cell-empty { color: #cbd5e1; font-style: italic; }
-
-.vin-tag {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
-}
-
-.vin-cell-date {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12.5px;
-  color: #475569;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.vin-cell-date svg { color: #94a3b8; }
-
-.vin-cell-amount {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-weight: 800;
-  color: #7c3aed;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.vin-cell-amount svg { color: #7c3aed; }
-
-/* GRAVITÉ */
-.vin-gravite {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.vin-gravite.gravite-0 { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-.vin-gravite.gravite-1 { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
-.vin-gravite.gravite-2 { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-.vin-gravite.gravite-3 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-
-/* PASTILLES ÉTAT */
-.vin-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 11px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border: 1px solid transparent;
-  white-space: nowrap;
-}
-
-.vin-pill.declared { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
-.vin-pill.inprogress { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
-.vin-pill.resolved { background: #dcfce7; color: #166534; border-color: #86efac; }
-.vin-pill.closed { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
-
-/* EMPTY */
-.vin-table-empty {
-  text-align: center;
-  padding: 50px 16px;
-  color: #94a3b8;
-  font-size: 0.9rem;
-}
-
-.vin-empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  color: #94a3b8;
-}
-
-.vin-empty-state svg { color: #cbd5e1; }
-
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .vin-stats { width: 100%; justify-content: space-between; }
-  .vin-stat { flex: 1; min-width: 0; }
-}
-
-@media (max-width: 768px) {
-  .vin-container { padding: 16px; }
-  .vin-header-card { padding: 18px; }
-  .vin-header-left h2 { font-size: 1.1rem; }
-  .vin-actions-bar { padding: 10px 12px; gap: 6px; }
-  .vin-action-btn { padding: 8px 11px; font-size: 0.8rem; }
-  .vin-filter-panel { padding: 12px; gap: 10px; }
-  .vin-filter-group { min-width: 100%; }
-  .vin-export-stack { margin-left: 0; width: 100%; }
-  .vin-export-btn { flex: 1; }
-  .vin-table { font-size: 12.5px; }
-  .vin-table th, .vin-table td { padding: 10px 12px; }
-}
-
-@media (max-width: 480px) {
-  .vin-header-icon-wrap { width: 42px; height: 42px; }
-  .vin-table-wrap { overflow-x: auto; }
-  .vin-table { min-width: 820px; }
-}
-/* ═══════════════════════════════════════════════════════════
-   ACTIONS — boutons rapides de changement d'état
-   ═══════════════════════════════════════════════════════════ */
-
+/* Séparateur vertical */
 .vin-actions-sep {
   width: 1px;
   align-self: stretch;
@@ -515,6 +205,7 @@ background: linear-gradient(
   margin: 2px 6px;
 }
 
+/* Boutons rapides de changement d'état */
 .vin-action-btn.etat-quick {
   border-width: 1.5px;
   border-style: solid;
@@ -554,4 +245,387 @@ background: linear-gradient(
   background: #f1f5f9;
   border-color: #cbd5e1;
   color: #334155;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILTRES
+   ═══════════════════════════════════════════════════════════ */
+.vin-filter-panel {
+  display: flex;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.vin-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.vin-filter-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+}
+
+/* Libellés de filtres → teal */
+.vin-filter-label svg { color: #0794a4; }
+
+.vin-filter-input-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  overflow: hidden;
+  height: 40px;
+  padding: 0 12px;
+  gap: 8px;
+  transition: all 0.15s ease;
+}
+
+/* Focus → teal */
+.vin-filter-input-wrap:focus-within {
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
+}
+
+.vin-filter-icon { color: #94a3b8; }
+
+.vin-filter-input-wrap input,
+.vin-filter-input-wrap select {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.86rem;
+  color: #1e293b;
+  height: 100%;
+  background: transparent;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.vin-filter-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+  padding: 9px 14px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.vin-filter-reset:hover {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #e11d48;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   EXPORT — couleurs unies
+   ═══════════════════════════════════════════════════════════ */
+.vin-export-stack {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.vin-export-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  box-shadow: 0 4px 10px -4px rgba(15, 23, 42, 0.2);
+}
+
+.vin-export-btn:hover { transform: translateY(-2px); }
+
+.vin-export-btn.excel { background: #10b981; }
+.vin-export-btn.excel:hover { background: #059669; }
+
+.vin-export-btn.print { background: #0794a4; }
+.vin-export-btn.print:hover { background: #067a87; }
+
+.vin-export-btn.stats { background: #f59e0b; }
+.vin-export-btn.stats:hover { background: #d97706; }
+
+/* ═══════════════════════════════════════════════════════════
+   ERREUR
+   ═══════════════════════════════════════════════════════════ */
+.vin-error-banner {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1.5px solid #fecaca;
+  color: #b91c1c;
+  font-size: 0.86rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABLEAU
+   ═══════════════════════════════════════════════════════════ */
+.vin-table-wrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px -4px rgba(15, 23, 42, 0.06);
+}
+
+.vin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+/* En-tête du tableau → teal clair uni */
+.vin-table thead {
+  background: #e9f8fa;
+}
+
+.vin-table th {
+  text-align: left;
+  padding: 13px 16px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #067a87;
+  border-bottom: 1.5px solid #d5f0f3;
+  white-space: nowrap;
+}
+
+.vin-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.vin-table tbody tr:last-child td { border-bottom: none; }
+.vin-table tbody tr { transition: background 0.15s ease; }
+.vin-table tbody tr:hover { background: #fafbfd; }
+
+.vin-row { cursor: pointer; }
+.vin-row.selected td { background: #e9f8fa; }
+.vin-row.selected { box-shadow: inset 4px 0 0 #0794a4; }
+
+/* ═══════════════════════════════════════════════════════════
+   TRI DES COLONNES
+   ═══════════════════════════════════════════════════════════ */
+.vin-th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.vin-th-sortable:hover { background: #d5f0f3; color: #066470; }
+.vin-th-sortable.is-sorted { background: #d5f0f3; color: #066470; }
+
+.vin-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vin-sort-icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.vin-th-sortable:hover .vin-sort-icon,
+.vin-sort-icon.active { color: #0794a4; }
+
+/* ═══════════════════════════════════════════════════════════
+   CELLULES
+   ═══════════════════════════════════════════════════════════ */
+.vin-cell-vehicle { display: flex; align-items: center; gap: 10px; }
+
+/* Icône véhicule → teal clair uni */
+.vin-cell-vehicle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #e9f8fa;
+  color: #0794a4;
+  flex-shrink: 0;
+}
+
+.vin-cell-vehicle-text { display: flex; flex-direction: column; gap: 1px; }
+
+.vin-cell-main { font-weight: 700; color: #0f172a; font-size: 13.5px; }
+.vin-cell-sub { font-size: 11.5px; color: #94a3b8; font-weight: 600; }
+
+.vin-cell-driver { display: flex; align-items: center; gap: 10px; }
+
+/* Avatar conducteur → teal uni */
+.vin-cell-driver-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0794a4;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.vin-cell-empty { color: #cbd5e1; font-style: italic; }
+
+.vin-tag {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.vin-cell-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #475569;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.vin-cell-date svg { color: #94a3b8; }
+
+.vin-cell-amount {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 800;
+  color: #6d28d9;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.vin-cell-amount svg { color: #6d28d9; }
+
+/* ═══════════════════════════════════════════════════════════
+   GRAVITÉ
+   ═══════════════════════════════════════════════════════════ */
+.vin-gravite {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vin-gravite.gravite-0 { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.vin-gravite.gravite-1 { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
+.vin-gravite.gravite-2 { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+.vin-gravite.gravite-3 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
+/* ═══════════════════════════════════════════════════════════
+   PASTILLES ÉTAT
+   ═══════════════════════════════════════════════════════════ */
+.vin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.vin-pill.declared   { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+.vin-pill.inprogress { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+.vin-pill.resolved   { background: #dcfce7; color: #166534; border-color: #86efac; }
+.vin-pill.closed     { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+
+/* ═══════════════════════════════════════════════════════════
+   EMPTY
+   ═══════════════════════════════════════════════════════════ */
+.vin-table-empty {
+  text-align: center;
+  padding: 50px 16px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.vin-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+}
+
+.vin-empty-state svg { color: #cbd5e1; }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .vin-stats { width: 100%; justify-content: space-between; }
+  .vin-stat { flex: 1; min-width: 0; }
+}
+
+@media (max-width: 768px) {
+  .vin-container { padding: 16px; }
+  .vin-header-card { padding: 14px 16px; }
+  .vin-header-left h2 { font-size: 1.1rem; }
+  .vin-actions-bar { padding: 10px 12px; gap: 6px; }
+  .vin-action-btn { padding: 8px 11px; font-size: 0.8rem; }
+  .vin-actions-sep { display: none; }
+  .vin-filter-panel { padding: 12px; gap: 10px; }
+  .vin-filter-group { min-width: 100%; }
+  .vin-export-stack { margin-left: 0; width: 100%; }
+  .vin-export-btn { flex: 1; }
+  .vin-table { font-size: 12.5px; }
+  .vin-table th, .vin-table td { padding: 10px 12px; }
+}
+
+@media (max-width: 480px) {
+  .vin-header-icon-wrap { width: 42px; height: 42px; }
+  .vin-table-wrap { overflow-x: auto; }
+  .vin-table { min-width: 820px; }
 }

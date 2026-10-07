@@ -2,12 +2,19 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   MapPin, Plus, Pencil, Trash2, Search, RotateCcw,
   Download, Printer, BarChart3, Loader2, AlertTriangle,
-  Navigation, Home,
+  Navigation, Home, ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
 import emplacementService from '../../../../services/emplacementService';
 import EmplacementModal from '../../../ui/modals/EmplacementModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import './Emplacements.css';
+
+/* Colonnes paramétrables (affichage + recherche) */
+const EMP_COLUMNS_DEFAULT = [
+  { key: 'nom',     label: 'Nom',     visible: true, searchable: true },
+  { key: 'adresse', label: 'Adresse', visible: true, searchable: true },
+];
 
 export default function Emplacements() {
   const [emplacements, setEmplacements] = useState([]);
@@ -15,6 +22,13 @@ export default function Emplacements() {
   const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
+
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const [columnSettings, setColumnSettings] = useState(EMP_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -41,16 +55,94 @@ export default function Emplacements() {
 
   useEffect(() => { load(); }, []);
 
-  const filtered = useMemo(() => {
-    return emplacements.filter((e) => {
-      const haystack = [e.nom, e.adresse]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
+  const getColumnValue = (e, key) => {
+    switch (key) {
+      case 'nom':     return e.nom || '';
+      case 'adresse': return e.adresse || '';
+      default:        return '';
+    }
+  };
 
-      return !searchTerm || haystack.includes(searchTerm.toLowerCase());
-    });
-  }, [emplacements, searchTerm]);
+  const filtered = useMemo(() => {
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
+
+    const result = emplacements.filter((e) => (
+      !term || searchableCols.some((key) => getColumnValue(e, key).toLowerCase().includes(term))
+    ));
+
+    if (!sortColumn) return result;
+
+    const sorted = [...result].sort((a, b) =>
+      getColumnValue(a, sortColumn).localeCompare(getColumnValue(b, sortColumn), 'fr', {
+        sensitivity: 'base',
+        numeric: true,
+      })
+    );
+    return sortDirection === 'desc' ? sorted.reverse() : sorted;
+  }, [emplacements, searchTerm, columnSettings, sortColumn, sortDirection]);
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="emp-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="emp-sort-icon active" />
+      : <ArrowDown size={13} className="emp-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const renderCell = (key, e) => {
+    switch (key) {
+      case 'nom':
+        return (
+          <td key="nom">
+            <div className="emp-cell-name">
+              <div className="emp-cell-name-icon">
+                <Home size={14} strokeWidth={2.2} />
+              </div>
+              <span className="emp-cell-main">{e.nom || '—'}</span>
+            </div>
+          </td>
+        );
+      case 'adresse':
+        return (
+          <td key="adresse">
+            {e.adresse ? (
+              <div className="emp-cell-address">
+                <Navigation size={13} strokeWidth={2.2} />
+                <span>{e.adresse}</span>
+              </div>
+            ) : (
+              <span className="emp-cell-empty">—</span>
+            )}
+          </td>
+        );
+      default:
+        return null;
+    }
+  };
 
   const handleResetFilters = () => setSearchTerm('');
 
@@ -122,9 +214,15 @@ export default function Emplacements() {
 
       <div className="emp-header-card">
         <div className="emp-header-left">
-          <div className="emp-header-icon-wrap">
+          <button
+            type="button"
+            className="emp-header-icon-wrap emp-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <MapPin size={24} strokeWidth={2} />
-          </div>
+          </button>
           <div>
             <h2>Emplacements</h2>
             <p className="emp-header-subtitle">Lieux et sites référencés</p>
@@ -178,7 +276,7 @@ export default function Emplacements() {
             <Search size={16} strokeWidth={2.2} className="emp-filter-icon" />
             <input
               type="text"
-              placeholder="Nom ou adresse..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -214,14 +312,26 @@ export default function Emplacements() {
         <table className="emp-table">
           <thead>
             <tr>
-              <th>Nom</th>
-              <th>Adresse</th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`emp-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="emp-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={2} className="emp-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="emp-table-empty">
                   <div className="emp-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="emp-spin" />
                     <span>Chargement des emplacements...</span>
@@ -230,7 +340,7 @@ export default function Emplacements() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={2} className="emp-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="emp-table-empty">
                   <div className="emp-empty-state">
                     <MapPin size={32} strokeWidth={1.6} />
                     <span>
@@ -248,24 +358,7 @@ export default function Emplacements() {
                   className={`emp-row ${selected?.id === e.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(e)}
                 >
-                  <td>
-                    <div className="emp-cell-name">
-                      <div className="emp-cell-name-icon">
-                        <Home size={14} strokeWidth={2.2} />
-                      </div>
-                      <span className="emp-cell-main">{e.nom || '—'}</span>
-                    </div>
-                  </td>
-                  <td>
-                    {e.adresse ? (
-                      <div className="emp-cell-address">
-                        <Navigation size={13} strokeWidth={2.2} />
-                        <span>{e.adresse}</span>
-                      </div>
-                    ) : (
-                      <span className="emp-cell-empty">—</span>
-                    )}
-                  </td>
+                  {visibleColumns.map((c) => renderCell(c.key, e))}
                 </tr>
               ))
             )}
@@ -279,6 +372,16 @@ export default function Emplacements() {
         onSave={handleSave}
         emplacement={selected}
         isEditing={!!selected}
+      />
+
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="emplacement"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
 
       <ConfirmModal

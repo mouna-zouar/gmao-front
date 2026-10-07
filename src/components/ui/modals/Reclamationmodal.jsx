@@ -143,15 +143,15 @@ const SearchableSelect = ({
   const displayValue = isOpen ? search : selectedLabel;
 
   return (
-    <div className="rcm-searchable" ref={containerRef}>
-      <div className={`rcm-searchable-input-wrap ${isOpen ? 'is-open' : ''}`}>
-        <Search size={15} strokeWidth={2.3} className="rcm-searchable-icon" />
+    <div className="rm-select" ref={containerRef}>
+      <div className={`rm-select-input-wrap ${isOpen ? 'is-open' : ''}`}>
+        <Search size={15} strokeWidth={2.3} className="rm-select-icon" />
 
         <input
           ref={inputRef}
           id={id}
           type="text"
-          className="rcm-searchable-input"
+          className="rm-select-input"
           value={displayValue}
           onChange={handleInputChange}
           onFocus={handleFocus}
@@ -163,7 +163,7 @@ const SearchableSelect = ({
         {(selected || search) && !disabled && !loading && (
           <button
             type="button"
-            className="rcm-searchable-clear-inline"
+            className="rm-select-clear"
             onClick={handleClear}
             aria-label="Effacer"
             tabIndex={-1}
@@ -175,28 +175,28 @@ const SearchableSelect = ({
         <ChevronDown
           size={15}
           strokeWidth={2.3}
-          className={`rcm-searchable-chevron ${isOpen ? 'rotated' : ''}`}
+          className={`rm-select-chevron ${isOpen ? 'rotated' : ''}`}
         />
       </div>
 
       {isOpen && (
-        <div className="rcm-searchable-menu">
-          <div className="rcm-searchable-options">
+        <div className="rm-select-menu">
+          <div className="rm-select-options">
             {allowEmpty && !term && (
               <button
                 type="button"
-                className={`rcm-searchable-option ${!value ? 'is-selected' : ''}`}
+                className={`rm-select-option ${!value ? 'is-selected' : ''}`}
                 onClick={() => handleSelect({ id: '' })}
               >
-                <span className="rcm-searchable-option-main">
-                  <span className="rcm-searchable-option-label">{emptyOptionLabel}</span>
+                <span className="rm-select-option-main">
+                  <span className="rm-select-option-label">{emptyOptionLabel}</span>
                 </span>
                 {!value && <Check size={14} strokeWidth={3} />}
               </button>
             )}
 
             {filtered.length === 0 && (!allowEmpty || term) ? (
-              <div className="rcm-searchable-empty">{emptyMessage}</div>
+              <div className="rm-select-empty">{emptyMessage}</div>
             ) : (
               filtered.map((o) => {
                 const val = String(getValue(o));
@@ -206,13 +206,13 @@ const SearchableSelect = ({
                   <button
                     key={val}
                     type="button"
-                    className={`rcm-searchable-option ${isSelected ? 'is-selected' : ''}`}
+                    className={`rm-select-option ${isSelected ? 'is-selected' : ''}`}
                     onClick={() => handleSelect(o)}
                   >
-                    <span className="rcm-searchable-option-main">
-                      <span className="rcm-searchable-option-label">{getLabel(o)}</span>
+                    <span className="rm-select-option-main">
+                      <span className="rm-select-option-label">{getLabel(o)}</span>
                       {hint && (
-                        <span className="rcm-searchable-option-hint">{hint}</span>
+                        <span className="rm-select-option-hint">{hint}</span>
                       )}
                     </span>
                     {isSelected && <Check size={14} strokeWidth={3} />}
@@ -482,16 +482,16 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
     switch (activeSection) {
       case 'general':
         return (
-          <div className="bmm-content-pane">
-            <div className="bmm-pane-header">
+          <div className="rm-content-pane">
+            <div className="rm-pane-header">
               <h3>Description du problème</h3>
               <p>Décris précisément le problème signalé</p>
             </div>
 
-            <div className="bmm-grid">
-              <div className="bmm-field bmm-field--full">
+            <div className="rm-grid">
+              <div className="rm-field rm-field--full">
                 <label htmlFor="rcm-description">
-                  Description <span className="bmm-required">*</span>
+                  Description <span className="rm-required">*</span>
                 </label>
                 <textarea
                   id="rcm-description"
@@ -505,7 +505,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                 />
               </div>
 
-              <div className="bmm-field">
+              <div className="rm-field">
                 <label htmlFor="rcm-num">Numéro</label>
                 <input
                   id="rcm-num"
@@ -517,7 +517,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                 />
               </div>
 
-              <div className="bmm-field">
+              <div className="rm-field">
                 <label htmlFor="rcm-n">N° interne</label>
                 <input
                   id="rcm-n"
@@ -533,16 +533,16 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
 
       case 'immobilisation':
         return (
-          <div className="bmm-content-pane">
-            <div className="bmm-pane-header">
+          <div className="rm-content-pane">
+            <div className="rm-pane-header">
               <h3>Immobilisation concernée</h3>
               <p>Sélectionne l'équipement qui fait l'objet de la réclamation</p>
             </div>
 
-            <div className="bmm-grid">
-              <div className="bmm-field bmm-field--full">
+            <div className="rm-grid">
+              <div className="rm-field rm-field--full">
                 <label htmlFor="rcm-immobilisation">
-                  Immobilisation <span className="bmm-required">*</span>
+                  Immobilisation <span className="rm-required">*</span>
                 </label>
                 <SearchableSelect
                   id="rcm-immobilisation"
@@ -559,7 +559,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                   }
                   getOptionHint={(i) => (i.code ? `Code : ${i.code}` : null)}
                 />
-                <p className="bmm-hint">
+                <p className="rm-hint">
                   L'immobilisation est utilisée pour générer automatiquement le bon de maintenance associé.
                 </p>
               </div>
@@ -569,14 +569,14 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
 
       case 'localisation':
         return (
-          <div className="bmm-content-pane">
-            <div className="bmm-pane-header">
+          <div className="rm-content-pane">
+            <div className="rm-pane-header">
               <h3>Localisation</h3>
               <p>Clinique, service et dépôt concernés</p>
             </div>
 
-            <div className="bmm-grid">
-              <div className="bmm-field">
+            <div className="rm-grid">
+              <div className="rm-field">
                 <label htmlFor="rcm-clinique">Clinique</label>
                 <select
                   id="rcm-clinique"
@@ -596,7 +596,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                 </select>
               </div>
 
-              <div className="bmm-field">
+              <div className="rm-field">
                 <label htmlFor="rcm-service">Service</label>
                 <SearchableSelect
                   id="rcm-service"
@@ -615,7 +615,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                 />
               </div>
 
-              <div className="bmm-field bmm-field--full">
+              <div className="rm-field rm-field--full">
                 <label htmlFor="rcm-depot">Dépôt</label>
                 <SearchableSelect
                   id="rcm-depot"
@@ -639,14 +639,14 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
 
       case 'classification':
         return (
-          <div className="bmm-content-pane">
-            <div className="bmm-pane-header">
+          <div className="rm-content-pane">
+            <div className="rm-pane-header">
               <h3>Classification</h3>
               <p>Criticité, urgence, type et état de la réclamation</p>
             </div>
 
-            <div className="bmm-grid">
-              <div className="bmm-field">
+            <div className="rm-grid">
+              <div className="rm-field">
                 <label htmlFor="rcm-criticite">Criticité</label>
                 <select id="rcm-criticite" name="criticite" value={formData.criticite} onChange={handleChange}>
                   <option value="">—</option>
@@ -656,7 +656,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                 </select>
               </div>
 
-              <div className="bmm-field">
+              <div className="rm-field">
                 <label htmlFor="rcm-urgence">Urgence</label>
                 <select id="rcm-urgence" name="urgence" value={formData.urgence} onChange={handleChange}>
                   <option value="">—</option>
@@ -666,7 +666,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                 </select>
               </div>
 
-              <div className="bmm-field">
+              <div className="rm-field">
                 <label htmlFor="rcm-type">Type</label>
                 <select id="rcm-type" name="type" value={formData.type} onChange={handleChange}>
                   <option value="">—</option>
@@ -677,7 +677,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
               </div>
 
               {isEditing && (
-                <div className="bmm-field">
+                <div className="rm-field">
                   <label htmlFor="rcm-etat">État</label>
                   <select id="rcm-etat" name="etat" value={formData.etat} onChange={handleChange}>
                     {ETAT_OPTIONS.map((o) => (
@@ -692,14 +692,14 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
 
       case 'affectation':
         return (
-          <div className="bmm-content-pane">
-            <div className="bmm-pane-header">
+          <div className="rm-content-pane">
+            <div className="rm-pane-header">
               <h3>Affectation</h3>
               <p>Personnel en charge du traitement</p>
             </div>
 
-            <div className="bmm-grid">
-              <div className="bmm-field bmm-field--full">
+            <div className="rm-grid">
+              <div className="rm-field rm-field--full">
                 <label htmlFor="rcm-personnel">Personnel affecté</label>
                 <SearchableSelect
                   id="rcm-personnel"
@@ -719,7 +719,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                   }
                   getOptionHint={(p) => (p.matricule ? `Matricule : ${p.matricule}` : null)}
                 />
-                <p className="bmm-hint">
+                <p className="rm-hint">
                   Tu pourras affecter ou modifier le personnel à tout moment depuis la liste des réclamations.
                 </p>
               </div>
@@ -734,39 +734,39 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="bmm-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="rm-modal" onClick={(e) => e.stopPropagation()}>
 
         {/* HEADER */}
-        <div className="bmm-header">
-          <div className="bmm-header-left">
-            <div className="bmm-header-icon-wrap">
+        <div className="rm-header">
+          <div className="rm-header-left">
+            <div className="rm-header-icon-wrap">
               <AlertCircle size={22} strokeWidth={2} />
             </div>
             <div>
-              <span className="bmm-eyebrow">
+              <span className="rm-eyebrow">
                 {isEditing ? 'Modification' : 'Nouvelle entrée'}
               </span>
               <h2>{isEditing ? 'Modifier la réclamation' : 'Nouvelle réclamation'}</h2>
             </div>
           </div>
-          <div className="bmm-header-right">
+          <div className="rm-header-right">
             {urgenceLabel && (
-              <span className={`bmm-urgence-badge urgence-${formData.urgence}`}>
+              <span className={`rm-urgence-badge urgence-${formData.urgence}`}>
                 {urgenceLabel}
               </span>
             )}
-            <button type="button" className="bmm-close-btn" onClick={onClose} aria-label="Fermer">
+            <button type="button" className="rm-close-btn" onClick={onClose} aria-label="Fermer">
               <X size={18} strokeWidth={2.5} />
             </button>
           </div>
         </div>
 
         {/* LAYOUT SPLIT */}
-        <form className="bmm-layout" onSubmit={handleSubmit}>
+        <form className="rm-layout" onSubmit={handleSubmit}>
 
-          <aside className="bmm-nav">
-            <div className="bmm-nav-title">Sections</div>
-            <nav className="bmm-nav-list">
+          <aside className="rm-nav">
+            <div className="rm-nav-title">Sections</div>
+            <nav className="rm-nav-list">
               {sectionsVisibles.map((s) => {
                 const isActive = activeSection === s.id;
                 const count = sectionCounts[s.id];
@@ -775,15 +775,15 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                   <button
                     key={s.id}
                     type="button"
-                    className={`bmm-nav-item ${isActive ? 'active' : ''}`}
+                    className={`rm-nav-item ${isActive ? 'active' : ''}`}
                     onClick={() => setActiveSection(s.id)}
                   >
-                    <span className="bmm-nav-item-icon">
+                    <span className="rm-nav-item-icon">
                       <Icon size={15} strokeWidth={2.3} />
                     </span>
-                    <span className="bmm-nav-item-label">{s.label}</span>
+                    <span className="rm-nav-item-label">{s.label}</span>
                     {count != null && count > 0 && (
-                      <span className="bmm-nav-item-count">{count}</span>
+                      <span className="rm-nav-item-count">{count}</span>
                     )}
                   </button>
                 );
@@ -791,11 +791,11 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
             </nav>
           </aside>
 
-          <div className="bmm-content">
+          <div className="rm-content">
             {renderContent()}
 
             {error && (
-              <div className="bmm-error">
+              <div className="rm-error">
                 <AlertCircle size={16} strokeWidth={2.5} />
                 <span>{error}</span>
               </div>
@@ -804,20 +804,20 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
         </form>
 
         {/* FOOTER */}
-        <div className="bmm-footer">
-          <div className="bmm-footer-left">
-            <span className="bmm-footer-step">
+        <div className="rm-footer">
+          <div className="rm-footer-left">
+            <span className="rm-footer-step">
               {sectionsVisibles.findIndex((s) => s.id === activeSection) + 1} / {sectionsVisibles.length}
             </span>
           </div>
-          <div className="bmm-footer-right">
+          <div className="rm-footer-right">
             <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
               Annuler
             </Button>
             <Button type="button" variant="primary" onClick={handleSubmit} disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 size={16} strokeWidth={2.5} className="bmm-spin" style={{ marginRight: 6 }} />
+                  <Loader2 size={16} strokeWidth={2.5} className="rm-spin" style={{ marginRight: 6 }} />
                   Enregistrement...
                 </>
               ) : (

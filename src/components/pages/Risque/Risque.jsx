@@ -23,6 +23,10 @@ const LIMITES = [
   { key: 100, label: 'Top 100' },
 ];
 
+/* ---------- Pagination ---------- */
+const TAILLES_PAGE = [10, 20, 50, 100];
+const TAILLE_PAGE_DEFAUT = 10;
+
 /* ---------- Utils ---------- */
 function formatDate(iso) {
   if (!iso) return 'Aucune intervention';
@@ -90,9 +94,110 @@ const IconTrendFlat = () => (
   <Svg size={13}><path d="M2 12h20" /></Svg>
 );
 
+const IconChevron = ({ direction = 'right' }) => (
+  <Svg size={14}>
+    {direction === 'left'
+      ? <path d="m15 18-6-6 6-6" />
+      : <path d="m9 18 6-6-6-6" />}
+  </Svg>
+);
+
 const TENDANCE_ICON = { HAUSSE: IconTrendUp, BAISSE: IconTrendDown, STABLE: IconTrendFlat };
 const TENDANCE_LABEL = { HAUSSE: 'En hausse', BAISSE: 'En baisse', STABLE: 'Stable' };
 const TENDANCE_CLASS = { HAUSSE: 'hausse', BAISSE: 'baisse', STABLE: 'stable' };
+
+/* ---------- Pagination : construction des pages ---------- */
+function construirePages(pageActuelle, totalPages) {
+  const pages = [];
+  const ajouter = (v) => { if (!pages.includes(v)) pages.push(v); };
+
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) ajouter(i);
+    return pages;
+  }
+
+  ajouter(1);
+  if (pageActuelle > 3) ajouter('…');
+  for (let i = Math.max(2, pageActuelle - 1); i <= Math.min(totalPages - 1, pageActuelle + 1); i++) {
+    ajouter(i);
+  }
+  if (pageActuelle < totalPages - 2) ajouter('…');
+  ajouter(totalPages);
+  return pages;
+}
+
+function Pagination({
+  page, totalPages, totalItems, taillePage,
+  onChangePage, onChangeTaille,
+}) {
+  if (totalPages <= 1 && totalItems <= TAILLES_PAGE[0]) return null;
+
+  const pages = construirePages(page, totalPages);
+
+  return (
+    <div className="risque-pagination">
+      <div className="risque-pagination__left">
+        <span className="risque-pagination__info">
+          Page <strong>{page}</strong> sur <strong>{totalPages}</strong>
+          {' · '}<span className="risque-pagination__count">{totalItems} équipement{totalItems > 1 ? 's' : ''}</span>
+        </span>
+      </div>
+
+      <div className="risque-pagination__center">
+        <button
+          type="button"
+          className="risque-pagination__btn risque-pagination__btn--nav"
+          onClick={() => onChangePage(page - 1)}
+          disabled={page <= 1}
+          aria-label="Page précédente"
+        >
+          <IconChevron direction="left" />
+        </button>
+
+        {pages.map((p, idx) =>
+          p === '…' ? (
+            <span key={`ellipsis-${idx}`} className="risque-pagination__ellipsis">…</span>
+          ) : (
+            <button
+              key={p}
+              type="button"
+              className={`risque-pagination__btn ${p === page ? 'is-active' : ''}`}
+              onClick={() => onChangePage(p)}
+              aria-current={p === page ? 'page' : undefined}
+            >
+              {p}
+            </button>
+          )
+        )}
+
+        <button
+          type="button"
+          className="risque-pagination__btn risque-pagination__btn--nav"
+          onClick={() => onChangePage(page + 1)}
+          disabled={page >= totalPages}
+          aria-label="Page suivante"
+        >
+          <IconChevron direction="right" />
+        </button>
+      </div>
+
+      <div className="risque-pagination__right">
+        <label className="risque-pagination__size">
+          <span>Par page</span>
+          <select
+            value={taillePage}
+            onChange={(e) => onChangeTaille(Number(e.target.value))}
+            className="risque-pagination__select"
+          >
+            {TAILLES_PAGE.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+    </div>
+  );
+}
 
 /* ---------- Composant ---------- */
 export default function Risque() {
@@ -101,6 +206,10 @@ export default function Risque() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [recherche, setRecherche] = useState('');
+
+  /* ---------- Pagination ---------- */
+  const [page, setPage] = useState(1);
+  const [taillePage, setTaillePage] = useState(TAILLE_PAGE_DEFAUT);
 
   const charger = useCallback(async () => {
     setLoading(true);
@@ -128,6 +237,26 @@ export default function Risque() {
     );
   }, [equipements, recherche]);
 
+  /* ---------- Pagination ---------- */
+  const totalItems = equipementsAffiches.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / taillePage));
+  const pageCourante = Math.min(page, totalPages);
+
+  const equipementsPaginees = useMemo(() => {
+    const debut = (pageCourante - 1) * taillePage;
+    return equipementsAffiches.slice(debut, debut + taillePage);
+  }, [equipementsAffiches, pageCourante, taillePage]);
+
+  // Reset page à 1 quand les filtres changent
+  useEffect(() => { setPage(1); }, [recherche]);
+  useEffect(() => { setPage(1); }, [limite]);
+  useEffect(() => { setPage(1); }, [taillePage]);
+
+  // Borne la page courante si le total baisse
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
   const kpis = useMemo(() => {
     const nbCritiques = equipements.filter((e) => e.niveauRisque === 'CRITIQUE').length;
     const nbEleves = equipements.filter((e) => e.niveauRisque === 'ELEVE').length;
@@ -142,7 +271,6 @@ export default function Risque() {
       {/* ---------- Header ---------- */}
       <header className="risque-header">
         <div className="risque-header__text">
-          <span className="risque-eyebrow">Équipements · Roadmap métier · Étape ⑥</span>
           <h1>Risques</h1>
           <p>
             Score prédictif de panne (0-100), calculé à partir de la fréquence des pannes
@@ -201,7 +329,9 @@ export default function Risque() {
             <div className="risque-kpi__icon"><IconShieldAlert /></div>
             <div className="risque-kpi__body">
               <span className="risque-kpi__label">Score moyen</span>
-              <span className="risque-kpi__valeur">{kpis.scoreMoyen !== null ? kpis.scoreMoyen.toFixed(0) : '—'} / 100</span>
+              <span className="risque-kpi__valeur">
+                {kpis.scoreMoyen !== null ? kpis.scoreMoyen.toFixed(0) : '—'} / 100
+              </span>
             </div>
           </div>
         </section>
@@ -219,6 +349,13 @@ export default function Risque() {
             className="risque-recherche"
           />
         </div>
+
+        {!loading && equipementsAffiches.length > 0 && (
+          <span className="risque-filtres__count">
+            {equipementsAffiches.length} équipement{equipementsAffiches.length > 1 ? 's' : ''}
+            {recherche && ' filtré' + (equipementsAffiches.length > 1 ? 's' : '')}
+          </span>
+        )}
       </div>
 
       {/* ---------- Liste ---------- */}
@@ -239,52 +376,67 @@ export default function Risque() {
           </span>
         </p>
       ) : (
-        <ul className="risque-list">
-          {equipementsAffiches.map((e) => {
-            const niveauClass = NIVEAU_CLASS[e.niveauRisque] || 'inconnu';
-            const TendanceIcon = TENDANCE_ICON[e.tendance] || IconTrendFlat;
-            return (
-              <li key={e.lotArticleImmobilistationId} className={`risque-card risque-card--${niveauClass}`}>
-                <div className="risque-card__score">
-                  <span className={`risque-score-cercle risque-score-cercle--${niveauClass}`}>
-                    {e.scoreRisque}
-                  </span>
-                  <span className={`risque-niveau-label risque-niveau-label--${niveauClass}`}>
-                    {NIVEAU_LABELS[e.niveauRisque] || e.niveauRisque}
-                  </span>
-                </div>
-
-                <div className="risque-card__body">
-                  <div className="risque-card__titre-wrap">
-                    <span className="risque-card__titre">{e.designation || `Équipement #${e.lotArticleImmobilistationId}`}</span>
-                    {(e.marque || e.modele) && (
-                      <span className="risque-card__marque">{[e.marque, e.modele].filter(Boolean).join(' · ')}</span>
-                    )}
-                  </div>
-
-                  <div className="risque-card__meta">
-                    <span className="risque-meta-item">
-                      <strong>{e.nbPannes12Mois}</strong> panne{e.nbPannes12Mois > 1 ? 's' : ''} / 12 mois
+        <>
+          <ul className="risque-list">
+            {equipementsPaginees.map((e) => {
+              const niveauClass = NIVEAU_CLASS[e.niveauRisque] || 'inconnu';
+              const TendanceIcon = TENDANCE_ICON[e.tendance] || IconTrendFlat;
+              return (
+                <li key={e.lotArticleImmobilistationId} className={`risque-card risque-card--${niveauClass}`}>
+                  <div className="risque-card__score">
+                    <span className={`risque-score-cercle risque-score-cercle--${niveauClass}`}>
+                      {e.scoreRisque}
                     </span>
-                    <span className={`risque-meta-item risque-tendance risque-tendance--${TENDANCE_CLASS[e.tendance] || 'stable'}`}>
-                      <TendanceIcon /> {TENDANCE_LABEL[e.tendance] || e.tendance}
-                    </span>
-                    <span className="risque-meta-item">{formatAge(e.ageAnnees)}</span>
-                    {e.garantieExpiree === true && (
-                      <span className="risque-meta-item risque-garantie-expiree">Garantie expirée</span>
-                    )}
-                    {e.garantieExpiree === false && (
-                      <span className="risque-meta-item risque-garantie-active">Sous garantie</span>
-                    )}
-                    <span className="risque-meta-item risque-meta-item--muted">
-                      Dernière intervention : {formatDate(e.derniereIntervention)}
+                    <span className={`risque-niveau-label risque-niveau-label--${niveauClass}`}>
+                      {NIVEAU_LABELS[e.niveauRisque] || e.niveauRisque}
                     </span>
                   </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+
+                  <div className="risque-card__body">
+                    <div className="risque-card__titre-wrap">
+                      <span className="risque-card__titre">
+                        {e.designation || `Équipement #${e.lotArticleImmobilistationId}`}
+                      </span>
+                      {(e.marque || e.modele) && (
+                        <span className="risque-card__marque">
+                          {[e.marque, e.modele].filter(Boolean).join(' · ')}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="risque-card__meta">
+                      <span className="risque-meta-item">
+                        <strong>{e.nbPannes12Mois}</strong> panne{e.nbPannes12Mois > 1 ? 's' : ''} / 12 mois
+                      </span>
+                      <span className={`risque-meta-item risque-tendance risque-tendance--${TENDANCE_CLASS[e.tendance] || 'stable'}`}>
+                        <TendanceIcon /> {TENDANCE_LABEL[e.tendance] || e.tendance}
+                      </span>
+                      <span className="risque-meta-item">{formatAge(e.ageAnnees)}</span>
+                      {e.garantieExpiree === true && (
+                        <span className="risque-meta-item risque-garantie-expiree">Garantie expirée</span>
+                      )}
+                      {e.garantieExpiree === false && (
+                        <span className="risque-meta-item risque-garantie-active">Sous garantie</span>
+                      )}
+                      <span className="risque-meta-item risque-meta-item--muted">
+                        Dernière intervention : {formatDate(e.derniereIntervention)}
+                      </span>
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          <Pagination
+            page={pageCourante}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            taillePage={taillePage}
+            onChangePage={setPage}
+            onChangeTaille={setTaillePage}
+          />
+        </>
       )}
     </div>
   );

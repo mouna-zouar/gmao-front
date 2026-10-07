@@ -13,6 +13,16 @@ const PERIODES = [
 
 const MOIS_COURTS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
+const PAGE_SIZE = 5;
+const EQUIP_PAGE_SIZE = 5;
+
+/* ---------- Chart (SVG) ---------- */
+const CHART = {
+  W: 800,
+  H: 240,
+  PAD: { top: 20, right: 20, bottom: 40, left: 56 },
+};
+
 /* ---------- Utils ---------- */
 function calculerBornes(periodeKey) {
   const fin = new Date();
@@ -93,7 +103,14 @@ const IconTruck = () => (
   <Svg size={16}><path d="M3 7h11v10H3z" /><path d="M14 10h4l3 3v4h-7" /><circle cx="7" cy="18" r="1.5" /><circle cx="17.5" cy="18" r="1.5" /></Svg>
 );
 
-/* Icône du header */
+const IconChevronLeft = () => (
+  <Svg size={16}><path d="m15 18-6-6 6-6" /></Svg>
+);
+
+const IconChevronRight = () => (
+  <Svg size={16}><path d="m9 18 6-6-6-6" /></Svg>
+);
+
 const IconWallet = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
        stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -110,6 +127,8 @@ export default function Cout() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [recherche, setRecherche] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [equipPage, setEquipPage] = useState(1);
 
   const charger = useCallback(async () => {
     setLoading(true);
@@ -132,6 +151,7 @@ export default function Cout() {
 
   useEffect(() => { charger(); }, [charger]);
 
+  /* ---------- Liste filtrée + triée ---------- */
   const bonsAffiches = useMemo(() => {
     return bons
       .filter((b) => !recherche.trim()
@@ -142,15 +162,126 @@ export default function Cout() {
       .sort((a, b) => b.coutTotal - a.coutTotal);
   }, [bons, recherche]);
 
-  const moisMax = useMemo(() => {
-    if (!bilan?.coutParMois) return 0;
-    return Math.max(...Object.values(bilan.coutParMois), 0);
+  /* ---------- Pagination bons ---------- */
+  const totalPages = Math.max(1, Math.ceil(bonsAffiches.length / PAGE_SIZE));
+
+  useEffect(() => { setCurrentPage(1); }, [recherche, periodeKey]);
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+
+  const bonsPagines = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return bonsAffiches.slice(start, start + PAGE_SIZE);
+  }, [bonsAffiches, currentPage]);
+
+  const goToPage = (p) => setCurrentPage(Math.min(Math.max(1, p), totalPages));
+
+  const paginationRange = useMemo(() => {
+    const maxVisible = 5;
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    start = Math.max(1, end - maxVisible + 1);
+    const range = [];
+    for (let i = start; i <= end; i += 1) range.push(i);
+    return range;
+  }, [currentPage, totalPages]);
+
+  const debut = bonsAffiches.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const fin = Math.min(currentPage * PAGE_SIZE, bonsAffiches.length);
+
+  /* ---------- Pagination top équipements ---------- */
+  const topEquipements = bilan?.topEquipements ?? [];
+  const equipTotalPages = Math.max(1, Math.ceil(topEquipements.length / EQUIP_PAGE_SIZE));
+
+  useEffect(() => { setEquipPage(1); }, [periodeKey]);
+
+  useEffect(() => {
+    if (equipPage > equipTotalPages) setEquipPage(equipTotalPages);
+  }, [equipPage, equipTotalPages]);
+
+  const equipementsPagines = useMemo(() => {
+    const start = (equipPage - 1) * EQUIP_PAGE_SIZE;
+    return topEquipements.slice(start, start + EQUIP_PAGE_SIZE);
+  }, [topEquipements, equipPage]);
+
+  const goToEquipPage = (p) => setEquipPage(Math.min(Math.max(1, p), equipTotalPages));
+
+  const equipPaginationRange = useMemo(() => {
+    const maxVisible = 5;
+    let start = Math.max(1, equipPage - Math.floor(maxVisible / 2));
+    let end = Math.min(equipTotalPages, start + maxVisible - 1);
+    start = Math.max(1, end - maxVisible + 1);
+    const range = [];
+    for (let i = start; i <= end; i += 1) range.push(i);
+    return range;
+  }, [equipPage, equipTotalPages]);
+
+  const equipDebut = topEquipements.length === 0 ? 0 : (equipPage - 1) * EQUIP_PAGE_SIZE + 1;
+  const equipFin = Math.min(equipPage * EQUIP_PAGE_SIZE, topEquipements.length);
+
+  /* ---------- Chart : data + géométrie ---------- */
+  const chartData = useMemo(() => {
+    if (!bilan?.coutParMois) return [];
+    return Object.entries(bilan.coutParMois).map(([cle, valeur]) => {
+      const [annee, mois] = cle.split('-');
+      const idx = parseInt(mois, 10) - 1;
+      return {
+        key: cle,
+        label: `${MOIS_COURTS[idx] || mois} ${annee}`,
+        shortLabel: MOIS_COURTS[idx] || mois,
+        valeur,
+      };
+    });
   }, [bilan]);
 
+  const chartMax = useMemo(() => {
+    if (chartData.length === 0) return 1;
+    const max = Math.max(...chartData.map((d) => d.valeur), 0);
+    return max > 0 ? max * 1.15 : 1;
+  }, [chartData]);
+
+  const chartPoints = useMemo(() => {
+    if (chartData.length === 0) return [];
+    const innerW = CHART.W - CHART.PAD.left - CHART.PAD.right;
+    const innerH = CHART.H - CHART.PAD.top - CHART.PAD.bottom;
+    const n = chartData.length;
+    return chartData.map((d, i) => {
+      const x = CHART.PAD.left + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+      const y = CHART.PAD.top + innerH - (d.valeur / chartMax) * innerH;
+      return { ...d, x, y };
+    });
+  }, [chartData, chartMax]);
+
+  const chartAreaPath = useMemo(() => {
+    if (chartPoints.length === 0) return '';
+    const baseline = CHART.H - CHART.PAD.bottom;
+    return (
+      `M ${chartPoints[0].x} ${baseline} ` +
+      chartPoints.map((p) => `L ${p.x} ${p.y}`).join(' ') +
+      ` L ${chartPoints[chartPoints.length - 1].x} ${baseline} Z`
+    );
+  }, [chartPoints]);
+
+  const chartLinePath = useMemo(() => {
+    if (chartPoints.length === 0) return '';
+    return `M ${chartPoints.map((p) => `${p.x} ${p.y}`).join(' L ')}`;
+  }, [chartPoints]);
+
+  const chartYTicks = useMemo(() => {
+    const innerH = CHART.H - CHART.PAD.top - CHART.PAD.bottom;
+    return [0, 0.33, 0.66, 1].map((r) => ({
+      ratio: r,
+      y: CHART.PAD.top + innerH * (1 - r),
+      value: chartMax * r,
+    }));
+  }, [chartMax]);
+
+  /* ---------- Max barres équipements ---------- */
   const equipementMax = useMemo(() => {
-    if (!bilan?.topEquipements?.length) return 0;
-    return Math.max(...bilan.topEquipements.map((e) => e.coutTotal), 0);
-  }, [bilan]);
+    if (!topEquipements.length) return 0;
+    return Math.max(...topEquipements.map((e) => e.coutTotal), 0);
+  }, [topEquipements]);
 
   return (
     <div className="cout-page">
@@ -222,34 +353,122 @@ export default function Cout() {
         </section>
       )}
 
-      {/* ---------- Coût par mois + top équipements ---------- */}
-      {!loading && bilan && ((bilan.coutParMois && Object.keys(bilan.coutParMois).length > 0) || bilan.topEquipements?.length > 0) && (
+      {/* ---------- Panneaux : Évolution mensuelle + Top équipements ---------- */}
+      {!loading && bilan && (chartData.length > 0 || topEquipements.length > 0) && (
         <section className="cout-panels">
-          {bilan.coutParMois && Object.keys(bilan.coutParMois).length > 0 && (
+          {/* ═══ Area chart : Évolution mensuelle ═══ */}
+          {chartData.length > 0 && (
             <div className="cout-panel">
               <h3 className="cout-panel__title">Évolution mensuelle</h3>
-              <div className="cout-mois-chart">
-                {Object.entries(bilan.coutParMois).map(([cle, valeur]) => (
-                  <div key={cle} className="cout-mois-bar-wrap">
-                    <span className="cout-mois-bar-valeur">{formatMontantCourt(valeur)}</span>
-                    <div className="cout-mois-bar-track">
-                      <div
-                        className="cout-mois-bar-fill"
-                        style={{ height: `${moisMax > 0 ? Math.max(4, (valeur / moisMax) * 100) : 4}%` }}
+
+              <div className="cout-chart">
+                <svg
+                  viewBox={`0 0 ${CHART.W} ${CHART.H}`}
+                  preserveAspectRatio="xMidYMid meet"
+                  className="cout-chart__svg"
+                  role="img"
+                  aria-label="Évolution mensuelle des coûts"
+                >
+                  <defs>
+                    <linearGradient id="coutAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#0794a4" stopOpacity="0.35" />
+                      <stop offset="60%" stopColor="#0794a4" stopOpacity="0.10" />
+                      <stop offset="100%" stopColor="#0794a4" stopOpacity="0" />
+                    </linearGradient>
+
+                    <linearGradient id="coutLineGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#3dbcc9" />
+                      <stop offset="100%" stopColor="#067a87" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Grille horizontale + labels Y */}
+                  {chartYTicks.map((tick, idx) => (
+                    <g key={`yt-${idx}`}>
+                      <line
+                        x1={CHART.PAD.left}
+                        x2={CHART.W - CHART.PAD.right}
+                        y1={tick.y}
+                        y2={tick.y}
+                        className="cout-chart__grid"
                       />
-                    </div>
-                    <span className="cout-mois-bar-label">{formatMoisLabel(cle)}</span>
-                  </div>
-                ))}
+                      <text
+                        x={CHART.PAD.left - 10}
+                        y={tick.y + 4}
+                        textAnchor="end"
+                        className="cout-chart__y-label"
+                      >
+                        {formatMontantCourt(tick.value)}
+                      </text>
+                    </g>
+                  ))}
+
+                  {/* Axe X (baseline) */}
+                  <line
+                    x1={CHART.PAD.left}
+                    x2={CHART.W - CHART.PAD.right}
+                    y1={CHART.H - CHART.PAD.bottom}
+                    y2={CHART.H - CHART.PAD.bottom}
+                    className="cout-chart__axis"
+                  />
+
+                  {/* Aire */}
+                  <path d={chartAreaPath} fill="url(#coutAreaGradient)" />
+
+                  {/* Ligne */}
+                  <path
+                    d={chartLinePath}
+                    fill="none"
+                    stroke="url(#coutLineGradient)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Points + labels X */}
+                  {chartPoints.map((p) => (
+                    <g key={p.key} className="cout-chart__point-group">
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r="10"
+                        className="cout-chart__point-halo"
+                      />
+                      <circle
+                        cx={p.x}
+                        cy={p.y}
+                        r="5"
+                        fill="#ffffff"
+                        stroke="#067a87"
+                        strokeWidth="2.5"
+                        className="cout-chart__point"
+                      />
+                      <circle cx={p.x} cy={p.y} r="2" fill="#0794a4" />
+
+                      <title>{`${p.label} : ${formatMontant(p.valeur)}`}</title>
+
+                      <text
+                        x={p.x}
+                        y={CHART.H - CHART.PAD.bottom + 20}
+                        textAnchor="middle"
+                        className="cout-chart__x-label"
+                      >
+                        {p.shortLabel}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
               </div>
             </div>
           )}
 
-          {bilan.topEquipements?.length > 0 && (
+          {/* ═══ Top équipements ═══ */}
+          {topEquipements.length > 0 && (
             <div className="cout-panel">
               <h3 className="cout-panel__title">Équipements les plus coûteux</h3>
+
               <ul className="cout-top-list">
-                {bilan.topEquipements.map((e) => (
+                {equipementsPagines.map((e) => (
                   <li key={e.lotArticleImmobilistationId} className="cout-top-item">
                     <div className="cout-top-item__header">
                       <span className="cout-top-item__nom">
@@ -269,13 +488,83 @@ export default function Cout() {
                   </li>
                 ))}
               </ul>
+
+              {/* Pagination équipements */}
+              {equipTotalPages > 1 && (
+                <div className="cout-equip-pagination">
+                  <span className="cout-equip-pagination__info">
+                    {equipDebut}–{equipFin} sur {topEquipements.length}
+                  </span>
+
+                  <div className="cout-equip-pagination__controls">
+                    <button
+                      type="button"
+                      className="cout-pagination__btn"
+                      onClick={() => goToEquipPage(equipPage - 1)}
+                      disabled={equipPage === 1}
+                      title="Page précédente"
+                    >
+                      <IconChevronLeft />
+                    </button>
+
+                    {equipPaginationRange[0] > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          className={`cout-pagination__btn ${equipPage === 1 ? 'active' : ''}`}
+                          onClick={() => goToEquipPage(1)}
+                        >
+                          1
+                        </button>
+                        {equipPaginationRange[0] > 2 && <span className="cout-pagination__ellipsis">…</span>}
+                      </>
+                    )}
+
+                    {equipPaginationRange.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        className={`cout-pagination__btn ${p === equipPage ? 'active' : ''}`}
+                        onClick={() => goToEquipPage(p)}
+                      >
+                        {p}
+                      </button>
+                    ))}
+
+                    {equipPaginationRange[equipPaginationRange.length - 1] < equipTotalPages && (
+                      <>
+                        {equipPaginationRange[equipPaginationRange.length - 1] < equipTotalPages - 1 && (
+                          <span className="cout-pagination__ellipsis">…</span>
+                        )}
+                        <button
+                          type="button"
+                          className={`cout-pagination__btn ${equipPage === equipTotalPages ? 'active' : ''}`}
+                          onClick={() => goToEquipPage(equipTotalPages)}
+                        >
+                          {equipTotalPages}
+                        </button>
+                      </>
+                    )}
+
+                    <button
+                      type="button"
+                      className="cout-pagination__btn"
+                      onClick={() => goToEquipPage(equipPage + 1)}
+                      disabled={equipPage === equipTotalPages}
+                      title="Page suivante"
+                    >
+                      <IconChevronRight />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
       )}
 
-      {/* ---------- Recherche ---------- */}
-      <div className="cout-filtres">
+      {/* ---------- Toolbar : recherche + compteur ---------- */}
+      <div className="cout-toolbar">
         <div className="cout-recherche-wrap">
           <span className="cout-recherche-icon"><IconSearch /></span>
           <input
@@ -286,6 +575,13 @@ export default function Cout() {
             className="cout-recherche"
           />
         </div>
+
+        {!loading && bonsAffiches.length > 0 && (
+          <span className="cout-toolbar__count">
+            {bonsAffiches.length} bon{bonsAffiches.length > 1 ? 's' : ''}
+            {recherche && ' filtré' + (bonsAffiches.length > 1 ? 's' : '')}
+          </span>
+        )}
       </div>
 
       {/* ---------- Liste ---------- */}
@@ -302,38 +598,110 @@ export default function Cout() {
           <span>Aucun bon ne correspond à cette recherche sur la période.</span>
         </p>
       ) : (
-        <ul className="cout-list">
-          {bonsAffiches.map((b) => (
-            <li key={b.bonMaintenanceId} className="cout-card">
-              <div className="cout-card__header">
-                <div className="cout-card__titre-wrap">
-                  <span className="cout-card__titre">{b.titre || `Bon ${b.num || b.bonMaintenanceId}`}</span>
-                  <span className="cout-card__num">{b.num}</span>
-                  {b.equipementNom && <span className="cout-card__equip">{b.equipementNom}</span>}
+        <>
+          <ul className="cout-list">
+            {bonsPagines.map((b) => (
+              <li key={b.bonMaintenanceId} className="cout-card">
+                <div className="cout-card__header">
+                  <div className="cout-card__titre-wrap">
+                    <span className="cout-card__titre">{b.titre || `Bon ${b.num || b.bonMaintenanceId}`}</span>
+                    <span className="cout-card__num">{b.num}</span>
+                    {b.equipementNom && <span className="cout-card__equip">{b.equipementNom}</span>}
+                  </div>
+                  <div className="cout-card__right">
+                    {b.priorite && <span className="cout-card__priorite">{prioriteLabel(b.priorite)}</span>}
+                    <span className="cout-card__total">{formatMontant(b.coutTotal)}</span>
+                  </div>
                 </div>
-                <div className="cout-card__right">
-                  {b.priorite && <span className="cout-card__priorite">{prioriteLabel(b.priorite)}</span>}
-                  <span className="cout-card__total">{formatMontant(b.coutTotal)}</span>
-                </div>
-              </div>
 
-              <div className="cout-card__breakdown">
-                <div className="cout-breakdown-item">
-                  <span className="cout-breakdown-item__label"><IconWrench /> Main d'œuvre</span>
-                  <span className="cout-breakdown-item__valeur">{formatMontant(b.coutMainOeuvre)}</span>
+                <div className="cout-card__breakdown">
+                  <div className="cout-breakdown-item">
+                    <span className="cout-breakdown-item__label"><IconWrench /> Main d'œuvre</span>
+                    <span className="cout-breakdown-item__valeur">{formatMontant(b.coutMainOeuvre)}</span>
+                  </div>
+                  <div className="cout-breakdown-item">
+                    <span className="cout-breakdown-item__label"><IconBox /> Pièces dépôt</span>
+                    <span className="cout-breakdown-item__valeur">{formatMontant(b.coutPiecesDepot)}</span>
+                  </div>
+                  <div className="cout-breakdown-item">
+                    <span className="cout-breakdown-item__label"><IconTruck /> Achats</span>
+                    <span className="cout-breakdown-item__valeur">{formatMontant(b.coutAchats)}</span>
+                  </div>
                 </div>
-                <div className="cout-breakdown-item">
-                  <span className="cout-breakdown-item__label"><IconBox /> Pièces dépôt</span>
-                  <span className="cout-breakdown-item__valeur">{formatMontant(b.coutPiecesDepot)}</span>
-                </div>
-                <div className="cout-breakdown-item">
-                  <span className="cout-breakdown-item__label"><IconTruck /> Achats</span>
-                  <span className="cout-breakdown-item__valeur">{formatMontant(b.coutAchats)}</span>
-                </div>
+              </li>
+            ))}
+          </ul>
+
+          {/* ---------- Pagination bons ---------- */}
+          {totalPages > 1 && (
+            <div className="cout-pagination">
+              <span className="cout-pagination__info">
+                {debut}–{fin} sur {bonsAffiches.length} bon{bonsAffiches.length > 1 ? 's' : ''}
+              </span>
+
+              <div className="cout-pagination__controls">
+                <button
+                  type="button"
+                  className="cout-pagination__btn"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  title="Page précédente"
+                >
+                  <IconChevronLeft />
+                </button>
+
+                {paginationRange[0] > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      className={`cout-pagination__btn ${currentPage === 1 ? 'active' : ''}`}
+                      onClick={() => goToPage(1)}
+                    >
+                      1
+                    </button>
+                    {paginationRange[0] > 2 && <span className="cout-pagination__ellipsis">…</span>}
+                  </>
+                )}
+
+                {paginationRange.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`cout-pagination__btn ${p === currentPage ? 'active' : ''}`}
+                    onClick={() => goToPage(p)}
+                  >
+                    {p}
+                  </button>
+                ))}
+
+                {paginationRange[paginationRange.length - 1] < totalPages && (
+                  <>
+                    {paginationRange[paginationRange.length - 1] < totalPages - 1 && (
+                      <span className="cout-pagination__ellipsis">…</span>
+                    )}
+                    <button
+                      type="button"
+                      className={`cout-pagination__btn ${currentPage === totalPages ? 'active' : ''}`}
+                      onClick={() => goToPage(totalPages)}
+                    >
+                      {totalPages}
+                    </button>
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  className="cout-pagination__btn"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  title="Page suivante"
+                >
+                  <IconChevronRight />
+                </button>
               </div>
-            </li>
-          ))}
-        </ul>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

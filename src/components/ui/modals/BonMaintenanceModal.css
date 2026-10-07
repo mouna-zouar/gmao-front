@@ -1,8 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   BonMaintenanceModal.css — Refonte moderne (Layout split + tabs)
-   ═══════════════════════════════════════════════════════════ */
 
-/* ─────────── CONTENEUR ─────────── */
 .bmm-modal {
   width: 1000px;
   max-width: 96vw;
@@ -54,12 +50,8 @@
   justify-content: space-between;
   gap: 16px;
   padding: 18px 24px;
-background: linear-gradient(
-    135deg,
-    #1b648f 0%,
-    #287da8 55%,
-    #5ba8c9 100%
-  );  color: #ffffff;
+background: #0f766e !important;  
+color: #ffffff;
   position: relative;
   overflow: hidden;
   flex-shrink: 0;
@@ -224,14 +216,14 @@ background: linear-gradient(
 .bmm-nav-item:hover {
   background: #ffffff;
   border-color: #e2e8f0;
-  color: #0f766e;
+  color: #0f766e !important;
 }
 
 .bmm-nav-item.active {
-  background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+  background: #0f766e !important;
   color: #ffffff;
-  border-color: #0f766e;
-  box-shadow: 0 6px 16px -6px rgba(15, 118, 110, 0.5);
+  border-color: #0f766e !important;
+  box-shadow: 0 6px 16px -6px rgba(15, 118, 110, 0.5) !important;
 }
 
 .bmm-nav-item-icon {
@@ -278,7 +270,6 @@ background: linear-gradient(
   color: #ffffff;
 }
 
-/* ─────────── CONTENU PRINCIPAL SCROLLABLE ─────────── */
 .bmm-content {
   flex: 1;
   overflow-y: scroll;

@@ -46,24 +46,24 @@ import { prioriteLabel, prioriteColor } from '../../../constants/Priorite';
 import bonMaintenanceIntervenantService from '../../../services/bonMaintenanceIntervenantService';
 import bonMaintenanceIntervenantHistoriqueService from '../../../services/Bonmaintenanceintervenanthistoriqueservice';
 import bonMaintenanceCommentaireService from '../../../services/Bonmaintenancecommentaireservice';
-import bonMaintenanceDocumentAchatService from '../../../services/BonMaintenancedocumentachatservice';
+import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenancedocumentachatservice';
 import bonMaintenancePieceImmoService from '../../../services/Bonmaintenancepieceimmoservice';
 import bonMaintenanceHistoriqueService from '../../../services/Bonmaintenancehistoriqueservice';
-import bonMaintenanceDiagnosticService from '../../../services/bonMaintenanceDiagnosticService';
+import bonMaintenanceDiagnosticService from '../../../services/Bonmaintenancediagnosticservice';
 import bonMaintenanceControleEquipementService from '../../../services/bonMaintenanceControleEquipementService';
 import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenanceRemiseEnServiceService';
-import bonMaintenanceService from '../../../services/bonMaintenanceService';
+import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import slaService from '../../../services/slaService';
 import coutService from '../../../services/coutService';
 import rcaCapaService from '../../../services/rcaCapaService';
-import reclamationBonMaintenanceService from '../../../services/reclamationBonMaintenanceService';
-import personnelService from '../../../services/personnelService';
+import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
+import personnelService from '../../../services/Personnelservice';
 import prestataireService from '../../../services/prestataireService';
-import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
+import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../services/lotArticleService';
-import pieceLigneService from '../../../services/pieceLigneService';
+import pieceLigneService from '../../../services/PieceLigneService';
 import articleService from '../../../services/articleService';
-import pieceService from '../../../services/pieceService';
+import pieceService from '../../../services/Pieceservice';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import './BonMaintenanceDetails.css';
@@ -445,6 +445,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [derniereRemiseEnService, setDerniereRemiseEnService] = useState(null);
   const [intervenantsFlow, setIntervenantsFlow] = useState([]);
   const [loadingIntervenantsFlow, setLoadingIntervenantsFlow] = useState(false);
+  const [historiqueFlow, setHistoriqueFlow] = useState([]);
   const [slaInfo, setSlaInfo] = useState(null);
   const [loadingSla, setLoadingSla] = useState(false);
   const [showSlaDetail, setShowSlaDetail] = useState(false);
@@ -693,6 +694,17 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       .finally(() => setLoadingIntervenantsFlow(false));
   }, [bonMaintenance?.id]);
 
+  useEffect(() => {
+    if (!bonMaintenance?.id) return;
+
+    bonMaintenanceHistoriqueService.findByBonMaintenanceId(bonMaintenance.id)
+      .then((data) => setHistoriqueFlow(data ?? []))
+      .catch((err) => {
+        console.error('Erreur chargement historique :', err);
+        setHistoriqueFlow([]);
+      });
+  }, [bonMaintenance?.id]);
+
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
       ...prev,
@@ -736,7 +748,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     );
   }
 
-  const historique = bon.historique || [];
+  const historique = historiqueFlow;
   const reclamation = reclamations.length > 0 ? reclamations[0] : null;
 
   return (
@@ -2984,6 +2996,7 @@ function IntervenantsTab({ bonMaintenanceId }) {
 function DocumentsTab({ bonMaintenanceId }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pieceId, setPieceId] = useState('');
@@ -2994,11 +3007,13 @@ function DocumentsTab({ bonMaintenanceId }) {
 
   const load = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await bonMaintenanceDocumentAchatService.findByBonMaintenanceId(bonMaintenanceId);
       setDocuments(data ?? []);
     } catch (err) {
       console.error(err);
+      setLoadError(err.response?.data?.message || err.message || 'Erreur de chargement');
     } finally {
       setLoading(false);
     }
@@ -3078,6 +3093,10 @@ function DocumentsTab({ bonMaintenanceId }) {
 
       {loading ? (
         <p className="bmd-empty"><Loader2 size={24} className="spinner" /> Chargement...</p>
+      ) : loadError ? (
+        <p className="bmd-empty" style={{ color: '#c0392b' }}>
+          Impossible de charger les documents d'achat : {loadError}
+        </p>
       ) : documents.length === 0 ? (
         <p className="bmd-empty">
           <Inbox size={24} className="empty-icon" /> Aucun document d'achat pour l'instant.
@@ -3240,14 +3259,17 @@ function CommentairesTab({ bonMaintenanceId }) {
 function HistoriqueTab({ bonMaintenanceId }) {
   const [historique, setHistorique] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
   const load = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
-      const data = await bonMaintenanceHistoriqueService.getByBonMaintenance(bonMaintenanceId);
+      const data = await bonMaintenanceHistoriqueService.findByBonMaintenanceId(bonMaintenanceId);
       setHistorique(data ?? []);
     } catch (err) {
       console.error(err);
+      setLoadError(err.response?.data?.message || err.message || 'Erreur de chargement');
     } finally {
       setLoading(false);
     }
@@ -3266,6 +3288,10 @@ function HistoriqueTab({ bonMaintenanceId }) {
 
       {loading ? (
         <p className="bmd-empty"><Loader2 size={24} className="spinner" /> Chargement...</p>
+      ) : loadError ? (
+        <p className="bmd-empty" style={{ color: '#c0392b' }}>
+          Impossible de charger l'historique : {loadError}
+        </p>
       ) : historique.length === 0 ? (
         <p className="bmd-empty">
           <Inbox size={24} className="empty-icon" /> Aucun historique pour l'instant.

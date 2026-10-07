@@ -5,7 +5,7 @@ import {
   Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, BarChart3, Search,
   Filter, RefreshCw, AlertCircle, Clock, Calendar, Users, Building2,
   Activity, ChevronLeft, ChevronRight, Circle, Loader2, Info,
-  AlertTriangle, Ban, Gauge, Sparkles
+  AlertTriangle, Ban, Gauge, Sparkles, ArrowUp, ArrowDown, ArrowUpDown
 } from 'lucide-react';
 
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
@@ -30,6 +30,7 @@ import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenance
 import pieceLigneService from '../../../services/pieceLigneService';
 
 import ConfirmModal from '../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 
 import './BonsMaintenance.css';
 
@@ -200,6 +201,34 @@ const SORTABLE_COLUMNS = {
 const PAGE_SIZE = 10;
 
 /* =========================================================
+   COLONNES (paramétrables : affichage + recherche)
+   ========================================================= */
+const BON_COLUMNS_DEFAULT = [
+  { key: 'num',         label: 'Numéro',      visible: true, searchable: true  },
+  { key: 'titre',       label: 'Titre',       visible: true, searchable: true  },
+  { key: 'prestataire', label: 'Prestataire', visible: true, searchable: false },
+  { key: 'service',     label: 'Service',     visible: true, searchable: false },
+  { key: 'urgence',     label: 'Urgence',     visible: true, searchable: false },
+  { key: 'priorite',    label: 'Priorité',    visible: true, searchable: false },
+  { key: 'date',        label: 'Date',        visible: true, searchable: false },
+  { key: 'etat',        label: 'État',        visible: true, searchable: false },
+];
+
+function getColumnSearchValue(b, key) {
+  switch (key) {
+    case 'num':         return b.num || '';
+    case 'titre':       return b.titre || '';
+    case 'prestataire': return b.prestataire?.raisonSociale || b.prestataire?.nom || '';
+    case 'service':     return b.serviceNom || b.service?.description || '';
+    case 'urgence':     return niveauLabel(b.urgence);
+    case 'priorite':    return `${b.priorite || ''} ${prioriteLabel(b.priorite)}`;
+    case 'date':        return formatDate(b.date);
+    case 'etat':        return etatLabel(b.etat);
+    default:            return '';
+  }
+}
+
+/* =========================================================
    COMPOSANT PRINCIPAL
    ========================================================= */
 export default function BonsMaintenance() {
@@ -249,6 +278,10 @@ export default function BonsMaintenance() {
   const [motifModal, setMotifModal] = useState({ show: false, motif: '', error: null, confirming: false });
   const [etatModal, setEtatModal] = useState({ show: false, etat: '', error: null, confirming: false });
   const [rowInfo, setRowInfo] = useState({});
+
+  const [columnSettings, setColumnSettings] = useState(BON_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const load = async () => {
     setLoading(true);
@@ -347,14 +380,15 @@ export default function BonsMaintenance() {
   }, [bons]);
 
   const filteredBons = useMemo(() => {
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
     return bons.filter((b) => {
-      const matchesSearch = !searchTerm
-        || b.titre?.toLowerCase().includes(searchTerm.toLowerCase())
-        || b.num?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = !term
+        || searchableCols.some((key) => getColumnSearchValue(b, key).toLowerCase().includes(term));
       const matchesEtat = etatFilter === 'all' || String(b.etat) === etatFilter;
       return matchesSearch && matchesEtat;
     });
-  }, [bons, searchTerm, etatFilter]);
+  }, [bons, searchTerm, etatFilter, columnSettings]);
 
   const sortedBons = useMemo(() => {
     const extractor = SORTABLE_COLUMNS[sortColumn];
@@ -413,9 +447,66 @@ export default function BonsMaintenance() {
     }
   };
 
-  const sortIndicator = (column) => {
-    if (sortColumn !== column) return '';
-    return sortDirection === 'asc' ? ' ▲' : ' ▼';
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="bons-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="bons-sort-icon active" />
+      : <ArrowDown size={13} className="bons-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const TABLE_COLUMNS_DEF = {
+    num: { cell: (b) => <td key="num" style={{ fontWeight: 600 }}>{b.num || '—'}</td> },
+    titre: { cell: (b) => <td key="titre">{b.titre}</td> },
+    prestataire: { cell: (b) => <td key="prestataire">{b.prestataire?.raisonSociale || b.prestataire?.nom || '—'}</td> },
+    service: { cell: (b) => <td key="service">{b.serviceNom || b.service?.description || '—'}</td> },
+    urgence: {
+      cell: (b) => (
+        <td key="urgence">
+          <span className={`bons-urgence-badge urgence-${b.urgence || 0}`}>{niveauLabel(b.urgence)}</span>
+        </td>
+      ),
+    },
+    priorite: {
+      cell: (b) => (
+        <td key="priorite">
+          <span className={`bons-priorite-badge priorite-color-${prioriteColor(b.priorite)}`}>
+            {b.priorite || '—'} · {prioriteLabel(b.priorite)}
+          </span>
+        </td>
+      ),
+    },
+    date: {
+      cell: (b) => (
+        <td key="date">
+          <span className="bons-date-cell"><Calendar size={14} />{formatDate(b.date)}</span>
+        </td>
+      ),
+    },
+    etat: {
+      cell: (b) => (
+        <td key="etat">
+          <span className={`bons-badge ${ETAT_BADGE_CLASS[b.etat] || ''}`}>
+            {renderEtatIcon(b.etat)}
+            {etatLabel(b.etat)}
+          </span>
+        </td>
+      ),
+    },
   };
 
   const handleExportExcel = () => {
@@ -634,9 +725,15 @@ export default function BonsMaintenance() {
       {/* HEADER */}
       <div className="bons-header-card">
         <div className="bons-header-title-box">
-          <div className="bons-header-icon-wrapper">
+          <button
+            type="button"
+            className="bons-header-icon-wrapper bons-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <Activity size={28} className="bons-header-icon" />
-          </div>
+          </button>
           <div>
             <h2>Bons de maintenance</h2>
             <p className="bons-header-subtitle">Gestion des interventions de maintenance</p>
@@ -801,7 +898,7 @@ export default function BonsMaintenance() {
             <Search size={16} className="bons-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher par titre ou numéro..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -868,41 +965,31 @@ export default function BonsMaintenance() {
         <table className="bons-table">
           <thead>
             <tr>
-              <th className="bons-th-sortable" onClick={() => handleSort('num')}>
-                <span>Numéro</span><span className="bons-sort-indicator">{sortIndicator('num')}</span>
-              </th>
-              <th className="bons-th-sortable" onClick={() => handleSort('titre')}>
-                <span>Titre</span><span className="bons-sort-indicator">{sortIndicator('titre')}</span>
-              </th>
-              <th className="bons-th-sortable" onClick={() => handleSort('prestataire')}>
-                <span>Prestataire</span><span className="bons-sort-indicator">{sortIndicator('prestataire')}</span>
-              </th>
-              <th className="bons-th-sortable" onClick={() => handleSort('service')}>
-                <span>Service</span><span className="bons-sort-indicator">{sortIndicator('service')}</span>
-              </th>
-              <th className="bons-th-sortable" onClick={() => handleSort('urgence')}>
-                <span>Urgence</span><span className="bons-sort-indicator">{sortIndicator('urgence')}</span>
-              </th>
-              <th className="bons-th-sortable" onClick={() => handleSort('priorite')}>
-                <span>Priorité</span><span className="bons-sort-indicator">{sortIndicator('priorite')}</span>
-              </th>
-              <th className="bons-th-sortable" onClick={() => handleSort('date')}>
-                <span>Date</span><span className="bons-sort-indicator">{sortIndicator('date')}</span>
-              </th>
-              <th className="bons-th-sortable" onClick={() => handleSort('etat')}>
-                <span>État</span><span className="bons-sort-indicator">{sortIndicator('etat')}</span>
-              </th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`bons-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="bons-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
 
           <tbody>
             {loading ? (
-              <tr><td colSpan={8} className="bons-table-empty">
+              <tr><td colSpan={visibleColumns.length || 1} className="bons-table-empty">
                 <Loader2 size={24} className="bons-spinner" />
                 <span>Chargement...</span>
               </td></tr>
             ) : sortedBons.length === 0 ? (
-              <tr><td colSpan={8} className="bons-table-empty">
+              <tr><td colSpan={visibleColumns.length || 1} className="bons-table-empty">
                 {bons.length === 0 ? (
                   <><AlertCircle size={24} /><span>Aucun bon de maintenance pour l'instant. Ajoute le premier avec le bouton ci-dessus.</span></>
                 ) : (
@@ -917,32 +1004,7 @@ export default function BonsMaintenance() {
                   onClick={() => handleRowClick(b)}
                   title={rowInfo[b.id]?.tooltip || ''}
                 >
-                  <td style={{ fontWeight: 600 }}>{b.num || '—'}</td>
-                  <td>{b.titre}</td>
-                  <td>{b.prestataire?.raisonSociale || b.prestataire?.nom || '—'}</td>
-                  <td>{b.serviceNom || b.service?.description || '—'}</td>
-                  <td>
-                    <span className={`bons-urgence-badge urgence-${b.urgence || 0}`}>
-                      {niveauLabel(b.urgence)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`bons-priorite-badge priorite-color-${prioriteColor(b.priorite)}`}>
-                      {b.priorite || '—'} · {prioriteLabel(b.priorite)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="bons-date-cell">
-                      <Calendar size={14} />
-                      {formatDate(b.date)}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`bons-badge ${ETAT_BADGE_CLASS[b.etat] || ''}`}>
-                      {renderEtatIcon(b.etat)}
-                      {etatLabel(b.etat)}
-                    </span>
-                  </td>
+                  {visibleColumns.map((c) => TABLE_COLUMNS_DEF[c.key]?.cell(b))}
                 </tr>
               ))
             )}
@@ -1320,6 +1382,17 @@ export default function BonsMaintenance() {
         </div>
       )}
 
+      {/* MODAL PARAMÈTRES DES COLONNES */}
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="bon"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
+      />
+
       {/* MODALES PAGES EXTERNES */}
       <PageModal
         isOpen={anomaliesOpen}
@@ -1339,7 +1412,7 @@ export default function BonsMaintenance() {
         title="Blocages d'équipement"
         subtitle="Équipements sans suite après arrêt obligatoire"
         icon={Ban}
-        accent="#9f1239"
+        accent="#dc2626"
         size="full"
       >
         <BlocagesImmobilisation isModal />

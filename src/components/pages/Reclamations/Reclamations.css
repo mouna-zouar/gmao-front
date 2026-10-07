@@ -1,55 +1,113 @@
-/* ============================================================
-   VARIABLES (héritées du projet)
-   ============================================================ */
 :root {
-  --primary: #0f766e;
-  --primary-dark: #0d5f58;
-  --primary-light: #eefaf8;
-  --gray-50: #f8fafc;
-  --gray-100: #f1f5f9;
-  --gray-200: #e2e8f0;
-  --gray-300: #cbd5e1;
-  --gray-400: #94a3b8;
-  --gray-500: #64748b;
-  --gray-600: #475569;
-  --gray-700: #334155;
-  --gray-800: #1e293b;
-  --gray-900: #0f172a;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+  --teal-900: #054e57;
+  --teal-800: #066470;
+  --teal-700: #067a87;
+  --teal-600: #0794a4;
+  --teal-500: #0aa8ba;
+  --teal-400: #3dbcc9;
+  --teal-200: #a8e0e6;
+  --teal-100: #d5f0f3;
+  --teal-50: #e9f8fa;
+  --teal-25: #f3fcfd;
+
+  --cyan-600: #0891b2;
+  --cyan-100: #cffafe;
+
+  --blue-600: #2563eb;
+  --blue-100: #dbeafe;
+
+  --indigo-600: #6366f1;
+  --indigo-100: #e0e7ff;
+
+  --violet-600: #8b5cf6;
+  --violet-100: #ede9fe;
+
+  --green-600: #10b981;
+  --green-100: #d1fae5;
+
+  --red-600: #dc2626;
+  --red-100: #fee2e2;
+
+  --amber-500: #f59e0b;
+  --amber-700: #b45309;
+  --amber-50: #fffbeb;
+  --amber-200: #fde68a;
+
+  --slate-900: #0f172a;
+  --slate-700: #334155;
+  --slate-500: #64748b;
+  --slate-400: #94a3b8;
+  --slate-300: #cbd5e1;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50: #f8fafc;
+
+  /* Alias compatibilité JSX existant */
+  --primary: var(--teal-600);
+  --primary-dark: var(--teal-700);
+  --primary-light: var(--teal-50);
+
+  --gray-50: var(--slate-50);
+  --gray-100: var(--slate-100);
+  --gray-200: var(--slate-200);
+  --gray-300: var(--slate-300);
+  --gray-400: var(--slate-400);
+  --gray-500: var(--slate-500);
+  --gray-600: var(--slate-700);
+  --gray-700: var(--slate-700);
+  --gray-800: var(--slate-900);
+  --gray-900: var(--slate-900);
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
+
   --radius: 16px;
-  --radius-sm: 8px;
-  --radius-xs: 4px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ============================================================
+   CONTAINER
+   ============================================================ */
 .reclamations-container {
   padding: 24px;
+  margin: 0 auto;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--slate-700);
+  background: var(--slate-50);
+  min-height: calc(100vh - 80px);
   animation: reclamationsFadeIn 0.4s ease-out;
+  -webkit-font-smoothing: antialiased;
 }
 
 @keyframes reclamationsFadeIn {
   from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── Header ── */
+/* ============================================================
+   HEADER — carte blanche style FicheEmploye
+   ============================================================ */
 .reclamations-header-card {
   background: #ffffff;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  border: 1px solid var(--slate-200);
+  border-radius: 16px;
   padding: 16px 24px;
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
   transition: var(--transition);
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .reclamations-header-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
 .reclamations-header-title-box {
@@ -58,154 +116,140 @@
   gap: 14px;
 }
 
+/* ⭐ Icône header en teal (alignée FicheEmploye) */
 .reclamations-header-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 46px;
   border-radius: 10px;
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--teal-50);
+  border: 1px solid var(--teal-100);
+  color: var(--teal-600);
+  flex-shrink: 0;
 }
 
 .reclamations-header-title-box h2 {
-  font-size: 1.3rem;
+  font-size: 1.45rem;
   font-weight: 800;
-  color: var(--gray-900);
+  color: var(--slate-900);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .reclamations-header-subtitle {
   font-size: 0.85rem;
-  color: var(--gray-500);
-  margin: 2px 0 0;
+  color: var(--slate-500);
+  margin: 3px 0 0;
+  font-weight: 500;
 }
 
+/* ⭐ Badge total en teal (aligné badge-depot de FicheEmploye) */
 .reclamations-badge-total {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1.5px solid #fecaca;
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-weight: 700;
+  background: var(--teal-50);
+  color: var(--teal-700);
+  border: 1.5px solid var(--teal-100);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 800;
   font-size: 0.78rem;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
-/* ── Barre d'actions ── */
+/* ============================================================
+   ACTIONS BAR — carte blanche style FicheEmploye
+   ============================================================ */
 .reclamations-actions-bar {
   background: #ffffff;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  padding: 10px 16px;
+  border: 1px solid var(--slate-200);
+  border-radius: 16px;
+  padding: 12px 20px;
   margin-bottom: 20px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   align-items: center;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
   transition: var(--transition);
 }
 
 .reclamations-actions-bar:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
 .reclamations-action-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 8px 14px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
+  font-family: inherit;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   cursor: pointer;
-  transition: var(--transition);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   background: transparent;
-  color: var(--gray-600);
+  color: var(--slate-700);
+  white-space: nowrap;
 }
 
 .reclamations-action-btn:hover:not(:disabled) {
-  background: var(--gray-50);
   transform: translateY(-1px);
 }
 
-.reclamations-action-btn:disabled {
-  opacity: 0.4;
+.reclamations-action-btn:disabled,
+.reclamations-action-btn.disabled {
+  opacity: 0.45;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
-.reclamations-action-btn.ajouter {
-  color: #10b981;
-}
-.reclamations-action-btn.ajouter:hover:not(:disabled) {
-  background: #ecfdf5;
-}
+.reclamations-action-btn.ajouter              { color: var(--green-600); }
+.reclamations-action-btn.ajouter:hover:not(:disabled)   { background: #ecfdf5; }
 
-.reclamations-action-btn.modifier {
-  color: #ea580c;
-}
-.reclamations-action-btn.modifier:hover:not(:disabled) {
-  background: #fff7ed;
-}
+.reclamations-action-btn.modifier             { color: var(--blue-600); }
+.reclamations-action-btn.modifier:hover:not(:disabled)  { background: #eff6ff; }
 
-.reclamations-action-btn.details {
-  color: var(--primary);
-}
-.reclamations-action-btn.details:hover:not(:disabled) {
-  background: var(--primary-light);
-}
+.reclamations-action-btn.details              { color: var(--teal-600); }
+.reclamations-action-btn.details:hover:not(:disabled)   { background: var(--teal-50); }
 
-.reclamations-action-btn.associer {
-  color: #2563eb;
-}
-.reclamations-action-btn.associer:hover:not(:disabled) {
-  background: #eff6ff;
-}
+.reclamations-action-btn.associer             { color: var(--blue-600); }
+.reclamations-action-btn.associer:hover:not(:disabled)  { background: #eff6ff; }
 
-.reclamations-action-btn.valider {
-  color: #16a34a;
-}
-.reclamations-action-btn.valider:hover:not(:disabled) {
-  background: #f0fdf4;
-}
+.reclamations-action-btn.valider              { color: var(--green-600); }
+.reclamations-action-btn.valider:hover:not(:disabled)   { background: #f0fdf4; }
 
-.reclamations-action-btn.rejeter {
-  color: #dc2626;
-}
-.reclamations-action-btn.rejeter:hover:not(:disabled) {
-  background: #fef2f2;
-}
+.reclamations-action-btn.rejeter              { color: var(--red-600); }
+.reclamations-action-btn.rejeter:hover:not(:disabled)   { background: #fef2f2; }
 
-.reclamations-action-btn.supprimer {
-  color: #dc2626;
-}
-.reclamations-action-btn.supprimer:hover:not(:disabled) {
-  background: #fef2f2;
-}
+.reclamations-action-btn.supprimer            { color: var(--red-600); }
+.reclamations-action-btn.supprimer:hover:not(:disabled) { background: #fef2f2; }
 
 .reclamations-actions-divider {
   width: 1px;
   align-self: stretch;
-  background: var(--gray-200);
-  margin: 4px 4px;
+  min-height: 22px;
+  background: var(--slate-200);
+  margin: 4px 8px;
 }
 
-/* ── Filtres ── */
+/* ============================================================
+   FILTRES — fond slate-50 style FicheEmploye
+   ============================================================ */
 .reclamations-filter-panel {
   display: flex;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  margin-bottom: 20px;
+  background: var(--slate-50);
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 24px;
   gap: 16px;
   flex-wrap: wrap;
   align-items: center;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.01);
 }
 
 .reclamations-filter-group {
@@ -219,10 +263,8 @@
 .reclamations-filter-label {
   font-size: 0.78rem;
   font-weight: 700;
-  color: var(--gray-600);
+  color: var(--slate-700);
   white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 
 .reclamations-filter-input-wrap {
@@ -230,8 +272,8 @@
   align-items: center;
   flex: 1;
   background: #ffffff;
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--slate-200);
+  border-radius: 8px;
   overflow: hidden;
   height: 38px;
   padding: 0 12px;
@@ -239,14 +281,22 @@
   transition: var(--transition);
 }
 
+.reclamations-filter-input-wrap:hover {
+  border-color: var(--slate-400);
+}
+
 .reclamations-filter-input-wrap:focus-within {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
 }
 
 .reclamations-filter-input-wrap svg {
-  color: var(--gray-400);
+  color: var(--slate-400);
   flex-shrink: 0;
+}
+
+.reclamations-filter-input-wrap:focus-within svg {
+  color: var(--teal-600);
 }
 
 .reclamations-filter-input-wrap input,
@@ -255,19 +305,35 @@
   border: none;
   outline: none;
   font-size: 0.85rem;
-  color: var(--gray-800);
+  font-weight: 500;
+  color: var(--slate-900);
   height: 100%;
   background: transparent;
+  font-family: inherit;
+}
+
+.reclamations-filter-input-wrap input::placeholder {
+  color: var(--slate-400);
+}
+
+.reclamations-filter-input-wrap select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 26px;
 }
 
 .reclamations-filter-reset {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--gray-500);
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--slate-700);
   padding: 8px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
+  border-radius: 8px;
+  border: 1px solid var(--slate-200);
+  background: #ffffff;
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
@@ -276,7 +342,7 @@
 .reclamations-filter-reset:hover {
   background: #fef2f2;
   border-color: #fecaca;
-  color: #dc2626;
+  color: var(--red-600);
 }
 
 .reclamations-export-stack {
@@ -289,7 +355,7 @@
 .reclamations-export-btn {
   width: 34px;
   height: 34px;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   border: none;
   display: flex;
   align-items: center;
@@ -301,58 +367,60 @@
 
 .reclamations-export-btn:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 4px 10px -2px rgba(15, 23, 42, 0.15);
 }
 
-.reclamations-export-btn.excel {
-  background: #10b981;
-}
-.reclamations-export-btn.print {
-  background: var(--primary);
-}
-.reclamations-export-btn.stats {
-  background: #f59e0b;
-}
+.reclamations-export-btn.excel { background: var(--green-600); }
+.reclamations-export-btn.print { background: var(--teal-600); }
+.reclamations-export-btn.stats { background: var(--cyan-600); }
 
-/* ── Table ── */
+/* ============================================================
+   TABLE — style modern-table
+   ============================================================ */
 .reclamations-table-wrap {
   background: #ffffff;
-  border: 1px solid var(--gray-200);
-  border-radius: var(--radius);
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
   transition: var(--transition);
+  margin-bottom: 20px;
 }
 
 .reclamations-table-wrap:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
 .reclamations-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13.5px;
+  font-size: 0.88rem;
+  background: #ffffff;
 }
 
 .reclamations-table thead {
-  background: var(--gray-50);
+  background: var(--slate-50);
 }
 
 .reclamations-table th {
   text-align: left;
   padding: 12px 16px;
-  font-size: 11px;
+  font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--gray-500);
-  border-bottom: 1.5px solid var(--gray-200);
+  letter-spacing: 0.02em;
+  color: var(--teal-700);
+  background: var(--slate-50);
+  border-top: 1px solid var(--slate-200);
+  border-bottom: 1.5px solid var(--teal-100);
+  white-space: nowrap;
 }
 
 .reclamations-table td {
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--gray-100);
-  color: var(--gray-800);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--slate-100);
+  color: var(--slate-700);
+  vertical-align: middle;
 }
 
 .reclamations-table tbody tr:last-child td {
@@ -368,85 +436,109 @@
 
 .reclamations-table-empty {
   text-align: center;
-  padding: 48px 16px;
-  color: var(--gray-400);
+  padding: 60px 20px;
+  color: var(--slate-400);
   font-size: 0.9rem;
+  background: #fafbfc;
 }
 
 .reclamations-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
-  border-radius: var(--radius-sm);
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  border-radius: 10px;
+  background: var(--red-100);
+  border: 1px solid #fca5a5;
+  color: #991b1b;
   font-size: 0.85rem;
   font-weight: 600;
 }
 
-/* ── Lignes ── */
+/* ============================================================
+   LIGNES
+   ============================================================ */
 .reclamations-row {
   cursor: pointer;
   transition: var(--transition);
 }
 
 .reclamations-row:hover td {
-  background: var(--gray-50);
+  background: var(--slate-50);
 }
 
 .reclamations-row.selected td {
-  background: #fef2f2;
+  background: var(--teal-100) !important;
 }
 
 .reclamations-row.selected {
-  box-shadow: inset 4px 0 0 #dc2626;
+  box-shadow: inset 4px 0 0 var(--teal-600);
 }
 
-/* ── Badges ── */
+/* ============================================================
+   BADGES ÉTAT
+   ============================================================ */
 .reclamations-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 11px;
+  border-radius: 999px;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  border: 1px solid transparent;
+  line-height: 1.2;
 }
 
 .reclamations-badge--ouverte {
-  background: #fef2f2;
-  color: #dc2626;
-}
-.reclamations-badge--encours {
-  background: #fff8eb;
-  color: #b45309;
-}
-.reclamations-badge--cloturee {
-  background: #f0fdf4;
-  color: #16a34a;
-}
-.reclamations-badge--attente {
-  background: #f5f3ff;
-  color: #7c3aed;
-}
-.reclamations-badge--rejetee {
-  background: var(--gray-100);
-  color: var(--gray-500);
+  background: var(--red-100);
+  color: #b91c1c;
+  border-color: #fca5a5;
 }
 
-/* ── Pagination ── */
+.reclamations-badge--encours {
+  background: var(--amber-50);
+  color: var(--amber-700);
+  border-color: var(--amber-200);
+}
+
+.reclamations-badge--cloturee {
+  background: var(--green-100);
+  color: #047857;
+  border-color: #6ee7b7;
+}
+
+.reclamations-badge--attente {
+  background: var(--violet-100);
+  color: #6d28d9;
+  border-color: #c4b5fd;
+}
+
+.reclamations-badge--rejetee {
+  background: var(--slate-100);
+  color: var(--slate-500);
+  border-color: var(--slate-200);
+}
+
+/* ============================================================
+   PAGINATION
+   ============================================================ */
 .reclamations-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 16px 4px 4px;
+  padding: 14px 20px;
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
 }
 
 .reclamations-pagination-info {
-  font-size: 0.8rem;
-  color: var(--gray-500);
+  font-size: 0.82rem;
+  color: var(--slate-500);
+  font-weight: 500;
 }
 
 .reclamations-pagination-controls {
@@ -457,28 +549,34 @@
 }
 
 .reclamations-pagination-btn {
-  min-width: 34px;
-  padding: 6px 12px;
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--slate-200);
+  border-radius: 6px;
   background: #ffffff;
-  color: var(--gray-600);
-  font-size: 0.8rem;
+  color: var(--slate-500);
+  font-size: 0.82rem;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .reclamations-pagination-btn:hover:not(:disabled) {
-  border-color: var(--primary);
-  color: var(--primary);
-  transform: translateY(-1px);
+  background: var(--slate-100);
+  border-color: var(--slate-300);
+  color: var(--slate-700);
 }
 
 .reclamations-pagination-btn.active {
-  background: var(--primary);
-  border-color: var(--primary);
+  background: var(--teal-600);
+  border-color: var(--teal-600);
   color: #ffffff;
+  font-weight: 700;
 }
 
 .reclamations-pagination-btn:disabled {
@@ -486,29 +584,36 @@
   cursor: not-allowed;
 }
 
-/* ── Modal de rejet (intégré) ── */
+/* ============================================================
+   MODAL REJET (intégré)
+   ============================================================ */
 .rejet-modal .confirm-modal-container {
   max-width: 460px;
 }
 
 .rejet-modal .confirm-modal-input {
   width: 100%;
-  padding: 10px 14px;
-  border: 1.5px solid var(--gray-200);
-  border-radius: var(--radius-sm);
-  font-size: 0.85rem;
+  padding: 11px 14px;
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
+  font-size: 0.9rem;
   font-family: inherit;
   outline: none;
   transition: var(--transition);
   resize: vertical;
+  background: var(--slate-50);
+  color: var(--slate-900);
 }
 
 .rejet-modal .confirm-modal-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.08);
+  border-color: var(--teal-600);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
 }
 
-/* ── Responsive ── */
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 @media (max-width: 768px) {
   .reclamations-container {
     padding: 16px;
@@ -520,14 +625,18 @@
     gap: 12px;
   }
 
+  .reclamations-header-title-box h2 {
+    font-size: 1.15rem;
+  }
+
   .reclamations-actions-bar {
     padding: 10px 12px;
     gap: 6px;
   }
 
   .reclamations-action-btn {
-    padding: 6px 10px;
-    font-size: 0.75rem;
+    padding: 8px 10px;
+    font-size: 0.82rem;
   }
 
   .reclamations-action-btn span:not(.reclamations-action-icon) {
@@ -553,12 +662,12 @@
   }
 
   .reclamations-table {
-    font-size: 12px;
+    font-size: 12.5px;
   }
 
   .reclamations-table th,
   .reclamations-table td {
-    padding: 8px 12px;
+    padding: 10px 12px;
   }
 
   .reclamations-desc-cell {
@@ -568,22 +677,22 @@
   .reclamations-pagination {
     flex-direction: column;
     align-items: center;
+    text-align: center;
   }
 }
 
 @media (max-width: 480px) {
   .reclamations-header-title-box h2 {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
 
   .reclamations-badge-total {
     font-size: 0.7rem;
-    padding: 4px 12px;
+    padding: 6px 12px;
   }
 
   .reclamations-action-btn {
-    font-size: 0.7rem;
-    padding: 4px 8px;
+    padding: 6px 8px;
   }
 
   .reclamations-action-btn svg {
@@ -598,11 +707,63 @@
 
   .reclamations-table th,
   .reclamations-table td {
-    padding: 6px 8px;
-    font-size: 11px;
+    padding: 8px;
+    font-size: 12px;
   }
 
   .reclamations-desc-cell {
     max-width: 100px;
   }
+}
+
+/* ============================================================
+   TRI DES COLONNES + BOUTON PARAMÈTRES
+   ============================================================ */
+.reclamations-th-sortable {
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.reclamations-th-sortable:hover { background: var(--teal-25); color: var(--teal-800); }
+
+.reclamations-th-sortable.is-sorted {
+  background: var(--teal-50);
+  color: var(--teal-800);
+}
+
+.reclamations-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reclamations-sort-icon {
+  color: var(--slate-300);
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+
+.reclamations-th-sortable:hover .reclamations-sort-icon,
+.reclamations-sort-icon.active { color: var(--teal-600); }
+
+/* Icône d'en-tête = bouton « paramètres des colonnes » */
+.reclamations-header-icon-btn {
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.reclamations-header-icon-btn:hover {
+  background: var(--teal-100);
+  border-color: var(--teal-200);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px -6px rgba(7, 148, 164, 0.45);
+}
+
+.reclamations-header-icon-btn:active { transform: translateY(0); }
+
+.reclamations-header-icon-btn:focus-visible {
+  outline: 2px solid var(--teal-600);
+  outline-offset: 2px;
 }

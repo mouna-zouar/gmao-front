@@ -1,9 +1,4 @@
-/* ═══════════════════════════════════════════════════════════
-   VehiculeReservationModal.css — Layout 3 colonnes
-   nav + contenu + aperçu
-   ═══════════════════════════════════════════════════════════ */
 
-/* ═══════════ MODAL CONTAINER ═══════════ */
 .bmm-modal {
   width: 900px;
   max-width: 96vw;

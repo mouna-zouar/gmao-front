@@ -4,12 +4,14 @@ import {
   Download, Printer, BarChart3, Loader2, AlertTriangle,
   Car, User, Calendar, Clock, MapPin, Flag,
   CheckCircle2, XCircle, Activity, Hourglass, Ban, CheckCheck,
+  ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
 import vehiculeReservationService from '../../../../services/vehiculeReservationService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
 import VehiculeReservationModal from '../../../ui/modals/VehiculeReservationModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import './VehiculeReservations.css';
 
 // Codes alignés sur le backend (voir commentaire sur le champ `etat`
@@ -41,6 +43,15 @@ const ETAT_ACTIONS = [
   { toEtat: 3, label: 'Annuler', Icon: Ban, className: 'cancel', allowedFrom: [0, 1] },
 ];
 
+/* Colonnes paramétrables (affichage + recherche) */
+const VRS_COLUMNS_DEFAULT = [
+  { key: 'vehicule',   label: 'Véhicule',   visible: true, searchable: true  },
+  { key: 'conducteur', label: 'Conducteur', visible: true, searchable: true  },
+  { key: 'periode',    label: 'Période',    visible: true, searchable: false },
+  { key: 'motif',      label: 'Motif',      visible: true, searchable: true  },
+  { key: 'etat',       label: 'État',       visible: true, searchable: false },
+];
+
 function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -60,6 +71,13 @@ export default function VehiculeReservations() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
+
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const [columnSettings, setColumnSettings] = useState(VRS_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const [vehiculesMap, setVehiculesMap] = useState({});
   const [personnelsMap, setPersonnelsMap] = useState({});
@@ -121,27 +139,170 @@ export default function VehiculeReservations() {
     return { total, enAttente, confirmees, enCours, terminees };
   }, [reservations]);
 
+  // Texte de recherche d'une colonne
+  const getColumnSearchValue = (r, key) => {
+    const veh = vehiculesMap[r.vehiculeId];
+    const pers = personnelsMap[r.personnelId] ?? { nom: r.personnelNom };
+    switch (key) {
+      case 'vehicule':   return [veh?.matricule, veh?.marque].filter(Boolean).join(' ');
+      case 'conducteur': return [pers?.nom, pers?.prenom, pers?.matricule].filter(Boolean).join(' ');
+      case 'periode':    return `${formatDateTime(r.dateDebut)} ${formatDateTime(r.dateFin)}`;
+      case 'motif':      return r.motif || '';
+      case 'etat':       return etatLabel(r.etat);
+      default:           return '';
+    }
+  };
+
+  // Valeur utilisée pour trier une colonne
+  const getSortValue = (r, key) => {
+    const veh = vehiculesMap[r.vehiculeId];
+    const pers = personnelsMap[r.personnelId] ?? { nom: r.personnelNom };
+    const time = (iso) => (iso ? new Date(iso).getTime() || 0 : 0);
+    switch (key) {
+      case 'vehicule':   return veh?.matricule || '';
+      case 'conducteur': return pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '';
+      case 'periode':    return time(r.dateDebut);
+      case 'motif':      return r.motif || '';
+      case 'etat':       return Number(r.etat ?? -1);
+      default:           return '';
+    }
+  };
+
   const filtered = useMemo(() => {
-    return reservations.filter((r) => {
-      const veh = vehiculesMap[r.vehiculeId];
-      const pers = personnelsMap[r.personnelId];
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
 
-      const haystack = [
-        veh?.matricule, veh?.marque,
-        pers?.nom, pers?.prenom, pers?.matricule,
-        r.motif, r.personnelNom,
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      const matchesSearch = !searchTerm || haystack.includes(searchTerm.toLowerCase());
+    const result = reservations.filter((r) => {
+      const matchesSearch = !term
+        || searchableCols.some((key) => getColumnSearchValue(r, key).toLowerCase().includes(term));
       const matchesEtat = etatFilter === 'all' || String(r.etat) === etatFilter;
-
       return matchesSearch && matchesEtat;
     });
-  }, [reservations, searchTerm, etatFilter, vehiculesMap, personnelsMap]);
+
+    if (!sortColumn) return result;
+
+    const sorted = [...result].sort((x, y) => {
+      const vx = getSortValue(x, sortColumn);
+      const vy = getSortValue(y, sortColumn);
+      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      return vx - vy;
+    });
+    return sortDirection === 'desc' ? sorted.reverse() : sorted;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reservations, searchTerm, etatFilter, vehiculesMap, personnelsMap, columnSettings, sortColumn, sortDirection]);
 
   const handleResetFilters = () => {
     setSearchTerm('');
     setEtatFilter('all');
+  };
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="vrs-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="vrs-sort-icon active" />
+      : <ArrowDown size={13} className="vrs-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const renderCell = (key, r) => {
+    const veh = vehiculesMap[r.vehiculeId];
+    const pers = personnelsMap[r.personnelId] ?? { nom: r.personnelNom };
+    const meta = ETAT_META[r.etat] ?? ETAT_META[0];
+    const EtatIcon = meta.Icon;
+
+    switch (key) {
+      case 'vehicule':
+        return (
+          <td key="vehicule">
+            <div className="vrs-cell-vehicle">
+              <div className="vrs-cell-vehicle-icon">
+                <Car size={14} strokeWidth={2.2} />
+              </div>
+              <div className="vrs-cell-vehicle-text">
+                <span className="vrs-cell-main">
+                  {veh?.matricule || `Véhicule #${r.vehiculeId}`}
+                </span>
+                {veh?.marque && (
+                  <span className="vrs-cell-sub">{veh.marque}</span>
+                )}
+              </div>
+            </div>
+          </td>
+        );
+      case 'conducteur':
+        return (
+          <td key="conducteur">
+            {pers?.nom ? (
+              <div className="vrs-cell-driver">
+                <div className="vrs-cell-driver-avatar">
+                  <User size={14} strokeWidth={2.2} />
+                </div>
+                <span className="vrs-cell-main">
+                  {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
+                </span>
+              </div>
+            ) : (
+              <span className="vrs-cell-empty">—</span>
+            )}
+          </td>
+        );
+      case 'periode':
+        return (
+          <td key="periode">
+            <div className="vrs-cell-period">
+              <span className="vrs-period-line">
+                <Calendar size={12} strokeWidth={2.5} />
+                {formatDateTime(r.dateDebut)}
+              </span>
+              <span className="vrs-period-sep">→</span>
+              <span className="vrs-period-line end">
+                <Flag size={12} strokeWidth={2.5} />
+                {formatDateTime(r.dateFin)}
+              </span>
+            </div>
+          </td>
+        );
+      case 'motif':
+        return (
+          <td key="motif">
+            <span className="vrs-cell-motif">{r.motif || '—'}</span>
+          </td>
+        );
+      case 'etat':
+        return (
+          <td key="etat">
+            <span className={`vrs-pill ${meta.class}`}>
+              <EtatIcon size={12} strokeWidth={2.5} />
+              {etatLabel(r.etat)}
+            </span>
+          </td>
+        );
+      default:
+        return null;
+    }
   };
 
   const handleRowClick = (r) => {
@@ -259,9 +420,15 @@ export default function VehiculeReservations() {
       {/* HEADER */}
       <div className="vrs-header-card">
         <div className="vrs-header-left">
-          <div className="vrs-header-icon-wrap">
+          <button
+            type="button"
+            className="vrs-header-icon-wrap vrs-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <CalendarCheck size={24} strokeWidth={2} />
-          </div>
+          </button>
           <div>
             <h2>Réservations véhicule</h2>
             <p className="vrs-header-subtitle">
@@ -362,7 +529,7 @@ export default function VehiculeReservations() {
             <Search size={16} strokeWidth={2.2} className="vrs-filter-icon" />
             <input
               type="text"
-              placeholder="Véhicule, conducteur, motif..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -414,17 +581,26 @@ export default function VehiculeReservations() {
         <table className="vrs-table">
           <thead>
             <tr>
-              <th>Véhicule</th>
-              <th>Conducteur</th>
-              <th>Période</th>
-              <th>Motif</th>
-              <th>État</th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`vrs-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="vrs-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="vrs-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vrs-table-empty">
                   <div className="vrs-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vrs-spin" />
                     <span>Chargement des réservations...</span>
@@ -433,7 +609,7 @@ export default function VehiculeReservations() {
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={5} className="vrs-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="vrs-table-empty">
                   <div className="vrs-empty-state">
                     <CalendarCheck size={32} strokeWidth={1.6} />
                     <span>
@@ -445,76 +621,15 @@ export default function VehiculeReservations() {
                 </td>
               </tr>
             ) : (
-              filtered.map((r) => {
-                const veh = vehiculesMap[r.vehiculeId];
-                const pers = personnelsMap[r.personnelId] ?? { nom: r.personnelNom };
-                const meta = ETAT_META[r.etat] ?? ETAT_META[0];
-                const EtatIcon = meta.Icon;
-
-                return (
-                  <tr
-                    key={r.id}
-                    className={`vrs-row ${selected?.id === r.id ? 'selected' : ''}`}
-                    onClick={() => handleRowClick(r)}
-                  >
-                    <td>
-                      <div className="vrs-cell-vehicle">
-                        <div className="vrs-cell-vehicle-icon">
-                          <Car size={14} strokeWidth={2.2} />
-                        </div>
-                        <div className="vrs-cell-vehicle-text">
-                          <span className="vrs-cell-main">
-                            {veh?.matricule || `Véhicule #${r.vehiculeId}`}
-                          </span>
-                          {veh?.marque && (
-                            <span className="vrs-cell-sub">{veh.marque}</span>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td>
-                      {pers?.nom ? (
-                        <div className="vrs-cell-driver">
-                          <div className="vrs-cell-driver-avatar">
-                            <User size={14} strokeWidth={2.2} />
-                          </div>
-                          <span className="vrs-cell-main">
-                            {`${pers.nom || ''} ${pers.prenom || ''}`.trim()}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="vrs-cell-empty">—</span>
-                      )}
-                    </td>
-
-                    <td>
-                      <div className="vrs-cell-period">
-                        <span className="vrs-period-line">
-                          <Calendar size={12} strokeWidth={2.5} />
-                          {formatDateTime(r.dateDebut)}
-                        </span>
-                        <span className="vrs-period-sep">→</span>
-                        <span className="vrs-period-line end">
-                          <Flag size={12} strokeWidth={2.5} />
-                          {formatDateTime(r.dateFin)}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td>
-                      <span className="vrs-cell-motif">{r.motif || '—'}</span>
-                    </td>
-
-                    <td>
-                      <span className={`vrs-pill ${meta.class}`}>
-                        <EtatIcon size={12} strokeWidth={2.5} />
-                        {etatLabel(r.etat)}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })
+              filtered.map((r) => (
+                <tr
+                  key={r.id}
+                  className={`vrs-row ${selected?.id === r.id ? 'selected' : ''}`}
+                  onClick={() => handleRowClick(r)}
+                >
+                  {visibleColumns.map((c) => renderCell(c.key, r))}
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -527,6 +642,17 @@ export default function VehiculeReservations() {
         onSave={handleSave}
         reservation={selected}
         isEditing={!!selected}
+      />
+
+      {/* PARAMÈTRES DES COLONNES */}
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="reservation"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
 
       <ConfirmModal

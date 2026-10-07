@@ -15,13 +15,16 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
-  X
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown
 } from 'lucide-react';
 import reclamationService from '../../../services/reclamationService';
 import ReclamationModal from '../../ui/modals/ReclamationModal';
 import ReclamationDetailsModal from '../../ui/modals/ReclamationDetailsModal';
 import AssociateBonMaintenanceModal from '../../ui/modals/AssociateBonMaintenanceModal';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
+import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import './Reclamations.css';
 
 const ETAT_LABELS = {
@@ -62,6 +65,50 @@ function formatDate(iso) {
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+function personnelLabel(r) {
+  return r.personnelAffecte
+    ? `${r.personnelAffecte.nom ?? ''} ${r.personnelAffecte.prenom ?? ''}`.trim()
+    : (r.personnelAffecteNom || '');
+}
+
+/* Colonnes paramétrables (affichage + recherche) */
+const RECLAMATION_COLUMNS_DEFAULT = [
+  { key: 'num',         label: 'Numéro',            visible: true, searchable: true  },
+  { key: 'description', label: 'Description',       visible: true, searchable: true  },
+  { key: 'service',     label: 'Service',           visible: true, searchable: false },
+  { key: 'criticite',   label: 'Criticité',         visible: true, searchable: false },
+  { key: 'urgence',     label: 'Urgence',           visible: true, searchable: false },
+  { key: 'personnel',   label: 'Personnel affecté', visible: true, searchable: false },
+  { key: 'date',        label: 'Date',              visible: true, searchable: false },
+  { key: 'etat',        label: 'État',              visible: true, searchable: false },
+];
+
+function getColumnSearchValue(r, key) {
+  switch (key) {
+    case 'num':         return r.num || '';
+    case 'description': return r.description || '';
+    case 'service':     return r.serviceNom || r.service?.description || '';
+    case 'criticite':   return niveauLabel(r.criticite);
+    case 'urgence':     return niveauLabel(r.urgence);
+    case 'personnel':   return personnelLabel(r);
+    case 'date':        return formatDate(r.date);
+    case 'etat':        return etatLabel(r.etat);
+    default:            return '';
+  }
+}
+
+/* Valeurs utilisées pour le tri */
+const SORTABLE_COLUMNS = {
+  num:         (r) => r.num || '',
+  description: (r) => r.description || '',
+  service:     (r) => r.serviceNom || r.service?.description || '',
+  criticite:   (r) => r.criticite ?? -1,
+  urgence:     (r) => r.urgence ?? -1,
+  personnel:   (r) => personnelLabel(r),
+  date:        (r) => (r.date ? new Date(r.date).getTime() : 0),
+  etat:        (r) => r.etat ?? -1,
+};
+
 export default function Reclamations() {
   const [reclamations, setReclamations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,6 +116,13 @@ export default function Reclamations() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
+
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const [columnSettings, setColumnSettings] = useState(RECLAMATION_COLUMNS_DEFAULT);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
@@ -114,22 +168,35 @@ export default function Reclamations() {
   }, []);
 
   const filteredReclamations = useMemo(() => {
-    return reclamations.filter((r) => {
-      const matchesSearch = !searchTerm
-        || r.description?.toLowerCase().includes(searchTerm.toLowerCase())
-        || r.num?.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
+    const term = searchTerm.trim().toLowerCase();
+
+    const filtered = reclamations.filter((r) => {
+      const matchesSearch = !term
+        || searchableCols.some((key) => getColumnSearchValue(r, key).toLowerCase().includes(term));
 
       const matchesEtat = etatFilter === 'all' || String(r.etat) === etatFilter;
 
       return matchesSearch && matchesEtat;
     });
-  }, [reclamations, searchTerm, etatFilter]);
+
+    const extractor = sortColumn ? SORTABLE_COLUMNS[sortColumn] : null;
+    if (!extractor) return filtered;
+
+    const sorted = [...filtered].sort((a, b) => {
+      const va = extractor(a);
+      const vb = extractor(b);
+      if (typeof va === 'string') return va.localeCompare(vb, 'fr', { sensitivity: 'base', numeric: true });
+      return va - vb;
+    });
+    return sortDirection === 'desc' ? sorted.reverse() : sorted;
+  }, [reclamations, searchTerm, etatFilter, columnSettings, sortColumn, sortDirection]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReclamations.length / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, etatFilter]);
+  }, [searchTerm, etatFilter, sortColumn, sortDirection]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -153,6 +220,56 @@ export default function Reclamations() {
     }
     return range;
   }, [totalPages]);
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const renderSortIcon = (column) => {
+    if (sortColumn !== column) return <ArrowUpDown size={13} className="reclamations-sort-icon" />;
+    return sortDirection === 'asc'
+      ? <ArrowUp size={13} className="reclamations-sort-icon active" />
+      : <ArrowDown size={13} className="reclamations-sort-icon active" />;
+  };
+
+  const openColumnSettings = () => {
+    setColumnSettingsInstanceKey((k) => k + 1);
+    setShowColumnSettings(true);
+  };
+
+  const toggleColumnVisibility = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, visible: !c.visible } : c)));
+  };
+
+  const toggleColumnSearchability = (key) => {
+    setColumnSettings((prev) => prev.map((c) => (c.key === key ? { ...c, searchable: !c.searchable } : c)));
+  };
+
+  const visibleColumns = columnSettings.filter((c) => c.visible);
+
+  const TABLE_COLUMNS_DEF = {
+    num: { cell: (r) => <td key="num" style={{ fontWeight: 600 }}>{r.num || '—'}</td> },
+    description: { cell: (r) => <td key="description" className="reclamations-desc-cell">{r.description}</td> },
+    service: { cell: (r) => <td key="service">{r.serviceNom || r.service?.description || '—'}</td> },
+    criticite: { cell: (r) => <td key="criticite">{niveauLabel(r.criticite)}</td> },
+    urgence: { cell: (r) => <td key="urgence">{niveauLabel(r.urgence)}</td> },
+    personnel: { cell: (r) => <td key="personnel">{personnelLabel(r) || '—'}</td> },
+    date: { cell: (r) => <td key="date">{formatDate(r.date)}</td> },
+    etat: {
+      cell: (r) => (
+        <td key="etat">
+          <span className={`reclamations-badge ${ETAT_BADGE_CLASS[r.etat] || ''}`}>
+            {etatLabel(r.etat)}
+          </span>
+        </td>
+      ),
+    },
+  };
 
   const handleResetFilters = () => {
     setSearchTerm('');
@@ -284,9 +401,7 @@ export default function Reclamations() {
       (r.description || '').replace(/"/g, '""'),
       niveauLabel(r.criticite),
       niveauLabel(r.urgence),
-      r.personnelAffecte
-        ? `${r.personnelAffecte.nom ?? ''} ${r.personnelAffecte.prenom ?? ''}`.trim()
-        : (r.personnelAffecteNom || ''),
+      personnelLabel(r),
       formatDate(r.date),
       etatLabel(r.etat),
     ]);
@@ -319,9 +434,15 @@ export default function Reclamations() {
 
       <div className="reclamations-header-card">
         <div className="reclamations-header-title-box">
-          <div className="reclamations-header-icon">
+          <button
+            type="button"
+            className="reclamations-header-icon reclamations-header-icon-btn"
+            onClick={openColumnSettings}
+            title="Paramètres des colonnes"
+            aria-label="Paramètres des colonnes"
+          >
             <AlertCircle size={24} />
-          </div>
+          </button>
           <div>
             <h2>Réclamations</h2>
             <p className="reclamations-header-subtitle">
@@ -402,7 +523,7 @@ export default function Reclamations() {
             <Search size={16} />
             <input
               type="text"
-              placeholder="Rechercher par description ou numéro..."
+              placeholder="Rechercher dans les colonnes actives..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -447,24 +568,30 @@ export default function Reclamations() {
         <table className="reclamations-table">
           <thead>
             <tr>
-              <th>Numéro</th>
-              <th>Description</th>
-              <th>Service</th>
-              <th>Criticité</th>
-              <th>Urgence</th>
-              <th>Personnel affecté</th>
-              <th>Date</th>
-              <th>État</th>
+              {visibleColumns.map((c) => (
+                <th
+                  key={c.key}
+                  className={`reclamations-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
+                  onClick={() => handleSort(c.key)}
+                  aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+                  title={`Trier par ${c.label}`}
+                >
+                  <span className="reclamations-th-inner">
+                    <span>{c.label}</span>
+                    {renderSortIcon(c.key)}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={8} className="reclamations-table-empty">Chargement...</td>
+                <td colSpan={visibleColumns.length || 1} className="reclamations-table-empty">Chargement...</td>
               </tr>
             ) : filteredReclamations.length === 0 ? (
               <tr>
-                <td colSpan={8} className="reclamations-table-empty">
+                <td colSpan={visibleColumns.length || 1} className="reclamations-table-empty">
                   {reclamations.length === 0
                     ? "Aucune réclamation pour l'instant. Ajoute la première avec le bouton ci-dessus."
                     : "Aucune réclamation ne correspond à ces filtres."}
@@ -477,22 +604,7 @@ export default function Reclamations() {
                   className={`reclamations-row ${selectedReclamation?.id === r.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(r)}
                 >
-                  <td style={{ fontWeight: 600 }}>{r.num || '—'}</td>
-                  <td className="reclamations-desc-cell">{r.description}</td>
-                  <td>{r.serviceNom || r.service?.description || '—'}</td>
-                  <td>{niveauLabel(r.criticite)}</td>
-                  <td>{niveauLabel(r.urgence)}</td>
-                  <td>
-                    {r.personnelAffecte
-                      ? `${r.personnelAffecte.nom ?? ''} ${r.personnelAffecte.prenom ?? ''}`.trim()
-                      : (r.personnelAffecteNom || '—')}
-                  </td>
-                  <td>{formatDate(r.date)}</td>
-                  <td>
-                    <span className={`reclamations-badge ${ETAT_BADGE_CLASS[r.etat] || ''}`}>
-                      {etatLabel(r.etat)}
-                    </span>
-                  </td>
+                  {visibleColumns.map((c) => TABLE_COLUMNS_DEF[c.key]?.cell(r))}
                 </tr>
               ))
             )}
@@ -569,6 +681,16 @@ export default function Reclamations() {
         title={confirmModal.title}
         message={confirmModal.message}
         confirmText={confirmModal.confirmText}
+      />
+
+      <ColumnSettingsModal
+        key={columnSettingsInstanceKey}
+        show={showColumnSettings}
+        onClose={() => setShowColumnSettings(false)}
+        type="reclamation"
+        columns={columnSettings}
+        onToggleVisibility={toggleColumnVisibility}
+        onToggleSearch={toggleColumnSearchability}
       />
 
       {rejetModal.show && (
