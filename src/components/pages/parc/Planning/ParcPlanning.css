@@ -2,6 +2,9 @@
   --pp-primary: #0794a4;
   --pp-primary-dark: #067a87;
   --pp-primary-soft: #e9f8fa;
+  --pp-primary-light: #d5f0f3;
+  --pp-primary-border: #a8e0e6;
+
   --pp-blue: #3b82f6;
   --pp-blue-soft: #dbeafe;
   --pp-teal: #0794a4;
@@ -12,11 +15,21 @@
   --pp-red-soft: #fee2e2;
   --pp-slate: #64748b;
   --pp-slate-soft: #f1f5f9;
+
+  --pp-gray-100: #f1f5f9;
   --pp-gray-200: #e2e8f0;
+  --pp-gray-300: #cbd5e1;
   --pp-gray-500: #64748b;
+  --pp-gray-700: #334155;
   --pp-gray-900: #0f172a;
-  --pp-radius: 12px;
-  --pp-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.04);
+
+  --pp-radius: 16px;
+  --pp-radius-sm: 10px;
+  --pp-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --pp-shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px -6px rgba(15, 23, 42, 0.08);
+  --pp-shadow-md: 0 2px 4px rgba(15, 23, 42, 0.04), 0 12px 28px -12px rgba(15, 23, 42, 0.14);
+  --pp-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --pp-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .parcplan-container {
@@ -24,19 +37,26 @@
   margin: 0 auto;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   color: var(--pp-gray-900);
+  animation: parcplanFadeIn 0.4s ease-out;
 }
 
-/* Header → teal foncé uni */
+@keyframes parcplanFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════ HEADER ═══════════ */
 .parcplan-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: #067a87;
+  background: #ffffff;
+  border: 1px solid var(--pp-gray-200);
   border-radius: var(--pp-radius);
-  padding: 20px 24px;
-  margin-bottom: 16px;
-  color: #fff;
-  box-shadow: var(--pp-shadow);
+  padding: 18px 24px;
+  margin-bottom: 20px;
+  color: var(--pp-gray-900);
+  box-shadow: var(--pp-shadow-sm);
   flex-wrap: wrap;
 }
 
@@ -44,17 +64,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  background: rgba(255, 255, 255, 0.18);
+  width: 46px;
+  height: 46px;
+  background: var(--pp-primary-soft);
+  border: 1px solid var(--pp-primary-light);
   border-radius: 10px;
+  color: var(--pp-primary);
   flex-shrink: 0;
 }
 
 .parcplan-header-text { flex: 1; min-width: 200px; }
-.parcplan-header h1 { margin: 0; font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
-.parcplan-header p { margin: 3px 0 0; font-size: 0.82rem; color: rgba(255, 255, 255, 0.85); }
 
+.parcplan-header h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--pp-gray-900);
+}
+
+.parcplan-header p {
+  margin: 3px 0 0;
+  font-size: 0.85rem;
+  color: var(--pp-gray-500);
+  font-weight: 500;
+}
+
+/* Navigation semaine */
 .parcplan-nav { display: flex; align-items: center; gap: 6px; }
 
 .parcplan-nav-btn,
@@ -62,42 +98,111 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  color: #fff;
-  border-radius: 8px;
+  background: #ffffff;
+  border: 1.5px solid var(--pp-gray-200);
+  color: var(--pp-gray-700);
+  border-radius: 10px;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s ease;
+  font-weight: 700;
+  transition: all 0.18s var(--pp-ease);
 }
-.parcplan-nav-btn { width: 34px; height: 34px; }
-.parcplan-nav-today { padding: 0 14px; height: 34px; font-size: 0.82rem; font-weight: 600; }
-.parcplan-nav-btn:hover, .parcplan-nav-today:hover { background: rgba(255, 255, 255, 0.28); }
 
+.parcplan-nav-btn { width: 38px; height: 38px; }
+.parcplan-nav-today { padding: 0 16px; height: 38px; font-size: 0.85rem; }
+
+.parcplan-nav-btn:hover,
+.parcplan-nav-today:hover {
+  background: var(--pp-primary-soft);
+  border-color: var(--pp-primary-border);
+  color: var(--pp-primary-dark);
+  transform: translateY(-1px);
+}
+
+.parcplan-nav-btn:active,
+.parcplan-nav-today:active {
+  transform: translateY(0);
+}
+
+/* ═══════════ TOOLBAR ═══════════ */
 .parcplan-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 12px 18px;
+  background: #ffffff;
+  border: 1px solid var(--pp-gray-200);
+  border-radius: var(--pp-radius);
+  box-shadow: var(--pp-shadow-xs);
 }
 
-.parcplan-week-label { font-size: 0.95rem; font-weight: 700; color: var(--pp-gray-900); }
+.parcplan-week-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--pp-gray-900);
+  letter-spacing: -0.01em;
+}
 
-.parcplan-toggles { display: flex; gap: 16px; }
+.parcplan-week-label::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--pp-primary);
+  box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.15);
+}
+
+.parcplan-toggles { display: flex; gap: 10px; flex-wrap: wrap; }
+
 .parcplan-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  padding: 8px 14px;
   font-size: 0.83rem;
-  font-weight: 500;
-  color: var(--pp-gray-500);
+  font-weight: 700;
+  color: var(--pp-gray-700);
   cursor: pointer;
+  background: var(--pp-gray-100);
+  border: 1.5px solid transparent;
+  border-radius: 10px;
+  transition: all 0.18s var(--pp-ease);
+  user-select: none;
 }
-.parcplan-toggle input { cursor: pointer; }
 
-.parcplan-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.parcplan-toggle:hover {
+  background: var(--pp-primary-soft);
+  color: var(--pp-primary-dark);
+}
+
+.parcplan-toggle input {
+  cursor: pointer;
+  accent-color: var(--pp-primary);
+  width: 15px;
+  height: 15px;
+}
+
+.parcplan-toggle:has(input:checked) {
+  background: var(--pp-primary-soft);
+  border-color: var(--pp-primary-border);
+  color: var(--pp-primary-dark);
+}
+
+.parcplan-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+}
 
 .color-blue  { background: var(--pp-blue); }
 .color-teal  { background: var(--pp-teal); }
@@ -105,15 +210,119 @@
 .color-red   { background: var(--pp-red); }
 .color-slate { background: var(--pp-slate); }
 
+/* ═══════════ LÉGENDE DES COULEURS ═══════════ */
+.parcplan-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 14px 18px;
+  margin-bottom: 18px;
+  background: #ffffff;
+  border: 1px solid var(--pp-gray-200);
+  border-radius: var(--pp-radius);
+  box-shadow: var(--pp-shadow-xs);
+  animation: parcplanLegendIn 0.25s var(--pp-ease-out);
+}
+
+@keyframes parcplanLegendIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.parcplan-legend-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  animation: parcplanLegendIn 0.25s var(--pp-ease-out);
+}
+
+.parcplan-legend-group-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--pp-gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-right: 12px;
+  border-right: 1px solid var(--pp-gray-200);
+  white-space: nowrap;
+}
+
+.parcplan-legend-group-title::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--pp-primary);
+}
+
+.parcplan-legend-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.parcplan-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 11px;
+  background: var(--pp-gray-100);
+  border: 1px solid var(--pp-gray-200);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--pp-gray-700);
+  white-space: nowrap;
+  transition: all 0.15s var(--pp-ease);
+}
+
+.parcplan-legend-item:hover {
+  background: #ffffff;
+  border-color: var(--pp-gray-300);
+  transform: translateY(-1px);
+  box-shadow: var(--pp-shadow-xs);
+}
+
+.parcplan-legend-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.15);
+}
+
+.parcplan-legend-swatch.color-blue  { background: #3b82f6; }
+.parcplan-legend-swatch.color-teal  { background: #0794a4; }
+.parcplan-legend-swatch.color-amber { background: #f59e0b; }
+.parcplan-legend-swatch.color-red   { background: #ef4444; }
+.parcplan-legend-swatch.color-slate { background: #64748b; }
+
+/* ═══════════ ERROR / LOADING ═══════════ */
 .parcplan-error-banner {
-  background: var(--pp-red-soft);
-  color: #991b1b;
-  border: 1px solid #fca5a5;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1.5px solid #fecaca;
+  border-left: 3px solid var(--pp-red);
+  border-radius: 12px;
   padding: 12px 16px;
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 16px;
+  animation: parcplanSlideIn 0.3s var(--pp-ease-out);
+}
+
+@keyframes parcplanSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .parcplan-loading {
@@ -124,88 +333,310 @@
   min-height: 300px;
   gap: 14px;
   color: var(--pp-gray-500);
+  background: #ffffff;
+  border: 1px solid var(--pp-gray-200);
+  border-radius: var(--pp-radius);
+  font-weight: 600;
 }
-.parcplan-spin { animation: parcplan-spin 0.8s linear infinite; color: var(--pp-primary); }
-@keyframes parcplan-spin { to { transform: rotate(360deg); } }
 
-/* GRID */
+.parcplan-spin {
+  animation: parcplan-spin 0.8s linear infinite;
+  color: var(--pp-primary);
+}
+
+@keyframes parcplan-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════ GRILLE ═══════════ */
 .parcplan-grid-wrap {
   overflow-x: auto;
   border: 1px solid var(--pp-gray-200);
   border-radius: var(--pp-radius);
-  background: #fff;
-  box-shadow: var(--pp-shadow);
+  background: #ffffff;
+  box-shadow: var(--pp-shadow-sm);
 }
 
-.parcplan-grid { width: 100%; border-collapse: collapse; min-width: 900px; }
+.parcplan-grid-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+.parcplan-grid-wrap::-webkit-scrollbar-thumb {
+  background: var(--pp-gray-300);
+  border-radius: 4px;
+}
 
+.parcplan-grid {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 960px;
+}
+
+/* En-tête */
 .parcplan-grid thead th {
-  background: #f8fafc;
-  padding: 10px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--pp-primary-soft);
+  padding: 14px 10px;
   text-align: center;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--pp-gray-500);
-  border-bottom: 1.5px solid var(--pp-gray-200);
-  border-left: 1px solid #f1f5f9;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--pp-primary-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border-bottom: 1.5px solid var(--pp-primary-light);
+  border-left: 1px solid rgba(7, 148, 164, 0.08);
+  white-space: nowrap;
 }
 
-.parcplan-jour-nom { display: block; text-transform: uppercase; letter-spacing: 0.04em; }
-.parcplan-jour-date { display: block; font-size: 0.78rem; font-weight: 800; color: var(--pp-gray-900); margin-top: 2px; }
+.parcplan-grid thead th:first-child {
+  text-align: left;
+  padding-left: 20px;
+  padding-right: 20px;
+  border-left: none;
+  background: var(--pp-primary-soft);
+}
 
+.parcplan-jour-nom {
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+  color: var(--pp-primary-dark);
+}
+
+.parcplan-jour-date {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--pp-gray-900);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Colonne véhicule */
 .parcplan-col-vehicule {
   text-align: left !important;
-  padding: 10px 14px !important;
-  min-width: 150px;
-  background: #fff;
+  padding: 12px 20px !important;
+  min-width: 180px;
+  background: #ffffff;
   position: sticky;
   left: 0;
   z-index: 1;
   border-right: 1.5px solid var(--pp-gray-200);
+  transition: background 0.15s var(--pp-ease);
 }
 
-.parcplan-matricule { display: block; font-weight: 700; font-size: 0.85rem; color: var(--pp-gray-900); }
-.parcplan-marque { display: block; font-size: 0.72rem; color: var(--pp-gray-500); }
+.parcplan-matricule {
+  display: block;
+  font-weight: 800;
+  font-size: 0.88rem;
+  color: var(--pp-gray-900);
+  font-family: 'Courier New', ui-monospace, monospace;
+  letter-spacing: 0.02em;
+}
 
-.parcplan-col-today { background: var(--pp-primary-soft) !important; }
+.parcplan-marque {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--pp-gray-500);
+  font-weight: 600;
+  margin-top: 2px;
+}
 
-.parcplan-grid tbody tr { border-bottom: 1px solid #f1f5f9; }
-.parcplan-grid tbody tr:hover td:not(.parcplan-col-vehicule) { background: #fafbfc; }
+/* Colonne aujourd'hui */
+.parcplan-col-today {
+  background: rgba(7, 148, 164, 0.06) !important;
+  position: relative;
+}
 
+.parcplan-col-today::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--pp-primary);
+}
+
+/* Corps */
+.parcplan-grid tbody tr {
+  border-bottom: 1px solid var(--pp-gray-100);
+  transition: background 0.15s var(--pp-ease);
+}
+
+.parcplan-grid tbody tr:hover td:not(.parcplan-col-vehicule) {
+  background: rgba(7, 148, 164, 0.03);
+}
+
+.parcplan-grid tbody tr:hover .parcplan-col-vehicule {
+  background: var(--pp-primary-soft);
+}
+
+.parcplan-grid tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Cellules */
 .parcplan-cell {
   vertical-align: top;
-  padding: 6px;
-  border-left: 1px solid #f1f5f9;
-  min-width: 120px;
+  padding: 8px 8px;
+  border-left: 1px solid var(--pp-gray-100);
+  min-width: 130px;
+  transition: background 0.15s var(--pp-ease);
 }
 
-.parcplan-cell-empty { color: #cbd5e1; display: block; text-align: center; padding: 6px 0; }
+.parcplan-cell-empty {
+  color: var(--pp-gray-300);
+  display: block;
+  text-align: center;
+  padding: 8px 0;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
 
-.parcplan-cell-events { display: flex; flex-direction: column; gap: 3px; }
+.parcplan-cell-events {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
+/* ═══════════ ÉVÉNEMENTS ═══════════ */
 .parcplan-event {
-  color: #fff;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 3px 6px;
-  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 5px 8px;
+  border-radius: 7px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: default;
+  letter-spacing: -0.005em;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  transition: all 0.15s var(--pp-ease);
+  position: relative;
 }
 
-.parcplan-empty { text-align: center; padding: 40px; color: var(--pp-gray-500); }
+.parcplan-event::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+
+.parcplan-event:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px -3px rgba(15, 23, 42, 0.25);
+  filter: brightness(1.05);
+}
+
+/* Couleurs unies */
+.parcplan-event.color-blue  { background: #3b82f6; }
+.parcplan-event.color-teal  { background: #0794a4; }
+.parcplan-event.color-amber { background: #f59e0b; }
+.parcplan-event.color-red   { background: #ef4444; }
+.parcplan-event.color-slate { background: #64748b; }
+
+/* ═══════════ EMPTY / NOTE ═══════════ */
+.parcplan-empty {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--pp-gray-500);
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: var(--pp-gray-100);
+}
 
 .parcplan-note {
-  margin-top: 14px;
+  margin-top: 16px;
   font-size: 0.78rem;
   color: var(--pp-gray-500);
   font-style: italic;
+  padding: 10px 14px;
+  background: var(--pp-primary-soft);
+  border: 1px solid var(--pp-primary-light);
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-@media (max-width: 768px) {
-  .parcplan-container { padding: 16px; }
-  .parcplan-header { flex-direction: column; align-items: stretch; }
-  .parcplan-nav { justify-content: center; }
+/* ═══════════ RESPONSIVE ═══════════ */
+@media (max-width: 900px) {
+  .parcplan-container { padding: 18px; }
+
+  .parcplan-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+  }
+
+  .parcplan-nav {
+    justify-content: center;
+  }
+
+  .parcplan-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .parcplan-toggles {
+    justify-content: center;
+  }
+
+  .parcplan-grid {
+    min-width: 800px;
+  }
+
+  /* Légende en colonne */
+  .parcplan-legend {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .parcplan-legend-group-title {
+    border-right: none;
+    border-bottom: 1px solid var(--pp-gray-200);
+    padding-right: 0;
+    padding-bottom: 6px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .parcplan-container { padding: 12px; }
+
+  .parcplan-header { padding: 14px 16px; }
+  .parcplan-header h1 { font-size: 1.1rem; }
+
+  .parcplan-nav-btn { width: 34px; height: 34px; }
+  .parcplan-nav-today { height: 34px; padding: 0 12px; font-size: 0.8rem; }
+
+  .parcplan-toggle {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+
+  .parcplan-event {
+    font-size: 0.65rem;
+    padding: 4px 6px;
+  }
+
+  .parcplan-grid thead th { padding: 10px 6px; }
+  .parcplan-grid thead th:first-child { padding-left: 12px; padding-right: 12px; }
+  .parcplan-col-vehicule { padding: 10px 12px !important; min-width: 140px; }
+
+  .parcplan-legend { padding: 12px 14px; }
+  .parcplan-legend-item { font-size: 0.7rem; padding: 4px 9px; }
+  .parcplan-legend-swatch { width: 10px; height: 10px; border-radius: 3px; }
 }

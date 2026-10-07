@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, CalendarDays, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, Loader2, Route, BookmarkCheck } from 'lucide-react';
 import parcPlanningService from '../../../../services/parcPlanningService';
 import './ParcPlanning.css';
 
@@ -127,6 +127,65 @@ export default function ParcPlanning() {
           </label>
         </div>
       </div>
+
+      {/* LÉGENDE DES COULEURS — conditionnelle selon les toggles */}
+      {(afficherMissions || afficherReservations) && (
+        <div className="parcplan-legend">
+          {afficherMissions && (
+            <div className="parcplan-legend-group">
+              <span className="parcplan-legend-group-title">
+                <Route size={13} strokeWidth={2.5} />
+                Missions
+              </span>
+              <div className="parcplan-legend-items">
+                <span className="parcplan-legend-item">
+                  <span className="parcplan-legend-swatch color-blue" />
+                  Planifiée
+                </span>
+                <span className="parcplan-legend-item">
+                  <span className="parcplan-legend-swatch color-teal" />
+                  En cours
+                </span>
+                <span className="parcplan-legend-item">
+                  <span className="parcplan-legend-swatch color-slate" />
+                  Terminée
+                </span>
+                <span className="parcplan-legend-item">
+                  <span className="parcplan-legend-swatch color-red" />
+                  Annulée
+                </span>
+              </div>
+            </div>
+          )}
+
+          {afficherReservations && (
+            <div className="parcplan-legend-group">
+              <span className="parcplan-legend-group-title">
+                <BookmarkCheck size={13} strokeWidth={2.5} />
+                Réservations
+              </span>
+              <div className="parcplan-legend-items">
+                <span className="parcplan-legend-item">
+                  <span className="parcplan-legend-swatch color-amber" />
+                  En attente
+                </span>
+                <span className="parcplan-legend-item">
+                  <span className="parcplan-legend-swatch color-blue" />
+                  Acceptée
+                </span>
+                <span className="parcplan-legend-item">
+                  <span className="parcplan-legend-swatch color-red" />
+                  Refusée / Annulée
+                </span>
+                <span className="parcplan-legend-item">
+                  <span className="parcplan-legend-swatch color-slate" />
+                  Terminée
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {error && <div className="parcplan-error-banner">{error}</div>}
 

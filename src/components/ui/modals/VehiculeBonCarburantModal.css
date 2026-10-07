@@ -1,7 +1,7 @@
 
 .bmm-modal {
-  width: 900px;
-  max-width: 96vw;
+  width: 800px !important;
+  max-width: 98vw;
   max-height: 92vh;
   display: flex;
   flex-direction: column;
@@ -626,4 +626,29 @@
 .bmm-field-error {
   display: flex; align-items: center; gap: 5px; margin-top: 6px;
   font-size: 0.74rem; font-weight: 600; color: #dc2626; line-height: 1.35;
+}
+.bmm-conso-badge {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.bmm-conso-badge.anomalie {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.bmm-conso-alerte {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
 }

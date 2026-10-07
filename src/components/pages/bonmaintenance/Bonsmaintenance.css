@@ -276,14 +276,14 @@
 }
 
 /* ============================================================
-   ACTIONS BAR — carte blanche style FicheEmploye
+   ACTIONS BAR — style aligné sur BonCarburant
    ============================================================ */
 .bons-actions-bar {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-  padding: 12px 20px;
+  padding: 12px 18px;
   background: #ffffff;
   border: 1px solid var(--slate-200);
   border-radius: 16px;
@@ -293,77 +293,137 @@
 
 .bons-actions-divider {
   width: 1px;
-  height: 22px;
+  align-self: stretch;
+  min-height: 26px;
   background: var(--slate-200);
-  margin: 0 8px;
+  margin: 2px 4px;
 }
 
+/* Base bouton — identique à .vbc-action-btn */
 .bons-action-btn {
+  background: transparent;
+  border: 1.5px solid transparent;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 14px;
-  font-size: 0.88rem;
+  padding: 9px 14px;
+  font-size: 0.86rem;
   font-weight: 700;
-  font-family: inherit;
   cursor: pointer;
-  border-radius: 8px;
-  border: none;
-  background: transparent;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 10px;
+  transition: all 0.18s ease;
+  color: #475569;
+  font-family: inherit;
   white-space: nowrap;
 }
 
-.bons-action-btn.disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  pointer-events: none;
+.bons-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
+.bons-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Ajouter — teal plein (bouton principal) ─── */
+.bons-action-btn.ajouter {
+  background: #0794a4;
+  color: #ffffff;
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
+}
+.bons-action-btn.ajouter:hover:not(.disabled) {
+  background: #067a87;
+  box-shadow: 0 10px 22px -6px rgba(7, 148, 164, 0.6);
 }
 
-.bons-action-btn.ajouter              { color: var(--green-600); }
-.bons-action-btn.ajouter:hover        { background: #ecfdf5; }
+/* ─── Modifier — orange ─── */
+.bons-action-btn.modifier { color: #ea580c; }
+.bons-action-btn.modifier:hover:not(.disabled) {
+  background: #fff7ed;
+  border-color: #fed7aa;
+}
 
-.bons-action-btn.modifier             { color: var(--blue-600); }
-.bons-action-btn.modifier:hover:not(.disabled) { background: #eff6ff; }
+/* ─── Détails — teal ─── */
+.bons-action-btn.details { color: #0794a4; }
+.bons-action-btn.details:hover:not(.disabled) {
+  background: #e9f8fa;
+  border-color: #d5f0f3;
+}
 
-.bons-action-btn.details              { color: var(--teal-600); }
-.bons-action-btn.details:hover:not(.disabled)  { background: var(--teal-50); }
+/* ─── Demander — bleu ─── */
+.bons-action-btn.demander { color: #0284c7; }
+.bons-action-btn.demander:hover:not(.disabled) {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
 
-.bons-action-btn.supprimer            { color: var(--red-600); }
-.bons-action-btn.supprimer:hover:not(.disabled) { background: #fef2f2; }
-
-.bons-action-btn.demander             { color: var(--blue-600); }
-.bons-action-btn.demander:hover:not(.disabled) { background: #eff6ff; }
-
-.bons-action-btn.commander            { color: var(--teal-700); }
-.bons-action-btn.commander:hover:not(.disabled) { background: var(--teal-50); }
-
+/* Demander — état "allumé" (action disponible) */
 .bons-action-btn.demander.allume {
-  background: var(--blue-100);
-  color: #1d4ed8;
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #075985;
 }
 
+/* ─── Demandes — slate ─── */
+.bons-action-btn.demandes { color: #475569; }
+.bons-action-btn.demandes:hover:not(.disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* ─── Commander — teal foncé ─── */
+.bons-action-btn.commander { color: #067a87; }
+.bons-action-btn.commander:hover:not(.disabled) {
+  background: #e9f8fa;
+  border-color: #d5f0f3;
+}
+
+/* Commander — état "allumé" */
 .bons-action-btn.commander.allume {
-  background: var(--teal-100);
-  color: var(--teal-800);
+  background: #d5f0f3;
+  border-color: #a8e0e6;
+  color: #067a87;
 }
 
-.bons-action-btn.demarrer             { color: var(--blue-600); }
-.bons-action-btn.demarrer:hover:not(.disabled) { background: #eff6ff; }
+/* ─── Supprimer — rouge ─── */
+.bons-action-btn.supprimer { color: #e11d48; }
+.bons-action-btn.supprimer:hover:not(.disabled) {
+  background: #fff1f2;
+  border-color: #fecdd3;
+}
 
-.bons-action-btn.reprendre            { color: var(--teal-700); }
-.bons-action-btn.reprendre:hover:not(.disabled) { background: var(--teal-50); }
+/* ─── Transitions d'état ─── */
+.bons-action-btn.demarrer { color: #0284c7; }
+.bons-action-btn.demarrer:hover:not(.disabled) {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
 
-.bons-action-btn.suspendre            { color: var(--amber-700); }
-.bons-action-btn.suspendre:hover:not(.disabled) { background: var(--amber-50); }
+.bons-action-btn.reprendre { color: #067a87; }
+.bons-action-btn.reprendre:hover:not(.disabled) {
+  background: #e9f8fa;
+  border-color: #d5f0f3;
+}
 
-.bons-action-btn.effectuer            { color: var(--green-600); }
-.bons-action-btn.effectuer:hover:not(.disabled) { background: #ecfdf5; }
+.bons-action-btn.suspendre { color: #b45309; }
+.bons-action-btn.suspendre:hover:not(.disabled) {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
 
-.bons-action-btn.annuler              { color: var(--slate-500); }
-.bons-action-btn.annuler:hover:not(.disabled)   { background: var(--slate-100); }
+.bons-action-btn.effectuer { color: #16a34a; }
+.bons-action-btn.effectuer:hover:not(.disabled) {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
 
-.bons-terminal-state { display: flex; align-items: center; padding: 4px 0; }
+.bons-action-btn.annuler { color: #64748b; }
+.bons-action-btn.annuler:hover:not(.disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+/* ─── Terminal state / pas de sélection ─── */
+.bons-terminal-state {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+}
 
 .bons-terminal-badge {
   display: inline-flex;
@@ -372,10 +432,10 @@
   background: var(--slate-100);
   color: var(--slate-500);
   padding: 8px 14px;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 700;
   font-size: 0.82rem;
-  border: 1px solid var(--slate-200);
+  border: 1.5px solid var(--slate-200);
 }
 
 .bons-no-selection-message {

@@ -127,7 +127,22 @@ const vehiculeBonCarburantService = {
     );
 
     return data;
-  }
+  },
+
+  async getConsommation(bonId) {
+    const { data } = await api.get(`/vehicule-bon-carburant/${bonId}/consommation`);
+    return data;
+  },
+
+  async getConsommationsByVehicule(vehiculeId) {
+    const { data } = await api.get(`/vehicule-bon-carburant/vehicule/${vehiculeId}/consommations`);
+    return data;
+  },
+
+  async getConsommationMoyenne(vehiculeId) {
+    const { data } = await api.get(`/vehicule-bon-carburant/vehicule/${vehiculeId}/consommation-moyenne`);
+    return data;
+  },
 };
 
 export default vehiculeBonCarburantService;

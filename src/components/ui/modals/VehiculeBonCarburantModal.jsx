@@ -1,10 +1,21 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
 import vehiculeService from '../../../services/vehiculeService';
 import personnelService from '../../../services/personnelService';
+import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
+import { CARBURANT_TYPE_OPTIONS } from '../../../constants/carburantType';
 import {
-  Fuel, X, Car, User, Calendar, Gauge, Coins,
-  Loader2, AlertTriangle, Save,
+  Fuel,
+  X,
+  Car,
+  User,
+  Calendar,
+  Gauge,
+  Coins,
+  Loader2,
+  AlertTriangle,
+  Save,
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeBonCarburantModal.css';
@@ -15,30 +26,48 @@ const emptyForm = {
   date: '',
   montant: '',
   kilometrage: '',
+  litres: '',
+  typeCarburant: '',
+  station: '',
 };
 
 // ─── Sections de navigation ───
 const NAV_SECTIONS = [
   { id: 'identification', label: 'Identification', Icon: Car },
-  { id: 'details',        label: 'Détails',        Icon: Fuel },
+  { id: 'details', label: 'Détails', Icon: Fuel },
 ];
 
 function toInputDateTime(iso) {
   if (!iso) return '';
+
   const s = String(iso);
-  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) return s;
+
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s)) {
+    return s;
+  }
+
   const d = new Date(s);
+
   if (isNaN(d.getTime())) return '';
+
   const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+    d.getDate()
+  )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEditing }) => {
+const VehiculeBonCarburantModal = ({
+  isOpen,
+  onClose,
+  onSave,
+  bonCarburant,
+  isEditing,
+}) => {
   const [formData, setFormData] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ✅ REMPLACE (pas de currentStep ici) par activeSection
   const [activeSection, setActiveSection] = useState('identification');
 
   const [vehicules, setVehicules] = useState([]);
@@ -47,11 +76,14 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
   const [personnels, setPersonnels] = useState([]);
   const [loadingPersonnels, setLoadingPersonnels] = useState(false);
 
+  const [consommation, setConsommation] = useState(null);
+
   useEffect(() => {
     if (!isOpen) return;
 
     const fetchVehicules = async () => {
       setLoadingVehicules(true);
+
       try {
         const page = await vehiculeService.getAll(0, 300);
         setVehicules(page.content ?? []);
@@ -65,6 +97,7 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
 
     const fetchPersonnels = async () => {
       setLoadingPersonnels(true);
+
       try {
         const page = await personnelService.getAll(0, 300);
         setPersonnels(page.content ?? []);
@@ -93,6 +126,9 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
         date: toInputDateTime(bonCarburant.date),
         montant: bonCarburant.montant ?? '',
         kilometrage: bonCarburant.kilometrage ?? '',
+        litres: bonCarburant.litres ?? '',
+        typeCarburant: bonCarburant.typeCarburant ?? '',
+        station: bonCarburant.station ?? '',
       });
     } else {
       setFormData({
@@ -102,14 +138,31 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
     }
   }, [isOpen, bonCarburant, isEditing]);
 
+  // Consommation déjà enregistrée pour ce bon.
+  // Disponible uniquement en édition : un bon pas encore créé
+  // n'a pas d'historique à comparer.
+  useEffect(() => {
+    if (!isOpen || !isEditing || !bonCarburant?.id) {
+      setConsommation(null);
+      return;
+    }
+
+    vehiculeBonCarburantService
+      .getConsommation(bonCarburant.id)
+      .then(setConsommation)
+      .catch(() => setConsommation(null));
+  }, [isOpen, isEditing, bonCarburant?.id]);
+
   /**
    * Kilométrage actuel du véhicule sélectionné : plancher de saisie.
    * Le bon carburant est une source de kilométrage réel, le relevé ne peut
-   * donc pas être inférieur au compteur du véhicule. Le contrôle définitif
-   * est fait côté serveur (409), celui-ci n'est qu'un garde-fou de saisie.
+   * donc pas être inférieur au compteur du véhicule.
    */
   const kmVehicule = useMemo(() => {
-    const veh = vehicules.find((v) => String(v.id) === String(formData.vehiculeId));
+    const veh = vehicules.find(
+      (v) => String(v.id) === String(formData.vehiculeId)
+    );
+
     return veh?.kilometrage ?? null;
   }, [formData.vehiculeId, vehicules]);
 
@@ -120,7 +173,12 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
     setError(null);
   };
 
@@ -132,15 +190,17 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
       setActiveSection('identification');
       return;
     }
+
     if (!formData.date) {
       setError('La date est obligatoire.');
       setActiveSection('details');
       return;
     }
+
     if (kmInvalide) {
       setError(
         `Le kilométrage saisi (${formData.kilometrage} km) est inférieur au ` +
-        `compteur actuel du véhicule (${kmVehicule} km). Un compteur ne recule jamais.`
+          `compteur actuel du véhicule (${kmVehicule} km). Un compteur ne recule jamais.`
       );
       setActiveSection('details');
       return;
@@ -148,18 +208,36 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
 
     setLoading(true);
     setError(null);
+
     try {
       const payload = {
         vehiculeId: Number(formData.vehiculeId),
-        personnelId: formData.personnelId === '' ? null : Number(formData.personnelId),
+        personnelId:
+          formData.personnelId === ''
+            ? null
+            : Number(formData.personnelId),
         date: formData.date || null,
-        montant: formData.montant === '' ? null : Number(formData.montant),
-        kilometrage: formData.kilometrage === '' ? null : Number(formData.kilometrage),
+        montant:
+          formData.montant === '' ? null : Number(formData.montant),
+        kilometrage:
+          formData.kilometrage === ''
+            ? null
+            : Number(formData.kilometrage),
+        litres:
+          formData.litres === '' ? null : Number(formData.litres),
+        typeCarburant:
+          formData.typeCarburant === ''
+            ? null
+            : Number(formData.typeCarburant),
+        station: formData.station.trim() || null,
       };
+
       await onSave(payload);
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || "Échec de l'enregistrement.");
+      setError(
+        err.response?.data?.message || "Échec de l'enregistrement."
+      );
       console.error(err);
     } finally {
       setLoading(false);
@@ -168,16 +246,28 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
 
   if (!isOpen) return null;
 
-  const vehiculeLabel = vehicules.find((v) => String(v.id) === String(formData.vehiculeId));
-  const personnelLabel = personnels.find((p) => String(p.id) === String(formData.personnelId));
+  const vehiculeLabel = vehicules.find(
+    (v) => String(v.id) === String(formData.vehiculeId)
+  );
+
+  const personnelLabel = personnels.find(
+    (p) => String(p.id) === String(formData.personnelId)
+  );
 
   // ─── Badges compteurs par section ───
   const sectionCounts = {
-    identification: [formData.vehiculeId, formData.personnelId].filter(Boolean).length,
+    identification: [
+      formData.vehiculeId,
+      formData.personnelId,
+    ].filter(Boolean).length,
+
     details: [
       formData.date,
       formData.montant,
       formData.kilometrage,
+      formData.litres,
+      formData.typeCarburant,
+      formData.station,
     ].filter((v) => v !== '' && v != null).length,
   };
 
@@ -197,6 +287,7 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
                 <label htmlFor="vbc-vehicule">
                   Véhicule <span className="bmm-required">*</span>
                 </label>
+
                 <select
                   id="vbc-vehicule"
                   name="vehiculeId"
@@ -205,27 +296,43 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
                   disabled={loadingVehicules}
                 >
                   <option value="">
-                    {loadingVehicules ? 'Chargement...' : 'Sélectionner un véhicule...'}
+                    {loadingVehicules
+                      ? 'Chargement...'
+                      : 'Sélectionner un véhicule...'}
                   </option>
+
                   {vehicules.map((v) => (
                     <option key={v.id} value={v.id}>
-                      {v.matricule || `Véhicule #${v.id}`}{v.marque ? ` — ${v.marque}` : ''}
+                      {v.matricule || `Véhicule #${v.id}`}
+                      {v.marque ? ` — ${v.marque}` : ''}
                     </option>
                   ))}
                 </select>
+
                 {vehiculeLabel && (
                   <p className="bmm-hint">
                     {vehiculeLabel.matricule}
-                    {vehiculeLabel.marque ? ` — ${vehiculeLabel.marque}` : ''}
+                    {vehiculeLabel.marque
+                      ? ` — ${vehiculeLabel.marque}`
+                      : ''}
                   </p>
                 )}
+
                 {!loadingVehicules && vehicules.length === 0 && (
-                  <p className="bmm-hint" style={{ color: '#b45309' }}>Aucun véhicule trouvé.</p>
+                  <p
+                    className="bmm-hint"
+                    style={{ color: '#b45309' }}
+                  >
+                    Aucun véhicule trouvé.
+                  </p>
                 )}
               </div>
 
               <div className="bmm-field bmm-field--full">
-                <label htmlFor="vbc-personnel">Conducteur</label>
+                <label htmlFor="vbc-personnel">
+                  Conducteur
+                </label>
+
                 <select
                   id="vbc-personnel"
                   name="personnelId"
@@ -234,14 +341,19 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
                   disabled={loadingPersonnels}
                 >
                   <option value="">
-                    {loadingPersonnels ? 'Chargement...' : '— Non affecté —'}
+                    {loadingPersonnels
+                      ? 'Chargement...'
+                      : '— Non affecté —'}
                   </option>
+
                   {personnels.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.nom} {p.prenom}{p.matricule ? ` (${p.matricule})` : ''}
+                      {p.nom} {p.prenom}
+                      {p.matricule ? ` (${p.matricule})` : ''}
                     </option>
                   ))}
                 </select>
+
                 {personnelLabel && (
                   <p className="bmm-hint">
                     {personnelLabel.nom} {personnelLabel.prenom}
@@ -257,7 +369,10 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
               <h3>Détails du bon</h3>
-              <p>Date, montant et kilométrage au moment du plein</p>
+              <p>
+                Date, montant, kilométrage et informations du
+                plein
+              </p>
             </div>
 
             <div className="bmm-grid">
@@ -265,6 +380,7 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
                 <label htmlFor="vbc-date">
                   Date <span className="bmm-required">*</span>
                 </label>
+
                 <input
                   id="vbc-date"
                   type="datetime-local"
@@ -276,10 +392,12 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
 
               <div className="bmm-field">
                 <label htmlFor="vbc-montant">Montant</label>
+
                 <div className="bmm-km-card bmm-km-card--inline">
                   <span className="bmm-km-label">
                     <Coins size={14} strokeWidth={2.5} />
                   </span>
+
                   <input
                     id="vbc-montant"
                     type="number"
@@ -290,16 +408,19 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
                     onChange={handleChange}
                     placeholder="0.00"
                   />
+
                   <span className="bmm-km-unit">DT</span>
                 </div>
               </div>
 
               <div className="bmm-field">
                 <label htmlFor="vbc-km">Kilométrage</label>
+
                 <div className="bmm-km-card bmm-km-card--inline">
                   <span className="bmm-km-label">
                     <Gauge size={14} strokeWidth={2.5} />
                   </span>
+
                   <input
                     id="vbc-km"
                     type="number"
@@ -308,61 +429,247 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
                     name="kilometrage"
                     value={formData.kilometrage}
                     onChange={handleChange}
-                    placeholder={kmVehicule != null ? String(kmVehicule) : '0'}
-                    className={kmInvalide ? 'bmm-input-invalid' : ''}
+                    placeholder={
+                      kmVehicule != null
+                        ? String(kmVehicule)
+                        : '0'
+                    }
+                    className={
+                      kmInvalide
+                        ? 'bmm-input-invalid'
+                        : ''
+                    }
                   />
+
                   <span className="bmm-km-unit">km</span>
                 </div>
 
                 {kmVehicule != null && !kmInvalide && (
                   <small className="bmm-field-hint">
-                    Compteur actuel du véhicule : {Number(kmVehicule).toLocaleString('fr-FR')} km.
-                    Ce relevé mettra à jour le kilométrage du véhicule.
+                    Compteur actuel du véhicule :{' '}
+                    {Number(kmVehicule).toLocaleString('fr-FR')}{' '}
+                    km. Ce relevé mettra à jour le kilométrage
+                    du véhicule.
                   </small>
                 )}
 
                 {kmInvalide && (
                   <small className="bmm-field-error">
-                    <AlertTriangle size={12} strokeWidth={2.5} />
-                    Le relevé ne peut pas être inférieur au compteur du véhicule
-                    ({Number(kmVehicule).toLocaleString('fr-FR')} km).
+                    <AlertTriangle
+                      size={12}
+                      strokeWidth={2.5}
+                    />
+                    Le relevé ne peut pas être inférieur au
+                    compteur du véhicule (
+                    {Number(kmVehicule).toLocaleString(
+                      'fr-FR'
+                    )}{' '}
+                    km).
                   </small>
                 )}
               </div>
+
+              <div className="bmm-field">
+                <label htmlFor="vbc-litres">Litres</label>
+
+                <input
+                  id="vbc-litres"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  name="litres"
+                  value={formData.litres}
+                  onChange={handleChange}
+                  placeholder="0.00"
+                />
+              </div>
+
+              <div className="bmm-field">
+                <label htmlFor="vbc-type">
+                  Type de carburant
+                </label>
+
+                <select
+                  id="vbc-type"
+                  name="typeCarburant"
+                  value={formData.typeCarburant}
+                  onChange={handleChange}
+                >
+                  <option value="">—</option>
+
+                  {CARBURANT_TYPE_OPTIONS.map((opt) => (
+                    <option
+                      key={opt.value}
+                      value={opt.value}
+                    >
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bmm-field">
+                <label htmlFor="vbc-station">Station</label>
+
+                <input
+                  id="vbc-station"
+                  type="text"
+                  name="station"
+                  value={formData.station}
+                  onChange={handleChange}
+                  placeholder="Nom de la station"
+                />
+              </div>
+
+              {consommation && (
+                <div
+                  className={`bmm-conso-badge ${
+                    consommation.anomalie
+                      ? 'anomalie'
+                      : ''
+                  }`}
+                >
+                  {consommation.consommationL100km != null ? (
+                    <>
+                      <strong>
+                        {consommation.consommationL100km.toFixed(
+                          1
+                        )}{' '}
+                        L/100km
+                      </strong>
+
+                      {consommation.moyenneVehiculeL100km !=
+                        null && (
+                        <span>
+                          {' '}
+                          (moyenne véhicule :{' '}
+                          {consommation.moyenneVehiculeL100km.toFixed(
+                            1
+                          )}{' '}
+                          L/100km)
+                        </span>
+                      )}
+
+                      {consommation.anomalie && (
+                        <span className="bmm-conso-alerte">
+                          <AlertTriangle
+                            size={13}
+                            strokeWidth={2.5}
+                          />
+                          Consommation anormale
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span>
+                      Consommation non calculable (premier
+                      plein ou litres manquants sur un plein
+                      précédent).
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Récapitulatif */}
             <div className="bmm-summary">
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Véhicule</span>
+                <span className="bmm-summary-label">
+                  Véhicule
+                </span>
+
                 <span className="bmm-summary-value">
                   {vehiculeLabel
-                    ? `${vehiculeLabel.matricule || ''}${vehiculeLabel.marque ? ` — ${vehiculeLabel.marque}` : ''}`.trim()
+                    ? `${vehiculeLabel.matricule || ''}${
+                        vehiculeLabel.marque
+                          ? ` — ${vehiculeLabel.marque}`
+                          : ''
+                      }`.trim()
                     : '—'}
                 </span>
               </div>
+
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Conducteur</span>
+                <span className="bmm-summary-label">
+                  Conducteur
+                </span>
+
                 <span className="bmm-summary-value">
                   {personnelLabel
                     ? `${personnelLabel.nom} ${personnelLabel.prenom}`
                     : '—'}
                 </span>
               </div>
+
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Date</span>
-                <span className="bmm-summary-value">{formData.date || '—'}</span>
-              </div>
-              <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Montant</span>
+                <span className="bmm-summary-label">
+                  Date
+                </span>
+
                 <span className="bmm-summary-value">
-                  {formData.montant !== '' ? `${formData.montant} DT` : '—'}
+                  {formData.date || '—'}
                 </span>
               </div>
+
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Kilométrage</span>
+                <span className="bmm-summary-label">
+                  Montant
+                </span>
+
                 <span className="bmm-summary-value">
-                  {formData.kilometrage !== '' ? `${formData.kilometrage} km` : '—'}
+                  {formData.montant !== ''
+                    ? `${formData.montant} DT`
+                    : '—'}
+                </span>
+              </div>
+
+              <div className="bmm-summary-row">
+                <span className="bmm-summary-label">
+                  Kilométrage
+                </span>
+
+                <span className="bmm-summary-value">
+                  {formData.kilometrage !== ''
+                    ? `${formData.kilometrage} km`
+                    : '—'}
+                </span>
+              </div>
+
+              <div className="bmm-summary-row">
+                <span className="bmm-summary-label">
+                  Litres
+                </span>
+
+                <span className="bmm-summary-value">
+                  {formData.litres !== ''
+                    ? `${formData.litres} L`
+                    : '—'}
+                </span>
+              </div>
+
+              <div className="bmm-summary-row">
+                <span className="bmm-summary-label">
+                  Type de carburant
+                </span>
+
+                <span className="bmm-summary-value">
+                  {formData.typeCarburant !== ''
+                    ? CARBURANT_TYPE_OPTIONS.find(
+                        (opt) =>
+                          String(opt.value) ===
+                          String(formData.typeCarburant)
+                      )?.label || '—'
+                    : '—'}
+                </span>
+              </div>
+
+              <div className="bmm-summary-row">
+                <span className="bmm-summary-label">
+                  Station
+                </span>
+
+                <span className="bmm-summary-value">
+                  {formData.station || '—'}
                 </span>
               </div>
             </div>
@@ -376,27 +683,40 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="bmm-modal bmm-modal--sm" onClick={(e) => e.stopPropagation()}>
-
+      <div
+        className="bmm-modal bmm-modal--sm"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* HEADER */}
         <div className="bmm-header">
           <div className="bmm-header-left">
             <div className="bmm-header-icon-wrap">
               <Fuel size={22} strokeWidth={2} />
             </div>
+
             <div>
               <span className="bmm-eyebrow">
-                {isEditing ? 'Modification' : 'Nouvelle entrée'}
+                {isEditing
+                  ? 'Modification'
+                  : 'Nouvelle entrée'}
               </span>
-              <h2>{isEditing ? 'Modifier le bon carburant' : 'Nouveau bon carburant'}</h2>
+
+              <h2>
+                {isEditing
+                  ? 'Modifier le bon carburant'
+                  : 'Nouveau bon carburant'}
+              </h2>
             </div>
           </div>
+
           <div className="bmm-header-right">
             {vehiculeLabel && (
               <span className="bmm-mode-badge">
-                {vehiculeLabel.matricule || `#${vehiculeLabel.id}`}
+                {vehiculeLabel.matricule ||
+                  `#${vehiculeLabel.id}`}
               </span>
             )}
+
             <button
               type="button"
               className="bmm-close-btn"
@@ -409,32 +729,50 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
         </div>
 
         {/* LAYOUT SPLIT : NAV + CONTENU */}
-        <form className="bmm-layout" onSubmit={handleSubmit}>
-
+        <form
+          className="bmm-layout"
+          onSubmit={handleSubmit}
+        >
           {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
-            <div className="bmm-nav-title">Sections</div>
+            <div className="bmm-nav-title">
+              Sections
+            </div>
+
             <nav className="bmm-nav-list">
               {NAV_SECTIONS.map((s) => {
-                const isActive = activeSection === s.id;
+                const isActive =
+                  activeSection === s.id;
                 const count = sectionCounts[s.id];
                 const Icon = s.Icon;
+
                 return (
                   <button
                     key={s.id}
                     type="button"
-                    className={`bmm-nav-item ${isActive ? 'active' : ''}`}
+                    className={`bmm-nav-item ${
+                      isActive ? 'active' : ''
+                    }`}
                     onClick={() => {
                       setError(null);
                       setActiveSection(s.id);
                     }}
                   >
                     <span className="bmm-nav-item-icon">
-                      <Icon size={15} strokeWidth={2.3} />
+                      <Icon
+                        size={15}
+                        strokeWidth={2.3}
+                      />
                     </span>
-                    <span className="bmm-nav-item-label">{s.label}</span>
+
+                    <span className="bmm-nav-item-label">
+                      {s.label}
+                    </span>
+
                     {count != null && count > 0 && (
-                      <span className="bmm-nav-item-count">{count}</span>
+                      <span className="bmm-nav-item-count">
+                        {count}
+                      </span>
                     )}
                   </button>
                 );
@@ -448,7 +786,11 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
 
             {error && (
               <div className="bmm-error">
-                <AlertTriangle size={16} strokeWidth={2.5} />
+                <AlertTriangle
+                  size={16}
+                  strokeWidth={2.5}
+                />
+
                 <span>{error}</span>
               </div>
             )}
@@ -459,29 +801,54 @@ const VehiculeBonCarburantModal = ({ isOpen, onClose, onSave, bonCarburant, isEd
         <div className="bmm-footer">
           <div className="bmm-footer-left">
             <span className="bmm-footer-step">
-              {NAV_SECTIONS.findIndex((s) => s.id === activeSection) + 1} / {NAV_SECTIONS.length}
+              {NAV_SECTIONS.findIndex(
+                (s) => s.id === activeSection
+              ) + 1}{' '}
+              / {NAV_SECTIONS.length}
             </span>
           </div>
+
           <div className="bmm-footer-right">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              disabled={loading}
+            >
               Annuler
             </Button>
-            <Button type="button" variant="primary" onClick={handleSubmit} disabled={loading || kmInvalide}>
+
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleSubmit}
+              disabled={loading || kmInvalide}
+            >
               {loading ? (
                 <>
-                  <Loader2 size={16} strokeWidth={2.5} className="bmm-spin" style={{ marginRight: 6 }} />
+                  <Loader2
+                    size={16}
+                    strokeWidth={2.5}
+                    className="bmm-spin"
+                    style={{ marginRight: 6 }}
+                  />
                   Enregistrement...
                 </>
               ) : (
                 <>
-                  <Save size={16} strokeWidth={2.5} style={{ marginRight: 6 }} />
-                  {isEditing ? 'Mettre à jour' : 'Créer le bon'}
+                  <Save
+                    size={16}
+                    strokeWidth={2.5}
+                    style={{ marginRight: 6 }}
+                  />
+                  {isEditing
+                    ? 'Mettre à jour'
+                    : 'Créer le bon'}
                 </>
               )}
             </Button>
           </div>
         </div>
-
       </div>
     </div>
   );
