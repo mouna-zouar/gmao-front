@@ -29,6 +29,7 @@ import {
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
+import emplacementService from '../../../../services/emplacementService';
 import VehiculeMissionModal from '../../../ui/modals/VehiculeMissionModal';
 import PageModal from '../../../ui/modals/PageModal';
 import VehiculeTracage from './VehiculeTracage';
@@ -60,6 +61,11 @@ function formatDate(iso) {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function destinationLabel(mission, emplacementsMap) {
+  const emp = emplacementsMap[mission.destinationId];
+  return emp?.nom || mission.destination || mission.lieu || '';
 }
 
 function formatDateTime(iso) {
@@ -101,6 +107,7 @@ export default function VehiculeMissions() {
 
   const [vehiculesMap, setVehiculesMap] = useState({});
   const [personnelsMap, setPersonnelsMap] = useState({});
+  const [emplacementsMap, setEmplacementsMap] = useState({});
 
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -121,10 +128,11 @@ export default function VehiculeMissions() {
     setLoading(true);
     setError(null);
     try {
-      const [page, vehPage, persPage] = await Promise.all([
+      const [page, vehPage, persPage, empPage] = await Promise.all([
         vehiculeMissionService.getAll(0, 100),
         vehiculeService.getAll(0, 500),
         personnelService.getAll(0, 500),
+        emplacementService.getAll(0, 500).catch(() => ({ content: [] })),
       ]);
 
       setMissions(page.content ?? []);
@@ -136,6 +144,10 @@ export default function VehiculeMissions() {
       const pMap = {};
       (persPage.content ?? []).forEach((p) => { pMap[p.id] = p; });
       setPersonnelsMap(pMap);
+
+      const eMap = {};
+      (empPage.content ?? empPage ?? []).forEach((e) => { eMap[e.id] = e; });
+      setEmplacementsMap(eMap);
     } catch (err) {
       console.error(err);
       setError("Impossible de charger les missions. Vérifie que le serveur est bien lancé.");
@@ -173,7 +185,7 @@ export default function VehiculeMissions() {
       case 'conducteur':  return [pers?.nom, pers?.prenom, pers?.matricule].filter(Boolean).join(' ');
       case 'depart':      return formatDateTime(m.dateDepart || m.dateDebut);
       case 'retour':      return formatDateTime(m.dateRetour || m.dateFin);
-      case 'destination': return [m.destination, m.lieu, m.localisation].filter(Boolean).join(' ');
+      case 'destination': return [destinationLabel(m, emplacementsMap), m.localisation].filter(Boolean).join(' ');
       case 'parcourus':   return m.kilometrageParcouru != null ? String(m.kilometrageParcouru) : '';
       case 'etat':        return etatLabel(m.etat);
       default:            return '';
@@ -191,7 +203,7 @@ export default function VehiculeMissions() {
       case 'conducteur':  return pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '';
       case 'depart':      return time(m.dateDepart || m.dateDebut);
       case 'retour':      return time(m.dateRetour || m.dateFin);
-      case 'destination': return m.destination || m.lieu || '';
+      case 'destination': return destinationLabel(m, emplacementsMap);
       case 'parcourus':   return Number(m.kilometrageParcouru ?? m.kilometrageDepart ?? -1);
       case 'etat':        return Number(m.etat ?? -1);
       default:            return '';
@@ -313,14 +325,14 @@ export default function VehiculeMissions() {
         return (
           <td key="destination">
             <div className="vms-cell-destination">
-              <span>{m.destination || m.lieu || '—'}</span>
+              <span>{destinationLabel(m, emplacementsMap) || '—'}</span>
               {hasCoords && (
                 <a
-                  href={`https://www.google.com/maps?q=${m.latitude},${m.longitude}`}
+                  href={`https://www.openstreetmap.org/?mlat=${m.latitude}&mlon=${m.longitude}#map=16/${m.latitude}/${m.longitude}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="vms-cell-map-link"
-                  title="Voir sur Google Maps"
+                  title="Voir sur OpenStreetMap"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MapPin size={13} strokeWidth={2.5} />
@@ -453,7 +465,7 @@ export default function VehiculeMissions() {
         (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—').replace(/"/g, '""'),
         formatDateTime(m.dateDepart || m.dateDebut),
         formatDateTime(m.dateRetour || m.dateFin),
-        (m.destination || m.lieu || '—').replace(/"/g, '""'),
+        (destinationLabel(m, emplacementsMap) || '—').replace(/"/g, '""'),
         (m.localisation || '—').replace(/"/g, '""'),
         m.kilometrageParcouru != null ? String(m.kilometrageParcouru) : '—',
         etatLabel(m.etat),

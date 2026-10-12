@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import planningService from '../../../services/planningService';
 import './PlanningTechnicien.css';
+import { t, tp, locale } from '../../../i18n';
 
 const ETAT_LABELS = { 0: 'Nouveau', 1: 'En cours', 2: 'Terminé', 10: 'Annulé' };
 const PAGE_SIZE_OPTIONS = [6, 12, 24, 48];
@@ -21,7 +22,7 @@ function formatHeure(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 function todayInputValue() {
@@ -57,7 +58,7 @@ export default function PlanningTechnicien() {
       .then((data) => setTechniciens(data ?? []))
       .catch((err) => {
         console.error('Erreur chargement planning techniciens :', err);
-        setError("Impossible de charger le planning des techniciens.");
+        setError(t('Impossible de charger le planning des techniciens.'));
         setTechniciens([]);
       })
       .finally(() => setLoading(false));
@@ -72,12 +73,13 @@ export default function PlanningTechnicien() {
   const filtered = useMemo(() => {
     const q = normalize(search.trim());
     if (!q) return techniciens;
-    return techniciens.filter((t) => {
-      if (normalize(t.personnelNom).includes(q)) return true;
-      return (t.creneaux ?? []).some((c) =>
+    return techniciens.filter((tech) => {
+      if (normalize(tech.personnelNom).includes(q)) return true;
+      return (tech.creneaux ?? []).some((c) =>
         normalize(c.bonMaintenanceNum).includes(q) ||
         normalize(c.equipementNom).includes(q) ||
-        normalize(ETAT_LABELS[c.etat] || '').includes(q)
+        normalize(ETAT_LABELS[c.etat] || '').includes(q) ||
+        normalize(ETAT_LABELS[c.etat] ? t(ETAT_LABELS[c.etat]) : '').includes(q)
       );
     });
   }, [techniciens, search]);
@@ -105,8 +107,8 @@ export default function PlanningTechnicien() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
           </svg>
           <div>
-            <h2>Planning technicien</h2>
-            <p>Interventions planifiées, par technicien</p>
+            <h2>{t('Planning technicien')}</h2>
+            <p>{t('Interventions planifiées, par technicien')}</p>
           </div>
         </div>
 
@@ -127,7 +129,7 @@ export default function PlanningTechnicien() {
           <input
             type="text"
             className="pt-search-input"
-            placeholder="Rechercher un technicien, un BON, un équipement…"
+            placeholder={t('Rechercher un technicien, un BON, un équipement…')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -136,8 +138,8 @@ export default function PlanningTechnicien() {
               type="button"
               className="pt-search-clear"
               onClick={handleClearSearch}
-              aria-label="Effacer la recherche"
-              title="Effacer"
+              aria-label={t('Effacer la recherche')}
+              title={t('Effacer')}
             >
               ×
             </button>
@@ -146,47 +148,47 @@ export default function PlanningTechnicien() {
 
         <div className="pt-toolbar-meta">
           <span className="pt-result-count">
-            {filtered.length} technicien{filtered.length > 1 ? 's' : ''}
+            {tp('technicien', filtered.length)}
           </span>
         </div>
       </div>
 
       <div className="pt-legend">
-        <span className="pt-legend-item"><span className="pt-dot pt-dot--dispo" /> Disponible</span>
-        <span className="pt-legend-item"><span className="pt-dot pt-dot--occupe" /> En intervention</span>
+        <span className="pt-legend-item"><span className="pt-dot pt-dot--dispo" /> {t('Disponible')}</span>
+        <span className="pt-legend-item"><span className="pt-dot pt-dot--occupe" /> {t('En intervention')}</span>
       </div>
 
       {loading ? (
-        <p className="pt-empty">Chargement...</p>
+        <p className="pt-empty">{t('Chargement...')}</p>
       ) : error ? (
         <p className="pt-empty pt-error">{error}</p>
       ) : techniciens.length === 0 ? (
-        <p className="pt-empty">Aucune intervention planifiée pour cette date.</p>
+        <p className="pt-empty">{t('Aucune intervention planifiée pour cette date.')}</p>
       ) : filtered.length === 0 ? (
         <div className="pt-empty pt-empty-filter">
-          <p>Aucun technicien ne correspond à « <strong>{search}</strong> ».</p>
+          <p>{t('Aucun technicien ne correspond à')} « <strong>{search}</strong> ».</p>
           <button type="button" className="pt-btn pt-btn--ghost" onClick={handleClearSearch}>
-            Réinitialiser la recherche
+            {t('Réinitialiser la recherche')}
           </button>
         </div>
       ) : (
         <>
           <div className="pt-grid">
-            {paginated.map((t) => (
-              <div key={t.personnelId} className="pt-card">
+            {paginated.map((tech) => (
+              <div key={tech.personnelId} className="pt-card">
                 <div className="pt-card-header">
-                  <span className={`pt-status-dot ${t.enIntervention ? 'pt-dot--occupe' : 'pt-dot--dispo'}`} />
-                  <span className="pt-technicien-nom">{t.personnelNom}</span>
-                  <span className={`pt-status-label ${t.enIntervention ? 'occupe' : 'dispo'}`}>
-                    {t.enIntervention ? 'En intervention' : 'Disponible'}
+                  <span className={`pt-status-dot ${tech.enIntervention ? 'pt-dot--occupe' : 'pt-dot--dispo'}`} />
+                  <span className="pt-technicien-nom">{tech.personnelNom}</span>
+                  <span className={`pt-status-label ${tech.enIntervention ? 'occupe' : 'dispo'}`}>
+                    {tech.enIntervention ? t('En intervention') : t('Disponible')}
                   </span>
                 </div>
 
                 <div className="pt-timeline">
-                  {(t.creneaux ?? []).length === 0 ? (
-                    <p className="pt-empty-creneaux">Aucun créneau ce jour-là.</p>
+                  {(tech.creneaux ?? []).length === 0 ? (
+                    <p className="pt-empty-creneaux">{t('Aucun créneau ce jour-là.')}</p>
                   ) : (
-                    t.creneaux.map((c, idx) => (
+                    tech.creneaux.map((c, idx) => (
                       <div key={idx} className="pt-creneau">
                         <span className="pt-creneau-heure">{formatHeure(c.heureDebut)}</span>
                         <span className="pt-creneau-sep">┃</span>
@@ -195,7 +197,7 @@ export default function PlanningTechnicien() {
                         <span className="pt-creneau-equipement">{c.equipementNom || '—'}</span>
                         {c.etat != null && (
                           <span className={`pt-creneau-etat pt-creneau-etat--${c.etat}`}>
-                            {ETAT_LABELS[c.etat] || `État ${c.etat}`}
+                            {ETAT_LABELS[c.etat] ? t(ETAT_LABELS[c.etat]) : t('État {n}', { n: c.etat })}
                           </span>
                         )}
                       </div>
@@ -209,11 +211,11 @@ export default function PlanningTechnicien() {
           {/* Pagination */}
           <div className="pt-pagination">
             <div className="pt-pagination-info">
-              Page <strong>{currentPage}</strong> sur <strong>{totalPages}</strong>
+              {t('Page')} <strong>{currentPage}</strong> {t('sur')} <strong>{totalPages}</strong>
             </div>
 
             <div className="pt-pagination-size">
-              <label htmlFor="pt-page-size">Afficher</label>
+              <label htmlFor="pt-page-size">{t('Afficher')}</label>
               <select
                 id="pt-page-size"
                 className="pt-page-size-select"
@@ -224,7 +226,7 @@ export default function PlanningTechnicien() {
                   <option key={n} value={n}>{n}</option>
                 ))}
               </select>
-              <span>par page</span>
+              <span>{t('par page')}</span>
             </div>
 
             <div className="pt-pagination-controls">
@@ -233,18 +235,18 @@ export default function PlanningTechnicien() {
                 className="pt-btn pt-btn--page"
                 onClick={handlePrev}
                 disabled={currentPage <= 1}
-                aria-label="Page précédente"
+                aria-label={t('Page précédente')}
               >
-                ‹ Précédent
+                <span className="rtl-miroir">‹</span> {t('Précédent')}
               </button>
               <button
                 type="button"
                 className="pt-btn pt-btn--page"
                 onClick={handleNext}
                 disabled={currentPage >= totalPages}
-                aria-label="Page suivante"
+                aria-label={t('Page suivante')}
               >
-                Suivant ›
+                {t('Suivant')} <span className="rtl-miroir">›</span>
               </button>
             </div>
           </div>

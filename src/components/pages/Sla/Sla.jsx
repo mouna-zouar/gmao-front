@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import slaService from '../../../services/slaService';
 import { prioriteLabel, prioriteRang } from '../../../constants/Priorite';
+import { t, tp, locale } from '../../../i18n';
 import './Sla.css';
 
 /* ---------- Config ---------- */
@@ -49,19 +50,20 @@ function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-    + ' · ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' })
+    + ' · ' + d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDuree(heures) {
   if (heures === null || heures === undefined) return '—';
-  if (heures < 48) return `${heures.toFixed(1)} h`;
-  return `${(heures / 24).toFixed(1)} j`;
+  const n1 = (v) => v.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  if (heures < 48) return t('{n} h', { n: n1(heures) });
+  return t('{n} j', { n: n1(heures / 24) });
 }
 
 function formatTaux(taux) {
   if (taux === null || taux === undefined) return '—';
-  return `${taux.toFixed(1)} %`;
+  return t('{n} %', { n: taux.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
 }
 
 /* ---------- Icônes ---------- */
@@ -167,8 +169,8 @@ function Pagination({
     <div className="sla-pagination">
       <div className="sla-pagination__left">
         <span className="sla-pagination__info">
-          Page <strong>{page}</strong> sur <strong>{totalPages}</strong>
-          {' · '}<span className="sla-pagination__count">{totalItems} bon{totalItems > 1 ? 's' : ''}</span>
+          {t("Page")} <strong>{page}</strong> {t("sur")} <strong>{totalPages}</strong>
+          {' · '}<span className="sla-pagination__count">{tp('bon', totalItems)}</span>
         </span>
       </div>
 
@@ -178,9 +180,9 @@ function Pagination({
           className="sla-pagination__btn sla-pagination__btn--nav"
           onClick={() => onChangePage(page - 1)}
           disabled={page <= 1}
-          aria-label="Page précédente"
+          aria-label={t("Page précédente")}
         >
-          <IconChevron direction="left" />
+          <span className="rtl-miroir"><IconChevron direction="left" /></span>
         </button>
 
         {pages.map((p, idx) =>
@@ -204,15 +206,15 @@ function Pagination({
           className="sla-pagination__btn sla-pagination__btn--nav"
           onClick={() => onChangePage(page + 1)}
           disabled={page >= totalPages}
-          aria-label="Page suivante"
+          aria-label={t("Page suivante")}
         >
-          <IconChevron direction="right" />
+          <span className="rtl-miroir"><IconChevron direction="right" /></span>
         </button>
       </div>
 
       <div className="sla-pagination__right">
         <label className="sla-pagination__size">
-          <span>Par page</span>
+          <span>{t("Par page")}</span>
           <select
             value={taillePage}
             onChange={(e) => onChangeTaille(Number(e.target.value))}
@@ -261,7 +263,7 @@ export default function Sla() {
       }
     } catch (err) {
       console.error('Erreur chargement SLA :', err);
-      setError('Impossible de charger les données SLA.');
+      setError(t("Impossible de charger les données SLA."));
     } finally {
       setLoading(false);
     }
@@ -298,9 +300,9 @@ export default function Sla() {
   }, [page, totalPages]);
 
   /* ---------- Helper pour classer les taux ---------- */
-  const getTauxClass = (t) =>
-    t >= 90 ? 'sla-prio-bar--bon'
-    : t >= 70 ? 'sla-prio-bar--moyen'
+  const getTauxClass = (taux) =>
+    taux >= 90 ? 'sla-prio-bar--bon'
+    : taux >= 70 ? 'sla-prio-bar--moyen'
     : 'sla-prio-bar--critique';
 
   return (
@@ -311,10 +313,9 @@ export default function Sla() {
           <IconClipboardCheck />
         </div>
         <div className="sla-header__text">
-          <h1>SLA</h1>
+          <h1>{t("SLA")}</h1>
           <p>
-            Délais de réponse et de résolution contractuels par priorité, mesurés sur les
-            dates réelles des bons — pas d'estimation.
+            {t("Délais de réponse et de résolution contractuels par priorité, mesurés sur les dates réelles des bons — pas d'estimation.")}
           </p>
         </div>
 
@@ -326,7 +327,7 @@ export default function Sla() {
                 className={`sla-vue-btn ${vue === v.key ? 'sla-vue-btn--active' : ''}`}
                 onClick={() => setVue(v.key)}
               >
-                {v.label}
+                {t(v.label)}
               </button>
             ))}
           </div>
@@ -339,7 +340,7 @@ export default function Sla() {
                   className={`sla-periode-btn ${periodeKey === p.key ? 'sla-periode-btn--active' : ''}`}
                   onClick={() => setPeriodeKey(p.key)}
                 >
-                  {p.label}
+                  {t(p.label)}
                 </button>
               ))}
             </div>
@@ -347,7 +348,7 @@ export default function Sla() {
 
           <button className="sla-refresh-btn" onClick={charger} disabled={loading}>
             {loading ? <IconSpinner /> : <IconRefresh />}
-            <span>{loading ? 'Chargement' : 'Rafraîchir'}</span>
+            <span>{loading ? t("Chargement") : t("Rafraîchir")}</span>
           </button>
         </div>
       </header>
@@ -358,7 +359,7 @@ export default function Sla() {
           <div className={`sla-kpi ${(bilan.tauxRespectReponsePct ?? 100) >= 90 ? 'sla-kpi--bon' : (bilan.tauxRespectReponsePct ?? 100) >= 70 ? 'sla-kpi--moyen' : 'sla-kpi--critique'}`}>
             <div className="sla-kpi__icon"><IconTarget /></div>
             <div className="sla-kpi__body">
-              <span className="sla-kpi__label">Respect délai de réponse</span>
+              <span className="sla-kpi__label">{t("Respect délai de réponse")}</span>
               <span className="sla-kpi__valeur">{formatTaux(bilan.tauxRespectReponsePct)}</span>
             </div>
           </div>
@@ -366,7 +367,7 @@ export default function Sla() {
           <div className={`sla-kpi ${(bilan.tauxRespectResolutionPct ?? 100) >= 90 ? 'sla-kpi--bon' : (bilan.tauxRespectResolutionPct ?? 100) >= 70 ? 'sla-kpi--moyen' : 'sla-kpi--critique'}`}>
             <div className="sla-kpi__icon"><IconCheckShield /></div>
             <div className="sla-kpi__body">
-              <span className="sla-kpi__label">Respect délai de résolution</span>
+              <span className="sla-kpi__label">{t("Respect délai de résolution")}</span>
               <span className="sla-kpi__valeur">{formatTaux(bilan.tauxRespectResolutionPct)}</span>
             </div>
           </div>
@@ -374,7 +375,7 @@ export default function Sla() {
           <div className="sla-kpi sla-kpi--neutre">
             <div className="sla-kpi__icon"><IconStopwatch /></div>
             <div className="sla-kpi__body">
-              <span className="sla-kpi__label">Bons analysés</span>
+              <span className="sla-kpi__label">{t("Bons analysés")}</span>
               <span className="sla-kpi__valeur">{bilan.nbBonsAnalyses}</span>
             </div>
           </div>
@@ -382,7 +383,7 @@ export default function Sla() {
           <div className={`sla-kpi ${bilan.nbReponseDepassee + bilan.nbResolutionDepassee > 0 ? 'sla-kpi--critique' : 'sla-kpi--bon'}`}>
             <div className="sla-kpi__icon"><IconAlertTriangle /></div>
             <div className="sla-kpi__body">
-              <span className="sla-kpi__label">Dépassements (réponse + résolution)</span>
+              <span className="sla-kpi__label">{t("Dépassements (réponse + résolution)")}</span>
               <span className="sla-kpi__valeur">{bilan.nbReponseDepassee + bilan.nbResolutionDepassee}</span>
             </div>
           </div>
@@ -393,9 +394,9 @@ export default function Sla() {
       {vue === 'PERIODE' && !loading && bilan && bilan.parPriorite?.length > 0 && (
         <section className="sla-priorites">
           <div className="sla-priorites__header">
-            <h3 className="sla-priorites__title">Répartition par priorité</h3>
+            <h3 className="sla-priorites__title">{t("Répartition par priorité")}</h3>
             <span className="sla-priorites__sub">
-              {bilan.parPriorite.reduce((s, p) => s + p.nbBons, 0)} bons analysés
+              {tp('bon analysé', bilan.parPriorite.reduce((s, p) => s + p.nbBons, 0))}
             </span>
           </div>
 
@@ -416,16 +417,16 @@ export default function Sla() {
                       <span className="sla-prio-card__label">{p.priorite}</span>
                     </div>
                     <span className="sla-prio-card__nb">
-                      {p.nbBons} bon{p.nbBons > 1 ? 's' : ''}
+                      {tp('bon', p.nbBons)}
                     </span>
                   </div>
 
-                  <div className="sla-prio-card__name">{prioriteLabel(p.priorite)}</div>
+                  <div className="sla-prio-card__name">{t(prioriteLabel(p.priorite))}</div>
 
                   <div className="sla-prio-card__bars">
                     <div className="sla-prio-bar">
                       <div className="sla-prio-bar__head">
-                        <span className="sla-prio-bar__label">Réponse</span>
+                        <span className="sla-prio-bar__label">{t("Réponse")}</span>
                         <span className="sla-prio-bar__value">{formatTaux(tauxRep)}</span>
                       </div>
                       <div className="sla-prio-bar__track">
@@ -438,7 +439,7 @@ export default function Sla() {
 
                     <div className="sla-prio-bar">
                       <div className="sla-prio-bar__head">
-                        <span className="sla-prio-bar__label">Résolution</span>
+                        <span className="sla-prio-bar__label">{t("Résolution")}</span>
                         <span className="sla-prio-bar__value">{formatTaux(tauxRes)}</span>
                       </div>
                       <div className="sla-prio-bar__track">
@@ -462,7 +463,7 @@ export default function Sla() {
           <span className="sla-recherche-icon"><IconSearch /></span>
           <input
             type="text"
-            placeholder="Rechercher par titre ou numéro..."
+            placeholder={t("Rechercher par titre ou numéro...")}
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             className="sla-recherche"
@@ -472,7 +473,7 @@ export default function Sla() {
 
       {/* ---------- Liste ---------- */}
       {loading ? (
-        <p className="sla-empty">Chargement...</p>
+        <p className="sla-empty">{t("Chargement...")}</p>
       ) : error ? (
         <p className="sla-error">
           <IconAlert />
@@ -483,8 +484,8 @@ export default function Sla() {
           <IconInbox />
           <span>
             {vue === 'DEPASSEMENTS'
-              ? "Aucun dépassement en cours — tous les bons ouverts sont dans les délais."
-              : 'Aucun bon ne correspond à cette recherche sur la période.'}
+              ? t("Aucun dépassement en cours — tous les bons ouverts sont dans les délais.")
+              : t("Aucun bon ne correspond à cette recherche sur la période.")}
           </span>
         </p>
       ) : (
@@ -495,34 +496,34 @@ export default function Sla() {
                 <div className="sla-card__header">
                   <div className="sla-card__titre-wrap">
                     <span className="sla-priorite-dot" style={{ backgroundColor: PRIORITE_HEX[b.priorite] }} />
-                    <span className="sla-card__titre">{b.titre || `Bon ${b.num || b.bonMaintenanceId}`}</span>
+                    <span className="sla-card__titre">{b.titre || t('Bon {num}', { num: b.num || b.bonMaintenanceId })}</span>
                     <span className="sla-card__num">{b.num}</span>
                   </div>
-                  <span className="sla-card__priorite-label">{prioriteLabel(b.priorite)}</span>
+                  <span className="sla-card__priorite-label">{t(prioriteLabel(b.priorite))}</span>
                 </div>
 
                 <div className="sla-card__delais">
                   <div className="sla-delai">
-                    <span className="sla-delai__label">Réponse</span>
+                    <span className="sla-delai__label">{t("Réponse")}</span>
                     <span className={`sla-statut ${STATUT_CLASS[b.statutReponse] || ''}`}>
-                      {STATUT_LABELS[b.statutReponse] || b.statutReponse}
+                      {STATUT_LABELS[b.statutReponse] ? t(STATUT_LABELS[b.statutReponse]) : b.statutReponse}
                     </span>
                     <span className="sla-delai__detail">
                       {b.delaiReponseReelHeures !== null && b.delaiReponseReelHeures !== undefined
-                        ? `${formatDuree(b.delaiReponseReelHeures)} (cible ${formatDuree(b.delaiReponseCibleHeures)})`
-                        : b.echeanceReponse ? `Échéance ${formatDateTime(b.echeanceReponse)}` : '—'}
+                        ? t('{reel} (cible {cible})', { reel: formatDuree(b.delaiReponseReelHeures), cible: formatDuree(b.delaiReponseCibleHeures) })
+                        : b.echeanceReponse ? t('Échéance {date}', { date: formatDateTime(b.echeanceReponse) }) : '—'}
                     </span>
                   </div>
 
                   <div className="sla-delai">
-                    <span className="sla-delai__label">Résolution</span>
+                    <span className="sla-delai__label">{t("Résolution")}</span>
                     <span className={`sla-statut ${STATUT_CLASS[b.statutResolution] || ''}`}>
-                      {STATUT_LABELS[b.statutResolution] || b.statutResolution}
+                      {STATUT_LABELS[b.statutResolution] ? t(STATUT_LABELS[b.statutResolution]) : b.statutResolution}
                     </span>
                     <span className="sla-delai__detail">
                       {b.delaiResolutionReelHeures !== null && b.delaiResolutionReelHeures !== undefined
-                        ? `${formatDuree(b.delaiResolutionReelHeures)} (cible ${formatDuree(b.delaiResolutionCibleHeures)})`
-                        : b.echeanceResolution ? `Échéance ${formatDateTime(b.echeanceResolution)}` : '—'}
+                        ? t('{reel} (cible {cible})', { reel: formatDuree(b.delaiResolutionReelHeures), cible: formatDuree(b.delaiResolutionCibleHeures) })
+                        : b.echeanceResolution ? t('Échéance {date}', { date: formatDateTime(b.echeanceResolution) }) : '—'}
                     </span>
                   </div>
                 </div>

@@ -36,6 +36,7 @@ import Cout from '../components/pages/Cout/Cout';
 import ParcPlanning from '../components/pages/parc/Planning/ParcPlanning';
 import Risque from '../components/pages/Risque/Risque';
 import Intelligence from '../components/pages/Intelligence/Intelligence';
+import ParametresSysteme from '../components/pages/ParametresSysteme/ParametresSysteme';
 
 
 
@@ -51,6 +52,7 @@ const AppRoutes = () => {
             <Route path="/reclamations" element={<Reclamations />} />
             <Route path="/bons-maintenance" element={<BonsMaintenance />} />
             <Route path="/tables-parametrage" element={<Referentielconsultation  />} />
+            <Route path="/parametres-systeme" element={<ParametresSysteme />} />
             <Route path="/fiche-bon-maintenance" element={<Fichebonmaintenance />} />
             <Route path="/planning-bon-maintenance" element={<Planningbonmaintenance />} />
             <Route path="/reclamation-dashboard" element={<Reclamationdashboard />} />

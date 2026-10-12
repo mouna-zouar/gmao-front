@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import disponibiliteService from '../../../services/Disponibiliteservice ';
 import { criticiteHex, criticiteLabel } from '../../../constants/Criticite';
+import { t, tp, locale } from '../../../i18n';
 import './Disponibilite.css';
 
 /* ---------- Config ---------- */
@@ -35,8 +36,8 @@ function calculerBornes(periodeKey) {
 
 function formatDuree(heures) {
   if (heures === null || heures === undefined) return '—';
-  if (heures < 48) return `${heures.toFixed(1)} h`;
-  return `${(heures / 24).toFixed(1)} j`;
+  if (heures < 48) return t('{n} h', { n: heures.toFixed(1) });
+  return t('{n} j', { n: (heures / 24).toFixed(1) });
 }
 
 function tauxNiveau(taux) {
@@ -153,8 +154,8 @@ function Pagination({
     <div className="disp-pagination">
       <div className="disp-pagination__left">
         <span className="disp-pagination__info">
-          Page <strong>{page}</strong> sur <strong>{totalPages}</strong>
-          {' · '}<span className="disp-pagination__count">{totalItems} équipement{totalItems > 1 ? 's' : ''}</span>
+          {t('Page {p} sur {total}', { p: page, total: totalPages })}
+          {' · '}<span className="disp-pagination__count">{tp('équipement', totalItems)}</span>
         </span>
       </div>
 
@@ -164,9 +165,9 @@ function Pagination({
           className="disp-pagination__btn disp-pagination__btn--nav"
           onClick={() => onChangePage(page - 1)}
           disabled={page <= 1}
-          aria-label="Page précédente"
+          aria-label={t("Page précédente")}
         >
-          <IconChevron direction="left" />
+          <span className="rtl-miroir"><IconChevron direction="left" /></span>
         </button>
 
         {pages.map((p, idx) =>
@@ -190,15 +191,15 @@ function Pagination({
           className="disp-pagination__btn disp-pagination__btn--nav"
           onClick={() => onChangePage(page + 1)}
           disabled={page >= totalPages}
-          aria-label="Page suivante"
+          aria-label={t("Page suivante")}
         >
-          <IconChevron direction="right" />
+          <span className="rtl-miroir"><IconChevron direction="right" /></span>
         </button>
       </div>
 
       <div className="disp-pagination__right">
         <label className="disp-pagination__size">
-          <span>Par page</span>
+          <span>{t("Par page")}</span>
           <select
             value={taillePage}
             onChange={(e) => onChangeTaille(Number(e.target.value))}
@@ -236,7 +237,7 @@ export default function Disponibilite() {
       setDonnees(data ?? []);
     } catch (err) {
       console.error('Erreur chargement disponibilité :', err);
-      setError('Impossible de charger la disponibilité du parc.');
+      setError(t("Impossible de charger la disponibilité du parc."));
     } finally {
       setLoading(false);
     }
@@ -302,10 +303,9 @@ export default function Disponibilite() {
           <IconActivity />
         </div>
         <div className="disp-header__text">
-          <h1>Disponibilité</h1>
+          <h1>{t("Disponibilité")}</h1>
           <p>
-            Taux de disponibilité, MTBF (temps moyen entre pannes) et MTTR (temps moyen de
-            réparation), calculés à partir de l'historique réel des états — pas d'estimation.
+            {t("Taux de disponibilité, MTBF (temps moyen entre pannes) et MTTR (temps moyen de réparation), calculés à partir de l'historique réel des états — pas d'estimation.")}
           </p>
         </div>
 
@@ -317,13 +317,13 @@ export default function Disponibilite() {
                 className={`disp-periode-btn ${periodeKey === p.key ? 'disp-periode-btn--active' : ''}`}
                 onClick={() => setPeriodeKey(p.key)}
               >
-                {p.label}
+                {t(p.label)}
               </button>
             ))}
           </div>
           <button className="disp-refresh-btn" onClick={charger} disabled={loading}>
             {loading ? <IconSpinner /> : <IconRefresh />}
-            <span>{loading ? 'Chargement' : 'Rafraîchir'}</span>
+            <span>{loading ? t("Chargement") : t("Rafraîchir")}</span>
           </button>
         </div>
       </header>
@@ -334,7 +334,7 @@ export default function Disponibilite() {
           <div className={`disp-kpi disp-kpi--${tauxNiveau(kpis.tauxMoyen)}`}>
             <div className="disp-kpi__icon"><IconGauge /></div>
             <div className="disp-kpi__body">
-              <span className="disp-kpi__label">Disponibilité moyenne du parc</span>
+              <span className="disp-kpi__label">{t("Disponibilité moyenne du parc")}</span>
               <span className="disp-kpi__valeur">{formatTaux(kpis.tauxMoyen)}</span>
             </div>
           </div>
@@ -342,7 +342,7 @@ export default function Disponibilite() {
           <div className="disp-kpi disp-kpi--neutre">
             <div className="disp-kpi__icon"><IconWrenchAlt /></div>
             <div className="disp-kpi__body">
-              <span className="disp-kpi__label">Pannes sur la période</span>
+              <span className="disp-kpi__label">{t("Pannes sur la période")}</span>
               <span className="disp-kpi__valeur">{kpis.totalPannes}</span>
             </div>
           </div>
@@ -350,7 +350,7 @@ export default function Disponibilite() {
           <div className="disp-kpi disp-kpi--neutre">
             <div className="disp-kpi__icon"><IconClockRepeat /></div>
             <div className="disp-kpi__body">
-              <span className="disp-kpi__label">MTBF moyen</span>
+              <span className="disp-kpi__label">{t("MTBF moyen")}</span>
               <span className="disp-kpi__valeur">{formatDuree(kpis.mtbfMoyen)}</span>
             </div>
           </div>
@@ -358,7 +358,7 @@ export default function Disponibilite() {
           <div className="disp-kpi disp-kpi--neutre">
             <div className="disp-kpi__icon"><IconTrendDown /></div>
             <div className="disp-kpi__body">
-              <span className="disp-kpi__label">MTTR moyen</span>
+              <span className="disp-kpi__label">{t("MTTR moyen")}</span>
               <span className="disp-kpi__valeur">{formatDuree(kpis.mttrMoyen)}</span>
             </div>
           </div>
@@ -366,7 +366,7 @@ export default function Disponibilite() {
           <div className={`disp-kpi ${kpis.nbCritiques > 0 ? 'disp-kpi--critique' : 'disp-kpi--bon'}`}>
             <div className="disp-kpi__icon"><IconAlert /></div>
             <div className="disp-kpi__body">
-              <span className="disp-kpi__label">Actifs sous {SEUIL_MOYEN}%</span>
+              <span className="disp-kpi__label">{t('Actifs sous {seuil} %', { seuil: SEUIL_MOYEN })}</span>
               <span className="disp-kpi__valeur">{kpis.nbCritiques}</span>
             </div>
           </div>
@@ -379,7 +379,7 @@ export default function Disponibilite() {
           <span className="disp-recherche-icon"><IconSearch /></span>
           <input
             type="text"
-            placeholder="Rechercher un équipement..."
+            placeholder={t("Rechercher un équipement...")}
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             className="disp-recherche"
@@ -389,7 +389,7 @@ export default function Disponibilite() {
 
       {/* ---------- Liste ---------- */}
       {loading ? (
-        <p className="disp-empty">Chargement...</p>
+        <p className="disp-empty">{t("Chargement...")}</p>
       ) : error ? (
         <p className="disp-error">
           <IconAlert />
@@ -400,8 +400,8 @@ export default function Disponibilite() {
           <IconInbox />
           <span>
             {donnees.length === 0
-              ? "Aucune donnée de disponibilité pour le moment — assure-toi que des états d'équipement ont été calculés (page « État des équipements »)."
-              : 'Aucun équipement ne correspond à cette recherche.'}
+              ? t("Aucune donnée de disponibilité pour le moment — assure-toi que des états d'équipement ont été calculés (page « État des équipements »).")
+              : t("Aucun équipement ne correspond à cette recherche.")}
           </span>
         </p>
       ) : (
@@ -425,10 +425,10 @@ export default function Disponibilite() {
                       <span
                         className="disp-criticite-dot"
                         style={{ backgroundColor: criticiteHex(d.criticite) }}
-                        title={criticiteLabel(d.criticite)}
+                        title={t(criticiteLabel(d.criticite))}
                       />
                       <span className="disp-card__titre">{d.cibleNom}</span>
-                      <span className="disp-etat-pill">{ETAT_LABELS[d.etatActuel] || d.etatActuel || '—'}</span>
+                      <span className="disp-etat-pill">{t(ETAT_LABELS[d.etatActuel] || d.etatActuel || '—')}</span>
                     </div>
 
                     <div className="disp-card__taux">
@@ -448,30 +448,32 @@ export default function Disponibilite() {
                     <div className="disp-detail">
                       <div className="disp-detail__grid">
                         <div className="disp-detail__item">
-                          <span className="disp-detail__label">Pannes sur la période</span>
+                          <span className="disp-detail__label">{t("Pannes sur la période")}</span>
                           <span className="disp-detail__valeur">{d.nbPannes}</span>
                         </div>
                         <div className="disp-detail__item">
-                          <span className="disp-detail__label">MTBF</span>
+                          <span className="disp-detail__label">{t("MTBF")}</span>
                           <span className="disp-detail__valeur">{formatDuree(d.mtbfHeures)}</span>
                         </div>
                         <div className="disp-detail__item">
-                          <span className="disp-detail__label">MTTR</span>
+                          <span className="disp-detail__label">{t("MTTR")}</span>
                           <span className="disp-detail__valeur">{formatDuree(d.mttrHeures)}</span>
                         </div>
                         <div className="disp-detail__item">
-                          <span className="disp-detail__label">Temps disponible</span>
+                          <span className="disp-detail__label">{t("Temps disponible")}</span>
                           <span className="disp-detail__valeur">{formatDuree(d.dureeDisponibleHeures)}</span>
                         </div>
                         <div className="disp-detail__item">
-                          <span className="disp-detail__label">Temps indisponible</span>
+                          <span className="disp-detail__label">{t("Temps indisponible")}</span>
                           <span className="disp-detail__valeur">{formatDuree(d.dureeIndisponibleHeures)}</span>
                         </div>
                       </div>
                       <p className="disp-detail__note">
-                        Calculé sur la période {new Date(d.dateDebutPeriode).toLocaleDateString('fr-FR')} –{' '}
-                        {new Date(d.dateFinPeriode).toLocaleDateString('fr-FR')}.
-                        {d.nbPannes === 0 && ' Aucune panne enregistrée sur cette fenêtre : MTBF/MTTR non calculables.'}
+                        {t('Calculé sur la période {debut} – {fin}.', {
+                          debut: new Date(d.dateDebutPeriode).toLocaleDateString(locale()),
+                          fin: new Date(d.dateFinPeriode).toLocaleDateString(locale()),
+                        })}
+                        {d.nbPannes === 0 && ` ${t('Aucune panne enregistrée sur cette fenêtre : MTBF/MTTR non calculables.')}`}
                       </p>
                     </div>
                   )}

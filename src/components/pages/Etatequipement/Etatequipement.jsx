@@ -4,6 +4,9 @@ import etatEquipementService from '../../../services/Etatequipementservice';
 import disponibiliteService from '../../../services/Disponibiliteservice ';
 import risqueService from '../../../services/Risqueservice';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../constants/Criticite';
+import EquipementMaintenancePanel from './Equipementmaintenancepanel';
+import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
+import { t, tp, locale } from '../../../i18n';
 import './EtatEquipement.css';
 
 /* ---------- Risque (étape ⑥ de la roadmap métier) ---------- */
@@ -29,8 +32,8 @@ function formatTaux(taux) {
 
 function formatDureeHeures(heures) {
   if (heures === null || heures === undefined) return '—';
-  if (heures < 48) return `${heures.toFixed(1)} h`;
-  return `${(heures / 24).toFixed(1)} j`;
+  if (heures < 48) return t('{n} h', { n: heures.toFixed(1) });
+  return t('{n} j', { n: (heures / 24).toFixed(1) });
 }
 
 /* ---------- Config ---------- */
@@ -60,15 +63,15 @@ function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-function formatDateTime(iso) {
+function formatDateTime(iso, loc = locale()) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-    + ' · ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString(loc, { day: '2-digit', month: 'short', year: 'numeric' })
+    + ' · ' + d.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' });
 }
 
 function joursDepuis(iso) {
@@ -167,7 +170,8 @@ const ETAT_ICONS = {
   HORS_SERVICE: IconPause,
 };
 
-/* ---------- Export PDF ---------- */
+/* ---------- Export PDF ----------
+   Reste en français : la police standard de jsPDF ne sait pas afficher l'alphabet arabe. */
 function exporterHistoriquePDF(equipement, historique) {
   const doc = new jsPDF();
   const marginX = 14;
@@ -185,7 +189,7 @@ function exporterHistoriquePDF(equipement, historique) {
   doc.text(`État actuel : ${ETAT_LABELS[equipement.etatActuel] || equipement.etatActuel}`, marginX, y);
   y += 5;
   if (equipement.depuisLe) {
-    doc.text(`Depuis le ${formatDateTime(equipement.depuisLe)}`, marginX, y);
+    doc.text(`Depuis le ${formatDateTime(equipement.depuisLe, 'fr-FR')}`, marginX, y);
     y += 5;
   }
   doc.setTextColor(120);
@@ -219,22 +223,22 @@ function exporterHistoriquePDF(equipement, historique) {
     doc.setTextColor(0);
   }
 
-  historique.forEach((t) => {
+  historique.forEach((tache) => {
     if (y > 280) {
       doc.addPage();
       y = 20;
     }
-    const dateStr = formatDateTime(t.dateTransition);
-    const transitionStr = `${t.etatPrecedent ? `${ETAT_LABELS[t.etatPrecedent] || t.etatPrecedent} → ` : 'Première détection : '}${ETAT_LABELS[t.etatNouveau] || t.etatNouveau}`;
+    const dateStr = formatDateTime(tache.dateTransition, 'fr-FR');
+    const transitionStr = `${tache.etatPrecedent ? `${ETAT_LABELS[tache.etatPrecedent] || tache.etatPrecedent} → ` : 'Première détection : '}${ETAT_LABELS[tache.etatNouveau] || tache.etatNouveau}`;
 
     doc.text(dateStr, marginX, y);
     doc.text(transitionStr, marginX + 32, y, { maxWidth: 82 });
-    doc.text(t.bonMaintenanceNum || '—', marginX + 120, y);
-    if (t.motif) {
+    doc.text(tache.bonMaintenanceNum || '—', marginX + 120, y);
+    if (tache.motif) {
       y += 4.5;
       doc.setFontSize(7.5);
       doc.setTextColor(140);
-      doc.text(t.motif, marginX + 32, y, { maxWidth: 130 });
+      doc.text(tache.motif, marginX + 32, y, { maxWidth: 130 });
       doc.setFontSize(9);
       doc.setTextColor(0);
     }
@@ -262,6 +266,7 @@ export default function EtatEquipement({ isModal = false }) {
   const [loadingDispo, setLoadingDispo] = useState(false);
   const [risques, setRisques] = useState({});
   const [loadingRisque, setLoadingRisque] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const charger = useCallback(async () => {
     setLoading(true);
@@ -271,7 +276,7 @@ export default function EtatEquipement({ isModal = false }) {
       setEtats(data ?? []);
     } catch (err) {
       console.error('Erreur chargement états équipement :', err);
-      setError('Impossible de charger les états.');
+      setError(t("Impossible de charger les états."));
     } finally {
       setLoading(false);
     }
@@ -395,19 +400,33 @@ export default function EtatEquipement({ isModal = false }) {
       {!isModal && (
         <header className="etat-header">
           <div className="etat-header__text">
-            <span className="etat-eyebrow">Équipements · Supervision</span>
-            <h1>État des équipements</h1>
+            <span className="etat-eyebrow">{t("Équipements · Supervision")}</span>
+            <h1>{t("État des équipements")}</h1>
             <p>
-              Statut logique calculé automatiquement à chaque événement — création de bon,
-              changement d'état, remise en service — indépendamment de l'état SQL Server legacy.
+              {t("Statut logique calculé automatiquement à chaque événement — création de bon, changement d'état, remise en service — indépendamment de l'état SQL Server legacy.")}
             </p>
           </div>
 
-          <button className="etat-recalculer-btn" onClick={recalculerTout} disabled={recalculant}>
-            {recalculant ? <IconSpinner /> : <IconRefresh />}
-            <span>{recalculant ? 'Recalcul en cours' : 'Recalculer tout'}</span>
-          </button>
+          <div className="etat-header__actions">
+            <button
+              className="etat-recalculer-btn"
+              onClick={() => setSettingsOpen((v) => !v)}
+            >
+              <span>{settingsOpen ? t("Fermer les paramètres") : t("Maintenance préventive — paramètres")}</span>
+            </button>
+            <button className="etat-recalculer-btn" onClick={recalculerTout} disabled={recalculant}>
+              {recalculant ? <IconSpinner /> : <IconRefresh />}
+              <span>{recalculant ? t("Recalcul en cours") : t("Recalculer tout")}</span>
+            </button>
+          </div>
         </header>
+      )}
+
+      {/* ---------- Référentiel des maintenances préventives réglementaires ---------- */}
+      {!isModal && settingsOpen && (
+        <section style={{ marginBottom: 24 }}>
+          <EquipementMaintenanceTypesSettings />
+        </section>
       )}
 
       {/* ---------- Bouton recalcul en mode modale ---------- */}
@@ -415,7 +434,7 @@ export default function EtatEquipement({ isModal = false }) {
         <div className="etat-modal-toolbar">
           <button className="etat-recalculer-btn" onClick={recalculerTout} disabled={recalculant}>
             {recalculant ? <IconSpinner /> : <IconRefresh />}
-            <span>{recalculant ? 'Recalcul en cours' : 'Recalculer tout'}</span>
+            <span>{recalculant ? t("Recalcul en cours") : t("Recalculer tout")}</span>
           </button>
         </div>
       )}
@@ -439,7 +458,7 @@ export default function EtatEquipement({ isModal = false }) {
                 className={`etat-summary__item etat-summary__item--${et.toLowerCase()}`}
               >
                 <div className="etat-summary__head">
-                  <span className="etat-summary__label">{ETAT_LABELS[et]}</span>
+                  <span className="etat-summary__label">{t(ETAT_LABELS[et])}</span>
                   <span className="etat-summary__icon"><Icon /></span>
                 </div>
                 <span className="etat-summary__nombre">{compteurs[et] || 0}</span>
@@ -455,7 +474,7 @@ export default function EtatEquipement({ isModal = false }) {
           <span className="etat-recherche-icon"><IconSearch /></span>
           <input
             type="text"
-            placeholder="Rechercher un équipement..."
+            placeholder={t("Rechercher un équipement...")}
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             className="etat-recherche"
@@ -479,7 +498,7 @@ export default function EtatEquipement({ isModal = false }) {
 
       {/* ---------- Liste ---------- */}
       {loading ? (
-        <p className="etat-empty">Chargement...</p>
+        <p className="etat-empty">{t("Chargement...")}</p>
       ) : error ? (
         <p className="etat-error">
           <IconAlert />
@@ -490,8 +509,8 @@ export default function EtatEquipement({ isModal = false }) {
           <IconInbox />
           <span>
             {etats.length === 0
-              ? 'Aucun état calculé pour le moment — clique sur "Recalculer tout" pour initialiser.'
-              : 'Aucun équipement ne correspond à ce filtre.'}
+              ? t("Aucun état calculé pour le moment — clique sur \"Recalculer tout\" pour initialiser.")
+              : t("Aucun équipement ne correspond à ce filtre.")}
           </span>
         </p>
       ) : (
@@ -516,23 +535,23 @@ export default function EtatEquipement({ isModal = false }) {
                   <div className="etat-card__titre-wrap">
                     <span className={`etat-badge ${ETAT_CLASS[e.etatActuel] || ''}`}>
                       <span className="etat-badge__dot" />
-                      {ETAT_LABELS[e.etatActuel] || e.etatActuel}
+                      {t(ETAT_LABELS[e.etatActuel] || e.etatActuel)}
                     </span>
                     <span className="etat-card__titre">{e.cibleNom}</span>
                     {dispo && (
                       <span
                         className={`etat-dispo-pill etat-dispo-pill--${niveauDispo}`}
-                        title="Taux de disponibilité sur les 12 derniers mois"
+                        title={t("Taux de disponibilité sur les 12 derniers mois")}
                       >
-                        {formatTaux(dispo.tauxDisponibilitePct)} dispo
+                        {formatTaux(dispo.tauxDisponibilitePct)} {t("dispo")}
                       </span>
                     )}
                     {risque && (
                       <span
                         className={`etat-risque-pill etat-risque-pill--${niveauRisque}`}
-                        title="Score de risque de panne (0-100)"
+                        title={t("Score de risque de panne (0-100)")}
                       >
-                        Risque {risque.scoreRisque}
+                        {t("Risque")} {risque.scoreRisque}
                       </span>
                     )}
                   </div>
@@ -541,7 +560,7 @@ export default function EtatEquipement({ isModal = false }) {
                     {jours !== null && (
                       <>
                         <IconClock />
-                        <span>depuis {jours} jour{jours > 1 ? 's' : ''}</span>
+                        <span>{tp('depuis jours', jours)}</span>
                       </>
                     )}
                     <span className="etat-card__chevron">
@@ -553,7 +572,7 @@ export default function EtatEquipement({ isModal = false }) {
                 {e.bonMaintenanceReferenceNum && (
                   <p className="etat-card__bon">
                     <IconFile />
-                    <span>Bon de référence : <strong>{e.bonMaintenanceReferenceNum}</strong></span>
+                    <span>{t("Bon de référence :")} <strong>{e.bonMaintenanceReferenceNum}</strong></span>
                   </p>
                 )}
 
@@ -562,7 +581,7 @@ export default function EtatEquipement({ isModal = false }) {
                     className="etat-criticite-dot"
                     style={{ backgroundColor: criticiteHex(e.criticite) }}
                   />
-                  <label htmlFor={`criticite-${e.lotArticleImmobilistationId}`}>Criticité</label>
+                  <label htmlFor={`criticite-${e.lotArticleImmobilistationId}`}>{t("Criticité")}</label>
                   <select
                     id={`criticite-${e.lotArticleImmobilistationId}`}
                     className="etat-criticite-select"
@@ -573,7 +592,7 @@ export default function EtatEquipement({ isModal = false }) {
                     }
                   >
                     {CRITICITE_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
+                      <option key={o.value} value={o.value}>{t(o.label)}</option>
                     ))}
                   </select>
                 </div>
@@ -583,43 +602,43 @@ export default function EtatEquipement({ isModal = false }) {
                     <div className="etat-dispo-bloc">
                       <span className="etat-dispo-bloc__title">
                         <IconGauge />
-                        Disponibilité (12 derniers mois)
+                        {t("Disponibilité (12 derniers mois)")}
                       </span>
                       {loadingDispo && !dispo ? (
-                        <p className="etat-dispo-bloc__loading">Calcul en cours...</p>
+                        <p className="etat-dispo-bloc__loading">{t("Calcul en cours...")}</p>
                       ) : dispo ? (
                         <div className="etat-dispo-bloc__grid">
                           <div className="etat-dispo-bloc__item">
-                            <span className="etat-dispo-bloc__label">Taux</span>
+                            <span className="etat-dispo-bloc__label">{t("Taux")}</span>
                             <span className={`etat-dispo-bloc__valeur etat-dispo-bloc__valeur--${niveauDispo}`}>
                               {formatTaux(dispo.tauxDisponibilitePct)}
                             </span>
                           </div>
                           <div className="etat-dispo-bloc__item">
-                            <span className="etat-dispo-bloc__label">Pannes</span>
+                            <span className="etat-dispo-bloc__label">{t("Pannes")}</span>
                             <span className="etat-dispo-bloc__valeur">{dispo.nbPannes}</span>
                           </div>
                           <div className="etat-dispo-bloc__item">
-                            <span className="etat-dispo-bloc__label">MTBF</span>
+                            <span className="etat-dispo-bloc__label">{t("MTBF")}</span>
                             <span className="etat-dispo-bloc__valeur">{formatDureeHeures(dispo.mtbfHeures)}</span>
                           </div>
                           <div className="etat-dispo-bloc__item">
-                            <span className="etat-dispo-bloc__label">MTTR</span>
+                            <span className="etat-dispo-bloc__label">{t("MTTR")}</span>
                             <span className="etat-dispo-bloc__valeur">{formatDureeHeures(dispo.mttrHeures)}</span>
                           </div>
                         </div>
                       ) : (
-                        <p className="etat-dispo-bloc__loading">Disponibilité indisponible pour cet équipement.</p>
+                        <p className="etat-dispo-bloc__loading">{t("Disponibilité indisponible pour cet équipement.")}</p>
                       )}
                     </div>
 
                     <div className="etat-risque-bloc">
                       <span className="etat-dispo-bloc__title">
                         <IconGauge />
-                        Risque de panne (score prédictif)
+                        {t("Risque de panne (score prédictif)")}
                       </span>
                       {loadingRisque && !risque ? (
-                        <p className="etat-dispo-bloc__loading">Calcul en cours...</p>
+                        <p className="etat-dispo-bloc__loading">{t("Calcul en cours...")}</p>
                       ) : risque ? (
                         <div className="etat-risque-bloc__content">
                           <span className={`etat-risque-score etat-risque-score--${niveauRisque}`}>
@@ -628,36 +647,43 @@ export default function EtatEquipement({ isModal = false }) {
                           </span>
                           <div className="etat-risque-bloc__grid">
                             <div className="etat-dispo-bloc__item">
-                              <span className="etat-dispo-bloc__label">Niveau</span>
+                              <span className="etat-dispo-bloc__label">{t("Niveau")}</span>
                               <span className={`etat-dispo-bloc__valeur etat-dispo-bloc__valeur--${niveauRisque}`}>
-                                {RISQUE_NIVEAU_LABELS[risque.niveauRisque] || risque.niveauRisque}
+                                {t(RISQUE_NIVEAU_LABELS[risque.niveauRisque] || risque.niveauRisque)}
                               </span>
                             </div>
                             <div className="etat-dispo-bloc__item">
-                              <span className="etat-dispo-bloc__label">Pannes / 12 mois</span>
+                              <span className="etat-dispo-bloc__label">{t("Pannes / 12 mois")}</span>
                               <span className="etat-dispo-bloc__valeur">{risque.nbPannes12Mois}</span>
                             </div>
                             <div className="etat-dispo-bloc__item">
-                              <span className="etat-dispo-bloc__label">Tendance</span>
-                              <span className="etat-dispo-bloc__valeur">{RISQUE_TENDANCE_LABELS[risque.tendance] || risque.tendance}</span>
+                              <span className="etat-dispo-bloc__label">{t("Tendance")}</span>
+                              <span className="etat-dispo-bloc__valeur">{t(RISQUE_TENDANCE_LABELS[risque.tendance] || risque.tendance)}</span>
                             </div>
                             <div className="etat-dispo-bloc__item">
-                              <span className="etat-dispo-bloc__label">Garantie</span>
+                              <span className="etat-dispo-bloc__label">{t("Garantie")}</span>
                               <span className="etat-dispo-bloc__valeur">
-                                {risque.garantieExpiree === true ? 'Expirée' : risque.garantieExpiree === false ? 'Active' : '—'}
+                                {risque.garantieExpiree === true ? t("Expirée") : risque.garantieExpiree === false ? t("Active") : '—'}
                               </span>
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <p className="etat-dispo-bloc__loading">Score de risque indisponible pour cet équipement.</p>
+                        <p className="etat-dispo-bloc__loading">{t("Score de risque indisponible pour cet équipement.")}</p>
                       )}
+                    </div>
+
+                    <div className="etat-maintenance-preventive-bloc" onClick={(ev) => ev.stopPropagation()}>
+                      <EquipementMaintenancePanel
+                        immobilisation={{ id: e.lotArticleImmobilistationId, designation: e.cibleNom }}
+                        onOpenBon={(bonId) => { window.location.href = `/bons-maintenance?id=${bonId}`; }}
+                      />
                     </div>
 
                     <div className="etat-historique__toolbar">
                       <span className="etat-historique__title">
                         <IconHistory />
-                        Historique des transitions
+                        {t("Historique des transitions")}
                       </span>
                       <button
                         className="etat-export-btn"
@@ -665,34 +691,34 @@ export default function EtatEquipement({ isModal = false }) {
                         disabled={loadingHistorique}
                       >
                         <IconDownload />
-                        Exporter en PDF
+                        {t("Exporter en PDF")}
                       </button>
                     </div>
 
                     {loadingHistorique ? (
-                      <p className="etat-empty">Chargement de l'historique...</p>
+                      <p className="etat-empty">{t("Chargement de l'historique...")}</p>
                     ) : historique.length === 0 ? (
-                      <p className="etat-empty">Aucune transition enregistrée.</p>
+                      <p className="etat-empty">{t("Aucune transition enregistrée.")}</p>
                     ) : (
                       <ul className="etat-historique__list">
-                        {historique.map((t) => (
-                          <li key={t.id} className="etat-historique__item">
+                        {historique.map((tache) => (
+                          <li key={tache.id} className="etat-historique__item">
                             <span className="etat-historique__transition">
-                              {t.etatPrecedent
-                                ? <>{ETAT_LABELS[t.etatPrecedent] || t.etatPrecedent} → </>
-                                : 'Première détection : '}
-                              <strong>{ETAT_LABELS[t.etatNouveau] || t.etatNouveau}</strong>
+                              {tache.etatPrecedent
+                                ? <>{t(ETAT_LABELS[tache.etatPrecedent] || tache.etatPrecedent)} <span className="rtl-miroir">→</span> </>
+                                : t("Première détection : ")}
+                              <strong>{t(ETAT_LABELS[tache.etatNouveau] || tache.etatNouveau)}</strong>
                             </span>
                             <span className="etat-historique__date">
-                              {formatDateTime(t.dateTransition)}
+                              {formatDateTime(tache.dateTransition)}
                             </span>
-                            {t.bonMaintenanceNum && (
+                            {tache.bonMaintenanceNum && (
                               <span className="etat-historique__bon">
-                                Bon {t.bonMaintenanceNum}
+                                {t("Bon")} {tache.bonMaintenanceNum}
                               </span>
                             )}
-                            {t.motif && (
-                              <span className="etat-historique__motif">« {t.motif} »</span>
+                            {tache.motif && (
+                              <span className="etat-historique__motif">« {tache.motif} »</span>
                             )}
                           </li>
                         ))}

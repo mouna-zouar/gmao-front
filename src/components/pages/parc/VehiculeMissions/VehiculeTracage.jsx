@@ -9,6 +9,7 @@ import vehiculeService from '../../../../services/vehiculeService';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
 import personnelService from '../../../../services/personnelService';
+import emplacementService from '../../../../services/emplacementService';
 import './VehiculeTracage.css';
 
 const ETAT_LABELS = { 0: 'Planifiée', 1: 'En cours', 2: 'Terminée', 3: 'Annulée' };
@@ -22,6 +23,11 @@ const NATURE_LABELS = { 0: 'Temps', 1: 'Cycles', 2: 'Distance' };
 const TYPE_LABELS = { 0: 'Véhicule léger', 1: 'Camion', 2: 'Engin', 3: 'Tracteur', 4: 'Autre' };
 
 // ─── Utilitaires ───
+function destinationLabel(mission, emplacementsMap = {}) {
+  const emp = emplacementsMap[mission?.destinationId];
+  return emp?.nom || mission?.destination || '';
+}
+
 function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -96,6 +102,7 @@ export default function VehiculeTracage({
   const [loadingMissions, setLoadingMissions] = useState(false);
 
   const [personnelsMap, setPersonnelsMap] = useState({});
+  const [emplacementsMap, setEmplacementsMap] = useState({});
   const [conducteurActuel, setConducteurActuel] = useState(null);
 
   const [error, setError] = useState(null);
@@ -112,15 +119,20 @@ export default function VehiculeTracage({
       setLoadingVehicules(true);
       setError(null);
       try {
-        const [vehPage, persPage] = await Promise.all([
+        const [vehPage, persPage, empPage] = await Promise.all([
           vehiculeService.getAll(0, 500),
           personnelService.getAll(0, 500),
+          emplacementService.getAll(0, 500).catch(() => ({ content: [] })),
         ]);
         setVehicules(vehPage.content ?? []);
 
         const pm = {};
         (persPage.content ?? []).forEach((p) => { pm[p.id] = p; });
         setPersonnelsMap(pm);
+
+        const em = {};
+        (empPage.content ?? empPage ?? []).forEach((e) => { em[e.id] = e; });
+        setEmplacementsMap(em);
       } catch (err) {
         console.error(err);
         setError("Impossible de charger les véhicules.");
@@ -349,6 +361,7 @@ export default function VehiculeTracage({
               conducteur={conducteurLabel}
               progress={liveProgress}
               onTerminer={handleTerminer}
+              emplacementsMap={emplacementsMap}
             />
           )}
 
@@ -362,7 +375,7 @@ export default function VehiculeTracage({
                 <div>
                   <span className="vtr-ready-label">Mission planifiée prête à démarrer</span>
                   <span className="vtr-ready-num">
-                    {derniereMission.num || `#${derniereMission.id}`} — {derniereMission.destination || 'Sans destination'}
+                    {derniereMission.num || `#${derniereMission.id}`} — {destinationLabel(derniereMission, emplacementsMap) || 'Sans destination'}
                   </span>
                 </div>
               </div>
@@ -442,6 +455,7 @@ export default function VehiculeTracage({
                   progress={liveProgress}
                   tick={tick}
                   onTerminer={handleTerminer}
+                  emplacementsMap={emplacementsMap}
                 />
               ) : (
                 <>
@@ -483,10 +497,10 @@ export default function VehiculeTracage({
                                   <Calendar size={12} strokeWidth={2.5} />
                                   {formatDateTime(m.dateDepart)}
                                 </span>
-                                {m.destination && (
+                                {destinationLabel(m, emplacementsMap) && (
                                   <span className="vtr-timeline-dest">
                                     <MapPin size={12} strokeWidth={2.5} />
-                                    {m.destination}
+                                    {destinationLabel(m, emplacementsMap)}
                                   </span>
                                 )}
                               </div>
@@ -545,7 +559,7 @@ export default function VehiculeTracage({
 // ═══════════════════════════════════════════════════════════════
 // BANDEAU MISSION EN COURS — Innovant
 // ═══════════════════════════════════════════════════════════════
-function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer }) {
+function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer, emplacementsMap = {} }) {
   const pct = Math.min(100, Math.round(progress * 100));
   const missionRef = mission.num || `#${mission.id}`;
 
@@ -634,7 +648,7 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
             <MapPin size={14} strokeWidth={2.5} />
           </span>
           <span className="vtr-live-banner__endpoint-label">
-            {mission.destination || 'Arrivée'}
+            {destinationLabel(mission, emplacementsMap) || 'Arrivée'}
           </span>
           <span className="vtr-live-banner__endpoint-time">
             {mission.dateRetour ? formatTime(mission.dateRetour) : '—'}
@@ -648,7 +662,7 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
 // ═══════════════════════════════════════════════════════════════
 // PANNEAU SUIVI LIVE — Innovant avec métriques circulaires
 // ═══════════════════════════════════════════════════════════════
-function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTerminer }) {
+function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTerminer, emplacementsMap = {} }) {
   const pct = Math.min(100, Math.round(progress * 100));
   const etaMin = useMemo(() => {
     const startedAt = mission.dateDepart ? new Date(mission.dateDepart).getTime() : null;
@@ -819,7 +833,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
             </div>
           )}
 
-          {mission.destination && (
+          {destinationLabel(mission, emplacementsMap) && (
             <div className="vtr-live-panel__briefing-item">
               <div className="vtr-live-panel__briefing-icon vtr-live-panel__briefing-icon--orange">
                 <MapPin size={13} strokeWidth={2.5} />
@@ -827,7 +841,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
               <div className="vtr-live-panel__briefing-text">
                 <span className="vtr-live-panel__briefing-label">Destination</span>
                 <span className="vtr-live-panel__briefing-value">
-                  {mission.destination}
+                  {destinationLabel(mission, emplacementsMap)}
                 </span>
               </div>
             </div>

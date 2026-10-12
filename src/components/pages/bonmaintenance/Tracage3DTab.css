@@ -1,0 +1,642 @@
+/* ============================================================
+   TRAÇAGE — journal vertical (même langage que BmdPage.css)
+   ============================================================ */
+.trx,
+.trx-etat {
+  --t-ink: var(--ink, #12303a);
+  --t-ink-soft: var(--ink-soft, #4b6670);
+  --t-ink-faint: var(--ink-faint, #7f969d);
+  --t-paper: var(--paper, #f2f6f6);
+  --t-line: var(--line, #d7e3e5);
+  --t-brand: var(--brand, #0794a4);
+  --t-brand-deep: var(--brand-deep, #05606b);
+  --t-brand-wash: var(--brand-wash, #e3f3f5);
+  --t-done: var(--done, #1f9d74);
+  --t-now: var(--now, #e8962e);
+  --t-alert: var(--alert, #d9434b);
+  --t-titre: var(--font-titre, 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif);
+
+  font-family: var(--font-texte, 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif);
+  color: var(--t-ink);
+}
+
+.trx { display: flex; flex-direction: column; gap: 18px; }
+.trx button { font-family: inherit; }
+.trx :focus-visible { outline: 3px solid var(--t-brand); outline-offset: 2px; }
+
+/* ---------- Tons ---------- */
+.trx-ton--brand  { --c: var(--t-brand-deep); --c-wash: var(--t-brand-wash); }
+.trx-ton--info   { --c: #2c5fb8; --c-wash: #e6eefb; }
+.trx-ton--violet { --c: #6b4fc8; --c-wash: #eeeafb; }
+.trx-ton--now    { --c: #b8701a; --c-wash: #fdf1e1; }
+.trx-ton--ok     { --c: var(--t-done); --c-wash: #e2f5ee; }
+.trx-ton--alert  { --c: var(--t-alert); --c-wash: #fde8e9; }
+.trx-ton--calme  { --c: var(--t-ink-soft); --c-wash: #e8eef0; }
+
+/* ---------- Chargement / vide ---------- */
+.trx-etat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 300px;
+  padding: 24px;
+  border-radius: 20px;
+  border: 1.5px dashed var(--t-line);
+  background: #ffffff;
+  color: var(--t-ink-soft);
+  text-align: center;
+  font-size: 15px;
+}
+.trx-etat p { margin: 0; max-width: 46ch; }
+
+.trx-tourne { animation: trx-rotation 0.9s linear infinite; }
+@keyframes trx-rotation { to { transform: rotate(360deg); } }
+
+/* ---------- En-tête ---------- */
+.trx-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px 20px;
+  flex-wrap: wrap;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1.5px solid var(--t-line);
+}
+
+.trx-phrase {
+  margin: 0;
+  font-size: 17px;
+  color: var(--t-ink-soft);
+}
+
+.trx-phrase strong {
+  font-family: var(--t-titre);
+  font-weight: 800;
+  color: var(--t-ink);
+}
+
+.trx-direct { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+.trx-direct-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--t-line);
+  background: #ffffff;
+  color: var(--t-ink-soft);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trx-direct-btn.is-on {
+  border-color: #bfe3d6;
+  background: #e2f5ee;
+  color: #17785a;
+}
+
+.trx-direct-btn.is-on svg { animation: trx-onde 2s ease-in-out infinite; }
+
+@keyframes trx-onde {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.trx-rafraichir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1.5px solid var(--t-line);
+  background: #ffffff;
+  color: var(--t-ink-soft);
+  cursor: pointer;
+}
+.trx-rafraichir:hover:not(:disabled) { border-color: var(--t-brand); color: var(--t-brand-deep); }
+.trx-rafraichir:disabled { cursor: wait; }
+
+.trx-maj { font-size: 13px; color: var(--t-ink-faint); }
+
+/* ---------- Erreur ---------- */
+.trx-erreur {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: #fde8e9;
+  border: 1.5px solid #f5c2c5;
+  color: var(--t-alert);
+  font-weight: 600;
+}
+
+.trx-erreur span { flex: 1; color: var(--t-ink); }
+
+.trx-erreur button {
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  background: var(--t-alert);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ---------- Filtres ---------- */
+.trx-outils {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+}
+
+.trx-filtres { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.trx-filtre {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--t-line);
+  background: #ffffff;
+  color: var(--t-ink-soft);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.trx-filtre span {
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--t-paper);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.trx-filtre:hover { border-color: var(--t-brand); color: var(--t-brand-deep); }
+.trx-filtre.is-actif { background: var(--t-ink); border-color: var(--t-ink); color: #ffffff; }
+.trx-filtre.is-actif span { background: rgba(255, 255, 255, 0.18); }
+
+.trx-outils-droite { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.trx-lien {
+  border: none;
+  background: none;
+  padding: 6px 0;
+  color: var(--t-brand-deep);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+/* ---------- Journal ---------- */
+.trx-journal { transition: opacity 0.2s ease; }
+.trx-journal.is-actualise { opacity: 0.75; }
+
+.trx-jour + .trx-jour { margin-top: 22px; }
+
+.trx-jour-titre {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 0 10px;
+  padding: 6px 0;
+  background: var(--t-paper);
+  font-family: var(--t-titre);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--t-ink);
+}
+
+.trx-liste {
+  --heure: 52px;
+  --point: 36px;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Rail vertical reliant les événements */
+.trx-liste::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  bottom: 18px;
+  left: calc(var(--heure) + 12px + var(--point) / 2 - 1.5px);
+  width: 3px;
+  border-radius: 999px;
+  background: #dfe9eb;
+}
+
+.trx-evt {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--heure) var(--point) minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+  padding-bottom: 10px;
+}
+
+.trx-evt-heure {
+  padding-top: 9px;
+  text-align: right;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--t-ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.trx-evt-point {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--point);
+  height: var(--point);
+  border-radius: 50%;
+  background: var(--c-wash);
+  color: var(--c);
+  box-shadow: 0 0 0 4px var(--t-paper);
+}
+
+.trx-evt-carte {
+  border-radius: 16px;
+  border: 1.5px solid var(--t-line);
+  background: #ffffff;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.trx-evt.is-ouvert .trx-evt-carte { border-color: var(--c); }
+
+.trx-evt-tete {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.trx-evt-tete:disabled { cursor: default; }
+.trx-evt-tete:hover:not(:disabled) { background: #fbfdfd; }
+
+.trx-evt-textes { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+
+.trx-evt-type {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c);
+}
+
+.trx-evt-titre {
+  font-family: var(--t-titre);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--t-ink);
+  line-height: 1.3;
+}
+
+.trx-evt-resume {
+  font-size: 14px;
+  color: var(--t-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.trx-evt.is-ouvert .trx-evt-resume { -webkit-line-clamp: unset; }
+
+.trx-evt-acteur {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--t-ink-faint);
+}
+
+.trx-badge {
+  flex-shrink: 0;
+  padding: 3px 11px;
+  border-radius: 999px;
+  background: var(--c-wash);
+  color: var(--c);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.trx-evt-chevron {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--t-ink-faint);
+  transition: transform 0.2s ease;
+}
+
+.trx-evt.is-ouvert .trx-evt-chevron { transform: rotate(180deg); color: var(--c); }
+
+.trx-evt-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+  padding: 14px 16px 16px;
+  border-top: 1.5px dashed var(--t-line);
+  background: #fbfdfd;
+  animation: trx-deplie 0.2s ease-out;
+}
+
+@keyframes trx-deplie {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.trx-evt-details dt { font-size: 13px; color: var(--t-ink-faint); }
+
+.trx-evt-details dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--t-ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---------- Nouvel événement ---------- */
+.trx-nouveau {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--t-now);
+  color: #2b1a04;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+.trx-evt.is-nouveau .trx-evt-carte { animation: trx-arrivee 1.6s ease-out; }
+.trx-evt.is-nouveau .trx-evt-point { animation: trx-point 1.6s ease-out; }
+
+@keyframes trx-arrivee {
+  0%   { transform: translateX(-10px); opacity: 0; box-shadow: 0 0 0 0 rgba(232, 150, 46, 0.5); }
+  25%  { transform: none; opacity: 1; }
+  100% { box-shadow: 0 0 0 14px rgba(232, 150, 46, 0); }
+}
+
+@keyframes trx-point {
+  0%   { transform: scale(0.4); }
+  40%  { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Attente de la suite ---------- */
+.trx-attente {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 0 calc(52px + 12px);
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1.5px dashed var(--t-line);
+  color: var(--t-ink-faint);
+  font-size: 14px;
+}
+
+.trx-attente-point {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--t-done);
+  animation: trx-onde 2s ease-in-out infinite;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .trx-liste { --heure: 44px; --point: 32px; }
+  .trx-evt { column-gap: 8px; }
+  .trx-evt-tete { flex-wrap: wrap; }
+  .trx-badge { order: 3; margin-left: 0; }
+  .trx-attente { margin-left: 0; }
+  .trx-outils-droite { width: 100%; justify-content: space-between; }
+}
+
+
+/* ============================================================
+   ANIMATIONS — le journal « respire »
+   ============================================================ */
+
+/* ---- Entrée en cascade (premier affichage, changement de filtre) ---- */
+.trx-journal.is-cascade .trx-jour-titre {
+  animation: trx-titre-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--j, 0) * 120ms);
+}
+
+.trx-journal.is-cascade .trx-evt {
+  animation: trx-evt-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(80ms + var(--i, 0) * 70ms);
+}
+
+.trx-journal.is-cascade .trx-evt-point {
+  animation: trx-point-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(140ms + var(--i, 0) * 70ms);
+}
+
+/* Le rail se dessine de haut en bas */
+.trx-journal.is-cascade .trx-liste::before {
+  transform-origin: top;
+  animation: trx-rail 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
+  animation-delay: calc(var(--j, 0) * 120ms);
+}
+
+@keyframes trx-titre-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes trx-evt-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes trx-point-in {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+@keyframes trx-rail {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+/* ---- Survol : la carte se soulève, la pastille réagit ---- */
+.trx-evt-carte {
+  transition: border-color 0.15s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.trx-evt:hover .trx-evt-carte {
+  transform: translateX(3px);
+  box-shadow: 0 10px 24px -14px rgba(18, 48, 58, 0.35);
+}
+
+.trx-evt-point { transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease; }
+
+.trx-evt:hover .trx-evt-point,
+.trx-evt.is-ouvert .trx-evt-point {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 4px var(--t-paper), 0 0 0 7px var(--c-wash);
+}
+
+/* ---- Détails : les lignes apparaissent une à une ---- */
+.trx-evt-details > div {
+  animation: trx-ligne-in 0.3s ease-out both;
+  animation-delay: calc(var(--d, 0) * 45ms);
+}
+
+@keyframes trx-ligne-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ---- Compteurs ---- */
+.trx-chiffre { font-variant-numeric: tabular-nums; }
+
+/* ---- Direct : tracé de moniteur cardiaque ---- */
+.trx-pouls {
+  width: 54px;
+  height: 18px;
+  margin-left: 2px;
+  overflow: visible;
+}
+
+.trx-pouls path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.35;
+  stroke-dasharray: 0.35 0.65;
+  stroke-dashoffset: 0;
+}
+
+.trx-pouls.is-actif path {
+  opacity: 1;
+  animation: trx-ecg 1.8s linear infinite;
+}
+
+@keyframes trx-ecg {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* ---- Actualisation : un reflet traverse l'en-tête ---- */
+.trx-entete { position: relative; overflow: hidden; }
+
+.trx-entete.is-actualise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgba(7, 148, 164, 0.10) 50%, transparent 80%);
+  animation: trx-reflet 1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes trx-reflet {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}
+
+/* L'heure de mise à jour clignote une fois à chaque actualisation */
+.trx-maj { animation: trx-maj 0.9s ease-out; }
+
+@keyframes trx-maj {
+  0%   { color: var(--t-done); }
+  100% { color: var(--t-ink-faint); }
+}
+
+.trx-rafraichir svg { transition: transform 0.3s ease; }
+.trx-rafraichir:hover:not(:disabled) svg { transform: rotate(90deg); }
+
+/* ---- Filtres : petit rebond au clic ---- */
+.trx-filtre { transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease; }
+.trx-filtre:active { transform: scale(0.95); }
+.trx-filtre.is-actif span { animation: trx-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+@keyframes trx-pop {
+  0% { transform: scale(0.6); }
+  100% { transform: scale(1); }
+}
+
+/* ---- Nouvel événement : arrivée plus marquée ---- */
+.trx-evt.is-nouveau .trx-evt-carte {
+  animation: trx-arrivee-vive 2.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes trx-arrivee-vive {
+  0%   { opacity: 0; transform: translateX(-24px) scale(0.97); box-shadow: 0 0 0 0 rgba(232, 150, 46, 0.55); border-color: var(--t-now); }
+  20%  { opacity: 1; transform: none; }
+  60%  { box-shadow: 0 0 0 16px rgba(232, 150, 46, 0); border-color: var(--t-now); }
+  100% { box-shadow: 0 0 0 0 rgba(232, 150, 46, 0); }
+}
+
+.trx-evt.is-nouveau .trx-evt-point {
+  animation: trx-point-vif 2.2s ease-out;
+}
+
+@keyframes trx-point-vif {
+  0%   { transform: scale(0.3); box-shadow: 0 0 0 4px var(--t-paper), 0 0 0 0 rgba(232, 150, 46, 0.6); }
+  30%  { transform: scale(1.2); }
+  50%  { transform: scale(1); box-shadow: 0 0 0 4px var(--t-paper), 0 0 0 14px rgba(232, 150, 46, 0); }
+  100% { box-shadow: 0 0 0 4px var(--t-paper); }
+}
+
+.trx-nouveau { animation: trx-etiquette 1s ease-in-out 3; }
+
+@keyframes trx-etiquette {
+  0%, 100% { transform: none; }
+  50% { transform: translateY(-2px); }
+}
+
+/* ---- Attente : le point qui respire ---- */
+.trx-attente-point {
+  box-shadow: 0 0 0 0 rgba(31, 157, 116, 0.5);
+  animation: trx-respire 2s ease-out infinite;
+}
+
+@keyframes trx-respire {
+  0%   { box-shadow: 0 0 0 0 rgba(31, 157, 116, 0.5); }
+  70%  { box-shadow: 0 0 0 10px rgba(31, 157, 116, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(31, 157, 116, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trx *,
+  .trx *::before,
+  .trx *::after { animation: none !important; transition: none !important; }
+}

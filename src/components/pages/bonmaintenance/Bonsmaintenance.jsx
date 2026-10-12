@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 import {
   Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw,
   Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, BarChart3, Search,
@@ -19,6 +20,7 @@ import FicheBonMaintenance from '../Fichebonmaintenance/FicheBonMaintenance';
 import CommanderModal from '../../ui/modals/CommanderModal';
 import DemanderModal from '../../ui/modals/DemanderModal';
 import PageModal from '../../ui/modals/PageModal';
+import Button from '../../ui/Button';
 
 import Anomalies from '../Anomalies/Anomalies';
 import BlocagesImmobilisation from '../BlocagesImmobilisation/BlocagesImmobilisation';
@@ -32,11 +34,9 @@ import pieceLigneService from '../../../services/pieceLigneService';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 
+import { t, tp, locale, SelecteurLangue } from '../../../i18n';
 import './BonsMaintenance.css';
 
-/* =========================================================
-   CONSTANTES
-   ========================================================= */
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
 
 const TRANSITIONS = {
@@ -73,15 +73,12 @@ const ETAT_IMMOBILISATION_OPTIONS = [
   { value: 4, label: 'Hors service' },
 ];
 
-/* =========================================================
-   MAPPING ÉTAT DEMANDE
-   ========================================================= */
 const DEMANDE_ETAT_MAP = {
-  EN_ATTENTE: { label: 'En attente', cls: 'dmd-etat--attente' },
-  ACCEPTEE:   { label: 'Acceptée',   cls: 'dmd-etat--acceptee' },
-  REFUSEE:    { label: 'Refusée',    cls: 'dmd-etat--refusee' },
-  COMMANDE:   { label: 'Commandée',  cls: 'dmd-etat--commande' },
-  SERVIE:     { label: 'Servie',     cls: 'dmd-etat--servie' },
+  EN_ATTENTE: { label: 'En attente', cls: 'dmd2-etat--attente' },
+  ACCEPTEE:   { label: 'Acceptée',   cls: 'dmd2-etat--acceptee' },
+  REFUSEE:    { label: 'Refusée',    cls: 'dmd2-etat--refusee' },
+  COMMANDE:   { label: 'Commandée',  cls: 'dmd2-etat--commande' },
+  SERVIE:     { label: 'Servie',     cls: 'dmd2-etat--servie' },
 };
 
 function demandeEtatLabel(etat) {
@@ -92,40 +89,46 @@ function demandeEtatClass(etat) {
   return DEMANDE_ETAT_MAP[etat]?.cls || '';
 }
 
-/* =========================================================
-   UTILITAIRES
-   ========================================================= */
-function etatLabel(etat) { return etat == null ? '—' : ETAT_LABELS[etat] ?? `État ${etat}`; }
-function niveauLabel(niveau) { return niveau == null ? '—' : NIVEAU_LABELS[niveau] ?? `Niveau ${niveau}`; }
+
+function etatLabel(etat) { return etat == null ? '—' : ETAT_LABELS[etat] ?? t('État {n}', { n: etat }); }
+function niveauLabel(niveau) { return niveau == null ? '—' : NIVEAU_LABELS[niveau] ?? t('Niveau {n}', { n: niveau }); }
 
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+function formatDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  return d.toLocaleString(locale(), {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
 }
 
 function getAvailableActions(bon) {
   if (!bon) return [];
-  const t = TRANSITIONS[bon.etat];
-  return t ? t.actions : [];
+  const tache = TRANSITIONS[bon.etat];
+  return tache ? tache.actions : [];
 }
 
 function isTerminalState(bon) {
   if (!bon) return false;
-  const t = TRANSITIONS[bon.etat];
-  return t ? t.isTerminal || false : false;
+  const tache = TRANSITIONS[bon.etat];
+  return tache ? tache.isTerminal || false : false;
 }
 
 function getEtatCount(bons, etatValue) {
   return bons.filter((b) => b.etat === etatValue).length;
 }
 
-/* =========================================================
-   CALCUL DES BESOINS
-   ========================================================= */
+
 async function computeBonMaintenanceNeeds(bonId) {
-  let tooltip = "Aucun document d'achat (Demander/Commander) pour ce bon.";
+  let tooltip = t("Aucun document d'achat (Demander/Commander) pour ce bon.");
   let commanderNecessaire = false;
   let demanderNecessaire = false;
   const dejaCommandeParArticle = {};
@@ -137,9 +140,9 @@ async function computeBonMaintenanceNeeds(bonId) {
     const lignesTexte = (documents ?? [])
       .filter((d) => d.piece?.codePieceType === '.COMMANDE_FOURNISSEUR' || d.piece?.codePieceType === '.D_Fourniture')
       .map((d) => {
-        const typeLabel = d.piece.codePieceType === '.COMMANDE_FOURNISSEUR' ? 'Commande' : 'Demande';
-        const articlesTexte = (d.lignes ?? []).map((l) => `Article #${l.prestataireArticlesId} (Qté ${l.qte ?? '—'})`).join(', ');
-        return `${typeLabel} — ${articlesTexte || 'aucun article'}`;
+        const typeLabel = d.piece.codePieceType === '.COMMANDE_FOURNISSEUR' ? t('Commande') : t('Demande');
+        const articlesTexte = (d.lignes ?? []).map((l) => t('Article #{id} (Qté {qte})', { id: l.prestataireArticlesId, qte: l.qte ?? '—' })).join(t(', '));
+        return `${typeLabel} — ${articlesTexte || t('aucun article')}`;
       });
 
     if (lignesTexte.length > 0) tooltip = lignesTexte.join('\n');
@@ -159,22 +162,22 @@ async function computeBonMaintenanceNeeds(bonId) {
 
   try {
     const taches = await bonMaintenanceTacheService.getByBonMaintenance(bonId);
-    const tachesAvecArticle = (taches ?? []).filter((t) => t.prestataireArticlesId != null);
+    const tachesAvecArticle = (taches ?? []).filter((tache) => tache.prestataireArticlesId != null);
 
-    await Promise.all(tachesAvecArticle.map(async (t) => {
+    await Promise.all(tachesAvecArticle.map(async (tache) => {
       try {
-        const disponible = await pieceLigneService.getQuantiteDisponible(t.prestataireArticlesId);
-        const qte = t.qte ?? 0;
+        const disponible = await pieceLigneService.getQuantiteDisponible(tache.prestataireArticlesId);
+        const qte = tache.qte ?? 0;
         const manquant = disponible != null ? Math.max(0, qte - disponible) : qte;
         if (manquant <= 0) return;
 
-        const dejaCommande = dejaCommandeParArticle[t.prestataireArticlesId] ?? 0;
-        const dejaDemande = dejaDemandeParArticle[t.prestataireArticlesId] ?? 0;
+        const dejaCommande = dejaCommandeParArticle[tache.prestataireArticlesId] ?? 0;
+        const dejaDemande = dejaDemandeParArticle[tache.prestataireArticlesId] ?? 0;
         const resteACommander = manquant - dejaCommande;
         const resteADemander = manquant - dejaDemande;
 
         if (resteADemander > 0) demanderNecessaire = true;
-        if (resteACommander > 0 && t.sousTraitantId != null) commanderNecessaire = true;
+        if (resteACommander > 0 && tache.sousTraitantId != null) commanderNecessaire = true;
       } catch { /* ignore */ }
     }));
   } catch (err) {
@@ -184,9 +187,7 @@ async function computeBonMaintenanceNeeds(bonId) {
   return { tooltip, commanderNecessaire, demanderNecessaire };
 }
 
-/* =========================================================
-   COLONNES TRI
-   ========================================================= */
+
 const SORTABLE_COLUMNS = {
   num: (b) => b.num || '',
   titre: (b) => b.titre || '',
@@ -201,7 +202,7 @@ const SORTABLE_COLUMNS = {
 const PAGE_SIZE = 10;
 
 /* =========================================================
-   COLONNES (paramétrables : affichage + recherche)
+   COLONNES TABLEAU (paramétrables)
    ========================================================= */
 const BON_COLUMNS_DEFAULT = [
   { key: 'num',         label: 'Numéro',      visible: true, searchable: true  },
@@ -213,6 +214,111 @@ const BON_COLUMNS_DEFAULT = [
   { key: 'date',        label: 'Date',        visible: true, searchable: false },
   { key: 'etat',        label: 'État',        visible: true, searchable: false },
 ];
+
+/* =========================================================
+   EXPORT EXCEL — Liste complète des attributs (avec extract)
+   ========================================================= */
+const EXCEL_ALL_FIELDS = [
+  // --- Identification ---
+  { key: 'id',                          label: 'ID',                        extract: (b) => b.id ?? '' },
+  { key: 'num',                         label: 'Numéro',                    extract: (b) => b.num || '' },
+  { key: 'titre',                       label: 'Titre',                     extract: (b) => b.titre || '' },
+  { key: 'description',                 label: 'Description',               extract: (b) => b.description || '' },
+
+  // --- État & classification ---
+  { key: 'etat',                        label: 'État',                      extract: (b) => etatLabel(b.etat) },
+  { key: 'urgence',                     label: 'Urgence',                   extract: (b) => niveauLabel(b.urgence) },
+  { key: 'priorite',                    label: 'Priorité (code)',           extract: (b) => b.priorite ?? '' },
+  { key: 'prioriteLabel',               label: 'Priorité (libellé)',        extract: (b) => prioriteLabel(b.priorite) },
+
+  // --- Dates ---
+  { key: 'date',                        label: 'Date',                      extract: (b) => formatDate(b.date) },
+  { key: 'dateCreation',                label: 'Date de création',          extract: (b) => formatDate(b.dateCreation) },
+  { key: 'dateDebut',                   label: 'Date de début',             extract: (b) => formatDate(b.dateDebut) },
+  { key: 'dateFin',                     label: 'Date de fin',               extract: (b) => formatDate(b.dateFin) },
+  { key: 'dateCloture',                 label: 'Date de clôture',           extract: (b) => formatDate(b.dateCloture) },
+
+  // --- Prestataire ---
+  { key: 'prestataireId',               label: 'Prestataire ID',            extract: (b) => b.prestataireId ?? b.prestataire?.id ?? '' },
+  { key: 'prestataireNom',              label: 'Prestataire',               extract: (b) => b.prestataire?.raisonSociale || b.prestataire?.nom || '' },
+  { key: 'prestataireCode',             label: 'Code prestataire',          extract: (b) => b.prestataire?.code || '' },
+
+  // --- Sous-traitant ---
+  { key: 'sousTraitantId',              label: 'Sous-traitant ID',          extract: (b) => b.sousTraitantId ?? '' },
+  { key: 'sousTraitant',                label: 'Sous-traitant',             extract: (b) => b.sousTraitant || '' },
+
+  // --- Service ---
+  { key: 'serviceId',                   label: 'Service ID',                extract: (b) => b.serviceId ?? b.service?.id ?? '' },
+  { key: 'serviceNom',                  label: 'Service',                   extract: (b) => b.serviceNom || b.service?.description || b.service?.label || '' },
+
+  // --- Dépôt ---
+  { key: 'depotId',                     label: 'Dépôt ID',                  extract: (b) => b.depotId ?? b.depot?.id ?? '' },
+  { key: 'depotNom',                    label: 'Dépôt',                     extract: (b) => b.depotNom || b.depot?.codeDepots || b.depot?.libelle || '' },
+
+  // --- Clinique ---
+  { key: 'cliniqueId',                  label: 'Clinique ID',               extract: (b) => b.cliniqueId ?? b.clinique?.id ?? '' },
+  { key: 'cliniqueNom',                 label: 'Clinique',                  extract: (b) => b.cliniqueNom || b.clinique?.nom || '' },
+
+  // --- Équipement / Immobilisation ---
+  { key: 'lotArticleImmobilistationId', label: 'Immobilisation ID',         extract: (b) => b.lotArticleImmobilistationId ?? '' },
+
+  // --- Personnel ---
+  { key: 'personnelId',                 label: 'Personnel ID',              extract: (b) => b.personnelId ?? '' },
+  { key: 'personnelNom',                label: 'Personnel',                 extract: (b) => b.personnelNom || (b.personnel ? `${b.personnel.nom || ''} ${b.personnel.prenom || ''}`.trim() : '') },
+
+  // --- Création / modification ---
+  { key: 'personnelCreationNom',        label: 'Créé par',                  extract: (b) => b.personnelCreationNom || '' },
+  { key: 'personnelModificationNom',    label: 'Modifié par',               extract: (b) => b.personnelModificationNom || '' },
+
+  // --- Champs libres ---
+  { key: 'motifSuspension',             label: 'Motif suspension',          extract: (b) => b.motifSuspension || '' },
+  { key: 'observations',                label: 'Observations',              extract: (b) => b.observations || '' },
+  { key: 'commentaire',                 label: 'Commentaire',               extract: (b) => b.commentaire || '' },
+
+  // --- SLA & coût ---
+  { key: 'slaReponse',                  label: 'SLA réponse',               extract: (b) => b.sla?.statutReponse || '' },
+  { key: 'slaResolution',               label: 'SLA résolution',            extract: (b) => b.sla?.statutResolution || '' },
+  { key: 'coutTotal',                   label: 'Coût total',                extract: (b) => b.cout?.coutTotal ?? '' },
+];
+
+const EXCEL_COLUMNS_OPTIONS = EXCEL_ALL_FIELDS.map(({ key, label }) => ({ key, label }));
+
+/**
+ * Extrait les champs dynamiques non listés (fallback).
+ * Permet de capturer les attributs bruts non prévus.
+ */
+function collectDynamicFields(bons) {
+  const knownKeys = new Set(EXCEL_ALL_FIELDS.map((f) => f.key));
+  const skipKeys = new Set([
+    'prestataire', 'service', 'depot', 'clinique', 'personnel',
+    'sla', 'cout', 'rcaAnalyses', 'commentaires', 'intervenants',
+    'taches', 'diagnostics', 'controles', 'remisesEnService',
+    'documents', 'historique', 'reclamations', 'pieces', 'lignes',
+  ]);
+
+  const dynamicKeys = new Set();
+
+  bons.forEach((b) => {
+    Object.keys(b || {}).forEach((k) => {
+      if (knownKeys.has(k) || skipKeys.has(k)) return;
+      const v = b[k];
+      if (v === null || v === undefined) return;
+      if (typeof v === 'object') return;
+      dynamicKeys.add(k);
+    });
+  });
+
+  return Array.from(dynamicKeys).map((k) => ({
+    key: k,
+    label: k.charAt(0).toUpperCase() + k.slice(1),
+    extract: (b) => {
+      const v = b[k];
+      if (v === null || v === undefined) return '';
+      if (typeof v === 'boolean') return v ? t("Oui") : t("Non");
+      return String(v);
+    },
+  }));
+}
 
 function getColumnSearchValue(b, key) {
   switch (key) {
@@ -272,7 +378,7 @@ export default function BonsMaintenance() {
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
-    confirmText: 'Confirmer', onConfirm: null, error: null, confirming: false,
+    confirmText: t("Confirmer"), onConfirm: null, error: null, confirming: false,
   });
 
   const [motifModal, setMotifModal] = useState({ show: false, motif: '', error: null, confirming: false });
@@ -283,6 +389,11 @@ export default function BonsMaintenance() {
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
+  /* --- Export Excel : colonnes sélectionnables --- */
+  const [isExcelColumnsModalOpen, setIsExcelColumnsModalOpen] = useState(false);
+  const [excelSelectedColumns, setExcelSelectedColumns] = useState([]);
+  const [exportingExcel, setExportingExcel] = useState(false);
+
   const load = async () => {
     setLoading(true);
     setError(null);
@@ -291,7 +402,7 @@ export default function BonsMaintenance() {
       setBons(page.content ?? []);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les bons de maintenance. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les bons de maintenance. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -471,13 +582,13 @@ export default function BonsMaintenance() {
 
   const TABLE_COLUMNS_DEF = {
     num: { cell: (b) => <td key="num" style={{ fontWeight: 600 }}>{b.num || '—'}</td> },
-    titre: { cell: (b) => <td key="titre">{b.titre}</td> },
+    titre: { cell: (b) => <td key="titre">{t(b.titre)}</td> },
     prestataire: { cell: (b) => <td key="prestataire">{b.prestataire?.raisonSociale || b.prestataire?.nom || '—'}</td> },
     service: { cell: (b) => <td key="service">{b.serviceNom || b.service?.description || '—'}</td> },
     urgence: {
       cell: (b) => (
         <td key="urgence">
-          <span className={`bons-urgence-badge urgence-${b.urgence || 0}`}>{niveauLabel(b.urgence)}</span>
+          <span className={`bons-urgence-badge urgence-${b.urgence || 0}`}>{t(niveauLabel(b.urgence))}</span>
         </td>
       ),
     },
@@ -485,7 +596,7 @@ export default function BonsMaintenance() {
       cell: (b) => (
         <td key="priorite">
           <span className={`bons-priorite-badge priorite-color-${prioriteColor(b.priorite)}`}>
-            {b.priorite || '—'} · {prioriteLabel(b.priorite)}
+            {b.priorite || '—'} · {t(prioriteLabel(b.priorite))}
           </span>
         </td>
       ),
@@ -502,34 +613,108 @@ export default function BonsMaintenance() {
         <td key="etat">
           <span className={`bons-badge ${ETAT_BADGE_CLASS[b.etat] || ''}`}>
             {renderEtatIcon(b.etat)}
-            {etatLabel(b.etat)}
+            {t(etatLabel(b.etat))}
           </span>
         </td>
       ),
     },
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Numéro', 'Titre', 'Prestataire', 'Urgence', 'Priorité', 'Date', 'État'];
-    const lignes = sortedBons.map((b) => [
-      b.num || '',
-      (b.titre || '').replace(/"/g, '""'),
-      b.prestataire?.raisonSociale || b.prestataire?.nom || '',
-      niveauLabel(b.urgence),
-      prioriteLabel(b.priorite),
-      formatDate(b.date),
-      etatLabel(b.etat),
-    ]);
-    const csv = [entetes, ...lignes].map((ligne) => ligne.map((cellule) => `"${cellule}"`).join(';')).join('\r\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const lien = document.createElement('a');
-    lien.href = url;
-    lien.download = `bons-maintenance-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(lien);
-    lien.click();
-    document.body.removeChild(lien);
-    URL.revokeObjectURL(url);
+  /* =========================================================
+     EXPORT EXCEL — Modale de sélection
+     ========================================================= */
+  const openExcelColumnsModal = () => {
+    // Toutes les colonnes cochées par défaut
+    setExcelSelectedColumns(EXCEL_COLUMNS_OPTIONS.map((c) => c.key));
+    setIsExcelColumnsModalOpen(true);
+  };
+
+  const toggleExcelColumn = (key) => {
+    setExcelSelectedColumns((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  const toggleAllExcelColumns = () => {
+    if (excelSelectedColumns.length === EXCEL_COLUMNS_OPTIONS.length) {
+      setExcelSelectedColumns([]);
+    } else {
+      setExcelSelectedColumns(EXCEL_COLUMNS_OPTIONS.map((c) => c.key));
+    }
+  };
+
+  /* =========================================================
+     EXPORT EXCEL — Génération complète
+     ========================================================= */
+  const handleExportExcel = async () => {
+    if (excelSelectedColumns.length === 0) {
+      alert(t("Veuillez sélectionner au moins une colonne."));
+      return;
+    }
+
+    try {
+      setExportingExcel(true);
+
+      // 1. Charger les détails complets (tous attributs) de chaque bon
+      const details = await Promise.all(
+        sortedBons.map(async (b) => {
+          try {
+            const full = await bonMaintenanceService.getById(b.id);
+            return full ?? b;
+          } catch (err) {
+            console.warn(`Impossible de charger le détail du bon #${b.id}`, err);
+            return b;
+          }
+        })
+      );
+
+      // 2. Récupérer les champs dynamiques (fallback pour capturer les attributs non listés)
+      const dynamicFields = collectDynamicFields(details);
+
+      // 3. Construire la liste complète des colonnes disponibles
+      const allFields = [...EXCEL_ALL_FIELDS, ...dynamicFields];
+
+      // 4. Filtrer selon les colonnes cochées
+      const selectedFields = allFields.filter((f) =>
+        excelSelectedColumns.includes(f.key)
+      );
+
+      const headers = selectedFields.map((f) => t(f.label));
+
+      const rows = details.map((b) =>
+        selectedFields.map((f) => {
+          const v = f.extract(b);
+          if (v === null || v === undefined) return '';
+          return typeof v === 'string' ? t(v) : v; // libellés d'état traduits ; données saisies inchangées
+        })
+      );
+
+      // 5. Générer le fichier XLSX
+      const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+
+      const colWidths = headers.map((h, idx) => {
+        let maxLen = String(h).length;
+        rows.forEach((row) => {
+          const cellLen = String(row[idx] ?? '').length;
+          if (cellLen > maxLen) maxLen = cellLen;
+        });
+        return { wch: Math.min(Math.max(maxLen + 2, 12), 60) };
+      });
+      worksheet['!cols'] = colWidths;
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, t('Bons de maintenance').slice(0, 31));
+
+      const today = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(workbook, `bons-maintenance-complet-${today}.xlsx`);
+
+      setIsExcelColumnsModalOpen(false);
+    } catch (err) {
+      console.error('Erreur export Excel:', err);
+      alert(t("Erreur lors de l'export Excel."));
+    } finally {
+      setExportingExcel(false);
+    }
   };
 
   const handlePrint = () => window.print();
@@ -551,12 +736,12 @@ export default function BonsMaintenance() {
       const result = await bonMaintenanceFullService.createFull(payload, children || {});
       if (result.errors.length > 0) {
         const summary = result.errors.map((e) => `- ${e.type} #${e.index + 1}`).join('\n');
-        alert(`Le bon a été créé, mais ${result.errors.length} élément(s) enfant(s) n'ont pas pu être ajoutés :\n${summary}\n\nTu peux les ajouter manuellement depuis l'onglet Détails du bon.`);
+        alert(`${t("Le bon a été créé, mais {n} élément(s) n'ont pas pu être ajoutés :", { n: result.errors.length })}\n${summary}\n\n${t("Vous pouvez les ajouter depuis la page de détail du bon.")}`);
       }
       const conflits = (result.intervenants || []).filter((i) => i.conflitPeriode);
       if (conflits.length > 0) {
         const detail = conflits.map((i) => `- ${i.personnel?.nom || ''} ${i.personnel?.prenom || ''} : ${i.conflitMessage}`).join('\n');
-        alert(`⚠️ Conflit de planning détecté pour ${conflits.length} intervenant(s) :\n${detail}\n\nLe bon a bien été créé — vérifie la disponibilité de ces techniciens si besoin.`);
+        alert(`⚠️ ${t('Conflit de planning détecté pour {n} intervenant(s) :', { n: conflits.length })}\n${detail}\n\n${t('Le bon a bien été créé. Vérifiez la disponibilité de ces techniciens si besoin.')}`);
       }
     }
     setSelectedBon(null);
@@ -570,9 +755,9 @@ export default function BonsMaintenance() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: 'Supprimer le bon de maintenance',
-      message: `Supprimer le bon "${selectedBon.titre}" ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer le bon de maintenance"),
+      message: t('Supprimer le bon « {titre} » ? Cette action est irréversible.', { titre: selectedBon.titre }),
+      confirmText: t("Supprimer"),
       error: null,
       confirming: false,
       onConfirm: async () => {
@@ -595,7 +780,7 @@ export default function BonsMaintenance() {
   };
 
   const runTransition = async (action) => {
-    if (!selectedBon || transitioning) return { ok: false, message: 'Aucun bon sélectionné.' };
+    if (!selectedBon || transitioning) return { ok: false, message: t("Aucun bon sélectionné.") };
     setTransitioning(true);
     try {
       const updated = await action();
@@ -669,9 +854,9 @@ export default function BonsMaintenance() {
     setConfirmModal({
       show: true,
       type: 'warning',
-      title: 'Annuler le bon de maintenance',
-      message: `Annuler le bon "${selectedBon.titre}" ?`,
-      confirmText: 'Annuler le bon',
+      title: t("Annuler le bon de maintenance"),
+      message: t('Annuler le bon « {titre} » ?', { titre: selectedBon.titre }),
+      confirmText: t("Annuler le bon"),
       error: null,
       confirming: false,
       onConfirm: async () => {
@@ -685,7 +870,7 @@ export default function BonsMaintenance() {
 
   const getActiveFilterLabel = () => {
     const option = ETAT_FILTER_OPTIONS.find((o) => o.value === etatFilter);
-    return option ? option.label : 'Tous les états';
+    return option ? option.label : t("Tous les états");
   };
 
   const renderEtatIcon = (etat, size = 16) => {
@@ -729,38 +914,41 @@ export default function BonsMaintenance() {
             type="button"
             className="bons-header-icon-wrapper bons-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <Activity size={28} className="bons-header-icon" />
           </button>
           <div>
-            <h2>Bons de maintenance</h2>
-            <p className="bons-header-subtitle">Gestion des interventions de maintenance</p>
+            <h2>{t("Bons de maintenance")}</h2>
+            <p className="bons-header-subtitle">{t("Gestion des interventions de maintenance")}</p>
           </div>
         </div>
 
         <div className="bons-header-stats">
-          <span className="bons-badge-total">Total : {bons.length}</span>
+          <span className="bons-badge-total">{t('Total : {n}', { n: bons.length })}</span>
 
-          <button className="bons-toggle-stats" title="Anomalies" onClick={() => setAnomaliesOpen(true)}>
+          {/* Langue de l'application (même réglage que dans les Paramètres) */}
+          <SelecteurLangue className="bons-langue" />
+
+          <button className="bons-toggle-stats" title={t("Anomalies")} onClick={() => setAnomaliesOpen(true)}>
             <AlertTriangle size={20} />
-            <span>Anomalies</span>
+            <span>{t("Anomalies")}</span>
           </button>
 
-          <button className="bons-toggle-stats" title="Blocages" onClick={() => setBlocagesOpen(true)}>
+          <button className="bons-toggle-stats" title={t("Blocages")} onClick={() => setBlocagesOpen(true)}>
             <Ban size={20} />
-            <span>Blocages</span>
+            <span>{t("Blocages")}</span>
           </button>
 
-          <button className="bons-toggle-stats" title="État des équipements" onClick={() => setEtatEquipOpen(true)}>
+          <button className="bons-toggle-stats" title={t("État des équipements")} onClick={() => setEtatEquipOpen(true)}>
             <Gauge size={20} />
-            <span>État équipements</span>
+            <span>{t("État équipements")}</span>
           </button>
 
-          <button className="bons-toggle-stats" title="Intelligence" onClick={() => setIntelligenceOpen(true)}>
+          <button className="bons-toggle-stats" title={t("Intelligence")} onClick={() => setIntelligenceOpen(true)}>
             <Sparkles size={20} />
-            <span>Intelligence</span>
+            <span>{t("Intelligence")}</span>
           </button>
 
           <button className="bons-toggle-stats" onClick={() => setShowFilterStats(!showFilterStats)} title="Afficher/masquer les statistiques">
@@ -784,10 +972,10 @@ export default function BonsMaintenance() {
                 className={`bons-stat-item ${isActive ? 'active' : ''}`}
                 onClick={() => setEtatFilter(option.value)}
                 style={{ '--stat-color': option.color }}
-                title={`${option.label}: ${count} bon(s)`}
+                title={`${t(option.label)} : ${tp('bon (compte)', count)}`}
               >
                 <Icon size={18} style={{ color: option.color }} />
-                <span className="bons-stat-label">{option.label}</span>
+                <span className="bons-stat-label">{t(option.label)}</span>
                 <span className="bons-stat-count">{count}</span>
                 <div className="bons-stat-bar-bg">
                   <div className="bons-stat-bar-fill" style={{ width: `${percentage}%`, backgroundColor: option.color }} />
@@ -802,17 +990,17 @@ export default function BonsMaintenance() {
       <div className="bons-actions-bar">
         <button className="bons-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} />
-          <span>Ajouter</span>
+          <span>{t("Ajouter")}</span>
         </button>
 
         <button className={`bons-action-btn modifier ${!selectedBon ? 'disabled' : ''}`} disabled={!selectedBon} onClick={openEdit}>
           <Edit size={18} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button className={`bons-action-btn details ${!selectedBon ? 'disabled' : ''}`} disabled={!selectedBon} onClick={() => setViewMode('details')}>
           <Eye size={18} />
-          <span>Détails</span>
+          <span>{t("Détails")}</span>
         </button>
 
         <button
@@ -821,12 +1009,12 @@ export default function BonsMaintenance() {
           onClick={openDemander}
         >
           <PackageSearch size={18} />
-          <span>Demander</span>
+          <span>{t("Demander")}</span>
         </button>
 
         <button className={`bons-action-btn demandes ${!selectedBon ? 'disabled' : ''}`} disabled={!selectedBon} onClick={openDemandes}>
           <PackageSearch size={18} />
-          <span>Demandes</span>
+          <span>{t("Demandes")}</span>
         </button>
 
         <button
@@ -835,12 +1023,12 @@ export default function BonsMaintenance() {
           onClick={openCommander}
         >
           <ShoppingCart size={18} />
-          <span>Commander</span>
+          <span>{t("Commander")}</span>
         </button>
 
         <button className={`bons-action-btn supprimer ${!selectedBon || isDeleting ? 'disabled' : ''}`} disabled={!selectedBon || isDeleting} onClick={handleDelete}>
           <Trash2 size={18} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
 
         <div className="bons-actions-divider" />
@@ -866,7 +1054,7 @@ export default function BonsMaintenance() {
                   }}
                 >
                   <Icon size={16} />
-                  <span>{ACTION_LABELS[action]}</span>
+                  <span>{t(ACTION_LABELS[action])}</span>
                 </button>
               );
             })}
@@ -877,7 +1065,7 @@ export default function BonsMaintenance() {
           <div className="bons-terminal-state">
             <span className="bons-terminal-badge">
               {renderEtatIcon(selectedBon.etat)}
-              {TRANSITIONS[selectedBon.etat]?.label || 'Terminé'}
+              {t(TRANSITIONS[selectedBon.etat]?.label || 'Terminé')}
             </span>
           </div>
         )}
@@ -885,7 +1073,7 @@ export default function BonsMaintenance() {
         {!selectedBon && (
           <span className="bons-no-selection-message">
             <Info size={16} />
-            Sélectionnez un bon pour voir les actions disponibles
+            {t("Sélectionnez un bon pour voir les actions disponibles")}
           </span>
         )}
       </div>
@@ -893,17 +1081,17 @@ export default function BonsMaintenance() {
       {/* FILTRES */}
       <div className="bons-filter-panel">
         <div className="bons-filter-group">
-          <span className="bons-filter-label">Recherche</span>
+          <span className="bons-filter-label">{t("Recherche")}</span>
           <div className="bons-filter-input-wrap">
             <Search size={16} className="bons-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             {searchTerm && (
-              <button className="bons-filter-clear" onClick={() => setSearchTerm('')} title="Effacer la recherche">
+              <button className="bons-filter-clear" onClick={() => setSearchTerm('')} title={t("Effacer la recherche")}>
                 <XCircle size={16} />
               </button>
             )}
@@ -911,15 +1099,15 @@ export default function BonsMaintenance() {
         </div>
 
         <div className="bons-filter-group">
-          <span className="bons-filter-label">État</span>
+          <span className="bons-filter-label">{t("État")}</span>
           <div className="bons-filter-input-wrap">
             <Filter size={16} className="bons-filter-icon" />
             <select value={etatFilter} onChange={(e) => setEtatFilter(e.target.value)}>
               {ETAT_FILTER_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.value !== 'all'
-                    ? `${option.label} (${etatStats[Number(option.value)] || 0})`
-                    : option.label}
+                    ? `${t(option.label)} (${etatStats[Number(option.value)] || 0})`
+                    : t(option.label)}
                 </option>
               ))}
             </select>
@@ -928,25 +1116,25 @@ export default function BonsMaintenance() {
 
         <button className="bons-filter-reset" onClick={handleResetFilters}>
           <RefreshCw size={16} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="bons-filter-info">
           <span className="bons-filter-result">
-            {filteredBons.length} résultat{filteredBons.length > 1 ? 's' : ''}
-            {etatFilter !== 'all' && ` • ${getActiveFilterLabel()}`}
+            {tp('résultat', filteredBons.length)}
+            {etatFilter !== 'all' && ` • ${t(getActiveFilterLabel())}`}
             {searchTerm && ` • "${searchTerm}"`}
           </span>
         </div>
 
         <div className="bons-export-stack">
-          <button className="bons-export-btn excel" title="Exporter en Excel (CSV)" onClick={handleExportExcel}>
+          <button className="bons-export-btn excel" title={t("Exporter en Excel (tous attributs)")} onClick={openExcelColumnsModal}>
             <FileSpreadsheet size={18} />
           </button>
-          <button className="bons-export-btn print" title="Imprimer" onClick={handlePrint}>
+          <button className="bons-export-btn print" title={t("Imprimer")} onClick={handlePrint}>
             <Printer size={18} />
           </button>
-          <button className="bons-export-btn stats" title="Statistiques" onClick={() => setShowFilterStats(!showFilterStats)}>
+          <button className="bons-export-btn stats" title={t("Statistiques")} onClick={() => setShowFilterStats(!showFilterStats)}>
             <BarChart3 size={18} />
           </button>
         </div>
@@ -971,10 +1159,10 @@ export default function BonsMaintenance() {
                   className={`bons-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="bons-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -986,14 +1174,14 @@ export default function BonsMaintenance() {
             {loading ? (
               <tr><td colSpan={visibleColumns.length || 1} className="bons-table-empty">
                 <Loader2 size={24} className="bons-spinner" />
-                <span>Chargement...</span>
+                <span>{t("Chargement...")}</span>
               </td></tr>
             ) : sortedBons.length === 0 ? (
               <tr><td colSpan={visibleColumns.length || 1} className="bons-table-empty">
                 {bons.length === 0 ? (
-                  <><AlertCircle size={24} /><span>Aucun bon de maintenance pour l'instant. Ajoute le premier avec le bouton ci-dessus.</span></>
+                  <><AlertCircle size={24} /><span>{t("Aucun bon de maintenance pour l'instant. Ajoute le premier avec le bouton ci-dessus.")}</span></>
                 ) : (
-                  <><Search size={24} /><span>Aucun bon ne correspond à ces filtres. Essaye de modifier ta recherche.</span></>
+                  <><Search size={24} /><span>{t("Aucun bon ne correspond à ces filtres. Essaye de modifier ta recherche.")}</span></>
                 )}
               </td></tr>
             ) : (
@@ -1016,12 +1204,12 @@ export default function BonsMaintenance() {
       {!loading && sortedBons.length > 0 && (
         <div className="bons-pagination">
           <span className="bons-pagination-info">
-            {sortedBons.length} résultat{sortedBons.length > 1 ? 's' : ''} — page {currentPage} / {totalPages}
+            {tp('résultat', sortedBons.length)} — {t('page {p} / {total}', { p: currentPage, total: totalPages })}
           </span>
           <div className="bons-pagination-controls">
             <button type="button" className="bons-pagination-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
               <ChevronLeft size={16} />
-              Précédent
+              {t("Précédent")}
             </button>
             {paginationRange.map((p) => (
               <button key={p} type="button" className={`bons-pagination-btn ${p === currentPage ? 'active' : ''}`} onClick={() => goToPage(p)}>
@@ -1029,7 +1217,7 @@ export default function BonsMaintenance() {
               </button>
             ))}
             <button type="button" className="bons-pagination-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
-              Suivant
+              {t("Suivant")}
               <ChevronRight size={16} />
             </button>
           </div>
@@ -1051,7 +1239,7 @@ export default function BonsMaintenance() {
         onClose={() => setDemanderOpen(false)}
         bonMaintenance={selectedBon}
         onDemandeCreee={() => {
-          alert('✅ Demande créée avec succès.');
+          alert(t("✅ Demande créée avec succès."));
           setActionsRefreshKey((k) => k + 1);
         }}
       />
@@ -1062,87 +1250,84 @@ export default function BonsMaintenance() {
         onClose={() => setCommanderOpen(false)}
         bonMaintenance={selectedBon}
         onCommandeCreee={() => {
-          alert('✅ Commande créée avec succès.');
+          alert(t("✅ Commande créée avec succès."));
           setActionsRefreshKey((k) => k + 1);
         }}
       />
 
-      {/* =========================================================
-          MODAL DEMANDES — Style premium aligné
-          ========================================================= */}
+      {/* MODAL DEMANDES */}
       {demandesOpen && (
         <div
-          className="dmd-overlay"
-          onClick={() => {
-            if (!demandeActionLoading) setDemandesOpen(false);
-          }}
+          className="modal-overlay"
+          onClick={() => { if (!demandeActionLoading) setDemandesOpen(false); }}
         >
-          <div className="dmd-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="bmm-modal cmd-modal dmd2-modal" onClick={(e) => e.stopPropagation()}>
 
-            {/* HEADER */}
-            <div className="dmd-header">
-              <div className="dmd-header__text">
-                <span className="dmd-header__eyebrow">Bon de maintenance</span>
-                <h2>Demandes de pièces</h2>
-                <p className="dmd-header__subtitle">
-                  Suivi et validation des demandes pour le bon{' '}
-                  <strong>{selectedBon?.num || `#${selectedBon?.id}`}</strong>
-                </p>
+            <div className="bmm-header">
+              <div className="bmm-header-left">
+                <div className="bmm-header-icon-wrap">
+                  <PackageSearch size={22} strokeWidth={2} />
+                </div>
+                <div>
+                  <span className="bmm-eyebrow">{t("Bon de maintenance")}</span>
+                  <h2>
+                    {t('Demandes — {bon}', { bon: selectedBon?.num || selectedBon?.titre || t('Bon #{id}', { id: selectedBon?.id }) })}
+                  </h2>
+                </div>
               </div>
-
-              <button
-                type="button"
-                className="dmd-close-btn"
-                onClick={() => setDemandesOpen(false)}
-                disabled={!!demandeActionLoading}
-                aria-label="Fermer"
-              >
-                <XCircle size={18} />
-              </button>
+              <div className="bmm-header-right">
+                <span className="bmm-type-badge">{tp('demande', demandes.length)}</span>
+                <button
+                  type="button"
+                  className="bmm-close-btn"
+                  onClick={() => setDemandesOpen(false)}
+                  disabled={!!demandeActionLoading}
+                  aria-label={t("Fermer")}
+                >
+                  <XCircle size={18} strokeWidth={2.5} />
+                </button>
+              </div>
             </div>
 
-            {/* BODY */}
-            <div className="dmd-body">
-
+            <div className="bmm-content cmd-body dmd2-body">
               {demandesError && (
-                <div className="dmd-form-error">
-                  <AlertCircle size={16} />
+                <div className="bmm-error">
+                  <AlertTriangle size={16} strokeWidth={2.5} />
                   <span>{demandesError}</span>
                 </div>
               )}
 
               {demandesLoading ? (
-                <div className="dmd-empty">
-                  <span className="dmd-spinner" />
-                  <span>Chargement des demandes...</span>
+                <div className="dmd2-empty">
+                  <Loader2 size={22} className="bmm-spin" />
+                  <span>{t("Chargement des demandes...")}</span>
                 </div>
               ) : demandes.length === 0 ? (
-                <div className="dmd-empty dmd-empty--empty">
-                  <PackageSearch size={28} />
-                  <span>Aucune demande pour ce bon de maintenance.</span>
+                <div className="dmd2-empty">
+                  <PackageSearch size={26} />
+                  <span>{t("Aucune demande pour ce bon de maintenance.")}</span>
                 </div>
               ) : (
                 <>
-                  <div className="dmd-toolbar">
-                    <div className="dmd-toolbar__count">
-                      <span className="dmd-toolbar__count-num">{demandes.length}</span>
-                      <span>demande{demandes.length > 1 ? 's' : ''}</span>
-                      <span className="dmd-toolbar__sep">·</span>
-                      <span className="dmd-toolbar__hint">
-                        {demandes.filter((d) => d.etat === 'EN_ATTENTE').length} en attente
+                  <div className="cmd-toolbar">
+                    <div className="cmd-toolbar__count">
+                      <span>{tp('demande', demandes.length)}</span>
+                      <span className="cmd-toolbar__sep">·</span>
+                      <span className="cmd-toolbar__hint">
+                        {t('{n} en attente', { n: demandes.filter((d) => d.etat === 'EN_ATTENTE').length })}
                       </span>
                     </div>
                   </div>
 
-                  <div className="dmd-table-wrap">
-                    <table className="dmd-table">
+                  <div className="cmd-table-wrap">
+                    <table className="cmd-table">
                       <thead>
                         <tr>
-                          <th>Article</th>
-                          <th style={{ width: 100, textAlign: 'center' }}>Quantité</th>
-                          <th style={{ width: 110, textAlign: 'center' }}>Mode stock</th>
-                          <th style={{ width: 140, textAlign: 'center' }}>État</th>
-                          <th style={{ width: 220, textAlign: 'right' }}>Actions</th>
+                          <th>{t("Article")}</th>
+                          <th style={{ width: 80, textAlign: 'center' }}>{t("Qté")}</th>
+                          <th style={{ width: 90, textAlign: 'center' }}>{t("Mode stock")}</th>
+                          <th style={{ width: 130, textAlign: 'center' }}>{t("État")}</th>
+                          <th style={{ width: 200, textAlign: 'end' }}>{t("Actions")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1154,55 +1339,63 @@ export default function BonsMaintenance() {
 
                           return (
                             <tr key={demande.id}>
-                              <td className="dmd-cell-article">
-                                Article #{demande.prestataireArticlesId}
-                                {demande.designation && (
-                                  <span className="dmd-cell-article__ref">
-                                    {demande.designation}
+                              <td className="cmd-cell-article">
+                                {demande.designation || t('Article #{id}', { id: demande.prestataireArticlesId })}
+                                {demande.prestataireArticlesId && demande.designation && (
+                                  <span className="cmd-cell-article__ref">
+                                    {t("Réf. #")}{demande.prestataireArticlesId}
                                   </span>
                                 )}
                               </td>
 
-                              <td className="dmd-cell-num">
-                                <span className="dmd-cell-qte__pill">{demande.qte}</span>
+                              <td className="cmd-cell-num">
+                                <span className="cmd-cell-besoin__pill">{demande.qte}</span>
                               </td>
 
-                              <td className="dmd-cell-num">
+                              <td className="cmd-cell-num">
                                 {demande.modeStock != null ? (
-                                  <span className="dmd-cell-mode__pill">{demande.modeStock}</span>
+                                  <span className="cmd-cell-stock__pill">{demande.modeStock}</span>
                                 ) : (
-                                  <span className="dmd-cell-mode__pill dmd-cell-mode__pill--empty">—</span>
+                                  <span className="cmd-cell-stock__pill cmd-cell-stock__pill--empty">—</span>
                                 )}
                               </td>
 
-                              <td className="dmd-cell-num">
-                                <span className={`dmd-etat-badge ${etatCls}`}>{etatTxt}</span>
+                              <td style={{ textAlign: 'center' }}>
+                                <span className={`dmd2-etat-badge ${etatCls}`}>{t(etatTxt)}</span>
                               </td>
 
                               <td>
                                 {isEnAttente ? (
-                                  <div className="dmd-row-actions">
+                                  <div className="dmd2-row-actions">
                                     <button
                                       type="button"
-                                      className="dmd-btn dmd-btn--accept"
+                                      className="dmd2-btn dmd2-btn--accept"
                                       onClick={() => handleAccepterDemande(demande.id)}
                                       disabled={isLoading}
                                     >
-                                      {isLoading ? <span className="dmd-spinner-sm" /> : <CheckCircle size={14} />}
-                                      <span>{isLoading ? 'Traitement...' : 'Accepter'}</span>
+                                      {isLoading ? (
+                                        <Loader2 size={13} className="bmm-spin" />
+                                      ) : (
+                                        <CheckCircle size={13} strokeWidth={2.5} />
+                                      )}
+                                      <span>{isLoading ? '...' : t("Accepter")}</span>
                                     </button>
                                     <button
                                       type="button"
-                                      className="dmd-btn dmd-btn--refuse"
+                                      className="dmd2-btn dmd2-btn--refuse"
                                       onClick={() => handleRefuserDemande(demande.id)}
                                       disabled={isLoading}
                                     >
-                                      {isLoading ? <span className="dmd-spinner-sm" /> : <XCircle size={14} />}
-                                      <span>{isLoading ? 'Traitement...' : 'Refuser'}</span>
+                                      {isLoading ? (
+                                        <Loader2 size={13} className="bmm-spin" />
+                                      ) : (
+                                        <XCircle size={13} strokeWidth={2.5} />
+                                      )}
+                                      <span>{isLoading ? '...' : t("Refuser")}</span>
                                     </button>
                                   </div>
                                 ) : (
-                                  <div className="dmd-no-action">—</div>
+                                  <div className="dmd2-no-action" style={{ textAlign: 'end' }}>—</div>
                                 )}
                               </td>
                             </tr>
@@ -1215,30 +1408,38 @@ export default function BonsMaintenance() {
               )}
             </div>
 
-            {/* FOOTER */}
-            <div className="dmd-footer">
-              <div className="dmd-nav-buttons">
-                <button
+            <div className="bmm-footer">
+              <div className="bmm-footer-left">
+                <span className="bmm-footer-step">
+                  {t('{n} en attente', { n: demandes.filter((d) => d.etat === 'EN_ATTENTE').length })}
+                </span>
+              </div>
+              <div className="bmm-footer-right">
+                <Button
                   type="button"
-                  className="dmd-submit-btn"
+                  variant="ghost"
                   onClick={loadDemandes}
                   disabled={demandesLoading || !!demandeActionLoading}
                 >
-                  <RefreshCw size={15} className={demandesLoading ? 'dmd-spin' : ''} />
-                  <span>Actualiser</span>
-                </button>
+                  <RefreshCw
+                    size={15}
+                    strokeWidth={2.5}
+                    className={demandesLoading ? 'bmm-spin' : ''}
+                    style={{ marginRight: 6 }}
+                  />
+                  {t("Actualiser")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => setDemandesOpen(false)}
+                  disabled={!!demandeActionLoading}
+                >
+                  {t("Fermer")}
+                </Button>
               </div>
-
-              <button
-                type="button"
-                className="dmd-cancel-btn"
-                onClick={() => setDemandesOpen(false)}
-                disabled={!!demandeActionLoading}
-              >
-                <span>Fermer</span>
-                <kbd>ESC</kbd>
-              </button>
             </div>
+
           </div>
         </div>
       )}
@@ -1272,13 +1473,13 @@ export default function BonsMaintenance() {
                 <Pause size={48} className="modal-confirm-icon warning" />
               </div>
               <div className="confirm-modal-text">
-                <h3>Motif de suspension</h3>
-                <p>Indique pourquoi ce bon de maintenance est suspendu.</p>
+                <h3>{t("Motif de suspension")}</h3>
+                <p>{t("Indique pourquoi ce bon de maintenance est suspendu.")}</p>
                 <textarea
                   className="confirm-modal-input"
                   value={motifModal.motif}
                   onChange={(e) => setMotifModal((p) => ({ ...p, motif: e.target.value, error: null }))}
-                  placeholder="Motif de suspension..."
+                  placeholder={t("Motif de suspension...")}
                   rows={3}
                   autoFocus
                   disabled={motifModal.confirming}
@@ -1302,7 +1503,7 @@ export default function BonsMaintenance() {
                 onClick={() => setMotifModal({ show: false, motif: '', error: null, confirming: false })}
                 disabled={motifModal.confirming}
               >
-                Annuler
+                {t("Annuler")}
               </button>
               <button
                 type="button"
@@ -1311,7 +1512,7 @@ export default function BonsMaintenance() {
                 disabled={!motifModal.motif.trim() || motifModal.confirming}
               >
                 <Pause size={16} />
-                {motifModal.confirming ? 'Patientez...' : 'Suspendre'}
+                {motifModal.confirming ? t("Patientez...") : t("Suspendre")}
               </button>
             </div>
           </div>
@@ -1334,8 +1535,8 @@ export default function BonsMaintenance() {
                 <CheckCircle size={48} className="modal-confirm-icon success" />
               </div>
               <div className="confirm-modal-text">
-                <h3>Marquer effectué</h3>
-                <p>État final de l'immobilisation (laisser vide si non applicable).</p>
+                <h3>{t("Marquer effectué")}</h3>
+                <p>{t("État final de l'immobilisation (laisser vide si non applicable).")}</p>
                 <select
                   className="confirm-modal-input"
                   value={etatModal.etat}
@@ -1344,7 +1545,7 @@ export default function BonsMaintenance() {
                   disabled={etatModal.confirming}
                 >
                   {ETAT_IMMOBILISATION_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
+                    <option key={o.value} value={o.value}>{t(o.label)}</option>
                   ))}
                 </select>
               </div>
@@ -1366,7 +1567,7 @@ export default function BonsMaintenance() {
                 onClick={() => setEtatModal({ show: false, etat: '', error: null, confirming: false })}
                 disabled={etatModal.confirming}
               >
-                Annuler
+                {t("Annuler")}
               </button>
               <button
                 type="button"
@@ -1375,7 +1576,7 @@ export default function BonsMaintenance() {
                 disabled={etatModal.confirming}
               >
                 <CheckCircle size={16} />
-                {etatModal.confirming ? 'Patientez...' : 'Marquer effectué'}
+                {etatModal.confirming ? t("Patientez...") : t("Marquer effectué")}
               </button>
             </div>
           </div>
@@ -1393,12 +1594,116 @@ export default function BonsMaintenance() {
         onToggleSearch={toggleColumnSearchability}
       />
 
+      {/* MODALE EXPORT EXCEL — Choix des colonnes */}
+      {isExcelColumnsModalOpen && (
+        <div
+          className="bons-excel-modal-overlay"
+          onClick={() => !exportingExcel && setIsExcelColumnsModalOpen(false)}
+        >
+          <div
+            className="bons-excel-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* HEADER */}
+            <div className="bons-excel-header">
+              <div className="bons-excel-header-left">
+                <div className="bons-excel-header-icon">
+                  <FileSpreadsheet size={22} />
+                </div>
+                <div>
+                  <h3>{t("Exporter en Excel")}</h3>
+                  <small>
+                    {EXCEL_COLUMNS_OPTIONS.length} {t("attributs disponibles — sélectionnez ceux à inclure")}
+                  </small>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="bons-excel-close-btn"
+                onClick={() => setIsExcelColumnsModalOpen(false)}
+                disabled={exportingExcel}
+                aria-label={t("Fermer")}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* BODY */}
+            <div className="bons-excel-body">
+              <div className="bons-excel-toolbar">
+                <span className="bons-excel-count">
+                  {excelSelectedColumns.length} / {EXCEL_COLUMNS_OPTIONS.length} {t("sélectionné(s)")}
+                </span>
+                <button
+                  type="button"
+                  className="bons-excel-toggle-all"
+                  onClick={toggleAllExcelColumns}
+                  disabled={exportingExcel}
+                >
+                  {excelSelectedColumns.length === EXCEL_COLUMNS_OPTIONS.length
+                    ? t("Tout décocher")
+                    : t("Tout cocher")}
+                </button>
+              </div>
+
+              <div className="bons-excel-grid">
+                {EXCEL_COLUMNS_OPTIONS.map((col) => {
+                  const checked = excelSelectedColumns.includes(col.key);
+                  return (
+                    <label
+                      key={col.key}
+                      className={`bons-excel-col-item ${checked ? 'checked' : ''}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleExcelColumn(col.key)}
+                        disabled={exportingExcel}
+                      />
+                      {t(col.label)}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* FOOTER */}
+            <div className="bons-excel-footer">
+              <small className="bons-excel-footer-info">
+                📊 {sortedBons.length} {t("bon(s) à exporter")}
+              </small>
+
+              <div className="bons-excel-footer-actions">
+                <button
+                  type="button"
+                  className="bons-excel-btn secondary"
+                  onClick={() => setIsExcelColumnsModalOpen(false)}
+                  disabled={exportingExcel}
+                >
+                  {t("Annuler")}
+                </button>
+                <button
+                  type="button"
+                  className="bons-excel-btn primary"
+                  onClick={handleExportExcel}
+                  disabled={excelSelectedColumns.length === 0 || exportingExcel}
+                >
+                  <FileSpreadsheet size={16} />
+                  {exportingExcel ? t("Export...") : t("Exporter")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MODALES PAGES EXTERNES */}
       <PageModal
         isOpen={anomaliesOpen}
         onClose={() => setAnomaliesOpen(false)}
-        title="Détection d'anomalies"
-        subtitle="Pics anormaux de réclamations par équipement ou par service"
+        title={t("Détection d'anomalies")}
+        subtitle={t("Pics anormaux de réclamations par équipement ou par service")}
         icon={AlertTriangle}
         accent="#dc2626"
         size="full"
@@ -1409,8 +1714,8 @@ export default function BonsMaintenance() {
       <PageModal
         isOpen={blocagesOpen}
         onClose={() => setBlocagesOpen(false)}
-        title="Blocages d'équipement"
-        subtitle="Équipements sans suite après arrêt obligatoire"
+        title={t("Blocages d'équipement")}
+        subtitle={t("Équipements sans suite après arrêt obligatoire")}
         icon={Ban}
         accent="#dc2626"
         size="full"
@@ -1421,8 +1726,8 @@ export default function BonsMaintenance() {
       <PageModal
         isOpen={etatEquipOpen}
         onClose={() => setEtatEquipOpen(false)}
-        title="État des équipements"
-        subtitle="Statut logique calculé à chaque événement"
+        title={t("État des équipements")}
+        subtitle={t("Statut logique calculé à chaque événement")}
         icon={Gauge}
         accent="#4338ca"
         size="full"
@@ -1433,8 +1738,8 @@ export default function BonsMaintenance() {
       <PageModal
         isOpen={intelligenceOpen}
         onClose={() => setIntelligenceOpen(false)}
-        title="Intelligence"
-        subtitle="Vue consolidée : Risques, Anomalies et RCA/CAPA croisés"
+        title={t("Intelligence")}
+        subtitle={t("Vue consolidée : Risques, Anomalies et RCA/CAPA croisés")}
         icon={Sparkles}
         accent="#7c3aed"
         size="full"

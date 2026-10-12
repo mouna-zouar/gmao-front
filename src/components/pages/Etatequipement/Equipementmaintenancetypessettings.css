@@ -1,0 +1,39 @@
+/*
+ * Overrides spécifiques au panneau « Maintenance préventive des équipements
+ * médicaux », en plus des classes mtp-* génériques réutilisées depuis
+ * VehiculeMaintenanceTypesSettings.css.
+ *
+ * Portée via .mtp-panel--equipement pour ne jamais affecter le panneau
+ * équivalent du Parc automobile (qui partage les mêmes classes mtp-*).
+ */
+
+/* Ascenseur (scrollbar) de secours sur la fenêtre modale elle-même.
+ * Le formulaire a grandi (ajout de la section "Équipement ciblé"), donc en
+ * plus des ascenseurs déjà présents sur l'aperçu (.mtp-dialog__aside) et le
+ * corps du formulaire (.mtp-dialog__body), on garantit un défilement visible
+ * sur la boîte de dialogue elle-même si jamais son contenu dépasse la
+ * hauteur disponible (notamment sur petit écran, en complément du mode
+ * colonne déjà prévu en media query). */
+.mtp-panel--equipement .mtp-dialog {
+  overflow-y: auto !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #94a3b8 transparent !important;
+}
+
+.mtp-panel--equipement .mtp-dialog::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+.mtp-panel--equipement .mtp-dialog::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.mtp-panel--equipement .mtp-dialog::-webkit-scrollbar-thumb {
+  background: #94a3b8 !important;
+  border-radius: 999px !important;
+  border: 2px solid #ffffff !important;
+}
+
+.mtp-panel--equipement .mtp-dialog::-webkit-scrollbar-thumb:hover {
+  background: #64748b !important;
+}

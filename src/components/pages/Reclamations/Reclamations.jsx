@@ -6,6 +6,7 @@ import {
   Trash2,
   Eye,
   Link,
+  FilePlus,
   CheckCircle,
   XCircle,
   Search,
@@ -21,10 +22,16 @@ import {
 } from 'lucide-react';
 import reclamationService from '../../../services/reclamationService';
 import ReclamationModal from '../../ui/modals/ReclamationModal';
-import ReclamationDetailsModal from '../../ui/modals/ReclamationDetailsModal';
+import ReclamationDetails from './ReclamationDetails';
+// ⚠️ Adapte ce chemin au dossier où se trouve BonMaintenanceDetails.jsx
+import BonMaintenanceDetails from '../BonMaintenance/BonMaintenanceDetails';
 import AssociateBonMaintenanceModal from '../../ui/modals/AssociateBonMaintenanceModal';
+import BonMaintenanceModal from '../../ui/modals/BonMaintenanceModal';
+import bonMaintenanceFullService from '../../../services/bonMaintenanceFullService';
+import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
+import { t, locale } from '../../../i18n';
 import './Reclamations.css';
 
 const ETAT_LABELS = {
@@ -50,19 +57,19 @@ const NIVEAU_LABELS = {
 };
 
 function etatLabel(etat) {
-  return ETAT_LABELS[etat] ?? `État ${etat}`;
+  return ETAT_LABELS[etat] ?? t('État {n}', { n: etat });
 }
 
 function niveauLabel(niveau) {
   if (niveau == null) return '—';
-  return NIVEAU_LABELS[niveau] ?? `Niveau ${niveau}`;
+  return NIVEAU_LABELS[niveau] ?? t('Niveau {n}', { n: niveau });
 }
 
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function personnelLabel(r) {
@@ -117,8 +124,9 @@ export default function Reclamations() {
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
 
-  const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc');
+  // ✅ Tri par défaut : date la plus récente en premier
+  const [sortColumn, setSortColumn] = useState('date');
+  const [sortDirection, setSortDirection] = useState('desc');
 
   const [columnSettings, setColumnSettings] = useState(RECLAMATION_COLUMNS_DEFAULT);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
@@ -132,17 +140,19 @@ export default function Reclamations() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [associateOpen, setAssociateOpen] = useState(false);
+  const [createBonOpen, setCreateBonOpen] = useState(false);
 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsData, setDetailsData] = useState(null);
+  const [bonOuvert, setBonOuvert] = useState(null);
 
   const [confirmModal, setConfirmModal] = useState({
     show: false,
     type: 'warning',
     title: '',
     message: '',
-    confirmText: 'Confirmer',
+    confirmText: t("Confirmer"),
     onConfirm: null,
   });
 
@@ -157,7 +167,7 @@ export default function Reclamations() {
       setReclamations(page.content ?? []);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les réclamations. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les réclamations. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -252,19 +262,31 @@ export default function Reclamations() {
 
   const visibleColumns = columnSettings.filter((c) => c.visible);
 
+  // Pré-remplissage du bon à partir de la réclamation sélectionnée
+  const bonInitialValues = useMemo(() => {
+    if (!selectedReclamation) return null;
+    const r = selectedReclamation;
+    return {
+      titre: r.num ? t('Réclamation {num}', { num: r.num }) : t('Réclamation #{id}', { id: r.id }),
+      description: r.description || '',
+      urgence: r.urgence ?? '',
+      lotArticleImmobilistationId: r.lotArticleImmobilistationId ?? '',
+    };
+  }, [selectedReclamation]);
+
   const TABLE_COLUMNS_DEF = {
     num: { cell: (r) => <td key="num" style={{ fontWeight: 600 }}>{r.num || '—'}</td> },
-    description: { cell: (r) => <td key="description" className="reclamations-desc-cell">{r.description}</td> },
+    description: { cell: (r) => <td key="description" className="reclamations-desc-cell">{t(r.description)}</td> },
     service: { cell: (r) => <td key="service">{r.serviceNom || r.service?.description || '—'}</td> },
-    criticite: { cell: (r) => <td key="criticite">{niveauLabel(r.criticite)}</td> },
-    urgence: { cell: (r) => <td key="urgence">{niveauLabel(r.urgence)}</td> },
+    criticite: { cell: (r) => <td key="criticite">{t(niveauLabel(r.criticite))}</td> },
+    urgence: { cell: (r) => <td key="urgence">{t(niveauLabel(r.urgence))}</td> },
     personnel: { cell: (r) => <td key="personnel">{personnelLabel(r) || '—'}</td> },
     date: { cell: (r) => <td key="date">{formatDate(r.date)}</td> },
     etat: {
       cell: (r) => (
         <td key="etat">
           <span className={`reclamations-badge ${ETAT_BADGE_CLASS[r.etat] || ''}`}>
-            {etatLabel(r.etat)}
+            {t(etatLabel(r.etat))}
           </span>
         </td>
       ),
@@ -295,20 +317,75 @@ export default function Reclamations() {
     setAssociateOpen(true);
   };
 
-  const openDetails = async () => {
+  const openCreateBon = () => {
     if (!selectedReclamation) return;
-    setDetailsOpen(true);
-    setDetailsLoading(true);
-    setDetailsData(null);
+    setCreateBonOpen(true);
+  };
+
+  /**
+   * Crée le bon de maintenance (avec ses enfants éventuels) puis le lie
+   * automatiquement à la réclamation sélectionnée.
+   */
+  const handleCreateBon = async (payload, children) => {
+    if (!selectedReclamation) return;
+    const result = await bonMaintenanceFullService.createFull(payload, children || {});
+    const bon = result.bonMaintenance;
+
     try {
-      const data = await reclamationService.getWithBonMaintenance(selectedReclamation.id);
+      await reclamationBonMaintenanceService.link(selectedReclamation.id, bon.id);
+    } catch (err) {
+      console.error(err);
+      alert(t('Le bon {num} a été créé, mais son association à la réclamation a échoué. Utilisez le bouton « Associer » pour le lier manuellement.', { num: bon.num || `#${bon.id}` }));
+    }
+
+    if (result.errors.length > 0) {
+      const summary = result.errors.map((e) => `- ${e.type} #${e.index + 1}`).join('\n');
+      alert(t("Le bon a été créé, mais {n} élément(s) n'ont pas pu être ajoutés :", { n: result.errors.length }) + `\n${summary}`);
+    }
+
+    await apresAction();
+  };
+
+  const rechargerDetails = async (id, { silencieux = false } = {}) => {
+    if (!silencieux) {
+      setDetailsLoading(true);
+      setDetailsData(null);
+    }
+    try {
+      const data = await reclamationService.getWithBonMaintenance(id);
       setDetailsData(data);
+      // Garde la sélection à jour (les actions Valider / Rejeter / Modifier s'appuient dessus)
+      const rec = data?.reclamation ?? data;
+      if (rec?.id) setSelectedReclamation(rec);
     } catch (err) {
       console.error('Erreur chargement des détails :', err);
-      alert('Impossible de charger les détails de cette réclamation.');
+      alert(t("Impossible de charger les détails de cette réclamation."));
       setDetailsOpen(false);
     } finally {
       setDetailsLoading(false);
+    }
+  };
+
+  const openDetails = async (reclamation = selectedReclamation) => {
+    if (!reclamation) return;
+    setSelectedReclamation(reclamation);
+    setDetailsOpen(true);
+    await rechargerDetails(reclamation.id);
+  };
+
+  const fermerDetails = () => {
+    setDetailsOpen(false);
+    setDetailsData(null);
+    setSelectedReclamation(null);
+  };
+
+  // Après une action : sur la page de détail on la rafraîchit, sur la liste on désélectionne
+  const apresAction = async () => {
+    await load();
+    if (detailsOpen && selectedReclamation) {
+      await rechargerDetails(selectedReclamation.id, { silencieux: true });
+    } else {
+      setSelectedReclamation(null);
     }
   };
 
@@ -319,12 +396,11 @@ export default function Reclamations() {
     } else {
       saved = await reclamationService.create(payload);
       if (saved.bonMaintenanceId) {
-        alert(`Réclamation créée. Bon de maintenance associé généré (id ${saved.bonMaintenanceId}).`);
+        alert(t('Réclamation créée. Bon de maintenance associé généré (id {id}).', { id: saved.bonMaintenanceId }));
       }
     }
 
-    setSelectedReclamation(null);
-    await load();
+    await apresAction();
   };
 
   const closeConfirmModal = () => setConfirmModal((prev) => ({ ...prev, show: false }));
@@ -334,9 +410,9 @@ export default function Reclamations() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: 'Supprimer la réclamation',
-      message: `Supprimer la réclamation "${selectedReclamation.num || selectedReclamation.id}" ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer la réclamation"),
+      message: t('Supprimer la réclamation « {num} » ? Cette action est irréversible.', { num: selectedReclamation.num || selectedReclamation.id }),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -344,9 +420,11 @@ export default function Reclamations() {
           await reclamationService.remove(selectedReclamation.id);
           setReclamations((prev) => prev.filter((r) => r.id !== selectedReclamation.id));
           setSelectedReclamation(null);
+          setDetailsOpen(false);
+          setDetailsData(null);
         } catch (err) {
           console.error(err);
-          alert("Échec de la suppression de cette réclamation.");
+          alert(t("Échec de la suppression de cette réclamation."));
         } finally {
           setIsDeleting(false);
         }
@@ -359,11 +437,13 @@ export default function Reclamations() {
     setValidating(true);
     try {
       const updated = await reclamationService.valider(selectedReclamation.id, {});
-      alert(updated.bonMaintenanceId
-        ? `Réclamation validée. Bon de maintenance lié (id ${updated.bonMaintenanceId}).`
-        : 'Réclamation validée.');
-      setSelectedReclamation(null);
-      await load();
+      // Sur la page de détail, le parcours se met à jour : pas besoin d'alerte
+      if (!detailsOpen) {
+        alert(updated.bonMaintenanceId
+          ? t('Réclamation validée. Bon de maintenance lié (id {id}).', { id: updated.bonMaintenanceId })
+          : 'Réclamation validée.');
+      }
+      await apresAction();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || 'Échec de la validation.');
@@ -384,8 +464,7 @@ export default function Reclamations() {
     setValidating(true);
     try {
       await reclamationService.rejeter(selectedReclamation.id, { motifRejet: motif });
-      setSelectedReclamation(null);
-      await load();
+      await apresAction();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.message || 'Échec du rejet.');
@@ -395,7 +474,7 @@ export default function Reclamations() {
   };
 
   const handleExportExcel = () => {
-    const entetes = ['Numéro', 'Description', 'Criticité', 'Urgence', 'Personnel affecté', 'Date', 'État'];
+    const entetes = ['Numéro', 'Description', 'Criticité', 'Urgence', 'Personnel affecté', 'Date', 'État'].map((e) => t(e));
     const lignes = filteredReclamations.map((r) => [
       r.num || '',
       (r.description || '').replace(/"/g, '""'),
@@ -426,10 +505,38 @@ export default function Reclamations() {
   };
 
   const handleStats = () => {
-    alert('Ouvre le dashboard des réclamations pour les statistiques détaillées.');
+    alert(t("Ouvre le dashboard des réclamations pour les statistiques détaillées."));
   };
 
+  // Un bon ouvert depuis la page de détail s'affiche en plein écran, avec retour vers la réclamation
+  if (bonOuvert) {
+    return (
+      <BonMaintenanceDetails
+        bonMaintenance={bonOuvert}
+        onBack={() => {
+          setBonOuvert(null);
+          if (selectedReclamation) rechargerDetails(selectedReclamation.id, { silencieux: true });
+        }}
+      />
+    );
+  }
+
   return (
+    <>
+    {detailsOpen ? (
+      <ReclamationDetails
+        data={detailsData}
+        loading={detailsLoading}
+        validating={validating}
+        onBack={fermerDetails}
+        onModifier={openEdit}
+        onValider={handleValider}
+        onRejeter={openRejetModal}
+        onCreerBon={openCreateBon}
+        onAssocier={openAssociate}
+        onOuvrirBon={(bon) => setBonOuvert(bon)}
+      />
+    ) : (
     <div className="reclamations-container">
 
       <div className="reclamations-header-card">
@@ -438,25 +545,25 @@ export default function Reclamations() {
             type="button"
             className="reclamations-header-icon reclamations-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <AlertCircle size={24} />
           </button>
           <div>
-            <h2>Réclamations</h2>
+            <h2>{t("Réclamations")}</h2>
             <p className="reclamations-header-subtitle">
-              Gestion des réclamations
+              {t("Gestion des réclamations")}
             </p>
           </div>
         </div>
-        <span className="reclamations-badge-total">Total : {filteredReclamations.length}</span>
+        <span className="reclamations-badge-total">{t("Total :")} {filteredReclamations.length}</span>
       </div>
 
       <div className="reclamations-actions-bar">
         <button className="reclamations-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} />
-          <span>Ajouter</span>
+          <span>{t("Ajouter")}</span>
         </button>
 
         <button
@@ -465,16 +572,16 @@ export default function Reclamations() {
           onClick={openEdit}
         >
           <Edit size={18} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
           className={`reclamations-action-btn details ${!selectedReclamation ? 'disabled' : ''}`}
           disabled={!selectedReclamation}
-          onClick={openDetails}
+          onClick={() => openDetails()}
         >
           <Eye size={18} />
-          <span>Détails</span>
+          <span>{t("Détails")}</span>
         </button>
 
         <button
@@ -483,7 +590,17 @@ export default function Reclamations() {
           onClick={openAssociate}
         >
           <Link size={18} />
-          <span>Associer</span>
+          <span>{t("Associer")}</span>
+        </button>
+
+        <button
+          className={`reclamations-action-btn creer-bon ${!selectedReclamation ? 'disabled' : ''}`}
+          disabled={!selectedReclamation}
+          onClick={openCreateBon}
+          title={t("Créer un bon de maintenance pour cette réclamation")}
+        >
+          <FilePlus size={18} />
+          <span>{t("Créer un bon")}</span>
         </button>
 
         <div className="reclamations-actions-divider" />
@@ -494,7 +611,7 @@ export default function Reclamations() {
           onClick={handleValider}
         >
           <CheckCircle size={18} />
-          <span>Valider</span>
+          <span>{t("Valider")}</span>
         </button>
 
         <button
@@ -503,7 +620,7 @@ export default function Reclamations() {
           onClick={openRejetModal}
         >
           <XCircle size={18} />
-          <span>Rejeter</span>
+          <span>{t("Rejeter")}</span>
         </button>
 
         <button
@@ -512,18 +629,18 @@ export default function Reclamations() {
           onClick={handleDelete}
         >
           <Trash2 size={18} />
-          <span>Supprimer</span>
+          <span>{t("Supprimer")}</span>
         </button>
       </div>
 
       <div className="reclamations-filter-panel">
         <div className="reclamations-filter-group">
-          <span className="reclamations-filter-label">Recherche</span>
+          <span className="reclamations-filter-label">{t("Recherche")}</span>
           <div className="reclamations-filter-input-wrap">
             <Search size={16} />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -531,32 +648,32 @@ export default function Reclamations() {
         </div>
 
         <div className="reclamations-filter-group">
-          <span className="reclamations-filter-label">État</span>
+          <span className="reclamations-filter-label">{t("État")}</span>
           <div className="reclamations-filter-input-wrap">
             <Filter size={16} />
             <select value={etatFilter} onChange={(e) => setEtatFilter(e.target.value)}>
-              <option value="all">Tous</option>
-              <option value="0">Ouverte</option>
-              <option value="1">En cours</option>
-              <option value="2">Clôturée</option>
-              <option value="3">En attente de validation</option>
-              <option value="4">Rejetée</option>
+              <option value="all">{t("Tous")}</option>
+              <option value="0">{t("Ouverte")}</option>
+              <option value="1">{t("En cours")}</option>
+              <option value="2">{t("Clôturée")}</option>
+              <option value="3">{t("En attente de validation")}</option>
+              <option value="4">{t("Rejetée")}</option>
             </select>
           </div>
         </div>
 
         <button className="reclamations-filter-reset" onClick={handleResetFilters}>
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="reclamations-export-stack">
-          <button className="reclamations-export-btn excel" title="Exporter en Excel (CSV)" onClick={handleExportExcel}>
+          <button className="reclamations-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>
             <FileSpreadsheet size={18} />
           </button>
-          <button className="reclamations-export-btn print" title="Imprimer" onClick={handlePrint}>
+          <button className="reclamations-export-btn print" title={t("Imprimer")} onClick={handlePrint}>
             <Printer size={18} />
           </button>
-          <button className="reclamations-export-btn stats" title="Statistiques" onClick={handleStats}>
+          <button className="reclamations-export-btn stats" title={t("Statistiques")} onClick={handleStats}>
             <BarChart3 size={18} />
           </button>
         </div>
@@ -574,10 +691,10 @@ export default function Reclamations() {
                   className={`reclamations-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="reclamations-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -587,14 +704,14 @@ export default function Reclamations() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={visibleColumns.length || 1} className="reclamations-table-empty">Chargement...</td>
+                <td colSpan={visibleColumns.length || 1} className="reclamations-table-empty">{t("Chargement...")}</td>
               </tr>
             ) : filteredReclamations.length === 0 ? (
               <tr>
                 <td colSpan={visibleColumns.length || 1} className="reclamations-table-empty">
                   {reclamations.length === 0
-                    ? "Aucune réclamation pour l'instant. Ajoute la première avec le bouton ci-dessus."
-                    : "Aucune réclamation ne correspond à ces filtres."}
+                    ? t("Aucune réclamation pour l'instant. Ajoute la première avec le bouton ci-dessus.")
+                    : t("Aucune réclamation ne correspond à ces filtres.")}
                 </td>
               </tr>
             ) : (
@@ -603,6 +720,8 @@ export default function Reclamations() {
                   key={r.id}
                   className={`reclamations-row ${selectedReclamation?.id === r.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(r)}
+                  onDoubleClick={() => openDetails(r)}
+                  title={t("Double-cliquez pour voir le détail")}
                 >
                   {visibleColumns.map((c) => TABLE_COLUMNS_DEF[c.key]?.cell(r))}
                 </tr>
@@ -615,8 +734,8 @@ export default function Reclamations() {
       {!loading && filteredReclamations.length > 0 && (
         <div className="reclamations-pagination">
           <span className="reclamations-pagination-info">
-            {filteredReclamations.length} résultat{filteredReclamations.length > 1 ? 's' : ''}
-            {' — page '}{currentPage}{' / '}{totalPages}
+            {filteredReclamations.length} {t("résultat")}{filteredReclamations.length > 1 ? 's' : ''}
+            {t(" — page ")}{currentPage}{' / '}{totalPages}
           </span>
 
           <div className="reclamations-pagination-controls">
@@ -651,6 +770,8 @@ export default function Reclamations() {
           </div>
         </div>
       )}
+    </div>
+    )}
 
       <ReclamationModal
         isOpen={modalOpen}
@@ -660,17 +781,23 @@ export default function Reclamations() {
         isEditing={!!selectedReclamation}
       />
 
-      <ReclamationDetailsModal
-        isOpen={detailsOpen}
-        onClose={() => setDetailsOpen(false)}
-        loading={detailsLoading}
-        data={detailsData}
-      />
-
       <AssociateBonMaintenanceModal
         isOpen={associateOpen}
-        onClose={() => setAssociateOpen(false)}
+        onClose={() => {
+          setAssociateOpen(false);
+          if (detailsOpen && selectedReclamation) rechargerDetails(selectedReclamation.id, { silencieux: true });
+        }}
         reclamation={selectedReclamation}
+      />
+
+      <BonMaintenanceModal
+        isOpen={createBonOpen}
+        onClose={() => setCreateBonOpen(false)}
+        onSave={handleCreateBon}
+        bonMaintenance={null}
+        isEditing={false}
+        initialValues={bonInitialValues}
+        titleOverride={t('Nouveau bon') + ` — ${selectedReclamation?.num || t('Réclamation #{id}', { id: selectedReclamation?.id ?? '' })}`}
       />
 
       <ConfirmModal
@@ -701,13 +828,13 @@ export default function Reclamations() {
                 <XCircle className="modal-confirm-icon danger" size={48} strokeWidth={2} />
               </div>
               <div className="confirm-modal-text">
-                <h3>Rejeter la réclamation</h3>
-                <p>Indique le motif du rejet.</p>
+                <h3>{t("Rejeter la réclamation")}</h3>
+                <p>{t("Indique le motif du rejet.")}</p>
                 <textarea
                   className="confirm-modal-input"
                   value={rejetModal.motif}
                   onChange={(e) => setRejetModal((p) => ({ ...p, motif: e.target.value }))}
-                  placeholder="Motif de rejet..."
+                  placeholder={t("Motif de rejet...")}
                   rows={3}
                   autoFocus
                 />
@@ -715,7 +842,7 @@ export default function Reclamations() {
             </div>
             <div className="confirm-modal-footer">
               <button type="button" className="confirm-btn secondary" onClick={() => setRejetModal({ show: false, motif: '' })}>
-                Annuler
+                {t("Annuler")}
               </button>
               <button
                 type="button"
@@ -723,12 +850,12 @@ export default function Reclamations() {
                 onClick={confirmRejeter}
                 disabled={!rejetModal.motif.trim()}
               >
-                Rejeter
+                {t("Rejeter")}
               </button>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

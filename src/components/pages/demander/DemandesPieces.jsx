@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import bonMaintenancePieceService from '../../../services/bonMaintenancePieceService';
 import pieceLigneService from '../../../services/pieceLigneService';
+import { t } from '../../../i18n';
 import './DemandesPieces.css';
 
 /* ---------- Config ---------- */
@@ -145,7 +146,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
       console.error(`Erreur ${type} demande`, err);
       setError(
         err?.response?.data?.message ||
-        `Impossible d’${type === 'accepter' ? 'accepter' : 'refuser'} la demande.`
+        (type === 'accepter' ? t('Impossible d’accepter la demande.') : t('Impossible de refuser la demande.'))
       );
     } finally {
       setActionLoading(null);
@@ -156,7 +157,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
   const handleAccepter = (id) => handleAction(id, 'accepter');
   const handleRefuser = (id) => handleAction(id, 'refuser');
 
-  const getEtatLabel = (etat) => ETAT_LABELS[etat] || etat || '—';
+  const getEtatLabel = (etat) => t(ETAT_LABELS[etat] || etat || '—');
   const getEtatClass = (etat) => ETAT_CLASS[etat] || '';
 
   const renderStock = (demande) => {
@@ -172,7 +173,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
     return (
       <span
         className={`stock-pill${insuffisant ? ' stock-pill--insuffisant' : ''}`}
-        title={insuffisant ? 'Stock insuffisant pour cette demande' : 'Stock disponible'}
+        title={insuffisant ? t("Stock insuffisant pour cette demande") : t("Stock disponible")}
       >
         {stock}
       </span>
@@ -183,7 +184,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
   if (loading) {
     return (
       <div className="demandes-loading">
-        <span>Chargement des demandes...</span>
+        <span>{t("Chargement des demandes...")}</span>
       </div>
     );
   }
@@ -193,9 +194,9 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
       {/* ---------- Header ---------- */}
       <div className="demandes-header">
         <div className="demandes-header__text">
-          <span className="demandes-eyebrow">Pièces · Demandes</span>
-          <h2>Demandes de pièces</h2>
-          <p>Liste des pièces demandées pour ce bon de maintenance</p>
+          <span className="demandes-eyebrow">{t("Pièces · Demandes")}</span>
+          <h2>{t("Demandes de pièces")}</h2>
+          <p>{t("Liste des pièces demandées pour ce bon de maintenance")}</p>
         </div>
 
         <button
@@ -205,7 +206,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
           disabled={loading}
         >
           <IconRefresh />
-          <span>Actualiser</span>
+          <span>{t("Actualiser")}</span>
         </button>
       </div>
 
@@ -223,21 +224,21 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
           <span className="empty-icon">
             <IconPackage />
           </span>
-          <h3>Aucune demande</h3>
-          <p>Aucune pièce n'a encore été demandée pour ce bon.</p>
+          <h3>{t("Aucune demande")}</h3>
+          <p>{t("Aucune pièce n'a encore été demandée pour ce bon.")}</p>
         </div>
       ) : (
         <div className="demandes-table-wrapper">
           <table className="demandes-table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Article</th>
-                <th>Mode stock</th>
-                <th>Qté</th>
-                <th>Stock dispo</th>
-                <th>État</th>
-                <th>Actions</th>
+                <th>{t("ID")}</th>
+                <th>{t("Article")}</th>
+                <th>{t("Mode stock")}</th>
+                <th>{t("Qté")}</th>
+                <th>{t("Stock dispo")}</th>
+                <th>{t("État")}</th>
+                <th>{t("Actions")}</th>
               </tr>
             </thead>
 
@@ -250,7 +251,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
 
                     <td className="col-article">
                       {demande.prestataireArticlesId
-                        ? `Article #${demande.prestataireArticlesId}`
+                        ? t('Article #{id}', { id: demande.prestataireArticlesId })
                         : '—'}
                     </td>
 
@@ -266,7 +267,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
 
                     <td>
                       <span className={`etat-badge ${getEtatClass(demande.etat)}`}>
-                        {getEtatLabel(demande.etat)}
+                        {t(getEtatLabel(demande.etat))}
                       </span>
                     </td>
 
@@ -278,7 +279,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
                             className="btn-accepter"
                             onClick={() => handleAccepter(demande.id)}
                             disabled={isLoading}
-                            title="Accepter la demande"
+                            title={t("Accepter la demande")}
                           >
                             {isLoading && actionType === 'accepter' ? (
                               <IconSpinner />
@@ -286,7 +287,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
                               <IconCheck />
                             )}
                             <span>
-                              {isLoading && actionType === 'accepter' ? 'Traitement' : 'Accepter'}
+                              {isLoading && actionType === 'accepter' ? t("Traitement") : t("Accepter")}
                             </span>
                           </button>
 
@@ -295,7 +296,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
                             className="btn-refuser"
                             onClick={() => handleRefuser(demande.id)}
                             disabled={isLoading}
-                            title="Refuser la demande"
+                            title={t("Refuser la demande")}
                           >
                             {isLoading && actionType === 'refuser' ? (
                               <IconSpinner />
@@ -303,7 +304,7 @@ const DemandesPieces = ({ bonMaintenanceId }) => {
                               <IconX />
                             )}
                             <span>
-                              {isLoading && actionType === 'refuser' ? 'Traitement' : 'Refuser'}
+                              {isLoading && actionType === 'refuser' ? t("Traitement") : t("Refuser")}
                             </span>
                           </button>
                         </div>

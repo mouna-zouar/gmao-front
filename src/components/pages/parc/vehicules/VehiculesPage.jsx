@@ -86,15 +86,13 @@ export default function VehiculesPage() {
   const [error, setError] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // ─── Vue : 'list' ou 'details' ──────────────────────────────────────
   const [viewMode, setViewMode] = useState('list');
   const [activeTab, setActiveTab] = useState('infos');
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Filtres "brouillon"
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
 
-  // Filtres appliqués
   const [appliedFilters, setAppliedFilters] = useState({
     searchTerm: '',
     etatFilter: 'all',
@@ -182,7 +180,6 @@ export default function VehiculesPage() {
     if (!fresh) setSelectedVehicule(null);
   }, [vehicules]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ─── Helpers colonnes ────────────────────────────────────────────────
   const openColumnSettings = () => {
     setColumnSettingsInstanceKey((k) => k + 1);
     setShowColumnSettings(true);
@@ -256,7 +253,6 @@ export default function VehiculesPage() {
     setCurrentPage(1);
   }, [appliedFilters]);
 
-  // ─── Actions filtres ────────────────────────────────────────────────
   const handleSearch = () => {
     setAppliedFilters({ searchTerm, etatFilter });
   };
@@ -267,21 +263,29 @@ export default function VehiculesPage() {
     setAppliedFilters({ searchTerm: '', etatFilter: 'all' });
   };
 
-  // ─── Sélection / navigation vers détails ────────────────────────────
   const handleRowClick = (vehicule) => {
     setSelectedVehicule((prev) => (prev?.id === vehicule.id ? null : vehicule));
   };
 
   const handleViewDetails = () => {
-    if (selectedVehicule) {
-      setActiveTab('infos');
-      setViewMode('details');
+    if (selectedVehicule && !isTransitioning) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setActiveTab('infos');
+        setViewMode('details');
+        setIsTransitioning(false);
+      }, 180);
     }
   };
 
   const handleBackToList = () => {
-    setViewMode('list');
-    setActiveTab('infos');
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setViewMode('list');
+      setActiveTab('infos');
+      setIsTransitioning(false);
+    }, 180);
   };
 
   const openCreate = () => {
@@ -462,9 +466,6 @@ export default function VehiculesPage() {
 
   const visibleColumns = columnSettings.filter((c) => c.visible);
 
-  // ════════════════════════════════════════════════════════════════
-  //  VUE DÉTAILS (page séparée, avec onglets)
-  // ════════════════════════════════════════════════════════════════
   if (viewMode === 'details' && selectedVehicule) {
     const km = selectedVehicule.kilometrage != null
       ? `${Number(selectedVehicule.kilometrage).toLocaleString('fr-FR')} km`
@@ -477,10 +478,9 @@ export default function VehiculesPage() {
     ];
 
     return (
-      <div className="vehicules-container">
+      <div className={`vehicules-container ${isTransitioning ? 'is-transitioning' : ''}`}>
         <div className="vd-page">
 
-          {/* ═══════════════ HERO ═══════════════ */}
           <header className="vd-hero">
             <div className="vd-hero-bg" aria-hidden="true" />
 
@@ -549,7 +549,6 @@ export default function VehiculesPage() {
             </div>
           </header>
 
-          {/* ═══════════════ KPI CARDS ═══════════════ */}
           <div className="vd-kpi-grid">
             <div className="vd-kpi kpi-blue">
               <div className="vd-kpi-icon">
@@ -598,9 +597,6 @@ export default function VehiculesPage() {
             </div>
           </div>
 
-          {/* ═══════════════════════════════════════════════════════════
-              ONGLETS
-              ═══════════════════════════════════════════════════════════ */}
           <div className="vd-tabs-container">
             <nav className="vd-tabs" role="tablist">
               {TABS.map((tab) => {
@@ -627,7 +623,6 @@ export default function VehiculesPage() {
 
             <div className="vd-tab-content">
 
-              {/* ═══════ ONGLET 1 : INFORMATIONS GÉNÉRALES ═══════ */}
               {activeTab === 'infos' && (
                 <div
                   className="vd-tabpanel"
@@ -706,7 +701,6 @@ export default function VehiculesPage() {
                 </div>
               )}
 
-              {/* ═══════ ONGLET 2 : MAINTENANCE PRÉVENTIVE ═══════ */}
               {activeTab === 'maintenance' && (
                 <div
                   className="vd-tabpanel"
@@ -721,7 +715,6 @@ export default function VehiculesPage() {
                 </div>
               )}
 
-              {/* ═══════ ONGLET 3 : HISTORIQUE DU COMPTEUR ═══════ */}
               {activeTab === 'historique' && (
                 <div
                   className="vd-tabpanel"
@@ -735,7 +728,6 @@ export default function VehiculesPage() {
           </div>
         </div>
 
-        {/* Modales accessibles depuis la vue détails */}
         <VehiculeModal
           isOpen={modalOpen}
           onClose={() => setModalOpen(false)}
@@ -758,7 +750,7 @@ export default function VehiculesPage() {
   }
 
   return (
-    <div className="vehicules-container">
+    <div className={`vehicules-container ${isTransitioning ? 'is-transitioning' : ''}`}>
 
       <div className="vehicules-header-card">
         <div className="vehicules-header-title-box">
@@ -769,24 +761,20 @@ export default function VehiculesPage() {
             title="Paramètres des colonnes"
             aria-label="Paramètres des colonnes"
           >
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
-    <circle cx="7" cy="17" r="2"/>
-    <path d="M9 17h6"/>
-    <circle cx="17" cy="17" r="2"/>
-</svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
+              <circle cx="7" cy="17" r="2"/>
+              <path d="M9 17h6"/>
+              <circle cx="17" cy="17" r="2"/>
+            </svg>
           </button>
           <div>
             <h2>Véhicules</h2>
-            <p className="vehicules-header-subtitle">
-              Parc de véhicules suivis (matricule, marque, cycle de vie...)
-            </p>
           </div>
         </div>
         <span className="vehicules-badge-total">Total : {filteredVehicules.length}</span>
       </div>
 
-      {/* ═══════════════ KPI CARDS ═══════════════ */}
       <div className="vehicules-kpi-grid">
         <div className="vehicules-kpi-card kpi-total">
           <div className="vehicules-kpi-icon">
@@ -829,7 +817,6 @@ export default function VehiculesPage() {
         </div>
       </div>
 
-      {/* ═══════════════ ACTIONS BAR ═══════════════ */}
       <div className="vehicules-actions-bar">
         <button className="vehicules-action-btn ajouter" onClick={openCreate}>
           <span className="vehicules-action-icon">+</span>
@@ -904,7 +891,6 @@ export default function VehiculesPage() {
         )}
       </div>
 
-      {/* ═══════════════ FILTER PANEL ═══════════════ */}
       <div className="vehicules-filter-panel">
         <div className="vehicules-filter-group">
           <span className="vehicules-filter-label">Recherche</span>
@@ -982,7 +968,6 @@ export default function VehiculesPage() {
 
       {error && <div className="vehicules-error-banner">{error}</div>}
 
-      {/* ═══════════════ TABLE ═══════════════ */}
       <div className="vehicules-table-wrap">
         <table className="vehicules-table">
           <thead>
@@ -1028,7 +1013,6 @@ export default function VehiculesPage() {
           </tbody>
         </table>
 
-        {/* ═══════════════ PAGINATION ═══════════════ */}
         <div className="table-footer-pagination">
           <div className="pagination-left">
             {filteredVehicules.length} véhicule(s)
@@ -1087,14 +1071,20 @@ export default function VehiculesPage() {
         </div>
       </div>
 
-      {/* ═══════════════ MODALES ═══════════════ */}
       {settingsOpen && (
-        <div className="vp-settings-overlay" onClick={() => setSettingsOpen(false)}>
-          <div className="vp-settings-modal" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="mtp-panel-overlay"
+          onClick={() => setSettingsOpen(false)}
+        >
+          <div
+            className="mtp-panel-overlay__inner"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               type="button"
-              className="vp-settings-close"
+              className="mtp-panel-overlay__close"
               onClick={() => setSettingsOpen(false)}
+              aria-label="Fermer"
             >
               ×
             </button>

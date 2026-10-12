@@ -1,10 +1,13 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
 import vehiculeService from '../../../services/vehiculeService';
 import personnelService from '../../../services/personnelService';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
-import { CARBURANT_TYPE_OPTIONS } from '../../../constants/carburantType';
+import {
+  CARBURANT_TYPE_OPTIONS,
+  libelleQuantiteCarburant,
+  uniteQuantiteCarburant,
+} from '../../../constants/carburantType';
 import {
   Fuel,
   X,
@@ -470,7 +473,9 @@ const VehiculeBonCarburantModal = ({
               </div>
 
               <div className="bmm-field">
-                <label htmlFor="vbc-litres">Litres</label>
+                <label htmlFor="vbc-litres">
+                  {libelleQuantiteCarburant(formData.typeCarburant)}
+                </label>
 
                 <input
                   id="vbc-litres"
@@ -535,7 +540,7 @@ const VehiculeBonCarburantModal = ({
                         {consommation.consommationL100km.toFixed(
                           1
                         )}{' '}
-                        L/100km
+                        {uniteQuantiteCarburant(formData.typeCarburant)}/100km
                       </strong>
 
                       {consommation.moyenneVehiculeL100km !=
@@ -546,7 +551,7 @@ const VehiculeBonCarburantModal = ({
                           {consommation.moyenneVehiculeL100km.toFixed(
                             1
                           )}{' '}
-                          L/100km)
+                          {uniteQuantiteCarburant(formData.typeCarburant)}/100km)
                         </span>
                       )}
 
@@ -637,12 +642,12 @@ const VehiculeBonCarburantModal = ({
 
               <div className="bmm-summary-row">
                 <span className="bmm-summary-label">
-                  Litres
+                  {libelleQuantiteCarburant(formData.typeCarburant)}
                 </span>
 
                 <span className="bmm-summary-value">
                   {formData.litres !== ''
-                    ? `${formData.litres} L`
+                    ? `${formData.litres} ${uniteQuantiteCarburant(formData.typeCarburant)}`
                     : '—'}
                 </span>
               </div>

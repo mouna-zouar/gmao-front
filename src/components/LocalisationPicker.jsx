@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import './LocalisationPicker.css';
+import { t, langueActuelle } from '../../../i18n';
 
 // Fix des icônes Leaflet par défaut (souci connu avec les bundlers)
 delete L.Icon.Default.prototype._getIconUrl;
@@ -23,6 +24,9 @@ function ClickHandler({ onClick }) {
 }
 
 export default function LocalisationPicker({ value, onChange }) {
+  // Les adresses renvoyées par Nominatim suivent la langue de l'application
+  // (l'application est remontée à chaque changement de langue)
+  const langueAdresses = langueActuelle() === 'ar' ? 'ar,fr' : 'fr';
   const [marker, setMarker] = useState(
     value?.latitude != null && value?.longitude != null
       ? [Number(value.latitude), Number(value.longitude)]
@@ -46,7 +50,7 @@ export default function LocalisationPicker({ value, onChange }) {
   const reverseGeocode = useCallback(async (lat, lng) => {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&accept-language=${langueAdresses}`,
         {
           headers: {
             'User-Agent': 'MonAppVehicules/1.0 (contact@monapp.com)', // Obligatoire pour Nominatim
@@ -60,7 +64,7 @@ export default function LocalisationPicker({ value, onChange }) {
       console.error('Reverse geocoding échoué :', err);
       return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     }
-  }, []);
+  }, [langueAdresses]);
 
   const handleMapClick = useCallback(
     async (lat, lng) => {
@@ -78,7 +82,7 @@ export default function LocalisationPicker({ value, onChange }) {
     setSearching(true);
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&addressdetails=1`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=1&addressdetails=1&accept-language=${langueAdresses}`,
         {
           headers: {
             'User-Agent': 'MonAppVehicules/1.0 (contact@monapp.com)',
@@ -125,7 +129,7 @@ export default function LocalisationPicker({ value, onChange }) {
         <input
           type="text"
           className="locpicker-input"
-          placeholder="Rechercher une adresse..."
+          placeholder={t('Rechercher une adresse...')}
           value={address}
           onChange={(e) => setAddress(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleSearch())}
@@ -135,13 +139,16 @@ export default function LocalisationPicker({ value, onChange }) {
           className="locpicker-search-btn"
           onClick={handleSearch}
           disabled={searching}
+          title={t('Rechercher')}
+          aria-label={t('Rechercher')}
         >
           {searching ? '...' : '🔍'}
         </button>
         <button
           type="button"
           className="locpicker-geo-btn"
-          title="Utiliser ma position"
+          title={t('Utiliser ma position')}
+          aria-label={t('Utiliser ma position')}
           onClick={handleUseGeolocation}
         >
           📍
@@ -161,7 +168,7 @@ export default function LocalisationPicker({ value, onChange }) {
           <ClickHandler onClick={handleMapClick} />
           {marker && (
             <Marker position={marker}>
-              <Popup>{address || 'Position sélectionnée'}</Popup>
+              <Popup>{address || t('Position sélectionnée')}</Popup>
             </Marker>
           )}
         </MapContainer>
@@ -169,7 +176,7 @@ export default function LocalisationPicker({ value, onChange }) {
 
       {marker && (
         <p className="locpicker-coords">
-          Coordonnées : <strong>{marker[0].toFixed(5)}</strong>, <strong>{marker[1].toFixed(5)}</strong>
+          {t('Coordonnées :')} <bdi dir="ltr"><strong>{marker[0].toFixed(5)}</strong>, <strong>{marker[1].toFixed(5)}</strong></bdi>
         </p>
       )}
     </div>

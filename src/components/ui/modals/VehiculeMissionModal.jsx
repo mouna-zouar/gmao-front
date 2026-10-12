@@ -4,6 +4,7 @@ import vehiculeService from '../../../services/vehiculeService';
 import personnelService from '../../../services/personnelService';
 import vehiculeMissionService from '../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
+import emplacementService from '../../../services/emplacementService';
 import { etatVehiculeLabel, isVehiculeDisponiblePourMission } from '../../../constants/Vehiculeetat';
 import {
   MapContainer,
@@ -62,7 +63,8 @@ const emptyForm = {
   conducteurId: '',
   dateDepart: '',
   dateRetour: '',
-  destination: '',
+  sourceId: '',
+  destinationId: '',
   localisation: '',
   latitude: null,
   longitude: null,
@@ -299,6 +301,9 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
   const [personnels, setPersonnels] = useState([]);
   const [loadingPersonnels, setLoadingPersonnels] = useState(false);
 
+  const [emplacements, setEmplacements] = useState([]);
+  const [loadingEmplacements, setLoadingEmplacements] = useState(false);
+
   const [searching, setSearching] = useState(false);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
 
@@ -336,8 +341,23 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
       }
     };
 
+    const fetchEmplacements = async () => {
+      setLoadingEmplacements(true);
+      try {
+        const response = await emplacementService.getAll(0, 200);
+        const data = response?.content ?? response?.data ?? response ?? [];
+        setEmplacements(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Erreur chargement emplacements :', err);
+        setEmplacements([]);
+      } finally {
+        setLoadingEmplacements(false);
+      }
+    };
+
     fetchVehicules();
     fetchPersonnels();
+    fetchEmplacements();
   }, [isOpen]);
 
   useEffect(() => {
@@ -354,7 +374,8 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         conducteurId: vehiculeMission.conducteurId ?? vehiculeMission.personnelId ?? '',
         dateDepart: toDateTimeInput(vehiculeMission.dateDepart ?? vehiculeMission.dateDebut),
         dateRetour: toDateTimeInput(vehiculeMission.dateRetour ?? vehiculeMission.dateFin),
-        destination: vehiculeMission.destination ?? '',
+        sourceId: vehiculeMission.sourceId ?? '',
+        destinationId: vehiculeMission.destinationId ?? '',
         localisation: vehiculeMission.localisation ?? '',
         latitude: vehiculeMission.latitude ?? null,
         longitude: vehiculeMission.longitude ?? null,
@@ -547,6 +568,18 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
       return;
     }
 
+    if (!formData.sourceId) {
+      setError("L'emplacement de départ est obligatoire.");
+      setActiveSection('trajet');
+      return;
+    }
+
+    if (!formData.destinationId) {
+      setError("L'emplacement de destination est obligatoire.");
+      setActiveSection('trajet');
+      return;
+    }
+
     if (formData.dateRetour && formData.dateDepart > formData.dateRetour) {
       setError('La date de fin doit être supérieure à la date de début.');
       setActiveSection('trajet');
@@ -571,8 +604,8 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         vehiculeId: Number(formData.vehiculeId),
         conducteurId: toNumOrNull(formData.conducteurId),
         etat: Number(formData.etat ?? 0),
-        sourceId: vehiculeMission?.sourceId ?? 1,
-        destinationId: vehiculeMission?.destinationId ?? 1,
+        sourceId: Number(formData.sourceId),
+        destinationId: Number(formData.destinationId),
         dateDebut: formData.dateDepart || null,
         dateFin: formData.dateRetour || null,
         dateDebutReel: vehiculeMission?.dateDebutReel ?? null,
@@ -614,11 +647,13 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
 
   const vehiculeLabel = vehicules.find((v) => String(v.id) === String(formData.vehiculeId));
   const conducteurLabel = personnels.find((p) => String(p.id) === String(formData.conducteurId));
+  const sourceLabel = emplacements.find((e) => String(e.id) === String(formData.sourceId));
+  const destinationLabel = emplacements.find((e) => String(e.id) === String(formData.destinationId));
 
   const sectionCounts = {
     general: formData.num || formData.objet ? 1 : 0,
     vehicule: [formData.vehiculeId, formData.conducteurId].filter(Boolean).length,
-    trajet: [formData.dateDepart, formData.destination, formData.localisation].filter(Boolean).length,
+    trajet: [formData.dateDepart, formData.sourceId, formData.destinationId].filter(Boolean).length,
     kilometrage: [formData.kilometrageDepart, formData.kilometrageRetour].filter(Boolean).length,
     notes: formData.observations?.trim() ? 1 : 0,
   };
@@ -838,14 +873,45 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
 
             <div className="bmm-grid" style={{ marginTop: 18 }}>
               <div className="bmm-field">
-                <label htmlFor="vm-destination">Destination</label>
-                <input
-                  id="vm-destination"
-                  type="text"
-                  name="destination"
-                  value={formData.destination}
+                <label htmlFor="vm-source">
+                  Emplacement de départ <span className="bmm-required">*</span>
+                </label>
+                <SearchableSelect
+                  id="vm-source"
+                  name="sourceId"
+                  value={formData.sourceId}
                   onChange={handleChange}
-                  placeholder="Ex : Clinique El Amen"
+                  options={emplacements}
+                  loading={loadingEmplacements}
+                  placeholder="Rechercher un emplacement..."
+                  emptyMessage="Aucun emplacement ne correspond"
+                  getValue={(e) => e.id}
+                  getLabel={(e) => e.nom || `Emplacement #${e.id}`}
+                  getOptionHint={(e) => e.adresse || null}
+                />
+                {!loadingEmplacements && emplacements.length === 0 && (
+                  <p className="bmm-hint" style={{ color: '#dc2626' }}>
+                    Aucun emplacement trouvé.
+                  </p>
+                )}
+              </div>
+
+              <div className="bmm-field">
+                <label htmlFor="vm-destination">
+                  Emplacement de destination <span className="bmm-required">*</span>
+                </label>
+                <SearchableSelect
+                  id="vm-destination"
+                  name="destinationId"
+                  value={formData.destinationId}
+                  onChange={handleChange}
+                  options={emplacements}
+                  loading={loadingEmplacements}
+                  placeholder="Rechercher un emplacement..."
+                  emptyMessage="Aucun emplacement ne correspond"
+                  getValue={(e) => e.id}
+                  getLabel={(e) => e.nom || `Emplacement #${e.id}`}
+                  getOptionHint={(e) => e.adresse || null}
                 />
               </div>
 
@@ -867,7 +933,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
             </div>
 
             <div className="bmm-field" style={{ marginTop: 16 }}>
-              <label htmlFor="vm-localisation">Localisation</label>
+              <label htmlFor="vm-localisation">Point GPS (optionnel)</label>
               <div className="bmm-localisation-wrap">
                 <input
                   id="vm-localisation"
@@ -931,6 +997,14 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                 <p className="bmm-hint">
                   Coordonnées : {Number(formData.latitude).toFixed(5)},{' '}
                   {Number(formData.longitude).toFixed(5)}
+                  {' — '}
+                  <a
+                    href={`https://www.openstreetmap.org/?mlat=${formData.latitude}&mlon=${formData.longitude}#map=16/${formData.latitude}/${formData.longitude}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Ouvrir dans OpenStreetMap
+                  </a>
                 </p>
               )}
 
@@ -1075,12 +1149,17 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Destination</span>
-                <span className="bmm-summary-value">{formData.destination || '—'}</span>
+                <span className="bmm-summary-label">Emplacement de départ</span>
+                <span className="bmm-summary-value">{sourceLabel?.nom || '—'}</span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Localisation</span>
+                <span className="bmm-summary-label">Emplacement de destination</span>
+                <span className="bmm-summary-value">{destinationLabel?.nom || '—'}</span>
+              </div>
+
+              <div className="bmm-summary-row">
+                <span className="bmm-summary-label">Point GPS</span>
                 <span className="bmm-summary-value">{formData.localisation || '—'}</span>
               </div>
 

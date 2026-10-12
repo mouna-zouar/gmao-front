@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import blocageImmobilisationService from '../../../services/Blocageimmobilisationservice';
+import { t, tp, locale } from '../../../i18n';
 import './BlocagesImmobilisation.css';
 
 /* ---------- Config ---------- */
@@ -24,7 +25,7 @@ function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 /* ---------- Icônes ---------- */
@@ -145,7 +146,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
       setBlocages(page.content ?? []);
     } catch (err) {
       console.error('Erreur chargement blocages :', err);
-      setError('Impossible de charger les blocages.');
+      setError(t("Impossible de charger les blocages."));
     } finally {
       setLoading(false);
     }
@@ -161,7 +162,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
       setAnalyseMessage(
         nouveaux.length === 0
           ? "Analyse terminée : aucun nouveau blocage détecté."
-          : `Analyse terminée : ${nouveaux.length} nouveau${nouveaux.length > 1 ? 'x' : ''} blocage${nouveaux.length > 1 ? 's' : ''} détecté${nouveaux.length > 1 ? 's' : ''}.`
+          : t('Analyse terminée : {resultat}.', { resultat: tp('nouveau blocage', nouveaux.length) })
       );
       await charger();
     } catch (err) {
@@ -200,17 +201,16 @@ export default function BlocagesImmobilisation({ isModal = false }) {
       {!isModal && (
         <header className="blocages-immob-header">
           <div className="blocages-immob-header__text">
-            <span className="blocages-immob-eyebrow">Maintenance · Surveillance</span>
-            <h1>Blocages d'équipement</h1>
+            <span className="blocages-immob-eyebrow">{t("Maintenance · Surveillance")}</span>
+            <h1>{t("Blocages d'équipement")}</h1>
             <p>
-              Équipements dont le dernier arrêt obligatoire est resté sans suite — pas de bon
-              rouvert, pas de remise en service conforme — depuis au moins 15 jours.
+              {t("Équipements dont le dernier arrêt obligatoire est resté sans suite — pas de bon rouvert, pas de remise en service conforme — depuis au moins 15 jours.")}
             </p>
           </div>
 
           <button className="blocages-immob-analyser-btn" onClick={lancerAnalyse} disabled={analysing}>
             {analysing ? <IconSpinner /> : <IconSearch />}
-            <span>{analysing ? 'Analyse en cours' : "Lancer l'analyse"}</span>
+            <span>{analysing ? t("Analyse en cours") : t("Lancer l'analyse")}</span>
           </button>
         </header>
       )}
@@ -220,7 +220,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
         <div className="blocages-immob-modal-toolbar">
           <button className="blocages-immob-analyser-btn" onClick={lancerAnalyse} disabled={analysing}>
             {analysing ? <IconSpinner /> : <IconSearch />}
-            <span>{analysing ? 'Analyse en cours' : "Lancer l'analyse"}</span>
+            <span>{analysing ? t("Analyse en cours") : t("Lancer l'analyse")}</span>
           </button>
         </div>
       )}
@@ -230,7 +230,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
         <section className="blocages-immob-stats">
           <div className="blocages-immob-stat blocages-immob-stat--total">
             <div className="blocages-immob-stat__head">
-              <span className="blocages-immob-stat__label">Total</span>
+              <span className="blocages-immob-stat__label">{t("Total")}</span>
               <span className="blocages-immob-stat__icon"><IconLayers /></span>
             </div>
             <span className="blocages-immob-stat__value">{stats.total}</span>
@@ -238,7 +238,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
 
           <div className="blocages-immob-stat blocages-immob-stat--nouveau">
             <div className="blocages-immob-stat__head">
-              <span className="blocages-immob-stat__label">Nouveaux</span>
+              <span className="blocages-immob-stat__label">{t("Nouveaux")}</span>
               <span className="blocages-immob-stat__icon"><IconFlame /></span>
             </div>
             <span className="blocages-immob-stat__value">{stats.nouveaux}</span>
@@ -246,7 +246,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
 
           <div className="blocages-immob-stat blocages-immob-stat--actif">
             <div className="blocages-immob-stat__head">
-              <span className="blocages-immob-stat__label">Actifs</span>
+              <span className="blocages-immob-stat__label">{t("Actifs")}</span>
               <span className="blocages-immob-stat__icon"><IconPulse /></span>
             </div>
             <span className="blocages-immob-stat__value">{stats.actifs}</span>
@@ -254,7 +254,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
 
           <div className="blocages-immob-stat blocages-immob-stat--resolu">
             <div className="blocages-immob-stat__head">
-              <span className="blocages-immob-stat__label">Résolus</span>
+              <span className="blocages-immob-stat__label">{t("Résolus")}</span>
               <span className="blocages-immob-stat__icon"><IconShieldCheck /></span>
             </div>
             <span className="blocages-immob-stat__value">{stats.resolus}</span>
@@ -278,14 +278,14 @@ export default function BlocagesImmobilisation({ isModal = false }) {
             className={`blocages-immob-filtre-btn ${filtreStatut === key ? 'blocages-immob-filtre-btn--active' : ''}`}
             onClick={() => setFiltreStatut(key)}
           >
-            {label}
+            {t(label)}
           </button>
         ))}
       </div>
 
       {/* ---------- Liste ---------- */}
       {loading ? (
-        <p className="blocages-immob-empty">Chargement...</p>
+        <p className="blocages-immob-empty">{t("Chargement...")}</p>
       ) : error ? (
         <p className="blocages-immob-error">
           <IconAlert />
@@ -294,7 +294,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
       ) : blocagesAffiches.length === 0 ? (
         <p className="blocages-immob-empty">
           <IconInbox />
-          <span>Aucun blocage pour ce filtre.</span>
+          <span>{t("Aucun blocage pour ce filtre.")}</span>
         </p>
       ) : (
         <ul className="blocages-immob-list">
@@ -307,26 +307,26 @@ export default function BlocagesImmobilisation({ isModal = false }) {
                     <h3 className="blocages-immob-card__titre">{b.cibleNom}</h3>
                     <span className={`blocages-immob-statut blocages-immob-statut--${statutKey}`}>
                       <span className="blocages-immob-statut__dot" />
-                      {STATUT_LABELS[b.statut] || b.statut}
+                      {t(STATUT_LABELS[b.statut] || b.statut)}
                     </span>
                   </div>
                   <span className="blocages-immob-jours">
                     <IconClock />
-                    {b.joursBlocage} j sans suite
+                    {tp('jours sans suite', b.joursBlocage ?? 0)}
                   </span>
                 </div>
 
                 <div className="blocages-immob-card__meta">
                   <div className="blocages-immob-card__meta-item">
-                    <span className="blocages-immob-card__meta-label">Arrêté depuis</span>
+                    <span className="blocages-immob-card__meta-label">{t("Arrêté depuis")}</span>
                     <span className="blocages-immob-card__meta-value">{formatDate(b.dateArret)}</span>
                   </div>
                   <div className="blocages-immob-card__meta-item">
-                    <span className="blocages-immob-card__meta-label">Bon d'arrêt</span>
+                    <span className="blocages-immob-card__meta-label">{t("Bon d'arrêt")}</span>
                     <span className="blocages-immob-card__meta-value">{b.bonMaintenanceArretNum}</span>
                   </div>
                   <div className="blocages-immob-card__meta-item">
-                    <span className="blocages-immob-card__meta-label">Détecté le</span>
+                    <span className="blocages-immob-card__meta-label">{t("Détecté le")}</span>
                     <span className="blocages-immob-card__meta-value">{formatDate(b.dateDetection)}</span>
                   </div>
                 </div>
@@ -334,7 +334,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
                 {b.statut === 'RESOLU' && b.personnelTraitantNom === 'Résolution automatique' && (
                   <p className="blocages-immob-card__auto">
                     <IconCheck />
-                    Résolu automatiquement — bon rouvert ou remise en service enregistrée.
+                    {t("Résolu automatiquement — bon rouvert ou remise en service enregistrée.")}
                   </p>
                 )}
 
@@ -346,7 +346,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
                         onClick={() => changerStatut(b.id, 'VUE')}
                       >
                         <IconEye />
-                        Marquer comme vu
+                        {t("Marquer comme vu")}
                       </button>
                     )}
                     <button
@@ -354,7 +354,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
                       onClick={() => changerStatut(b.id, 'IGNOREE')}
                     >
                       <IconBan />
-                      Ignorer
+                      {t("Ignorer")}
                     </button>
                   </div>
                 )}

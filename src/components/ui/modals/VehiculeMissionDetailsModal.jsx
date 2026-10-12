@@ -87,7 +87,7 @@ export default function VehiculeMissionDetailsModal({
   const EtatIcon = meta.Icon;
   const hasCoords = mission.latitude != null && mission.longitude != null;
   const mapsUrl = hasCoords
-    ? `https://www.google.com/maps?q=${mission.latitude},${mission.longitude}`
+    ? `https://www.openstreetmap.org/?mlat=${mission.latitude}&mlon=${mission.longitude}#map=16/${mission.latitude}/${mission.longitude}`
     : null;
 
   const nomConducteur = conducteur
@@ -216,7 +216,7 @@ export default function VehiculeMissionDetailsModal({
                       className="vm-details-map-btn"
                     >
                       <ExternalLink size={13} strokeWidth={2.5} />
-                      Ouvrir dans Google Maps
+                      Ouvrir dans OpenStreetMap
                     </a>
                   </div>
                 </div>

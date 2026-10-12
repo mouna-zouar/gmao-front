@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import risqueService from '../../../services/Risqueservice';
+import { t, tp, locale } from '../../../i18n';
 import './Risque.css';
 
 /* ---------- Config ---------- */
@@ -29,15 +30,16 @@ const TAILLE_PAGE_DEFAUT = 10;
 
 /* ---------- Utils ---------- */
 function formatDate(iso) {
-  if (!iso) return 'Aucune intervention';
+  if (!iso) return t("Aucune intervention");
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function formatAge(annees) {
-  if (annees === null || annees === undefined) return 'Âge inconnu';
-  return `${annees.toFixed(1)} an${annees >= 2 ? 's' : ''}`;
+  if (annees === null || annees === undefined) return t("Âge inconnu");
+  const n = annees.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return annees >= 2 ? t('{n} ans', { n }) : t('{n} an', { n });
 }
 
 /* ---------- Icônes ---------- */
@@ -138,8 +140,8 @@ function Pagination({
     <div className="risque-pagination">
       <div className="risque-pagination__left">
         <span className="risque-pagination__info">
-          Page <strong>{page}</strong> sur <strong>{totalPages}</strong>
-          {' · '}<span className="risque-pagination__count">{totalItems} équipement{totalItems > 1 ? 's' : ''}</span>
+          {t("Page")} <strong>{page}</strong> {t("sur")} <strong>{totalPages}</strong>
+          {' · '}<span className="risque-pagination__count">{tp('équipement', totalItems)}</span>
         </span>
       </div>
 
@@ -149,9 +151,9 @@ function Pagination({
           className="risque-pagination__btn risque-pagination__btn--nav"
           onClick={() => onChangePage(page - 1)}
           disabled={page <= 1}
-          aria-label="Page précédente"
+          aria-label={t("Page précédente")}
         >
-          <IconChevron direction="left" />
+          <span className="rtl-miroir"><IconChevron direction="left" /></span>
         </button>
 
         {pages.map((p, idx) =>
@@ -175,15 +177,15 @@ function Pagination({
           className="risque-pagination__btn risque-pagination__btn--nav"
           onClick={() => onChangePage(page + 1)}
           disabled={page >= totalPages}
-          aria-label="Page suivante"
+          aria-label={t("Page suivante")}
         >
-          <IconChevron direction="right" />
+          <span className="rtl-miroir"><IconChevron direction="right" /></span>
         </button>
       </div>
 
       <div className="risque-pagination__right">
         <label className="risque-pagination__size">
-          <span>Par page</span>
+          <span>{t("Par page")}</span>
           <select
             value={taillePage}
             onChange={(e) => onChangeTaille(Number(e.target.value))}
@@ -219,7 +221,7 @@ export default function Risque() {
       setEquipements(data ?? []);
     } catch (err) {
       console.error('Erreur chargement risques :', err);
-      setError('Impossible de charger le score de risque du parc.');
+      setError(t("Impossible de charger le score de risque du parc."));
     } finally {
       setLoading(false);
     }
@@ -271,11 +273,9 @@ export default function Risque() {
       {/* ---------- Header ---------- */}
       <header className="risque-header">
         <div className="risque-header__text">
-          <h1>Risques</h1>
+          <h1>{t("Risques")}</h1>
           <p>
-            Score prédictif de panne (0-100), calculé à partir de la fréquence des pannes
-            récentes, de leur tendance, de l'âge de l'équipement et de l'expiration de sa
-            garantie — sans modèle externe, entièrement explicable.
+            {t("Score prédictif de panne (0-100), calculé à partir de la fréquence des pannes récentes, de leur tendance, de l'âge de l'équipement et de l'expiration de sa garantie — sans modèle externe, entièrement explicable.")}
           </p>
         </div>
 
@@ -287,13 +287,13 @@ export default function Risque() {
                 className={`risque-limite-btn ${limite === l.key ? 'risque-limite-btn--active' : ''}`}
                 onClick={() => setLimite(l.key)}
               >
-                {l.label}
+                {t(l.label)}
               </button>
             ))}
           </div>
           <button className="risque-refresh-btn" onClick={charger} disabled={loading}>
             {loading ? <IconSpinner /> : <IconRefresh />}
-            <span>{loading ? 'Chargement' : 'Rafraîchir'}</span>
+            <span>{loading ? t("Chargement") : t("Rafraîchir")}</span>
           </button>
         </div>
       </header>
@@ -304,7 +304,7 @@ export default function Risque() {
           <div className="risque-kpi risque-kpi--neutre">
             <div className="risque-kpi__icon"><IconShieldAlert /></div>
             <div className="risque-kpi__body">
-              <span className="risque-kpi__label">Équipements analysés</span>
+              <span className="risque-kpi__label">{t("Équipements analysés")}</span>
               <span className="risque-kpi__valeur">{kpis.total}</span>
             </div>
           </div>
@@ -312,7 +312,7 @@ export default function Risque() {
           <div className={`risque-kpi ${kpis.nbCritiques > 0 ? 'risque-kpi--critique' : 'risque-kpi--bon'}`}>
             <div className="risque-kpi__icon"><IconAlert /></div>
             <div className="risque-kpi__body">
-              <span className="risque-kpi__label">Niveau critique</span>
+              <span className="risque-kpi__label">{t("Niveau critique")}</span>
               <span className="risque-kpi__valeur">{kpis.nbCritiques}</span>
             </div>
           </div>
@@ -320,7 +320,7 @@ export default function Risque() {
           <div className={`risque-kpi ${kpis.nbEleves > 0 ? 'risque-kpi--eleve' : 'risque-kpi--bon'}`}>
             <div className="risque-kpi__icon"><IconTrendUp /></div>
             <div className="risque-kpi__body">
-              <span className="risque-kpi__label">Niveau élevé</span>
+              <span className="risque-kpi__label">{t("Niveau élevé")}</span>
               <span className="risque-kpi__valeur">{kpis.nbEleves}</span>
             </div>
           </div>
@@ -328,7 +328,7 @@ export default function Risque() {
           <div className="risque-kpi risque-kpi--neutre">
             <div className="risque-kpi__icon"><IconShieldAlert /></div>
             <div className="risque-kpi__body">
-              <span className="risque-kpi__label">Score moyen</span>
+              <span className="risque-kpi__label">{t("Score moyen")}</span>
               <span className="risque-kpi__valeur">
                 {kpis.scoreMoyen !== null ? kpis.scoreMoyen.toFixed(0) : '—'} / 100
               </span>
@@ -343,7 +343,7 @@ export default function Risque() {
           <span className="risque-recherche-icon"><IconSearch /></span>
           <input
             type="text"
-            placeholder="Rechercher par désignation, marque ou modèle..."
+            placeholder={t("Rechercher par désignation, marque ou modèle...")}
             value={recherche}
             onChange={(e) => setRecherche(e.target.value)}
             className="risque-recherche"
@@ -352,15 +352,16 @@ export default function Risque() {
 
         {!loading && equipementsAffiches.length > 0 && (
           <span className="risque-filtres__count">
-            {equipementsAffiches.length} équipement{equipementsAffiches.length > 1 ? 's' : ''}
-            {recherche && ' filtré' + (equipementsAffiches.length > 1 ? 's' : '')}
+            {recherche
+              ? tp('équipement filtré', equipementsAffiches.length)
+              : tp('équipement', equipementsAffiches.length)}
           </span>
         )}
       </div>
 
       {/* ---------- Liste ---------- */}
       {loading ? (
-        <p className="risque-empty">Chargement...</p>
+        <p className="risque-empty">{t("Chargement...")}</p>
       ) : error ? (
         <p className="risque-error">
           <IconAlert />
@@ -371,8 +372,8 @@ export default function Risque() {
           <IconInbox />
           <span>
             {equipements.length === 0
-              ? 'Aucune donnée de risque disponible pour le moment.'
-              : 'Aucun équipement ne correspond à cette recherche.'}
+              ? t("Aucune donnée de risque disponible pour le moment.")
+              : t("Aucun équipement ne correspond à cette recherche.")}
           </span>
         </p>
       ) : (
@@ -388,14 +389,14 @@ export default function Risque() {
                       {e.scoreRisque}
                     </span>
                     <span className={`risque-niveau-label risque-niveau-label--${niveauClass}`}>
-                      {NIVEAU_LABELS[e.niveauRisque] || e.niveauRisque}
+                      {NIVEAU_LABELS[e.niveauRisque] ? t(NIVEAU_LABELS[e.niveauRisque]) : e.niveauRisque}
                     </span>
                   </div>
 
                   <div className="risque-card__body">
                     <div className="risque-card__titre-wrap">
                       <span className="risque-card__titre">
-                        {e.designation || `Équipement #${e.lotArticleImmobilistationId}`}
+                        {e.designation || t('Équipement #{id}', { id: e.lotArticleImmobilistationId })}
                       </span>
                       {(e.marque || e.modele) && (
                         <span className="risque-card__marque">
@@ -406,20 +407,20 @@ export default function Risque() {
 
                     <div className="risque-card__meta">
                       <span className="risque-meta-item">
-                        <strong>{e.nbPannes12Mois}</strong> panne{e.nbPannes12Mois > 1 ? 's' : ''} / 12 mois
+                        {tp('panne sur 12 mois', e.nbPannes12Mois)}
                       </span>
                       <span className={`risque-meta-item risque-tendance risque-tendance--${TENDANCE_CLASS[e.tendance] || 'stable'}`}>
-                        <TendanceIcon /> {TENDANCE_LABEL[e.tendance] || e.tendance}
+                        <TendanceIcon /> {TENDANCE_LABEL[e.tendance] ? t(TENDANCE_LABEL[e.tendance]) : e.tendance}
                       </span>
                       <span className="risque-meta-item">{formatAge(e.ageAnnees)}</span>
                       {e.garantieExpiree === true && (
-                        <span className="risque-meta-item risque-garantie-expiree">Garantie expirée</span>
+                        <span className="risque-meta-item risque-garantie-expiree">{t("Garantie expirée")}</span>
                       )}
                       {e.garantieExpiree === false && (
-                        <span className="risque-meta-item risque-garantie-active">Sous garantie</span>
+                        <span className="risque-meta-item risque-garantie-active">{t("Sous garantie")}</span>
                       )}
                       <span className="risque-meta-item risque-meta-item--muted">
-                        Dernière intervention : {formatDate(e.derniereIntervention)}
+                        {t("Dernière intervention :")} {formatDate(e.derniereIntervention)}
                       </span>
                     </div>
                   </div>

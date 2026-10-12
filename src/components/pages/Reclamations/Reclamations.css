@@ -116,7 +116,7 @@
   gap: 14px;
 }
 
-/* Icône header en teal (alignée FicheEmploye) */
+/* ⭐ Icône header en teal (alignée FicheEmploye) */
 .reclamations-header-icon {
   display: flex;
   align-items: center;
@@ -145,7 +145,7 @@
   font-weight: 500;
 }
 
-/* Badge total en teal */
+/* ⭐ Badge total en teal (aligné badge-depot de FicheEmploye) */
 .reclamations-badge-total {
   background: var(--teal-50);
   color: var(--teal-700);
@@ -159,109 +159,84 @@
 }
 
 /* ============================================================
-   ACTIONS BAR — style aligné sur BonCarburant
+   ACTIONS BAR — carte blanche style FicheEmploye
    ============================================================ */
 .reclamations-actions-bar {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-  padding: 12px 18px;
   background: #ffffff;
   border: 1px solid var(--slate-200);
   border-radius: 16px;
+  padding: 12px 20px;
   margin-bottom: 20px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
   box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
+  transition: var(--transition);
 }
 
-.reclamations-actions-divider {
-  width: 1px;
-  align-self: stretch;
-  min-height: 26px;
-  background: var(--slate-200);
-  margin: 2px 4px;
+.reclamations-actions-bar:hover {
+  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
-/* Base bouton — identique à .vbc-action-btn */
 .reclamations-action-btn {
-  background: transparent;
-  border: 1.5px solid transparent;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 9px 14px;
-  font-size: 0.86rem;
+  padding: 8px 14px;
+  font-size: 0.88rem;
   font-weight: 700;
-  cursor: pointer;
-  border-radius: 10px;
-  transition: all 0.18s ease;
-  color: #475569;
   font-family: inherit;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
+  color: var(--slate-700);
   white-space: nowrap;
 }
 
-.reclamations-action-btn:hover:not(.disabled):not(:disabled) {
+.reclamations-action-btn:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
 .reclamations-action-btn:disabled,
 .reclamations-action-btn.disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-/* ─── Ajouter — teal plein (bouton principal) ─── */
-.reclamations-action-btn.ajouter {
-  background: #0794a4;
-  color: #ffffff;
-  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
-}
-.reclamations-action-btn.ajouter:hover:not(:disabled):not(.disabled) {
-  background: #067a87;
-  box-shadow: 0 10px 22px -6px rgba(7, 148, 164, 0.6);
-}
+.reclamations-action-btn.ajouter              { color: var(--green-600); }
+.reclamations-action-btn.ajouter:hover:not(:disabled)   { background: #ecfdf5; }
 
-/* ─── Modifier — orange ─── */
-.reclamations-action-btn.modifier { color: #ea580c; }
-.reclamations-action-btn.modifier:hover:not(:disabled):not(.disabled) {
-  background: #fff7ed;
-  border-color: #fed7aa;
-}
+.reclamations-action-btn.modifier             { color: var(--blue-600); }
+.reclamations-action-btn.modifier:hover:not(:disabled)  { background: #eff6ff; }
 
-/* ─── Détails — teal ─── */
-.reclamations-action-btn.details { color: #0794a4; }
-.reclamations-action-btn.details:hover:not(:disabled):not(.disabled) {
-  background: #e9f8fa;
-  border-color: #d5f0f3;
-}
+.reclamations-action-btn.details              { color: var(--teal-600); }
+.reclamations-action-btn.details:hover:not(:disabled)   { background: var(--teal-50); }
 
-/* ─── Associer — bleu ─── */
-.reclamations-action-btn.associer { color: #0284c7; }
-.reclamations-action-btn.associer:hover:not(:disabled):not(.disabled) {
-  background: #f0f9ff;
-  border-color: #bae6fd;
-}
+.reclamations-action-btn.associer             { color: var(--blue-600); }
+.reclamations-action-btn.associer:hover:not(:disabled)  { background: #eff6ff; }
 
-/* ─── Valider — vert ─── */
-.reclamations-action-btn.valider { color: #16a34a; }
-.reclamations-action-btn.valider:hover:not(:disabled):not(.disabled) {
-  background: #ecfdf5;
-  border-color: #a7f3d0;
-}
+.reclamations-action-btn.creer-bon            { color: var(--teal-600); }
+.reclamations-action-btn.creer-bon:hover:not(:disabled) { background: var(--teal-50); }
 
-/* ─── Rejeter — rouge ─── */
-.reclamations-action-btn.rejeter { color: #e11d48; }
-.reclamations-action-btn.rejeter:hover:not(:disabled):not(.disabled) {
-  background: #fff1f2;
-  border-color: #fecdd3;
-}
+.reclamations-action-btn.valider              { color: var(--green-600); }
+.reclamations-action-btn.valider:hover:not(:disabled)   { background: #f0fdf4; }
 
-/* ─── Supprimer — rouge ─── */
-.reclamations-action-btn.supprimer { color: #e11d48; }
-.reclamations-action-btn.supprimer:hover:not(:disabled):not(.disabled) {
-  background: #fff1f2;
-  border-color: #fecdd3;
+.reclamations-action-btn.rejeter              { color: var(--red-600); }
+.reclamations-action-btn.rejeter:hover:not(:disabled)   { background: #fef2f2; }
+
+.reclamations-action-btn.supprimer            { color: var(--red-600); }
+.reclamations-action-btn.supprimer:hover:not(:disabled) { background: #fef2f2; }
+
+.reclamations-actions-divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 22px;
+  background: var(--slate-200);
+  margin: 4px 8px;
 }
 
 /* ============================================================
@@ -663,11 +638,13 @@
   }
 
   .reclamations-action-btn {
-    padding: 8px 11px;
-    font-size: 0.8rem;
+    padding: 8px 10px;
+    font-size: 0.82rem;
   }
 
-  .reclamations-actions-divider { display: none; }
+  .reclamations-action-btn span:not(.reclamations-action-icon) {
+    display: none;
+  }
 
   .reclamations-filter-panel {
     flex-direction: column;
@@ -718,8 +695,12 @@
   }
 
   .reclamations-action-btn {
-    padding: 8px 11px;
-    font-size: 0.8rem;
+    padding: 6px 8px;
+  }
+
+  .reclamations-action-btn svg {
+    width: 16px;
+    height: 16px;
   }
 
   .reclamations-export-btn {

@@ -8,6 +8,7 @@ import serviceService from '../../../services/Serviceservice';
 import cliniqueService from '../../../services/cliniqueService';
 import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
+import { t, locale } from '../../../i18n';
 import './FicheBonMaintenance.css';
 
 const ETAT_OPTIONS = [
@@ -27,7 +28,7 @@ const ETAT_BADGE_CLASS = {
 };
 
 function etatLabel(etat) {
-  return ETAT_OPTIONS.find((o) => o.value === etat)?.label ?? `État ${etat}`;
+  return t(ETAT_OPTIONS.find((o) => o.value === etat)?.label ?? 'État {n}', { n: etat });
 }
 
 const TYPE_OPTIONS = [
@@ -49,7 +50,7 @@ function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function toDateTimeLocalInput(iso) {
@@ -283,9 +284,9 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     } catch (err) {
       console.error('Erreur enregistrement bon de maintenance :', err);
       setConfirmModal({
-        show: true, type: 'danger', title: 'Erreur',
-        message: "Impossible d'enregistrer le bon de maintenance.",
-        confirmText: 'Fermer', onConfirm: () => setConfirmModal((p) => ({ ...p, show: false })),
+        show: true, type: 'danger', title: t("Erreur"),
+        message: t("Impossible d'enregistrer le bon de maintenance."),
+        confirmText: t("Fermer"), onConfirm: () => setConfirmModal((p) => ({ ...p, show: false })),
       });
     } finally {
       setIsSaving(false);
@@ -294,9 +295,9 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
 
   const doTransition = async (label, action) => {
     setConfirmModal({
-      show: true, type: 'info', title: label,
-      message: `Confirmer l'action « ${label} » sur ce bon de maintenance ?`,
-      confirmText: 'Confirmer', cancelText: 'Annuler',
+      show: true, type: 'info', title: t(label),
+      message: t("Confirmer l'action « {action} » sur ce bon de maintenance ?", { action: t(label) }),
+      confirmText: t("Confirmer"), cancelText: 'Annuler',
       onConfirm: async () => {
         setConfirmModal((p) => ({ ...p, show: false }));
         try {
@@ -305,9 +306,9 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
         } catch (err) {
           console.error(`Erreur transition ${label} :`, err);
           setConfirmModal({
-            show: true, type: 'danger', title: 'Erreur',
-            message: `Échec de l'action « ${label} ».`,
-            confirmText: 'Fermer', onConfirm: () => setConfirmModal((p) => ({ ...p, show: false })),
+            show: true, type: 'danger', title: t("Erreur"),
+            message: t("Échec de l'action « {action} ».", { action: t(label) }),
+            confirmText: t("Fermer"), onConfirm: () => setConfirmModal((p) => ({ ...p, show: false })),
           });
         }
       },
@@ -331,9 +332,9 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       console.error('Erreur marquage Effectué :', err);
       setEtatModal({ show: false, etat: '' });
       setConfirmModal({
-        show: true, type: 'danger', title: 'Erreur',
-        message: "Échec du marquage « Effectué ».",
-        confirmText: 'Fermer', onConfirm: () => setConfirmModal((p) => ({ ...p, show: false })),
+        show: true, type: 'danger', title: t("Erreur"),
+        message: t("Échec du marquage « Effectué »."),
+        confirmText: t("Fermer"), onConfirm: () => setConfirmModal((p) => ({ ...p, show: false })),
       });
     }
   };
@@ -350,15 +351,15 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       console.error('Erreur suspension :', err);
       setMotifModal({ show: false, motif: '' });
       setConfirmModal({
-        show: true, type: 'danger', title: 'Erreur',
-        message: "Échec de la suspension du bon de maintenance.",
-        confirmText: 'Fermer', onConfirm: () => setConfirmModal((p) => ({ ...p, show: false })),
+        show: true, type: 'danger', title: t("Erreur"),
+        message: t("Échec de la suspension du bon de maintenance."),
+        confirmText: t("Fermer"), onConfirm: () => setConfirmModal((p) => ({ ...p, show: false })),
       });
     }
   };
 
   if (loading) {
-    return <div className="fiche-employeur-wrapper"><p style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Chargement...</p></div>;
+    return <div className="fiche-employeur-wrapper"><p style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>{t("Chargement...")}</p></div>;
   }
 
   return (
@@ -369,11 +370,11 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="header-icon">
               <path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
             </svg>
-            <h2>{bon?.titre || bon?.num || (isNew ? 'Nouveau bon de maintenance' : 'Bon de maintenance')}</h2>
+            <h2>{bon?.titre || bon?.num || (isNew ? t("Nouveau bon de maintenance") : t("Bon de maintenance"))}</h2>
           </div>
         </div>
         <div className="header-right">
-          {bon && <span className={`fbm-etat-badge ${ETAT_BADGE_CLASS[bon.etat] || ''}`}>{etatLabel(bon.etat)}</span>}
+          {bon && <span className={`fbm-etat-badge ${ETAT_BADGE_CLASS[bon.etat] || ''}`}>{t(etatLabel(bon.etat))}</span>}
         </div>
       </div>
 
@@ -381,19 +382,19 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
         {onBack && (
           <button type="button" className="action-bar-btn retour-liste" onClick={onBack}>
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            <span className="btn-label">Retour à la liste</span>
+            <span className="btn-label">{t("Retour à la liste")}</span>
           </button>
         )}
         {!isEditMode && !isNew && (
           <button type="button" className="action-bar-btn modifier" onClick={() => setIsEditMode(true)}>
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-            <span className="btn-label">Modifier</span>
+            <span className="btn-label">{t("Modifier")}</span>
           </button>
         )}
         {isEditMode && !isNew && (
           <button type="button" className="action-bar-btn annuler" onClick={() => { setIsEditMode(false); loadBon(); }}>
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            <span className="btn-label">Annuler</span>
+            <span className="btn-label">{t("Annuler")}</span>
           </button>
         )}
 
@@ -402,25 +403,25 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
             {bon.etat === 1 && (
               <button type="button" className="action-bar-btn fbm-wf-encours" onClick={handlePasserEnCours}>
                 <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span className="btn-label">Passer en cours</span>
+                <span className="btn-label">{t("Passer en cours")}</span>
               </button>
             )}
             {(bon.etat === 1 || bon.etat === 3) && (
               <button type="button" className="action-bar-btn fbm-wf-suspendre" onClick={handleSuspendre}>
                 <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span className="btn-label">Suspendre</span>
+                <span className="btn-label">{t("Suspendre")}</span>
               </button>
             )}
             {bon.etat === 3 && (
               <button type="button" className="action-bar-btn fbm-wf-effectuer" onClick={handleMarquerEffectue}>
                 <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span className="btn-label">Marquer effectué</span>
+                <span className="btn-label">{t("Marquer effectué")}</span>
               </button>
             )}
             {bon.etat !== 10 && bon.etat !== 4 && (
               <button type="button" className="action-bar-btn fbm-wf-annuler" onClick={handleAnnuler}>
                 <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
-                <span className="btn-label">Annuler le bon</span>
+                <span className="btn-label">{t("Annuler le bon")}</span>
               </button>
             )}
           </>
@@ -429,7 +430,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
         {onClose && (
           <div className="actions-bar-right">
             <button type="button" className="action-bar-btn fermer-view" onClick={onClose}>
-              <span className="btn-label">← Retourner à la liste</span>
+              <span className="btn-label">{t("← Retourner à la liste")}</span>
             </button>
           </div>
         )}
@@ -440,12 +441,12 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
           {isSaving ? (
             <>
               <span className="spinner"></span>
-              <span className="save-btn-text">Enregistrement...</span>
+              <span className="save-btn-text">{t("Enregistrement...")}</span>
             </>
           ) : (
             <>
               <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-              <span className="save-btn-text">{isNew ? 'Créer le bon' : 'Enregistrer les modifications'}</span>
+              <span className="save-btn-text">{isNew ? t("Créer le bon") : t("Enregistrer les modifications")}</span>
             </>
           )}
         </button>
@@ -457,23 +458,23 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
             <div className="section-icon">
               <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
             </div>
-            <h3>Informations générales</h3>
+            <h3>{t("Informations générales")}</h3>
             <div className="section-toggle"><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="chevron-icon"><path d="M19 9l-7 7-7-7" /></svg></div>
           </div>
           <div className="section-content"><div className="section-content-inner">
             <div className="form-group-row">
-              <div className="input-group"><label>Numéro</label><input type="text" name="num" value={formData.num} onChange={handleChange} /></div>
-              <div className="input-group"><label>N° interne</label><input type="number" name="n" value={formData.n} onChange={handleChange} /></div>
+              <div className="input-group"><label>{t("Numéro")}</label><input type="text" name="num" value={formData.num} onChange={handleChange} /></div>
+              <div className="input-group"><label>{t("N° interne")}</label><input type="number" name="n" value={formData.n} onChange={handleChange} /></div>
             </div>
             <div className="form-group-row">
-              <div className="input-group full"><label>Titre</label><input type="text" name="titre" value={formData.titre} onChange={handleChange} /></div>
+              <div className="input-group full"><label>{t("Titre")}</label><input type="text" name="titre" value={formData.titre} onChange={handleChange} /></div>
             </div>
             <div className="form-group-row">
-              <div className="input-group full"><label>Description</label><textarea name="description" rows={3} value={formData.description} onChange={handleChange} /></div>
+              <div className="input-group full"><label>{t("Description")}</label><textarea name="description" rows={3} value={formData.description} onChange={handleChange} /></div>
             </div>
             <div className="form-group-row">
               <div className="input-group">
-                <label>Immobilisation</label>
+                <label>{t("Immobilisation")}</label>
                 <select name="lotArticleImmobilistationId" value={formData.lotArticleImmobilistationId} onChange={handleChange}>
                   <option value="">—</option>
                   {immobilisations.map((i) => <option key={i.id} value={i.id}>{i.designation || `#${i.id}`}</option>)}
@@ -481,39 +482,39 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
                 {formData.lotArticleImmobilistationId && (
                   <p className="cem-hint">
                     {checkingImmoQte
-                      ? 'Vérification du stock...'
-                      : (immoQteDisponible != null ? `Quantité disponible : ${immoQteDisponible}` : 'Quantité disponible inconnue')}
+                      ? t("Vérification du stock...")
+                      : (immoQteDisponible != null ? t('Quantité disponible : {n}', { n: immoQteDisponible }) : t("Quantité disponible inconnue"))}
                   </p>
                 )}
                 {!checkingImmoQte && formData.lotArticleImmobilistationId && immoQteDisponible != null && Number(immoQteDisponible) <= 0 && (
-                  <p className="cem-warning">⚠ Quantité non disponible pour cette immobilisation.</p>
+                  <p className="cem-warning">{t("⚠ Quantité non disponible pour cette immobilisation.")}</p>
                 )}
               </div>
               <div className="input-group">
-                <label>Prestataire</label>
+                <label>{t("Prestataire")}</label>
                 <select name="prestataireId" value={formData.prestataireId} onChange={handleChange}>
                   <option value="">—</option>
-                  {prestataires.map((p) => <option key={p.id} value={p.id}>{prestataireLabel(p)}</option>)}
+                  {prestataires.map((p) => <option key={p.id} value={p.id}>{t(prestataireLabel(p))}</option>)}
                 </select>
               </div>
             </div>
             <div className="form-group-row">
               <div className="input-group">
-                <label>Clinique</label>
+                <label>{t("Clinique")}</label>
                 <select name="cliniqueId" value={formData.cliniqueId} onChange={handleChange}>
                   <option value="">—</option>
                   {cliniques.map((c) => <option key={c.id} value={c.id}>{c.nom || `#${c.id}`}</option>)}
                 </select>
               </div>
               <div className="input-group">
-                <label>Service</label>
+                <label>{t("Service")}</label>
                 <select name="serviceId" value={formData.serviceId} onChange={handleChange}>
                   <option value="">—</option>
                   {servicesDisponibles.map((s) => <option key={s.id} value={s.id}>{s.description || s.code || `#${s.id}`}</option>)}
                 </select>
               </div>
               <div className="input-group">
-                <label>Dépôt</label>
+                <label>{t("Dépôt")}</label>
                 <select name="depotId" value={formData.depotId} onChange={handleChange}>
                   <option value="">—</option>
                   {depotsDisponibles.map((d) => <option key={d.id} value={d.id}>{d.nom || d.codeDepots || `#${d.id}`}</option>)}
@@ -522,40 +523,40 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
             </div>
             <div className="form-group-row">
               <div className="input-group">
-                <label>Type</label>
+                <label>{t("Type")}</label>
                 <select name="type" value={formData.type} onChange={handleChange}>
                   <option value="">—</option>
-                  {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                 </select>
               </div>
               <div className="input-group">
-                <label>Urgence</label>
+                <label>{t("Urgence")}</label>
                 <select name="urgence" value={formData.urgence} onChange={handleChange}>
                   <option value="">—</option>
-                  {NIVEAU_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  {NIVEAU_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                 </select>
               </div>
-              <div className="input-group"><label>Date d'intervention</label><input type="datetime-local" name="dateIntervention" value={formData.dateIntervention} onChange={handleChange} /></div>
+              <div className="input-group"><label>{t("Date d'intervention")}</label><input type="datetime-local" name="dateIntervention" value={formData.dateIntervention} onChange={handleChange} /></div>
             </div>
             <div className="form-group-row">
-              <div className="input-group"><label>Effet</label><input type="text" name="effet" value={formData.effet} onChange={handleChange} /></div>
-              <div className="input-group"><label>Cause</label><input type="text" name="cause" value={formData.cause} onChange={handleChange} /></div>
-              <div className="input-group"><label>Remède</label><input type="text" name="remede" value={formData.remede} onChange={handleChange} /></div>
+              <div className="input-group"><label>{t("Effet")}</label><input type="text" name="effet" value={formData.effet} onChange={handleChange} /></div>
+              <div className="input-group"><label>{t("Cause")}</label><input type="text" name="cause" value={formData.cause} onChange={handleChange} /></div>
+              <div className="input-group"><label>{t("Remède")}</label><input type="text" name="remede" value={formData.remede} onChange={handleChange} /></div>
             </div>
             <div className="form-group-row">
-              <div className="input-group full"><label>Commentaire</label><textarea name="commentaire" rows={2} value={formData.commentaire} onChange={handleChange} /></div>
+              <div className="input-group full"><label>{t("Commentaire")}</label><textarea name="commentaire" rows={2} value={formData.commentaire} onChange={handleChange} /></div>
             </div>
             <div className="form-group-row">
               <label className="checkbox-label">
                 <input type="checkbox" name="arretOblig" checked={formData.arretOblig} onChange={handleChange} disabled={!isEditMode} />
-                Arrêt obligatoire
+                {t("Arrêt obligatoire")}
               </label>
             </div>
             {bon && (
               <div className="form-group-row">
-                <div className="input-group"><label>Créé par</label><input type="text" value={bon.personnelCreationNom || (bon.personnelCreation ? personnelLabel(bon.personnelCreation) : '—')} disabled /></div>
-                <div className="input-group"><label>Demandé par</label><input type="text" value={bon.personnelDemandantNom || (bon.personnelDemandant ? personnelLabel(bon.personnelDemandant) : '—')} disabled /></div>
-                <div className="input-group"><label>Coût total</label><input type="text" value={bon.coutTotal != null ? `${bon.coutTotal} DT` : '—'} disabled /></div>
+                <div className="input-group"><label>{t("Créé par")}</label><input type="text" value={bon.personnelCreationNom || (bon.personnelCreation ? personnelLabel(bon.personnelCreation) : '—')} disabled /></div>
+                <div className="input-group"><label>{t("Demandé par")}</label><input type="text" value={bon.personnelDemandantNom || (bon.personnelDemandant ? personnelLabel(bon.personnelDemandant) : '—')} disabled /></div>
+                <div className="input-group"><label>{t("Coût total")}</label><input type="text" value={bon.coutTotal != null ? t('{montant} DT', { montant: bon.coutTotal }) : '—'} disabled /></div>
               </div>
             )}
           </div></div>
@@ -572,17 +573,17 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       {motifModal.show && (
         <div className="fbm-motif-overlay" onClick={() => setMotifModal({ show: false, motif: '' })}>
           <div className="fbm-motif-box" onClick={(e) => e.stopPropagation()}>
-            <h3>Motif de suspension</h3>
+            <h3>{t("Motif de suspension")}</h3>
             <textarea
               rows={3}
               value={motifModal.motif}
               onChange={(e) => setMotifModal((p) => ({ ...p, motif: e.target.value }))}
-              placeholder="Indiquer le motif de la suspension..."
+              placeholder={t("Indiquer le motif de la suspension...")}
               autoFocus
             />
             <div className="fbm-motif-actions">
-              <button type="button" className="fbm-motif-cancel" onClick={() => setMotifModal({ show: false, motif: '' })}>Annuler</button>
-              <button type="button" className="fbm-motif-confirm" onClick={confirmSuspendre} disabled={!motifModal.motif.trim()}>Suspendre</button>
+              <button type="button" className="fbm-motif-cancel" onClick={() => setMotifModal({ show: false, motif: '' })}>{t("Annuler")}</button>
+              <button type="button" className="fbm-motif-confirm" onClick={confirmSuspendre} disabled={!motifModal.motif.trim()}>{t("Suspendre")}</button>
             </div>
           </div>
         </div>
@@ -591,12 +592,12 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       {etatModal.show && (
         <div className="fbm-motif-overlay" onClick={() => setEtatModal({ show: false, etat: '' })}>
           <div className="fbm-motif-box" onClick={(e) => e.stopPropagation()}>
-            <h3>État final de l'immobilisation</h3>
+            <h3>{t("État final de l'immobilisation")}</h3>
             <input
               type="number"
               value={etatModal.etat}
               onChange={(e) => setEtatModal((p) => ({ ...p, etat: e.target.value }))}
-              placeholder="Laisser vide si non applicable"
+              placeholder={t("Laisser vide si non applicable")}
               autoFocus
               style={{
                 width: '100%', padding: '10px 12px', borderRadius: 10,
@@ -604,8 +605,8 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
               }}
             />
             <div className="fbm-motif-actions">
-              <button type="button" className="fbm-motif-cancel" onClick={() => setEtatModal({ show: false, etat: '' })}>Annuler</button>
-              <button type="button" className="fbm-motif-confirm" onClick={confirmMarquerEffectue}>Marquer effectué</button>
+              <button type="button" className="fbm-motif-cancel" onClick={() => setEtatModal({ show: false, etat: '' })}>{t("Annuler")}</button>
+              <button type="button" className="fbm-motif-confirm" onClick={confirmMarquerEffectue}>{t("Marquer effectué")}</button>
             </div>
           </div>
         </div>

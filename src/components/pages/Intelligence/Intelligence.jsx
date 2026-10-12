@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import risqueService from '../../../services/Risqueservice';
 import anomalieService from '../../../services/Anomalieservice';
 import rcaCapaService from '../../../services/rcaCapaService';
+import { t, tp, locale } from '../../../i18n';
 import './Intelligence.css';
 
 /* ---------- Config ---------- */
@@ -13,21 +14,22 @@ const NB_CROISEMENTS_RCA = 20;
 const NIVEAU_LABELS = { CRITIQUE: 'Critique', ELEVE: 'Élevé', MODERE: 'Modéré', FAIBLE: 'Faible' };
 const SEVERITE_LABELS = { MODEREE: 'Modérée', ELEVEE: 'Élevée', CRITIQUE: 'Critique' };
 const TYPE_ANOMALIE_LABELS = { EQUIPEMENT: 'Équipement', SERVICE: 'Service' };
+const TENDANCE_LABELS = { HAUSSE: 'En hausse', BAISSE: 'En baisse', STABLE: 'Stable' };
 
 /* ---------- Utils ---------- */
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-    + ' · ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' })
+    + ' · ' + d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 const ACTIONS_CLOSES = new Set(['TERMINEE', 'VERIFIEE_EFFICACE', 'VERIFIEE_INEFFICACE']);
@@ -102,7 +104,7 @@ export default function Intelligence({ isModal = false }) {
       setActionsEnRetard(retardData ?? []);
     } catch (err) {
       console.error('Erreur chargement dashboard Intelligence :', err);
-      setError('Impossible de charger le dashboard Intelligence.');
+      setError(t("Impossible de charger le dashboard Intelligence."));
     } finally {
       setLoading(false);
     }
@@ -154,16 +156,14 @@ export default function Intelligence({ isModal = false }) {
     <div className={`intel-page ${isModal ? 'intel-page--modal' : ''}`}>
       <header className="intel-header">
         <div className="intel-header__text">
-          <h1>Intelligence</h1>
+          <h1>{t("Intelligence")}</h1>
           <p>
-            Croise les signaux des modules Risques, Anomalies et RCA/CAPA plutôt que de les
-            laisser dans 3 endroits séparés — pour repérer les équipements qui cumulent
-            plusieurs signaux d'alerte en même temps.
+            {t("Croise les signaux des modules Risques, Anomalies et RCA/CAPA plutôt que de les laisser dans 3 endroits séparés — pour repérer les équipements qui cumulent plusieurs signaux d'alerte en même temps.")}
           </p>
         </div>
         <button className="intel-refresh-btn" onClick={charger} disabled={loading}>
           {loading ? <IconSpinner /> : <IconRefresh />}
-          <span>{loading ? 'Chargement' : 'Rafraîchir'}</span>
+          <span>{loading ? t("Chargement") : t("Rafraîchir")}</span>
         </button>
       </header>
 
@@ -177,7 +177,7 @@ export default function Intelligence({ isModal = false }) {
           <div className={`intel-kpi ${pointsChauds.length > 0 ? 'intel-kpi--critique' : 'intel-kpi--bon'}`}>
             <div className="intel-kpi__icon"><IconFlame /></div>
             <div className="intel-kpi__body">
-              <span className="intel-kpi__label">Points chauds (risque + RCA ouverte)</span>
+              <span className="intel-kpi__label">{t("Points chauds (risque + RCA ouverte)")}</span>
               <span className="intel-kpi__valeur">{croisementEnCours ? '…' : pointsChauds.length}</span>
             </div>
           </div>
@@ -185,7 +185,7 @@ export default function Intelligence({ isModal = false }) {
           <div className={`intel-kpi ${anomalies.length > 0 ? 'intel-kpi--eleve' : 'intel-kpi--bon'}`}>
             <div className="intel-kpi__icon"><IconAlertTriangle /></div>
             <div className="intel-kpi__body">
-              <span className="intel-kpi__label">Anomalies non traitées</span>
+              <span className="intel-kpi__label">{t("Anomalies non traitées")}</span>
               <span className="intel-kpi__valeur">{anomalies.length}</span>
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function Intelligence({ isModal = false }) {
           <div className={`intel-kpi ${actionsEnRetard.length > 0 ? 'intel-kpi--critique' : 'intel-kpi--bon'}`}>
             <div className="intel-kpi__icon"><IconClock /></div>
             <div className="intel-kpi__body">
-              <span className="intel-kpi__label">Actions CAPA en retard</span>
+              <span className="intel-kpi__label">{t("Actions CAPA en retard")}</span>
               <span className="intel-kpi__valeur">{actionsEnRetard.length}</span>
             </div>
           </div>
@@ -201,7 +201,7 @@ export default function Intelligence({ isModal = false }) {
           <div className={`intel-kpi ${risquesCritiques.length > 0 ? 'intel-kpi--eleve' : 'intel-kpi--bon'}`}>
             <div className="intel-kpi__icon"><IconShieldAlert /></div>
             <div className="intel-kpi__body">
-              <span className="intel-kpi__label">Équipements à risque élevé/critique</span>
+              <span className="intel-kpi__label">{t("Équipements à risque élevé/critique")}</span>
               <span className="intel-kpi__valeur">{risquesCritiques.length}</span>
             </div>
           </div>
@@ -211,16 +211,15 @@ export default function Intelligence({ isModal = false }) {
       {/* ---------- Points chauds ---------- */}
       {!loading && (
         <section className="intel-panel intel-panel--chauds">
-          <h2 className="intel-panel__title"><IconFlame /> Points chauds</h2>
+          <h2 className="intel-panel__title"><IconFlame /> {t("Points chauds")}</h2>
           <p className="intel-panel__subtitle">
-            Équipements à risque élevé/critique qui ont aussi une analyse RCA en cours —
-            un problème récurrent qui n'est pas encore vraiment résolu.
+            {t("Équipements à risque élevé/critique qui ont aussi une analyse RCA en cours — un problème récurrent qui n'est pas encore vraiment résolu.")}
           </p>
 
           {croisementEnCours ? (
-            <p className="intel-empty">Croisement en cours...</p>
+            <p className="intel-empty">{t("Croisement en cours...")}</p>
           ) : pointsChauds.length === 0 ? (
-            <p className="intel-empty"><IconInbox /><span>Aucun croisement pour le moment — bon signe.</span></p>
+            <p className="intel-empty"><IconInbox /><span>{t("Aucun croisement pour le moment — bon signe.")}</span></p>
           ) : (
             <ul className="intel-chauds-list">
               {pointsChauds.map((c) => (
@@ -229,11 +228,11 @@ export default function Intelligence({ isModal = false }) {
                     {c.risque.scoreRisque}
                   </span>
                   <div className="intel-chaud-body">
-                    <span className="intel-chaud-titre">{c.risque.designation || `Équipement #${c.risque.lotArticleImmobilistationId}`}</span>
+                    <span className="intel-chaud-titre">{c.risque.designation || t('Équipement #{id}', { id: c.risque.lotArticleImmobilistationId })}</span>
                     <span className="intel-chaud-meta">
-                      Risque {NIVEAU_LABELS[c.risque.niveauRisque] || c.risque.niveauRisque}
-                      {' · '}{c.nbAnalyses} analyse{c.nbAnalyses > 1 ? 's' : ''} RCA
-                      {c.nbActionsOuvertes > 0 && ` · ${c.nbActionsOuvertes} action${c.nbActionsOuvertes > 1 ? 's' : ''} CAPA ouverte${c.nbActionsOuvertes > 1 ? 's' : ''}`}
+                      {t('Risque {niveau}', { niveau: t(NIVEAU_LABELS[c.risque.niveauRisque] || c.risque.niveauRisque).toLowerCase() })}
+                      {' · '}{tp('analyse RCA', c.nbAnalyses)}
+                      {c.nbActionsOuvertes > 0 && ` · ${tp('action CAPA ouverte', c.nbActionsOuvertes)}`}
                     </span>
                   </div>
                 </li>
@@ -246,21 +245,21 @@ export default function Intelligence({ isModal = false }) {
       <div className="intel-grid">
         {/* ---------- Anomalies non traitées ---------- */}
         <section className="intel-panel">
-          <h2 className="intel-panel__title"><IconAlertTriangle /> Anomalies non traitées</h2>
+          <h2 className="intel-panel__title"><IconAlertTriangle /> {t("Anomalies non traitées")}</h2>
           {loading ? (
-            <p className="intel-empty">Chargement...</p>
+            <p className="intel-empty">{t("Chargement...")}</p>
           ) : anomalies.length === 0 ? (
-            <p className="intel-empty"><IconInbox /><span>Aucune anomalie non traitée.</span></p>
+            <p className="intel-empty"><IconInbox /><span>{t("Aucune anomalie non traitée.")}</span></p>
           ) : (
             <ul className="intel-list">
               {anomalies.slice(0, 8).map((a) => (
                 <li key={a.id} className={`intel-list-item intel-list-item--${(a.severite || '').toLowerCase()}`}>
                   <div className="intel-list-item__top">
-                    <span className="intel-list-item__titre">{a.cibleNom || `${TYPE_ANOMALIE_LABELS[a.type] || a.type} #${a.cibleId}`}</span>
-                    <span className="intel-badge">{SEVERITE_LABELS[a.severite] || a.severite}</span>
+                    <span className="intel-list-item__titre">{a.cibleNom || `${t(TYPE_ANOMALIE_LABELS[a.type] || a.type)} #${a.cibleId}`}</span>
+                    <span className="intel-badge">{t(SEVERITE_LABELS[a.severite] || a.severite)}</span>
                   </div>
                   <span className="intel-list-item__meta">
-                    {a.nombreReclamations} réclamation{a.nombreReclamations > 1 ? 's' : ''} récentes (moyenne habituelle {a.moyenneHistorique?.toFixed(1)}) · {formatDate(a.dateDetection)}
+                    {tp('réclamation récente', a.nombreReclamations ?? 0)} {t('(moyenne habituelle {m})', { m: a.moyenneHistorique?.toFixed(1) ?? '—' })} · {formatDate(a.dateDetection)}
                   </span>
                 </li>
               ))}
@@ -270,21 +269,21 @@ export default function Intelligence({ isModal = false }) {
 
         {/* ---------- Actions CAPA en retard ---------- */}
         <section className="intel-panel">
-          <h2 className="intel-panel__title"><IconClock /> Actions CAPA en retard</h2>
+          <h2 className="intel-panel__title"><IconClock /> {t("Actions CAPA en retard")}</h2>
           {loading ? (
-            <p className="intel-empty">Chargement...</p>
+            <p className="intel-empty">{t("Chargement...")}</p>
           ) : actionsEnRetard.length === 0 ? (
-            <p className="intel-empty"><IconInbox /><span>Aucune action en retard.</span></p>
+            <p className="intel-empty"><IconInbox /><span>{t("Aucune action en retard.")}</span></p>
           ) : (
             <ul className="intel-list">
               {actionsEnRetard.slice(0, 8).map((a) => (
                 <li key={a.id} className="intel-list-item intel-list-item--critique">
                   <div className="intel-list-item__top">
-                    <span className="intel-list-item__titre">{a.description}</span>
-                    <span className="intel-badge">{a.type === 'PREVENTIVE' ? 'Préventive' : 'Corrective'}</span>
+                    <span className="intel-list-item__titre">{t(a.description)}</span>
+                    <span className="intel-badge">{a.type === 'PREVENTIVE' ? t("Préventive") : t("Corrective")}</span>
                   </div>
                   <span className="intel-list-item__meta">
-                    {a.responsable ? `${a.responsable} · ` : ''}Échéance dépassée : {formatDateTime(a.dateEcheance)}
+                    {a.responsable ? `${a.responsable} · ` : ''}{t('Échéance dépassée : {date}', { date: formatDateTime(a.dateEcheance) })}
                   </span>
                 </li>
               ))}
@@ -295,21 +294,21 @@ export default function Intelligence({ isModal = false }) {
 
       {/* ---------- Top équipements à risque ---------- */}
       <section className="intel-panel">
-        <h2 className="intel-panel__title"><IconShieldAlert /> Équipements les plus à risque</h2>
+        <h2 className="intel-panel__title"><IconShieldAlert /> {t("Équipements les plus à risque")}</h2>
         {loading ? (
-          <p className="intel-empty">Chargement...</p>
+          <p className="intel-empty">{t("Chargement...")}</p>
         ) : risques.length === 0 ? (
-          <p className="intel-empty"><IconInbox /><span>Aucune donnée de risque disponible.</span></p>
+          <p className="intel-empty"><IconInbox /><span>{t("Aucune donnée de risque disponible.")}</span></p>
         ) : (
           <ul className="intel-list intel-list--risque">
             {risques.slice(0, 10).map((r) => (
               <li key={r.lotArticleImmobilistationId} className={`intel-list-item intel-list-item--${(r.niveauRisque || '').toLowerCase()}`}>
                 <div className="intel-list-item__top">
-                  <span className="intel-list-item__titre">{r.designation || `Équipement #${r.lotArticleImmobilistationId}`}</span>
+                  <span className="intel-list-item__titre">{r.designation || t('Équipement #{id}', { id: r.lotArticleImmobilistationId })}</span>
                   <span className="intel-badge">{r.scoreRisque}/100</span>
                 </div>
                 <span className="intel-list-item__meta">
-                  {r.nbPannes12Mois} panne{r.nbPannes12Mois > 1 ? 's' : ''} / 12 mois · tendance {(r.tendance || '').toLowerCase()}
+                  {tp('panne sur 12 mois', r.nbPannes12Mois ?? 0)} · {t('tendance {t}', { t: t(TENDANCE_LABELS[r.tendance] || r.tendance || '—').toLowerCase() })}
                 </span>
               </li>
             ))}

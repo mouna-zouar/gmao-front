@@ -229,7 +229,7 @@ const SearchableSelect = ({
   );
 };
 
-const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditing }) => {
+const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditing, initialValues = null, titleOverride = null }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
@@ -342,9 +342,10 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
         ...emptyForm,
         prestataireId: ctx.prestataireId ?? '',
         personnelDemandantId: ctx.userId ?? '',
+        ...(initialValues || {}),
       });
     }
-  }, [isOpen, bonMaintenance, isEditing]);
+  }, [isOpen, bonMaintenance, isEditing, initialValues]);
 
   // ─── Scroll content to top when section changes ───
   useEffect(() => {
@@ -1280,7 +1281,7 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
               <span className="bmm-eyebrow">
                 {isEditing ? 'Modification' : 'Nouvelle entrée'}
               </span>
-              <h2>{isEditing ? 'Modifier le bon' : 'Nouveau bon de maintenance'}</h2>
+              <h2>{isEditing ? 'Modifier le bon' : (titleOverride || 'Nouveau bon de maintenance')}</h2>
             </div>
           </div>
           <div className="bmm-header-right">

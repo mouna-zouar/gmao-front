@@ -1,0 +1,402 @@
+/* ============================================================
+   FORMULAIRES GUIDÉS (onglets du bon de maintenance)
+   Mêmes couleurs que BmdPage.css, valeurs de secours incluses
+   ============================================================ */
+.bmf-form {
+  --f-ink: var(--ink, #12303a);
+  --f-ink-soft: var(--ink-soft, #4b6670);
+  --f-ink-faint: var(--ink-faint, #7f969d);
+  --f-line: var(--line, #d7e3e5);
+  --f-paper: var(--paper, #f2f6f6);
+  --f-brand: var(--brand, #0794a4);
+  --f-brand-deep: var(--brand-deep, #05606b);
+  --f-brand-wash: var(--brand-wash, #e3f3f5);
+  --f-done: var(--done, #1f9d74);
+  --f-now: var(--now, #e8962e);
+  --f-alert: var(--alert, #d9434b);
+
+  margin-bottom: 24px;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1.5px solid var(--f-line);
+  overflow: hidden;
+  font-family: var(--font-texte, 'Figtree', system-ui, sans-serif);
+  color: var(--f-ink);
+  animation: bmf-ouvre 0.25s ease-out;
+}
+
+@keyframes bmf-ouvre {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.bmf-form-entete {
+  padding: 20px 24px 4px;
+}
+
+.bmf-form-entete h3 {
+  margin: 0;
+  font-family: var(--font-titre, inherit);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.bmf-form-entete p {
+  margin: 4px 0 0;
+  color: var(--f-ink-soft);
+  font-size: 15px;
+}
+
+.bmf-etapes { padding: 8px 24px 0; }
+
+/* ---------- Étapes ---------- */
+.bmf-etape {
+  margin: 0;
+  padding: 18px 0 20px;
+  border: none;
+  border-bottom: 1.5px dashed var(--f-line);
+  min-width: 0;
+}
+
+.bmf-etape:last-of-type { border-bottom: none; }
+
+.bmf-etape-titre {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0;
+  margin-bottom: 14px;
+  font-family: var(--font-titre, inherit);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.bmf-etape-titre small {
+  display: block;
+  font-family: var(--font-texte, inherit);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--f-ink-faint);
+}
+
+.bmf-etape-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--f-ink);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.bmf-etape-champs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px 20px;
+  padding-left: 42px;
+}
+
+/* ---------- Champ ---------- */
+.bmf-champ { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.bmf-champ.is-large { grid-column: 1 / -1; }
+
+.bmf-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--f-ink);
+}
+
+.bmf-requis,
+.bmf-optionnel {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bmf-requis { color: #b8701a; }
+.bmf-optionnel { color: var(--f-ink-faint); font-weight: 500; }
+
+.bmf-aide,
+.bmf-info,
+.bmf-alerte {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.bmf-aide { color: var(--f-ink-faint); }
+.bmf-info { color: var(--f-brand-deep); font-weight: 600; }
+.bmf-alerte { color: var(--f-alert); font-weight: 700; }
+
+/* ---------- Entrées texte, date, nombre ---------- */
+.bmf-input,
+.bmf-nombre input {
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--f-line);
+  background: var(--f-paper);
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--f-ink);
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
+
+.bmf-input::placeholder,
+.bmf-nombre input::placeholder { color: #9fb3b8; }
+
+.bmf-input:hover,
+.bmf-nombre input:hover { border-color: #b9ccd0; }
+
+.bmf-input:focus,
+.bmf-nombre input:focus {
+  outline: none;
+  border-color: var(--f-brand);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px var(--f-brand-wash);
+}
+
+.bmf-input--date { font-variant-numeric: tabular-nums; }
+
+.bmf-nombre {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bmf-nombre input { padding-right: 56px; font-variant-numeric: tabular-nums; }
+
+.bmf-unite {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--f-ink-soft);
+  font-weight: 700;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* ---------- Choix en pastilles ---------- */
+.bmf-choix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bmf-choix-btn {
+  --c: var(--f-brand-deep);
+  --c-wash: var(--f-brand-wash);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--f-line);
+  background: #ffffff;
+  color: var(--f-ink-soft);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.bmf-choix-btn:hover { border-color: var(--c); color: var(--c); }
+.bmf-choix-btn:active { transform: scale(0.97); }
+.bmf-choix-btn:focus-visible { outline: 3px solid var(--f-brand); outline-offset: 2px; }
+
+.bmf-choix-btn.is-actif {
+  background: var(--c);
+  border-color: var(--c);
+  color: #ffffff;
+}
+
+.bmf-ton--brand { --c: var(--f-brand-deep); }
+.bmf-ton--ok    { --c: var(--f-done); }
+.bmf-ton--now   { --c: #c27618; }
+.bmf-ton--alert { --c: var(--f-alert); }
+.bmf-ton--info  { --c: #2c5fb8; }
+.bmf-ton--calme { --c: var(--f-ink-soft); }
+
+/* Grandes cartes de choix (décision importante : conforme ? autorisée ?) */
+.bmf-choix.is-grand {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.bmf-choix.is-grand .bmf-choix-btn {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 92px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--f-ink);
+}
+
+.bmf-choix.is-grand .bmf-choix-btn svg { color: var(--c); margin-bottom: 4px; }
+
+.bmf-choix.is-grand .bmf-choix-btn small {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--f-ink-faint);
+}
+
+.bmf-choix.is-grand .bmf-choix-btn.is-actif {
+  background: #ffffff;
+  border-color: var(--c);
+  box-shadow: 0 0 0 3px var(--c) inset;
+}
+
+.bmf-choix.is-grand .bmf-choix-btn.is-actif small { color: var(--f-ink-soft); }
+
+/* ---------- Stock ---------- */
+.bmf-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--f-paper);
+  color: var(--f-ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bmf-stock.is-ok { background: #e2f5ee; color: #17785a; }
+.bmf-stock.is-manque { background: #fde8e9; color: var(--f-alert); }
+
+/* ---------- Listes avec recherche dans les formulaires ---------- */
+.bmf-form .bmd-searchable-input-wrap {
+  height: 50px;
+  padding: 0 12px 0 16px;
+  border-radius: 14px;
+  background: var(--f-paper);
+}
+
+.bmf-form .bmd-searchable-input-wrap.is-open,
+.bmf-form .bmd-searchable-input-wrap:focus-within {
+  background: #ffffff;
+  border-color: var(--f-brand);
+  box-shadow: 0 0 0 4px var(--f-brand-wash);
+}
+
+.bmf-form .bmd-searchable-input { font-size: 16px; }
+
+.bmf-form .bmd-searchable-menu { border-radius: 16px; }
+
+.bmf-form .bmd-searchable-option {
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+
+/* ---------- Actions ---------- */
+.bmf-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 -24px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+  border-top: 1.5px solid var(--f-line);
+}
+
+.bmf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.bmf-btn:active { transform: scale(0.98); }
+
+.bmf-btn--annuler {
+  background: #ffffff;
+  border-color: var(--f-line);
+  color: var(--f-ink-soft);
+}
+.bmf-btn--annuler:hover { border-color: var(--f-ink-soft); color: var(--f-ink); }
+
+.bmf-btn--valider {
+  background: var(--f-brand);
+  color: #ffffff;
+  min-width: 200px;
+}
+.bmf-btn--valider:hover:not(:disabled) { background: var(--f-brand-deep); }
+.bmf-btn--valider:disabled { opacity: 0.7; cursor: wait; }
+
+.bmf-tourne { animation: bmf-rotation 0.9s linear infinite; }
+@keyframes bmf-rotation { to { transform: rotate(360deg); } }
+
+/* ---------- Formulaires simples restants (commentaires, documents) ---------- */
+.bmx-tiroir .bmd-comment-form textarea,
+.bmx-tiroir .bmd-inline-form input,
+.bmx-tiroir .bmd-inline-form select,
+.bmx-tiroir .bmd-inline-form textarea {
+  min-height: 50px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--f-line, #d7e3e5);
+  background: #f2f6f6;
+  font-size: 16px;
+}
+
+.bmx-tiroir .bmd-comment-form textarea:focus,
+.bmx-tiroir .bmd-inline-form input:focus,
+.bmx-tiroir .bmd-inline-form textarea:focus {
+  background: #ffffff;
+  border-color: #0794a4;
+  box-shadow: 0 0 0 4px #e3f3f5;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .bmf-form-entete,
+  .bmf-etapes { padding-left: 16px; padding-right: 16px; }
+  .bmf-etape-champs { padding-left: 0; grid-template-columns: 1fr; }
+  .bmf-actions { margin: 0 -16px; padding: 12px 16px; }
+  .bmf-btn { flex: 1; }
+  .bmf-choix-btn { flex: 1 1 auto; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bmf-form { animation: none; }
+}

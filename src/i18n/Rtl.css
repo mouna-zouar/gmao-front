@@ -1,0 +1,324 @@
+/* ============================================================
+   ARABE : police + sens droite-à-gauche
+   Le navigateur inverse déjà les flex, grid et l'alignement du texte
+   grâce à <html dir="rtl">. Ici on corrige seulement ce qui est
+   positionné à gauche/droite « en dur ».
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@600;700;800&display=swap');
+
+/* ---------- Police arabe pour tous nos écrans ---------- */
+[dir='rtl'] .bmx-page,
+[dir='rtl'] .bmx-tiroir-fond,
+[dir='rtl'] .rcx-page,
+[dir='rtl'] .asb-fond,
+[dir='rtl'] .bmf-form,
+[dir='rtl'] .trx,
+[dir='rtl'] .trx-etat,
+[dir='rtl'] .bmdc-overlay,
+[dir='rtl'] .reclamations-container,
+[dir='rtl'] .bmd-container {
+  --font-titre: 'Noto Kufi Arabic', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-texte: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  font-family: var(--font-texte);
+  letter-spacing: 0 !important; /* l'écriture arabe est liée : pas d'espacement entre lettres */
+}
+
+[dir='rtl'] .bmx-page *,
+[dir='rtl'] .bmx-tiroir-fond *,
+[dir='rtl'] .rcx-page *,
+[dir='rtl'] .asb-fond *,
+[dir='rtl'] .trx *,
+[dir='rtl'] .bmdc-overlay *,
+[dir='rtl'] .reclamations-container * {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+}
+
+/* L'arabe a besoin d'un peu plus d'interligne */
+[dir='rtl'] .bmx-page,
+[dir='rtl'] .rcx-page,
+[dir='rtl'] .trx { line-height: 1.7; }
+
+/* Les numéros (bons, dates, montants) restent lisibles de gauche à droite */
+[dir='rtl'] .bmx-bracelet-num,
+[dir='rtl'] .rcx-bracelet-num,
+[dir='rtl'] .rcx-bon-num,
+[dir='rtl'] .asb-carte-num,
+[dir='rtl'] .bmx-cout-total {
+  unicode-bidi: plaintext;
+}
+
+/* ---------- Icônes directionnelles (flèches, chevrons) ---------- */
+[dir='rtl'] .rtl-miroir,
+[dir='rtl'] .bmx-btn svg.lucide-arrow-left,
+[dir='rtl'] .rcx-btn svg.lucide-arrow-left,
+[dir='rtl'] .bmd-detail-back svg,
+[dir='rtl'] .bmx-vital-fleche,
+[dir='rtl'] .bmx-rubrique-fleche,
+[dir='rtl'] .rcx-vital-fleche,
+[dir='rtl'] .rcx-bon-ouvrir svg,
+[dir='rtl'] .bmd-table-chevron-col svg,
+[dir='rtl'] .bmd-card-arrow {
+  transform: scaleX(-1);
+}
+
+[dir='rtl'] .bmx-rubrique:hover .bmx-rubrique-fleche { transform: scaleX(-1); }
+[dir='rtl'] .bmd-card:hover .bmd-card-arrow,
+[dir='rtl'] .bmd-card.active .bmd-card-arrow { transform: scaleX(-1) translateX(2px); }
+
+/* ---------- Ligne du parcours (bon et réclamation) ---------- */
+[dir='rtl'] .bmx-ligne::before { left: calc(100% / 12); right: calc(100% / 12); }
+[dir='rtl'] .bmx-ligne::after { left: auto; right: calc(100% / 12); }
+
+[dir='rtl'] .rcx-ligne::before { left: 12.5%; right: 12.5%; }
+[dir='rtl'] .rcx-ligne::after { left: auto; right: 12.5%; }
+
+@media (max-width: 760px) {
+  [dir='rtl'] .bmx-ligne::before,
+  [dir='rtl'] .bmx-ligne::after { left: auto; right: calc(var(--point) / 2 - 3px); }
+  [dir='rtl'] .rcx-ligne::before,
+  [dir='rtl'] .rcx-ligne::after { left: auto; right: calc(var(--point) / 2 - 3px); }
+  [dir='rtl'] .bmx-station-aide { padding-left: 0; padding-right: calc(var(--point) + 14px); }
+}
+
+/* ---------- Bracelet : le trou passe à gauche ---------- */
+[dir='rtl'] .bmx-bracelet-trou,
+[dir='rtl'] .rcx-bracelet-trou { right: auto; left: 12px; }
+[dir='rtl'] .bmx-bracelet-etat,
+[dir='rtl'] .rcx-bracelet-etat { padding: 6px 16px 6px 14px; }
+[dir='rtl'] .bmx-bracelet-num,
+[dir='rtl'] .rcx-bracelet-num { padding: 6px 14px 6px 34px; }
+
+/* ---------- Bloc « À faire maintenant » : cercles décoratifs à gauche ---------- */
+[dir='rtl'] .bmx-maintenant::after,
+[dir='rtl'] .rcx-maintenant::after { right: auto; left: -40px; }
+
+/* ---------- Panneaux latéraux : ils arrivent depuis la gauche ---------- */
+[dir='rtl'] .bmx-tiroir,
+[dir='rtl'] .asb-panneau {
+  border-radius: 0 28px 28px 0;
+  box-shadow: 20px 0 60px rgba(18, 48, 58, 0.25);
+  animation-name: rtl-glisse;
+}
+[dir='rtl'] .bmx-tiroir-entete,
+[dir='rtl'] .asb-entete { border-radius: 0 28px 0 0; }
+
+@keyframes rtl-glisse {
+  from { transform: translateX(-40px); opacity: 0.4; }
+  to   { transform: none; opacity: 1; }
+}
+
+@media (max-width: 760px) {
+  [dir='rtl'] .bmx-tiroir,
+  [dir='rtl'] .bmx-tiroir-entete { border-radius: 0; }
+}
+@media (max-width: 640px) {
+  [dir='rtl'] .asb-panneau,
+  [dir='rtl'] .asb-entete { border-radius: 0; }
+}
+
+/* ---------- Citation de la réclamation : barre à droite ---------- */
+[dir='rtl'] .rcx-citation {
+  border-left: 1.5px solid var(--line);
+  border-right: 6px solid var(--now);
+}
+
+/* ---------- Formulaires ---------- */
+[dir='rtl'] .bmf-etape-champs { padding-left: 0; padding-right: 42px; }
+[dir='rtl'] .bmf-nombre input { padding-right: 16px; padding-left: 56px; }
+[dir='rtl'] .bmf-unite { right: auto; left: 6px; }
+[dir='rtl'] .bmf-choix.is-grand .bmf-choix-btn { text-align: right; }
+@media (max-width: 640px) {
+  [dir='rtl'] .bmf-etape-champs { padding-right: 0; }
+}
+
+[dir='rtl'] .bmd-searchable-input-wrap { padding: 0 12px 0 10px; }
+[dir='rtl'] .bmd-searchable-option { text-align: right; }
+
+/* ---------- Tableaux ---------- */
+[dir='rtl'] .bmd-table thead th { text-align: right; }
+[dir='rtl'] .bmd-table-chevron-col { text-align: left; }
+[dir='rtl'] .bmd-table tbody td.bmd-table-chevron-col { padding-right: 14px; padding-left: 12px; }
+
+/* ---------- Traçage ---------- */
+[dir='rtl'] .trx-liste::before {
+  left: auto;
+  right: calc(var(--heure) + 12px + var(--point) / 2 - 1.5px);
+}
+[dir='rtl'] .trx-evt-heure { text-align: left; }
+[dir='rtl'] .trx-evt:hover .trx-evt-carte { transform: translateX(-3px); }
+[dir='rtl'] .trx-attente { margin: 8px calc(52px + 12px) 0 0; }
+[dir='rtl'] .trx-pouls { transform: scaleX(-1); }
+@keyframes trx-titre-in-rtl {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: none; }
+}
+[dir='rtl'] .trx-journal.is-cascade .trx-jour-titre { animation-name: trx-titre-in-rtl; }
+@media (max-width: 640px) {
+  [dir='rtl'] .trx-attente { margin-right: 0; }
+}
+
+/* ---------- Associer ---------- */
+[dir='rtl'] .asb-confirm { padding: 4px 12px 4px 4px; }
+
+/* ---------- Liste des réclamations ---------- */
+[dir='rtl'] .reclamations-table th { text-align: right; }
+[dir='rtl'] .reclamations-export-stack { margin-left: 0; margin-right: auto; }
+[dir='rtl'] .reclamations-row.selected { box-shadow: inset -4px 0 0 var(--teal-600); }
+[dir='rtl'] .reclamations-pagination-btn svg { transform: scaleX(-1); }
+[dir='rtl'] .reclamations-filter-input-wrap select {
+  background-position: left 6px center;
+  padding-right: 0;
+  padding-left: 26px;
+}
+
+/* ---------- Ancienne vue d'ensemble (FlowTab) ---------- */
+[dir='rtl'] .bmd-flow-step::before { left: auto; right: 0; }
+[dir='rtl'] .bmd-flow-content { padding: 0 74px 18px 20px; }
+[dir='rtl'] .bmd-flow-connector { margin-left: 0; margin-right: 16px; }
+[dir='rtl'] .bmd-timeline { padding-left: 0; padding-right: 24px; }
+[dir='rtl'] .bmd-timeline::before { left: auto; right: 5px; }
+[dir='rtl'] .bmd-timeline-item { padding: 10px 26px 12px 0; }
+[dir='rtl'] .bmd-timeline-dot { left: auto; right: -4px; }
+[dir='rtl'] .bmd-intervention-item { border-left-width: 1px; border-right: 3px solid var(--purple); }
+[dir='rtl'] .bmd-reclamation-item { border-left-width: 1px; border-right: 3px solid var(--warning); }
+@media (max-width: 768px) {
+  [dir='rtl'] .bmd-flow-content { padding: 0 16px 16px 16px; }
+}
+
+/* ---------- Sélecteur de langue (réglages de l'application) ---------- */
+.selecteur-langue {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: #f2f6f6;
+  border: 1.5px solid #d7e3e5;
+}
+
+.selecteur-langue-btn {
+  min-height: 38px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #4b6670;
+  font-family: 'Figtree', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selecteur-langue-btn[lang='ar'] { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+
+.selecteur-langue-btn.is-actif {
+  background: #12303a;
+  color: #ffffff;
+}
+
+.selecteur-langue-btn:focus-visible { outline: 3px solid #0794a4; outline-offset: 2px; }
+
+/* ---------- Liste des bons de maintenance ---------- */
+[dir='rtl'] .bons-container {
+  font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+[dir='rtl'] .bons-container * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .bons-table th,
+[dir='rtl'] .cmd-table th { text-align: right; }
+[dir='rtl'] .bons-pagination-btn svg,
+[dir='rtl'] .bons-pagination-btn svg { transform: scaleX(-1); }
+[dir='rtl'] .bons-export-stack { margin-left: 0; margin-right: auto; }
+[dir='rtl'] .bons-filter-input-wrap select {
+  background-position: left 6px center;
+  padding-right: 0;
+  padding-left: 26px;
+}
+[dir='rtl'] .bons-filter-info { margin-left: 0; margin-right: auto; }
+
+.selecteur-langue.bons-langue { flex-shrink: 0; }
+.selecteur-langue.bons-langue .selecteur-langue-btn { min-height: 34px; padding: 4px 12px; font-size: 13px; }
+
+/* ---------- Tableau des tâches (kanban) ---------- */
+[dir='rtl'] .bmk-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .bmk-container * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .bmk-card-arrow { display: inline-block; transform: scaleX(-1); }
+[dir='rtl'] .bmk-card-dates { direction: rtl; }
+
+/* ---------- Blocages d'équipement ---------- */
+[dir='rtl'] .blocages-immob-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .blocages-immob-page * { letter-spacing: 0 !important; text-transform: none !important; }
+
+/* ---------- Détection d'anomalies ---------- */
+[dir='rtl'] .anomalies-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .anomalies-page * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] span.rtl-miroir { display: inline-block; }
+
+/* ---------- Demandes de pièces ---------- */
+[dir='rtl'] .demandes-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .demandes-container * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .demandes-table th { text-align: right; }
+
+/* ---------- Disponibilité ---------- */
+[dir='rtl'] .disp-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .disp-page * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .disp-barre { transform: scaleX(-1); }
+
+/* ---------- État des équipements + maintenance préventive ---------- */
+[dir='rtl'] .etat-page,
+[dir='rtl'] .mtp-panel,
+[dir='rtl'] .mtp-backdrop,
+[dir='rtl'] .vmp-panel { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .etat-page *,
+[dir='rtl'] .mtp-panel *,
+[dir='rtl'] .mtp-backdrop *,
+[dir='rtl'] .vmp-panel * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .mtp-card__gauge-track,
+[dir='rtl'] .mtp-gauge__track { transform: scaleX(-1); }
+
+/* ---------- Fiche bon de maintenance ---------- */
+[dir='rtl'] .fiche-employeur-wrapper { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .fiche-employeur-wrapper * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .action-bar-btn.retour-liste svg { transform: scaleX(-1); }
+[dir='rtl'] .actions-bar-right { margin-left: 0; margin-right: auto; }
+
+/* ---------- Intelligence ---------- */
+[dir='rtl'] .intel-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .intel-page * { letter-spacing: 0 !important; text-transform: none !important; }
+
+/* ---------- Maintenance prédictive ---------- */
+[dir='rtl'] .mp-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .mp-page * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .mp-table th, [dir='rtl'] .mp-table td { text-align: right; }
+[dir='rtl'] .mp-score-bar { transform: scaleX(-1); }
+[dir='rtl'] .mp-tendance { direction: ltr; unicode-bidi: isolate; }
+
+/* ---------- Planning technicien ---------- */
+[dir='rtl'] .pt-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .pt-container * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .pt-search-icon { left: auto; right: 12px; }
+[dir='rtl'] .pt-search-input { padding-left: 32px; padding-right: 36px; }
+[dir='rtl'] .pt-search-clear { right: auto; left: 8px; }
+[dir='rtl'] .pt-status-label { margin-left: 0; margin-right: auto; }
+[dir='rtl'] .pt-creneau-heure, [dir='rtl'] .pt-creneau-bon { direction: ltr; unicode-bidi: isolate; }
+
+/* ---------- Planning par intervenant ---------- */
+[dir='rtl'] .planning-bm-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .planning-bm-container * { letter-spacing: 0 !important; }
+[dir='rtl'] .planning-bm-container svg.rtl-miroir { transform: scaleX(-1); }
+[dir='rtl'] .planning-bm-event-pill { text-align: right; }
+[dir='rtl'] .planning-bm-popover-body .planning-bm-event-etat { margin-left: 0; margin-right: auto; }
+
+/* ---------- Risques & SLA ---------- */
+[dir='rtl'] .risque-page, [dir='rtl'] .sla-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .risque-page *, [dir='rtl'] .sla-page * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .risque-recherche-icon, [dir='rtl'] .sla-recherche-icon { left: auto; right: 12px; }
+[dir='rtl'] .risque-recherche, [dir='rtl'] .sla-recherche { padding-left: 12px; padding-right: 36px; }
+[dir='rtl'] .sla-prio-bar__track { transform: scaleX(-1); }
+[dir='rtl'] .sla-card__num, [dir='rtl'] .sla-delai__detail { unicode-bidi: plaintext; }
+
+/* ---------- Sélecteur de localisation (Leaflet) ---------- */
+[dir='rtl'] .locpicker { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+/* Leaflet calcule ses positions en LTR : on garde la carte en LTR */
+[dir='rtl'] .locpicker-map .leaflet-container { direction: ltr; }
+[dir='rtl'] .locpicker-map .leaflet-popup-content { direction: rtl; text-align: right; }

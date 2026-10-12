@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import planningService from '../../../services/planningService';
 import './PlanningBonMaintenance.css';
+import { t, tp, locale } from '../../../i18n';
 
 const MODE_OPTIONS = [
   { value: 'BON_MAINTENANCE', label: 'Bons de maintenance' },
@@ -39,12 +40,23 @@ const formatDateKey = (date) => {
 };
 
 const formatDateLong = (date) =>
-  date.toLocaleDateString('fr-FR', {
+  date.toLocaleDateString(locale(), {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
   });
+
+// Noms de mois / jours dans la langue courante (ar-TN donne جانفي، فيفري…)
+const majuscule = (s) => s.charAt(0).toLocaleUpperCase(locale()) + s.slice(1);
+const nomsMois = () => Array.from({ length: 12 }, (_, i) =>
+  majuscule(new Intl.DateTimeFormat(locale(), { month: 'long' }).format(new Date(2000, i, 1))));
+// 2000-01-02 est un dimanche ; format 'short' → DIM / الأحد, 'narrow' → D / ح
+const nomsJours = (format) => Array.from({ length: 7 }, (_, i) =>
+  new Intl.DateTimeFormat(locale(), { weekday: format })
+    .format(new Date(2000, 0, 2 + i))
+    .replace('.', '')
+    .toLocaleUpperCase(locale()));
 
 const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -137,7 +149,7 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
       setEvenements(data ?? []);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger le planning. Vérifie que le serveur est bien lancé.");
+      setError(t('Impossible de charger le planning. Vérifie que le serveur est bien lancé.'));
       setEvenements([]);
     } finally {
       setLoading(false);
@@ -202,10 +214,9 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
 
   const closePopover = () => setPopover(null);
 
-  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-  const daysOfWeek = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM'];
-  const daysOfWeekShort = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+  const monthNames = useMemo(nomsMois, []);
+  const daysOfWeek = useMemo(() => nomsJours('short'), []);
+  const daysOfWeekShort = useMemo(() => nomsJours('narrow'), []);
 
   const getHeaderText = () => {
     if (view === 'month') {
@@ -225,16 +236,16 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
     <div className="planning-bm-container">
       <div className="planning-bm-filters-bar">
         <div className="planning-bm-filter-group">
-          <label>Vue par</label>
+          <label>{t('Vue par')}</label>
           <select value={mode} onChange={(e) => setMode(e.target.value)} className="planning-bm-select">
             {MODE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+              <option key={o.value} value={o.value}>{t(o.label)}</option>
             ))}
           </select>
         </div>
 
         <div className="planning-bm-filter-group">
-          <label>Date</label>
+          <label>{t('Date')}</label>
           <input
             type="date"
             value={dateFilter}
@@ -244,7 +255,7 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
         </div>
 
         <button type="button" className="planning-bm-today-btn" onClick={handleToday}>
-          Aujourd'hui
+          {t("Aujourd'hui")}
         </button>
       </div>
 
@@ -254,13 +265,13 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
         <div className="planning-bm-calendar-header">
           <div className="planning-bm-header-left">
             <div className="planning-bm-nav-buttons">
-              <button onClick={handlePrev} className="planning-bm-icon-btn" aria-label="Précédent">
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <button onClick={handlePrev} className="planning-bm-icon-btn" aria-label={t('Précédent')} title={t('Précédent')}>
+                <svg className="rtl-miroir" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <button onClick={handleNext} className="planning-bm-icon-btn" aria-label="Suivant">
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+              <button onClick={handleNext} className="planning-bm-icon-btn" aria-label={t('Suivant')} title={t('Suivant')}>
+                <svg className="rtl-miroir" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
               </button>
@@ -273,9 +284,9 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
 
           <div className="planning-bm-header-right">
             <div className="planning-bm-view-tabs">
-              <button className={`planning-bm-tab ${view === 'month' ? 'active' : ''}`} onClick={() => setView('month')}>Mois</button>
-              <button className={`planning-bm-tab ${view === 'week' ? 'active' : ''}`} onClick={() => setView('week')}>Semaine</button>
-              <button className={`planning-bm-tab ${view === 'day' ? 'active' : ''}`} onClick={() => setView('day')}>Jour</button>
+              <button className={`planning-bm-tab ${view === 'month' ? 'active' : ''}`} onClick={() => setView('month')}>{t('Mois')}</button>
+              <button className={`planning-bm-tab ${view === 'week' ? 'active' : ''}`} onClick={() => setView('week')}>{t('Semaine')}</button>
+              <button className={`planning-bm-tab ${view === 'day' ? 'active' : ''}`} onClick={() => setView('day')}>{t('Jour')}</button>
             </div>
           </div>
         </div>
@@ -291,7 +302,7 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
 
           <div className="planning-bm-days">
             {loading ? (
-              <div className="planning-bm-loading">Chargement du planning...</div>
+              <div className="planning-bm-loading">{t('Chargement du planning...')}</div>
             ) : calendarDays.map((item, idx) => {
               const { date, isCurrentMonth } = item;
               const allEvents = getEventsForDate(date);
@@ -337,7 +348,7 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
                         <div
                           key={`${ev.type}-${ev.id}`}
                           className={`planning-bm-event-pill ${ETAT_EVENT_CLASS[ev.etat] || 'event-etat-nouveau'}`}
-                          title={`${ev.titre || ''} — ${ETAT_LABELS[ev.etat] || ''}`}
+                          title={`${ev.titre || ''} — ${ETAT_LABELS[ev.etat] ? t(ETAT_LABELS[ev.etat]) : ''}`}
                           onClick={(e) => handleEventClick(e, ev)}
                         >
                           <span className="planning-bm-event-dot" />
@@ -352,16 +363,16 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
                         className="planning-bm-more-events"
                         onClick={(e) => handleMoreClick(e, date, allEvents)}
                       >
-                        +{hiddenCount} autre{hiddenCount > 1 ? 's' : ''}
+                        {tp('+ autre', hiddenCount)}
                       </button>
                     )}
 
                     {allEvents.length === 0 && view === 'day' && (
-                      <div className="planning-bm-no-events">Aucun événement ce jour.</div>
+                      <div className="planning-bm-no-events">{t('Aucun événement ce jour.')}</div>
                     )}
                   </div>
 
-                  {isToday && <span className="planning-bm-today-badge">Aujourd'hui</span>}
+                  {isToday && <span className="planning-bm-today-badge">{t("Aujourd'hui")}</span>}
                 </div>
               );
             })}
@@ -376,14 +387,14 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
               <div>
                 <div className="planning-bm-popover-date">{formatDateLong(popover.date)}</div>
                 <div className="planning-bm-popover-count">
-                  {popover.events.length} événement{popover.events.length > 1 ? 's' : ''}
+                  {tp('événement', popover.events.length)}
                 </div>
               </div>
               <button
                 type="button"
                 className="planning-bm-popover-close"
                 onClick={closePopover}
-                aria-label="Fermer"
+                aria-label={t('Fermer')}
               >
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
@@ -400,7 +411,7 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
                   <span className="planning-bm-event-dot" />
                   <span className="planning-bm-event-title">{ev.titre || `#${ev.id}`}</span>
                   <span className="planning-bm-event-etat">
-                    {ETAT_LABELS[ev.etat] || ''}
+                    {ETAT_LABELS[ev.etat] ? t(ETAT_LABELS[ev.etat]) : ''}
                   </span>
                 </div>
               ))}
