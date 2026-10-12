@@ -322,3 +322,113 @@
 /* Leaflet calcule ses positions en LTR : on garde la carte en LTR */
 [dir='rtl'] .locpicker-map .leaflet-container { direction: ltr; }
 [dir='rtl'] .locpicker-map .leaflet-popup-content { direction: rtl; text-align: right; }
+
+/* ---------- Parc : véhicules ---------- */
+[dir='rtl'] .vehicules-container,
+[dir='rtl'] .vkh-panel,
+[dir='rtl'] .mtp-panel-overlay { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .vehicules-container *,
+[dir='rtl'] .vkh-panel * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .vehicules-table th,
+[dir='rtl'] .vehicules-table td { text-align: right; }
+[dir='rtl'] .vehicules-matricule-badge,
+[dir='rtl'] .vd-mono,
+[dir='rtl'] .vd-hero-title { direction: ltr; unicode-bidi: isolate; }
+[dir='rtl'] .vp-badge-retard { margin-left: 0; margin-right: 6px; }
+[dir='rtl'] .mtp-panel-overlay__close { right: auto; left: 12px; }
+
+/* ---------- Parc : incidents, missions, traçage, réservations ---------- */
+[dir='rtl'] .vin-container,
+[dir='rtl'] .vms-container,
+[dir='rtl'] .vrs-container,
+[dir='rtl'] .vtr-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .vin-container *,
+[dir='rtl'] .vms-container *,
+[dir='rtl'] .vrs-container *,
+[dir='rtl'] .vtr-container * { letter-spacing: 0 !important; text-transform: none !important; }
+[dir='rtl'] .vin-table th, [dir='rtl'] .vin-table td,
+[dir='rtl'] .vms-table th, [dir='rtl'] .vms-table td,
+[dir='rtl'] .vrs-table th, [dir='rtl'] .vrs-table td { text-align: right; }
+[dir='rtl'] .vin-filter-icon, [dir='rtl'] .vms-filter-icon, [dir='rtl'] .vrs-filter-icon { left: auto; right: 12px; }
+[dir='rtl'] .vtr-select-icon { left: auto; right: 12px; }
+[dir='rtl'] .vtr-select-chevron { right: auto; left: 12px; }
+[dir='rtl'] .vms-cell-num, [dir='rtl'] .vtr-timeline-num,
+[dir='rtl'] .vtr-live-banner__mission, [dir='rtl'] .vtr-live-panel__ref { direction: ltr; unicode-bidi: isolate; }
+/* La voiture avance de droite à gauche (départ à droite, arrivée à gauche) */
+[dir='rtl'] .vtr-live-banner__progress { transform: scaleX(-1); }
+/* Timelines : trait et pastilles du côté droit */
+[dir='rtl'] .vtr-timeline-item, [dir='rtl'] .vtr-live-timeline__item { text-align: right; }
+
+/* ---------- Parc : projets, permis, carburant, conducteurs ---------- */
+[dir='rtl'] .prj-container,
+[dir='rtl'] .pc-container,
+[dir='rtl'] .vbc-container,
+[dir='rtl'] .vcd-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .prj-container *,
+[dir='rtl'] .pc-container *,
+[dir='rtl'] .vbc-container *,
+[dir='rtl'] .vcd-container * { letter-spacing: 0 !important; }
+[dir='rtl'] .prj-table th, [dir='rtl'] .prj-table td,
+[dir='rtl'] .pc-table th, [dir='rtl'] .pc-table td,
+[dir='rtl'] .vbc-table th, [dir='rtl'] .vbc-table td,
+[dir='rtl'] .vcd-table th, [dir='rtl'] .vcd-table td { text-align: right; }
+[dir='rtl'] .prj-filter-icon, [dir='rtl'] .pc-filter-icon,
+[dir='rtl'] .vbc-filter-icon, [dir='rtl'] .vcd-filter-icon { left: auto; right: 12px; }
+[dir='rtl'] .prj-cell-code { direction: ltr; unicode-bidi: isolate; }
+/* La carte du permis reproduit le document officiel bilingue : on garde sa mise en page */
+[dir='rtl'] .pcd-permis-stage { direction: ltr; }
+
+/* ---------- Parc : planning hebdomadaire ---------- */
+[dir='rtl'] .parcplan-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .parcplan-container * { letter-spacing: 0 !important; }
+[dir='rtl'] .parcplan-col-vehicule { text-align: right; }
+[dir='rtl'] .parcplan-matricule { direction: ltr; unicode-bidi: isolate; }
+
+/* ---------- Tableaux de bord & emplacements ---------- */
+[dir='rtl'] .reclamation-dashboard-container,
+[dir='rtl'] .bon-maintenance-dashboard-container,
+[dir='rtl'] .parcdash-container,
+[dir='rtl'] .emp-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .reclamation-dashboard-container *,
+[dir='rtl'] .bon-maintenance-dashboard-container *,
+[dir='rtl'] .parcdash-container *,
+[dir='rtl'] .emp-container * { letter-spacing: 0 !important; }
+[dir='rtl'] .reclamation-dashboard-table th, [dir='rtl'] .reclamation-dashboard-table td,
+[dir='rtl'] .bon-maintenance-dashboard-table th, [dir='rtl'] .bon-maintenance-dashboard-table td,
+[dir='rtl'] .parcdash-table th, [dir='rtl'] .parcdash-table td,
+[dir='rtl'] .emp-table th, [dir='rtl'] .emp-table td { text-align: right; }
+/* Barres horizontales : remplissage depuis la droite */
+[dir='rtl'] .reclamation-dashboard-hbar-track,
+[dir='rtl'] .bon-maintenance-dashboard-hbar-track,
+[dir='rtl'] .parcdash-breakdown-bar-bg { transform: scaleX(-1); }
+[dir='rtl'] .emp-filter-icon { left: auto; right: 12px; }
+
+/* ---------- Menu latéral et barre du haut ---------- */
+.user-dropdown__langue {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 16px 12px;
+  border-bottom: 1px solid #e8eef0;
+}
+.user-dropdown__langue-titre {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.selecteur-langue.layout-langue { display: flex; width: 100%; }
+.selecteur-langue.layout-langue .selecteur-langue-btn { flex: 1; min-height: 32px; padding: 4px 8px; font-size: 13px; }
+[dir='rtl'] .sidebar,
+[dir='rtl'] .navbar,
+[dir='rtl'] .user-dropdown { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .sidebar *,
+[dir='rtl'] .navbar * { letter-spacing: 0 !important; }
+[dir='rtl'] .user-dropdown__langue-titre { text-transform: none; }
+[dir='rtl'] .nav-item, [dir='rtl'] .submenu a { text-align: right; }
+[dir='rtl'] .notif-dropdown__item { text-align: right; }
+
+/* ---------- Accueil ---------- */
+[dir='rtl'] .dashboard-wrapper { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .dashboard-wrapper * { letter-spacing: 0 !important; }

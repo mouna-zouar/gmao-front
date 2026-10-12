@@ -6,7 +6,7 @@ import risqueService from '../../../services/Risqueservice';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../constants/Criticite';
 import EquipementMaintenancePanel from './Equipementmaintenancepanel';
 import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
-import { t, tp, locale } from '../../../i18n';
+import { t, tp, locale, tPdf, localePdf } from '../../../i18n';
 import './EtatEquipement.css';
 
 /* ---------- Risque (étape ⑥ de la roadmap métier) ---------- */
@@ -171,7 +171,8 @@ const ETAT_ICONS = {
 };
 
 /* ---------- Export PDF ----------
-   Reste en français : la police standard de jsPDF ne sait pas afficher l'alphabet arabe. */
+   En anglais si l'anglais est choisi, sinon en français : la police standard de jsPDF
+   ne sait pas afficher l'alphabet arabe (voir tPdf dans i18n). */
 function exporterHistoriquePDF(equipement, historique) {
   const doc = new jsPDF();
   const marginX = 14;
@@ -180,21 +181,21 @@ function exporterHistoriquePDF(equipement, historique) {
 
   doc.setFontSize(16);
   doc.setFont(undefined, 'bold');
-  const titre = `Historique d'état — ${equipement.cibleNom || `Équipement #${equipement.lotArticleImmobilistationId}`}`;
+  const titre = `${tPdf("Historique d'état")} — ${equipement.cibleNom || tPdf('Équipement #{id}', { id: equipement.lotArticleImmobilistationId })}`;
   doc.text(titre, marginX, y, { maxWidth: pageWidth - marginX * 2 });
   y += 10;
 
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
-  doc.text(`État actuel : ${ETAT_LABELS[equipement.etatActuel] || equipement.etatActuel}`, marginX, y);
+  doc.text(tPdf('État actuel : {etat}', { etat: ETAT_LABELS[equipement.etatActuel] ? tPdf(ETAT_LABELS[equipement.etatActuel]) : equipement.etatActuel }), marginX, y);
   y += 5;
   if (equipement.depuisLe) {
-    doc.text(`Depuis le ${formatDateTime(equipement.depuisLe, 'fr-FR')}`, marginX, y);
+    doc.text(tPdf('Depuis le {date}', { date: formatDateTime(equipement.depuisLe, localePdf()) }), marginX, y);
     y += 5;
   }
   doc.setTextColor(120);
   doc.text(
-    `Document généré le ${new Date().toLocaleDateString('fr-FR')} à ${new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`,
+    tPdf('Document généré le {date} à {heure}', { date: new Date().toLocaleDateString(localePdf()), heure: new Date().toLocaleTimeString(localePdf(), { hour: '2-digit', minute: '2-digit' }) }),
     marginX, y
   );
   doc.setTextColor(0);
@@ -206,9 +207,9 @@ function exporterHistoriquePDF(equipement, historique) {
 
   doc.setFontSize(10);
   doc.setFont(undefined, 'bold');
-  doc.text('Date', marginX, y);
-  doc.text('Transition', marginX + 32, y);
-  doc.text('Bon', marginX + 120, y);
+  doc.text(tPdf('Date'), marginX, y);
+  doc.text(tPdf('Transition'), marginX + 32, y);
+  doc.text(tPdf('Bon'), marginX + 120, y);
   y += 3;
   doc.setDrawColor(230);
   doc.line(marginX, y, pageWidth - marginX, y);
@@ -219,7 +220,7 @@ function exporterHistoriquePDF(equipement, historique) {
 
   if (historique.length === 0) {
     doc.setTextColor(140);
-    doc.text('Aucune transition enregistrée.', marginX, y);
+    doc.text(tPdf('Aucune transition enregistrée.'), marginX, y);
     doc.setTextColor(0);
   }
 
@@ -228,8 +229,9 @@ function exporterHistoriquePDF(equipement, historique) {
       doc.addPage();
       y = 20;
     }
-    const dateStr = formatDateTime(tache.dateTransition, 'fr-FR');
-    const transitionStr = `${tache.etatPrecedent ? `${ETAT_LABELS[tache.etatPrecedent] || tache.etatPrecedent} → ` : 'Première détection : '}${ETAT_LABELS[tache.etatNouveau] || tache.etatNouveau}`;
+    const dateStr = formatDateTime(tache.dateTransition, localePdf());
+    const libellePdf = (e) => (ETAT_LABELS[e] ? tPdf(ETAT_LABELS[e]) : e);
+    const transitionStr = `${tache.etatPrecedent ? `${libellePdf(tache.etatPrecedent)} → ` : tPdf('Première détection : ')}${libellePdf(tache.etatNouveau)}`;
 
     doc.text(dateStr, marginX, y);
     doc.text(transitionStr, marginX + 32, y, { maxWidth: 82 });

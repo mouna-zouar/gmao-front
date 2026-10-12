@@ -12,6 +12,8 @@ import personnelService from '../../../../services/personnelService';
 import VehiculeReservationModal from '../../../ui/modals/VehiculeReservationModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import { t, tp, locale } from '../../../../i18n';
+import { imprimerListe } from '../../../../utils/imprimerListe';
 import './VehiculeReservations.css';
 
 // Codes alignés sur le backend (voir commentaire sur le champ `etat`
@@ -56,13 +58,14 @@ function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('fr-FR', {
+  return d.toLocaleString(locale(), {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
 }
 
-function etatLabel(e) { return ETAT_LABELS[e] ?? `État ${e}`; }
+// Libellé traduit : la recherche, le tableau et l'export suivent la langue choisie
+function etatLabel(e) { return ETAT_LABELS[e] ? t(ETAT_LABELS[e]) : t('État {n}', { n: e }); }
 
 export default function VehiculeReservations() {
   const [reservations, setReservations] = useState([]);
@@ -89,7 +92,7 @@ export default function VehiculeReservations() {
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
-    confirmText: 'Confirmer', onConfirm: null,
+    confirmText: t("Confirmer"), onConfirm: null,
   });
 
   const load = async () => {
@@ -113,7 +116,7 @@ export default function VehiculeReservations() {
       setPersonnelsMap(pMap);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les réservations. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les réservations. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -184,7 +187,7 @@ export default function VehiculeReservations() {
     const sorted = [...result].sort((x, y) => {
       const vx = getSortValue(x, sortColumn);
       const vy = getSortValue(y, sortColumn);
-      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      if (typeof vx === 'string') return vx.localeCompare(vy, locale(), { sensitivity: 'base', numeric: true });
       return vx - vy;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
@@ -243,7 +246,7 @@ export default function VehiculeReservations() {
               </div>
               <div className="vrs-cell-vehicle-text">
                 <span className="vrs-cell-main">
-                  {veh?.matricule || `Véhicule #${r.vehiculeId}`}
+                  {veh?.matricule || t('Véhicule #{id}', { id: r.vehiculeId })}
                 </span>
                 {veh?.marque && (
                   <span className="vrs-cell-sub">{veh.marque}</span>
@@ -277,7 +280,7 @@ export default function VehiculeReservations() {
                 <Calendar size={12} strokeWidth={2.5} />
                 {formatDateTime(r.dateDebut)}
               </span>
-              <span className="vrs-period-sep">→</span>
+              <span className="vrs-period-sep rtl-miroir">→</span>
               <span className="vrs-period-line end">
                 <Flag size={12} strokeWidth={2.5} />
                 {formatDateTime(r.dateFin)}
@@ -348,7 +351,7 @@ export default function VehiculeReservations() {
       await load();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Échec du changement d'état.");
+      alert(err.response?.data?.message || t("Échec du changement d'état."));
     } finally {
       setIsUpdatingEtat(false);
     }
@@ -361,9 +364,9 @@ export default function VehiculeReservations() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: 'Supprimer la réservation',
-      message: `Supprimer cette réservation ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer la réservation"),
+      message: t('Supprimer cette réservation ? Cette action est irréversible.'),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -373,7 +376,7 @@ export default function VehiculeReservations() {
           setSelected(null);
         } catch (err) {
           console.error(err);
-          alert('Échec de la suppression.');
+          alert(t("Échec de la suppression."));
         } finally {
           setIsDeleting(false);
         }
@@ -381,23 +384,29 @@ export default function VehiculeReservations() {
     });
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Véhicule', 'Conducteur', 'Début', 'Fin', 'Motif', 'État'];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['Véhicule', 'Conducteur', 'Début', 'Fin', 'Motif', 'État'].map((e) => t(e));
     const lignes = filtered.map((r) => {
       const veh = vehiculesMap[r.vehiculeId];
       const pers = personnelsMap[r.personnelId] ?? { nom: r.personnelNom };
       return [
-        (veh?.matricule || '—').replace(/"/g, '""'),
-        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—').replace(/"/g, '""'),
+        (veh?.matricule || '—'),
+        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—'),
         formatDateTime(r.dateDebut),
         formatDateTime(r.dateFin),
-        (r.motif || '—').replace(/"/g, '""'),
+        (r.motif || '—'),
         etatLabel(r.etat),
       ];
     });
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((l) => l.map((c) => `"${c}"`).join(';'))
+      .map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -411,8 +420,21 @@ export default function VehiculeReservations() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => window.print();
-  const handleStats = () => alert('Dashboard à venir.');
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Réservations véhicule'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('État'), valeur: etatFilter !== 'all' ? etatLabel(Number(etatFilter)) : '' },
+      ],
+    });
+  };
+
+  const handleStats = () => alert(t("Dashboard à venir."));
 
   return (
     <div className="vrs-container">
@@ -424,15 +446,15 @@ export default function VehiculeReservations() {
             type="button"
             className="vrs-header-icon-wrap vrs-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <CalendarCheck size={24} strokeWidth={2} />
           </button>
           <div>
-            <h2>Réservations véhicule</h2>
+            <h2>{t("Réservations véhicule")}</h2>
             <p className="vrs-header-subtitle">
-              Planning des réservations et affectations de véhicules
+              {t("Planning des réservations et affectations de véhicules")}
             </p>
           </div>
         </div>
@@ -440,23 +462,23 @@ export default function VehiculeReservations() {
         <div className="vrs-stats">
           <div className="vrs-stat">
             <span className="vrs-stat-value">{stats.total}</span>
-            <span className="vrs-stat-label">Total</span>
+            <span className="vrs-stat-label">{t("Total")}</span>
           </div>
           <div className="vrs-stat stat-pending">
             <span className="vrs-stat-value">{stats.enAttente}</span>
-            <span className="vrs-stat-label">En attente</span>
+            <span className="vrs-stat-label">{t("En attente")}</span>
           </div>
           <div className="vrs-stat stat-confirmed">
             <span className="vrs-stat-value">{stats.confirmees}</span>
-            <span className="vrs-stat-label">Confirmées</span>
+            <span className="vrs-stat-label">{t("Confirmées")}</span>
           </div>
           <div className="vrs-stat stat-running">
             <span className="vrs-stat-value">{stats.enCours}</span>
-            <span className="vrs-stat-label">En cours</span>
+            <span className="vrs-stat-label">{t("En cours")}</span>
           </div>
           <div className="vrs-stat stat-done">
             <span className="vrs-stat-value">{stats.terminees}</span>
-            <span className="vrs-stat-label">Terminées</span>
+            <span className="vrs-stat-label">{t("Terminées")}</span>
           </div>
         </div>
       </div>
@@ -465,7 +487,7 @@ export default function VehiculeReservations() {
       <div className="vrs-actions-bar">
         <button className="vrs-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} strokeWidth={2.5} />
-          <span>Nouvelle réservation</span>
+          <span>{t("Nouvelle réservation")}</span>
         </button>
 
         <button
@@ -474,7 +496,7 @@ export default function VehiculeReservations() {
           onClick={openEdit}
         >
           <Pencil size={18} strokeWidth={2.2} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
@@ -483,7 +505,7 @@ export default function VehiculeReservations() {
           onClick={handleDelete}
         >
           <Trash2 size={18} strokeWidth={2.2} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
 
         <span className="vrs-actions-sep" aria-hidden="true" />
@@ -500,10 +522,10 @@ export default function VehiculeReservations() {
               disabled={disabled}
               title={
                 !selected
-                  ? 'Sélectionne une réservation'
+                  ? t("Sélectionne une réservation")
                   : !isAllowed
-                    ? `Non disponible depuis « ${etatLabel(selected.etat)} »`
-                    : a.label
+                    ? t('Non disponible depuis « {etat} »', { etat: etatLabel(selected.etat) })
+                    : t(a.label)
               }
               onClick={() => handleQuickEtat(a.toEtat)}
             >
@@ -512,7 +534,7 @@ export default function VehiculeReservations() {
               ) : (
                 <Icon size={18} strokeWidth={2.2} />
               )}
-              <span>{a.label}</span>
+              <span>{t(a.label)}</span>
             </button>
           );
         })}
@@ -523,13 +545,13 @@ export default function VehiculeReservations() {
         <div className="vrs-filter-group">
           <span className="vrs-filter-label">
             <Search size={14} strokeWidth={2.5} />
-            Recherche
+            {t("Recherche")}
           </span>
           <div className="vrs-filter-input-wrap">
             <Search size={16} strokeWidth={2.2} className="vrs-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -539,13 +561,13 @@ export default function VehiculeReservations() {
         <div className="vrs-filter-group">
           <span className="vrs-filter-label">
             <Filter size={14} strokeWidth={2.5} />
-            État
+            {t("État")}
           </span>
           <div className="vrs-filter-input-wrap">
             <select value={etatFilter} onChange={(e) => setEtatFilter(e.target.value)}>
-              <option value="all">Tous les états</option>
+              <option value="all">{t("Tous les états")}</option>
               {Object.entries(ETAT_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>{t(v)}</option>
               ))}
             </select>
           </div>
@@ -553,17 +575,17 @@ export default function VehiculeReservations() {
 
         <button className="vrs-filter-reset" onClick={handleResetFilters}>
           <RotateCcw size={14} strokeWidth={2.5} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="vrs-export-stack">
-          <button className="vrs-export-btn excel" onClick={handleExportExcel} title="Export CSV">
+          <button className="vrs-export-btn excel" onClick={handleExportExcel} title={t("Export CSV")}>
             <Download size={16} strokeWidth={2.5} />
           </button>
-          <button className="vrs-export-btn print" onClick={handlePrint} title="Imprimer">
+          <button className="vrs-export-btn print" onClick={handleImprimerListe} title={t("Imprimer")}>
             <Printer size={16} strokeWidth={2.5} />
           </button>
-          <button className="vrs-export-btn stats" onClick={handleStats} title="Stats">
+          <button className="vrs-export-btn stats" onClick={handleStats} title={t("Stats")}>
             <BarChart3 size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -587,10 +609,10 @@ export default function VehiculeReservations() {
                   className={`vrs-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="vrs-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -603,7 +625,7 @@ export default function VehiculeReservations() {
                 <td colSpan={visibleColumns.length || 1} className="vrs-table-empty">
                   <div className="vrs-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vrs-spin" />
-                    <span>Chargement des réservations...</span>
+                    <span>{t("Chargement des réservations...")}</span>
                   </div>
                 </td>
               </tr>
@@ -614,8 +636,8 @@ export default function VehiculeReservations() {
                     <CalendarCheck size={32} strokeWidth={1.6} />
                     <span>
                       {reservations.length === 0
-                        ? "Aucune réservation pour l'instant."
-                        : 'Aucune réservation ne correspond à ces filtres.'}
+                        ? t("Aucune réservation pour l'instant.")
+                        : t("Aucune réservation ne correspond à ces filtres.")}
                     </span>
                   </div>
                 </td>

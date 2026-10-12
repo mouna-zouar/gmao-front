@@ -12,6 +12,8 @@ import personnelService from '../../../../services/personnelService';
 import VehiculeIncidentModal from '../../../ui/modals/VehiculeIncidentModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import { t, tp, locale } from '../../../../i18n';
+import { imprimerListe } from '../../../../utils/imprimerListe';
 import './VehiculeIncidents.css';
 
 // Codes alignés sur le backend (voir commentaires sur les champs
@@ -48,22 +50,23 @@ function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function formatMontant(v) {
   if (v == null) return '—';
-  return `${Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DT`;
+  return t('{montant} DT', { montant: Number(v).toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) });
 }
 
 function formatKm(v) {
   if (v == null) return '—';
-  return `${Number(v).toLocaleString('fr-FR')} km`;
+  return t('{n} km', { n: Number(v).toLocaleString(locale()) });
 }
 
-function typeLabel(t) { return TYPE_LABELS[t] ?? `Type ${t}`; }
-function graviteLabel(g) { return GRAVITE_LABELS[g] ?? `Gravité ${g}`; }
-function etatLabel(e) { return ETAT_LABELS[e] ?? `État ${e}`; }
+// Libellés traduits : la recherche, le tableau et l'export suivent la langue choisie
+function typeLabel(type) { return TYPE_LABELS[type] ? t(TYPE_LABELS[type]) : t('Type {n}', { n: type }); }
+function graviteLabel(g) { return GRAVITE_LABELS[g] ? t(GRAVITE_LABELS[g]) : t('Gravité {niveau}', { niveau: g }); }
+function etatLabel(e) { return ETAT_LABELS[e] ? t(ETAT_LABELS[e]) : t('État {n}', { n: e }); }
 
 /* Colonnes paramétrables (affichage + recherche) */
 const VIN_COLUMNS_DEFAULT = [
@@ -102,7 +105,7 @@ export default function VehiculeIncidents() {
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
-    confirmText: 'Confirmer', onConfirm: null,
+    confirmText: t("Confirmer"), onConfirm: null,
   });
 
   const load = async () => {
@@ -126,7 +129,7 @@ export default function VehiculeIncidents() {
       setPersonnelsMap(pMap);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les incidents. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les incidents. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -201,7 +204,7 @@ export default function VehiculeIncidents() {
     const sorted = [...result].sort((x, y) => {
       const vx = getSortValue(x, sortColumn);
       const vy = getSortValue(y, sortColumn);
-      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      if (typeof vx === 'string') return vx.localeCompare(vy, locale(), { sensitivity: 'base', numeric: true });
       return vx - vy;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
@@ -255,7 +258,7 @@ export default function VehiculeIncidents() {
               </div>
               <div className="vin-cell-vehicle-text">
                 <span className="vin-cell-main">
-                  {veh?.matricule || `Véhicule #${i.vehiculeId}`}
+                  {veh?.matricule || t('Véhicule #{id}', { id: i.vehiculeId })}
                 </span>
                 {veh?.marque && <span className="vin-cell-sub">{veh.marque}</span>}
               </div>
@@ -356,9 +359,9 @@ export default function VehiculeIncidents() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: "Supprimer l'incident",
-      message: `Supprimer cet incident ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer l'incident"),
+      message: t('Supprimer cet incident ? Cette action est irréversible.'),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -368,7 +371,7 @@ export default function VehiculeIncidents() {
           setSelected(null);
         } catch (err) {
           console.error(err);
-          alert('Échec de la suppression.');
+          alert(t("Échec de la suppression."));
         } finally {
           setIsDeleting(false);
         }
@@ -404,20 +407,21 @@ export default function VehiculeIncidents() {
       await load();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Échec du changement d'état.");
+      alert(err.response?.data?.message || t("Échec du changement d'état."));
     } finally {
       setIsUpdatingEtat(false);
     }
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Véhicule', 'Conducteur', 'Type', 'Date', 'Gravité', 'État', 'Coût (DT)'];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['Véhicule', 'Conducteur', 'Type', 'Date', 'Gravité', 'État', 'Coût (DT)'].map((e) => t(e));
     const lignes = filtered.map((i) => {
       const veh = vehiculesMap[i.vehiculeId];
       const pers = personnelsMap[i.conducteurId];
       return [
-        (veh?.matricule || '—').replace(/"/g, '""'),
-        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—').replace(/"/g, '""'),
+        (veh?.matricule || '—'),
+        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—'),
         typeLabel(i.type),
         formatDate(i.dateIncident),
         graviteLabel(i.gravite),
@@ -425,9 +429,14 @@ export default function VehiculeIncidents() {
         i.cout ?? '—',
       ];
     });
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((l) => l.map((c) => `"${c}"`).join(';'))
+      .map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -441,8 +450,22 @@ export default function VehiculeIncidents() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => window.print();
-  const handleStats = () => alert('Dashboard à venir.');
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Incidents véhicule'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('État'), valeur: etatFilter !== 'all' ? etatLabel(Number(etatFilter)) : '' },
+        { label: t('Gravité'), valeur: graviteFilter !== 'all' ? graviteLabel(Number(graviteFilter)) : '' },
+      ],
+    });
+  };
+
+  const handleStats = () => alert(t("Dashboard à venir."));
 
   // États vers lesquels on peut basculer (tous sauf l'état courant).
   const nextEtats = selected
@@ -461,15 +484,15 @@ export default function VehiculeIncidents() {
             type="button"
             className="vin-header-icon-wrap vin-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <AlertTriangle size={24} strokeWidth={2} />
           </button>
           <div>
-            <h2>Incidents véhicule</h2>
+            <h2>{t("Incidents véhicule")}</h2>
             <p className="vin-header-subtitle">
-              Suivi des accidents, pannes et événements sur le parc
+              {t("Suivi des accidents, pannes et événements sur le parc")}
             </p>
           </div>
         </div>
@@ -477,23 +500,23 @@ export default function VehiculeIncidents() {
         <div className="vin-stats">
           <div className="vin-stat">
             <span className="vin-stat-value">{stats.total}</span>
-            <span className="vin-stat-label">Total</span>
+            <span className="vin-stat-label">{t("Total")}</span>
           </div>
           <div className="vin-stat stat-declared">
             <span className="vin-stat-value">{stats.declares}</span>
-            <span className="vin-stat-label">Déclarés</span>
+            <span className="vin-stat-label">{t("Déclarés")}</span>
           </div>
           <div className="vin-stat stat-progress">
             <span className="vin-stat-value">{stats.enCours}</span>
-            <span className="vin-stat-label">En cours</span>
+            <span className="vin-stat-label">{t("En cours")}</span>
           </div>
           <div className="vin-stat stat-resolved">
             <span className="vin-stat-value">{stats.resolus}</span>
-            <span className="vin-stat-label">Résolus</span>
+            <span className="vin-stat-label">{t("Résolus")}</span>
           </div>
           <div className="vin-stat stat-cost">
             <span className="vin-stat-value">{formatMontant(stats.coutTotal)}</span>
-            <span className="vin-stat-label">Coût</span>
+            <span className="vin-stat-label">{t("Coût")}</span>
           </div>
         </div>
       </div>
@@ -502,7 +525,7 @@ export default function VehiculeIncidents() {
       <div className="vin-actions-bar">
         <button className="vin-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} strokeWidth={2.5} />
-          <span>Nouvel incident</span>
+          <span>{t("Nouvel incident")}</span>
         </button>
 
         <button
@@ -511,7 +534,7 @@ export default function VehiculeIncidents() {
           onClick={openEdit}
         >
           <Pencil size={18} strokeWidth={2.2} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
@@ -520,7 +543,7 @@ export default function VehiculeIncidents() {
           onClick={handleDelete}
         >
           <Trash2 size={18} strokeWidth={2.2} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
 
         {/* Boutons de changement rapide d'état (visibles si un incident est sélectionné) */}
@@ -536,7 +559,7 @@ export default function VehiculeIncidents() {
                   type="button"
                   className={`vin-action-btn etat-quick color-${meta.color} ${isUpdatingEtat ? 'disabled' : ''}`}
                   disabled={isUpdatingEtat}
-                  title={`Passer à : ${etatLabel(target)}`}
+                  title={t('Passer à : {etat}', { etat: etatLabel(target) })}
                   onClick={() => handleQuickEtat(target)}
                 >
                   {isUpdatingEtat ? (
@@ -557,13 +580,13 @@ export default function VehiculeIncidents() {
         <div className="vin-filter-group">
           <span className="vin-filter-label">
             <Search size={14} strokeWidth={2.5} />
-            Recherche
+            {t("Recherche")}
           </span>
           <div className="vin-filter-input-wrap">
             <Search size={16} strokeWidth={2.2} className="vin-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -573,13 +596,13 @@ export default function VehiculeIncidents() {
         <div className="vin-filter-group">
           <span className="vin-filter-label">
             <Filter size={14} strokeWidth={2.5} />
-            État
+            {t("État")}
           </span>
           <div className="vin-filter-input-wrap">
             <select value={etatFilter} onChange={(e) => setEtatFilter(e.target.value)}>
-              <option value="all">Tous les états</option>
+              <option value="all">{t("Tous les états")}</option>
               {Object.entries(ETAT_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>{t(v)}</option>
               ))}
             </select>
           </div>
@@ -588,13 +611,13 @@ export default function VehiculeIncidents() {
         <div className="vin-filter-group">
           <span className="vin-filter-label">
             <ShieldAlert size={14} strokeWidth={2.5} />
-            Gravité
+            {t("Gravité")}
           </span>
           <div className="vin-filter-input-wrap">
             <select value={graviteFilter} onChange={(e) => setGraviteFilter(e.target.value)}>
-              <option value="all">Toutes les gravités</option>
+              <option value="all">{t("Toutes les gravités")}</option>
               {Object.entries(GRAVITE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>{t(v)}</option>
               ))}
             </select>
           </div>
@@ -602,17 +625,17 @@ export default function VehiculeIncidents() {
 
         <button className="vin-filter-reset" onClick={handleResetFilters}>
           <RotateCcw size={14} strokeWidth={2.5} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="vin-export-stack">
-          <button className="vin-export-btn excel" onClick={handleExportExcel} title="Export CSV">
+          <button className="vin-export-btn excel" onClick={handleExportExcel} title={t("Export CSV")}>
             <Download size={16} strokeWidth={2.5} />
           </button>
-          <button className="vin-export-btn print" onClick={handlePrint} title="Imprimer">
+          <button className="vin-export-btn print" onClick={handleImprimerListe} title={t("Imprimer")}>
             <Printer size={16} strokeWidth={2.5} />
           </button>
-          <button className="vin-export-btn stats" onClick={handleStats} title="Stats">
+          <button className="vin-export-btn stats" onClick={handleStats} title={t("Stats")}>
             <BarChart3 size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -636,10 +659,10 @@ export default function VehiculeIncidents() {
                   className={`vin-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="vin-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -652,7 +675,7 @@ export default function VehiculeIncidents() {
                 <td colSpan={visibleColumns.length || 1} className="vin-table-empty">
                   <div className="vin-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vin-spin" />
-                    <span>Chargement des incidents...</span>
+                    <span>{t("Chargement des incidents...")}</span>
                   </div>
                 </td>
               </tr>
@@ -663,8 +686,8 @@ export default function VehiculeIncidents() {
                     <AlertTriangle size={32} strokeWidth={1.6} />
                     <span>
                       {incidents.length === 0
-                        ? "Aucun incident enregistré."
-                        : 'Aucun incident ne correspond à ces filtres.'}
+                        ? t("Aucun incident enregistré.")
+                        : t("Aucun incident ne correspond à ces filtres.")}
                     </span>
                   </div>
                 </td>

@@ -20,6 +20,8 @@ import {
   allowedNextEtats,
 } from '../../../../constants/vehiculeEtat';
 import { criticiteLabel, criticiteColor } from '../../../../constants/Criticite';
+import { t, tp, locale } from '../../../../i18n';
+import { imprimerListe, imprimerFiche } from '../../../../utils/imprimerListe';
 import './VehiculesPage.css';
 
 const PAGE_SIZE = 10;
@@ -33,7 +35,7 @@ const TYPE_LABELS = {
 };
 
 function typeLabel(type) {
-  return TYPE_LABELS[type] ?? `Type ${type}`;
+  return TYPE_LABELS[type] ? t(TYPE_LABELS[type]) : t('Type {n}', { n: type });
 }
 
 const ETAT_TARGET_ICON = {
@@ -116,7 +118,7 @@ export default function VehiculesPage() {
     type: 'warning',
     title: '',
     message: '',
-    confirmText: 'Confirmer',
+    confirmText: t("Confirmer"),
     onConfirm: null,
   });
 
@@ -128,7 +130,7 @@ export default function VehiculesPage() {
       setVehicules(page.content ?? []);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les véhicules. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les véhicules. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -209,9 +211,10 @@ export default function VehiculesPage() {
       case 'numChassis':  return v.numChassis || '';
       case 'type':        return typeLabel(v.type);
       case 'kilometrage': return v.kilometrage != null ? String(v.kilometrage) : '';
-      case 'etat':        return etatVehiculeLabel(v.etat);
+      // libellé français + traduit : la recherche marche dans les deux langues
+      case 'etat':        return `${etatVehiculeLabel(v.etat)} ${t(etatVehiculeLabel(v.etat))}`;
       case 'criticite':   return v.criticite
-        ? `${v.criticite} ${criticiteLabel(v.criticite)}`
+        ? `${v.criticite} ${criticiteLabel(v.criticite)} ${t(criticiteLabel(v.criticite))}`
         : '';
       default:            return '';
     }
@@ -316,7 +319,7 @@ export default function VehiculesPage() {
       await load();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || "Échec du changement d'état.");
+      alert(err.response?.data?.message || t("Échec du changement d'état."));
     } finally {
       setIsUpdatingEtat(false);
     }
@@ -333,9 +336,9 @@ export default function VehiculesPage() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: 'Supprimer le véhicule',
-      message: `Supprimer le véhicule "${selectedVehicule.matricule}" ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer le véhicule"),
+      message: t('Supprimer le véhicule « {m} » ? Cette action est irréversible.', { m: selectedVehicule.matricule }),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -346,7 +349,7 @@ export default function VehiculesPage() {
           if (viewMode === 'details') setViewMode('list');
         } catch (err) {
           console.error(err);
-          alert("Échec de la suppression de ce véhicule.");
+          alert(t("Échec de la suppression de ce véhicule."));
         } finally {
           setIsDeleting(false);
         }
@@ -354,19 +357,25 @@ export default function VehiculesPage() {
     });
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Matricule', 'Marque', 'N° Châssis', 'Type', 'Kilométrage', 'État'];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['Matricule', 'Marque', 'N° Châssis', 'Type', 'Kilométrage', 'État'].map((e) => t(e));
     const lignes = filteredVehicules.map((v) => [
-      (v.matricule || '').replace(/"/g, '""'),
-      (v.marque || '—').replace(/"/g, '""'),
-      (v.numChassis || '—').replace(/"/g, '""'),
+      (v.matricule || ''),
+      (v.marque || '—'),
+      (v.numChassis || '—'),
       typeLabel(v.type),
       v.kilometrage != null ? String(v.kilometrage) : '—',
-      etatVehiculeLabel(v.etat),
+      t(etatVehiculeLabel(v.etat)),
     ]);
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((ligne) => ligne.map((cellule) => `"${cellule}"`).join(';'))
+      .map((ligne) => ligne.map((cellule) => `"${String(cellule ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -380,12 +389,83 @@ export default function VehiculesPage() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => {
-    window.print();
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Véhicules'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: appliedFilters.searchTerm.trim() },
+        { label: t('État'), valeur: appliedFilters.etatFilter !== 'all' ? t(ETAT_VEHICULE_LABELS[appliedFilters.etatFilter] ?? appliedFilters.etatFilter) : '' },
+      ],
+    });
+  };
+
+  // Impression de la fiche du véhicule (A4 portrait) : infos, maintenance préventive, derniers relevés
+  const STATUT_MAINTENANCE = { OK: 'À jour', A_VENIR: 'À venir', ATTEINT: 'Atteint', EN_RETARD: 'En retard', EN_COURS: 'En cours' };
+  const SOURCE_RELEVE = {
+    MISSION: 'Mission', BON_CARBURANT: 'Bon carburant', SAISIE_ADMINISTRATEUR: 'Saisie manuelle',
+    MAINTENANCE: 'Maintenance', INCIDENT: 'Incident',
+  };
+  const kmTexte = (v) => (v == null ? '' : t('{n} km', { n: Number(v).toLocaleString(locale()) }));
+  const handlePrint = async () => {
+    const v = selectedVehicule;
+    if (!v) return;
+    const [statuts, releves] = await Promise.all([
+      vehiculeMaintenanceService.getStatuts(v.id).catch(() => []),
+      vehiculeService.getHistoriqueKilometrage(v.id, 0, 10).then((p) => p?.content ?? []).catch(() => []),
+    ]);
+    imprimerFiche({
+      titre: v.matricule || `#${v.id}`,
+      sousTitre: [t('Fiche détaillée'), v.marque].filter(Boolean).join(' · '),
+      reference: typeLabel(v.type),
+      statut: t(etatVehiculeLabel(v.etat)),
+      sections: [
+        {
+          titre: t('Informations générales'),
+          champs: [
+            { label: t('Matricule'), valeur: v.matricule },
+            { label: t('Marque'), valeur: v.marque },
+            { label: t('N° Châssis'), valeur: v.numChassis },
+            { label: t('Type'), valeur: typeLabel(v.type) },
+            { label: t('Kilométrage'), valeur: kmTexte(v.kilometrage) },
+            { label: t('Criticité'), valeur: `${v.criticite || 'C3'} · ${t(criticiteLabel(v.criticite))}` },
+            { label: t('État actuel'), valeur: t(etatVehiculeLabel(v.etat)) },
+          ],
+        },
+        {
+          titre: t('Maintenance préventive'),
+          colonnes: [t('Opération'), t('Statut'), { label: t('Intervalle'), align: 'end' }, { label: t('Prochain seuil'), align: 'end' }, { label: t('Restant'), align: 'end' }],
+          lignes: (statuts ?? []).map((s) => [
+            s.typeLibelle,
+            STATUT_MAINTENANCE[s.statut] ? t(STATUT_MAINTENANCE[s.statut]) : s.statut,
+            kmTexte(s.intervalleKm),
+            kmTexte(s.prochainSeuilKm),
+            s.kmRestants == null ? '' : s.kmRestants < 0
+              ? t('{duree} de retard', { duree: kmTexte(Math.abs(s.kmRestants)) })
+              : kmTexte(s.kmRestants),
+          ]),
+          vide: t('Aucun type de maintenance configuré.'),
+        },
+        {
+          titre: t('Derniers relevés kilométriques'),
+          colonnes: [t('Date'), { label: t('Relevé'), align: 'end' }, t('Source')],
+          lignes: (releves ?? []).map((r) => [
+            r.date ? new Date(r.date).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' }) : '',
+            kmTexte(r.kilometrage),
+            SOURCE_RELEVE[r.source] ? t(SOURCE_RELEVE[r.source]) : r.source,
+          ]),
+          vide: t('Aucun relevé enregistré pour ce véhicule.'),
+        },
+      ],
+      signatures: [t('Responsable parc'), t('Conducteur')],
+    });
   };
 
   const handleStats = () => {
-    alert('Ouvre le dashboard des véhicules pour les statistiques détaillées.');
+    alert(t("Ouvre le dashboard des véhicules pour les statistiques détaillées."));
   };
 
   const nextEtats = allowedNextEtats(selectedVehicule?.etat);
@@ -402,7 +482,7 @@ export default function VehiculesPage() {
 
   const TABLE_COLUMNS_DEF = {
     matricule: {
-      label: 'Matricule',
+      label: t("Matricule"),
       cell: (v) => (
         <td key="matricule">
           <span className="vehicules-matricule-badge">
@@ -412,28 +492,28 @@ export default function VehiculesPage() {
       ),
     },
     marque: {
-      label: 'Marque',
+      label: t("Marque"),
       cell: (v) => <td key="marque">{v.marque || '—'}</td>,
     },
     numChassis: {
-      label: 'N° Châssis',
+      label: t("N° Châssis"),
       cell: (v) => <td key="numChassis">{v.numChassis || '—'}</td>,
     },
     type: {
-      label: 'Type',
+      label: t("Type"),
       cell: (v) => <td key="type">{typeLabel(v.type)}</td>,
     },
     kilometrage: {
-      label: 'Kilométrage',
+      label: t("Kilométrage"),
       cell: (v) => (
         <td key="kilometrage">
           {v.kilometrage != null
-            ? `${Number(v.kilometrage).toLocaleString('fr-FR')} km`
+            ? t('{n} km', { n: Number(v.kilometrage).toLocaleString(locale()) })
             : '—'}
           {alertesMaintenance[v.id]?.enRetard > 0 && (
             <span
               className="vp-badge-retard"
-              title={`${alertesMaintenance[v.id].enRetard} maintenance(s) en retard`}
+              title={tp('maintenance en retard', alertesMaintenance[v.id].enRetard)}
             >
               <AlertTriangle size={12} strokeWidth={2.5} />
               {alertesMaintenance[v.id].enRetard}
@@ -443,21 +523,21 @@ export default function VehiculesPage() {
       ),
     },
     etat: {
-      label: 'État',
+      label: t("État"),
       cell: (v) => (
         <td key="etat">
           <span className={`vehicules-pill color-${etatVehiculeColor(v.etat)}`}>
-            {etatVehiculeLabel(v.etat)}
+            {t(etatVehiculeLabel(v.etat))}
           </span>
         </td>
       ),
     },
     criticite: {
-      label: 'Criticité',
+      label: t("Criticité"),
       cell: (v) => (
         <td key="criticite">
           <span className={`vehicules-pill color-${criticiteColor(v.criticite)}`}>
-            {v.criticite || 'C3'} · {criticiteLabel(v.criticite)}
+            {v.criticite || 'C3'} · {t(criticiteLabel(v.criticite))}
           </span>
         </td>
       ),
@@ -468,13 +548,13 @@ export default function VehiculesPage() {
 
   if (viewMode === 'details' && selectedVehicule) {
     const km = selectedVehicule.kilometrage != null
-      ? `${Number(selectedVehicule.kilometrage).toLocaleString('fr-FR')} km`
+      ? t('{n} km', { n: Number(selectedVehicule.kilometrage).toLocaleString(locale()) })
       : '—';
 
     const TABS = [
-      { key: 'infos',       label: 'Informations générales', icon: Info },
-      { key: 'maintenance', label: 'Maintenance préventive', icon: Wrench },
-      { key: 'historique',  label: 'Historique du compteur', icon: HistoryIcon },
+      { key: 'infos',       label: t("Informations générales"), icon: Info },
+      { key: 'maintenance', label: t("Maintenance préventive"), icon: Wrench },
+      { key: 'historique',  label: t("Historique du compteur"), icon: HistoryIcon },
     ];
 
     return (
@@ -491,8 +571,8 @@ export default function VehiculesPage() {
                   className="vd-hero-back"
                   onClick={handleBackToList}
                 >
-                  <ArrowLeft size={16} strokeWidth={2.4} />
-                  Retour à la liste
+                  <ArrowLeft size={16} strokeWidth={2.4} className="rtl-miroir" />
+                  {t("Retour à la liste")}
                 </button>
 
                 <div className="vd-hero-actions">
@@ -502,7 +582,7 @@ export default function VehiculesPage() {
                     onClick={openEdit}
                   >
                     <FileText size={16} strokeWidth={2.4} />
-                    Modifier
+                    {t("Modifier")}
                   </button>
                   <button
                     type="button"
@@ -510,7 +590,7 @@ export default function VehiculesPage() {
                     onClick={handlePrint}
                   >
                     <Printer size={16} strokeWidth={2.4} />
-                    Imprimer
+                    {t("Imprimer")}
                   </button>
                 </div>
               </div>
@@ -522,7 +602,7 @@ export default function VehiculesPage() {
                   </div>
 
                   <div className="vd-hero-text">
-                    <span className="vd-hero-eyebrow">Fiche détaillée</span>
+                    <span className="vd-hero-eyebrow">{t("Fiche détaillée")}</span>
                     <h3 className="vd-hero-title">
                       {selectedVehicule.matricule || `#${selectedVehicule.id}`}
                     </h3>
@@ -542,7 +622,7 @@ export default function VehiculesPage() {
                     <strong>{km}</strong>
                   </span>
                   <span className="vd-hero-chip vd-hero-chip-state">
-                    {etatVehiculeLabel(selectedVehicule.etat)}
+                    {t(etatVehiculeLabel(selectedVehicule.etat))}
                   </span>
                 </div>
               </div>
@@ -556,7 +636,7 @@ export default function VehiculesPage() {
               </div>
               <div className="vd-kpi-body">
                 <span className="vd-kpi-value">{typeLabel(selectedVehicule.type)}</span>
-                <span className="vd-kpi-label">Type de véhicule</span>
+                <span className="vd-kpi-label">{t("Type de véhicule")}</span>
               </div>
             </div>
 
@@ -566,7 +646,7 @@ export default function VehiculesPage() {
               </div>
               <div className="vd-kpi-body">
                 <span className="vd-kpi-value">{km}</span>
-                <span className="vd-kpi-label">Kilométrage actuel</span>
+                <span className="vd-kpi-label">{t("Kilométrage actuel")}</span>
               </div>
             </div>
 
@@ -579,7 +659,7 @@ export default function VehiculesPage() {
                   {selectedVehicule.criticite || 'C3'}
                 </span>
                 <span className="vd-kpi-label">
-                  Criticité · {criticiteLabel(selectedVehicule.criticite)}
+                  {t("Criticité")} · {t(criticiteLabel(selectedVehicule.criticite))}
                 </span>
               </div>
             </div>
@@ -590,9 +670,9 @@ export default function VehiculesPage() {
               </div>
               <div className="vd-kpi-body">
                 <span className="vd-kpi-value">
-                  {etatVehiculeLabel(selectedVehicule.etat)}
+                  {t(etatVehiculeLabel(selectedVehicule.etat))}
                 </span>
-                <span className="vd-kpi-label">État actuel</span>
+                <span className="vd-kpi-label">{t("État actuel")}</span>
               </div>
             </div>
           </div>
@@ -615,7 +695,7 @@ export default function VehiculesPage() {
                     <span className="vd-tab-icon">
                       <TabIcon size={16} strokeWidth={2.4} />
                     </span>
-                    <span className="vd-tab-label">{tab.label}</span>
+                    <span className="vd-tab-label">{t(tab.label)}</span>
                   </button>
                 );
               })}
@@ -634,7 +714,7 @@ export default function VehiculesPage() {
                       <div>
                         <dt>
                           <FileText size={13} strokeWidth={2.4} />
-                          Matricule
+                          {t("Matricule")}
                         </dt>
                         <dd>
                           <span className="vd-mono">
@@ -645,14 +725,14 @@ export default function VehiculesPage() {
                       <div>
                         <dt>
                           <Truck size={13} strokeWidth={2.4} />
-                          Marque
+                          {t("Marque")}
                         </dt>
                         <dd>{selectedVehicule.marque || '—'}</dd>
                       </div>
                       <div>
                         <dt>
                           <FileText size={13} strokeWidth={2.4} />
-                          N° Châssis
+                          {t("N° Châssis")}
                         </dt>
                         <dd>
                           <span className="vd-mono">
@@ -663,36 +743,36 @@ export default function VehiculesPage() {
                       <div>
                         <dt>
                           <Truck size={13} strokeWidth={2.4} />
-                          Type
+                          {t("Type")}
                         </dt>
                         <dd>{typeLabel(selectedVehicule.type)}</dd>
                       </div>
                       <div>
                         <dt>
                           <Gauge size={13} strokeWidth={2.4} />
-                          Kilométrage
+                          {t("Kilométrage")}
                         </dt>
                         <dd>{km}</dd>
                       </div>
                       <div>
                         <dt>
                           <AlertOctagon size={13} strokeWidth={2.4} />
-                          Criticité
+                          {t("Criticité")}
                         </dt>
                         <dd>
                           <span className={`vehicules-pill color-${criticiteColor(selectedVehicule.criticite)}`}>
-                            {selectedVehicule.criticite || 'C3'} · {criticiteLabel(selectedVehicule.criticite)}
+                            {selectedVehicule.criticite || 'C3'} · {t(criticiteLabel(selectedVehicule.criticite))}
                           </span>
                         </dd>
                       </div>
                       <div>
                         <dt>
                           <CheckCircle2 size={13} strokeWidth={2.4} />
-                          État actuel
+                          {t("État actuel")}
                         </dt>
                         <dd>
                           <span className={`vehicules-pill color-${etatVehiculeColor(selectedVehicule.etat)}`}>
-                            {etatVehiculeLabel(selectedVehicule.etat)}
+                            {t(etatVehiculeLabel(selectedVehicule.etat))}
                           </span>
                         </dd>
                       </div>
@@ -758,8 +838,8 @@ export default function VehiculesPage() {
             type="button"
             className="vehicules-header-icon vehicules-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
@@ -769,10 +849,10 @@ export default function VehiculesPage() {
             </svg>
           </button>
           <div>
-            <h2>Véhicules</h2>
+            <h2>{t("Véhicules")}</h2>
           </div>
         </div>
-        <span className="vehicules-badge-total">Total : {filteredVehicules.length}</span>
+        <span className="vehicules-badge-total">{t("Total :")} {filteredVehicules.length}</span>
       </div>
 
       <div className="vehicules-kpi-grid">
@@ -782,7 +862,7 @@ export default function VehiculesPage() {
           </div>
           <div className="vehicules-kpi-body">
             <span className="vehicules-kpi-value">{stats.total}</span>
-            <span className="vehicules-kpi-label">Véhicules au total</span>
+            <span className="vehicules-kpi-label">{t("Véhicules au total")}</span>
           </div>
         </div>
 
@@ -792,7 +872,7 @@ export default function VehiculesPage() {
           </div>
           <div className="vehicules-kpi-body">
             <span className="vehicules-kpi-value">{stats.enService}</span>
-            <span className="vehicules-kpi-label">En service</span>
+            <span className="vehicules-kpi-label">{t("En service")}</span>
           </div>
         </div>
 
@@ -802,7 +882,7 @@ export default function VehiculesPage() {
           </div>
           <div className="vehicules-kpi-body">
             <span className="vehicules-kpi-value">{stats.enMaintenance}</span>
-            <span className="vehicules-kpi-label">En maintenance</span>
+            <span className="vehicules-kpi-label">{t("En maintenance")}</span>
           </div>
         </div>
 
@@ -812,7 +892,7 @@ export default function VehiculesPage() {
           </div>
           <div className="vehicules-kpi-body">
             <span className="vehicules-kpi-value">{stats.enAlerte}</span>
-            <span className="vehicules-kpi-label">Alertes actives</span>
+            <span className="vehicules-kpi-label">{t("Alertes actives")}</span>
           </div>
         </div>
       </div>
@@ -820,7 +900,7 @@ export default function VehiculesPage() {
       <div className="vehicules-actions-bar">
         <button className="vehicules-action-btn ajouter" onClick={openCreate}>
           <span className="vehicules-action-icon">+</span>
-          <span>Ajouter</span>
+          <span>{t("Ajouter")}</span>
         </button>
 
         <button
@@ -833,7 +913,7 @@ export default function VehiculesPage() {
           }}
         >
           <FileText size={16} strokeWidth={2.5} />
-          <span>Détails</span>
+          <span>{t("Détails")}</span>
         </button>
 
         <button
@@ -844,7 +924,7 @@ export default function VehiculesPage() {
           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
           </svg>
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
@@ -855,7 +935,7 @@ export default function VehiculesPage() {
           <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
 
         {selectedVehicule && (
@@ -863,7 +943,7 @@ export default function VehiculesPage() {
             <span className="vehicules-actions-sep" aria-hidden="true" />
             {nextEtats.length === 0 ? (
               <span className="vehicules-etat-locked">
-                {etatVehiculeLabel(selectedVehicule.etat)} — état terminal, aucune action.
+                {t(etatVehiculeLabel(selectedVehicule.etat))} {t("— état terminal, aucune action.")}
               </span>
             ) : (
               nextEtats.map((target) => {
@@ -874,7 +954,7 @@ export default function VehiculesPage() {
                     type="button"
                     className={`vehicules-action-btn etat-quick color-${etatVehiculeColor(target)} ${isUpdatingEtat ? 'disabled' : ''}`}
                     disabled={isUpdatingEtat}
-                    title={`Passer à : ${etatVehiculeLabel(target)}`}
+                    title={t('Passer à : {etat}', { etat: t(etatVehiculeLabel(target)) })}
                     onClick={() => handleQuickEtat(target)}
                   >
                     {isUpdatingEtat ? (
@@ -882,7 +962,7 @@ export default function VehiculesPage() {
                     ) : (
                       <Icon size={16} strokeWidth={2.5} />
                     )}
-                    <span>{etatVehiculeLabel(target)}</span>
+                    <span>{t(etatVehiculeLabel(target))}</span>
                   </button>
                 );
               })
@@ -893,14 +973,14 @@ export default function VehiculesPage() {
 
       <div className="vehicules-filter-panel">
         <div className="vehicules-filter-group">
-          <span className="vehicules-filter-label">Recherche</span>
+          <span className="vehicules-filter-label">{t("Recherche")}</span>
           <div className="vehicules-filter-input-wrap">
             <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z" />
             </svg>
             <input
               type="text"
-              placeholder="Rechercher par matricule, marque, châssis..."
+              placeholder={t("Rechercher par matricule, marque, châssis...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => {
@@ -911,12 +991,12 @@ export default function VehiculesPage() {
         </div>
 
         <div className="vehicules-filter-group">
-          <span className="vehicules-filter-label">État</span>
+          <span className="vehicules-filter-label">{t("État")}</span>
           <div className="vehicules-filter-input-wrap">
             <select value={etatFilter} onChange={(e) => setEtatFilter(e.target.value)}>
-              <option value="all">Tous</option>
+              <option value="all">{t("Tous")}</option>
               {Object.entries(ETAT_VEHICULE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>{t(v)}</option>
               ))}
             </select>
           </div>
@@ -926,39 +1006,39 @@ export default function VehiculesPage() {
           type="button"
           className="vehicules-search-btn"
           onClick={handleSearch}
-          title="Appliquer les filtres"
+          title={t("Appliquer les filtres")}
         >
           <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          Chercher
+          {t("Chercher")}
         </button>
 
         <button className="vehicules-filter-reset" onClick={handleResetFilters}>
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <button
           type="button"
           className="vp-settings-btn"
           onClick={() => setSettingsOpen(true)}
-          title="Paramétrer les seuils de maintenance préventive"
+          title={t("Paramétrer les seuils de maintenance préventive")}
         >
-          <Settings size={16} /> Paramètres maintenance
+          <Settings size={16} /> {t("Paramètres maintenance")}
         </button>
 
         <div className="vehicules-export-stack">
-          <button className="vehicules-export-btn excel" title="Exporter en Excel (CSV)" onClick={handleExportExcel}>
+          <button className="vehicules-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
           </button>
-          <button className="vehicules-export-btn print" title="Imprimer" onClick={handlePrint}>
+          <button className="vehicules-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zM9 9V5a2 2 0 012-2h2a2 2 0 012 2v4M7 13h10" />
             </svg>
           </button>
-          <button className="vehicules-export-btn stats" title="Statistiques" onClick={handleStats}>
+          <button className="vehicules-export-btn stats" title={t("Statistiques")} onClick={handleStats}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
             </svg>
@@ -975,7 +1055,7 @@ export default function VehiculesPage() {
               {visibleColumns.map((c) => {
                 const def = TABLE_COLUMNS_DEF[c.key];
                 if (!def) return null;
-                return <th key={c.key}>{def.label}</th>;
+                return <th key={c.key}>{t(def.label)}</th>;
               })}
             </tr>
           </thead>
@@ -983,15 +1063,15 @@ export default function VehiculesPage() {
             {loading ? (
               <tr>
                 <td colSpan={visibleColumns.length || 1} className="vehicules-table-empty">
-                  Chargement...
+                  {t("Chargement...")}
                 </td>
               </tr>
             ) : paginatedVehicules.length === 0 ? (
               <tr>
                 <td colSpan={visibleColumns.length || 1} className="vehicules-table-empty">
                   {vehicules.length === 0
-                    ? "Aucun véhicule pour l'instant. Ajoute le premier avec le bouton ci-dessus."
-                    : "Aucun véhicule ne correspond à ces filtres."}
+                    ? t("Aucun véhicule pour l'instant. Ajoute le premier avec le bouton ci-dessus.")
+                    : t("Aucun véhicule ne correspond à ces filtres.")}
                 </td>
               </tr>
             ) : (
@@ -1015,16 +1095,14 @@ export default function VehiculesPage() {
 
         <div className="table-footer-pagination">
           <div className="pagination-left">
-            {filteredVehicules.length} véhicule(s)
-            {filteredVehicules.length > 0 ? (
-              <>
-                {' '}— {(currentPageSafe - 1) * PAGE_SIZE + 1}–
-                {Math.min(currentPageSafe * PAGE_SIZE, filteredVehicules.length)}{' '}
-                affiché(s)
-              </>
-            ) : (
-              <> — Page 1 / 1</>
-            )}
+            {tp('véhicule', filteredVehicules.length)}
+            {' — '}
+            {filteredVehicules.length > 0
+              ? t('{de}–{a} affichés', {
+                  de: (currentPageSafe - 1) * PAGE_SIZE + 1,
+                  a: Math.min(currentPageSafe * PAGE_SIZE, filteredVehicules.length),
+                })
+              : t('Page {p} sur {total}', { p: 1, total: 1 })}
           </div>
 
           <div className="pagination-right">
@@ -1033,10 +1111,10 @@ export default function VehiculesPage() {
               className="pag-btn"
               disabled={currentPageSafe <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              title="Page précédente"
-              aria-label="Page précédente"
+              title={t("Page précédente")}
+              aria-label={t("Page précédente")}
             >
-              <ChevronLeft size={14} />
+              <ChevronLeft size={14} className="rtl-miroir" />
             </button>
 
             {getPageNumbers(currentPageSafe, totalPages).map((p, i) =>
@@ -1062,10 +1140,10 @@ export default function VehiculesPage() {
               className="pag-btn"
               disabled={currentPageSafe >= totalPages || totalPages <= 1}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              title="Page suivante"
-              aria-label="Page suivante"
+              title={t("Page suivante")}
+              aria-label={t("Page suivante")}
             >
-              <ChevronRight size={14} />
+              <ChevronRight size={14} className="rtl-miroir" />
             </button>
           </div>
         </div>
@@ -1084,9 +1162,9 @@ export default function VehiculesPage() {
               type="button"
               className="mtp-panel-overlay__close"
               onClick={() => setSettingsOpen(false)}
-              aria-label="Fermer"
+              aria-label={t("Fermer")}
             >
-              ×
+              {t("×")}
             </button>
             <VehiculeMaintenanceTypesSettings />
           </div>

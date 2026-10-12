@@ -8,6 +8,7 @@ import './ReglageLangue.css';
 const APERCUS = {
   fr: { titre: 'Français', exemple: 'Bon de maintenance · Faire le diagnostic', sens: 'Lecture de gauche à droite' },
   ar: { titre: 'العربية', exemple: 'أمر الصيانة · إجراء التشخيص', sens: 'القراءة من اليمين إلى اليسار' },
+  en: { titre: 'English', exemple: 'Work order · Do the diagnosis', sens: 'Reads left to right' },
 };
 
 /**

@@ -24,9 +24,11 @@ import {
   HelpCircle,
   Ban,
   Package,
+  Printer,
 } from 'lucide-react';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import { t, tp, locale } from '../../../i18n';
+import { imprimerFiche } from '../../../utils/imprimerListe';
 import './ReclamationDetails.css';
 
 // États de la réclamation (identiques à Reclamations.jsx)
@@ -286,6 +288,43 @@ export default function ReclamationDetails({
 
   const enAttente = reclamation.etat === ETAT.OUVERTE || reclamation.etat === ETAT.ATTENTE;
 
+  // Impression de la fiche de la réclamation (A4 portrait)
+  const imprimerReclamation = () => {
+    imprimerFiche({
+      titre,
+      sousTitre: t('Réclamation'),
+      reference: reclamation.num || t('Réclamation #{id}', { id: reclamation.id }),
+      statut: t(etatClair.texte),
+      sections: [
+        {
+          titre: t('Informations générales'),
+          champs: [
+            { label: t('Date'), valeur: formatDate(reclamation.date) },
+            { label: t('Service'), valeur: service },
+            { label: t('Équipement'), valeur: nomEquipement },
+            { label: t('Personne affectée'), valeur: personnel || t('Personne pour l’instant') },
+            { label: t('Criticité'), valeur: t(criticite?.texte || 'Non définie') },
+            { label: t('Urgence'), valeur: t(urgence?.texte || 'Non définie') },
+          ],
+        },
+        { titre: t('Ce qui a été signalé'), texte: reclamation.description || t('Aucune description n’a été saisie.') },
+        reclamation.etat === ETAT.REJETEE && { titre: t('Motif du rejet'), texte: reclamation.motifRejet },
+        {
+          titre: t('Bons de maintenance liés'),
+          colonnes: [t('Numéro'), t('Titre'), t('État'), t('Date')],
+          lignes: bons.map((b) => [
+            b.num || `#${b.id}`,
+            b.titre,
+            ETAT_BON_EN_CLAIR[b.etat] ? t(ETAT_BON_EN_CLAIR[b.etat].texte) : '',
+            b.date ? formatDate(b.date) : '',
+          ]),
+          vide: t('Aucun bon de maintenance n’est lié à cette réclamation.'),
+        },
+      ],
+      signatures: [t('Déclarant'), t('Responsable maintenance')],
+    });
+  };
+
   return (
     <div className="rcx-page">
       {/* ===== Barre du haut ===== */}
@@ -305,6 +344,9 @@ export default function ReclamationDetails({
           )}
           <button type="button" className="rcx-btn rcx-btn--clair" onClick={onModifier}>
             <Edit size={17} /> {t("Modifier")}
+          </button>
+          <button type="button" className="rcx-btn rcx-btn--clair" onClick={imprimerReclamation}>
+            <Printer size={17} /> {t("Imprimer la fiche")}
           </button>
         </div>
       </div>

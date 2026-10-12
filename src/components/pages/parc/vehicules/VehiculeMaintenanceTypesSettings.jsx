@@ -22,6 +22,7 @@ import {
   Pause,
 } from 'lucide-react';
 import vehiculeMaintenanceService from '../../../../services/vehiculeMaintenanceService';
+import { t, tp, locale } from '../../../../i18n';
 import './VehiculeMaintenanceTypesSettings.css';
 
 const emptyForm = {
@@ -34,7 +35,8 @@ const emptyForm = {
   actif: true,
 };
 
-const nf = new Intl.NumberFormat('fr-FR');
+// Formatage dans la langue courante (l'app est remontée à chaque changement de langue)
+const nf = { format: (v) => new Intl.NumberFormat(locale()).format(v) };
 
 const URGENCE = {
   1: { label: 'Faible',   tone: 'green'  },
@@ -76,7 +78,7 @@ export default function VehiculeMaintenanceTypesSettings() {
       const data = await vehiculeMaintenanceService.getTypes();
       setTypes(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Impossible de charger les seuils.');
+      setError(err?.response?.data?.message || t('Impossible de charger les seuils.'));
     } finally {
       setLoading(false);
     }
@@ -93,16 +95,16 @@ export default function VehiculeMaintenanceTypesSettings() {
     setFormOpen(true);
   };
 
-  const openEdit = (t) => {
-    setEditingId(t.id);
+  const openEdit = (typeMaint) => {
+    setEditingId(typeMaint.id);
     setForm({
-      code: t.code ?? '',
-      libelle: t.libelle ?? '',
-      intervalleKm: t.intervalleKm ?? '',
-      seuilAlerteKm: t.seuilAlerteKm ?? '',
-      urgenceBon: t.urgenceBon ?? '',
-      baseRecalcul: t.baseRecalcul ?? 0,
-      actif: t.actif ?? true,
+      code: typeMaint.code ?? '',
+      libelle: typeMaint.libelle ?? '',
+      intervalleKm: typeMaint.intervalleKm ?? '',
+      seuilAlerteKm: typeMaint.seuilAlerteKm ?? '',
+      urgenceBon: typeMaint.urgenceBon ?? '',
+      baseRecalcul: typeMaint.baseRecalcul ?? 0,
+      actif: typeMaint.actif ?? true,
     });
     setFormError(null);
     setFormOpen(true);
@@ -126,12 +128,12 @@ export default function VehiculeMaintenanceTypesSettings() {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    const t = setTimeout(() => codeInputRef.current?.focus(), 60);
+    const timer = setTimeout(() => codeInputRef.current?.focus(), 60);
 
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
-      clearTimeout(t);
+      clearTimeout(timer);
     };
   }, [formOpen, closeForm]);
 
@@ -177,7 +179,7 @@ export default function VehiculeMaintenanceTypesSettings() {
       setEditingId(null);
       await load();
     } catch (err) {
-      setFormError(err?.response?.data?.message || "Échec de l'enregistrement.");
+      setFormError(err?.response?.data?.message || t("Échec de l'enregistrement."));
     } finally {
       setSaving(false);
     }
@@ -188,50 +190,50 @@ export default function VehiculeMaintenanceTypesSettings() {
     if (!saving) handleSave();
   };
 
-  const doToggle = async (t) => {
-    setPendingId(t.id);
+  const doToggle = async (typeMaint) => {
+    setPendingId(typeMaint.id);
     setError(null);
     try {
-      if (t.actif) {
-        await vehiculeMaintenanceService.removeType(t.id);
+      if (typeMaint.actif) {
+        await vehiculeMaintenanceService.removeType(typeMaint.id);
       } else {
-        await vehiculeMaintenanceService.updateType(t.id, { ...t, actif: true });
+        await vehiculeMaintenanceService.updateType(typeMaint.id, { ...typeMaint, actif: true });
       }
       await load();
     } catch (err) {
-      setError(err?.response?.data?.message || 'Échec de la mise à jour.');
+      setError(err?.response?.data?.message || t('Échec de la mise à jour.'));
     } finally {
       setPendingId(null);
       setConfirmId(null);
     }
   };
 
-  const handleToggleActif = (t) => {
-    if (t.actif) {
-      setConfirmId(t.id);
+  const handleToggleActif = (typeMaint) => {
+    if (typeMaint.actif) {
+      setConfirmId(typeMaint.id);
     } else {
-      doToggle(t);
+      doToggle(typeMaint);
     }
   };
 
   const stats = useMemo(() => {
     const total = types.length;
-    const actifs = types.filter((t) => t.actif).length;
+    const actifs = types.filter((typeMaint) => typeMaint.actif).length;
     const avgIntervalle = total
-      ? Math.round(types.reduce((s, t) => s + (Number(t.intervalleKm) || 0), 0) / total)
+      ? Math.round(types.reduce((s, typeMaint) => s + (Number(typeMaint.intervalleKm) || 0), 0) / total)
       : 0;
     return { total, actifs, inactifs: total - actifs, avgIntervalle };
   }, [types]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = types.filter((t) => {
-      if (statusFilter === 'active' && !t.actif) return false;
-      if (statusFilter === 'inactive' && t.actif) return false;
+    const list = types.filter((typeMaint) => {
+      if (statusFilter === 'active' && !typeMaint.actif) return false;
+      if (statusFilter === 'inactive' && typeMaint.actif) return false;
       if (!q) return true;
       return (
-        (t.code || '').toLowerCase().includes(q) ||
-        (t.libelle || '').toLowerCase().includes(q)
+        (typeMaint.code || '').toLowerCase().includes(q) ||
+        (typeMaint.libelle || '').toLowerCase().includes(q)
       );
     });
 
@@ -276,14 +278,14 @@ export default function VehiculeMaintenanceTypesSettings() {
       <header className="mtp-panel__head">
         <div>
           <h3 id="mtp-panel-title" className="mtp-panel__title">
-            Paramètres de maintenance préventive
+            {t("Paramètres de maintenance préventive")}
           </h3>
           <p className="mtp-panel__lead">
-            Vos propres seuils kilométriques — aucune valeur imposée par défaut.
+            {t("Vos propres seuils kilométriques — aucune valeur imposée par défaut.")}
           </p>
         </div>
         <button type="button" className="mtp-panel__add" onClick={openCreate}>
-          <Plus size={16} /> Nouveau type
+          <Plus size={16} /> {t("Nouveau type")}
         </button>
       </header>
 
@@ -294,7 +296,7 @@ export default function VehiculeMaintenanceTypesSettings() {
           </span>
           <div className="mtp-kpi__body">
             <span className="mtp-kpi__value">{stats.total}</span>
-            <span className="mtp-kpi__label">Types</span>
+            <span className="mtp-kpi__label">{t("Types")}</span>
           </div>
         </div>
         <div className="mtp-kpi" role="listitem">
@@ -303,7 +305,7 @@ export default function VehiculeMaintenanceTypesSettings() {
           </span>
           <div className="mtp-kpi__body">
             <span className="mtp-kpi__value">{stats.actifs}</span>
-            <span className="mtp-kpi__label">Actifs</span>
+            <span className="mtp-kpi__label">{t("Actifs")}</span>
           </div>
         </div>
         <div className="mtp-kpi" role="listitem">
@@ -312,7 +314,7 @@ export default function VehiculeMaintenanceTypesSettings() {
           </span>
           <div className="mtp-kpi__body">
             <span className="mtp-kpi__value">{stats.inactifs}</span>
-            <span className="mtp-kpi__label">Désactivés</span>
+            <span className="mtp-kpi__label">{t("Désactivés")}</span>
           </div>
         </div>
         <div className="mtp-kpi" role="listitem">
@@ -323,7 +325,7 @@ export default function VehiculeMaintenanceTypesSettings() {
             <span className="mtp-kpi__value">
               {stats.avgIntervalle ? nf.format(stats.avgIntervalle) : '—'}
             </span>
-            <span className="mtp-kpi__label">km moyen</span>
+            <span className="mtp-kpi__label">{t("km moyen")}</span>
           </div>
         </div>
       </div>
@@ -334,28 +336,28 @@ export default function VehiculeMaintenanceTypesSettings() {
           <input
             type="search"
             className="mtp-search__input"
-            placeholder="Rechercher un code ou un libellé…"
+            placeholder={t("Rechercher un code ou un libellé…")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            aria-label="Rechercher"
+            aria-label={t("Rechercher")}
           />
           {query && (
             <button
               type="button"
               className="mtp-search__clear"
               onClick={() => setQuery('')}
-              aria-label="Effacer la recherche"
+              aria-label={t("Effacer la recherche")}
             >
               <X size={13} />
             </button>
           )}
         </div>
 
-        <div className="mtp-chips" role="group" aria-label="Filtrer par statut">
+        <div className="mtp-chips" role="group" aria-label={t("Filtrer par statut")}>
           {[
-            { v: 'all',      label: 'Tous',       count: stats.total },
-            { v: 'active',   label: 'Actifs',     count: stats.actifs },
-            { v: 'inactive', label: 'Désactivés', count: stats.inactifs },
+            { v: 'all',      label: t("Tous"),       count: stats.total },
+            { v: 'active',   label: t("Actifs"),     count: stats.actifs },
+            { v: 'inactive', label: t("Désactivés"), count: stats.inactifs },
           ].map((opt) => (
             <button
               key={opt.v}
@@ -364,7 +366,7 @@ export default function VehiculeMaintenanceTypesSettings() {
               onClick={() => setStatusFilter(opt.v)}
               aria-pressed={statusFilter === opt.v}
             >
-              {opt.label}
+              {t(opt.label)}
               <span className="mtp-chip__count">{opt.count}</span>
             </button>
           ))}
@@ -376,10 +378,10 @@ export default function VehiculeMaintenanceTypesSettings() {
             className="mtp-sort__select"
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            aria-label="Trier"
+            aria-label={t("Trier")}
           >
             {SORTS.map((s) => (
-              <option key={s.value} value={s.value}>{s.label}</option>
+              <option key={s.value} value={s.value}>{t(s.label)}</option>
             ))}
           </select>
         </label>
@@ -395,24 +397,23 @@ export default function VehiculeMaintenanceTypesSettings() {
         {loading && (
           <div className="mtp-cards__state mtp-cards__state--loading">
             <Loader2 size={22} className="mtp-spin" />
-            <span>Chargement des seuils…</span>
+            <span>{t("Chargement des seuils…")}</span>
           </div>
         )}
 
         {!loading && types.length === 0 && (
           <div className="mtp-cards__state mtp-cards__state--empty">
             <Inbox size={32} strokeWidth={1.5} />
-            <p className="mtp-cards__state-title">Aucun type de maintenance</p>
+            <p className="mtp-cards__state-title">{t("Aucun type de maintenance")}</p>
             <p className="mtp-cards__state-text">
-              Cliquez sur « Nouveau type » pour créer votre premier seuil
-              (ex. Vidange tous les 10 000 km).
+              {t("Cliquez sur « Nouveau type » pour créer votre premier seuil (ex. Vidange tous les 10 000 km).")}
             </p>
             <button
               type="button"
               className="mtp-btn mtp-btn--primary mtp-btn--sm"
               onClick={openCreate}
             >
-              <Plus size={14} /> Créer le premier type
+              <Plus size={14} /> {t("Créer le premier type")}
             </button>
           </div>
         )}
@@ -420,9 +421,9 @@ export default function VehiculeMaintenanceTypesSettings() {
         {!loading && types.length > 0 && filtered.length === 0 && (
           <div className="mtp-cards__state mtp-cards__state--empty">
             <Search size={28} strokeWidth={1.5} />
-            <p className="mtp-cards__state-title">Aucun résultat</p>
+            <p className="mtp-cards__state-title">{t("Aucun résultat")}</p>
             <p className="mtp-cards__state-text">
-              Aucun type ne correspond aux critères sélectionnés.
+              {t("Aucun type ne correspond aux critères sélectionnés.")}
             </p>
             {hasActiveFilters && (
               <button
@@ -430,54 +431,54 @@ export default function VehiculeMaintenanceTypesSettings() {
                 className="mtp-btn mtp-btn--ghost mtp-btn--sm"
                 onClick={resetFilters}
               >
-                <RotateCcw size={13} /> Réinitialiser les filtres
+                <RotateCcw size={13} /> {t("Réinitialiser les filtres")}
               </button>
             )}
           </div>
         )}
 
         {!loading &&
-          filtered.map((t) => {
-            const isPending = pendingId === t.id;
-            const isConfirm = confirmId === t.id;
+          filtered.map((typeMaint) => {
+            const isPending = pendingId === typeMaint.id;
+            const isConfirm = confirmId === typeMaint.id;
 
-            const interval = Number(t.intervalleKm) || 0;
-            const margin = Number(t.seuilAlerteKm) || 0;
+            const interval = Number(typeMaint.intervalleKm) || 0;
+            const margin = Number(typeMaint.seuilAlerteKm) || 0;
             const alertAt = Math.max(0, interval - margin);
             const alertPct = interval > 0 ? Math.min(100, (margin / interval) * 100) : 0;
-            const urgency = t.urgenceBon ? URGENCE[t.urgenceBon] : null;
+            const urgency = typeMaint.urgenceBon ? URGENCE[typeMaint.urgenceBon] : null;
 
             return (
               <article
-                key={t.id}
+                key={typeMaint.id}
                 role="listitem"
                 className={[
                   'mtp-card',
-                  !t.actif && 'mtp-card--inactive',
+                  !typeMaint.actif && 'mtp-card--inactive',
                   isPending && 'mtp-card--pending',
                 ]
                   .filter(Boolean)
                   .join(' ')}
               >
                 <header className="mtp-card__head">
-                  <code className="mtp-card__code">{t.code}</code>
+                  <code className="mtp-card__code">{typeMaint.code}</code>
                   <span
-                    className={`mtp-status ${t.actif ? 'mtp-status--on' : 'mtp-status--off'}`}
+                    className={`mtp-status ${typeMaint.actif ? 'mtp-status--on' : 'mtp-status--off'}`}
                   >
-                    {t.actif ? 'Actif' : 'Désactivé'}
+                    {typeMaint.actif ? t("Actif") : t("Désactivé")}
                   </span>
                 </header>
 
-                <h4 className="mtp-card__title">{t.libelle}</h4>
+                <h4 className="mtp-card__title">{typeMaint.libelle}</h4>
 
                 <div className="mtp-card__gauge">
                   <div className="mtp-card__gauge-head">
                     <span className="mtp-card__gauge-value">
-                      {nf.format(interval)} <em>km</em>
+                      {nf.format(interval)} <em>{t("km")}</em>
                     </span>
                     {margin > 0 && (
                       <span className="mtp-card__gauge-hint">
-                        alerte dès {nf.format(alertAt)} km
+                        {t("alerte dès")} {nf.format(alertAt)} {t("km")}
                       </span>
                     )}
                   </div>
@@ -486,8 +487,8 @@ export default function VehiculeMaintenanceTypesSettings() {
                     role="img"
                     aria-label={
                       margin > 0
-                        ? `Échéance à ${nf.format(interval)} km, alerte dès ${nf.format(alertAt)} km`
-                        : `Échéance à ${nf.format(interval)} km, sans pré-alerte`
+                        ? t('Échéance à {n} km, alerte dès {a} km', { n: nf.format(interval), a: nf.format(alertAt) })
+                        : t('Échéance à {n} km, sans pré-alerte', { n: nf.format(interval) })
                     }
                   >
                     <span className="mtp-card__gauge-ok" />
@@ -503,10 +504,10 @@ export default function VehiculeMaintenanceTypesSettings() {
                 <dl className="mtp-card__metrics">
                   <div className="mtp-card__metric">
                     <dt>
-                      <BellRing size={12} /> Pré-alerte
+                      <BellRing size={12} /> {t("Pré-alerte")}
                     </dt>
                     <dd>
-                      {t.seuilAlerteKm != null
+                      {typeMaint.seuilAlerteKm != null
                         ? `${nf.format(margin)} km`
                         : <span className="mtp-card__muted">—</span>}
                     </dd>
@@ -514,12 +515,12 @@ export default function VehiculeMaintenanceTypesSettings() {
 
                   <div className="mtp-card__metric">
                     <dt>
-                      <Flag size={12} /> Urgence
+                      <Flag size={12} /> {t("Urgence")}
                     </dt>
                     <dd>
                       {urgency ? (
-                        <span className={`mtp-urgency mtp-urgency--${t.urgenceBon}`}>
-                          {t.urgenceBon} · {urgency.label}
+                        <span className={`mtp-urgency mtp-urgency--${typeMaint.urgenceBon}`}>
+                          {typeMaint.urgenceBon} · {t(urgency.label)}
                         </span>
                       ) : (
                         <span className="mtp-card__muted">—</span>
@@ -529,11 +530,11 @@ export default function VehiculeMaintenanceTypesSettings() {
 
                   <div className="mtp-card__metric">
                     <dt>
-                      <Calculator size={12} /> Recalcul
+                      <Calculator size={12} /> {t("Recalcul")}
                     </dt>
                     <dd>
                       <span className="mtp-card__tag">
-                        {t.baseRecalcul === 1 ? 'Seuil théorique' : 'Km réel'}
+                        {typeMaint.baseRecalcul === 1 ? t("Seuil théorique") : t("Km réel")}
                       </span>
                     </dd>
                   </div>
@@ -543,20 +544,20 @@ export default function VehiculeMaintenanceTypesSettings() {
                   <button
                     type="button"
                     className="mtp-card__btn mtp-card__btn--edit"
-                    onClick={() => openEdit(t)}
+                    onClick={() => openEdit(typeMaint)}
                     disabled={isPending || isConfirm}
                   >
-                    <Pencil size={14} /> Modifier
+                    <Pencil size={14} /> {t("Modifier")}
                   </button>
 
                   {isConfirm ? (
-                    <div className="mtp-confirm" role="group" aria-label="Confirmer la désactivation">
-                      <span className="mtp-confirm__label">Désactiver ?</span>
+                    <div className="mtp-confirm" role="group" aria-label={t("Confirmer la désactivation")}>
+                      <span className="mtp-confirm__label">{t("Désactiver ?")}</span>
                       <button
                         type="button"
                         className="mtp-confirm__btn mtp-confirm__btn--yes"
-                        onClick={() => doToggle(t)}
-                        aria-label="Confirmer la désactivation"
+                        onClick={() => doToggle(typeMaint)}
+                        aria-label={t("Confirmer la désactivation")}
                       >
                         <CheckCircle2 size={14} />
                       </button>
@@ -564,7 +565,7 @@ export default function VehiculeMaintenanceTypesSettings() {
                         type="button"
                         className="mtp-confirm__btn mtp-confirm__btn--no"
                         onClick={() => setConfirmId(null)}
-                        aria-label="Annuler"
+                        aria-label={t("Annuler")}
                       >
                         <X size={14} />
                       </button>
@@ -572,23 +573,23 @@ export default function VehiculeMaintenanceTypesSettings() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => handleToggleActif(t)}
+                      onClick={() => handleToggleActif(typeMaint)}
                       className={`mtp-card__btn ${
-                        t.actif ? 'mtp-card__btn--danger' : 'mtp-card__btn--restore'
+                        typeMaint.actif ? 'mtp-card__btn--danger' : 'mtp-card__btn--restore'
                       }`}
                       disabled={isPending}
                     >
                       {isPending ? (
                         <>
-                          <Loader2 size={14} className="mtp-spin" /> Traitement…
+                          <Loader2 size={14} className="mtp-spin" /> {t("Traitement…")}
                         </>
-                      ) : t.actif ? (
+                      ) : typeMaint.actif ? (
                         <>
-                          <Pause size={14} /> Désactiver
+                          <Pause size={14} /> {t("Désactiver")}
                         </>
                       ) : (
                         <>
-                          <RotateCcw size={14} /> Réactiver
+                          <RotateCcw size={14} /> {t("Réactiver")}
                         </>
                       )}
                     </button>
@@ -608,7 +609,7 @@ export default function VehiculeMaintenanceTypesSettings() {
           onClick={closeForm}
         >
           <div className="mtp-dialog" onClick={(e) => e.stopPropagation()}>
-            <aside className="mtp-dialog__aside" aria-label="Aperçu du seuil">
+            <aside className="mtp-dialog__aside" aria-label={t("Aperçu du seuil")}>
               <div className="mtp-dialog__aside-head">
                 <span className="mtp-dialog__icon" aria-hidden="true">
                   {editingId ? <Pencil size={16} strokeWidth={2.4} /> : <Plus size={16} strokeWidth={2.4} />}
@@ -619,7 +620,7 @@ export default function VehiculeMaintenanceTypesSettings() {
               </div>
 
               <p className="mtp-dialog__aside-title">
-                {form.libelle.trim() || 'Libellé du type'}
+                {form.libelle.trim() || t("Libellé du type")}
               </p>
 
               <div className="mtp-gauge">
@@ -627,7 +628,7 @@ export default function VehiculeMaintenanceTypesSettings() {
                   <>
                     <p className="mtp-gauge__value">
                       {nf.format(preview.interval)}
-                      <span className="mtp-gauge__unit">km</span>
+                      <span className="mtp-gauge__unit">{t("km")}</span>
                     </p>
 
                     <div
@@ -635,8 +636,8 @@ export default function VehiculeMaintenanceTypesSettings() {
                       role="img"
                       aria-label={
                         preview.margin > 0
-                          ? `Échéance à ${nf.format(preview.interval)} km, alerte dès ${nf.format(preview.alertAt)} km`
-                          : `Échéance à ${nf.format(preview.interval)} km, sans pré-alerte`
+                          ? t('Échéance à {n} km, alerte dès {a} km', { n: nf.format(preview.interval), a: nf.format(preview.alertAt) })
+                          : t('Échéance à {n} km, sans pré-alerte', { n: nf.format(preview.interval) })
                       }
                     >
                       <span className="mtp-gauge__ok" />
@@ -650,52 +651,52 @@ export default function VehiculeMaintenanceTypesSettings() {
 
                     <ul className="mtp-gauge__legend">
                       <li className="mtp-gauge__legend-item mtp-gauge__legend-item--ok">
-                        Circulation normale
+                        {t("Circulation normale")}
                         <span className="mtp-gauge__legend-range">
-                          0 – {nf.format(preview.alertAt)} km
+                          0 – {nf.format(preview.alertAt)} {t("km")}
                         </span>
                       </li>
                       {preview.margin > 0 && (
                         <li className="mtp-gauge__legend-item mtp-gauge__legend-item--alert">
-                          Zone d'alerte
+                          {t("Zone d'alerte")}
                           <span className="mtp-gauge__legend-range">
-                            {nf.format(preview.alertAt)} – {nf.format(preview.interval)} km
+                            {nf.format(preview.alertAt)} – {nf.format(preview.interval)} {t("km")}
                           </span>
                         </li>
                       )}
                       <li className="mtp-gauge__legend-item mtp-gauge__legend-item--due">
-                        Échéance
+                        {t("Échéance")}
                         <span className="mtp-gauge__legend-range">
-                          {nf.format(preview.interval)} km
+                          {nf.format(preview.interval)} {t("km")}
                         </span>
                       </li>
                     </ul>
                   </>
                 ) : (
                   <p className="mtp-gauge__placeholder">
-                    Saisissez un intervalle pour visualiser le cycle de maintenance.
+                    {t("Saisissez un intervalle pour visualiser le cycle de maintenance.")}
                   </p>
                 )}
               </div>
 
               <dl className="mtp-recap">
                 <div className="mtp-recap__row">
-                  <dt>Urgence du bon</dt>
+                  <dt>{t("Urgence du bon")}</dt>
                   <dd>
                     {form.urgenceBon !== '' ? (
                       <span className={`mtp-urgency mtp-urgency--${form.urgenceBon}`}>
                         {form.urgenceBon}
                       </span>
-                    ) : ('Non définie')}
+                    ) : (t("Non définie"))}
                   </dd>
                 </div>
                 <div className="mtp-recap__row">
-                  <dt>Recalcul</dt>
-                  <dd>{Number(form.baseRecalcul) === 1 ? 'Seuil théorique' : 'Km réel'}</dd>
+                  <dt>{t("Recalcul")}</dt>
+                  <dd>{Number(form.baseRecalcul) === 1 ? t("Seuil théorique") : t("Km réel")}</dd>
                 </div>
                 <div className="mtp-recap__row">
-                  <dt>Statut</dt>
-                  <dd>{form.actif ? 'Actif' : 'Désactivé'}</dd>
+                  <dt>{t("Statut")}</dt>
+                  <dd>{form.actif ? t("Actif") : t("Désactivé")}</dd>
                 </div>
               </dl>
             </aside>
@@ -704,19 +705,19 @@ export default function VehiculeMaintenanceTypesSettings() {
               <header className="mtp-dialog__header">
                 <div>
                   <h4 id="mtp-dialog-title" className="mtp-dialog__heading">
-                    {editingId ? 'Modifier le type de maintenance' : 'Nouveau type de maintenance'}
+                    {editingId ? t("Modifier le type de maintenance") : t("Nouveau type de maintenance")}
                   </h4>
                   <p className="mtp-dialog__subtitle">
                     {editingId
-                      ? 'Ajustez les paramètres du seuil de déclenchement'
-                      : 'Définissez un nouveau seuil kilométrique préventif'}
+                      ? t("Ajustez les paramètres du seuil de déclenchement")
+                      : t("Définissez un nouveau seuil kilométrique préventif")}
                   </p>
                 </div>
                 <button
                   type="button"
                   className="mtp-dialog__close"
                   onClick={closeForm}
-                  aria-label="Fermer"
+                  aria-label={t("Fermer")}
                   disabled={saving}
                 >
                   <X size={16} />
@@ -727,13 +728,13 @@ export default function VehiculeMaintenanceTypesSettings() {
                 <div className="mtp-dialog__body">
                   <section className="mtp-group" aria-labelledby="mtp-group-id">
                     <div>
-                      <h5 id="mtp-group-id" className="mtp-group__title">Identification</h5>
-                      <p className="mtp-group__desc">Code unique et libellé utilisateur</p>
+                      <h5 id="mtp-group-id" className="mtp-group__title">{t("Identification")}</h5>
+                      <p className="mtp-group__desc">{t("Code unique et libellé utilisateur")}</p>
                     </div>
 
                     <div className="mtp-grid">
                       <label className="mtp-field">
-                        <span className="mtp-field__label">Code technique *</span>
+                        <span className="mtp-field__label">{t("Code technique *")}</span>
                         <input
                           ref={codeInputRef}
                           className="mtp-field__input"
@@ -746,38 +747,38 @@ export default function VehiculeMaintenanceTypesSettings() {
                         />
                         <small className="mtp-field__hint">
                           {editingId
-                            ? "Le code n'est pas modifiable après création."
-                            : 'Ex. VIDANGE, PLAQUETTES, FILTRE_AIR'}
+                            ? t("Le code n'est pas modifiable après création.")
+                            : t("Ex. VIDANGE, PLAQUETTES, FILTRE_AIR")}
                         </small>
                       </label>
 
                       <label className="mtp-field">
-                        <span className="mtp-field__label">Libellé *</span>
+                        <span className="mtp-field__label">{t("Libellé *")}</span>
                         <input
                           className="mtp-field__input"
                           name="libelle"
                           value={form.libelle}
                           onChange={handleChange}
-                          placeholder="Vidange huile moteur"
+                          placeholder={t("Vidange huile moteur")}
                           disabled={saving}
                           autoComplete="off"
                         />
-                        <small className="mtp-field__hint">Nom affiché aux utilisateurs</small>
+                        <small className="mtp-field__hint">{t("Nom affiché aux utilisateurs")}</small>
                       </label>
                     </div>
                   </section>
 
                   <section className="mtp-group" aria-labelledby="mtp-group-seuils">
                     <div>
-                      <h5 id="mtp-group-seuils" className="mtp-group__title">Seuils kilométriques</h5>
+                      <h5 id="mtp-group-seuils" className="mtp-group__title">{t("Seuils kilométriques")}</h5>
                       <p className="mtp-group__desc">
-                        Intervalle de déclenchement et marge de pré-alerte
+                        {t("Intervalle de déclenchement et marge de pré-alerte")}
                       </p>
                     </div>
 
                     <div className="mtp-grid">
                       <label className="mtp-field">
-                        <span className="mtp-field__label">Intervalle *</span>
+                        <span className="mtp-field__label">{t("Intervalle *")}</span>
                         <div className="mtp-field__affix">
                           <input
                             className="mtp-field__input mtp-field__input--suffixed"
@@ -789,13 +790,13 @@ export default function VehiculeMaintenanceTypesSettings() {
                             placeholder="10000"
                             disabled={saving}
                           />
-                          <span className="mtp-field__suffix">km</span>
+                          <span className="mtp-field__suffix">{t("km")}</span>
                         </div>
-                        <small className="mtp-field__hint">Distance entre deux interventions</small>
+                        <small className="mtp-field__hint">{t("Distance entre deux interventions")}</small>
                       </label>
 
                       <label className="mtp-field">
-                        <span className="mtp-field__label">Marge d'alerte</span>
+                        <span className="mtp-field__label">{t("Marge d'alerte")}</span>
                         <div className="mtp-field__affix">
                           <input
                             className="mtp-field__input mtp-field__input--suffixed"
@@ -807,10 +808,10 @@ export default function VehiculeMaintenanceTypesSettings() {
                             placeholder="500"
                             disabled={saving}
                           />
-                          <span className="mtp-field__suffix">km</span>
+                          <span className="mtp-field__suffix">{t("km")}</span>
                         </div>
                         <small className="mtp-field__hint">
-                          Prévient l'utilisateur avant l'échéance
+                          {t("Prévient l'utilisateur avant l'échéance")}
                         </small>
                       </label>
                     </div>
@@ -818,13 +819,13 @@ export default function VehiculeMaintenanceTypesSettings() {
 
                   <section className="mtp-group" aria-labelledby="mtp-group-avance">
                     <div>
-                      <h5 id="mtp-group-avance" className="mtp-group__title">Paramètres avancés</h5>
-                      <p className="mtp-group__desc">Bon de maintenance et cycle de recalcul</p>
+                      <h5 id="mtp-group-avance" className="mtp-group__title">{t("Paramètres avancés")}</h5>
+                      <p className="mtp-group__desc">{t("Bon de maintenance et cycle de recalcul")}</p>
                     </div>
 
                     <div className="mtp-grid">
                       <label className="mtp-field">
-                        <span className="mtp-field__label">Urgence du bon</span>
+                        <span className="mtp-field__label">{t("Urgence du bon")}</span>
                         <input
                           className="mtp-field__input"
                           type="number"
@@ -833,16 +834,16 @@ export default function VehiculeMaintenanceTypesSettings() {
                           name="urgenceBon"
                           value={form.urgenceBon}
                           onChange={handleChange}
-                          placeholder="1 à 4"
+                          placeholder={t("1 à 4")}
                           disabled={saving}
                         />
                         <small className="mtp-field__hint">
-                          Niveau 1 (faible) à 4 (critique)
+                          {t("Niveau 1 (faible) à 4 (critique)")}
                         </small>
                       </label>
 
                       <label className="mtp-field">
-                        <span className="mtp-field__label">Base de recalcul</span>
+                        <span className="mtp-field__label">{t("Base de recalcul")}</span>
                         <select
                           className="mtp-field__input mtp-field__input--select"
                           name="baseRecalcul"
@@ -850,11 +851,11 @@ export default function VehiculeMaintenanceTypesSettings() {
                           onChange={handleChange}
                           disabled={saving}
                         >
-                          <option value={0}>Kilométrage réel de l'intervention</option>
-                          <option value={1}>Seuil théorique</option>
+                          <option value={0}>{t("Kilométrage réel de l'intervention")}</option>
+                          <option value={1}>{t("Seuil théorique")}</option>
                         </select>
                         <small className="mtp-field__hint">
-                          Référence pour calculer le prochain seuil
+                          {t("Référence pour calculer le prochain seuil")}
                         </small>
                       </label>
                     </div>
@@ -871,9 +872,9 @@ export default function VehiculeMaintenanceTypesSettings() {
                       />
                       <span className="mtp-switch__knob" aria-hidden="true" />
                       <span className="mtp-switch__text">
-                        <span className="mtp-switch__title">Type actif</span>
+                        <span className="mtp-switch__title">{t("Type actif")}</span>
                         <small className="mtp-switch__desc">
-                          Contrôlé automatiquement à chaque mise à jour du kilométrage
+                          {t("Contrôlé automatiquement à chaque mise à jour du kilométrage")}
                         </small>
                       </span>
                     </label>
@@ -889,7 +890,7 @@ export default function VehiculeMaintenanceTypesSettings() {
 
                 <footer className="mtp-dialog__footer">
                   <span className="mtp-dialog__hint">
-                    <kbd className="mtp-kbd">Échap</kbd> pour annuler
+                    <kbd className="mtp-kbd">{t("Échap")}</kbd> {t("pour annuler")}
                   </span>
 
                   <div className="mtp-dialog__buttons">
@@ -899,15 +900,15 @@ export default function VehiculeMaintenanceTypesSettings() {
                       onClick={closeForm}
                       disabled={saving}
                     >
-                      Annuler
+                      {t("Annuler")}
                     </button>
                     <button type="submit" className="mtp-btn mtp-btn--primary" disabled={saving}>
                       {saving ? (
-                        <><Loader2 size={15} className="mtp-spin" /> Enregistrement…</>
+                        <><Loader2 size={15} className="mtp-spin" /> {t("Enregistrement…")}</>
                       ) : (
                         <>
                           <Save size={15} />
-                          {editingId ? 'Enregistrer les modifications' : 'Créer le type'}
+                          {editingId ? t("Enregistrer les modifications") : t("Créer le type")}
                         </>
                       )}
                     </button>

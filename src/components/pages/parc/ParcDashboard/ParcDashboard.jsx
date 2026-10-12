@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import parcDashboardService from '../../../../services/parcDashboardService';
+import { t, tp, locale } from '../../../../i18n';
 import './ParcDashboard.css';
 
 const ETAT_LABELS = {
@@ -29,19 +30,19 @@ const ETAT_ORDER = [0, 1, 2, 3, 4, 5, 6];
 
 function fmtNombre(n, decimals = 0) {
   if (n == null) return '—';
-  return Number(n).toLocaleString('fr-FR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+  return Number(n).toLocaleString(locale(), { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
 }
 
 function fmtPourcentage(n) {
   if (n == null) return '—';
-  return `${Number(n).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} %`;
+  return t('{n} %', { n: Number(n).toLocaleString(locale(), { maximumFractionDigits: 1 }) });
 }
 
 function fmtDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 const ICONS = {
@@ -69,7 +70,7 @@ export default function ParcDashboard() {
       setData(result);
     } catch (err) {
       console.error('Erreur chargement dashboard parc :', err);
-      setError("Impossible de charger le tableau de bord du parc. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger le tableau de bord du parc. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -82,7 +83,7 @@ export default function ParcDashboard() {
       <div className="parcdash-container">
         <div className="parcdash-loading">
           <div className="parcdash-spinner" />
-          <p>Chargement du tableau de bord...</p>
+          <p>{t("Chargement du tableau de bord...")}</p>
         </div>
       </div>
     );
@@ -99,12 +100,12 @@ export default function ParcDashboard() {
       <div className="parcdash-header">
         <div className="parcdash-header-icon-wrap">{ICONS.total}</div>
         <div className="parcdash-header-text">
-          <h1>Tableau de bord — Parc Auto</h1>
-          <p>Vue d'ensemble de la flotte : disponibilité, criticité, alertes documents, incidents</p>
+          <h1>{t("Tableau de bord — Parc Auto")}</h1>
+          <p>{t("Vue d'ensemble de la flotte : disponibilité, criticité, alertes documents, incidents")}</p>
         </div>
         <button className="parcdash-refresh-btn" onClick={load} disabled={loading}>
           {ICONS.refresh}
-          {loading ? 'Actualisation...' : 'Actualiser'}
+          {loading ? t("Actualisation...") : t("Actualiser")}
         </button>
       </div>
 
@@ -117,80 +118,80 @@ export default function ParcDashboard() {
         <div className="parcdash-stat-card parcdash-stat--featured">
           <div className="parcdash-stat-icon">{ICONS.total}</div>
           <div className="parcdash-stat-value">{fmtNombre(totalVehicules)}</div>
-          <div className="parcdash-stat-label">Total véhicules</div>
+          <div className="parcdash-stat-label">{t("Total véhicules")}</div>
         </div>
 
         <div className="parcdash-stat-card parcdash-stat--green">
           <div className="parcdash-stat-icon">{ICONS.dispo}</div>
           <div className="parcdash-stat-value">{fmtPourcentage(data?.tauxDisponibilite)}</div>
-          <div className="parcdash-stat-label">Taux de disponibilité</div>
+          <div className="parcdash-stat-label">{t("Taux de disponibilité")}</div>
         </div>
 
         <div className={`parcdash-stat-card ${data?.vehiculesCritiquesIndisponibles > 0 ? 'parcdash-stat--red' : 'parcdash-stat--neutral'}`}>
           <div className="parcdash-stat-icon">{ICONS.alerte}</div>
           <div className="parcdash-stat-value">{fmtNombre(data?.vehiculesCritiquesIndisponibles)}</div>
-          <div className="parcdash-stat-label">Véhicules C1 indisponibles</div>
+          <div className="parcdash-stat-label">{t("Véhicules C1 indisponibles")}</div>
         </div>
 
         <div className={`parcdash-stat-card ${data?.documentsExpires > 0 ? 'parcdash-stat--red' : 'parcdash-stat--neutral'}`}>
           <div className="parcdash-stat-icon">{ICONS.alerte}</div>
           <div className="parcdash-stat-value">{fmtNombre(data?.documentsExpires)}</div>
-          <div className="parcdash-stat-label">Documents expirés</div>
+          <div className="parcdash-stat-label">{t("Documents expirés")}</div>
         </div>
 
         <div className={`parcdash-stat-card ${data?.documentsExpirantSous30Jours > 0 ? 'parcdash-stat--amber' : 'parcdash-stat--neutral'}`}>
           <div className="parcdash-stat-icon">{ICONS.alerte}</div>
           <div className="parcdash-stat-value">{fmtNombre(data?.documentsExpirantSous30Jours)}</div>
-          <div className="parcdash-stat-label">Documents expirant sous 30j</div>
+          <div className="parcdash-stat-label">{t("Documents expirant sous 30j")}</div>
         </div>
 
         <div className="parcdash-stat-card parcdash-stat--neutral">
           <div className="parcdash-stat-icon">{ICONS.incident}</div>
           <div className="parcdash-stat-value">{fmtNombre(data?.incidentsOuverts)}</div>
-          <div className="parcdash-stat-label">Incidents ouverts</div>
+          <div className="parcdash-stat-label">{t("Incidents ouverts")}</div>
         </div>
 
         <div className="parcdash-stat-card parcdash-stat--neutral">
           <div className="parcdash-stat-icon">{ICONS.mission}</div>
           <div className="parcdash-stat-value">{fmtNombre(data?.missionsEnCours)}</div>
-          <div className="parcdash-stat-label">Missions en cours</div>
+          <div className="parcdash-stat-label">{t("Missions en cours")}</div>
         </div>
 
         <div className="parcdash-stat-card parcdash-stat--neutral">
           <div className="parcdash-stat-icon">{ICONS.reservation}</div>
           <div className="parcdash-stat-value">{fmtNombre(data?.reservationsEnAttente)}</div>
-          <div className="parcdash-stat-label">Réservations en attente</div>
+          <div className="parcdash-stat-label">{t("Réservations en attente")}</div>
         </div>
 
         <div className="parcdash-stat-card parcdash-stat--neutral">
           <div className="parcdash-stat-icon">{ICONS.carburant}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.carburantMontantMoisCourant, 2)} <span className="parcdash-stat-unit">DT</span></div>
-          <div className="parcdash-stat-label">Carburant — mois courant</div>
+          <div className="parcdash-stat-value">{fmtNombre(data?.carburantMontantMoisCourant, 2)} <span className="parcdash-stat-unit">{t("DT")}</span></div>
+          <div className="parcdash-stat-label">{t("Carburant — mois courant")}</div>
         </div>
 
         <div className="parcdash-stat-card parcdash-stat--neutral">
           <div className="parcdash-stat-icon">{ICONS.km}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.kilometrageMoyen)} <span className="parcdash-stat-unit">km</span></div>
-          <div className="parcdash-stat-label">Kilométrage moyen</div>
+          <div className="parcdash-stat-value">{fmtNombre(data?.kilometrageMoyen)} <span className="parcdash-stat-unit">{t("km")}</span></div>
+          <div className="parcdash-stat-label">{t("Kilométrage moyen")}</div>
         </div>
 
         <div className="parcdash-stat-card parcdash-stat--neutral">
           <div className="parcdash-stat-icon">{ICONS.km}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.kilometrageTotalCumule)} <span className="parcdash-stat-unit">km</span></div>
-          <div className="parcdash-stat-label">Kilométrage cumulé</div>
+          <div className="parcdash-stat-value">{fmtNombre(data?.kilometrageTotalCumule)} <span className="parcdash-stat-unit">{t("km")}</span></div>
+          <div className="parcdash-stat-label">{t("Kilométrage cumulé")}</div>
         </div>
 
         <div className={`parcdash-stat-card ${data?.coutIncidentsCumule > 0 ? 'parcdash-stat--amber' : 'parcdash-stat--neutral'}`}>
           <div className="parcdash-stat-icon">{ICONS.incident}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.coutIncidentsCumule, 2)} <span className="parcdash-stat-unit">DT</span></div>
-          <div className="parcdash-stat-label">Coût incidents cumulé</div>
+          <div className="parcdash-stat-value">{fmtNombre(data?.coutIncidentsCumule, 2)} <span className="parcdash-stat-unit">{t("DT")}</span></div>
+          <div className="parcdash-stat-label">{t("Coût incidents cumulé")}</div>
         </div>
       </div>
 
       {/* RÉPARTITIONS */}
       <div className="parcdash-panels-row">
         <div className="parcdash-panel">
-          <h3>Répartition par état</h3>
+          <h3>{t("Répartition par état")}</h3>
           <div className="parcdash-breakdown">
             {ETAT_ORDER.map((etat) => {
               const count = parEtat[etat] || 0;
@@ -198,7 +199,7 @@ export default function ParcDashboard() {
               return (
                 <div key={etat} className="parcdash-breakdown-row">
                   <span className={`parcdash-dot color-${ETAT_COLOR[etat]}`} />
-                  <span className="parcdash-breakdown-label">{ETAT_LABELS[etat]}</span>
+                  <span className="parcdash-breakdown-label">{t(ETAT_LABELS[etat])}</span>
                   <span className="parcdash-breakdown-count">{count}</span>
                   <div className="parcdash-breakdown-bar-bg">
                     <div className={`parcdash-breakdown-bar-fill color-${ETAT_COLOR[etat]}`} style={{ width: `${pct}%` }} />
@@ -210,7 +211,7 @@ export default function ParcDashboard() {
         </div>
 
         <div className="parcdash-panel">
-          <h3>Répartition par criticité</h3>
+          <h3>{t("Répartition par criticité")}</h3>
           <div className="parcdash-breakdown">
             {CRITICITE_ORDER.map((c) => {
               const count = parCriticite[c] || 0;
@@ -218,7 +219,7 @@ export default function ParcDashboard() {
               return (
                 <div key={c} className="parcdash-breakdown-row">
                   <span className={`parcdash-dot color-${CRITICITE_COLOR[c]}`} />
-                  <span className="parcdash-breakdown-label">{c} · {CRITICITE_LABELS[c]}</span>
+                  <span className="parcdash-breakdown-label">{c} · {t(CRITICITE_LABELS[c])}</span>
                   <span className="parcdash-breakdown-count">{count}</span>
                   <div className="parcdash-breakdown-bar-bg">
                     <div className={`parcdash-breakdown-bar-fill color-${CRITICITE_COLOR[c]}`} style={{ width: `${pct}%` }} />
@@ -232,18 +233,18 @@ export default function ParcDashboard() {
 
       {/* ALERTES DOCUMENTS */}
       <div className="parcdash-panel parcdash-panel--full">
-        <h3>Alertes documents obligatoires (expirés ou sous 30 jours)</h3>
+        <h3>{t("Alertes documents obligatoires (expirés ou sous 30 jours)")}</h3>
         {alertes.length === 0 ? (
-          <p className="parcdash-empty">Aucune alerte — tous les documents suivis sont à jour.</p>
+          <p className="parcdash-empty">{t("Aucune alerte — tous les documents suivis sont à jour.")}</p>
         ) : (
           <div className="parcdash-table-wrap">
             <table className="parcdash-table">
               <thead>
                 <tr>
-                  <th>Matricule</th>
-                  <th>Document</th>
-                  <th>Échéance</th>
-                  <th>Jours restants</th>
+                  <th>{t("Matricule")}</th>
+                  <th>{t("Document")}</th>
+                  <th>{t("Échéance")}</th>
+                  <th>{t("Jours restants")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -252,11 +253,11 @@ export default function ParcDashboard() {
                   return (
                     <tr key={`${a.vehiculeId}-${a.document}-${i}`} className={expire ? 'parcdash-row-expire' : ''}>
                       <td style={{ fontWeight: 600 }}>{a.matricule || `#${a.vehiculeId}`}</td>
-                      <td>{a.document}</td>
+                      <td>{t(a.document)}</td>
                       <td>{fmtDate(a.dateEcheance)}</td>
                       <td>
                         <span className={`parcdash-jours-badge ${expire ? 'expire' : a.joursRestants <= 7 ? 'urgent' : 'normal'}`}>
-                          {expire ? `Expiré depuis ${Math.abs(a.joursRestants)} j` : `${a.joursRestants} j`}
+                          {expire ? t('Expiré depuis {n} j', { n: Math.abs(a.joursRestants) }) : t('{n} j', { n: a.joursRestants })}
                         </span>
                       </td>
                     </tr>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
+import { t, tp, locale } from '../../../i18n';
 import './BonMaintenanceDashboard.css';
 
 const ETAT_LABELS = { 1: 'Nouveau', 2: 'Suspendu', 3: 'En cours', 4: 'Effectué', 10: 'Annulé' };
@@ -12,16 +13,20 @@ const MOIS_LABELS = {
 const STATS_STORAGE_KEY = 'bon-maintenance-dashboard.cards.order.v1';
 const CHARTS_STORAGE_KEY = 'bon-maintenance-dashboard.charts.order.v1';
 
+// Mois court : libellés maison en français, noms du calendrier local sinon (جانفي / Jan…)
 function formatMoisLabel(cle) {
-  const [, mm] = cle.split('-');
-  return MOIS_LABELS[mm] || cle;
+  const [aaaa, mm] = cle.split('-');
+  if (locale() === 'fr-FR') return MOIS_LABELS[mm] || cle;
+  const d = new Date(Number(aaaa), Number(mm) - 1, 1);
+  if (isNaN(d.getTime())) return cle;
+  return new Intl.DateTimeFormat(locale(), { month: 'short' }).format(d).replace('.', '');
 }
 
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 /* ─── Icônes SVG réutilisables ─── */
@@ -83,10 +88,11 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
   let displayValue = value ?? '—';
 
   if (value != null && def.unit) {
-    const num = Number(value);
-    displayValue = def.decimals != null
-      ? `${num.toFixed(def.decimals)} ${def.unit}`
-      : `${num} ${def.unit}`;
+    const n = Number(value).toLocaleString(locale(), def.decimals != null
+      ? { minimumFractionDigits: def.decimals, maximumFractionDigits: def.decimals }
+      : undefined);
+    // Unités traduites : DT / د.ت / TND et j / يوم / d
+    displayValue = def.unit === 'DT' ? t('{montant} DT', { montant: n }) : t('{n} j', { n });
   }
 
   return (
@@ -98,13 +104,13 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="bon-maintenance-dashboard-stat-drag-handle" title="Glisser pour réorganiser" aria-hidden="true">
+      <div className="bon-maintenance-dashboard-stat-drag-handle" title={t("Glisser pour réorganiser")} aria-hidden="true">
         {ICONS.grip}
       </div>
       <div className="bon-maintenance-dashboard-stat-icon">{def.icon}</div>
       <div className="bon-maintenance-dashboard-stat-body">
         <div className="bon-maintenance-dashboard-stat-value">{displayValue}</div>
-        <div className="bon-maintenance-dashboard-stat-label">{def.label}</div>
+        <div className="bon-maintenance-dashboard-stat-label">{t(def.label)}</div>
       </div>
     </div>
   );
@@ -121,7 +127,7 @@ function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEn
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="bon-maintenance-dashboard-chart-drag-handle" title="Glisser pour échanger" aria-hidden="true">
+      <div className="bon-maintenance-dashboard-chart-drag-handle" title={t("Glisser pour échanger")} aria-hidden="true">
         {ICONS.grip}
       </div>
       {children}
@@ -151,7 +157,7 @@ export default function BonMaintenanceDashboard() {
         setData(dashboard);
       } catch (err) {
         console.error(err);
-        setError('Impossible de charger le dashboard. Vérifie que le serveur est bien lancé.');
+        setError(t("Impossible de charger le dashboard. Vérifie que le serveur est bien lancé."));
       } finally {
         setLoading(false);
       }
@@ -228,7 +234,7 @@ export default function BonMaintenanceDashboard() {
     return (
       <div className="bon-maintenance-dashboard-container">
         <div className="bon-maintenance-dashboard-loading">
-          <p>Chargement du dashboard...</p>
+          <p>{t("Chargement du dashboard...")}</p>
         </div>
       </div>
     );
@@ -237,7 +243,7 @@ export default function BonMaintenanceDashboard() {
   if (error || !data) {
     return (
       <div className="bon-maintenance-dashboard-container">
-        <p className="bon-maintenance-dashboard-error">{error || 'Aucune donnée disponible.'}</p>
+        <p className="bon-maintenance-dashboard-error">{error || t("Aucune donnée disponible.")}</p>
       </div>
     );
   }
@@ -256,8 +262,8 @@ export default function BonMaintenanceDashboard() {
       return (
         <div className="bon-maintenance-dashboard-chart-card">
           <div className="bon-maintenance-dashboard-chart-head">
-            <h3>Bons créés par mois</h3>
-            <span className="bon-maintenance-dashboard-chart-sub">12 derniers mois</span>
+            <h3>{t("Bons créés par mois")}</h3>
+            <span className="bon-maintenance-dashboard-chart-sub">{t("12 derniers mois")}</span>
           </div>
           <div className="bon-maintenance-dashboard-bar-chart">
             {moisEntries.map(([cle, valeur]) => (
@@ -280,18 +286,18 @@ export default function BonMaintenanceDashboard() {
       return (
         <div className="bon-maintenance-dashboard-chart-card">
           <div className="bon-maintenance-dashboard-chart-head">
-            <h3>Répartition</h3>
-            <span className="bon-maintenance-dashboard-chart-sub">État & urgence</span>
+            <h3>{t("Répartition")}</h3>
+            <span className="bon-maintenance-dashboard-chart-sub">{t("État & urgence")}</span>
           </div>
 
           <div className="bon-maintenance-dashboard-niveau-section">
             <div className="bon-maintenance-dashboard-niveau-title">
-              <span>Par état</span>
+              <span>{t("Par état")}</span>
             </div>
             <div className="bon-maintenance-dashboard-hbar-list">
               {etats.map((etat) => (
                 <div key={etat} className="bon-maintenance-dashboard-hbar-row">
-                  <span className="bon-maintenance-dashboard-hbar-label">{ETAT_LABELS[etat]}</span>
+                  <span className="bon-maintenance-dashboard-hbar-label">{t(ETAT_LABELS[etat])}</span>
                   <div className="bon-maintenance-dashboard-hbar-track">
                     <div
                       className={`bon-maintenance-dashboard-hbar-fill bon-maintenance-dashboard-hbar-fill--etat${etat}`}
@@ -306,12 +312,12 @@ export default function BonMaintenanceDashboard() {
 
           <div className="bon-maintenance-dashboard-niveau-section">
             <div className="bon-maintenance-dashboard-niveau-title">
-              <span>Par urgence</span>
+              <span>{t("Par urgence")}</span>
             </div>
             <div className="bon-maintenance-dashboard-hbar-list">
               {urgenceEntries.map(([niveau, valeur]) => (
                 <div key={niveau} className="bon-maintenance-dashboard-hbar-row">
-                  <span className="bon-maintenance-dashboard-hbar-label">{NIVEAU_LABELS[niveau]}</span>
+                  <span className="bon-maintenance-dashboard-hbar-label">{t(NIVEAU_LABELS[niveau])}</span>
                   <div className="bon-maintenance-dashboard-hbar-track">
                     <div
                       className={`bon-maintenance-dashboard-hbar-fill bon-maintenance-dashboard-hbar-fill--niveau${niveau}`}
@@ -340,19 +346,19 @@ export default function BonMaintenanceDashboard() {
           </svg>
         </div>
         <div className="bon-maintenance-dashboard-header-text">
-          <h1>Tableau de Bord des Bons de Maintenance</h1>
-          <p>Vue d'ensemble et indicateurs clés — glisse les cartes pour les réorganiser</p>
+          <h1>{t("Tableau de Bord des Bons de Maintenance")}</h1>
+          <p>{t("Vue d'ensemble et indicateurs clés — glisse les cartes pour les réorganiser")}</p>
         </div>
         <button
           type="button"
           className="bon-maintenance-dashboard-reset-order"
           onClick={resetOrder}
-          title="Rétablir l'ordre par défaut"
+          title={t("Rétablir l'ordre par défaut")}
         >
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Réinitialiser l'ordre
+          {t("Réinitialiser l'ordre")}
         </button>
       </div>
 
@@ -398,26 +404,26 @@ export default function BonMaintenanceDashboard() {
       {/* Bons récents */}
       <div className="bon-maintenance-dashboard-recent-card">
         <div className="bon-maintenance-dashboard-chart-head">
-          <h3>Bons de maintenance récents</h3>
+          <h3>{t("Bons de maintenance récents")}</h3>
           {data.bonsRecents?.length > 0 && (
-            <span className="bon-maintenance-dashboard-chart-sub">{data.bonsRecents.length} derniers</span>
+            <span className="bon-maintenance-dashboard-chart-sub">{t('{n} derniers', { n: data.bonsRecents.length })}</span>
           )}
         </div>
 
         {(!data.bonsRecents || data.bonsRecents.length === 0) ? (
-          <p className="bon-maintenance-dashboard-empty">Aucun bon de maintenance pour l'instant.</p>
+          <p className="bon-maintenance-dashboard-empty">{t("Aucun bon de maintenance pour l'instant.")}</p>
         ) : (
           <div className="bon-maintenance-dashboard-table-wrap">
             <table className="bon-maintenance-dashboard-table">
               <thead>
                 <tr>
-                  <th>Numéro</th>
-                  <th>Titre</th>
-                  <th>Prestataire</th>
-                  <th>Service</th>
-                  <th>Urgence</th>
-                  <th>Date</th>
-                  <th>État</th>
+                  <th>{t("Numéro")}</th>
+                  <th>{t("Titre")}</th>
+                  <th>{t("Prestataire")}</th>
+                  <th>{t("Service")}</th>
+                  <th>{t("Urgence")}</th>
+                  <th>{t("Date")}</th>
+                  <th>{t("État")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -429,13 +435,13 @@ export default function BonMaintenanceDashboard() {
                     <td>{b.serviceNom || b.service?.description || '—'}</td>
                     <td>
                       <span className={`bon-maintenance-dashboard-niveau-badge bon-maintenance-dashboard-niveau-badge--${b.urgence}`}>
-                        {NIVEAU_LABELS[b.urgence] || '—'}
+                        {NIVEAU_LABELS[b.urgence] ? t(NIVEAU_LABELS[b.urgence]) : '—'}
                       </span>
                     </td>
                     <td>{formatDate(b.dateCreation)}</td>
                     <td>
                       <span className={`bon-maintenance-dashboard-etat-badge bon-maintenance-dashboard-etat-badge--${b.etat}`}>
-                        {ETAT_LABELS[b.etat] || `État ${b.etat}`}
+                        {ETAT_LABELS[b.etat] ? t(ETAT_LABELS[b.etat]) : t('État {n}', { n: b.etat })}
                       </span>
                     </td>
                   </tr>

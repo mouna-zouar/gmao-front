@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, CalendarDays, Loader2, Route, BookmarkCheck } from 'lucide-react';
 import parcPlanningService from '../../../../services/parcPlanningService';
 import './ParcPlanning.css';
+import { t, locale } from '../../../../i18n';
 
 // Mêmes libellés que VehiculeMissions.jsx / VehiculeReservations.jsx —
 // gardés en phase avec ces deux pages plutôt que réutilisés directement,
@@ -12,7 +13,14 @@ const MISSION_ETAT_COLOR = { 0: 'blue', 1: 'teal', 2: 'slate', 3: 'red' };
 const RESERVATION_ETAT_LABELS = { 0: 'En attente', 1: 'Acceptée', 2: 'Refusée', 3: 'Annulée', 4: 'Terminée' };
 const RESERVATION_ETAT_COLOR = { 0: 'amber', 1: 'blue', 2: 'red', 3: 'red', 4: 'slate' };
 
-const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+// Jours (lundi → dimanche) dans la langue courante : Lun / الاثنين / Mon.
+// 2000-01-03 est un lundi. L'app est remontée à chaque changement de langue.
+const nomsJours = () => Array.from({ length: 7 }, (_, i) => {
+  const s = new Intl.DateTimeFormat(locale(), { weekday: 'short' })
+    .format(new Date(2000, 0, 3 + i))
+    .replace('.', '');
+  return s.charAt(0).toLocaleUpperCase(locale()) + s.slice(1);
+});
 
 function lundiDeLaSemaine(date) {
   const d = new Date(date);
@@ -48,11 +56,11 @@ function formatHeure(iso) {
   if (!iso) return '';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '';
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDateCourte(d) {
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit' });
 }
 
 export default function ParcPlanning() {
@@ -63,6 +71,7 @@ export default function ParcPlanning() {
   const [afficherMissions, setAfficherMissions] = useState(true);
   const [afficherReservations, setAfficherReservations] = useState(true);
 
+  const JOURS = useMemo(nomsJours, []);
   const jours = useMemo(
     () => Array.from({ length: 7 }, (_, i) => ajouterJours(weekStart, i)),
     [weekStart]
@@ -76,7 +85,7 @@ export default function ParcPlanning() {
       setData(result);
     } catch (err) {
       console.error('Erreur chargement planning parc :', err);
-      setError("Impossible de charger le planning. Vérifie que le serveur est bien lancé.");
+      setError(t('Impossible de charger le planning. Vérifie que le serveur est bien lancé.'));
     } finally {
       setLoading(false);
     }
@@ -96,18 +105,18 @@ export default function ParcPlanning() {
       <div className="parcplan-header">
         <div className="parcplan-header-icon-wrap"><CalendarDays size={24} /></div>
         <div className="parcplan-header-text">
-          <h1>Planning — Missions &amp; Réservations</h1>
-          <p>Vue hebdomadaire par véhicule</p>
+          <h1>{t('Planning — Missions & Réservations')}</h1>
+          <p>{t('Vue hebdomadaire par véhicule')}</p>
         </div>
         <div className="parcplan-nav">
-          <button className="parcplan-nav-btn" onClick={() => setWeekStart((w) => ajouterJours(w, -7))} title="Semaine précédente">
-            <ChevronLeft size={18} />
+          <button className="parcplan-nav-btn" onClick={() => setWeekStart((w) => ajouterJours(w, -7))} title={t('Semaine précédente')} aria-label={t('Semaine précédente')}>
+            <ChevronLeft size={18} className="rtl-miroir" />
           </button>
           <button className="parcplan-nav-today" onClick={() => setWeekStart(lundiDeLaSemaine(new Date()))}>
-            Aujourd'hui
+            {t("Aujourd'hui")}
           </button>
-          <button className="parcplan-nav-btn" onClick={() => setWeekStart((w) => ajouterJours(w, 7))} title="Semaine suivante">
-            <ChevronRight size={18} />
+          <button className="parcplan-nav-btn" onClick={() => setWeekStart((w) => ajouterJours(w, 7))} title={t('Semaine suivante')} aria-label={t('Semaine suivante')}>
+            <ChevronRight size={18} className="rtl-miroir" />
           </button>
         </div>
       </div>
@@ -119,11 +128,11 @@ export default function ParcPlanning() {
         <div className="parcplan-toggles">
           <label className="parcplan-toggle">
             <input type="checkbox" checked={afficherMissions} onChange={(e) => setAfficherMissions(e.target.checked)} />
-            <span className="parcplan-dot color-blue" /> Missions
+            <span className="parcplan-dot color-blue" /> {t('Missions')}
           </label>
           <label className="parcplan-toggle">
             <input type="checkbox" checked={afficherReservations} onChange={(e) => setAfficherReservations(e.target.checked)} />
-            <span className="parcplan-dot color-amber" /> Réservations
+            <span className="parcplan-dot color-amber" /> {t('Réservations')}
           </label>
         </div>
       </div>
@@ -135,24 +144,24 @@ export default function ParcPlanning() {
             <div className="parcplan-legend-group">
               <span className="parcplan-legend-group-title">
                 <Route size={13} strokeWidth={2.5} />
-                Missions
+                {t('Missions')}
               </span>
               <div className="parcplan-legend-items">
                 <span className="parcplan-legend-item">
                   <span className="parcplan-legend-swatch color-blue" />
-                  Planifiée
+                  {t('Planifiée')}
                 </span>
                 <span className="parcplan-legend-item">
                   <span className="parcplan-legend-swatch color-teal" />
-                  En cours
+                  {t('En cours')}
                 </span>
                 <span className="parcplan-legend-item">
                   <span className="parcplan-legend-swatch color-slate" />
-                  Terminée
+                  {t('Terminée')}
                 </span>
                 <span className="parcplan-legend-item">
                   <span className="parcplan-legend-swatch color-red" />
-                  Annulée
+                  {t('Annulée')}
                 </span>
               </div>
             </div>
@@ -162,24 +171,24 @@ export default function ParcPlanning() {
             <div className="parcplan-legend-group">
               <span className="parcplan-legend-group-title">
                 <BookmarkCheck size={13} strokeWidth={2.5} />
-                Réservations
+                {t('Réservations')}
               </span>
               <div className="parcplan-legend-items">
                 <span className="parcplan-legend-item">
                   <span className="parcplan-legend-swatch color-amber" />
-                  En attente
+                  {t('En attente')}
                 </span>
                 <span className="parcplan-legend-item">
                   <span className="parcplan-legend-swatch color-blue" />
-                  Acceptée
+                  {t('Acceptée')}
                 </span>
                 <span className="parcplan-legend-item">
                   <span className="parcplan-legend-swatch color-red" />
-                  Refusée / Annulée
+                  {t('Refusée / Annulée')}
                 </span>
                 <span className="parcplan-legend-item">
                   <span className="parcplan-legend-swatch color-slate" />
-                  Terminée
+                  {t('Terminée')}
                 </span>
               </div>
             </div>
@@ -192,14 +201,14 @@ export default function ParcPlanning() {
       {loading && !data ? (
         <div className="parcplan-loading">
           <Loader2 size={28} className="parcplan-spin" />
-          <p>Chargement du planning...</p>
+          <p>{t('Chargement du planning...')}</p>
         </div>
       ) : (
         <div className="parcplan-grid-wrap">
           <table className="parcplan-grid">
             <thead>
               <tr>
-                <th className="parcplan-col-vehicule">Véhicule</th>
+                <th className="parcplan-col-vehicule">{t('Véhicule')}</th>
                 {jours.map((jour) => (
                   <th key={jour.toISOString()} className={memeJour(jour, aujourdhui) ? 'parcplan-col-today' : ''}>
                     <span className="parcplan-jour-nom">{JOURS[(jour.getDay() + 6) % 7]}</span>
@@ -210,7 +219,7 @@ export default function ParcPlanning() {
             </thead>
             <tbody>
               {vehicules.length === 0 ? (
-                <tr><td colSpan={8} className="parcplan-empty">Aucun véhicule dans le parc.</td></tr>
+                <tr><td colSpan={8} className="parcplan-empty">{t('Aucun véhicule dans le parc.')}</td></tr>
               ) : (
                 vehicules.map((v) => (
                   <tr key={v.id}>
@@ -232,18 +241,18 @@ export default function ParcPlanning() {
                                 <div
                                   key={`m-${m.id}`}
                                   className={`parcplan-event color-${MISSION_ETAT_COLOR[m.etat] ?? 'slate'}`}
-                                  title={`Mission ${m.num || ''} — ${MISSION_ETAT_LABELS[m.etat] ?? m.etat}\n${formatHeure(m.dateDebut)} → ${formatHeure(m.dateFin)}${m.motif ? `\n${m.motif}` : ''}`}
+                                  title={`${t('Mission {num}', { num: m.num || '' })} — ${MISSION_ETAT_LABELS[m.etat] ? t(MISSION_ETAT_LABELS[m.etat]) : m.etat}\n${formatHeure(m.dateDebut)} → ${formatHeure(m.dateFin)}${m.motif ? `\n${m.motif}` : ''}`}
                                 >
-                                  {m.num || 'Mission'} · {formatHeure(m.dateDebut)}
+                                  {m.num || t('Mission')} · {formatHeure(m.dateDebut)}
                                 </div>
                               ))}
                               {reservationsJour.map((r) => (
                                 <div
                                   key={`r-${r.id}`}
                                   className={`parcplan-event color-${RESERVATION_ETAT_COLOR[r.etat] ?? 'slate'}`}
-                                  title={`Réservation — ${RESERVATION_ETAT_LABELS[r.etat] ?? r.etat}\n${formatHeure(r.dateDebut)} → ${formatHeure(r.dateFin)}\n${r.personnelNom || ''}${r.motif ? `\n${r.motif}` : ''}`}
+                                  title={`${t('Réservation')} — ${RESERVATION_ETAT_LABELS[r.etat] ? t(RESERVATION_ETAT_LABELS[r.etat]) : r.etat}\n${formatHeure(r.dateDebut)} → ${formatHeure(r.dateFin)}\n${r.personnelNom || ''}${r.motif ? `\n${r.motif}` : ''}`}
                                 >
-                                  {r.personnelNom || 'Réservation'} · {formatHeure(r.dateDebut)}
+                                  {r.personnelNom || t('Réservation')} · {formatHeure(r.dateDebut)}
                                 </div>
                               ))}
                             </div>

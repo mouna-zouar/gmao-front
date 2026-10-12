@@ -10,6 +10,8 @@ import personnelService from '../../../../services/personnelService';
 import PermisConduiteModal from '../../../ui/modals/PermisConduiteModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import { t, tp, locale } from '../../../../i18n';
+import { imprimerListe, imprimerFiche } from '../../../../utils/imprimerListe';
 import './PermisConduite.css';
 
 // Référentiel de secours des catégories (au cas où l'appel API échoue avant chargement).
@@ -25,7 +27,7 @@ function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function isExpire(dateExpiration) {
@@ -75,7 +77,7 @@ export default function PermisConduite() {
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
-    confirmText: 'Confirmer', onConfirm: null,
+    confirmText: t("Confirmer"), onConfirm: null,
   });
 
   const load = async () => {
@@ -94,7 +96,7 @@ export default function PermisConduite() {
       setPersonnelsMap(pMap);
     } catch (err) {
       console.error(err);
-      setError('Impossible de charger les permis de conduite. Vérifie que le serveur est bien lancé.');
+      setError(t("Impossible de charger les permis de conduite. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -128,8 +130,8 @@ export default function PermisConduite() {
       case 'numero':     return p.numero || '';
       case 'categories': return (p.categories ?? []).map(categorieLabel).join(' ');
       case 'delivrance': return [formatDate(p.dateDelivrance), p.lieuDelivrance].filter(Boolean).join(' ');
-      case 'expiration': return p.dateExpiration ? formatDate(p.dateExpiration) : 'Sans expiration';
-      case 'statut':     return isExpire(p.dateExpiration) ? 'Expiré' : 'Valide';
+      case 'expiration': return p.dateExpiration ? formatDate(p.dateExpiration) : t("Sans expiration");
+      case 'statut':     return isExpire(p.dateExpiration) ? t("Expiré") : t("Valide");
       default:           return '';
     }
   };
@@ -170,7 +172,7 @@ export default function PermisConduite() {
     const sorted = [...result].sort((x, y) => {
       const vx = getSortValue(x, sortColumn);
       const vy = getSortValue(y, sortColumn);
-      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      if (typeof vx === 'string') return vx.localeCompare(vy, locale(), { sensitivity: 'base', numeric: true });
       return vx - vy;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
@@ -267,7 +269,7 @@ export default function PermisConduite() {
           <td key="expiration">
             <span className="pc-date-badge">
               <Calendar size={11} strokeWidth={2.5} />
-              {p.dateExpiration ? formatDate(p.dateExpiration) : 'Sans expiration'}
+              {p.dateExpiration ? formatDate(p.dateExpiration) : t("Sans expiration")}
             </span>
           </td>
         );
@@ -280,7 +282,7 @@ export default function PermisConduite() {
               ) : (
                 <CheckCircle2 size={11} strokeWidth={2.5} />
               )}
-              {expire ? 'Expiré' : 'Valide'}
+              {expire ? t("Expiré") : t("Valide")}
             </span>
           </td>
         );
@@ -331,9 +333,9 @@ export default function PermisConduite() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: 'Supprimer le permis',
-      message: 'Supprimer ce permis de conduire ? Cette action est irréversible.',
-      confirmText: 'Supprimer',
+      title: t("Supprimer le permis"),
+      message: t("Supprimer ce permis de conduire ? Cette action est irréversible."),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -343,7 +345,7 @@ export default function PermisConduite() {
           setSelected(null);
         } catch (err) {
           console.error(err);
-          alert('Échec de la suppression de ce permis.');
+          alert(t("Échec de la suppression de ce permis."));
         } finally {
           setIsDeleting(false);
         }
@@ -351,25 +353,31 @@ export default function PermisConduite() {
     });
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Conducteur', 'Matricule', 'Numéro permis', 'Catégories', 'Date délivrance', "Date d'expiration", 'Lieu', 'Statut'];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['Conducteur', 'Matricule', 'Numéro permis', 'Catégories', 'Date délivrance', "Date d'expiration", 'Lieu', 'Statut'].map((e) => t(e));
     const lignes = filtered.map((p) => {
       const pers = personnelsMap[p.personnelId];
       const expire = isExpire(p.dateExpiration);
       return [
-        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—').replace(/"/g, '""'),
-        (pers?.matricule || '—').replace(/"/g, '""'),
-        (p.numero || '—').replace(/"/g, '""'),
+        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—'),
+        (pers?.matricule || '—'),
+        (p.numero || '—'),
         (p.categories ?? []).map(categorieLabel).join(' / '),
         formatDate(p.dateDelivrance),
-        p.dateExpiration ? formatDate(p.dateExpiration) : 'Sans expiration',
-        (p.lieuDelivrance || '—').replace(/"/g, '""'),
-        expire ? 'Expiré' : 'Valide',
+        p.dateExpiration ? formatDate(p.dateExpiration) : t('Sans expiration'),
+        (p.lieuDelivrance || '—'),
+        expire ? t('Expiré') : t('Valide'),
       ];
     });
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((l) => l.map((c) => `"${c}"`).join(';'))
+      .map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -383,8 +391,51 @@ export default function PermisConduite() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => window.print();
-  const handleStats = () => alert('Dashboard à venir.');
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Permis de conduire'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('Catégorie'), valeur: categorieFilter !== 'all' ? categorieLabel(categorieFilter) : '' },
+        { label: t('Statut'), valeur: statutFilter === 'valide' ? t('Valide') : statutFilter === 'expire' ? t('Expiré') : '' },
+      ],
+    });
+  };
+
+  // Impression de la fiche du permis affiché (A4 portrait)
+  const handlePrint = () => {
+    const p = detailsPermis || selected;
+    if (!p) return;
+    const pers = personnelsMap[p.personnelId];
+    const expire = isExpire(p.dateExpiration);
+    imprimerFiche({
+      titre: pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : t('Permis de conduire'),
+      sousTitre: t('Permis de conduire'),
+      reference: p.numero || '',
+      statut: expire ? t('Expiré') : t('Valide'),
+      sections: [
+        {
+          titre: t('Informations générales'),
+          champs: [
+            { label: t('Conducteur'), valeur: pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '' },
+            { label: t('Matricule'), valeur: pers?.matricule },
+            { label: t('Numéro permis'), valeur: p.numero },
+            { label: t('Catégories'), valeur: (p.categories ?? []).map(categorieLabel).join(' · ') },
+            { label: t('Date délivrance'), valeur: p.dateDelivrance ? formatDate(p.dateDelivrance) : '' },
+            { label: t('Lieu'), valeur: p.lieuDelivrance },
+            { label: t("Date d'expiration"), valeur: p.dateExpiration ? formatDate(p.dateExpiration) : t('Sans expiration') },
+            { label: t('Statut'), valeur: expire ? t('Expiré') : t('Valide') },
+          ],
+        },
+      ],
+      signatures: [t('Responsable parc'), t('Conducteur')],
+    });
+  };
+  const handleStats = () => alert(t("Dashboard à venir."));
 
   // ════════════════════════════════════════════════════════════════
   //  RENDU
@@ -402,15 +453,15 @@ export default function PermisConduite() {
             type="button"
             className="pc-header-icon-wrap pc-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <IdCard size={24} strokeWidth={2} />
           </button>
           <div>
-            <h2>Permis de conduire</h2>
+            <h2>{t("Permis de conduire")}</h2>
             <p className="pc-header-subtitle">
-              Suivi des permis des conducteurs et de leurs catégories (réglementation tunisienne)
+              {t("Suivi des permis des conducteurs et de leurs catégories (réglementation tunisienne)")}
             </p>
           </div>
         </div>
@@ -418,19 +469,19 @@ export default function PermisConduite() {
         <div className="pc-stats">
           <div className="pc-stat">
             <span className="pc-stat-value">{stats.total}</span>
-            <span className="pc-stat-label">Total</span>
+            <span className="pc-stat-label">{t("Total")}</span>
           </div>
           <div className="pc-stat stat-active">
             <span className="pc-stat-value">{stats.valides}</span>
-            <span className="pc-stat-label">Valides</span>
+            <span className="pc-stat-label">{t("Valides")}</span>
           </div>
           <div className="pc-stat stat-inactive">
             <span className="pc-stat-value">{stats.expires}</span>
-            <span className="pc-stat-label">Expirés</span>
+            <span className="pc-stat-label">{t("Expirés")}</span>
           </div>
           <div className="pc-stat stat-principal">
             <span className="pc-stat-value">{stats.poidsLourd}</span>
-            <span className="pc-stat-label">Poids lourd / bus</span>
+            <span className="pc-stat-label">{t("Poids lourd / bus")}</span>
           </div>
         </div>
       </div>
@@ -439,7 +490,7 @@ export default function PermisConduite() {
       <div className="pc-actions-bar">
         <button className="pc-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} strokeWidth={2.5} />
-          <span>Ajouter</span>
+          <span>{t("Ajouter")}</span>
         </button>
 
         <button
@@ -452,7 +503,7 @@ export default function PermisConduite() {
           }}
         >
           <CreditCard size={18} strokeWidth={2.2} />
-          <span>Voir le permis</span>
+          <span>{t("Voir le permis")}</span>
         </button>
 
         <button
@@ -461,7 +512,7 @@ export default function PermisConduite() {
           onClick={openEdit}
         >
           <Pencil size={18} strokeWidth={2.2} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
@@ -470,7 +521,7 @@ export default function PermisConduite() {
           onClick={handleDelete}
         >
           <Trash2 size={18} strokeWidth={2.2} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
       </div>
 
@@ -479,13 +530,13 @@ export default function PermisConduite() {
         <div className="pc-filter-group">
           <span className="pc-filter-label">
             <Search size={14} strokeWidth={2.5} />
-            Recherche
+            {t("Recherche")}
           </span>
           <div className="pc-filter-input-wrap">
             <Search size={16} strokeWidth={2.2} className="pc-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -495,11 +546,11 @@ export default function PermisConduite() {
         <div className="pc-filter-group">
           <span className="pc-filter-label">
             <Filter size={14} strokeWidth={2.5} />
-            Catégorie
+            {t("Catégorie")}
           </span>
           <div className="pc-filter-input-wrap">
             <select value={categorieFilter} onChange={(e) => setCategorieFilter(e.target.value)}>
-              <option value="all">Toutes les catégories</option>
+              <option value="all">{t("Toutes les catégories")}</option>
               {Object.entries(CATEGORIE_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
               ))}
@@ -510,30 +561,30 @@ export default function PermisConduite() {
         <div className="pc-filter-group">
           <span className="pc-filter-label">
             <Filter size={14} strokeWidth={2.5} />
-            Statut
+            {t("Statut")}
           </span>
           <div className="pc-filter-input-wrap">
             <select value={statutFilter} onChange={(e) => setStatutFilter(e.target.value)}>
-              <option value="all">Tous les statuts</option>
-              <option value="valide">Valide</option>
-              <option value="expire">Expiré</option>
+              <option value="all">{t("Tous les statuts")}</option>
+              <option value="valide">{t("Valide")}</option>
+              <option value="expire">{t("Expiré")}</option>
             </select>
           </div>
         </div>
 
         <button className="pc-filter-reset" onClick={handleResetFilters}>
           <RotateCcw size={14} strokeWidth={2.5} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="pc-export-stack">
-          <button className="pc-export-btn excel" onClick={handleExportExcel} title="Export CSV">
+          <button className="pc-export-btn excel" onClick={handleExportExcel} title={t("Export CSV")}>
             <Download size={16} strokeWidth={2.5} />
           </button>
-          <button className="pc-export-btn print" onClick={handlePrint} title="Imprimer">
+          <button className="pc-export-btn print" onClick={handleImprimerListe} title={t("Imprimer")}>
             <Printer size={16} strokeWidth={2.5} />
           </button>
-          <button className="pc-export-btn stats" onClick={handleStats} title="Stats">
+          <button className="pc-export-btn stats" onClick={handleStats} title={t("Stats")}>
             <BarChart3 size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -557,10 +608,10 @@ export default function PermisConduite() {
                   className={`pc-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="pc-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -573,7 +624,7 @@ export default function PermisConduite() {
                 <td colSpan={visibleColumns.length || 1} className="pc-table-empty">
                   <div className="pc-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="pc-spin" />
-                    <span>Chargement des permis...</span>
+                    <span>{t("Chargement des permis...")}</span>
                   </div>
                 </td>
               </tr>
@@ -584,8 +635,8 @@ export default function PermisConduite() {
                     <IdCard size={32} strokeWidth={1.6} />
                     <span>
                       {permis.length === 0
-                        ? "Aucun permis de conduire pour l'instant."
-                        : 'Aucun permis ne correspond à ces filtres.'}
+                        ? t("Aucun permis de conduire pour l'instant.")
+                        : t("Aucun permis ne correspond à ces filtres.")}
                     </span>
                   </div>
                 </td>
@@ -615,7 +666,7 @@ export default function PermisConduite() {
           onClick={closeDetails}
           role="dialog"
           aria-modal="true"
-          aria-label="Détails du permis de conduire"
+          aria-label={t("Détails du permis de conduire")}
         >
           <div
             className="pcd-modal"
@@ -625,7 +676,7 @@ export default function PermisConduite() {
             <div className="pcd-modal-bar">
               <div className="pcd-modal-bar-left">
                 <CreditCard size={16} strokeWidth={2.4} />
-                <span>Permis de conduire</span>
+                <span>{t("Permis de conduire")}</span>
               </div>
               <div className="pcd-modal-bar-right">
                 <button
@@ -635,25 +686,25 @@ export default function PermisConduite() {
                     setSelected(detailsPermis);
                     setTimeout(() => setModalOpen(true), 0);
                   }}
-                  title="Modifier ce permis"
+                  title={t("Modifier ce permis")}
                 >
                   <Pencil size={14} strokeWidth={2.4} />
-                  Modifier
+                  {t("Modifier")}
                 </button>
                 <button
                   type="button"
                   className="pcd-modal-btn"
                   onClick={handlePrint}
-                  title="Imprimer"
+                  title={t("Imprimer")}
                 >
                   <Printer size={14} strokeWidth={2.4} />
-                  Imprimer
+                  {t("Imprimer")}
                 </button>
                 <button
                   type="button"
                   className="pcd-modal-close"
                   onClick={closeDetails}
-                  aria-label="Fermer"
+                  aria-label={t("Fermer")}
                 >
                   <X size={18} strokeWidth={2.6} />
                 </button>

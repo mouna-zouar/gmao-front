@@ -11,23 +11,25 @@ import personnelService from '../../../../services/personnelService';
 import VehiculeBonCarburantModal from '../../../ui/modals/VehiculeBonCarburantModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import { t, tp, locale } from '../../../../i18n';
+import { imprimerListe } from '../../../../utils/imprimerListe';
 import './VehiculeBonsCarburant.css';
 
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function formatMontant(v) {
   if (v == null) return '—';
-  return `${Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DT`;
+  return t('{montant} DT', { montant: Number(v).toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) });
 }
 
 function formatKm(v) {
   if (v == null) return '—';
-  return `${Number(v).toLocaleString('fr-FR')} km`;
+  return t('{n} km', { n: Number(v).toLocaleString(locale()) });
 }
 
 /* Colonnes paramétrables (affichage + recherche) */
@@ -63,7 +65,7 @@ export default function VehiculeBonsCarburant() {
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
-    confirmText: 'Confirmer', onConfirm: null,
+    confirmText: t("Confirmer"), onConfirm: null,
   });
 
   const load = async () => {
@@ -87,7 +89,7 @@ export default function VehiculeBonsCarburant() {
       setPersonnelsMap(pMap);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les bons carburant. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les bons carburant. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -153,7 +155,7 @@ export default function VehiculeBonsCarburant() {
     const sorted = [...result].sort((x, y) => {
       const vx = getSortValue(x, sortColumn);
       const vy = getSortValue(y, sortColumn);
-      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      if (typeof vx === 'string') return vx.localeCompare(vy, locale(), { sensitivity: 'base', numeric: true });
       return vx - vy;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
@@ -205,7 +207,7 @@ export default function VehiculeBonsCarburant() {
               </div>
               <div className="vbc-cell-vehicle-text">
                 <span className="vbc-cell-main">
-                  {veh?.matricule || `Véhicule #${b.vehiculeId}`}
+                  {veh?.matricule || t('Véhicule #{id}', { id: b.vehiculeId })}
                 </span>
                 {veh?.marque && <span className="vbc-cell-sub">{veh.marque}</span>}
               </div>
@@ -290,9 +292,9 @@ export default function VehiculeBonsCarburant() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: 'Supprimer le bon carburant',
-      message: `Supprimer ce bon carburant ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer le bon carburant"),
+      message: t('Supprimer ce bon carburant ? Cette action est irréversible.'),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -302,7 +304,7 @@ export default function VehiculeBonsCarburant() {
           setSelected(null);
         } catch (err) {
           console.error(err);
-          alert('Échec de la suppression.');
+          alert(t("Échec de la suppression."));
         } finally {
           setIsDeleting(false);
         }
@@ -310,22 +312,28 @@ export default function VehiculeBonsCarburant() {
     });
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Véhicule', 'Conducteur', 'Date', 'Montant (DT)', 'Kilométrage (km)'];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['Véhicule', 'Conducteur', 'Date', 'Montant (DT)', 'Kilométrage (km)'].map((e) => t(e));
     const lignes = filtered.map((b) => {
       const veh = vehiculesMap[b.vehiculeId];
       const pers = personnelsMap[b.personnelId];
       return [
-        (veh?.matricule || '—').replace(/"/g, '""'),
-        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—').replace(/"/g, '""'),
+        (veh?.matricule || '—'),
+        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—'),
         formatDate(b.date),
         b.montant ?? '—',
         b.kilometrage ?? '—',
       ];
     });
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((l) => l.map((c) => `"${c}"`).join(';'))
+      .map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -339,8 +347,21 @@ export default function VehiculeBonsCarburant() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => window.print();
-  const handleStats = () => alert('Dashboard à venir.');
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Bons carburant'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('Véhicule'), valeur: vehiculeFilter !== 'all' ? (vehiculesMap[vehiculeFilter]?.matricule || t('Véhicule #{id}', { id: vehiculeFilter })) : '' },
+      ],
+    });
+  };
+
+  const handleStats = () => alert(t("Dashboard à venir."));
 
   return (
     <div className="vbc-container">
@@ -352,15 +373,15 @@ export default function VehiculeBonsCarburant() {
             type="button"
             className="vbc-header-icon-wrap vbc-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <Fuel size={24} strokeWidth={2} />
           </button>
           <div>
-            <h2>Bons carburant</h2>
+            <h2>{t("Bons carburant")}</h2>
             <p className="vbc-header-subtitle">
-              Suivi des pleins de carburant par véhicule et conducteur
+              {t("Suivi des pleins de carburant par véhicule et conducteur")}
             </p>
           </div>
         </div>
@@ -368,19 +389,19 @@ export default function VehiculeBonsCarburant() {
         <div className="vbc-stats">
           <div className="vbc-stat">
             <span className="vbc-stat-value">{stats.total}</span>
-            <span className="vbc-stat-label">Total</span>
+            <span className="vbc-stat-label">{t("Total")}</span>
           </div>
           <div className="vbc-stat stat-amount">
             <span className="vbc-stat-value">{formatMontant(stats.montantTotal)}</span>
-            <span className="vbc-stat-label">Montant</span>
+            <span className="vbc-stat-label">{t("Montant")}</span>
           </div>
           <div className="vbc-stat stat-month">
             <span className="vbc-stat-value">{formatMontant(stats.montantMois)}</span>
-            <span className="vbc-stat-label">Ce mois</span>
+            <span className="vbc-stat-label">{t("Ce mois")}</span>
           </div>
           <div className="vbc-stat stat-km">
-            <span className="vbc-stat-value">{Number(stats.kmTotal).toLocaleString('fr-FR')}</span>
-            <span className="vbc-stat-label">km cumulés</span>
+            <span className="vbc-stat-value">{Number(stats.kmTotal).toLocaleString(locale())}</span>
+            <span className="vbc-stat-label">{t("km cumulés")}</span>
           </div>
         </div>
       </div>
@@ -389,7 +410,7 @@ export default function VehiculeBonsCarburant() {
       <div className="vbc-actions-bar">
         <button className="vbc-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} strokeWidth={2.5} />
-          <span>Nouveau bon</span>
+          <span>{t("Nouveau bon")}</span>
         </button>
 
         <button
@@ -398,7 +419,7 @@ export default function VehiculeBonsCarburant() {
           onClick={openEdit}
         >
           <Pencil size={18} strokeWidth={2.2} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
@@ -407,7 +428,7 @@ export default function VehiculeBonsCarburant() {
           onClick={handleDelete}
         >
           <Trash2 size={18} strokeWidth={2.2} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
       </div>
 
@@ -416,13 +437,13 @@ export default function VehiculeBonsCarburant() {
         <div className="vbc-filter-group">
           <span className="vbc-filter-label">
             <Search size={14} strokeWidth={2.5} />
-            Recherche
+            {t("Recherche")}
           </span>
           <div className="vbc-filter-input-wrap">
             <Search size={16} strokeWidth={2.2} className="vbc-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -432,14 +453,14 @@ export default function VehiculeBonsCarburant() {
         <div className="vbc-filter-group">
           <span className="vbc-filter-label">
             <Filter size={14} strokeWidth={2.5} />
-            Véhicule
+            {t("Véhicule")}
           </span>
           <div className="vbc-filter-input-wrap">
             <select value={vehiculeFilter} onChange={(e) => setVehiculeFilter(e.target.value)}>
-              <option value="all">Tous les véhicules</option>
+              <option value="all">{t("Tous les véhicules")}</option>
               {Object.values(vehiculesMap).map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.matricule || `Véhicule #${v.id}`}{v.marque ? ` — ${v.marque}` : ''}
+                  {v.matricule || t('Véhicule #{id}', { id: v.id })}{v.marque ? ` — ${v.marque}` : ''}
                 </option>
               ))}
             </select>
@@ -448,17 +469,17 @@ export default function VehiculeBonsCarburant() {
 
         <button className="vbc-filter-reset" onClick={handleResetFilters}>
           <RotateCcw size={14} strokeWidth={2.5} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="vbc-export-stack">
-          <button className="vbc-export-btn excel" onClick={handleExportExcel} title="Export CSV">
+          <button className="vbc-export-btn excel" onClick={handleExportExcel} title={t("Export CSV")}>
             <Download size={16} strokeWidth={2.5} />
           </button>
-          <button className="vbc-export-btn print" onClick={handlePrint} title="Imprimer">
+          <button className="vbc-export-btn print" onClick={handleImprimerListe} title={t("Imprimer")}>
             <Printer size={16} strokeWidth={2.5} />
           </button>
-          <button className="vbc-export-btn stats" onClick={handleStats} title="Stats">
+          <button className="vbc-export-btn stats" onClick={handleStats} title={t("Stats")}>
             <BarChart3 size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -482,10 +503,10 @@ export default function VehiculeBonsCarburant() {
                   className={`vbc-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="vbc-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -498,7 +519,7 @@ export default function VehiculeBonsCarburant() {
                 <td colSpan={visibleColumns.length || 1} className="vbc-table-empty">
                   <div className="vbc-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vbc-spin" />
-                    <span>Chargement des bons...</span>
+                    <span>{t("Chargement des bons...")}</span>
                   </div>
                 </td>
               </tr>
@@ -509,8 +530,8 @@ export default function VehiculeBonsCarburant() {
                     <Fuel size={32} strokeWidth={1.6} />
                     <span>
                       {bons.length === 0
-                        ? "Aucun bon carburant pour l'instant."
-                        : 'Aucun bon ne correspond à ces filtres.'}
+                        ? t("Aucun bon carburant pour l'instant.")
+                        : t("Aucun bon ne correspond à ces filtres.")}
                     </span>
                   </div>
                 </td>

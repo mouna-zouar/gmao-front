@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import reclamationService from '../../../services/reclamationService';
+import { t, tp, locale } from '../../../i18n';
 import './ReclamationDashboard.css';
 
 const ETAT_LABELS = { 0: 'Ouverte', 1: 'En cours', 2: 'Clôturée', 3: 'En attente de validation', 4: 'Rejetée' };
@@ -12,16 +13,20 @@ const MOIS_LABELS = {
 const STATS_STORAGE_KEY = 'reclamation-dashboard.cards.order.v1';
 const CHARTS_STORAGE_KEY = 'reclamation-dashboard.charts.order.v1';
 
+// Mois court : libellés maison en français, noms du calendrier local sinon (جانفي / Jan…)
 function formatMoisLabel(cle) {
-  const [, mm] = cle.split('-');
-  return MOIS_LABELS[mm] || cle;
+  const [aaaa, mm] = cle.split('-');
+  if (locale() === 'fr-FR') return MOIS_LABELS[mm] || cle;
+  const d = new Date(Number(aaaa), Number(mm) - 1, 1);
+  if (isNaN(d.getTime())) return cle;
+  return new Intl.DateTimeFormat(locale(), { month: 'short' }).format(d).replace('.', '');
 }
 
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 /* ─── Icônes SVG réutilisables ─── */
@@ -78,7 +83,7 @@ function saveOrder(storageKey, order) {
 /* ─── Carte de stat draggable ─── */
 function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver }) {
   const displayValue = def.id === 'delai' && value != null
-    ? `${Number(value).toFixed(1)} j`
+    ? t('{n} j', { n: Number(value).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
     : (value ?? '—');
 
   return (
@@ -90,13 +95,13 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="reclamation-dashboard-stat-drag-handle" title="Glisser pour réorganiser" aria-hidden="true">
+      <div className="reclamation-dashboard-stat-drag-handle" title={t("Glisser pour réorganiser")} aria-hidden="true">
         {ICONS.grip}
       </div>
       <div className="reclamation-dashboard-stat-icon">{def.icon}</div>
       <div className="reclamation-dashboard-stat-body">
         <div className="reclamation-dashboard-stat-value">{displayValue}</div>
-        <div className="reclamation-dashboard-stat-label">{def.label}</div>
+        <div className="reclamation-dashboard-stat-label">{t(def.label)}</div>
       </div>
     </div>
   );
@@ -113,7 +118,7 @@ function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEn
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="reclamation-dashboard-chart-drag-handle" title="Glisser pour échanger" aria-hidden="true">
+      <div className="reclamation-dashboard-chart-drag-handle" title={t("Glisser pour échanger")} aria-hidden="true">
         {ICONS.grip}
       </div>
       {children}
@@ -145,7 +150,7 @@ export default function ReclamationDashboard() {
         setData(dashboard);
       } catch (err) {
         console.error(err);
-        setError('Impossible de charger le dashboard. Vérifie que le serveur est bien lancé.');
+        setError(t("Impossible de charger le dashboard. Vérifie que le serveur est bien lancé."));
       } finally {
         setLoading(false);
       }
@@ -228,14 +233,14 @@ export default function ReclamationDashboard() {
       <div className="reclamation-dashboard-container">
         <div className="reclamation-dashboard-loading">
           <div className="reclamation-dashboard-spinner" />
-          <p>Chargement du dashboard...</p>
+          <p>{t("Chargement du dashboard...")}</p>
         </div>
       </div>
     );
   }
 
   if (error || !data) {
-    return <div className="reclamation-dashboard-container"><p className="reclamation-dashboard-error">{error || 'Aucune donnée disponible.'}</p></div>;
+    return <div className="reclamation-dashboard-container"><p className="reclamation-dashboard-error">{error || t("Aucune donnée disponible.")}</p></div>;
   }
 
   const moisEntries = Object.entries(data.parMois || {});
@@ -254,8 +259,8 @@ export default function ReclamationDashboard() {
       return (
         <div className="reclamation-dashboard-chart-card">
           <div className="reclamation-dashboard-chart-head">
-            <h3>Réclamations par mois</h3>
-            <span className="reclamation-dashboard-chart-sub">12 derniers mois</span>
+            <h3>{t("Réclamations par mois")}</h3>
+            <span className="reclamation-dashboard-chart-sub">{t("12 derniers mois")}</span>
           </div>
           <div className="reclamation-dashboard-bar-chart">
             {moisEntries.map(([cle, valeur]) => (
@@ -278,19 +283,19 @@ export default function ReclamationDashboard() {
       return (
         <div className="reclamation-dashboard-chart-card">
           <div className="reclamation-dashboard-chart-head">
-            <h3>Répartition par niveau</h3>
-            <span className="reclamation-dashboard-chart-sub">Criticité & urgence</span>
+            <h3>{t("Répartition par niveau")}</h3>
+            <span className="reclamation-dashboard-chart-sub">{t("Criticité & urgence")}</span>
           </div>
 
           <div className="reclamation-dashboard-niveau-section">
             <div className="reclamation-dashboard-niveau-title">
-              <span>Criticité</span>
+              <span>{t("Criticité")}</span>
               <span className="reclamation-dashboard-niveau-total">{totalCriticite}</span>
             </div>
             <div className="reclamation-dashboard-hbar-list">
               {criticiteEntries.map(([niveau, valeur]) => (
                 <div key={niveau} className="reclamation-dashboard-hbar-row">
-                  <span className="reclamation-dashboard-hbar-label">{NIVEAU_LABELS[niveau]}</span>
+                  <span className="reclamation-dashboard-hbar-label">{t(NIVEAU_LABELS[niveau])}</span>
                   <div className="reclamation-dashboard-hbar-track">
                     <div
                       className={`reclamation-dashboard-hbar-fill reclamation-dashboard-hbar-fill--niveau${niveau}`}
@@ -305,13 +310,13 @@ export default function ReclamationDashboard() {
 
           <div className="reclamation-dashboard-niveau-section">
             <div className="reclamation-dashboard-niveau-title">
-              <span>Urgence</span>
+              <span>{t("Urgence")}</span>
               <span className="reclamation-dashboard-niveau-total">{totalUrgence}</span>
             </div>
             <div className="reclamation-dashboard-hbar-list">
               {urgenceEntries.map(([niveau, valeur]) => (
                 <div key={niveau} className="reclamation-dashboard-hbar-row">
-                  <span className="reclamation-dashboard-hbar-label">{NIVEAU_LABELS[niveau]}</span>
+                  <span className="reclamation-dashboard-hbar-label">{t(NIVEAU_LABELS[niveau])}</span>
                   <div className="reclamation-dashboard-hbar-track">
                     <div
                       className={`reclamation-dashboard-hbar-fill reclamation-dashboard-hbar-fill--niveau${niveau}`}
@@ -340,19 +345,19 @@ export default function ReclamationDashboard() {
           </svg>
         </div>
         <div className="reclamation-dashboard-header-text">
-          <h1>Tableau de Bord des Réclamations</h1>
-          <p>Vue d'ensemble et indicateurs clés — glisse les cartes pour les réorganiser</p>
+          <h1>{t("Tableau de Bord des Réclamations")}</h1>
+          <p>{t("Vue d'ensemble et indicateurs clés — glisse les cartes pour les réorganiser")}</p>
         </div>
         <button
           type="button"
           className="reclamation-dashboard-reset-order"
           onClick={resetOrder}
-          title="Rétablir l'ordre par défaut"
+          title={t("Rétablir l'ordre par défaut")}
         >
           <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Réinitialiser l'ordre
+          {t("Réinitialiser l'ordre")}
         </button>
       </div>
 
@@ -398,25 +403,25 @@ export default function ReclamationDashboard() {
       {/* Réclamations récentes */}
       <div className="reclamation-dashboard-recent-card">
         <div className="reclamation-dashboard-chart-head">
-          <h3>Réclamations récentes</h3>
+          <h3>{t("Réclamations récentes")}</h3>
           {data.reclamationsRecentes?.length > 0 && (
-            <span className="reclamation-dashboard-chart-sub">{data.reclamationsRecentes.length} dernières</span>
+            <span className="reclamation-dashboard-chart-sub">{t('{n} dernières', { n: data.reclamationsRecentes.length })}</span>
           )}
         </div>
 
         {(!data.reclamationsRecentes || data.reclamationsRecentes.length === 0) ? (
-          <p className="reclamation-dashboard-empty">Aucune réclamation pour l'instant.</p>
+          <p className="reclamation-dashboard-empty">{t("Aucune réclamation pour l'instant.")}</p>
         ) : (
           <div className="reclamation-dashboard-table-wrap">
             <table className="reclamation-dashboard-table">
               <thead>
                 <tr>
-                  <th>Numéro</th>
-                  <th>Description</th>
-                  <th>Criticité</th>
-                  <th>Urgence</th>
-                  <th>Date</th>
-                  <th>État</th>
+                  <th>{t("Numéro")}</th>
+                  <th>{t("Description")}</th>
+                  <th>{t("Criticité")}</th>
+                  <th>{t("Urgence")}</th>
+                  <th>{t("Date")}</th>
+                  <th>{t("État")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -426,18 +431,18 @@ export default function ReclamationDashboard() {
                     <td className="reclamation-dashboard-desc-cell">{r.description}</td>
                     <td>
                       <span className={`reclamation-dashboard-niveau-badge reclamation-dashboard-niveau-badge--${r.criticite}`}>
-                        {NIVEAU_LABELS[r.criticite] || '—'}
+                        {NIVEAU_LABELS[r.criticite] ? t(NIVEAU_LABELS[r.criticite]) : '—'}
                       </span>
                     </td>
                     <td>
                       <span className={`reclamation-dashboard-niveau-badge reclamation-dashboard-niveau-badge--${r.urgence}`}>
-                        {NIVEAU_LABELS[r.urgence] || '—'}
+                        {NIVEAU_LABELS[r.urgence] ? t(NIVEAU_LABELS[r.urgence]) : '—'}
                       </span>
                     </td>
                     <td>{formatDate(r.date)}</td>
                     <td>
                       <span className={`reclamation-dashboard-etat-badge reclamation-dashboard-etat-badge--${r.etat}`}>
-                        {ETAT_LABELS[r.etat] || `État ${r.etat}`}
+                        {ETAT_LABELS[r.etat] ? t(ETAT_LABELS[r.etat]) : t('État {n}', { n: r.etat })}
                       </span>
                     </td>
                   </tr>

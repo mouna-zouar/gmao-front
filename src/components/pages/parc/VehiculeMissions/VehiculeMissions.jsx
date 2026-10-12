@@ -35,8 +35,10 @@ import PageModal from '../../../ui/modals/PageModal';
 import VehiculeTracage from './VehiculeTracage';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import { imprimerListe } from '../../../../utils/imprimerListe';
 import './VehiculeMissions.css';
 import TerminerMissionModal from '../../../ui/modals/TerminerMissionModal';
+import { t, tp, locale } from '../../../../i18n';
 
 const ETAT_LABELS = {
   0: 'Planifiée',
@@ -53,14 +55,14 @@ const ETAT_META = {
 };
 
 function etatLabel(etat) {
-  return ETAT_LABELS[etat] ?? `Code ${etat}`;
+  return ETAT_LABELS[etat] ? t(ETAT_LABELS[etat]) : t('Code {code}', { code: etat });
 }
 
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function destinationLabel(mission, emplacementsMap) {
@@ -72,7 +74,7 @@ function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('fr-FR', {
+  return d.toLocaleString(locale(), {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
@@ -120,7 +122,7 @@ export default function VehiculeMissions() {
     type: 'warning',
     title: '',
     message: '',
-    confirmText: 'Confirmer',
+    confirmText: t("Confirmer"),
     onConfirm: null,
   });
 
@@ -150,7 +152,7 @@ export default function VehiculeMissions() {
       setEmplacementsMap(eMap);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les missions. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les missions. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -226,7 +228,7 @@ export default function VehiculeMissions() {
     const sorted = [...result].sort((x, y) => {
       const vx = getSortValue(x, sortColumn);
       const vy = getSortValue(y, sortColumn);
-      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      if (typeof vx === 'string') return vx.localeCompare(vy, locale(), { sensitivity: 'base', numeric: true });
       return vx - vy;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
@@ -287,7 +289,7 @@ export default function VehiculeMissions() {
               </div>
               <div className="vms-cell-vehicle-text">
                 <span className="vms-cell-main">
-                  {veh?.nom || `Véhicule #${m.vehiculeId}`}
+                  {veh?.nom || t('Véhicule #{id}', { id: m.vehiculeId })}
                 </span>
                 {veh?.immatriculation && (
                   <span className="vms-cell-sub">{veh.immatriculation}</span>
@@ -332,7 +334,7 @@ export default function VehiculeMissions() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="vms-cell-map-link"
-                  title="Voir sur OpenStreetMap"
+                  title={t("Voir sur OpenStreetMap")}
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MapPin size={13} strokeWidth={2.5} />
@@ -346,9 +348,9 @@ export default function VehiculeMissions() {
         return (
           <td key="parcourus">
             {m.kilometrageParcouru != null
-              ? `${Number(m.kilometrageParcouru).toLocaleString('fr-FR')} km`
+              ? t('{n} km', { n: Number(m.kilometrageParcouru).toLocaleString(locale()) })
               : m.kilometrageDepart != null
-                ? `${Number(m.kilometrageDepart).toLocaleString('fr-FR')} km →`
+                ? <>{t('{n} km', { n: Number(m.kilometrageDepart).toLocaleString(locale()) })} <span className="rtl-miroir">→</span></>
                 : '—'}
           </td>
         );
@@ -406,9 +408,9 @@ export default function VehiculeMissions() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: 'Supprimer la mission',
-      message: `Supprimer la mission "${selected.num || selected.numero || selected.id}" ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer la mission"),
+      message: t('Supprimer la mission « {num} » ? Cette action est irréversible.', { num: selected.num || selected.numero || selected.id }),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -418,7 +420,7 @@ export default function VehiculeMissions() {
           setSelected(null);
         } catch (err) {
           console.error(err);
-          alert("Échec de la suppression de cette mission.");
+          alert(t("Échec de la suppression de cette mission."));
         } finally {
           setIsDeleting(false);
         }
@@ -433,7 +435,7 @@ export default function VehiculeMissions() {
       await load();
     } catch (err) {
       console.error(err);
-      alert(err.response?.data?.message || 'Échec du démarrage de la mission.');
+      alert(err.response?.data?.message || t('Échec du démarrage de la mission.'));
     }
   };
 
@@ -453,27 +455,33 @@ export default function VehiculeMissions() {
     await load();
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['N°', 'Véhicule', 'Immatriculation', 'Conducteur', 'Départ', 'Retour', 'Destination', 'Localisation', 'Km parcourus', 'État'];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['N°', 'Véhicule', 'Immatriculation', 'Conducteur', 'Départ', 'Retour', 'Destination', 'Localisation', 'Km parcourus', 'État'].map((e) => t(e));
     const lignes = filtered.map((m) => {
       const veh = vehiculesMap[m.vehiculeId];
       const pers = personnelsMap[m.conducteurId ?? m.personnelId];
       return [
-        (m.num || m.numero || '—').replace(/"/g, '""'),
-        (veh?.nom || '—').replace(/"/g, '""'),
-        (veh?.immatriculation || '—').replace(/"/g, '""'),
-        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—').replace(/"/g, '""'),
+        (m.num || m.numero || '—'),
+        (veh?.nom || '—'),
+        (veh?.immatriculation || '—'),
+        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—'),
         formatDateTime(m.dateDepart || m.dateDebut),
         formatDateTime(m.dateRetour || m.dateFin),
-        (destinationLabel(m, emplacementsMap) || '—').replace(/"/g, '""'),
-        (m.localisation || '—').replace(/"/g, '""'),
+        (destinationLabel(m, emplacementsMap) || '—'),
+        (m.localisation || '—'),
         m.kilometrageParcouru != null ? String(m.kilometrageParcouru) : '—',
         etatLabel(m.etat),
       ];
     });
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((ligne) => ligne.map((cellule) => `"${cellule}"`).join(';'))
+      .map((ligne) => ligne.map((cellule) => `"${String(cellule ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -487,8 +495,21 @@ export default function VehiculeMissions() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => window.print();
-  const handleStats = () => alert('Ouvre le dashboard des missions pour les statistiques détaillées.');
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Missions véhicules'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('État'), valeur: etatFilter !== 'all' ? etatLabel(Number(etatFilter)) : '' },
+      ],
+    });
+  };
+
+  const handleStats = () => alert(t("Ouvre le dashboard des missions pour les statistiques détaillées."));
 
   return (
     <div className="vms-container">
@@ -500,15 +521,15 @@ export default function VehiculeMissions() {
             type="button"
             className="vms-header-icon-wrap vms-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <Route size={24} strokeWidth={2} />
           </button>
           <div>
-            <h2>Missions véhicules</h2>
+            <h2>{t("Missions véhicules")}</h2>
             <p className="vms-header-subtitle">
-              Déplacements, affectations et suivi des missions par véhicule
+              {t("Déplacements, affectations et suivi des missions par véhicule")}
             </p>
           </div>
         </div>
@@ -517,19 +538,19 @@ export default function VehiculeMissions() {
         <div className="vms-stats">
           <div className="vms-stat">
             <span className="vms-stat-value">{stats.total}</span>
-            <span className="vms-stat-label">Total</span>
+            <span className="vms-stat-label">{t("Total")}</span>
           </div>
           <div className="vms-stat stat-planned">
             <span className="vms-stat-value">{stats.planifiees}</span>
-            <span className="vms-stat-label">Planifiées</span>
+            <span className="vms-stat-label">{t("Planifiées")}</span>
           </div>
           <div className="vms-stat stat-running">
             <span className="vms-stat-value">{stats.enCours}</span>
-            <span className="vms-stat-label">En cours</span>
+            <span className="vms-stat-label">{t("En cours")}</span>
           </div>
           <div className="vms-stat stat-done">
             <span className="vms-stat-value">{stats.terminees}</span>
-            <span className="vms-stat-label">Terminées</span>
+            <span className="vms-stat-label">{t("Terminées")}</span>
           </div>
         </div>
       </div>
@@ -538,7 +559,7 @@ export default function VehiculeMissions() {
       <div className="vms-actions-bar">
         <button className="vms-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} strokeWidth={2.5} />
-          <span>Nouvelle mission</span>
+          <span>{t("Nouvelle mission")}</span>
         </button>
 
         <button
@@ -547,37 +568,37 @@ export default function VehiculeMissions() {
           onClick={openEdit}
         >
           <Pencil size={18} strokeWidth={2.2} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
           className={`vms-action-btn tracage ${!selected ? 'disabled' : ''}`}
           disabled={!selected}
           onClick={() => setTracageOpen(true)}
-          title="Ouvrir le traçage et les détails de la mission"
+          title={t("Ouvrir le traçage et les détails de la mission")}
         >
           <Navigation size={18} strokeWidth={2.2} />
-          <span>Traçage</span>
+          <span>{t("Traçage")}</span>
         </button>
 
         <button
           className={`vms-action-btn demarrer ${(!selected || selected?.etat !== 0) ? 'disabled' : ''}`}
           disabled={!selected || selected?.etat !== 0}
           onClick={handleDemarrer}
-          title="Démarrer la mission sélectionnée"
+          title={t("Démarrer la mission sélectionnée")}
         >
           <Play size={18} strokeWidth={2.2} />
-          <span>Démarrer</span>
+          <span>{t("Démarrer")}</span>
         </button>
 
         <button
           className={`vms-action-btn terminer ${(!selected || selected?.etat !== 1) ? 'disabled' : ''}`}
           disabled={!selected || selected?.etat !== 1}
           onClick={handleTerminer}
-          title="Terminer la mission sélectionnée"
+          title={t("Terminer la mission sélectionnée")}
         >
           <CheckCircle2 size={18} strokeWidth={2.2} />
-          <span>Terminer</span>
+          <span>{t("Terminer")}</span>
         </button>
 
         <button
@@ -586,7 +607,7 @@ export default function VehiculeMissions() {
           onClick={handleDelete}
         >
           <Trash2 size={18} strokeWidth={2.2} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
       </div>
 
@@ -595,13 +616,13 @@ export default function VehiculeMissions() {
         <div className="vms-filter-group">
           <span className="vms-filter-label">
             <Search size={14} strokeWidth={2.5} />
-            Recherche
+            {t("Recherche")}
           </span>
           <div className="vms-filter-input-wrap">
             <Search size={16} strokeWidth={2.2} className="vms-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -611,11 +632,11 @@ export default function VehiculeMissions() {
         <div className="vms-filter-group">
           <span className="vms-filter-label">
             <Filter size={14} strokeWidth={2.5} />
-            État
+            {t("État")}
           </span>
           <div className="vms-filter-input-wrap">
             <select value={etatFilter} onChange={(e) => setEtatFilter(e.target.value)}>
-              <option value="all">Tous les états</option>
+              <option value="all">{t("Tous les états")}</option>
               {availableEtats.map((e) => (
                 <option key={e} value={e}>{etatLabel(e)}</option>
               ))}
@@ -625,17 +646,17 @@ export default function VehiculeMissions() {
 
         <button className="vms-filter-reset" onClick={handleResetFilters}>
           <RotateCcw size={14} strokeWidth={2.5} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="vms-export-stack">
-          <button className="vms-export-btn excel" title="Exporter en Excel (CSV)" onClick={handleExportExcel}>
+          <button className="vms-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>
             <Download size={16} strokeWidth={2.5} />
           </button>
-          <button className="vms-export-btn print" title="Imprimer" onClick={handlePrint}>
+          <button className="vms-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>
             <Printer size={16} strokeWidth={2.5} />
           </button>
-          <button className="vms-export-btn stats" title="Statistiques" onClick={handleStats}>
+          <button className="vms-export-btn stats" title={t("Statistiques")} onClick={handleStats}>
             <BarChart3 size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -659,10 +680,10 @@ export default function VehiculeMissions() {
                   className={`vms-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="vms-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -675,7 +696,7 @@ export default function VehiculeMissions() {
                 <td colSpan={visibleColumns.length || 1} className="vms-table-empty">
                   <div className="vms-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vms-spin" />
-                    <span>Chargement des missions...</span>
+                    <span>{t("Chargement des missions...")}</span>
                   </div>
                 </td>
               </tr>
@@ -686,8 +707,8 @@ export default function VehiculeMissions() {
                     <Route size={32} strokeWidth={1.6} />
                     <span>
                       {missions.length === 0
-                        ? "Aucune mission pour l'instant. Crée la première avec le bouton ci-dessus."
-                        : "Aucune mission ne correspond à ces filtres."}
+                        ? t("Aucune mission pour l'instant. Crée la première avec le bouton ci-dessus.")
+                        : t("Aucune mission ne correspond à ces filtres.")}
                     </span>
                   </div>
                 </td>
@@ -720,8 +741,8 @@ export default function VehiculeMissions() {
       <PageModal
         isOpen={tracageOpen}
         onClose={() => setTracageOpen(false)}
-        title="Traçage véhicule"
-        subtitle="Suivi en temps réel, historique et détails de la mission"
+        title={t("Traçage véhicule")}
+        subtitle={t('Suivi en temps réel, historique et détails de la mission')}
         icon={Navigation}
         accent="#0d9488"
         size="full"

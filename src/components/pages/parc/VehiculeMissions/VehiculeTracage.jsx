@@ -10,6 +10,7 @@ import vehiculeMissionService from '../../../../services/vehiculeMissionService'
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
 import personnelService from '../../../../services/personnelService';
 import emplacementService from '../../../../services/emplacementService';
+import { t, tp, locale } from '../../../../i18n';
 import './VehiculeTracage.css';
 
 const ETAT_LABELS = { 0: 'Planifiée', 1: 'En cours', 2: 'Terminée', 3: 'Annulée' };
@@ -32,7 +33,7 @@ function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('fr-FR', {
+  return d.toLocaleString(locale(), {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
@@ -42,14 +43,14 @@ function formatTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 function daysUntil(iso) {
@@ -72,8 +73,8 @@ function formatDuration(ms) {
   const totalMin = Math.floor(ms / 60000);
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
-  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}min`;
-  return `${m} min`;
+  if (h > 0) return t('{h} h {m} min', { h, m: String(m).padStart(2, '0') });
+  return t('{n} min', { n: m });
 }
 
 function formatElapsed(fromIso) {
@@ -135,7 +136,7 @@ export default function VehiculeTracage({
         setEmplacementsMap(em);
       } catch (err) {
         console.error(err);
-        setError("Impossible de charger les véhicules.");
+        setError(t("Impossible de charger les véhicules."));
       } finally {
         setLoadingVehicules(false);
       }
@@ -217,7 +218,7 @@ export default function VehiculeTracage({
     update();
     intervalRef.current = setInterval(() => {
       update();
-      setTick((t) => t + 1);
+      setTick((n) => n + 1);
     }, 1000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -251,13 +252,13 @@ export default function VehiculeTracage({
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error(err);
-      alert('Échec du démarrage.');
+      alert(t("Échec du démarrage."));
     }
   };
 
   const handleTerminer = async () => {
     if (!missionEnCours) return;
-    const kmStr = window.prompt('Kilométrage à la fin :', '');
+    const kmStr = window.prompt(t('Kilométrage à la fin :'), '');
     try {
       await vehiculeMissionService.terminer(
         missionEnCours.id,
@@ -267,7 +268,7 @@ export default function VehiculeTracage({
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error(err);
-      alert('Échec de la clôture.');
+      alert(t("Échec de la clôture."));
     }
   };
 
@@ -276,7 +277,7 @@ export default function VehiculeTracage({
       <div className={`vtr-container ${isModal ? 'vtr-container--modal' : ''}`}>
         <div className="vtr-loading-full">
           <Loader2 size={32} strokeWidth={2} className="vtr-spin" />
-          <span>Chargement...</span>
+          <span>{t("Chargement...")}</span>
         </div>
       </div>
     );
@@ -293,8 +294,8 @@ export default function VehiculeTracage({
               <Navigation size={24} strokeWidth={2} />
             </div>
             <div>
-              <h2>Traçage véhicule</h2>
-              <p>Suivi en temps réel, historique et état</p>
+              <h2>{t("Traçage véhicule")}</h2>
+              <p>{t("Suivi en temps réel, historique et état")}</p>
             </div>
           </div>
 
@@ -302,17 +303,17 @@ export default function VehiculeTracage({
             <div className="vtr-select-wrap">
               <Car size={16} strokeWidth={2.5} className="vtr-select-icon" />
               <select value={selectedVehiculeId} onChange={(e) => setSelectedVehiculeId(e.target.value)}>
-                <option value="">Sélectionner un véhicule...</option>
+                <option value="">{t("Sélectionner un véhicule...")}</option>
                 {vehicules.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.matricule || `Véhicule #${v.id}`}{v.marque ? ` — ${v.marque}` : ''}
+                    {v.matricule || t('Véhicule #{id}', { id: v.id })}{v.marque ? ` — ${v.marque}` : ''}
                   </option>
                 ))}
               </select>
               <ChevronDown size={16} strokeWidth={2.5} className="vtr-select-chevron" />
             </div>
 
-            <button className="vtr-refresh-btn" onClick={() => setRefreshKey((k) => k + 1)} title="Rafraîchir">
+            <button className="vtr-refresh-btn" onClick={() => setRefreshKey((k) => k + 1)} title={t("Rafraîchir")}>
               <RefreshCw size={16} strokeWidth={2.5} />
             </button>
           </div>
@@ -322,17 +323,17 @@ export default function VehiculeTracage({
           <div className="vtr-select-wrap">
             <Car size={16} strokeWidth={2.5} className="vtr-select-icon" />
             <select value={selectedVehiculeId} onChange={(e) => setSelectedVehiculeId(e.target.value)}>
-              <option value="">Sélectionner un véhicule...</option>
+              <option value="">{t("Sélectionner un véhicule...")}</option>
               {vehicules.map((v) => (
                 <option key={v.id} value={v.id}>
-                  {v.matricule || `Véhicule #${v.id}`}{v.marque ? ` — ${v.marque}` : ''}
+                  {v.matricule || t('Véhicule #{id}', { id: v.id })}{v.marque ? ` — ${v.marque}` : ''}
                 </option>
               ))}
             </select>
             <ChevronDown size={16} strokeWidth={2.5} className="vtr-select-chevron" />
           </div>
 
-          <button className="vtr-refresh-btn" onClick={() => setRefreshKey((k) => k + 1)} title="Rafraîchir">
+          <button className="vtr-refresh-btn" onClick={() => setRefreshKey((k) => k + 1)} title={t("Rafraîchir")}>
             <RefreshCw size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -348,8 +349,8 @@ export default function VehiculeTracage({
       {!vehicule ? (
         <div className="vtr-empty">
           <Car size={48} strokeWidth={1.4} />
-          <h3>Aucun véhicule sélectionné</h3>
-          <p>Choisis un véhicule en haut pour afficher son traçage.</p>
+          <h3>{t("Aucun véhicule sélectionné")}</h3>
+          <p>{t("Choisis un véhicule en haut pour afficher son traçage.")}</p>
         </div>
       ) : (
         <>
@@ -373,15 +374,15 @@ export default function VehiculeTracage({
                   <Clock size={18} strokeWidth={2.2} />
                 </div>
                 <div>
-                  <span className="vtr-ready-label">Mission planifiée prête à démarrer</span>
+                  <span className="vtr-ready-label">{t("Mission planifiée prête à démarrer")}</span>
                   <span className="vtr-ready-num">
-                    {derniereMission.num || `#${derniereMission.id}`} — {destinationLabel(derniereMission, emplacementsMap) || 'Sans destination'}
+                    {derniereMission.num || `#${derniereMission.id}`} — {destinationLabel(derniereMission, emplacementsMap) || t("Sans destination")}
                   </span>
                 </div>
               </div>
               <button className="vtr-btn-start" onClick={handleDemarrer}>
                 <Play size={14} strokeWidth={2.5} />
-                Démarrer la mission
+                {t("Démarrer la mission")}
               </button>
             </div>
           )}
@@ -393,14 +394,14 @@ export default function VehiculeTracage({
                 <Car size={26} strokeWidth={2} />
               </div>
               <div className="vtr-vehicle-info">
-                <h3>{vehicule.matricule || `Véhicule #${vehicule.id}`}</h3>
+                <h3>{vehicule.matricule || t('Véhicule #{id}', { id: vehicule.id })}</h3>
                 <p>
                   {vehicule.marque && <span>{vehicule.marque}</span>}
                   {vehicule.numChassis && <span> · {vehicule.numChassis}</span>}
                 </p>
                 <div className="vtr-vehicle-tags">
-                  <span className="vtr-tag">{TYPE_LABELS[vehicule.type] ?? `Type ${vehicule.type}`}</span>
-                  <span className="vtr-tag vtr-tag--ghost">{NATURE_LABELS[vehicule.nature] ?? `Nature ${vehicule.nature}`}</span>
+                  <span className="vtr-tag">{TYPE_LABELS[vehicule.type] ? t(TYPE_LABELS[vehicule.type]) : t('Type {n}', { n: vehicule.type })}</span>
+                  <span className="vtr-tag vtr-tag--ghost">{NATURE_LABELS[vehicule.nature] ? t(NATURE_LABELS[vehicule.nature]) : t('Nature {n}', { n: vehicule.nature })}</span>
                 </div>
               </div>
             </div>
@@ -410,9 +411,9 @@ export default function VehiculeTracage({
                 <Gauge size={16} strokeWidth={2.2} />
                 <div>
                   <span className="vtr-mini-stat-value">
-                    {vehicule.kilometrage != null ? Number(vehicule.kilometrage).toLocaleString('fr-FR') : '—'}
+                    {vehicule.kilometrage != null ? Number(vehicule.kilometrage).toLocaleString(locale()) : '—'}
                   </span>
-                  <span className="vtr-mini-stat-label">km compteur</span>
+                  <span className="vtr-mini-stat-label">{t("km compteur")}</span>
                 </div>
               </div>
 
@@ -420,15 +421,15 @@ export default function VehiculeTracage({
                 <Route size={16} strokeWidth={2.2} />
                 <div>
                   <span className="vtr-mini-stat-value">{stats.total}</span>
-                  <span className="vtr-mini-stat-label">missions</span>
+                  <span className="vtr-mini-stat-label">{t("missions")}</span>
                 </div>
               </div>
 
               <div className="vtr-mini-stat">
                 <TrendingUp size={16} strokeWidth={2.2} />
                 <div>
-                  <span className="vtr-mini-stat-value">{stats.kmTotal.toLocaleString('fr-FR')}</span>
-                  <span className="vtr-mini-stat-label">km cumulés</span>
+                  <span className="vtr-mini-stat-value">{stats.kmTotal.toLocaleString(locale())}</span>
+                  <span className="vtr-mini-stat-label">{t("km cumulés")}</span>
                 </div>
               </div>
 
@@ -436,9 +437,9 @@ export default function VehiculeTracage({
                 <Activity size={16} strokeWidth={2.2} />
                 <div>
                   <span className={`vtr-mini-stat-value ${missionEnCours ? 'is-running' : ''}`}>
-                    {missionEnCours ? 'En cours' : 'Disponible'}
+                    {missionEnCours ? t("En cours") : t("Disponible")}
                   </span>
-                  <span className="vtr-mini-stat-label">état</span>
+                  <span className="vtr-mini-stat-label">{t("état")}</span>
                 </div>
               </div>
             </div>
@@ -462,7 +463,7 @@ export default function VehiculeTracage({
                   <div className="vtr-card-header">
                     <div className="vtr-card-title">
                       <Clock size={16} strokeWidth={2.5} />
-                      <span>Historique missions</span>
+                      <span>{t("Historique missions")}</span>
                     </div>
                     <span className="vtr-card-badge">{missions.length}</span>
                   </div>
@@ -470,12 +471,12 @@ export default function VehiculeTracage({
                   {loadingMissions ? (
                     <div className="vtr-loading">
                       <Loader2 size={22} strokeWidth={2} className="vtr-spin" />
-                      <span>Chargement...</span>
+                      <span>{t("Chargement...")}</span>
                     </div>
                   ) : missions.length === 0 ? (
                     <div className="vtr-empty-mini">
                       <Route size={28} strokeWidth={1.5} />
-                      <p>Aucune mission enregistrée</p>
+                      <p>{t("Aucune mission enregistrée")}</p>
                     </div>
                   ) : (
                     <div className="vtr-timeline">
@@ -490,7 +491,7 @@ export default function VehiculeTracage({
                             <div className="vtr-timeline-content">
                               <div className="vtr-timeline-head">
                                 <span className="vtr-timeline-num">{m.num || `#${m.id}`}</span>
-                                <span className={`vtr-pill ${meta.class}`}>{ETAT_LABELS[m.etat]}</span>
+                                <span className={`vtr-pill ${meta.class}`}>{ETAT_LABELS[m.etat] ? t(ETAT_LABELS[m.etat]) : m.etat}</span>
                               </div>
                               <div className="vtr-timeline-body">
                                 <span className="vtr-timeline-date">
@@ -517,15 +518,15 @@ export default function VehiculeTracage({
 
           {/* ÉCHÉANCES */}
           <div className="vtr-echeances">
-            <EcheanceCard title="Assurance" Icon={Shield} dateDerniere={vehicule.dateDernierAssurance} dateProchaine={vehicule.dateProchainAssurance} />
-            <EcheanceCard title="Vignette" Icon={Shield} dateDerniere={vehicule.dateDernierVignette} dateProchaine={vehicule.dateProchainVignette} />
-            <EcheanceCard title="Visite technique" Icon={Shield} dateDerniere={vehicule.dateDernierVisiteTech} dateProchaine={vehicule.dateProchainVisiteTech} />
+            <EcheanceCard title={t("Assurance")} Icon={Shield} dateDerniere={vehicule.dateDernierAssurance} dateProchaine={vehicule.dateProchainAssurance} />
+            <EcheanceCard title={t("Vignette")} Icon={Shield} dateDerniere={vehicule.dateDernierVignette} dateProchaine={vehicule.dateProchainVignette} />
+            <EcheanceCard title={t("Visite technique")} Icon={Shield} dateDerniere={vehicule.dateDernierVisiteTech} dateProchaine={vehicule.dateProchainVisiteTech} />
             <EcheanceCard
-              title="Vidange"
+              title={t("Vidange")}
               Icon={Wrench}
               dateDerniere={vehicule.dateDernierVidange}
               dateProchaine={vehicule.dateProchainVidange}
-              extra={vehicule.kmProchainVidange != null ? `Prochaine à ${Number(vehicule.kmProchainVidange).toLocaleString('fr-FR')} km` : null}
+              extra={vehicule.kmProchainVidange != null ? t('Prochaine à {n} km', { n: Number(vehicule.kmProchainVidange).toLocaleString(locale()) }) : null}
             />
           </div>
 
@@ -536,7 +537,7 @@ export default function VehiculeTracage({
                 <User size={20} strokeWidth={2.2} />
               </div>
               <div className="vtr-driver-info">
-                <span className="vtr-driver-label">Conducteur actuel</span>
+                <span className="vtr-driver-label">{t("Conducteur actuel")}</span>
                 <span className="vtr-driver-name">
                   {conducteurLabel.nom} {conducteurLabel.prenom}
                   {conducteurLabel.matricule && ` (${conducteurLabel.matricule})`}
@@ -545,7 +546,7 @@ export default function VehiculeTracage({
               {conducteurActuel?.dateDebut && (
                 <div className="vtr-driver-since">
                   <Clock size={14} strokeWidth={2.2} />
-                  Depuis {formatDate(conducteurActuel.dateDebut)}
+                  {t('Depuis le {date}', { date: formatDate(conducteurActuel.dateDebut) })}
                 </div>
               )}
             </div>
@@ -578,19 +579,19 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
             <span className="vtr-live-banner__pulse-ring" />
           </span>
           <div>
-            <span className="vtr-live-banner__label">EN DIRECT</span>
+            <span className="vtr-live-banner__label">{t("EN DIRECT")}</span>
             <span className="vtr-live-banner__mission">{missionRef}</span>
           </div>
         </div>
 
         <div className="vtr-live-banner__header-right">
           <div className="vtr-live-banner__eta">
-            <span className="vtr-live-banner__eta-label">Progression</span>
+            <span className="vtr-live-banner__eta-label">{t("Progression")}</span>
             <span className="vtr-live-banner__eta-value">{pct}%</span>
           </div>
           <button className="vtr-live-banner__stop" onClick={onTerminer}>
             <CheckCircle2 size={15} strokeWidth={2.5} />
-            Terminer
+            {t("Terminer")}
           </button>
         </div>
       </div>
@@ -602,7 +603,7 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
           <span className="vtr-live-banner__endpoint-icon">
             <Flag size={14} strokeWidth={2.5} />
           </span>
-          <span className="vtr-live-banner__endpoint-label">Départ</span>
+          <span className="vtr-live-banner__endpoint-label">{t("Départ")}</span>
           <span className="vtr-live-banner__endpoint-time">
             {formatTime(mission.dateDepart)}
           </span>
@@ -648,7 +649,7 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
             <MapPin size={14} strokeWidth={2.5} />
           </span>
           <span className="vtr-live-banner__endpoint-label">
-            {destinationLabel(mission, emplacementsMap) || 'Arrivée'}
+            {destinationLabel(mission, emplacementsMap) || t("Arrivée")}
           </span>
           <span className="vtr-live-banner__endpoint-time">
             {mission.dateRetour ? formatTime(mission.dateRetour) : '—'}
@@ -691,7 +692,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
 
     if (departAt) {
       steps.push({
-        label: 'Mission démarrée',
+        label: t("Mission démarrée"),
         time: formatTime(departAt),
         done: true,
         current: false,
@@ -702,7 +703,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
     // Point intermédiaire fictif : 50%
     if (progress >= 0.5 && departAt) {
       steps.push({
-        label: 'Mi-parcours',
+        label: t("Mi-parcours"),
         time: formatTime(new Date(new Date(departAt).getTime() + (Date.now() - new Date(departAt).getTime()) / 2).toISOString()),
         done: true,
         current: false,
@@ -711,8 +712,8 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
     }
 
     steps.push({
-      label: 'En route...',
-      time: `il y a ${formatDuration(now - new Date(departAt || now).getTime())}`,
+      label: t("En route..."),
+      time: t('il y a {duree}', { duree: formatDuration(now - new Date(departAt || now).getTime()) }),
       done: false,
       current: true,
       icon: Car,
@@ -720,7 +721,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
 
     if (etaDate) {
       steps.push({
-        label: `Arrivée estimée`,
+        label: t('Arrivée estimée'),
         time: formatTime(etaDate),
         done: false,
         current: false,
@@ -738,7 +739,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
       <div className="vtr-live-panel__header">
         <div className="vtr-live-panel__title">
           <span className="vtr-live-panel__dot" />
-          <span>Suivi en temps réel</span>
+          <span>{t("Suivi en temps réel")}</span>
         </div>
         <span className="vtr-live-panel__ref">
           {mission.num || `#${mission.id}`}
@@ -751,21 +752,21 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
           value={pct}
           max={100}
           suffix="%"
-          label="Progression"
+          label={t("Progression")}
           color="#1b648f"
         />
         <CircularMetric
           value={elapsedMin ?? 0}
           max={Math.max(elapsedMin ?? 0, etaMin ?? 0, 60)}
           displayValue={elapsedMin != null ? formatDuration(elapsedMin * 60000) : '—'}
-          label="Temps écoulé"
+          label={t("Temps écoulé")}
           color="#0ea5e9"
         />
         <CircularMetric
           value={etaMin ?? 0}
           max={Math.max(elapsedMin ?? 0, etaMin ?? 0, 60)}
           displayValue={etaMin != null ? formatDuration(etaMin * 60000) : '—'}
-          label="Temps restant"
+          label={t("Temps restant")}
           color="#f59e0b"
         />
       </div>
@@ -774,7 +775,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
       <div className="vtr-live-panel__section">
         <div className="vtr-live-panel__section-title">
           <Activity size={14} strokeWidth={2.5} />
-          <span>Chronologie de la mission</span>
+          <span>{t("Chronologie de la mission")}</span>
         </div>
 
         <div className="vtr-live-timeline">
@@ -789,10 +790,10 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
                   <StepIcon size={11} strokeWidth={2.8} />
                 </div>
                 <div className="vtr-live-timeline__content">
-                  <span className="vtr-live-timeline__label">{step.label}</span>
+                  <span className="vtr-live-timeline__label">{t(step.label)}</span>
                   <span className="vtr-live-timeline__time">{step.time}</span>
                 </div>
-                {step.current && <span className="vtr-live-timeline__live">LIVE</span>}
+                {step.current && <span className="vtr-live-timeline__live">{t("LIVE")}</span>}
               </div>
             );
           })}
@@ -803,7 +804,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
       <div className="vtr-live-panel__section">
         <div className="vtr-live-panel__section-title">
           <Zap size={14} strokeWidth={2.5} />
-          <span>Briefing</span>
+          <span>{t("Briefing")}</span>
         </div>
 
         <div className="vtr-live-panel__briefing">
@@ -812,7 +813,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
               <Car size={13} strokeWidth={2.5} />
             </div>
             <div className="vtr-live-panel__briefing-text">
-              <span className="vtr-live-panel__briefing-label">Véhicule</span>
+              <span className="vtr-live-panel__briefing-label">{t("Véhicule")}</span>
               <span className="vtr-live-panel__briefing-value">
                 {vehicule.matricule || `#${vehicule.id}`}
               </span>
@@ -825,7 +826,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
                 <User size={13} strokeWidth={2.5} />
               </div>
               <div className="vtr-live-panel__briefing-text">
-                <span className="vtr-live-panel__briefing-label">Conducteur</span>
+                <span className="vtr-live-panel__briefing-label">{t("Conducteur")}</span>
                 <span className="vtr-live-panel__briefing-value">
                   {conducteur.nom} {conducteur.prenom}
                 </span>
@@ -839,7 +840,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
                 <MapPin size={13} strokeWidth={2.5} />
               </div>
               <div className="vtr-live-panel__briefing-text">
-                <span className="vtr-live-panel__briefing-label">Destination</span>
+                <span className="vtr-live-panel__briefing-label">{t("Destination")}</span>
                 <span className="vtr-live-panel__briefing-value">
                   {destinationLabel(mission, emplacementsMap)}
                 </span>
@@ -852,7 +853,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
               <Clock size={13} strokeWidth={2.5} />
             </div>
             <div className="vtr-live-panel__briefing-text">
-              <span className="vtr-live-panel__briefing-label">Départ</span>
+              <span className="vtr-live-panel__briefing-label">{t("Départ")}</span>
               <span className="vtr-live-panel__briefing-value">
                 {formatDateTime(mission.dateDepart)}
               </span>
@@ -865,7 +866,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
                 <Navigation size={13} strokeWidth={2.5} />
               </div>
               <div className="vtr-live-panel__briefing-text">
-                <span className="vtr-live-panel__briefing-label">Localisation</span>
+                <span className="vtr-live-panel__briefing-label">{t("Localisation")}</span>
                 <span className="vtr-live-panel__briefing-value">
                   {mission.localisation}
                 </span>
@@ -878,7 +879,7 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
       {/* ─── Action ─── */}
       <button className="vtr-live-panel__action" onClick={onTerminer}>
         <CheckCircle2 size={16} strokeWidth={2.5} />
-        Terminer la mission
+        {t("Terminer la mission")}
       </button>
     </div>
   );
@@ -942,11 +943,11 @@ function EcheanceCard({ title, Icon, dateDerniere, dateProchaine, extra }) {
 
       <div className="vtr-echeance-body">
         <div className="vtr-echeance-row">
-          <span className="vtr-echeance-label">Dernière</span>
+          <span className="vtr-echeance-label">{t("Dernière")}</span>
           <span className="vtr-echeance-value">{formatDate(dateDerniere)}</span>
         </div>
         <div className="vtr-echeance-row">
-          <span className="vtr-echeance-label">Prochaine</span>
+          <span className="vtr-echeance-label">{t("Prochaine")}</span>
           <span className="vtr-echeance-value">{formatDate(dateProchaine)}</span>
         </div>
       </div>
@@ -954,10 +955,10 @@ function EcheanceCard({ title, Icon, dateDerniere, dateProchaine, extra }) {
       {days !== null && (
         <div className={`vtr-echeance-badge level-${level}`}>
           {days < 0
-            ? `Expiré depuis ${Math.abs(days)} j`
+            ? t('Expiré depuis {n} j', { n: Math.abs(days) })
             : days === 0
-            ? "Aujourd'hui"
-            : `Dans ${days} jour${days > 1 ? 's' : ''}`}
+            ? t("Aujourd'hui")
+            : tp('dans jours', days)}
         </div>
       )}
 

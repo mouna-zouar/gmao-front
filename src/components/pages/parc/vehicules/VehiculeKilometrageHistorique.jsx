@@ -5,6 +5,7 @@ import {
   RefreshCw, Milestone,
 } from 'lucide-react';
 import vehiculeService from '../../../../services/vehiculeService';
+import { t, tp, locale } from '../../../../i18n';
 import './VehiculeKilometrageHistorique.css';
 
 const SOURCE_LABELS = {
@@ -26,9 +27,9 @@ const SOURCE_ICONS = {
 const sourceClass = (source) =>
   String(source ?? '').toLowerCase().replace(/_/g, '-');
 
-const fmtKm = (v) => (v == null ? '—' : `${Number(v).toLocaleString('fr-FR')} km`);
+const fmtKm = (v) => (v == null ? '—' : t('{n} km', { n: Number(v).toLocaleString(locale()) }));
 const fmtDate = (d) =>
-  d ? new Date(d).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+  d ? new Date(d).toLocaleString(locale(), { dateStyle: 'short', timeStyle: 'short' }) : '—';
 
 export default function VehiculeKilometrageHistorique({ vehiculeId }) {
   const [rows, setRows] = useState([]);
@@ -48,7 +49,7 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
       setTotalPages(data.totalPages ?? 0);
       setTotalElements(data.totalElements ?? data.content?.length ?? 0);
     } catch (err) {
-      setError(err?.response?.data?.message || "Impossible de charger l'historique.");
+      setError(err?.response?.data?.message || t("Impossible de charger l'historique."));
     } finally {
       setLoading(false);
     }
@@ -114,28 +115,28 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
           <div className="vkh-kpi kpi-current">
             <Gauge size={16} />
             <span className="vkh-kpi-value">{fmtKm(resume.dernier.kilometrage)}</span>
-            <span className="vkh-kpi-label">Dernier relevé</span>
+            <span className="vkh-kpi-label">{t("Dernier relevé")}</span>
           </div>
 
           <div className="vkh-kpi kpi-date">
             <Calendar size={16} />
             <span className="vkh-kpi-value vkh-kpi-value-sm">
               {resume.dernier.date
-                ? new Date(resume.dernier.date).toLocaleDateString('fr-FR', {
+                ? new Date(resume.dernier.date).toLocaleDateString(locale(), {
                     day: '2-digit', month: 'short', year: 'numeric',
                   })
                 : '—'}
             </span>
-            <span className="vkh-kpi-label">Date du relevé</span>
+            <span className="vkh-kpi-label">{t("Date du relevé")}</span>
           </div>
 
           {resume.progression != null && resume.progression > 0 && (
             <div className="vkh-kpi kpi-delta">
               <TrendingUp size={16} />
               <span className="vkh-kpi-value">
-                +{Number(resume.progression).toLocaleString('fr-FR')} km
+                +{fmtKm(resume.progression)}
               </span>
-              <span className="vkh-kpi-label">Progression page</span>
+              <span className="vkh-kpi-label">{t("Progression page")}</span>
             </div>
           )}
 
@@ -144,7 +145,7 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
               <Activity size={16} />
               <span className="vkh-kpi-value">{sourcesSummary.length}</span>
               <span className="vkh-kpi-label">
-                Source{sourcesSummary.length > 1 ? 's' : ''}
+                {tp('source (libellé)', sourcesSummary.length)}
               </span>
             </div>
           )}
@@ -163,14 +164,14 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
       <div className="vkh-section">
         <div className="vkh-section-head">
           <Activity size={14} />
-          <span>Relevés kilométriques</span>
+          <span>{t("Relevés kilométriques")}</span>
           <span className="vkh-count">{totalElements}</span>
         </div>
 
         {rows.length === 0 && !loading && (
           <div className="vkh-empty">
             <Inbox size={24} />
-            <p>Aucun relevé enregistré pour ce véhicule.</p>
+            <p>{t("Aucun relevé enregistré pour ce véhicule.")}</p>
           </div>
         )}
 
@@ -186,10 +187,10 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
                   {/* Bloc date */}
                   <div className="vkh-hist-date">
                     <span className="vkh-hist-day">
-                      {d ? d.toLocaleDateString('fr-FR', { day: '2-digit' }) : '—'}
+                      {d ? d.toLocaleDateString(locale(), { day: '2-digit' }) : '—'}
                     </span>
                     <span className="vkh-hist-month">
-                      {d ? d.toLocaleDateString('fr-FR', { month: 'short' }) : ''}
+                      {d ? d.toLocaleDateString(locale(), { month: 'short' }) : ''}
                     </span>
                     <span className="vkh-hist-year">
                       {d ? d.getFullYear() : ''}
@@ -202,22 +203,22 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
                       <h4 className="vkh-hist-title">
                         {fmtKm(r.kilometrage)}
                         {idx === 0 && (
-                          <span className="vkh-tag" title="Relevé le plus récent">
-                            Récent
+                          <span className="vkh-tag" title={t("Relevé le plus récent")}>
+                            {t("Récent")}
                           </span>
                         )}
                       </h4>
                       <div className="vkh-hist-tags">
                         <span className={`vkh-source vkh-source-${sourceClass(r.source)}`}>
                           <SourceIcon size={11} strokeWidth={2.6} />
-                          {SOURCE_LABELS[r.source] ?? r.source}
+                          {SOURCE_LABELS[r.source] ? t(SOURCE_LABELS[r.source]) : r.source}
                         </span>
                       </div>
                     </div>
 
                     <div className="vkh-hist-km">
                       <div className="vkh-hist-km-item">
-                        <span className="vkh-hist-km-label">Relevé</span>
+                        <span className="vkh-hist-km-label">{t("Relevé")}</span>
                         <span className="vkh-hist-km-value">
                           {fmtKm(r.kilometrage)}
                         </span>
@@ -225,17 +226,17 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
 
                       {delta != null && (
                         <div className="vkh-hist-km-item">
-                          <span className="vkh-hist-km-label">Variation</span>
+                          <span className="vkh-hist-km-label">{t("Variation")}</span>
                           <span className={`vkh-delta ${delta > 0 ? 'is-up' : 'is-flat'}`}>
                             {delta > 0 ? '+' : ''}
-                            {Number(delta).toLocaleString('fr-FR')} km
+                            {fmtKm(delta)}
                           </span>
                         </div>
                       )}
 
                       {r.sourceId != null && (
                         <div className="vkh-hist-km-item">
-                          <span className="vkh-hist-km-label">Référence</span>
+                          <span className="vkh-hist-km-label">{t("Référence")}</span>
                           <span className="vkh-ref">#{r.sourceId}</span>
                         </div>
                       )}
@@ -262,11 +263,11 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
             disabled={page === 0 || loading}
             onClick={goPrev}
           >
-            <ChevronLeft size={15} /> Précédent
+            <ChevronLeft size={15} className="rtl-miroir" /> {t("Précédent")}
           </button>
 
           <span className="vkh-page-info">
-            Page <strong>{page + 1}</strong> / {totalPages}
+            {t("Page")} <strong>{page + 1}</strong> / {totalPages}
           </span>
 
           <button
@@ -275,7 +276,7 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
             disabled={page >= totalPages - 1 || loading}
             onClick={goNext}
           >
-            Suivant <ChevronRight size={15} />
+            {t("Suivant")} <ChevronRight size={15} className="rtl-miroir" />
           </button>
         </div>
       )}

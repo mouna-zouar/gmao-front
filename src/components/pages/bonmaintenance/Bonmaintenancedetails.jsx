@@ -84,6 +84,7 @@ import ConfirmModal from '../../ui/modals/ConfirmModal';
 import Tracage3DTab from './Tracage3DTab';
 import { useCelebration } from './BmdCelebration';
 import { t, tp, locale } from '../../../i18n';
+import { imprimerFiche } from '../../../utils/imprimerListe';
 import './BonMaintenanceDetails.css';
 import {
   DiagnosticTab,
@@ -96,11 +97,13 @@ import {
   SearchableSelect,
   INTERVENANT_ETAT_LABELS,
   TACHE_ETAT_LABELS,
+  GRAVITE_LABELS,
   ETAT_IMMOBILISATION_OPTIONS,
   formatDateTime,
   formatDate,
   formatMontant,
   coutIntervenant,
+  nomIntervenantAffiche,
 } from './bmdShared';
 import './BmdPage.css';
 
@@ -500,6 +503,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [tiroir, setTiroir] = useState(null); // { key, form }
   const [aideMasquee, setAideMasquee] = useState(lireAideMasquee);
   const [celebrer, celebrationElement] = useCelebration();
+  const [impressionEnCours, setImpressionEnCours] = useState(false);
   const etatBonRef = useRef(bonMaintenance?.etat);
   useEffect(() => { etatBonRef.current = bon?.etat; }, [bon?.etat]);
 
@@ -809,6 +813,134 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const nomEquipement = equipement?.designation || bon.titre || 'Équipement non renseigné';
   const urgenceTexte = bon.urgence ? ['Faible', 'Moyenne', 'Élevée'][bon.urgence - 1] : 'Non définie';
 
+  // ---------- Impression de la fiche complète du bon (A4 portrait) ----------
+  // Les listes (diagnostics, tâches…) sont rechargées au moment d'imprimer pour être à jour.
+  const imprimerBon = async () => {
+    if (impressionEnCours) return;
+    setImpressionEnCours(true);
+    try {
+      const id = bon.id;
+      const [diagnostics, taches, intervenants, controles, remises] = await Promise.all([
+        bonMaintenanceDiagnosticService.getByBonMaintenance(id).catch(() => []),
+        bonMaintenanceTacheService.getByBonMaintenance(id).catch(() => []),
+        bonMaintenanceIntervenantService.getByBonMaintenance(id).catch(() => []),
+        bonMaintenanceControleEquipementService.getByBonMaintenance(id).catch(() => []),
+        bonMaintenanceRemiseEnServiceService.getByBonMaintenance(id).catch(() => []),
+      ]);
+      const oui = (v) => (v == null ? '' : v ? t('Oui') : t('Non'));
+      const periode = (debut, fin) => ((debut || fin) ? `${formatDateTime(debut)} → ${formatDateTime(fin)}` : '');
+      const immo = (lotId) => (lotId == null ? '' : (lotId === bon.lotArticleImmobilistationId && equipement?.designation) || t('Équipement #{id}', { id: lotId }));
+      const etatImmo = (v) => {
+        const o = ETAT_IMMOBILISATION_OPTIONS.find((x) => x.value === v);
+        return o ? t(o.label) : '';
+      };
+      const intervenantNom = (intervenantId) => {
+        const i = (intervenants ?? []).find((x) => x.id === intervenantId);
+        return i ? nomIntervenantAffiche(i) : (intervenantId != null ? `#${intervenantId}` : '');
+      };
+
+      imprimerFiche({
+        titre: nomEquipement === 'Équipement non renseigné' ? t(nomEquipement) : nomEquipement,
+        sousTitre: t('Bon de maintenance'),
+        reference: bon.num || t('Bon #{id}', { id: bon.id }),
+        statut: t(etatClair.texte),
+        sections: [
+          {
+            titre: t('Informations générales'),
+            champs: [
+              { label: t('Titre'), valeur: bon.titre, large: true },
+              { label: t('Date'), valeur: formatDate(bon.date) },
+              { label: t('Date de clôture'), valeur: bon.dateCloture ? formatDate(bon.dateCloture) : '' },
+              { label: t('Priorité'), valeur: bon.priorite ? `${bon.priorite} · ${t(prioriteLabel(bon.priorite))}` : '' },
+              { label: t('Urgence'), valeur: t(urgenceTexte) },
+              { label: t('Service'), valeur: bon.serviceNom || bon.service?.description },
+              { label: t('Clinique'), valeur: bon.cliniqueNom || bon.clinique?.nom },
+              { label: t('Dépôt'), valeur: bon.depotNom || bon.depot?.codeDepots },
+              { label: t('Modèle'), valeur: [equipement?.marque, equipement?.modele].filter(Boolean).join(' ') },
+              { label: t('Prestataire'), valeur: bon.prestataire?.raisonSociale || bon.prestataire?.nom },
+              { label: t('Sous-traitant'), valeur: bon.sousTraitant },
+              { label: t('Réclamation'), valeur: reclamation ? (reclamation.num || `#${reclamation.id}`) : '' },
+            ],
+          },
+          { titre: t('Description'), texte: bon.description },
+          {
+            titre: t('Diagnostics'),
+            colonnes: [t('Date'), t('Technicien'), t('Gravité'), t('Pièce'), t('Cause probable'), { label: t('Durée est.'), align: 'end' }],
+            lignes: (diagnostics ?? []).map((d) => [
+              formatDateTime(d.dateDiagnostic),
+              d.personnelNom,
+              d.gravite != null ? t(GRAVITE_LABELS[d.gravite] || String(d.gravite)) : '',
+              oui(d.besoinPiece),
+              d.causeProbable,
+              d.dureeEstimeeHeures != null ? t('{n} h', { n: d.dureeEstimeeHeures }) : '',
+            ]),
+            vide: t("Aucun diagnostic pour l'instant."),
+          },
+          {
+            titre: t('Tâches'),
+            colonnes: [{ label: t('N°'), largeur: '8%' }, t('Désignation'), t('État'), t('Planifié'), t('Intervenant')],
+            lignes: (taches ?? []).map((tache) => [
+              tache.ordre,
+              [tache.designation, tache.nom].filter(Boolean).join(' — '),
+              tache.etat != null ? t(TACHE_ETAT_LABELS[tache.etat] || String(tache.etat)) : '',
+              periode(tache.dateDebut, tache.dateFin),
+              tache.intervenantId != null ? intervenantNom(tache.intervenantId) : '',
+            ]),
+            vide: t("Aucune tâche pour l'instant."),
+          },
+          {
+            titre: t('Intervenants'),
+            colonnes: [t('Intervenant'), t('État'), t('Période'), { label: t('Heures'), align: 'end' }, { label: t('Coût total'), align: 'end' }],
+            lignes: (intervenants ?? []).map((i) => [
+              nomIntervenantAffiche(i),
+              i.etat != null ? t(INTERVENANT_ETAT_LABELS[i.etat] || String(i.etat)) : '',
+              periode(i.dateDebutIntervention, i.dateFinIntervention),
+              i.nbrHeure != null ? t('{n} h', { n: i.nbrHeure }) : '',
+              coutIntervenant(i) != null ? formatMontant(coutIntervenant(i)) : '',
+            ]),
+            vide: t("Aucun intervenant pour l'instant."),
+          },
+          {
+            titre: t('Contrôles équipement'),
+            colonnes: [t('Date'), t('Type'), t('Contrôleur'), { label: t('Mesuré / attendu'), align: 'end' }, t('Conformité')],
+            lignes: (controles ?? []).map((c) => [
+              formatDateTime(c.dateControle),
+              c.typeControle ? t(c.typeControle) : t('Contrôle'),
+              c.personnelNom,
+              (c.valeurMesuree != null || c.valeurAttendue != null) ? `${c.valeurMesuree ?? '—'} / ${c.valeurAttendue ?? '—'}` : '',
+              c.conforme == null ? '' : c.conforme ? t('Conforme') : t('Non conforme'),
+            ]),
+            vide: t("Aucun contrôle pour l'instant."),
+          },
+          {
+            titre: t('Remise en service'),
+            colonnes: [t('Date'), t('Décision'), t('Autorisé par'), t('Immobilisation'), t('État après')],
+            lignes: (remises ?? []).map((d) => [
+              formatDateTime(d.date),
+              d.conforme == null ? '' : d.conforme ? t('Autorisée') : t('Refusée'),
+              d.autoriseParNom,
+              immo(d.lotArticleImmobilistationId),
+              etatImmo(d.etatApres),
+            ]),
+            vide: t("Aucune décision de remise en service pour l'instant."),
+          },
+          coutInfo && {
+            titre: t('Coût de la réparation'),
+            champs: [
+              { label: t("Main d'œuvre"), valeur: coutInfo.coutMainOeuvre != null ? formatMontant(coutInfo.coutMainOeuvre) : '' },
+              { label: t('Pièces du dépôt'), valeur: coutInfo.coutPiecesDepot != null ? formatMontant(coutInfo.coutPiecesDepot) : '' },
+              { label: t('Achats fournisseur'), valeur: coutInfo.coutAchats != null ? formatMontant(coutInfo.coutAchats) : '' },
+              { label: t('Coût total'), valeur: coutInfo.coutTotal != null ? formatMontant(coutInfo.coutTotal) : '' },
+            ],
+          },
+        ],
+        signatures: [t('Technicien'), t('Responsable maintenance'), t('Service demandeur')],
+      });
+    } finally {
+      setImpressionEnCours(false);
+    }
+  };
+
   const signesVitaux = [
     { key: 'sla', icon: Clock, label: t("Délai"), valeur: sla.texte, ton: sla.ton, rubrique: 'sla' },
     { key: 'cout', icon: Wallet, label: t("Coût"), valeur: coutInfo ? formatMontant(coutInfo.coutTotal) : '—', ton: 'neutre', rubrique: 'cout' },
@@ -1061,11 +1193,17 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         <button type="button" className="bmx-btn bmx-btn--clair" onClick={onBack}>
           <ArrowLeft size={18} /> {t("Tous les bons")}
         </button>
-        {aideMasquee && (
-          <button type="button" className="bmx-btn bmx-btn--fantome" onClick={afficherAide}>
-            <HelpCircle size={18} /> {t("Comment ça marche ?")}
+        <div className="bmx-barre-droite">
+          {aideMasquee && (
+            <button type="button" className="bmx-btn bmx-btn--fantome" onClick={afficherAide}>
+              <HelpCircle size={18} /> {t("Comment ça marche ?")}
+            </button>
+          )}
+          <button type="button" className="bmx-btn bmx-btn--clair" onClick={imprimerBon} disabled={impressionEnCours}>
+            {impressionEnCours ? <Loader2 size={18} className="bmx-spin" /> : <Printer size={18} />}
+            {impressionEnCours ? t('Préparation…') : t('Imprimer la fiche')}
           </button>
-        )}
+        </div>
       </div>
 
       {/* ===== PARTIE 1 : le bon, en clair ===== */}

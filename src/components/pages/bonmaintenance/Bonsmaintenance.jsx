@@ -35,6 +35,7 @@ import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 
 import { t, tp, locale, SelecteurLangue } from '../../../i18n';
+import { imprimerListe } from '../../../utils/imprimerListe';
 import './BonsMaintenance.css';
 
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
@@ -717,7 +718,26 @@ export default function BonsMaintenance() {
     }
   };
 
-  const handlePrint = () => window.print();
+  // Impression : document mis en page avec les colonnes visibles du tableau et l'ordre de tri actuel
+  const handleImprimerListe = () => {
+    const valeur = (b, key) => {
+      switch (key) {
+        case 'urgence':  return t(niveauLabel(b.urgence));
+        case 'priorite': return b.priorite ? `${b.priorite} · ${t(prioriteLabel(b.priorite))}` : '—';
+        case 'etat':     return t(etatLabel(b.etat));
+        default:         return getColumnSearchValue(b, key);
+      }
+    };
+    imprimerListe({
+      titre: t('Bons de maintenance'),
+      colonnes: visibleColumns.map((c) => t(c.label)),
+      lignes: sortedBons.map((b) => visibleColumns.map((c) => valeur(b, c.key))),
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('État'), valeur: etatFilter !== 'all' ? t(etatLabel(Number(etatFilter))) : '' },
+      ],
+    });
+  };
   const handleResetFilters = () => { setSearchTerm(''); setEtatFilter('all'); };
 
   const handleRowClick = (bon) => {
@@ -1131,7 +1151,7 @@ export default function BonsMaintenance() {
           <button className="bons-export-btn excel" title={t("Exporter en Excel (tous attributs)")} onClick={openExcelColumnsModal}>
             <FileSpreadsheet size={18} />
           </button>
-          <button className="bons-export-btn print" title={t("Imprimer")} onClick={handlePrint}>
+          <button className="bons-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>
             <Printer size={18} />
           </button>
           <button className="bons-export-btn stats" title={t("Statistiques")} onClick={() => setShowFilterStats(!showFilterStats)}>

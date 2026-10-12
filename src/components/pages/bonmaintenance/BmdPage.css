@@ -60,6 +60,7 @@
   gap: 8px;
   min-height: 44px;
   padding: 10px 18px;
+  border-radius: 999px;
   border: 1.5px solid transparent;
   font-size: 15px;
   font-weight: 600;
@@ -896,3 +897,10 @@ button.bmx-vital:hover { background: var(--paper); }
   .bmx-tiroir-fond { animation: none; }
   .bmx-ligne::after { transition: none; }
 }
+
+/* ---------- Bouton « Imprimer la fiche » ---------- */
+.bmx-btn:disabled { opacity: 0.6; cursor: progress; }
+.bmx-spin { animation: bmx-tourne 0.9s linear infinite; }
+@keyframes bmx-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bmx-spin { animation: none; } }
+.bmx-barre-droite { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

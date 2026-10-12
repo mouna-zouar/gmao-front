@@ -8,6 +8,8 @@ import emplacementService from '../../../../services/emplacementService';
 import EmplacementModal from '../../../ui/modals/EmplacementModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import { t, tp, locale } from '../../../../i18n';
+import { imprimerListe } from '../../../../utils/imprimerListe';
 import './Emplacements.css';
 
 /* Colonnes paramétrables (affichage + recherche) */
@@ -36,7 +38,7 @@ export default function Emplacements() {
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
-    confirmText: 'Confirmer', onConfirm: null,
+    confirmText: t("Confirmer"), onConfirm: null,
   });
 
   const load = async () => {
@@ -47,7 +49,7 @@ export default function Emplacements() {
       setEmplacements(page.content ?? []);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les emplacements. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les emplacements. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -74,7 +76,7 @@ export default function Emplacements() {
     if (!sortColumn) return result;
 
     const sorted = [...result].sort((a, b) =>
-      getColumnValue(a, sortColumn).localeCompare(getColumnValue(b, sortColumn), 'fr', {
+      getColumnValue(a, sortColumn).localeCompare(getColumnValue(b, sortColumn), locale(), {
         sensitivity: 'base',
         numeric: true,
       })
@@ -167,9 +169,9 @@ export default function Emplacements() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: "Supprimer l'emplacement",
-      message: `Supprimer "${selected.nom || selected.adresse}" ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer l'emplacement"),
+      message: t('Supprimer « {nom} » ? Cette action est irréversible.', { nom: selected.nom || selected.adresse }),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -179,7 +181,7 @@ export default function Emplacements() {
           setSelected(null);
         } catch (err) {
           console.error(err);
-          alert('Échec de la suppression.');
+          alert(t("Échec de la suppression."));
         } finally {
           setIsDeleting(false);
         }
@@ -187,15 +189,21 @@ export default function Emplacements() {
     });
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Nom', 'Adresse'];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['Nom', 'Adresse'].map((e) => t(e));
     const lignes = filtered.map((e) => [
-      (e.nom || '—').replace(/"/g, '""'),
-      (e.adresse || '—').replace(/"/g, '""'),
+      (e.nom || '—'),
+      (e.adresse || '—'),
     ]);
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((l) => l.map((c) => `"${c}"`).join(';'))
+      .map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -209,6 +217,19 @@ export default function Emplacements() {
     URL.revokeObjectURL(url);
   };
 
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Emplacements'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+      ],
+    });
+  };
+
   return (
     <div className="emp-container">
 
@@ -218,27 +239,27 @@ export default function Emplacements() {
             type="button"
             className="emp-header-icon-wrap emp-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <MapPin size={24} strokeWidth={2} />
           </button>
           <div>
-            <h2>Emplacements</h2>
-            <p className="emp-header-subtitle">Lieux et sites référencés</p>
+            <h2>{t("Emplacements")}</h2>
+            <p className="emp-header-subtitle">{t("Lieux et sites référencés")}</p>
           </div>
         </div>
 
         <div className="emp-stats">
           <div className="emp-stat">
             <span className="emp-stat-value">{filtered.length}</span>
-            <span className="emp-stat-label">Total</span>
+            <span className="emp-stat-label">{t("Total")}</span>
           </div>
           <div className="emp-stat stat-adresses">
             <span className="emp-stat-value">
               {filtered.filter((e) => e.adresse).length}
             </span>
-            <span className="emp-stat-label">Avec adresse</span>
+            <span className="emp-stat-label">{t("Avec adresse")}</span>
           </div>
         </div>
       </div>
@@ -246,7 +267,7 @@ export default function Emplacements() {
       <div className="emp-actions-bar">
         <button className="emp-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} strokeWidth={2.5} />
-          <span>Nouvel emplacement</span>
+          <span>{t("Nouvel emplacement")}</span>
         </button>
         <button
           className={`emp-action-btn modifier ${!selected ? 'disabled' : ''}`}
@@ -254,7 +275,7 @@ export default function Emplacements() {
           onClick={openEdit}
         >
           <Pencil size={18} strokeWidth={2.2} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
         <button
           className={`emp-action-btn supprimer ${(!selected || isDeleting) ? 'disabled' : ''}`}
@@ -262,7 +283,7 @@ export default function Emplacements() {
           onClick={handleDelete}
         >
           <Trash2 size={18} strokeWidth={2.2} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
       </div>
 
@@ -270,13 +291,13 @@ export default function Emplacements() {
         <div className="emp-filter-group">
           <span className="emp-filter-label">
             <Search size={14} strokeWidth={2.5} />
-            Recherche
+            {t("Recherche")}
           </span>
           <div className="emp-filter-input-wrap">
             <Search size={16} strokeWidth={2.2} className="emp-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -285,17 +306,17 @@ export default function Emplacements() {
 
         <button className="emp-filter-reset" onClick={handleResetFilters}>
           <RotateCcw size={14} strokeWidth={2.5} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="emp-export-stack">
-          <button className="emp-export-btn excel" onClick={handleExportExcel} title="Export CSV">
+          <button className="emp-export-btn excel" onClick={handleExportExcel} title={t("Export CSV")}>
             <Download size={16} strokeWidth={2.5} />
           </button>
-          <button className="emp-export-btn print" onClick={() => window.print()} title="Imprimer">
+          <button className="emp-export-btn print" onClick={handleImprimerListe} title={t("Imprimer")}>
             <Printer size={16} strokeWidth={2.5} />
           </button>
-          <button className="emp-export-btn stats" onClick={() => alert('Dashboard à venir.')} title="Stats">
+          <button className="emp-export-btn stats" onClick={() => alert(t("Dashboard à venir."))} title={t("Stats")}>
             <BarChart3 size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -318,10 +339,10 @@ export default function Emplacements() {
                   className={`emp-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="emp-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -334,7 +355,7 @@ export default function Emplacements() {
                 <td colSpan={visibleColumns.length || 1} className="emp-table-empty">
                   <div className="emp-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="emp-spin" />
-                    <span>Chargement des emplacements...</span>
+                    <span>{t("Chargement des emplacements...")}</span>
                   </div>
                 </td>
               </tr>
@@ -345,8 +366,8 @@ export default function Emplacements() {
                     <MapPin size={32} strokeWidth={1.6} />
                     <span>
                       {emplacements.length === 0
-                        ? "Aucun emplacement pour l'instant."
-                        : 'Aucun emplacement ne correspond à ces filtres.'}
+                        ? t("Aucun emplacement pour l'instant.")
+                        : t("Aucun emplacement ne correspond à ces filtres.")}
                     </span>
                   </div>
                 </td>

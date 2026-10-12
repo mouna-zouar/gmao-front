@@ -1,23 +1,25 @@
 // ============================================================
-// SYSTÈME DE LANGUE (français / arabe)
+// SYSTÈME DE LANGUE (français / arabe / anglais)
 //
 // Principe : le texte français EST la clé.
-//   t('Faire le diagnostic')            → « تشخيص العطل » en arabe, inchangé en français
+//   t('Faire le diagnostic')            → « تشخيص العطل » en arabe, « Do the diagnosis » en anglais
 //   t('Étape {n} sur {total}', { n, total })
 //   tp('événement', 3)                  → « 3 événements » / « 3 أحداث » (pluriel arabe géré)
-// Une phrase absente du dictionnaire arabe reste en français : rien ne casse.
+// Une phrase absente d'un dictionnaire reste en français : rien ne casse.
 // ============================================================
 import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import ar from './ar';
+import en from './en';
 import './rtl.css';
 
 export const LANGUES = {
   fr: { code: 'fr', nom: 'Français', dir: 'ltr', locale: 'fr-FR' },
   ar: { code: 'ar', nom: 'العربية', dir: 'rtl', locale: 'ar-TN' }, // ar-TN : chiffres latins (12/10/2026)
+  en: { code: 'en', nom: 'English', dir: 'ltr', locale: 'en-GB' }, // en-GB : dates jj/mm/aaaa
 };
 
 const CLE_STOCKAGE = 'app-langue';
-const DICTIONNAIRES = { ar };
+const DICTIONNAIRES = { ar, en };
 
 function lireLangueStockee() {
   try {
@@ -51,7 +53,22 @@ export function t(texte, vars) {
   return remplir(trad, vars);
 }
 
-// Pluriels français de base (le dictionnaire arabe définit ses propres formes)
+/**
+ * Comme t(), mais pour les PDF jsPDF : sa police standard n'affiche pas l'arabe,
+ * donc on traduit en anglais si l'anglais est choisi, sinon on garde le français.
+ */
+export function tPdf(texte, vars) {
+  if (texte == null || typeof texte !== 'string') return texte;
+  const trad = langueCourante === 'en' && typeof en[texte] === 'string' ? en[texte] : texte;
+  return remplir(trad, vars);
+}
+
+/** Locale à utiliser dans les PDF (même règle que tPdf). */
+export function localePdf() {
+  return langueCourante === 'en' ? LANGUES.en.locale : LANGUES.fr.locale;
+}
+
+// Pluriels français de base (les dictionnaires arabe et anglais définissent leurs propres formes)
 const PLURIELS_FR = {
   'événement': { one: '{n} événement', other: '{n} événements' },
   personne: { one: '{n} personne', other: '{n} personnes' },
@@ -77,17 +94,23 @@ const PLURIELS_FR = {
   '+ autre': { one: '+{n} autre', other: '+{n} autres' },
   'équipement filtré': { one: '{n} équipement filtré', other: '{n} équipements filtrés' },
   'bon analysé': { one: '{n} bon analysé', other: '{n} bons analysés' },
+  'source (libellé)': { one: 'Source', other: 'Sources' },
+  'maintenance en retard': { one: '{n} maintenance en retard', other: '{n} maintenances en retard' },
+  'véhicule': { one: '{n} véhicule', other: '{n} véhicules' },
+  'dans jours': { one: 'Dans {n} jour', other: 'Dans {n} jours' },
+  ligne: { one: '{n} ligne', other: '{n} lignes' },
   'nouvelle anomalie': { one: '{n} nouvelle anomalie détectée', other: '{n} nouvelles anomalies détectées' },
   'nouveau blocage': { one: '{n} nouveau blocage détecté', other: '{n} nouveaux blocages détectés' },
   'jours sans suite': { one: '{n} j sans suite', other: '{n} j sans suite' },
 };
 
-/** Pluriel : tp('événement', 3) → « 3 événements ». Utilise les règles arabes (0, 1, 2, 3-10, 11+). */
+/** Pluriel : tp('événement', 3) → « 3 événements ». En arabe : règles 0, 1, 2, 3-10, 11+. */
 export function tp(cle, n, vars = {}) {
   const regles = new Intl.PluralRules(LANGUES[langueCourante].locale);
   const categorie = regles.select(n);
-  const formesAr = langueCourante === 'ar' ? ar[`#${cle}`] : null;
-  const formes = formesAr || PLURIELS_FR[cle];
+  const dico = DICTIONNAIRES[langueCourante];
+  const formesLangue = dico ? dico[`#${cle}`] : null;
+  const formes = formesLangue || PLURIELS_FR[cle];
   if (!formes) return `${n} ${cle}`;
   const modele = formes[categorie] ?? formes.other;
   return remplir(modele, { n, ...vars });

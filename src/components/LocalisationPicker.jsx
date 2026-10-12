@@ -26,7 +26,7 @@ function ClickHandler({ onClick }) {
 export default function LocalisationPicker({ value, onChange }) {
   // Les adresses renvoyées par Nominatim suivent la langue de l'application
   // (l'application est remontée à chaque changement de langue)
-  const langueAdresses = langueActuelle() === 'ar' ? 'ar,fr' : 'fr';
+  const langueAdresses = { ar: 'ar,fr', en: 'en,fr' }[langueActuelle()] || 'fr';
   const [marker, setMarker] = useState(
     value?.latitude != null && value?.longitude != null
       ? [Number(value.latitude), Number(value.longitude)]

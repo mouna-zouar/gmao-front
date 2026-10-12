@@ -32,6 +32,7 @@ import reclamationBonMaintenanceService from '../../../services/Reclamationbonma
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import { t, locale } from '../../../i18n';
+import { imprimerListe } from '../../../utils/imprimerListe';
 import './Reclamations.css';
 
 const ETAT_LABELS = {
@@ -473,20 +474,26 @@ export default function Reclamations() {
     }
   };
 
-  const handleExportExcel = () => {
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
     const entetes = ['Numéro', 'Description', 'Criticité', 'Urgence', 'Personnel affecté', 'Date', 'État'].map((e) => t(e));
     const lignes = filteredReclamations.map((r) => [
       r.num || '',
-      (r.description || '').replace(/"/g, '""'),
-      niveauLabel(r.criticite),
-      niveauLabel(r.urgence),
+      (r.description || ''),
+      t(niveauLabel(r.criticite)),
+      t(niveauLabel(r.urgence)),
       personnelLabel(r),
       formatDate(r.date),
-      etatLabel(r.etat),
+      t(etatLabel(r.etat)),
     ]);
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((ligne) => ligne.map((cellule) => `"${cellule}"`).join(';'))
+      .map((ligne) => ligne.map((cellule) => `"${String(cellule ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -500,8 +507,18 @@ export default function Reclamations() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => {
-    window.print();
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Réclamations'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('État'), valeur: etatFilter !== 'all' ? t(etatLabel(Number(etatFilter))) : '' },
+      ],
+    });
   };
 
   const handleStats = () => {
@@ -670,7 +687,7 @@ export default function Reclamations() {
           <button className="reclamations-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>
             <FileSpreadsheet size={18} />
           </button>
-          <button className="reclamations-export-btn print" title={t("Imprimer")} onClick={handlePrint}>
+          <button className="reclamations-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>
             <Printer size={18} />
           </button>
           <button className="reclamations-export-btn stats" title={t("Statistiques")} onClick={handleStats}>

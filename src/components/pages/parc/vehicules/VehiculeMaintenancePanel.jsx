@@ -11,9 +11,10 @@ import vehiculeMaintenanceService, {
   ORIGINE_MANUELLE,
 } from '../../../../services/vehiculeMaintenanceService';
 import VehiculeMaintenanceBonModal from '../../../ui/modals/Vehiculemaintenancebonmodal';
+import { t, tp, locale } from '../../../../i18n';
 import './VehiculeMaintenancePanel.css';
 
-const fmtKm = (v) => (v == null ? '—' : `${Number(v).toLocaleString('fr-FR')} km`);
+const fmtKm = (v) => (v == null ? '—' : t('{n} km', { n: Number(v).toLocaleString(locale()) }));
 
 const ICONS = {
   OK: CheckCircle2,
@@ -84,7 +85,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
       setStatuts(s);
       setDeclenchements(d);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Impossible de charger les maintenances.');
+      setError(err?.response?.data?.message || t('Impossible de charger les maintenances.'));
     } finally {
       setLoading(false);
     }
@@ -118,20 +119,20 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
         <div className="vmp-header-left">
           <Wrench size={20} />
           <div>
-            <h3>Maintenance préventive</h3>
+            <h3>{t("Maintenance préventive")}</h3>
             <span className="vmp-header-meta">
               <Gauge size={13} /> {fmtKm(vehicule.kilometrage)}
               <span className="vmp-sep">•</span>
-              <Package size={13} /> {kpi.total} opération{kpi.total > 1 ? 's' : ''}
+              <Package size={13} /> {tp('opération', kpi.total)}
             </span>
           </div>
         </div>
         <div className="vmp-header-actions">
           <button className="vmp-btn vmp-btn-primary" onClick={() => setBonModalOpen(true)}>
-            <Wrench size={15} /> Créer un bon
+            <Wrench size={15} /> {t("Créer un bon")}
           </button>
           <button className="vmp-btn vmp-btn-ghost" onClick={load} disabled={loading}>
-            <RefreshCw size={15} className={loading ? 'vmp-spin' : ''} /> Actualiser
+            <RefreshCw size={15} className={loading ? 'vmp-spin' : ''} /> {t("Actualiser")}
           </button>
         </div>
       </header>
@@ -142,22 +143,22 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
           <div className="vmp-kpi kpi-ok">
             <ShieldCheck size={16} />
             <span className="vmp-kpi-value">{kpi.ok}</span>
-            <span className="vmp-kpi-label">À jour</span>
+            <span className="vmp-kpi-label">{t("À jour")}</span>
           </div>
           <div className="vmp-kpi kpi-soon">
             <Clock size={16} />
             <span className="vmp-kpi-value">{kpi.soon}</span>
-            <span className="vmp-kpi-label">À venir</span>
+            <span className="vmp-kpi-label">{t("À venir")}</span>
           </div>
           <div className="vmp-kpi kpi-late">
             <AlertTriangle size={16} />
             <span className="vmp-kpi-value">{kpi.late}</span>
-            <span className="vmp-kpi-label">En retard</span>
+            <span className="vmp-kpi-label">{t("En retard")}</span>
           </div>
           <div className="vmp-kpi kpi-total">
             <Activity size={16} />
             <span className="vmp-kpi-value">{kpi.total}</span>
-            <span className="vmp-kpi-label">Total</span>
+            <span className="vmp-kpi-label">{t("Total")}</span>
           </div>
         </div>
       )}
@@ -167,9 +168,9 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
         <div className="vmp-alert success">
           <CheckCircle2 size={16} />
           <span>
-            Bon {flash.bon?.num ?? `#${flash.bon?.id}`} créé.{' '}
+            {t('Bon {num} créé.', { num: flash.bon?.num ?? `#${flash.bon?.id}` })}{' '}
             <button className="vmp-link" onClick={() => onOpenBon?.(flash.bon?.id)}>
-              Ouvrir <ExternalLink size={12} />
+              {t("Ouvrir")} <ExternalLink size={12} />
             </button>
           </span>
         </div>
@@ -181,7 +182,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
         <div className="vmp-alert danger">
           <AlertTriangle size={16} />
           <span>
-            {enRetard.length} en retard : {enRetard.map((s) => s.typeLibelle).join(', ')}
+            {t('{n} en retard : {liste}', { n: enRetard.length, liste: enRetard.map((s) => s.typeLibelle).join(', ') })}
           </span>
         </div>
       )}
@@ -189,7 +190,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
       {aVenir.length > 0 && enRetard.length === 0 && (
         <div className="vmp-alert warning">
           <Clock size={16} />
-          <span>{aVenir.length} à prévoir prochainement.</span>
+          <span>{t('{n} à prévoir prochainement.', { n: aVenir.length })}</span>
         </div>
       )}
 
@@ -197,14 +198,14 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
       <div className="vmp-section">
         <div className="vmp-section-head">
           <Activity size={14} />
-          <span>Situation par opération</span>
+          <span>{t("Situation par opération")}</span>
           <span className="vmp-count">{statuts.length}</span>
         </div>
 
         {statuts.length === 0 && !loading && (
           <div className="vmp-empty">
             <Wrench size={24} />
-            <p>Aucun type de maintenance configuré.</p>
+            <p>{t("Aucun type de maintenance configuré.")}</p>
           </div>
         )}
 
@@ -228,7 +229,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
                       <h4>{s.typeLibelle}</h4>
                       <span className={`vmp-badge vmp-badge-${statutClass(s.statut)}`}>
                         <Icon size={11} />
-                        {STATUT_LABELS[s.statut]}
+                        {t(STATUT_LABELS[s.statut])}
                       </span>
                     </div>
 
@@ -236,7 +237,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
                       <div className="vmp-ring-value">
                         {isLate ? `+${Math.abs(Math.round(pct))}%` : `${Math.round(pct)}%`}
                       </div>
-                      <div className="vmp-ring-sub">parcouru</div>
+                      <div className="vmp-ring-sub">{t("parcouru")}</div>
                     </ProgressRing>
                   </div>
 
@@ -249,12 +250,12 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
                   <div className="vmp-op-foot">
                     <span className={isLate ? 'is-late' : ''}>
                       {isLate
-                        ? `${fmtKm(Math.abs(restant))} de retard`
-                        : `${fmtKm(restant)} restant`}
+                        ? t('{duree} de retard', { duree: fmtKm(Math.abs(restant)) })
+                        : t('{duree} restant', { duree: fmtKm(restant) })}
                     </span>
                     {s.bonMaintenanceId && (
                       <button className="vmp-link" onClick={() => onOpenBon?.(s.bonMaintenanceId)}>
-                        Bon <ExternalLink size={11} />
+                        {t("Bon")} <ExternalLink size={11} />
                       </button>
                     )}
                   </div>
@@ -275,7 +276,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
           aria-expanded={histOpen}
         >
           <History size={14} />
-          <span>Maintenances déclenchées</span>
+          <span>{t("Maintenances déclenchées")}</span>
           <span className="vmp-count">{declenchements.length}</span>
           <span className="vmp-section-chevron" aria-hidden="true">
             {histOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -288,7 +289,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
             {declenchements.length === 0 && (
               <div className="vmp-empty">
                 <History size={24} />
-                <p>Aucune maintenance déclenchée.</p>
+                <p>{t("Aucune maintenance déclenchée.")}</p>
               </div>
             )}
 
@@ -303,12 +304,12 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
                       <div className="vmp-hist-date">
                         <span className="vmp-hist-day">
                           {d.dateDeclenchement
-                            ? new Date(d.dateDeclenchement).toLocaleDateString('fr-FR', { day: '2-digit' })
+                            ? new Date(d.dateDeclenchement).toLocaleDateString(locale(), { day: '2-digit' })
                             : '—'}
                         </span>
                         <span className="vmp-hist-month">
                           {d.dateDeclenchement
-                            ? new Date(d.dateDeclenchement).toLocaleDateString('fr-FR', { month: 'short' })
+                            ? new Date(d.dateDeclenchement).toLocaleDateString(locale(), { month: 'short' })
                             : ''}
                         </span>
                         <span className="vmp-hist-year">
@@ -324,34 +325,34 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
                           <h4 className="vmp-hist-title">
                             {d.typeLibelle}
                             {d.echeancesCumulees > 1 && (
-                              <span className="vmp-tag" title="Échéances cumulées">
-                                ×{d.echeancesCumulees}
+                              <span className="vmp-tag" title={t("Échéances cumulées")}>
+                                {t("×")}{d.echeancesCumulees}
                               </span>
                             )}
                           </h4>
                           <div className="vmp-hist-tags">
                             <span className={`vmp-origine ${isManuelle ? 'manuelle' : 'auto'}`}>
-                              {ORIGINE_LABELS[d.origine ?? 0]}
+                              {t(ORIGINE_LABELS[d.origine ?? 0])}
                             </span>
                             <span className="vmp-etat">
-                              {DECLENCHEMENT_ETATS[d.etat] ?? d.etat}
+                              {DECLENCHEMENT_ETATS[d.etat] ? t(DECLENCHEMENT_ETATS[d.etat]) : d.etat}
                             </span>
                           </div>
                         </div>
 
                         <div className="vmp-hist-km">
                           <div className="vmp-hist-km-item">
-                            <span className="vmp-hist-km-label">Seuil</span>
+                            <span className="vmp-hist-km-label">{t("Seuil")}</span>
                             <span className="vmp-hist-km-value">{fmtKm(d.seuilKm)}</span>
                           </div>
                           <div className="vmp-hist-km-item">
-                            <span className="vmp-hist-km-label">Déclenché à</span>
+                            <span className="vmp-hist-km-label">{t("Déclenché à")}</span>
                             <span className="vmp-hist-km-value">
                               {fmtKm(d.kilometrageDeclenchement)}
                             </span>
                           </div>
                           <div className="vmp-hist-km-item">
-                            <span className="vmp-hist-km-label">Km réel</span>
+                            <span className="vmp-hist-km-label">{t("Km réel")}</span>
                             <span className="vmp-hist-km-value">{fmtKm(d.kilometrageReel)}</span>
                           </div>
                         </div>
@@ -373,7 +374,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
                             onClick={() => onOpenBon?.(d.bonMaintenanceId)}
                           >
                             <FileText size={12} />
-                            Bon #{d.bonMaintenanceId}
+                            {t("Bon #")}{d.bonMaintenanceId}
                             <ExternalLink size={11} />
                           </button>
                         )}

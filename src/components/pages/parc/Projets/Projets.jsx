@@ -12,6 +12,8 @@ import emplacementService from '../../../../services/emplacementService';
 import ProjetModal from '../../../ui/modals/ProjetModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import { t, tp, locale } from '../../../../i18n';
+import { imprimerListe } from '../../../../utils/imprimerListe';
 import './Projets.css';
 
 const ETAT_LABELS = {
@@ -42,10 +44,11 @@ function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function etatLabel(e) { return ETAT_LABELS[e] ?? `État ${e}`; }
+// Libellé traduit : la recherche, le tableau et l'export suivent la langue choisie
+function etatLabel(e) { return ETAT_LABELS[e] ? t(ETAT_LABELS[e]) : t('État {n}', { n: e }); }
 
 export default function Projets() {
   const [projets, setProjets] = useState([]);
@@ -71,7 +74,7 @@ export default function Projets() {
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
-    confirmText: 'Confirmer', onConfirm: null,
+    confirmText: t("Confirmer"), onConfirm: null,
   });
 
   const load = async () => {
@@ -95,7 +98,7 @@ export default function Projets() {
       setEmplacementsMap(emMap);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les projets. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les projets. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -158,7 +161,7 @@ export default function Projets() {
     const sorted = [...result].sort((x, y) => {
       const vx = getSortValue(x, sortColumn);
       const vy = getSortValue(y, sortColumn);
-      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      if (typeof vx === 'string') return vx.localeCompare(vy, locale(), { sensitivity: 'base', numeric: true });
       return vx - vy;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
@@ -264,7 +267,7 @@ export default function Projets() {
                 <Calendar size={11} strokeWidth={2.5} />
                 {formatDate(p.dateDebut)}
               </span>
-              <span className="prj-period-sep">→</span>
+              <span className="prj-period-sep rtl-miroir">→</span>
               <span className="prj-period-badge end">
                 <Calendar size={11} strokeWidth={2.5} />
                 {formatDate(p.dateFin)}
@@ -311,9 +314,9 @@ export default function Projets() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: 'Supprimer le projet',
-      message: `Supprimer le projet "${selected.nom || selected.code}" ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer le projet"),
+      message: t('Supprimer le projet « {nom} » ? Cette action est irréversible.', { nom: selected.nom || selected.code }),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -323,7 +326,7 @@ export default function Projets() {
           setSelected(null);
         } catch (err) {
           console.error(err);
-          alert('Échec de la suppression.');
+          alert(t("Échec de la suppression."));
         } finally {
           setIsDeleting(false);
         }
@@ -331,24 +334,30 @@ export default function Projets() {
     });
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Code', 'Nom', 'Prestataire', 'Emplacement', 'Début', 'Fin', 'État'];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['Code', 'Nom', 'Prestataire', 'Emplacement', 'Début', 'Fin', 'État'].map((e) => t(e));
     const lignes = filtered.map((p) => {
       const prest = prestatairesMap[p.prestataireId];
       const empo = emplacementsMap[p.emplacementId];
       return [
-        (p.code || '—').replace(/"/g, '""'),
-        (p.nom || '—').replace(/"/g, '""'),
-        (prest?.raisonSociale || prest?.nom || '—').replace(/"/g, '""'),
-        (empo?.nom || empo?.adresse || '—').replace(/"/g, '""'),
+        (p.code || '—'),
+        (p.nom || '—'),
+        (prest?.raisonSociale || prest?.nom || '—'),
+        (empo?.nom || empo?.adresse || '—'),
         formatDate(p.dateDebut),
         formatDate(p.dateFin),
         etatLabel(p.etat),
       ];
     });
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((l) => l.map((c) => `"${c}"`).join(';'))
+      .map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -362,8 +371,21 @@ export default function Projets() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => window.print();
-  const handleStats = () => alert('Dashboard à venir.');
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Projets'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('État'), valeur: etatFilter !== 'all' ? etatLabel(Number(etatFilter)) : '' },
+      ],
+    });
+  };
+
+  const handleStats = () => alert(t("Dashboard à venir."));
 
   return (
     <div className="prj-container">
@@ -375,33 +397,33 @@ export default function Projets() {
             type="button"
             className="prj-header-icon-wrap prj-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <FolderKanban size={24} strokeWidth={2} />
           </button>
           <div>
-            <h2>Projets</h2>
-            <p className="prj-header-subtitle">Gestion des projets et leur affectation</p>
+            <h2>{t("Projets")}</h2>
+            <p className="prj-header-subtitle">{t("Gestion des projets et leur affectation")}</p>
           </div>
         </div>
 
         <div className="prj-stats">
           <div className="prj-stat">
             <span className="prj-stat-value">{stats.total}</span>
-            <span className="prj-stat-label">Total</span>
+            <span className="prj-stat-label">{t("Total")}</span>
           </div>
           <div className="prj-stat stat-planned">
             <span className="prj-stat-value">{stats.planifies}</span>
-            <span className="prj-stat-label">Planifiés</span>
+            <span className="prj-stat-label">{t("Planifiés")}</span>
           </div>
           <div className="prj-stat stat-running">
             <span className="prj-stat-value">{stats.enCours}</span>
-            <span className="prj-stat-label">En cours</span>
+            <span className="prj-stat-label">{t("En cours")}</span>
           </div>
           <div className="prj-stat stat-done">
             <span className="prj-stat-value">{stats.termines}</span>
-            <span className="prj-stat-label">Terminés</span>
+            <span className="prj-stat-label">{t("Terminés")}</span>
           </div>
         </div>
       </div>
@@ -410,7 +432,7 @@ export default function Projets() {
       <div className="prj-actions-bar">
         <button className="prj-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} strokeWidth={2.5} />
-          <span>Nouveau projet</span>
+          <span>{t("Nouveau projet")}</span>
         </button>
 
         <button
@@ -419,7 +441,7 @@ export default function Projets() {
           onClick={openEdit}
         >
           <Pencil size={18} strokeWidth={2.2} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
@@ -428,7 +450,7 @@ export default function Projets() {
           onClick={handleDelete}
         >
           <Trash2 size={18} strokeWidth={2.2} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
       </div>
 
@@ -437,13 +459,13 @@ export default function Projets() {
         <div className="prj-filter-group">
           <span className="prj-filter-label">
             <Search size={14} strokeWidth={2.5} />
-            Recherche
+            {t("Recherche")}
           </span>
           <div className="prj-filter-input-wrap">
             <Search size={16} strokeWidth={2.2} className="prj-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -453,13 +475,13 @@ export default function Projets() {
         <div className="prj-filter-group">
           <span className="prj-filter-label">
             <Filter size={14} strokeWidth={2.5} />
-            État
+            {t("État")}
           </span>
           <div className="prj-filter-input-wrap">
             <select value={etatFilter} onChange={(e) => setEtatFilter(e.target.value)}>
-              <option value="all">Tous les états</option>
+              <option value="all">{t("Tous les états")}</option>
               {Object.entries(ETAT_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>{t(v)}</option>
               ))}
             </select>
           </div>
@@ -467,17 +489,17 @@ export default function Projets() {
 
         <button className="prj-filter-reset" onClick={handleResetFilters}>
           <RotateCcw size={14} strokeWidth={2.5} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="prj-export-stack">
-          <button className="prj-export-btn excel" onClick={handleExportExcel} title="Export CSV">
+          <button className="prj-export-btn excel" onClick={handleExportExcel} title={t("Export CSV")}>
             <Download size={16} strokeWidth={2.5} />
           </button>
-          <button className="prj-export-btn print" onClick={handlePrint} title="Imprimer">
+          <button className="prj-export-btn print" onClick={handleImprimerListe} title={t("Imprimer")}>
             <Printer size={16} strokeWidth={2.5} />
           </button>
-          <button className="prj-export-btn stats" onClick={handleStats} title="Stats">
+          <button className="prj-export-btn stats" onClick={handleStats} title={t("Stats")}>
             <BarChart3 size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -501,10 +523,10 @@ export default function Projets() {
                   className={`prj-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="prj-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -517,7 +539,7 @@ export default function Projets() {
                 <td colSpan={visibleColumns.length || 1} className="prj-table-empty">
                   <div className="prj-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="prj-spin" />
-                    <span>Chargement des projets...</span>
+                    <span>{t("Chargement des projets...")}</span>
                   </div>
                 </td>
               </tr>
@@ -528,8 +550,8 @@ export default function Projets() {
                     <FolderKanban size={32} strokeWidth={1.6} />
                     <span>
                       {projets.length === 0
-                        ? "Aucun projet pour l'instant."
-                        : 'Aucun projet ne correspond à ces filtres.'}
+                        ? t("Aucun projet pour l'instant.")
+                        : t("Aucun projet ne correspond à ces filtres.")}
                     </span>
                   </div>
                 </td>

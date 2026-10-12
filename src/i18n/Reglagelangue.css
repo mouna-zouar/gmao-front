@@ -60,7 +60,7 @@
 }
 
 .rl-option[lang='ar'] { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
-.rl-option[lang='fr'] { font-family: 'Figtree', system-ui, sans-serif; }
+.rl-option[lang='fr'], .rl-option[lang='en'] { font-family: 'Figtree', system-ui, sans-serif; }
 
 .rl-option:hover { border-color: #0794a4; background: #ffffff; }
 .rl-option:active { transform: scale(0.99); }

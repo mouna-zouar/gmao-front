@@ -1649,7 +1649,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
     { key: 'immo', label: t("Immobilisation"), render: (c) => libelleImmo(c.lotArticleImmobilistationId) },
     {
       key: 'mesure',
-      label: 'Mesuré / attendu',
+      label: t('Mesuré / attendu'),
       align: 'right',
       render: (c) => ((c.valeurMesuree != null || c.valeurAttendue != null)
         ? `${c.valeurMesuree ?? '—'} / ${c.valeurAttendue ?? '—'}`

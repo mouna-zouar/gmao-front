@@ -10,6 +10,8 @@ import personnelService from '../../../../services/personnelService';
 import VehiculeConducteurModal from '../../../ui/modals/VehiculeConducteurModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import { t, tp, locale } from '../../../../i18n';
+import { imprimerListe } from '../../../../utils/imprimerListe';
 import './VehiculeConducteurs.css';
 
 const MODE_LABELS = {
@@ -20,14 +22,15 @@ const MODE_LABELS = {
 };
 
 function modeLabel(mode) {
-  return MODE_LABELS[mode] ?? `Mode ${mode}`;
+  // Libellé traduit : la recherche, le tableau et l'export suivent la langue choisie
+  return MODE_LABELS[mode] ? t(MODE_LABELS[mode]) : t('Mode {n}', { n: mode });
 }
 
 function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('fr-FR', {
+  return d.toLocaleString(locale(), {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
@@ -65,7 +68,7 @@ export default function VehiculeConducteurs() {
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
-    confirmText: 'Confirmer', onConfirm: null,
+    confirmText: t("Confirmer"), onConfirm: null,
   });
 
   const load = async () => {
@@ -89,7 +92,7 @@ export default function VehiculeConducteurs() {
       setPersonnelsMap(pMap);
     } catch (err) {
       console.error(err);
-      setError("Impossible de charger les affectations. Vérifie que le serveur est bien lancé.");
+      setError(t("Impossible de charger les affectations. Vérifie que le serveur est bien lancé."));
     } finally {
       setLoading(false);
     }
@@ -148,7 +151,7 @@ export default function VehiculeConducteurs() {
     const sorted = [...result].sort((x, y) => {
       const vx = getSortValue(x, sortColumn);
       const vy = getSortValue(y, sortColumn);
-      if (typeof vx === 'string') return vx.localeCompare(vy, 'fr', { sensitivity: 'base', numeric: true });
+      if (typeof vx === 'string') return vx.localeCompare(vy, locale(), { sensitivity: 'base', numeric: true });
       return vx - vy;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
@@ -200,7 +203,7 @@ export default function VehiculeConducteurs() {
               </div>
               <div className="vcd-cell-vehicle-text">
                 <span className="vcd-cell-main">
-                  {veh?.matricule || `Véhicule #${a.vehiculeId}`}
+                  {veh?.matricule || t('Véhicule #{id}', { id: a.vehiculeId })}
                 </span>
                 {veh?.marque && <span className="vcd-cell-sub">{veh.marque}</span>}
               </div>
@@ -279,9 +282,9 @@ export default function VehiculeConducteurs() {
     setConfirmModal({
       show: true,
       type: 'danger',
-      title: "Supprimer l'affectation",
-      message: `Supprimer cette affectation véhicule / conducteur ? Cette action est irréversible.`,
-      confirmText: 'Supprimer',
+      title: t("Supprimer l'affectation"),
+      message: t('Supprimer cette affectation véhicule / conducteur ? Cette action est irréversible.'),
+      confirmText: t("Supprimer"),
       onConfirm: async () => {
         closeConfirmModal();
         setIsDeleting(true);
@@ -291,7 +294,7 @@ export default function VehiculeConducteurs() {
           setSelected(null);
         } catch (err) {
           console.error(err);
-          alert("Échec de la suppression de cette affectation.");
+          alert(t("Échec de la suppression de cette affectation."));
         } finally {
           setIsDeleting(false);
         }
@@ -299,23 +302,29 @@ export default function VehiculeConducteurs() {
     });
   };
 
-  const handleExportExcel = () => {
-    const entetes = ['Véhicule', 'Marque', 'Conducteur', 'Matricule', "Date d'affectation", "Mode d'affectation"];
+  // Données du tableau filtré, partagées par l'export CSV et l'impression
+  const donneesTableau = () => {
+    const entetes = ['Véhicule', 'Marque', 'Conducteur', 'Matricule', "Date d'affectation", "Mode d'affectation"].map((e) => t(e));
     const lignes = filtered.map((a) => {
       const veh = vehiculesMap[a.vehiculeId];
       const pers = personnelsMap[a.personnelId];
       return [
-        (veh?.matricule || '—').replace(/"/g, '""'),
-        (veh?.marque || '—').replace(/"/g, '""'),
-        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—').replace(/"/g, '""'),
-        (pers?.matricule || '—').replace(/"/g, '""'),
+        (veh?.matricule || '—'),
+        (veh?.marque || '—'),
+        (pers ? `${pers.nom || ''} ${pers.prenom || ''}`.trim() : '—'),
+        (pers?.matricule || '—'),
         formatDateTime(a.dateAffectation),
         modeLabel(a.modeAffectation),
       ];
     });
+    return { entetes, lignes };
+  };
+
+  const handleExportExcel = () => {
+    const { entetes, lignes } = donneesTableau();
 
     const csv = [entetes, ...lignes]
-      .map((l) => l.map((c) => `"${c}"`).join(';'))
+      .map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';'))
       .join('\r\n');
 
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -329,8 +338,21 @@ export default function VehiculeConducteurs() {
     URL.revokeObjectURL(url);
   };
 
-  const handlePrint = () => window.print();
-  const handleStats = () => alert('Dashboard à venir.');
+  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
+  const handleImprimerListe = () => {
+    const { entetes, lignes } = donneesTableau();
+    imprimerListe({
+      titre: t('Véhicules / Conducteurs'),
+      colonnes: entetes,
+      lignes,
+      filtres: [
+        { label: t('Recherche'), valeur: searchTerm.trim() },
+        { label: t('Mode'), valeur: modeFilter !== 'all' ? modeLabel(Number(modeFilter)) : '' },
+      ],
+    });
+  };
+
+  const handleStats = () => alert(t("Dashboard à venir."));
 
   return (
     <div className="vcd-container">
@@ -342,15 +364,15 @@ export default function VehiculeConducteurs() {
             type="button"
             className="vcd-header-icon-wrap vcd-header-icon-btn"
             onClick={openColumnSettings}
-            title="Paramètres des colonnes"
-            aria-label="Paramètres des colonnes"
+            title={t("Paramètres des colonnes")}
+            aria-label={t("Paramètres des colonnes")}
           >
             <UserCheck size={24} strokeWidth={2} />
           </button>
           <div>
-            <h2>Véhicules / Conducteurs</h2>
+            <h2>{t("Véhicules / Conducteurs")}</h2>
             <p className="vcd-header-subtitle">
-              Historique des affectations de conducteurs aux véhicules
+              {t("Historique des affectations de conducteurs aux véhicules")}
             </p>
           </div>
         </div>
@@ -358,19 +380,19 @@ export default function VehiculeConducteurs() {
         <div className="vcd-stats">
           <div className="vcd-stat">
             <span className="vcd-stat-value">{stats.total}</span>
-            <span className="vcd-stat-label">Total</span>
+            <span className="vcd-stat-label">{t("Total")}</span>
           </div>
           <div className="vcd-stat stat-active">
             <span className="vcd-stat-value">{stats.principaux}</span>
-            <span className="vcd-stat-label">Principaux</span>
+            <span className="vcd-stat-label">{t("Principaux")}</span>
           </div>
           <div className="vcd-stat stat-principal">
             <span className="vcd-stat-value">{stats.temporaires}</span>
-            <span className="vcd-stat-label">Temporaires</span>
+            <span className="vcd-stat-label">{t("Temporaires")}</span>
           </div>
           <div className="vcd-stat stat-inactive">
             <span className="vcd-stat-value">{stats.remplacements}</span>
-            <span className="vcd-stat-label">Remplacements</span>
+            <span className="vcd-stat-label">{t("Remplacements")}</span>
           </div>
         </div>
       </div>
@@ -379,7 +401,7 @@ export default function VehiculeConducteurs() {
       <div className="vcd-actions-bar">
         <button className="vcd-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} strokeWidth={2.5} />
-          <span>Affecter</span>
+          <span>{t("Affecter")}</span>
         </button>
 
         <button
@@ -388,7 +410,7 @@ export default function VehiculeConducteurs() {
           onClick={openEdit}
         >
           <Pencil size={18} strokeWidth={2.2} />
-          <span>Modifier</span>
+          <span>{t("Modifier")}</span>
         </button>
 
         <button
@@ -397,7 +419,7 @@ export default function VehiculeConducteurs() {
           onClick={handleDelete}
         >
           <Trash2 size={18} strokeWidth={2.2} />
-          <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
+          <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
       </div>
 
@@ -406,13 +428,13 @@ export default function VehiculeConducteurs() {
         <div className="vcd-filter-group">
           <span className="vcd-filter-label">
             <Search size={14} strokeWidth={2.5} />
-            Recherche
+            {t("Recherche")}
           </span>
           <div className="vcd-filter-input-wrap">
             <Search size={16} strokeWidth={2.2} className="vcd-filter-icon" />
             <input
               type="text"
-              placeholder="Rechercher dans les colonnes actives..."
+              placeholder={t("Rechercher dans les colonnes actives...")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -422,13 +444,13 @@ export default function VehiculeConducteurs() {
         <div className="vcd-filter-group">
           <span className="vcd-filter-label">
             <Filter size={14} strokeWidth={2.5} />
-            Mode
+            {t("Mode")}
           </span>
           <div className="vcd-filter-input-wrap">
             <select value={modeFilter} onChange={(e) => setModeFilter(e.target.value)}>
-              <option value="all">Tous les modes</option>
+              <option value="all">{t("Tous les modes")}</option>
               {Object.entries(MODE_LABELS).map(([k, v]) => (
-                <option key={k} value={k}>{v}</option>
+                <option key={k} value={k}>{t(v)}</option>
               ))}
             </select>
           </div>
@@ -436,17 +458,17 @@ export default function VehiculeConducteurs() {
 
         <button className="vcd-filter-reset" onClick={handleResetFilters}>
           <RotateCcw size={14} strokeWidth={2.5} />
-          Réinitialiser
+          {t("Réinitialiser")}
         </button>
 
         <div className="vcd-export-stack">
-          <button className="vcd-export-btn excel" onClick={handleExportExcel} title="Export CSV">
+          <button className="vcd-export-btn excel" onClick={handleExportExcel} title={t("Export CSV")}>
             <Download size={16} strokeWidth={2.5} />
           </button>
-          <button className="vcd-export-btn print" onClick={handlePrint} title="Imprimer">
+          <button className="vcd-export-btn print" onClick={handleImprimerListe} title={t("Imprimer")}>
             <Printer size={16} strokeWidth={2.5} />
           </button>
-          <button className="vcd-export-btn stats" onClick={handleStats} title="Stats">
+          <button className="vcd-export-btn stats" onClick={handleStats} title={t("Stats")}>
             <BarChart3 size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -470,10 +492,10 @@ export default function VehiculeConducteurs() {
                   className={`vcd-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
                   onClick={() => handleSort(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={`Trier par ${c.label}`}
+                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
                 >
                   <span className="vcd-th-inner">
-                    <span>{c.label}</span>
+                    <span>{t(c.label)}</span>
                     {renderSortIcon(c.key)}
                   </span>
                 </th>
@@ -486,7 +508,7 @@ export default function VehiculeConducteurs() {
                 <td colSpan={visibleColumns.length || 1} className="vcd-table-empty">
                   <div className="vcd-empty-state">
                     <Loader2 size={26} strokeWidth={2} className="vcd-spin" />
-                    <span>Chargement des affectations...</span>
+                    <span>{t("Chargement des affectations...")}</span>
                   </div>
                 </td>
               </tr>
@@ -497,8 +519,8 @@ export default function VehiculeConducteurs() {
                     <UserCheck size={32} strokeWidth={1.6} />
                     <span>
                       {affectations.length === 0
-                        ? "Aucune affectation pour l'instant."
-                        : "Aucune affectation ne correspond à ces filtres."}
+                        ? t("Aucune affectation pour l'instant.")
+                        : t("Aucune affectation ne correspond à ces filtres.")}
                     </span>
                   </div>
                 </td>
