@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import {
   Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw,
@@ -24,7 +24,7 @@ import Button from '../../ui/Button';
 
 import Anomalies from '../Anomalies/Anomalies';
 import BlocagesImmobilisation from '../BlocagesImmobilisation/BlocagesImmobilisation';
-import EtatEquipement from '../EtatEquipement/EtatEquipement';
+import EquipementsEtEtat from '../Equipements/EquipementsEtEtat';
 import Intelligence from '../Intelligence/Intelligence';
 
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
@@ -34,7 +34,7 @@ import pieceLigneService from '../../../services/pieceLigneService';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 
-import { t, tp, locale, SelecteurLangue } from '../../../i18n';
+import { t, tp, locale } from '../../../i18n';
 import { imprimerListe } from '../../../utils/imprimerListe';
 import './BonsMaintenance.css';
 
@@ -368,13 +368,33 @@ export default function BonsMaintenance() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [viewMode, setViewMode] = useState('list');
+
+  // Lien direct /bons-maintenance?id=12 (QR code d'une fiche, notification) : ouvre ce bon
+  const [parametres, setParametres] = useSearchParams();
+  const idLien = Number(parametres.get('id')) || null;
+  useEffect(() => {
+    if (!idLien) return;
+    setSelectedBon((actuel) => (actuel?.id === idLien ? actuel : { id: idLien }));
+    setViewMode('details');
+  }, [idLien]);
+
+  const retourListe = () => {
+    setViewMode('list');
+    if (parametres.has('id')) setParametres({}, { replace: true });
+  };
+
+  // Équipements + état des équipements dans une même fenêtre (?vue=equipements&onglet=etat|liste) :
+  // en revenant d'une fiche équipement avec « Retour », la fenêtre se rouvre sur le même onglet.
+  const equipementsOpen = parametres.get('vue') === 'equipements';
+  const ongletEquipements = parametres.get('onglet') === 'liste' ? 'liste' : 'etat';
+  const ouvrirEquipements = (onglet = 'etat') => setParametres({ vue: 'equipements', onglet }, { replace: true });
+  const fermerEquipements = useCallback(() => setParametres({}, { replace: true }), [setParametres]);
   const [demanderAllume, setDemanderAllume] = useState(false);
   const [commanderAllume, setCommanderAllume] = useState(false);
   const [actionsRefreshKey, setActionsRefreshKey] = useState(0);
 
   const [anomaliesOpen, setAnomaliesOpen] = useState(false);
   const [blocagesOpen, setBlocagesOpen] = useState(false);
-  const [etatEquipOpen, setEtatEquipOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
 
   const [confirmModal, setConfirmModal] = useState({
@@ -905,7 +925,7 @@ export default function BonsMaintenance() {
       <div className="bons-container">
         <BonMaintenanceDetails
           bonMaintenance={selectedBon}
-          onBack={() => setViewMode('list')}
+          onBack={retourListe}
         />
       </div>
     );
@@ -948,8 +968,6 @@ export default function BonsMaintenance() {
         <div className="bons-header-stats">
           <span className="bons-badge-total">{t('Total : {n}', { n: bons.length })}</span>
 
-          {/* Langue de l'application (même réglage que dans les Paramètres) */}
-          <SelecteurLangue className="bons-langue" />
 
           <button className="bons-toggle-stats" title={t("Anomalies")} onClick={() => setAnomaliesOpen(true)}>
             <AlertTriangle size={20} />
@@ -961,9 +979,9 @@ export default function BonsMaintenance() {
             <span>{t("Blocages")}</span>
           </button>
 
-          <button className="bons-toggle-stats" title={t("État des équipements")} onClick={() => setEtatEquipOpen(true)}>
+          <button className="bons-toggle-stats" title={t("Équipements et leur état : fiche, historique, documents et QR code")} onClick={() => ouvrirEquipements('etat')}>
             <Gauge size={20} />
-            <span>{t("État équipements")}</span>
+            <span>{t("Équipements")}</span>
           </button>
 
           <button className="bons-toggle-stats" title={t("Intelligence")} onClick={() => setIntelligenceOpen(true)}>
@@ -1743,16 +1761,16 @@ export default function BonsMaintenance() {
         <BlocagesImmobilisation isModal />
       </PageModal>
 
-      <PageModal
-        isOpen={etatEquipOpen}
-        onClose={() => setEtatEquipOpen(false)}
-        title={t("État des équipements")}
-        subtitle={t("Statut logique calculé à chaque événement")}
-        icon={Gauge}
-        accent="#4338ca"
-        size="full"
-      >
-        <EtatEquipement isModal />
+ <PageModal
+  isOpen={equipementsOpen}
+  onClose={fermerEquipements}
+  title={t("Équipements")}
+  subtitle={t("Suivi, fiches et étiquettes QR")}
+  icon={Gauge}
+  accent="#0794a4"
+  size="full"
+>
+        <EquipementsEtEtat onglet={ongletEquipements} onChangerOnglet={ouvrirEquipements} />
       </PageModal>
 
       <PageModal

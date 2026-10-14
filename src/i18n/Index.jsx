@@ -1,12 +1,3 @@
-// ============================================================
-// SYSTÈME DE LANGUE (français / arabe / anglais)
-//
-// Principe : le texte français EST la clé.
-//   t('Faire le diagnostic')            → « تشخيص العطل » en arabe, « Do the diagnosis » en anglais
-//   t('Étape {n} sur {total}', { n, total })
-//   tp('événement', 3)                  → « 3 événements » / « 3 أحداث » (pluriel arabe géré)
-// Une phrase absente d'un dictionnaire reste en français : rien ne casse.
-// ============================================================
 import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import ar from './ar';
 import en from './en';
@@ -14,8 +5,8 @@ import './rtl.css';
 
 export const LANGUES = {
   fr: { code: 'fr', nom: 'Français', dir: 'ltr', locale: 'fr-FR' },
-  ar: { code: 'ar', nom: 'العربية', dir: 'rtl', locale: 'ar-TN' }, // ar-TN : chiffres latins (12/10/2026)
-  en: { code: 'en', nom: 'English', dir: 'ltr', locale: 'en-GB' }, // en-GB : dates jj/mm/aaaa
+  ar: { code: 'ar', nom: 'العربية', dir: 'rtl', locale: 'ar-TN' }, 
+  en: { code: 'en', nom: 'English', dir: 'ltr', locale: 'en-GB' }, 
 };
 
 const CLE_STOCKAGE = 'app-langue';
@@ -72,6 +63,7 @@ export function localePdf() {
 const PLURIELS_FR = {
   'événement': { one: '{n} événement', other: '{n} événements' },
   personne: { one: '{n} personne', other: '{n} personnes' },
+  'amende affichée': { one: '{n} amende affichée', other: '{n} amendes affichées' },
   bon: { one: '{n} bon lié', other: '{n} bons liés' },
   action: { one: '{n} action à suivre', other: '{n} actions à suivre' },
   'diagnostic fait': { one: '{n} fait', other: '{n} faits' },
@@ -99,9 +91,27 @@ const PLURIELS_FR = {
   'véhicule': { one: '{n} véhicule', other: '{n} véhicules' },
   'dans jours': { one: 'Dans {n} jour', other: 'Dans {n} jours' },
   ligne: { one: '{n} ligne', other: '{n} lignes' },
+  'actif': { one: '{n} actif', other: '{n} actifs' },
+  'élément (unité)': { one: 'élément', other: 'éléments' },
+  'élément au total': { one: '{n} élément au total', other: '{n} éléments au total' },
+  'élément chargé': { one: '{n} élément chargé.', other: '{n} éléments chargés.' },
+  'intervention en cours': { one: '{n} intervention en cours', other: '{n} interventions en cours' },
   'nouvelle anomalie': { one: '{n} nouvelle anomalie détectée', other: '{n} nouvelles anomalies détectées' },
   'nouveau blocage': { one: '{n} nouveau blocage détecté', other: '{n} nouveaux blocages détectés' },
   'jours sans suite': { one: '{n} j sans suite', other: '{n} j sans suite' },
+  'en ligne': { one: '{n} en ligne', other: '{n} en ligne' },
+  'nouveau message': { one: '{n} nouveau message', other: '{n} nouveaux messages' },
+  'message non lu': { one: '{n} message non lu', other: '{n} messages non lus' },
+  'bon de maintenance': { one: '{n} bon de maintenance', other: '{n} bons de maintenance' },
+  'panne': { one: '{n} panne', other: '{n} pannes' },
+  'équipement trouvé': { one: '{n} équipement trouvé', other: '{n} équipements trouvés' },
+  'étiquette à imprimer': { one: 'Imprimer {n} étiquette', other: 'Imprimer {n} étiquettes' },
+  'tâche à faire': { one: '{n} tâche à faire', other: '{n} tâches à faire' },
+  'travail en retard': { one: '{n} travail en retard', other: '{n} travaux en retard' },
+  'travail': { one: '{n} travail', other: '{n} travaux' },
+  'travail sans date': { one: '{n} travail sans date n’apparaît pas dans le calendrier.', other: '{n} travaux sans date n’apparaissent pas dans le calendrier.' },
+  'tâche annulée masquée': { one: 'Afficher {n} tâche annulée', other: 'Afficher {n} tâches annulées' },
+  'jour de retard': { one: '{n} j de retard', other: '{n} j de retard' },
 };
 
 /** Pluriel : tp('événement', 3) → « 3 événements ». En arabe : règles 0, 1, 2, 3-10, 11+. */

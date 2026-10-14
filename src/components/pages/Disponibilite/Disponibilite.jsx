@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import disponibiliteService from '../../../services/Disponibiliteservice ';
 import { criticiteHex, criticiteLabel } from '../../../constants/Criticite';
 import { t, tp, locale } from '../../../i18n';
@@ -121,9 +122,112 @@ const IconChevron = ({ direction = 'right' }) => (
   </Svg>
 );
 
+/* Icône tableur Excel */
+const IconExcel = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" />
+    <path d="M14 3v6h6" />
+    <path d="M9 12l6 6M15 12l-6 6" />
+  </svg>
+);
+
+/* ---------- Export Excel ---------- */
+function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
+  const wb = XLSX.utils.book_new();
+
+  const dateDebut = new Date(bornes.dateDebut).toLocaleDateString('fr-FR');
+  const dateFin = new Date(bornes.dateFin).toLocaleDateString('fr-FR');
+  const dateExport = new Date().toLocaleString('fr-FR');
+
+  /* ----- Feuille 1 : Synthèse ----- */
+  const syntheseData = [
+    ['Rapport de disponibilité', ''],
+    ['Période', periodeLabel],
+    ['Du', dateDebut],
+    ['Au', dateFin],
+    ['Généré le', dateExport],
+    ['', ''],
+    ['Indicateur', 'Valeur'],
+    ['Disponibilité moyenne du parc', kpis.tauxMoyen != null ? `${kpis.tauxMoyen.toFixed(2)} %` : '—'],
+    ['Pannes sur la période', kpis.totalPannes],
+    ['MTBF moyen', kpis.mtbfMoyen != null ? formatDuree(kpis.mtbfMoyen) : '—'],
+    ['MTTR moyen', kpis.mttrMoyen != null ? formatDuree(kpis.mttrMoyen) : '—'],
+    ['Actifs sous 80 %', kpis.nbCritiques],
+    ['', ''],
+    ['Nombre d\'équipements suivis', donnees.length],
+  ];
+  const wsSynthese = XLSX.utils.aoa_to_sheet(syntheseData);
+  wsSynthese['!cols'] = [{ wch: 34 }, { wch: 24 }];
+  wsSynthese['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+  XLSX.utils.book_append_sheet(wb, wsSynthese, 'Synthèse');
+
+  /* ----- Feuille 2 : Détail parc ----- */
+  const lignes = donnees.map((d) => {
+    const niveau = tauxNiveau(d.tauxDisponibilitePct);
+    const niveauLabel =
+      niveau === 'bon'      ? 'Bon' :
+      niveau === 'moyen'    ? 'Moyen' :
+      niveau === 'critique' ? 'Critique' : '—';
+
+    return {
+      'Équipement': d.cibleNom || `Équipement #${d.lotArticleImmobilistationId}`,
+      'État actuel': ETAT_LABELS[d.etatActuel] ? t(ETAT_LABELS[d.etatActuel]) : (d.etatActuel || '—'),
+      'Criticité': d.criticite != null ? t(criticiteLabel(d.criticite)) : '—',
+      'Disponibilité (%)': d.tauxDisponibilitePct != null ? Number(d.tauxDisponibilitePct.toFixed(2)) : '',
+      'Niveau': niveauLabel,
+      'Nb pannes': Number(d.nbPannes ?? 0),
+      'MTBF (h)': d.mtbfHeures != null ? Number(d.mtbfHeures.toFixed(2)) : '',
+      'MTTR (h)': d.mttrHeures != null ? Number(d.mttrHeures.toFixed(2)) : '',
+      'Temps disponible (h)': d.dureeDisponibleHeures != null ? Number(d.dureeDisponibleHeures.toFixed(2)) : '',
+      'Temps indisponible (h)': d.dureeIndisponibleHeures != null ? Number(d.dureeIndisponibleHeures.toFixed(2)) : '',
+    };
+  });
+
+  const wsDetail = XLSX.utils.json_to_sheet(lignes);
+  wsDetail['!cols'] = [
+    { wch: 38 },  // Équipement
+    { wch: 16 },  // État
+    { wch: 12 },  // Criticité
+    { wch: 16 },  // Dispo %
+    { wch: 12 },  // Niveau
+    { wch: 10 },  // Pannes
+    { wch: 12 },  // MTBF
+    { wch: 12 },  // MTTR
+    { wch: 20 },  // Temps dispo
+    { wch: 22 },  // Temps indispo
+  ];
+
+  // Ligne de totaux / moyennes
+  const avecTaux = donnees.filter((d) => d.tauxDisponibilitePct != null);
+  const totalRow = {
+    'Équipement': 'TOTAL / MOYENNE',
+    'État actuel': '',
+    'Criticité': '',
+    'Disponibilité (%)': avecTaux.length
+      ? Number((avecTaux.reduce((s, d) => s + d.tauxDisponibilitePct, 0) / avecTaux.length).toFixed(2))
+      : '',
+    'Niveau': '',
+    'Nb pannes': donnees.reduce((s, d) => s + Number(d.nbPannes ?? 0), 0),
+    'MTBF (h)': '',
+    'MTTR (h)': '',
+    'Temps disponible (h)': '',
+    'Temps indisponible (h)': '',
+  };
+  XLSX.utils.sheet_add_json(wsDetail, [totalRow], { skipHeader: true, origin: -1 });
+
+  XLSX.utils.book_append_sheet(wb, wsDetail, 'Détail parc');
+
+  /* ----- Nom du fichier ----- */
+  const cleanLabel = periodeLabel.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  const date = new Date().toISOString().slice(0, 10);
+  const nomFichier = `disponibilite-${cleanLabel}-${date}.xlsx`;
+
+  XLSX.writeFile(wb, nomFichier);
+}
+
 /* ---------- Pagination ---------- */
 function construirePages(pageActuelle, totalPages) {
-  // Retourne un tableau du genre : [1, '…', 4, 5, 6, '…', 20]
   const pages = [];
   const ajouter = (v) => { if (!pages.includes(v)) pages.push(v); };
 
@@ -220,6 +324,7 @@ export default function Disponibilite() {
   const [periodeKey, setPeriodeKey] = useState('12M');
   const [donnees, setDonnees] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [ligneOuverte, setLigneOuverte] = useState(null);
@@ -259,16 +364,9 @@ export default function Disponibilite() {
     return donneesAffichees.slice(debut, debut + taillePage);
   }, [donneesAffichees, pageCourante, taillePage]);
 
-  // Reset page à 1 quand la recherche change
   useEffect(() => { setPage(1); }, [recherche]);
-
-  // Reset page à 1 quand la période change
   useEffect(() => { setPage(1); }, [periodeKey]);
-
-  // Si la taille de page change, on revient à la page 1
   useEffect(() => { setPage(1); }, [taillePage]);
-
-  // Si la page courante dépasse le total, on la borne
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
@@ -294,6 +392,29 @@ export default function Disponibilite() {
 
     return { tauxMoyen, totalPannes, mtbfMoyen, mttrMoyen, nbCritiques };
   }, [donnees]);
+
+  /* ---------- Export Excel ---------- */
+  const periodeLabel = PERIODES.find((p) => p.key === periodeKey)?.label || periodeKey;
+
+  const handleExportExcel = () => {
+    if (!donnees.length) return;
+    setExporting(true);
+    try {
+      exporterExcel({
+        periodeLabel,
+        bornes: calculerBornes(periodeKey),
+        donnees,       // on exporte TOUT le parc (pas seulement la page filtrée)
+        kpis,
+      });
+    } catch (err) {
+      console.error('Erreur export Excel :', err);
+      setError("Impossible de générer le fichier Excel.");
+    } finally {
+      setTimeout(() => setExporting(false), 300);
+    }
+  };
+
+  const peutExporter = !loading && donnees.length > 0;
 
   return (
     <div className="disp-page">
@@ -321,6 +442,18 @@ export default function Disponibilite() {
               </button>
             ))}
           </div>
+
+          <button
+            type="button"
+            className="disp-export-btn"
+            onClick={handleExportExcel}
+            disabled={!peutExporter || exporting}
+            title={t("Exporter en Excel")}
+          >
+            {exporting ? <IconSpinner /> : <IconExcel />}
+            <span>{exporting ? t("Export…") : t("Excel")}</span>
+          </button>
+
           <button className="disp-refresh-btn" onClick={charger} disabled={loading}>
             {loading ? <IconSpinner /> : <IconRefresh />}
             <span>{loading ? t("Chargement") : t("Rafraîchir")}</span>

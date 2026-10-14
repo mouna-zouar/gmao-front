@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Dashboard from '../components/pages/Dashboard/Dashboard';
 import CompteurList from '../components/pages/Compteurs/Compteurs';
 import Reclamations from '../components/pages/Reclamations/Reclamations';
@@ -18,7 +18,6 @@ import Login from '../components/pages/Login/Login';
 import Anomalies from '../components/pages/Anomalies/Anomalies';
 import MaintenancePredictive from '../components/pages/MaintenancePredictive/MaintenancePredictive';
 import BlocagesImmobilisation from '../components/pages/BlocagesImmobilisation/BlocagesImmobilisation';
-import EtatEquipement from '../components/pages/EtatEquipement/EtatEquipement';
 import Disponibilite from '../components/pages/Disponibilite/Disponibilite';
 import Sla from '../components/pages/Sla/Sla';
 import VehiculesPage from '../components/pages/parc/vehicules/VehiculesPage';
@@ -37,6 +36,12 @@ import ParcPlanning from '../components/pages/parc/Planning/ParcPlanning';
 import Risque from '../components/pages/Risque/Risque';
 import Intelligence from '../components/pages/Intelligence/Intelligence';
 import ParametresSysteme from '../components/pages/ParametresSysteme/ParametresSysteme';
+import EspacePersonnel from '../components/pages/EspacePersonnel/EspacePersonnel';
+import EtatEquipement from '../components/pages/EtatEquipement/EtatEquipement';
+import EquipementFiche from '../components/pages/Equipements/EquipementFiche';
+import VehiculeAmendes from '../components/pages/parc/Vehiculeamendes/Vehiculeamendes';
+import VehiculeCouts from '../components/pages/parc/VehiculeCouts/VehiculeCouts';
+
 
 
 
@@ -50,6 +55,10 @@ const AppRoutes = () => {
 
             <Route path="/referentiels/compteurs" element={<CompteurList />} />
             <Route path="/reclamations" element={<Reclamations />} />
+            <Route path="/mon-espace" element={<EspacePersonnel />} />
+            <Route path="/equipements" element={<EtatEquipement />} />
+            {/* Ouverte aussi en scannant le QR code collé sur l'appareil */}
+            <Route path="/equipement/:id" element={<EquipementFiche />} />
             <Route path="/bons-maintenance" element={<BonsMaintenance />} />
             <Route path="/tables-parametrage" element={<Referentielconsultation  />} />
             <Route path="/parametres-systeme" element={<ParametresSysteme />} />
@@ -65,7 +74,7 @@ const AppRoutes = () => {
             <Route path="/anomalies" element={<Anomalies />} />
             <Route path="/maintenance-predictive" element={<MaintenancePredictive />} />
             <Route path="/blocages-immobilisation" element={<BlocagesImmobilisation />} />
-            <Route path="/etat-equipement" element={<EtatEquipement />} />
+            <Route path="/etat-equipement" element={<Navigate to="/equipements" replace />} />
             <Route path="/disponibilite" element={<Disponibilite />} />
             <Route path="/sla" element={<Sla />} />
             <Route path="/cout" element={<Cout />} />
@@ -79,6 +88,9 @@ const AppRoutes = () => {
             <Route path="/vehicule-bons-carburant" element={<VehiculeBonsCarburant />} />
             <Route path="/vehicule-incidents" element={<VehiculeIncidents />} />
             <Route path="/vehicule-reservations" element={<VehiculeReservations />} />
+            <Route path="/vehicule-amendes" element={<VehiculeAmendes />} />
+            <Route path="/vehicule-couts" element={<VehiculeCouts />} />
+
             <Route path="/parc-dashboard" element={<ParcDashboard />} />
             <Route path="/risque" element={<Risque />} />
             <Route path="/projets" element={<Projets />} />

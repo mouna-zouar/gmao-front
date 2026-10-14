@@ -14,6 +14,7 @@ const ColumnSettingsModal = ({ show, onClose, columns, onToggleVisibility, onTog
             case 'vehicule': return 'Colonnes - Véhicules';
             case 'bonCarburant': return 'Colonnes - Bons carburant';
             case 'incident': return 'Colonnes - Incidents véhicule';
+            case 'amende':   return 'Colonnes - Amendes véhicule';
             case 'mission':  return 'Colonnes - Missions véhicules';
             case 'reservation': return 'Colonnes - Réservations véhicule';
             case 'projet':   return 'Colonnes - Projets';

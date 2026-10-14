@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import coutService from '../../../services/coutService';
 import { prioriteLabel } from '../../../constants/Priorite';
 import './Cout.css';
@@ -119,12 +120,115 @@ const IconWallet = () => (
   </svg>
 );
 
+/* Icône tableur Excel (feuille + grille) */
+const IconExcel = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" />
+    <path d="M14 3v6h6" />
+    <path d="M9 12l6 6M15 12l-6 6" />
+  </svg>
+);
+
+/* ---------- Export Excel ---------- */
+function exporterExcel({ periodeLabel, bilan, bons, topEquipements }) {
+  const wb = XLSX.utils.book_new();
+
+  /* ----- Feuille 1 : Synthèse ----- */
+  const dateExport = new Date().toLocaleString('fr-FR');
+  const syntheseData = [
+    ['Rapport de coûts', ''],
+    ['Période', periodeLabel],
+    ['Généré le', dateExport],
+    ['', ''],
+    ['Indicateur', 'Valeur (DT)'],
+    ['Coût total de la période', bilan?.coutTotalGlobal ?? 0],
+    ["Main d'œuvre", bilan?.coutTotalMainOeuvre ?? 0],
+    ['Pièces dépôt', bilan?.coutTotalPiecesDepot ?? 0],
+    ['Achats fournisseur', bilan?.coutTotalAchats ?? 0],
+    ['', ''],
+    ['Nombre de bons', bons.length],
+  ];
+  const wsSynthese = XLSX.utils.aoa_to_sheet(syntheseData);
+  wsSynthese['!cols'] = [{ wch: 32 }, { wch: 22 }];
+  wsSynthese['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+  XLSX.utils.book_append_sheet(wb, wsSynthese, 'Synthèse');
+
+  /* ----- Feuille 2 : Bons ----- */
+  const bonsRows = bons.map((b) => ({
+    'N°': b.num || '',
+    'Titre': b.titre || '',
+    'Équipement': b.equipementNom || '',
+    'Priorité': b.priorite ? prioriteLabel(b.priorite) : '',
+    "Main d'œuvre (DT)": Number(b.coutMainOeuvre ?? 0),
+    'Pièces dépôt (DT)': Number(b.coutPiecesDepot ?? 0),
+    'Achats (DT)': Number(b.coutAchats ?? 0),
+    'Total (DT)': Number(b.coutTotal ?? 0),
+  }));
+  const wsBons = XLSX.utils.json_to_sheet(bonsRows);
+
+  // Largeurs des colonnes + format numérique 2 décimales
+  wsBons['!cols'] = [
+    { wch: 12 },
+    { wch: 42 },
+    { wch: 28 },
+    { wch: 14 },
+    { wch: 18 },
+    { wch: 18 },
+    { wch: 14 },
+    { wch: 14 },
+  ];
+
+  // Ligne de totaux en bas de la feuille Bons
+  const totalRow = {
+    'N°': '',
+    'Titre': 'TOTAL',
+    'Équipement': '',
+    'Priorité': '',
+    "Main d'œuvre (DT)": bons.reduce((s, b) => s + Number(b.coutMainOeuvre ?? 0), 0),
+    'Pièces dépôt (DT)': bons.reduce((s, b) => s + Number(b.coutPiecesDepot ?? 0), 0),
+    'Achats (DT)': bons.reduce((s, b) => s + Number(b.coutAchats ?? 0), 0),
+    'Total (DT)': bons.reduce((s, b) => s + Number(b.coutTotal ?? 0), 0),
+  };
+  XLSX.utils.sheet_add_json(wsBons, [totalRow], { skipHeader: true, origin: -1 });
+
+  XLSX.utils.book_append_sheet(wb, wsBons, 'Bons');
+
+  /* ----- Feuille 3 : Top équipements ----- */
+  if (topEquipements?.length) {
+    const equipRows = topEquipements.map((e, idx) => ({
+      'Rang': idx + 1,
+      'Équipement': e.cibleNom || `Équipement #${e.lotArticleImmobilistationId}`,
+      'Nombre de bons': Number(e.nbBons ?? 0),
+      'Coût total (DT)': Number(e.coutTotal ?? 0),
+      'Coût moyen / bon (DT)': Number(e.coutMoyenParBon ?? 0),
+    }));
+    const wsEquip = XLSX.utils.json_to_sheet(equipRows);
+    wsEquip['!cols'] = [
+      { wch: 8 },
+      { wch: 38 },
+      { wch: 16 },
+      { wch: 18 },
+      { wch: 22 },
+    ];
+    XLSX.utils.book_append_sheet(wb, wsEquip, 'Top équipements');
+  }
+
+  /* ----- Nom du fichier ----- */
+  const cleanLabel = periodeLabel.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  const date = new Date().toISOString().slice(0, 10);
+  const nomFichier = `couts-${cleanLabel}-${date}.xlsx`;
+
+  XLSX.writeFile(wb, nomFichier);
+}
+
 /* ---------- Composant ---------- */
 export default function Cout() {
   const [periodeKey, setPeriodeKey] = useState('3M');
   const [bons, setBons] = useState([]);
   const [bilan, setBilan] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -283,6 +387,29 @@ export default function Cout() {
     return Math.max(...topEquipements.map((e) => e.coutTotal), 0);
   }, [topEquipements]);
 
+  /* ---------- Export Excel ---------- */
+  const periodeLabel = PERIODES.find((p) => p.key === periodeKey)?.label || periodeKey;
+
+  const handleExportExcel = () => {
+    if (!bonsAffiches.length && !bilan) return;
+    setExporting(true);
+    try {
+      exporterExcel({
+        periodeLabel,
+        bilan,
+        bons: bonsAffiches,
+        topEquipements,
+      });
+    } catch (err) {
+      console.error('Erreur export Excel :', err);
+      setError("Impossible de générer le fichier Excel.");
+    } finally {
+      setTimeout(() => setExporting(false), 300);
+    }
+  };
+
+  const peutExporter = !loading && (bonsAffiches.length > 0 || (bilan && topEquipements.length > 0));
+
   return (
     <div className="cout-page">
       {/* ---------- Header ---------- */}
@@ -309,6 +436,18 @@ export default function Cout() {
               </button>
             ))}
           </div>
+
+          <button
+            type="button"
+            className="cout-export-btn"
+            onClick={handleExportExcel}
+            disabled={!peutExporter || exporting}
+            title="Exporter en Excel"
+          >
+            {exporting ? <IconSpinner /> : <IconExcel />}
+            <span>{exporting ? 'Export…' : 'Excel'}</span>
+          </button>
+
           <button className="cout-refresh-btn" onClick={charger} disabled={loading}>
             {loading ? <IconSpinner /> : <IconRefresh />}
             <span>{loading ? 'Chargement' : 'Rafraîchir'}</span>
@@ -356,7 +495,6 @@ export default function Cout() {
       {/* ---------- Panneaux : Évolution mensuelle + Top équipements ---------- */}
       {!loading && bilan && (chartData.length > 0 || topEquipements.length > 0) && (
         <section className="cout-panels">
-          {/* ═══ Area chart : Évolution mensuelle ═══ */}
           {chartData.length > 0 && (
             <div className="cout-panel">
               <h3 className="cout-panel__title">Évolution mensuelle</h3>
@@ -382,7 +520,6 @@ export default function Cout() {
                     </linearGradient>
                   </defs>
 
-                  {/* Grille horizontale + labels Y */}
                   {chartYTicks.map((tick, idx) => (
                     <g key={`yt-${idx}`}>
                       <line
@@ -403,7 +540,6 @@ export default function Cout() {
                     </g>
                   ))}
 
-                  {/* Axe X (baseline) */}
                   <line
                     x1={CHART.PAD.left}
                     x2={CHART.W - CHART.PAD.right}
@@ -412,10 +548,8 @@ export default function Cout() {
                     className="cout-chart__axis"
                   />
 
-                  {/* Aire */}
                   <path d={chartAreaPath} fill="url(#coutAreaGradient)" />
 
-                  {/* Ligne */}
                   <path
                     d={chartLinePath}
                     fill="none"
@@ -425,19 +559,11 @@ export default function Cout() {
                     strokeLinejoin="round"
                   />
 
-                  {/* Points + labels X */}
                   {chartPoints.map((p) => (
                     <g key={p.key} className="cout-chart__point-group">
+                      <circle cx={p.x} cy={p.y} r="10" className="cout-chart__point-halo" />
                       <circle
-                        cx={p.x}
-                        cy={p.y}
-                        r="10"
-                        className="cout-chart__point-halo"
-                      />
-                      <circle
-                        cx={p.x}
-                        cy={p.y}
-                        r="5"
+                        cx={p.x} cy={p.y} r="5"
                         fill="#ffffff"
                         stroke="#067a87"
                         strokeWidth="2.5"
@@ -462,7 +588,6 @@ export default function Cout() {
             </div>
           )}
 
-          {/* ═══ Top équipements ═══ */}
           {topEquipements.length > 0 && (
             <div className="cout-panel">
               <h3 className="cout-panel__title">Équipements les plus coûteux</h3>
@@ -489,7 +614,6 @@ export default function Cout() {
                 ))}
               </ul>
 
-              {/* Pagination équipements */}
               {equipTotalPages > 1 && (
                 <div className="cout-equip-pagination">
                   <span className="cout-equip-pagination__info">
@@ -632,7 +756,6 @@ export default function Cout() {
             ))}
           </ul>
 
-          {/* ---------- Pagination bons ---------- */}
           {totalPages > 1 && (
             <div className="cout-pagination">
               <span className="cout-pagination__info">

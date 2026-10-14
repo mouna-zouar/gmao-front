@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import slaService from '../../../services/slaService';
 import { prioriteLabel, prioriteRang } from '../../../constants/Priorite';
 import { t, tp, locale } from '../../../i18n';
@@ -137,6 +138,115 @@ const IconClipboardCheck = () => (
   </svg>
 );
 
+/* Icône tableur Excel */
+const IconExcel = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" />
+    <path d="M14 3v6h6" />
+    <path d="M9 12l6 6M15 12l-6 6" />
+  </svg>
+);
+
+/* ---------- Export Excel ---------- */
+function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
+  const wb = XLSX.utils.book_new();
+  const dateExport = new Date().toLocaleString('fr-FR');
+
+  /* ----- Feuille 1 : Synthèse ----- */
+  const syntheseData = [
+    ['Rapport SLA', ''],
+    ['Vue', vue === 'PERIODE' ? 'Bons de la période' : 'Dépassements en cours'],
+    ['Période', vue === 'PERIODE' ? periodeLabel : '— (dépassements ouverts)'],
+    ['Du', bornes ? new Date(bornes.dateDebut).toLocaleDateString('fr-FR') : '—'],
+    ['Au', bornes ? new Date(bornes.dateFin).toLocaleDateString('fr-FR') : '—'],
+    ['Généré le', dateExport],
+    ['', ''],
+  ];
+
+  if (bilan) {
+    syntheseData.push(
+      ['Indicateur', 'Valeur'],
+      ['Taux de respect — Réponse', bilan.tauxRespectReponsePct != null ? `${bilan.tauxRespectReponsePct.toFixed(1)} %` : '—'],
+      ['Taux de respect — Résolution', bilan.tauxRespectResolutionPct != null ? `${bilan.tauxRespectResolutionPct.toFixed(1)} %` : '—'],
+      ['Bons analysés', bilan.nbBonsAnalyses ?? 0],
+      ['Dépassements réponse', bilan.nbReponseDepassee ?? 0],
+      ['Dépassements résolution', bilan.nbResolutionDepassee ?? 0],
+      ['Total dépassements', (bilan.nbReponseDepassee ?? 0) + (bilan.nbResolutionDepassee ?? 0)],
+    );
+  } else {
+    syntheseData.push(
+      ['Indicateur', 'Valeur'],
+      ['Bons en dépassement', bons.length],
+    );
+  }
+
+  const wsSynthese = XLSX.utils.aoa_to_sheet(syntheseData);
+  wsSynthese['!cols'] = [{ wch: 34 }, { wch: 24 }];
+  wsSynthese['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+  XLSX.utils.book_append_sheet(wb, wsSynthese, 'Synthèse');
+
+  /* ----- Feuille 2 : Par priorité (si dispo) ----- */
+  if (bilan?.parPriorite?.length) {
+    const prioRows = bilan.parPriorite.map((p) => ({
+      'Priorité': p.priorite,
+      'Libellé': prioriteLabel(p.priorite),
+      'Nb bons': Number(p.nbBons ?? 0),
+      'Respect réponse (%)': p.tauxRespectReponsePct != null ? Number(p.tauxRespectReponsePct.toFixed(2)) : '',
+      'Respect résolution (%)': p.tauxRespectResolutionPct != null ? Number(p.tauxRespectResolutionPct.toFixed(2)) : '',
+    }));
+    const wsPrio = XLSX.utils.json_to_sheet(prioRows);
+    wsPrio['!cols'] = [
+      { wch: 10 },
+      { wch: 26 },
+      { wch: 12 },
+      { wch: 20 },
+      { wch: 22 },
+    ];
+    XLSX.utils.book_append_sheet(wb, wsPrio, 'Par priorité');
+  }
+
+  /* ----- Feuille 3 : Bons ----- */
+  const bonsRows = bons.map((b) => ({
+    'N°': b.num || '',
+    'Titre': b.titre || '',
+    'Priorité': b.priorite || '',
+    'Libellé priorité': b.priorite ? prioriteLabel(b.priorite) : '',
+    'Statut réponse': STATUT_LABELS[b.statutReponse] ? t(STATUT_LABELS[b.statutReponse]) : (b.statutReponse || '—'),
+    'Statut résolution': STATUT_LABELS[b.statutResolution] ? t(STATUT_LABELS[b.statutResolution]) : (b.statutResolution || '—'),
+    'Délai réponse réel (h)': b.delaiReponseReelHeures != null ? Number(b.delaiReponseReelHeures.toFixed(2)) : '',
+    'Délai réponse cible (h)': b.delaiReponseCibleHeures != null ? Number(b.delaiReponseCibleHeures.toFixed(2)) : '',
+    'Délai résolution réel (h)': b.delaiResolutionReelHeures != null ? Number(b.delaiResolutionReelHeures.toFixed(2)) : '',
+    'Délai résolution cible (h)': b.delaiResolutionCibleHeures != null ? Number(b.delaiResolutionCibleHeures.toFixed(2)) : '',
+    'Échéance réponse': b.echeanceReponse ? formatDateTime(b.echeanceReponse) : '',
+    'Échéance résolution': b.echeanceResolution ? formatDateTime(b.echeanceResolution) : '',
+  }));
+
+  const wsBons = XLSX.utils.json_to_sheet(bonsRows);
+  wsBons['!cols'] = [
+    { wch: 12 },
+    { wch: 42 },
+    { wch: 10 },
+    { wch: 22 },
+    { wch: 16 },
+    { wch: 18 },
+    { wch: 20 },
+    { wch: 20 },
+    { wch: 22 },
+    { wch: 22 },
+    { wch: 22 },
+    { wch: 22 },
+  ];
+  XLSX.utils.book_append_sheet(wb, wsBons, 'Bons');
+
+  /* ----- Nom du fichier ----- */
+  const vueSlug = vue === 'DEPASSEMENTS' ? 'depassements' : periodeLabel.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+  const date = new Date().toISOString().slice(0, 10);
+  const nomFichier = `sla-${vueSlug}-${date}.xlsx`;
+
+  XLSX.writeFile(wb, nomFichier);
+}
+
 /* ---------- Pagination ---------- */
 function construirePages(pageActuelle, totalPages) {
   const pages = [];
@@ -237,6 +347,7 @@ export default function Sla() {
   const [bons, setBons] = useState([]);
   const [bilan, setBilan] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState(null);
   const [recherche, setRecherche] = useState('');
 
@@ -305,6 +416,31 @@ export default function Sla() {
     : taux >= 70 ? 'sla-prio-bar--moyen'
     : 'sla-prio-bar--critique';
 
+  /* ---------- Export Excel ---------- */
+  const periodeLabel = PERIODES.find((p) => p.key === periodeKey)?.label || periodeKey;
+
+  const handleExportExcel = () => {
+    if (!bons.length && !bilan) return;
+    setExporting(true);
+    try {
+      exporterExcel({
+        vue,
+        periodeLabel,
+        bornes: vue === 'PERIODE' ? calculerBornes(periodeKey) : null,
+        bilan,
+        // On exporte TOUS les bons filtrés (pas seulement la page paginée)
+        bons: bonsAffiches,
+      });
+    } catch (err) {
+      console.error('Erreur export Excel :', err);
+      setError(t("Impossible de générer le fichier Excel."));
+    } finally {
+      setTimeout(() => setExporting(false), 300);
+    }
+  };
+
+  const peutExporter = !loading && (bonsAffiches.length > 0 || (bilan && bilan.nbBonsAnalyses > 0));
+
   return (
     <div className="sla-page">
       {/* ---------- Header ---------- */}
@@ -345,6 +481,17 @@ export default function Sla() {
               ))}
             </div>
           )}
+
+          <button
+            type="button"
+            className="sla-export-btn"
+            onClick={handleExportExcel}
+            disabled={!peutExporter || exporting}
+            title={t("Exporter en Excel")}
+          >
+            {exporting ? <IconSpinner /> : <IconExcel />}
+            <span>{exporting ? t("Export…") : t("Excel")}</span>
+          </button>
 
           <button className="sla-refresh-btn" onClick={charger} disabled={loading}>
             {loading ? <IconSpinner /> : <IconRefresh />}

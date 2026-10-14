@@ -25,10 +25,13 @@ import {
   Ban,
   Package,
   Printer,
+  QrCode,
 } from 'lucide-react';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import { t, tp, locale } from '../../../i18n';
 import { imprimerFiche } from '../../../utils/imprimerListe';
+import { qrSvg, urlReclamation } from '../../../utils/qrCode';
+import ModaleQrCode from '../../ui/QrCode/ModaleQrCode';
 import './ReclamationDetails.css';
 
 // États de la réclamation (identiques à Reclamations.jsx)
@@ -200,6 +203,7 @@ export default function ReclamationDetails({
   const { reclamation, bons } = normaliser(data);
   const [equipement, setEquipement] = useState(null);
   const [aideMasquee, setAideMasquee] = useState(lireAideMasquee);
+  const [qrOuvert, setQrOuvert] = useState(false);
   const titreRef = useRef(null);
 
   useEffect(() => {
@@ -289,8 +293,11 @@ export default function ReclamationDetails({
   const enAttente = reclamation.etat === ETAT.OUVERTE || reclamation.etat === ETAT.ATTENTE;
 
   // Impression de la fiche de la réclamation (A4 portrait)
-  const imprimerReclamation = () => {
+  const imprimerReclamation = async () => {
+    // QR code dans l'en-tête : scanné, il rouvre cette réclamation dans la GMAO
+    const qr = await qrSvg(urlReclamation(reclamation.id)).catch(() => null);
     imprimerFiche({
+      qr,
       titre,
       sousTitre: t('Réclamation'),
       reference: reclamation.num || t('Réclamation #{id}', { id: reclamation.id }),
@@ -345,11 +352,25 @@ export default function ReclamationDetails({
           <button type="button" className="rcx-btn rcx-btn--clair" onClick={onModifier}>
             <Edit size={17} /> {t("Modifier")}
           </button>
+          <button type="button" className="rcx-btn rcx-btn--clair" onClick={() => setQrOuvert(true)}>
+            <QrCode size={17} /> {t("QR code")}
+          </button>
           <button type="button" className="rcx-btn rcx-btn--clair" onClick={imprimerReclamation}>
             <Printer size={17} /> {t("Imprimer la fiche")}
           </button>
         </div>
       </div>
+
+      {qrOuvert && (
+        <ModaleQrCode
+          url={urlReclamation(reclamation.id)}
+          titre={titre}
+          sousTitre={t('Réclamation')}
+          reference={reclamation.num || t('Réclamation #{id}', { id: reclamation.id })}
+          appel={t('Scannez pour suivre la réclamation')}
+          onClose={() => setQrOuvert(false)}
+        />
+      )}
 
       {/* ===== PARTIE 1 : la réclamation, en clair ===== */}
       <section className="rcx-identite" aria-label={t("Informations générales de la réclamation")}>

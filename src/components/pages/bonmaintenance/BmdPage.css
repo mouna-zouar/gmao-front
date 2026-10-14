@@ -904,3 +904,24 @@ button.bmx-vital:hover { background: var(--paper); }
 @keyframes bmx-tourne { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .bmx-spin { animation: none; } }
 .bmx-barre-droite { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- Chat en direct : badges des messages non lus ---------- */
+.bmx-rubrique-nb--alerte {
+  background: var(--alert);
+  color: #ffffff;
+}
+
+.bmx-btn-chat { position: relative; }
+
+.bmx-btn-pastille {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--alert);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}

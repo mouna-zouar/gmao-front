@@ -54,6 +54,8 @@ import {
   HelpCircle,
   AlertTriangle,
   MessageSquare,
+  MessageCircle,
+  QrCode,
   History,
 } from 'lucide-react';
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
@@ -61,6 +63,10 @@ import { prioriteLabel, prioriteColor } from '../../../constants/Priorite';
 import bonMaintenanceIntervenantService from '../../../services/bonMaintenanceIntervenantService';
 import bonMaintenanceIntervenantHistoriqueService from '../../../services/Bonmaintenanceintervenanthistoriqueservice';
 import bonMaintenanceCommentaireService from '../../../services/Bonmaintenancecommentaireservice';
+import chatBonService from '../../../services/chatBonService';
+import BmdChat from './BmdChat';
+import { qrSvg, urlBon } from '../../../utils/qrCode';
+import ModaleQrCode from '../../ui/QrCode/ModaleQrCode';
 import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenancedocumentachatservice';
 import bonMaintenancePieceImmoService from '../../../services/Bonmaintenancepieceimmoservice';
 import bonMaintenanceHistoriqueService from '../../../services/Bonmaintenancehistoriqueservice';
@@ -422,8 +428,9 @@ const GROUPES_RUBRIQUES = [
   },
   {
     titre: 'Échanger',
-    aide: 'Notes et achats',
+    aide: 'Discussion, notes et achats',
     rubriques: [
+      { key: 'chat', label: 'Chat en direct', aide: 'Discuter avec l’équipe du bon', icon: MessageCircle },
       { key: 'commentaires', label: 'Commentaires', aide: 'Les messages de l’équipe', icon: MessageSquare },
       { key: 'documents', label: "Documents d'achat", aide: 'Commandes et demandes de pièces', icon: FileText },
     ],
@@ -504,6 +511,9 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [aideMasquee, setAideMasquee] = useState(lireAideMasquee);
   const [celebrer, celebrationElement] = useCelebration();
   const [impressionEnCours, setImpressionEnCours] = useState(false);
+  const [nonLusChat, setNonLusChat] = useState(0);
+  const [qrOuvert, setQrOuvert] = useState(false);
+  const fermerQr = useCallback(() => setQrOuvert(false), []);
   const etatBonRef = useRef(bonMaintenance?.etat);
   useEffect(() => { etatBonRef.current = bon?.etat; }, [bon?.etat]);
 
@@ -571,6 +581,17 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   }, [bon?.id]);
 
   useEffect(() => { chargerSlaEtCout(); }, [chargerSlaEtCout]);
+
+  // Messages non lus du chat (badge) ; silencieux si le chat n'est pas accessible
+  const idBonChat = bon?.id;
+  const chargerNonLusChat = useCallback(() => {
+    if (!idBonChat) return;
+    chatBonService.getNonLus([idBonChat])
+      .then((parBon) => setNonLusChat(parBon[idBonChat] || 0))
+      .catch(() => setNonLusChat(0));
+  }, [idBonChat]);
+
+  useEffect(() => { chargerNonLusChat(); }, [chargerNonLusChat]);
 
   const chargerRca = useCallback(() => {
     if (!bon?.id) {
@@ -752,7 +773,8 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     setTiroir(null);
     chargerResume();
     chargerSlaEtCout();
-  }, [chargerResume, chargerSlaEtCout]);
+    chargerNonLusChat();
+  }, [chargerResume, chargerSlaEtCout, chargerNonLusChat]);
 
   const toggleSection = (section) => {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -808,6 +830,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     intervenants: resumePret ? intervenantsFlow.length : null,
     historique: resumePret ? historiqueFlow.length : null,
     controle: dernierControle ? 1 : null,
+    chat: nonLusChat > 0 ? nonLusChat : null,
   };
 
   const nomEquipement = equipement?.designation || bon.titre || 'Équipement non renseigné';
@@ -839,7 +862,10 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         return i ? nomIntervenantAffiche(i) : (intervenantId != null ? `#${intervenantId}` : '');
       };
 
+      // QR code dans l'en-tête : scanné, il rouvre ce bon dans la GMAO
+      const qr = await qrSvg(urlBon(id)).catch(() => null);
       imprimerFiche({
+        qr,
         titre: nomEquipement === 'Équipement non renseigné' ? t(nomEquipement) : nomEquipement,
         sousTitre: t('Bon de maintenance'),
         reference: bon.num || t('Bon #{id}', { id: bon.id }),
@@ -985,6 +1011,8 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         return <ControleEquipementTab bonMaintenanceId={bon.id} defaultLotArticleImmobilistationId={bon.lotArticleImmobilistationId} autoOpenForm={auto} />;
       case 'remiseEnService':
         return <RemiseEnServiceTab bonMaintenanceId={bon.id} defaultLotArticleImmobilistationId={bon.lotArticleImmobilistationId} onBonMaybeChanged={rafraichirBon} onCelebrer={celebrer} autoOpenForm={auto} />;
+      case 'chat':
+        return <BmdChat bonId={bon.id} onNonLusChange={setNonLusChat} />;
       case 'commentaires':
         return <CommentairesTab bonMaintenanceId={bon.id} />;
       case 'historique':
@@ -1199,6 +1227,15 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
               <HelpCircle size={18} /> {t("Comment ça marche ?")}
             </button>
           )}
+          <button type="button" className="bmx-btn bmx-btn--clair bmx-btn-chat" onClick={() => ouvrir('chat')}>
+            <MessageCircle size={18} /> {t('Discuter')}
+            {nonLusChat > 0 && (
+              <span className="bmx-btn-pastille" aria-label={tp('message non lu', nonLusChat)}>{nonLusChat}</span>
+            )}
+          </button>
+          <button type="button" className="bmx-btn bmx-btn--clair" onClick={() => setQrOuvert(true)}>
+            <QrCode size={18} /> {t('QR code')}
+          </button>
           <button type="button" className="bmx-btn bmx-btn--clair" onClick={imprimerBon} disabled={impressionEnCours}>
             {impressionEnCours ? <Loader2 size={18} className="bmx-spin" /> : <Printer size={18} />}
             {impressionEnCours ? t('Préparation…') : t('Imprimer la fiche')}
@@ -1372,7 +1409,14 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
                           <span className="bmx-rubrique-nom">{t(r.label)}</span>
                           <span className="bmx-rubrique-aide">{t(r.aide)}</span>
                         </span>
-                        {n != null && <span className="bmx-rubrique-nb">{n}</span>}
+                        {n != null && (
+                          <span
+                            className={`bmx-rubrique-nb ${r.key === 'chat' ? 'bmx-rubrique-nb--alerte' : ''}`}
+                            title={r.key === 'chat' ? tp('message non lu', n) : undefined}
+                          >
+                            {n}
+                          </span>
+                        )}
                         <ChevronRight size={16} className="bmx-rubrique-fleche" />
                       </button>
                     </li>
@@ -1387,6 +1431,17 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       <Tiroir rubrique={tiroir?.key} onClose={fermerTiroir}>
         <div key={`${tiroir?.key}-${tiroir?.form}`}>{contenuTiroir()}</div>
       </Tiroir>
+
+      {qrOuvert && (
+        <ModaleQrCode
+          url={urlBon(bon.id)}
+          titre={nomEquipement === 'Équipement non renseigné' ? t(nomEquipement) : nomEquipement}
+          sousTitre={bon.titre && bon.titre !== nomEquipement ? bon.titre : t('Bon de maintenance')}
+          reference={bon.num || t('Bon #{id}', { id: bon.id })}
+          appel={t('Scannez pour ouvrir le bon')}
+          onClose={fermerQr}
+        />
+      )}
 
       {celebrationElement}
     </div>

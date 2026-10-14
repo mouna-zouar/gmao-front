@@ -1,0 +1,172 @@
+/* Amende véhicule : saisie et paiement (thème #0794a4) */
+.vam-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(16, 42, 48, 0.45);
+}
+
+.vam-fenetre {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: calc(100dvh - 32px);
+  overflow: hidden;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 24px 64px rgba(16, 42, 48, 0.28);
+  color: #102a30;
+  font-size: 14px;
+}
+.vam-fenetre *, .vam-fenetre *::before, .vam-fenetre *::after { box-sizing: border-box; }
+
+.vam-entete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #d3e5e8;
+}
+.vam-entete-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #dcf0f2;
+  color: #045a64;
+}
+.vam-entete h2 { margin: 0; font-size: 17px; font-weight: 700; color: #102a30; }
+.vam-entete p { margin: 2px 0 0; font-size: 13px; color: #45636a; }
+.vam-fermer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-inline-start: auto;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #45636a;
+  cursor: pointer;
+}
+.vam-fermer:hover { background: #dcf0f2; color: #045a64; }
+
+.vam-corps { flex: 1; overflow-y: auto; padding: 16px 20px 8px; }
+
+.vam-groupe { margin: 0 0 16px; padding: 0; border: none; }
+.vam-groupe legend {
+  margin-bottom: 10px;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #045a64;
+}
+
+.vam-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+.vam-grille--une { grid-template-columns: 1fr; }
+.vam-champ { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.vam-champ--large { grid-column: 1 / -1; }
+.vam-champ label { font-size: 13px; font-weight: 600; color: #45636a; }
+.vam-requis { color: #d6454d; }
+
+.vam-champ input,
+.vam-champ select,
+.vam-champ textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1.5px solid #d3e5e8;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #102a30;
+  font: inherit;
+}
+.vam-champ textarea { resize: vertical; }
+.vam-champ input:focus,
+.vam-champ select:focus,
+.vam-champ textarea:focus {
+  outline: none;
+  border-color: #0794a4;
+  box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.16);
+}
+.vam-champ.is-erreur input,
+.vam-champ.is-erreur select { border-color: #d6454d; }
+.vam-erreur-champ { margin: 0; font-size: 12.5px; font-weight: 600; color: #b42b33; }
+.vam-aide { margin: 0; font-size: 12.5px; color: #7a9399; }
+.vam-aide--bloc { display: flex; align-items: center; gap: 6px; margin: 12px 0 4px; }
+
+.vam-alerte {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: #fce8e9;
+  color: #b42b33;
+  font-weight: 600;
+}
+
+/* Bandeau « conducteur identifié » */
+.vam-identification {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #d3e5e8;
+  border-radius: 10px;
+  background: #f4fafb;
+  color: #45636a;
+  line-height: 1.45;
+}
+.vam-identification svg { flex-shrink: 0; margin-top: 1px; }
+.vam-identification--trouve { border-color: #a8dccb; background: #e0f4ec; color: #145c45; }
+.vam-identification--aucun,
+.vam-identification--erreur { border-color: #f2d3a6; background: #fcf0de; color: #7a4a0f; }
+.vam-identification strong { color: inherit; }
+
+.vam-pied {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid #d3e5e8;
+  background: #f8fbfc;
+}
+.vam-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1.5px solid #0794a4;
+  border-radius: 10px;
+  background: #0794a4;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.vam-bouton:hover:not(:disabled) { background: #045a64; border-color: #045a64; }
+.vam-bouton:disabled { opacity: 0.6; cursor: default; }
+.vam-bouton--clair { background: #ffffff; color: #045a64; border-color: #d3e5e8; }
+.vam-bouton--clair:hover:not(:disabled) { background: #dcf0f2; border-color: #0794a4; color: #045a64; }
+.vam-bouton:focus-visible,
+.vam-fermer:focus-visible { outline: 3px solid #0794a4; outline-offset: 2px; }
+
+.vam-tourne { animation: vam-tourne 0.9s linear infinite; }
+@keyframes vam-tourne { to { transform: rotate(360deg); } }
+
+@media (max-width: 560px) {
+  .vam-grille { grid-template-columns: 1fr; }
+  .vam-pied { flex-direction: column-reverse; }
+  .vam-pied .vam-bouton { justify-content: center; }
+}

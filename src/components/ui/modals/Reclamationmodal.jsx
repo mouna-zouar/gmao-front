@@ -13,6 +13,7 @@ import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import authService from '../../../services/Authservice';
 import './Modal.css';
 import './ReclamationModal.css';
+import ChampEquipement from '../ChampEquipement/ChampEquipement';
 
 const ETAT_OPTIONS = [
   { value: 0, label: 'Ouverte' },
@@ -227,7 +228,9 @@ const SearchableSelect = ({
   );
 };
 
-const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) => {
+// valeursInitiales (création seulement) : { lotArticleImmobilistationId, immobilisation: { id, designation } }
+// — utilisé par la fiche équipement et le scan d'un QR code pour pré-remplir l'équipement.
+const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, valeursInitiales }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
@@ -276,12 +279,16 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
 
     const fetchImmobilisations = async () => {
       setLoadingImmobilisations(true);
+      // L'équipement pré-rempli doit figurer dans la liste, même s'il n'est pas dans les 200 premiers
+      // (ou si la liste ne peut pas être chargée)
+      const initial = valeursInitiales?.immobilisation;
       try {
         const page = await lotArticleImmobilistationService.getAll(0, 200);
-        setImmobilisations(page.content ?? []);
+        const liste = page.content ?? [];
+        setImmobilisations(initial && !liste.some((i) => String(i.id) === String(initial.id)) ? [initial, ...liste] : liste);
       } catch (err) {
         console.error('Erreur chargement immobilisations :', err);
-        setImmobilisations([]);
+        setImmobilisations(initial ? [initial] : []);
       } finally {
         setLoadingImmobilisations(false);
       }
@@ -331,7 +338,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
     fetchServices();
     fetchCliniques();
     fetchDepots();
-  }, [isOpen]);
+  }, [isOpen, valeursInitiales?.immobilisation]);
 
   // ─── Dépôts filtrés par service ───
   useEffect(() => {
@@ -390,10 +397,13 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
         ...emptyForm,
         serviceId: ctx.serviceId ?? '',
         cliniqueId: ctx.cliniqueId ?? '',
+        ...(valeursInitiales?.lotArticleImmobilistationId != null
+          ? { lotArticleImmobilistationId: String(valeursInitiales.lotArticleImmobilistationId) }
+          : {}),
       });
     }
     setError(null);
-  }, [isOpen, reclamation, isEditing]);
+  }, [isOpen, reclamation, isEditing, valeursInitiales]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -544,23 +554,18 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing }) =
                 <label htmlFor="rcm-immobilisation">
                   Immobilisation <span className="rm-required">*</span>
                 </label>
-                <SearchableSelect
+                {/* Recherche par nom / n° de série / code-barre, ou scan du QR code de l'étiquette */}
+                <ChampEquipement
                   id="rcm-immobilisation"
                   name="lotArticleImmobilistationId"
                   value={formData.lotArticleImmobilistationId}
                   onChange={handleChange}
-                  options={immobilisations}
-                  loading={loadingImmobilisations}
-                  placeholder="Rechercher une immobilisation..."
-                  emptyMessage="Aucune immobilisation ne correspond"
-                  getValue={(i) => i.id}
-                  getLabel={(i) =>
-                    i.designation || i.libelle || i.code || `Immobilisation #${i.id}`
-                  }
-                  getOptionHint={(i) => (i.code ? `Code : ${i.code}` : null)}
+                  optionsLocales={immobilisations}
+                  chargement={loadingImmobilisations}
                 />
                 <p className="rm-hint">
-                  L'immobilisation est utilisée pour générer automatiquement le bon de maintenance associé.
+                  Tapez le nom, la marque, le n° de série ou le code-barre, ou scannez l'étiquette de l'équipement.
+                  L'immobilisation sert à générer automatiquement le bon de maintenance associé.
                 </p>
               </div>
             </div>

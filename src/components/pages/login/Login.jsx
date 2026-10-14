@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../constants/Authcontext';
 import logo from '../../../assets/logo_SoftSys.png';
 import dashboardBg from '../../../assets/dashboard-bg.jpg';
@@ -13,6 +13,11 @@ export default function Login() {
 
   const { login: doLogin } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // Page à rouvrir après la connexion (ex. fiche d'un équipement ouverte par son QR code).
+  // Seulement un chemin interne : pas d'adresse externe ni « //site ».
+  const retour = params.get('retour');
+  const destination = retour && retour.startsWith('/') && !retour.startsWith('//') ? retour : '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +30,7 @@ export default function Login() {
     setError(null);
     try {
       await doLogin(login.trim(), password);
-      navigate('/', { replace: true });
+      navigate(destination, { replace: true });
     } catch (err) {
       const status = err.response?.status;
       if (status === 401) {

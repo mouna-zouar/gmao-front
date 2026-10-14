@@ -66,7 +66,7 @@ function tableauHtml(colonnes, lignes, texteVide) {
 }
 
 // ---------- Squelette commun (en-tête, styles, pied de page) ----------
-function documentHtml({ titre, sousTitre, entreteDroite, corps }) {
+function documentHtml({ titre, sousTitre, entreteDroite, corps, qr }) {
   const code = langueActuelle();
   const langue = LANGUES[code] || LANGUES.fr;
   const ar = code === 'ar';
@@ -111,6 +111,9 @@ function documentHtml({ titre, sousTitre, entreteDroite, corps }) {
   .sous-titre { margin: 2px 0 0; color: #475569; font-size: 9.5pt; }
   .meta { text-align: end; color: #475569; font-size: 8.5pt; white-space: nowrap; }
   .meta b { display: block; color: #0f172a; font-size: 11pt; }
+  /* QR code de la fiche (ouvre le bon ou la réclamation dans l'application) */
+  .qr { flex-shrink: 0; width: 23mm; text-align: center; font-size: 6.5pt; color: #475569; line-height: 1.2; }
+  .qr svg { display: block; width: 23mm; height: 23mm; }
   .statut { display: inline-block; margin-top: 3px; padding: 1px 9px; border-radius: 999px; background: #ccfbf1; color: #115e59; font-weight: 700; font-size: 8.5pt; }
 
   .filtres { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 10px; }
@@ -166,6 +169,7 @@ function documentHtml({ titre, sousTitre, entreteDroite, corps }) {
       ${entreteDroite || ''}
       ${echapper(date)} · ${echapper(heure)}
     </div>
+    ${qr ? `<div class="qr">${qr}<span>${echapper(t('Scanner pour ouvrir'))}</span></div>` : ''}
   </header>
   ${corps}
 </body>
@@ -210,7 +214,7 @@ function sectionHtml(s) {
   return '';
 }
 
-function ficheHtml({ titre, sousTitre, reference, statut, sections, signatures }) {
+function ficheHtml({ titre, sousTitre, reference, statut, sections, signatures, qr }) {
   const droite = `${reference ? `<b><bdi>${echapper(reference)}</bdi></b>` : ''}${statut ? `<span class="statut">${echapper(statut)}</span><br>` : ''}`;
   const blocSignatures = signatures && signatures.length > 0
     ? `<div class="signatures">${signatures.map((s) => `<div class="signature">${echapper(s)}</div>`).join('')}</div>`
@@ -220,6 +224,7 @@ function ficheHtml({ titre, sousTitre, reference, statut, sections, signatures }
     sousTitre,
     entreteDroite: droite,
     corps: (sections || []).map(sectionHtml).join('') + blocSignatures,
+    qr,
   });
 }
 
@@ -271,10 +276,11 @@ export function imprimerListe({ titre, sousTitre, colonnes, lignes, filtres }) {
 /**
  * Imprime une fiche de détail (A4 portrait).
  * Sections : { titre, champs: [{label, valeur, large?}] } | { titre, colonnes, lignes, vide? } | { titre, texte }.
+ * qr (facultatif) : SVG d'un QR code affiché dans l'en-tête (voir utils/qrCode.js).
  * Les champs et textes vides sont omis ; un tableau vide affiche son message `vide`.
  */
-export function imprimerFiche({ titre, sousTitre, reference, statut, sections, signatures }) {
-  imprimerHtml(ficheHtml({ titre, sousTitre, reference, statut, sections, signatures }));
+export function imprimerFiche({ titre, sousTitre, reference, statut, sections, signatures, qr }) {
+  imprimerHtml(ficheHtml({ titre, sousTitre, reference, statut, sections, signatures, qr }));
 }
 
 // Exposés pour les tests de rendu

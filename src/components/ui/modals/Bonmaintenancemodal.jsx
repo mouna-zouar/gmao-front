@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import './Modal.css';
 import './BonMaintenanceModal.css';
+import ChampEquipement from '../ChampEquipement/ChampEquipement';
 
 const NIVEAU_OPTIONS = [
   { value: 1, label: 'Faible' },
@@ -671,23 +672,16 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
               </div>
 
               <div className="bmm-field">
-                <label>Immobilisation</label>
-                <SearchableSelect
+                <label htmlFor="bmm-immo">Immobilisation</label>
+                {/* Recherche par nom / n° de série / code-barre, ou scan du QR code de l'étiquette */}
+                <ChampEquipement
                   id="bmm-immo"
                   name="lotArticleImmobilistationId"
                   value={formData.lotArticleImmobilistationId}
                   onChange={handleChange}
-                  options={immobilisations}
-                  loading={loadingLists}
-                  placeholder="Rechercher une immobilisation..."
-                  emptyMessage="Aucune immobilisation ne correspond"
-                  allowEmpty
-                  emptyOptionLabel="— Aucune —"
-                  getValue={(i) => i.id}
-                  getLabel={(i) =>
-                    i.designation || i.libelle || i.code || `Immobilisation #${i.id}`
-                  }
-                  getOptionHint={(i) => (i.code ? `Code : ${i.code}` : null)}
+                  optionsLocales={immobilisations}
+                  chargement={loadingLists}
+                  facultatif
                 />
                 {formData.lotArticleImmobilistationId && (
                   <p className="bmm-hint">

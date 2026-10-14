@@ -1,0 +1,868 @@
+/* ============================================================
+   ESPACE PERSONNEL — colonne de droite (calendrier, à surveiller)
+   et kanban des tâches. Chargé après EspacePersonnel.css.
+   ============================================================ */
+
+/* ---------- Mise en page : contenu + colonne de droite ---------- */
+/* La page est souvent à côté du menu de l'application : on se règle sur SA largeur */
+.ep-page { container-type: inline-size; container-name: ep-page; }
+
+.ep-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 22px;
+  align-items: start;
+}
+
+.ep-principal { min-width: 0; }
+
+.ep-cote {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 16px;
+}
+
+/* ---------- Cartes de la colonne de droite ---------- */
+.ep-carte {
+  border: 1.5px solid var(--ep-line);
+  border-radius: 22px;
+  background: var(--ep-surface);
+  padding: 16px 16px 14px;
+  box-shadow: 0 20px 40px -32px rgba(18, 48, 58, 0.3);
+}
+
+.ep-carte-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ep-carte-entete h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ep-carte-entete h2 svg { color: var(--ep-brand); flex-shrink: 0; }
+.ep-surveiller .ep-carte-entete h2 svg { color: var(--ep-alert); }
+
+.ep-majuscule::first-letter { text-transform: uppercase; }
+
+/* ---------- Mini calendrier ---------- */
+.ep-cal-nav { display: inline-flex; align-items: center; gap: 4px; }
+
+.ep-cal-nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  min-width: 30px;
+  padding: 0 8px;
+  border: 1.5px solid var(--ep-line);
+  border-radius: 10px;
+  background: var(--ep-surface);
+  color: var(--ep-ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ep-cal-nav button:hover { border-color: var(--ep-ink-soft); color: var(--ep-ink); }
+
+.ep-cal-grille {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.ep-cal-jsem {
+  padding: 2px 0 6px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ep-ink-faint);
+  text-transform: uppercase;
+}
+
+.ep-cal-jour {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  height: 40px;
+  padding: 5px 0 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--ep-ink);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.ep-cal-jour:hover { background: var(--ep-paper); }
+.ep-cal-jour.is-hors-mois { color: #b5c3c7; font-weight: 500; }
+.ep-cal-jour.a-travaux { background: var(--ep-brand-wash); }
+.ep-cal-jour.a-travaux:hover { background: #d3ecef; }
+
+.ep-cal-jour.is-aujourdhui .ep-cal-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  margin-top: -2px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px var(--ep-brand);
+  color: var(--ep-brand-deep);
+}
+
+.ep-cal-jour.is-choisi,
+.ep-cal-jour.is-choisi:hover { background: var(--ep-ink); color: #ffffff; }
+.ep-cal-jour.is-choisi .ep-cal-num { color: #ffffff; box-shadow: none; }
+
+.ep-cal-points { display: inline-flex; gap: 2px; }
+
+.ep-cal-points i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ep-brand);
+}
+
+.ep-cal-points.is-proche i { background: var(--ep-now); }
+.ep-cal-points.is-retard i { background: var(--ep-alert); }
+.ep-cal-jour.is-choisi .ep-cal-points i { box-shadow: 0 0 0 1px #ffffff; }
+
+.ep-cal-jour-detail {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #edf0f5;
+}
+
+.ep-cal-jour-detail h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ep-ink-soft);
+}
+
+.ep-cal-vide {
+  margin: 0;
+  padding: 6px 0 2px;
+  font-size: 13px;
+  color: var(--ep-ink-faint);
+}
+
+/* ---------- Lignes de travaux (calendrier et « À surveiller ») ---------- */
+.ep-travaux {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ep-travail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  padding-inline-start: 12px;
+  border: 1.5px solid #edf0f5;
+  border-inline-start: 4px solid var(--ep-ton, var(--ep-brand));
+  border-radius: 12px;
+  background: var(--ep-surface);
+  color: var(--ep-ink);
+  text-align: start;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.ep-travail:hover { background: var(--ep-paper); }
+.ep-travail--compacte { padding-block: 7px; }
+
+.ep-travail-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--ep-ton-wash, var(--ep-brand-wash));
+  color: var(--ep-ton, var(--ep-brand-deep));
+  flex-shrink: 0;
+}
+
+.ep-travail-texte { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.3; }
+
+.ep-travail-titre {
+  font-size: 13.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ep-travail-sous {
+  font-size: 12px;
+  color: var(--ep-ink-faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Badge d'échéance ---------- */
+.ep-echeance {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: #e8eef0;
+  color: var(--ep-ink-soft);
+}
+
+.ep-echeance--retard { background: var(--ep-alert-wash); color: var(--ep-alert); }
+.ep-echeance--aujourdhui,
+.ep-echeance--proche { background: var(--ep-now-wash); color: #a3600f; }
+
+/* ---------- À surveiller ---------- */
+.ep-surveiller-compteurs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.ep-compteur {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: var(--ep-paper);
+  color: var(--ep-ink-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ep-compteur strong {
+  font-family: var(--ep-font-titre);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ep-ink);
+}
+
+.ep-compteur--retard { background: var(--ep-alert-wash); color: var(--ep-alert); }
+.ep-compteur--retard strong { color: var(--ep-alert); }
+.ep-compteur--proche { background: var(--ep-now-wash); color: #a3600f; }
+.ep-compteur--proche strong { color: #a3600f; }
+
+.ep-surveiller .ep-travaux { max-height: 340px; overflow-y: auto; }
+
+.ep-surveiller-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--ep-ink-faint);
+}
+
+/* ============================================================
+   KANBAN DES TÂCHES
+   ============================================================ */
+.ep-kanban-zone { padding: 16px 20px 20px; }
+
+.ep-kanban-outils {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.ep-kanban-aide {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ep-ink-faint);
+}
+
+.ep-klien {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--ep-brand-deep);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ep-kanban {
+  display: grid;
+  grid-template-columns: repeat(var(--ep-k-colonnes, 4), minmax(165px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.ep-kcolonne {
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+  border-radius: 18px;
+  background: var(--ep-paper);
+  border: 2px dashed transparent;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.ep-kcolonne.is-cible {
+  border-color: var(--ep-ton);
+  background: var(--ep-ton-wash);
+}
+
+.ep-kcolonne.is-source { opacity: 0.75; }
+
+.ep-kcolonne-entete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 8px;
+}
+
+.ep-kcolonne-point {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--ep-ton);
+  flex-shrink: 0;
+}
+
+.ep-kcolonne-entete h3 {
+  margin: 0;
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ep-ink);
+}
+
+.ep-kcolonne-nb {
+  min-width: 24px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--ep-surface);
+  color: var(--ep-ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.ep-kcolonne-cartes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  padding: 4px 10px 12px;
+  max-height: 560px;
+  overflow-y: auto;
+}
+
+.ep-kcolonne-vide,
+.ep-kcolonne-depot {
+  margin: 0;
+  padding: 18px 8px;
+  border-radius: 12px;
+  border: 1.5px dashed var(--ep-line);
+  color: var(--ep-ink-faint);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.ep-kcolonne.is-cible .ep-kcolonne-vide,
+.ep-kcolonne-depot {
+  border-color: var(--ep-ton);
+  color: var(--ep-ton);
+  font-weight: 700;
+}
+
+/* ---------- Cartes ---------- */
+.ep-kcarte {
+  position: relative;
+  padding: 10px 12px 8px;
+  border: 1.5px solid #e4ecee;
+  border-radius: 14px;
+  background: var(--ep-surface);
+  box-shadow: 0 1px 2px rgba(18, 48, 58, 0.06);
+  cursor: grab;
+  transition: box-shadow 0.12s, transform 0.12s, opacity 0.12s;
+}
+
+.ep-kcarte:hover { box-shadow: 0 8px 18px -10px rgba(18, 48, 58, 0.35); }
+.ep-kcarte:active { cursor: grabbing; }
+.ep-kcarte.is-glissee { opacity: 0.45; transform: rotate(-1deg); }
+.ep-kcarte.is-envoi { opacity: 0.7; cursor: progress; }
+
+.ep-kcarte--retard { border-inline-start: 4px solid var(--ep-alert); }
+.ep-kcarte--aujourdhui,
+.ep-kcarte--proche { border-inline-start: 4px solid var(--ep-now); }
+
+.ep-kcarte-haut { display: flex; align-items: flex-start; gap: 6px; }
+
+.ep-kcarte-poignee { flex-shrink: 0; margin-top: 2px; color: #b5c3c7; }
+
+.ep-kcarte h3 {
+  flex: 1;
+  margin: 0;
+  font-family: var(--ep-font-texte);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ep-ink);
+  overflow-wrap: anywhere;
+}
+
+.ep-kcarte-bon {
+  margin: 4px 0 0;
+  padding-inline-start: 20px;
+  font-size: 12px;
+  color: var(--ep-ink-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ep-kcarte-bon strong { color: var(--ep-ink); font-weight: 700; }
+
+.ep-kcarte-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding-inline-start: 20px;
+}
+
+.ep-kcarte-meta .ep-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--ep-ink-faint);
+}
+
+.ep-kcarte-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f0f3f4;
+}
+
+.ep-kbouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ep-ink-soft);
+  cursor: pointer;
+}
+
+.ep-kbouton:hover { background: var(--ep-paper); color: var(--ep-ink); }
+
+/* « Déplacer vers… » : vrai <select> transparent posé sur le libellé (clavier et tactile) */
+.ep-kdeplacer {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-inline-start: auto;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 8px;
+  color: var(--ep-ink-soft);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ep-kdeplacer:hover,
+.ep-kdeplacer:focus-within { background: var(--ep-paper); color: var(--ep-ink); }
+.ep-kdeplacer:focus-within { outline: 2px solid var(--ep-brand); }
+
+.ep-kdeplacer select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* ---------- Message en bas d'écran (avec « Annuler ») ---------- */
+.ep-toast {
+  position: fixed;
+  inset-block-end: 24px;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 10px 10px 10px 16px;
+  padding-inline: 16px 10px;
+  border-radius: 16px;
+  background: var(--ep-ink);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 18px 40px -16px rgba(18, 48, 58, 0.6);
+  animation: ep-toast-entree 0.2s ease-out;
+}
+
+[dir='rtl'] .ep-toast { transform: translateX(50%); }
+
+.ep-toast > svg { flex-shrink: 0; color: #7ee0c2; }
+.ep-toast--erreur { background: #8f1f26; }
+.ep-toast--erreur > svg { color: #ffd2d4; }
+.ep-toast span { flex: 1; }
+
+.ep-toast button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ep-toast button:hover { background: rgba(255, 255, 255, 0.24); }
+.ep-toast .ep-toast-fermer { padding: 6px; background: transparent; }
+
+@keyframes ep-toast-entree { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0 0; } }
+
+/* ---------- Responsive ---------- */
+@container ep-page (max-width: 1000px) {
+  .ep-layout { grid-template-columns: minmax(0, 1fr); }
+  /* La colonne de droite passe au-dessus du contenu : calendrier et urgences côte à côte */
+  .ep-cote {
+    order: -1;
+    position: static;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@container ep-page (max-width: 700px) {
+  .ep-cote { grid-template-columns: minmax(0, 1fr); }
+  .ep-kanban-zone { padding: 14px 12px 16px; }
+  .ep-kanban { grid-template-columns: repeat(var(--ep-k-colonnes, 4), minmax(230px, 82vw)); scroll-snap-type: x mandatory; }
+  .ep-kcolonne { scroll-snap-align: start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ep-toast { animation: none; }
+  .ep-kcarte, .ep-kcolonne, .ep-cal-jour { transition: none; }
+}
+
+/* ---------- Ajustements quand la colonne principale est étroite ---------- */
+.ep-principal { container-type: inline-size; container-name: ep-principal; }
+
+@container ep-principal (max-width: 820px) {
+  .ep-stat { gap: 12px; padding-inline: 16px; }
+  .ep-stat-icon { display: none; }
+}
+
+/* Cartes du kanban étroites : « Déplacer » en icône seule */
+.ep-kcolonne { container-type: inline-size; container-name: ep-kcolonne; }
+
+@container ep-kcolonne (max-width: 200px) {
+  .ep-kdeplacer span { display: none; }
+  .ep-kdeplacer { padding: 0 7px; }
+}
+
+.ep-calendrier .ep-carte-entete h2 { white-space: nowrap; min-width: 0; }
+.ep-calendrier .ep-cal-nav { flex-shrink: 0; }
+
+/* Titre du mois : jamais recouvert par les boutons de navigation */
+.ep-calendrier .ep-carte-entete h2 { font-size: 15px; overflow: hidden; text-overflow: ellipsis; }
+.ep-calendrier .ep-carte-entete h2 svg { display: none; }
+.ep-calendrier .ep-cal-nav button { height: 28px; min-width: 28px; }
+.ep-calendrier .ep-cal-auj { padding: 0 7px; font-size: 11.5px; }
+
+/* Titres en français dans une page en arabe : chaque texte garde son propre sens
+   de lecture, et les points de suspension restent à la fin */
+.ep-travail-titre,
+.ep-travail-sous,
+.ep-kcarte-bon,
+.ep-kcarte h3 { unicode-bidi: plaintext; }
+
+/* ============================================================
+   DISCUSSIONS (chat des bons dans Mon espace)
+   ============================================================ */
+
+/* Quatre cartes en haut : elles passent sur deux lignes si la place manque */
+.ep-stats { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+
+.ep-stat--alerte .ep-stat-foot { color: var(--ep-alert); font-weight: 700; }
+.ep-stat--alerte .ep-stat-dot { background: var(--ep-alert); }
+
+/* Pastille de non-lus du tableau des bons : cliquable */
+button.ep-chat-pastille {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.5;
+}
+button.ep-chat-pastille:hover { filter: brightness(0.92); }
+
+.ep-discussions {
+  display: grid;
+  grid-template-columns: minmax(220px, 290px) minmax(0, 1fr);
+  min-height: 620px;
+  border-top: 1px solid #edf0f5;
+}
+
+/* ---------- Liste ---------- */
+.ep-disc-liste {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-inline-end: 1px solid #edf0f5;
+  background: #fbfcfc;
+}
+
+.ep-disc-recherche {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px;
+  padding: 0 12px;
+  height: 38px;
+  border: 1.5px solid var(--ep-line);
+  border-radius: 12px;
+  background: var(--ep-surface);
+  color: var(--ep-ink-faint);
+}
+
+.ep-disc-recherche:focus-within { border-color: var(--ep-brand); }
+
+.ep-disc-recherche input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ep-ink);
+}
+
+.ep-page .ep-disc-recherche input:focus-visible { outline: none; }
+
+.ep-disc-erreur { margin: 0 12px 8px; font-size: 12.5px; color: var(--ep-alert); }
+
+.ep-disc-liste ul {
+  list-style: none;
+  margin: 0;
+  padding: 0 8px 12px;
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.ep-disc-item {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ep-ink);
+  text-align: start;
+  cursor: pointer;
+}
+
+.ep-disc-item:hover { background: var(--ep-paper); }
+.ep-disc-item.is-choisi { background: var(--ep-brand-wash); }
+
+.ep-disc-pastille {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--ep-surface);
+  border: 1.5px solid var(--ep-line);
+  color: var(--ep-brand-deep);
+}
+
+.ep-disc-item.a-non-lus .ep-disc-pastille { background: var(--ep-brand); border-color: var(--ep-brand); color: #ffffff; }
+
+.ep-disc-texte { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.35; }
+
+.ep-disc-ligne { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+.ep-disc-num { font-size: 13.5px; font-weight: 700; flex: 1; }
+
+.ep-disc-heure { font-size: 11.5px; color: var(--ep-ink-faint); white-space: nowrap; }
+.ep-disc-item.a-non-lus .ep-disc-heure { color: var(--ep-brand-deep); font-weight: 700; }
+
+.ep-disc-titre,
+.ep-disc-apercu {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  unicode-bidi: plaintext;
+}
+
+.ep-disc-titre { font-size: 12.5px; color: var(--ep-ink-soft); }
+.ep-disc-apercu { flex: 1; font-size: 12.5px; color: var(--ep-ink-faint); }
+.ep-disc-item.a-non-lus .ep-disc-apercu { color: var(--ep-ink); font-weight: 600; }
+
+.ep-disc-nb {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--ep-alert);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ep-disc-vide { padding: 16px; font-size: 13px; color: var(--ep-ink-faint); text-align: center; }
+
+/* ---------- Conversation ---------- */
+.ep-disc-conversation { display: flex; flex-direction: column; min-width: 0; }
+
+.ep-disc-entete {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.ep-disc-entete-texte { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.3; }
+.ep-disc-entete-texte strong { font-size: 15px; }
+.ep-disc-entete-texte span { font-size: 13px; color: var(--ep-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; unicode-bidi: plaintext; }
+
+.ep-disc-retour {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--ep-line);
+  border-radius: 50%;
+  background: var(--ep-surface);
+  color: var(--ep-ink);
+  cursor: pointer;
+}
+
+/* Le chat vient de la fiche du bon : on lui donne les couleurs de Mon espace */
+.ep-disc-chat {
+  --ink: var(--ep-ink);
+  --ink-soft: var(--ep-ink-soft);
+  --ink-faint: var(--ep-ink-faint);
+  --paper: var(--ep-paper);
+  --surface: var(--ep-surface);
+  --line: var(--ep-line);
+  --brand: var(--ep-brand);
+  --brand-deep: var(--ep-brand-deep);
+  --brand-wash: var(--ep-brand-wash);
+  --done: var(--ep-done);
+  --done-wash: var(--ep-done-wash);
+  --now: var(--ep-now);
+  --now-wash: var(--ep-now-wash);
+  --alert: var(--ep-alert);
+  --alert-wash: var(--ep-alert-wash);
+  --radius-l: 18px;
+  padding: 14px 18px 16px;
+  background: var(--ep-paper);
+  flex: 1;
+}
+
+.ep-disc-chat .bch { height: 560px; min-height: 0; }
+
+.ep-disc-accueil {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 40px 24px;
+  color: var(--ep-ink-faint);
+  text-align: center;
+}
+
+.ep-disc-accueil p { margin: 0; max-width: 32ch; }
+
+.ep-disc-accueil-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 20px;
+  background: var(--ep-brand-wash);
+  color: var(--ep-brand-deep);
+}
+
+/* Étroit : la liste OU la conversation, avec un bouton retour */
+@container ep-principal (max-width: 640px) {
+  .ep-discussions { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .ep-discussions.a-conversation .ep-disc-liste { display: none; }
+  .ep-discussions:not(.a-conversation) .ep-disc-conversation { display: none; }
+  .ep-disc-liste { border-inline-end: 0; }
+  .ep-disc-liste ul { max-height: none; }
+  .ep-disc-retour { display: inline-flex; }
+  .ep-disc-entete .ep-open-button { padding-inline: 10px; }
+  .ep-disc-chat { padding: 10px; }
+  .ep-disc-chat .bch { height: calc(100dvh - 220px); min-height: 420px; }
+}
+
+/* Tableau des bons dans une colonne étroite : textes sur plusieurs lignes plutôt que défilement */
+@container ep-principal (max-width: 900px) {
+  .ep-table th,
+  .ep-table td { padding: 12px 10px; white-space: normal; }
+  .ep-table td .ep-pill { white-space: normal; text-align: start; }
+  .ep-table td .ep-roles { flex-wrap: wrap; }
+  .ep-table .ep-open-button--plein { padding-inline: 10px; }
+}

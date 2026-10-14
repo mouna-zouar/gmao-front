@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
   Plus,
@@ -374,11 +375,24 @@ export default function Reclamations() {
     await rechargerDetails(reclamation.id);
   };
 
+  // Lien direct /reclamations?id=12 (QR code d'une fiche, notification)
+  const [parametres, setParametres] = useSearchParams();
+  const idLien = Number(parametres.get('id')) || null;
+
   const fermerDetails = () => {
     setDetailsOpen(false);
     setDetailsData(null);
     setSelectedReclamation(null);
+    if (parametres.has('id')) setParametres({}, { replace: true });
   };
+
+  // Ouvre la réclamation du lien direct
+  useEffect(() => {
+    if (idLien) openDetails({ id: idLien });
+    // openDetails est recréée à chaque rendu : on ne réagit qu'au changement d'identifiant
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idLien]);
+
 
   // Après une action : sur la page de détail on la rafraîchit, sur la liste on désélectionne
   const apresAction = async () => {

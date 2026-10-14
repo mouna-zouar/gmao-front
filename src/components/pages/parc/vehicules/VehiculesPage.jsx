@@ -3,7 +3,7 @@ import {
   CheckCircle2, Bookmark, Navigation, Wrench, Ban, XCircle, Tag, Loader2,
   AlertTriangle, Settings, Truck, ShieldCheck, HardHat, AlertOctagon,
   ChevronLeft, ChevronRight, ArrowLeft, Printer, FileText, Gauge,
-  Info, Activity, History as HistoryIcon,
+  Info, Activity, History as HistoryIcon, Wallet,
 } from 'lucide-react';
 import vehiculeService from '../../../../services/vehiculeService';
 import vehiculeMaintenanceService from '../../../../services/vehiculeMaintenanceService';
@@ -13,6 +13,10 @@ import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import VehiculeMaintenanceTypesSettings from './VehiculeMaintenanceTypesSettings';
 import VehiculeKilometrageHistorique from './VehiculeKilometrageHistorique';
 import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
+import PageModal from '../../../ui/modals/PageModal';
+import VehiculeCouts from '../VehiculeCouts/VehiculeCouts';
+import { VehiculeCoutOnglet } from '../VehiculeCouts/VehiculeCoutDetail';
+import CoutsParcResume from '../VehiculeCouts/CoutsParcResume';
 import {
   ETAT_VEHICULE_LABELS,
   etatVehiculeLabel,
@@ -87,6 +91,11 @@ export default function VehiculesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // Fenêtre « Coût par véhicule » (tout le parc)
+  const [coutsOpen, setCoutsOpen] = useState(false);
+  // Recharge le bandeau des coûts après la fenêtre (des frais ont pu être saisis)
+  const [coutsVersion, setCoutsVersion] = useState(0);
+  const fermerCouts = () => { setCoutsOpen(false); setCoutsVersion((v) => v + 1); };
 
   const [viewMode, setViewMode] = useState('list');
   const [activeTab, setActiveTab] = useState('infos');
@@ -555,6 +564,7 @@ export default function VehiculesPage() {
       { key: 'infos',       label: t("Informations générales"), icon: Info },
       { key: 'maintenance', label: t("Maintenance préventive"), icon: Wrench },
       { key: 'historique',  label: t("Historique du compteur"), icon: HistoryIcon },
+      { key: 'cout',        label: t("Coût"), icon: Wallet },
     ];
 
     return (
@@ -804,6 +814,17 @@ export default function VehiculesPage() {
                   <VehiculeKilometrageHistorique vehiculeId={selectedVehicule.id} />
                 </div>
               )}
+
+              {activeTab === 'cout' && (
+                <div
+                  className="vd-tabpanel"
+                  role="tabpanel"
+                  id="vd-tabpanel-cout"
+                >
+                  {/* Carburant, entretien, incidents, amendes et frais fixes de ce véhicule */}
+                  <VehiculeCoutOnglet vehicule={selectedVehicule} />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -854,6 +875,9 @@ export default function VehiculesPage() {
         </div>
         <span className="vehicules-badge-total">{t("Total :")} {filteredVehicules.length}</span>
       </div>
+
+      {/* Coûts du parc (année en cours) : carburant, entretien, incidents, amendes, frais fixes */}
+      <CoutsParcResume version={coutsVersion} onOuvrir={() => setCoutsOpen(true)} />
 
       <div className="vehicules-kpi-grid">
         <div className="vehicules-kpi-card kpi-total">
@@ -1027,6 +1051,7 @@ export default function VehiculesPage() {
           <Settings size={16} /> {t("Paramètres maintenance")}
         </button>
 
+
         <div className="vehicules-export-stack">
           <button className="vehicules-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -1178,6 +1203,18 @@ export default function VehiculesPage() {
         vehicule={selectedVehicule}
         isEditing={!!selectedVehicule}
       />
+
+      <PageModal
+        isOpen={coutsOpen}
+        onClose={fermerCouts}
+        title={t("Coût par véhicule")}
+        subtitle={t("Carburant, entretien, incidents, amendes et frais fixes, avec le coût au kilomètre")}
+        icon={Wallet}
+        accent="#0794a4"
+        size="full"
+      >
+        <VehiculeCouts isModal />
+      </PageModal>
 
       <ConfirmModal
         show={confirmModal.show}

@@ -432,3 +432,10 @@
 /* ---------- Accueil ---------- */
 [dir='rtl'] .dashboard-wrapper { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
 [dir='rtl'] .dashboard-wrapper * { letter-spacing: 0 !important; }
+
+/* ---------- Espace personnel ---------- */
+[dir='rtl'] .ep-page { --ep-font-titre: 'Noto Kufi Arabic', 'IBM Plex Sans Arabic', system-ui, sans-serif; --ep-font-texte: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .ep-page * { letter-spacing: 0 !important; }
+[dir='rtl'] .ep-table th, [dir='rtl'] .ep-table td { text-align: right; }
+[dir='rtl'] .ep-modal-ref { direction: ltr; unicode-bidi: isolate; }
+[dir='rtl'] .ep-filtre-role { padding: 6px 14px 6px 8px; }

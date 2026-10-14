@@ -1,4 +1,3 @@
-
 import api from './api';
 
 const login = async (login, password) => {
@@ -19,6 +18,7 @@ const setSession = (data) => {
       login: data.login,
       admin: data.admin,
       userId: data.userId ?? null,
+      userNom: data.userNom ?? null,
       serviceId: data.serviceId ?? null,
       serviceNom: data.serviceNom ?? null,
       prestataireId: data.prestataireId ?? null,

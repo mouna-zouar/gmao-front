@@ -1,10 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { NAV_ITEMS, NAV_SECTIONS } from '../../constants/navigation';
+import { NAV_PAGES, NAV_SECTIONS, trouverPage } from '../../constants/navigation';
 import notificationService from '../../services/notificationService';
 import { useAuth } from '../../constants/Authcontext';
 import { t, locale, SelecteurLangue } from '../../i18n';
+import { History, X } from 'lucide-react';
 import './Layout.css';
+import './MenuMetier.css';
+import '../ui/BadgeStatut/statuts-harmonises.css';
+
+const NB_RECENTS = 5;
+// Minuscules sans accents, pour chercher « reclamation » comme « Réclamation »
+const normaliser = (texte) => String(texte || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const cleRecents = (user) => `gmao-pages-recentes-${user?.id ?? user?.userId ?? user?.login ?? 'anonyme'}`;
+function lireRecents(cle) {
+  try { const v = JSON.parse(localStorage.getItem(cle) || '[]'); return Array.isArray(v) ? v : []; } catch { return []; }
+}
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,11 +38,56 @@ export default function Layout({ children }) {
 
   const currentPath = location.pathname;
 
-  const activeNavItem = NAV_ITEMS.find(item =>
-    item.path === currentPath || item.children?.some(child => child.path === currentPath)
-  );
+  // Page du menu ouverte (tient compte des paramètres comme ?vue=…)
+  const pageActive = trouverPage(currentPath, location.search);
+  const activeNavItem = pageActive?.parent;
+  const activeChild = pageActive && !pageActive.racine ? pageActive : null;
 
-  const activeChild = activeNavItem?.children?.find(child => child.path === currentPath);
+  /* ── Pages récentes (propres à l'utilisateur, gardées dans ce navigateur) ── */
+  const cle = cleRecents(user);
+  const [recents, setRecents] = useState(() => ({ cle, liste: lireRecents(cle) }));
+  let listeRecents = recents.cle === cle ? recents.liste : lireRecents(cle);
+  if (pageActive && pageActive.path !== '/' && (recents.cle !== cle || listeRecents[0] !== pageActive.path)) {
+    // Mise à jour pendant le rendu (pas d'effet) : la page ouverte passe en tête
+    listeRecents = [pageActive.path, ...listeRecents.filter((p) => p !== pageActive.path)].slice(0, NB_RECENTS);
+    setRecents({ cle, liste: listeRecents });
+  }
+  useEffect(() => {
+    try { localStorage.setItem(recents.cle, JSON.stringify(recents.liste)); } catch { /* stockage indisponible */ }
+  }, [recents]);
+  const pagesRecentes = listeRecents
+    .map((p) => NAV_PAGES.find((page) => page.path === p))
+    .filter((page) => page && page !== pageActive)
+    .slice(0, 4);
+
+  /* ── Recherche dans le menu ── */
+  const [recherche, setRecherche] = useState('');
+  const champRecherche = useRef(null);
+  const resultats = useMemo(() => {
+    const mots = normaliser(recherche).split(/\s+/).filter(Boolean);
+    if (mots.length === 0) return [];
+    return NAV_PAGES.filter((page) => {
+      const texte = normaliser([t(page.label), page.label, t(page.parent.label), page.parent.label, page.motsCles].join(' '));
+      return mots.every((m) => texte.includes(m));
+    });
+  }, [recherche]);
+  const ouvrirPage = (page) => {
+    setRecherche('');
+    setActivePopup(null);
+    navigate(page.path);
+  };
+  // Ctrl+K (ou ⌘K) : ouvrir le menu et chercher une page
+  useEffect(() => {
+    const surTouche = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSidebarOpen(true);
+        setTimeout(() => champRecherche.current?.focus(), 50);
+      }
+    };
+    window.addEventListener('keydown', surTouche);
+    return () => window.removeEventListener('keydown', surTouche);
+  }, []);
 
   useEffect(() => {
     if (activeNavItem && sidebarOpen) {
@@ -136,12 +192,59 @@ export default function Layout({ children }) {
             <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z" />
             </svg>
-            <input placeholder={t('Rechercher...')} />
+            <input
+              ref={champRecherche}
+              type="search"
+              value={recherche}
+              onChange={(e) => setRecherche(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && resultats[0]) ouvrirPage(resultats[0]);
+                if (e.key === 'Escape') setRecherche('');
+              }}
+              placeholder={t('Chercher une page…')}
+              aria-label={t('Chercher une page')}
+              title={t('Raccourci : Ctrl+K')}
+            />
+            {recherche && (
+              <button type="button" className="menu-recherche__effacer" onClick={() => setRecherche('')} aria-label={t('Effacer la recherche')}>
+                <X size={14} aria-hidden="true" />
+              </button>
+            )}
           </div>
         )}
 
         {/* Nav */}
         <nav className="sidebar__nav">
+          {sidebarOpen && recherche.trim() ? (
+            <div className="menu-recherche">
+              <span className="menu-groupe__titre">
+                {resultats.length === 0 ? t('Aucune page trouvée') : t('Pages trouvées : {n}', { n: resultats.length })}
+              </span>
+              {resultats.map((page) => (
+                <button key={page.path} type="button" className={`menu-lien nav-theme--${page.parent.id}`} onClick={() => ouvrirPage(page)}>
+                  <span className="menu-lien__icone">{page.icon}</span>
+                  <span className="menu-lien__textes">
+                    <span className="menu-lien__titre">{t(page.label)}</span>
+                    {!page.racine && <span className="menu-lien__groupe">{t(page.parent.label)}</span>}
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : (<>
+          {sidebarOpen && pagesRecentes.length > 0 && (
+            <div className="menu-recents">
+              <span className="menu-groupe__titre"><History size={13} aria-hidden="true" /> {t('Pages récentes')}</span>
+              {pagesRecentes.map((page) => (
+                <Link key={page.path} to={page.path} className={`menu-lien menu-lien--compact nav-theme--${page.parent.id}`}>
+                  <span className="menu-lien__icone">{page.icon}</span>
+                  <span className="menu-lien__textes">
+                    <span className="menu-lien__titre">{t(page.label)}</span>
+                    {!page.racine && <span className="menu-lien__groupe">{t(page.parent.label)}</span>}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
           {NAV_SECTIONS.map((section) => (
           <div key={section.id} className={`sidebar__section sidebar__section--${section.id}`}>
           {sidebarOpen ? (
@@ -185,7 +288,7 @@ export default function Layout({ children }) {
                       }}
                     >
                       {item.children.map(child => (
-                        <Link key={child.label} to={child.path || '#'} className="nav-popup__card"
+                        <Link key={child.path} to={child.path || '#'} className="nav-popup__card"
                           onClick={() => setActivePopup(null)}>
                           <div className={`nav-popup__card-icon nav-popup__card-icon--${item.id}`}>
                             {child.icon}
@@ -214,13 +317,14 @@ export default function Layout({ children }) {
                   className={`submenu ${openSubmenu === item.id ? 'submenu--open' : ''}`}
                   style={{
                     maxHeight: openSubmenu === item.id
-                      ? (item.children.length > 6 ? '240px' : `${item.children.length * 40}px`)
+                      ? (item.children.length > 8 ? '320px' : `${item.children.length * 40}px`)
                       : '0'
                   }}
                 >
                   {item.children.map(child => (
-                    <Link key={child.label} to={child.path || '#'}
-                      className={`submenu__link--${item.id} ${currentPath === child.path ? 'submenu__link--active' : ''}`}>
+                    <Link key={child.path} to={child.path || '#'}
+                      aria-current={activeChild === child ? 'page' : undefined}
+                      className={`submenu__link--${item.id} ${activeChild === child ? 'submenu__link--active' : ''}`}>
                       <span className={`submenu__link-icon submenu__link-icon--${item.id}`}>
                         {child.icon}
                       </span>
@@ -233,6 +337,7 @@ export default function Layout({ children }) {
           ))}
           </div>
           ))}
+          </>)}
         </nav>
 
         {/* Logout */}

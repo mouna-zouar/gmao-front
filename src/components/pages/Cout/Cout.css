@@ -1,5 +1,3 @@
-
-
 .cout-page {
   --teal-900: #054e57;
   --teal-800: #066470;
@@ -199,6 +197,49 @@
   cursor: not-allowed;
 }
 
+/* ---------- Bouton Export Excel ---------- */
+.cout-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px;
+  border: 1px solid var(--teal-600);
+  border-radius: 8px;
+  background: var(--teal-600);
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 2px 6px -2px rgba(7, 148, 164, 0.35);
+}
+
+.cout-export-btn:hover:not(:disabled) {
+  background: var(--teal-700);
+  border-color: var(--teal-700);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 6px 14px -4px rgba(7, 148, 164, 0.45);
+}
+
+.cout-export-btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.cout-export-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.cout-export-btn svg { flex-shrink: 0; }
+
 .cout-spinner { animation: coutSpin 0.8s linear infinite; }
 @keyframes coutSpin { to { transform: rotate(360deg); } }
 @keyframes coutFadeUp {
@@ -340,7 +381,7 @@
   border-bottom: 1px solid var(--slate-100);
 }
 
-/* ═══════════════════ GRAPHIQUE — Area chart SVG ═══════════════════ */
+/* ═══════════════════ GRAPHIQUE ═══════════════════ */
 .cout-chart {
   width: 100%;
   padding: 4px 0 0;
@@ -383,9 +424,7 @@
   letter-spacing: 0.01em;
 }
 
-.cout-chart__point-group {
-  cursor: pointer;
-}
+.cout-chart__point-group { cursor: pointer; }
 
 .cout-chart__point {
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -393,9 +432,7 @@
   transform-box: fill-box;
 }
 
-.cout-chart__point-group:hover .cout-chart__point {
-  transform: scale(1.35);
-}
+.cout-chart__point-group:hover .cout-chart__point { transform: scale(1.35); }
 
 .cout-chart__point-halo {
   fill: #0794a4;
@@ -404,9 +441,7 @@
   pointer-events: none;
 }
 
-.cout-chart__point-group:hover .cout-chart__point-halo {
-  opacity: 0.12;
-}
+.cout-chart__point-group:hover .cout-chart__point-halo { opacity: 0.12; }
 
 .cout-chart-empty {
   display: flex;
@@ -479,7 +514,7 @@
   color: var(--slate-500);
 }
 
-/* ═══════════════════ Toolbar (recherche + compteur) ═══════════════════ */
+/* ═══════════════════ Toolbar ═══════════════════ */
 .cout-toolbar {
   display: flex;
   align-items: center;
@@ -711,7 +746,7 @@
   white-space: nowrap;
 }
 
-/* ═══════════════════ Pagination (liste des bons) ═══════════════════ */
+/* ═══════════════════ Pagination ═══════════════════ */
 .cout-pagination {
   display: flex;
   align-items: center;
@@ -791,7 +826,7 @@
   user-select: none;
 }
 
-/* ═══════════════════ Pagination — Top équipements (compacte) ═══════════════════ */
+/* ═══════════════════ Pagination — Top équipements ═══════════════════ */
 .cout-equip-pagination {
   display: flex;
   align-items: center;
@@ -844,7 +879,8 @@
   .cout-header__actions { width: 100%; }
   .cout-periode-select { flex: 1; }
   .cout-periode-btn { flex: 1; text-align: center; padding: 6px 8px; font-size: 0.74rem; }
-  .cout-refresh-btn { width: 100%; justify-content: center; }
+  .cout-refresh-btn,
+  .cout-export-btn { flex: 1; justify-content: center; }
   .cout-kpis { grid-template-columns: 1fr; }
   .cout-card__breakdown { grid-template-columns: 1fr; }
   .cout-recherche-wrap { max-width: none; }
@@ -951,6 +987,16 @@
     color: #3dbcc9;
   }
 
+  .cout-export-btn {
+    background: #0794a4;
+    border-color: #0794a4;
+    color: #ffffff;
+  }
+  .cout-export-btn:hover:not(:disabled) {
+    background: #067a87;
+    border-color: #067a87;
+  }
+
   .cout-kpi--total { border-left-color: #0aa8ba; }
   .cout-kpi__icon { background: #2a3a52; }
   .cout-top-item__barre { background: #2a3a52; }
@@ -982,24 +1028,11 @@
     color: #ffffff;
   }
 
-  /* Chart dark mode */
-  .cout-chart__grid {
-    stroke: #2e3f5a;
-    opacity: 0.5;
-  }
-  .cout-chart__axis {
-    stroke: #475569;
-  }
-  .cout-chart__y-label {
-    fill: #64748b;
-  }
-  .cout-chart__x-label {
-    fill: #94a3b8;
-  }
-  .cout-chart__point {
-    fill: #223047;
-    stroke: #0aa8ba;
-  }
+  .cout-chart__grid { stroke: #2e3f5a; opacity: 0.5; }
+  .cout-chart__axis { stroke: #475569; }
+  .cout-chart__y-label { fill: #64748b; }
+  .cout-chart__x-label { fill: #94a3b8; }
+  .cout-chart__point { fill: #223047; stroke: #0aa8ba; }
   .cout-chart-empty {
     background: #1e2a3d;
     border-color: #2e3f5a;
