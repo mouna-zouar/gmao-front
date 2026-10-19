@@ -8,6 +8,7 @@ import emplacementService from '../../../services/emplacementService';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
 import { CARBURANT_TYPE_OPTIONS, carburantTypeLabel } from '../../../constants/carburantType';
 import { etatVehiculeLabel, isVehiculeDisponiblePourMission } from '../../../constants/Vehiculeetat';
+import { t, locale } from '../../../i18n';
 import {
   MapContainer,
   TileLayer,
@@ -230,7 +231,7 @@ const SearchableSelect = ({
           value={displayValue}
           onChange={handleInputChange}
           onFocus={handleFocus}
-          placeholder={loading ? 'Chargement...' : (selected ? '' : placeholder)}
+          placeholder={loading ? t('Chargement...') : (selected ? '' : t(placeholder))}
           disabled={disabled || loading}
           autoComplete="off"
         />
@@ -240,7 +241,7 @@ const SearchableSelect = ({
             type="button"
             className="bmm-searchable-clear-inline"
             onClick={handleClear}
-            aria-label="Effacer"
+            aria-label={t('Effacer')}
             tabIndex={-1}
           >
             <X size={13} strokeWidth={2.5} />
@@ -258,7 +259,7 @@ const SearchableSelect = ({
         <div className="bmm-searchable-menu">
           <div className="bmm-searchable-options">
             {filtered.length === 0 ? (
-              <div className="bmm-searchable-empty">{emptyMessage}</div>
+              <div className="bmm-searchable-empty">{t(emptyMessage)}</div>
             ) : (
               filtered.map((o) => {
                 const val = String(getValue(o));
@@ -330,8 +331,8 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
   };
 
   const ajouterBon = async () => {
-    if (!formBon.date) { setErreurBon('La date du plein est obligatoire.'); return; }
-    if (formBon.montant === '' || Number(formBon.montant) <= 0) { setErreurBon('Le montant est obligatoire.'); return; }
+    if (!formBon.date) { setErreurBon(t('La date du plein est obligatoire.')); return; }
+    if (formBon.montant === '' || Number(formBon.montant) <= 0) { setErreurBon(t('Le montant est obligatoire.')); return; }
     const bon = {
       vehiculeId: Number(formData.vehiculeId),
       personnelId: formData.conducteurId ? Number(formData.conducteurId) : null,
@@ -355,7 +356,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
       setFormBon(BON_VIDE);
     } catch (err) {
       console.error('Erreur ajout bon de carburant :', err);
-      setErreurBon(err?.response?.data?.message || "Le bon n'a pas pu être enregistré.");
+      setErreurBon(err?.response?.data?.message || t("Le bon n'a pas pu être enregistré."));
     } finally {
       setEnregistrementBon(false);
     }
@@ -558,7 +559,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
   const handleSearchAddress = async () => {
     const query = formData.localisation?.trim();
     if (!query) {
-      setError('Saisis une adresse à rechercher.');
+      setError(t('Saisis une adresse à rechercher.'));
       return;
     }
 
@@ -587,13 +588,13 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
           localisation: data[0].display_name,
         }));
         setMapCenter([lat, lng]);
-        setInfo('Adresse trouvée.');
+        setInfo(t('Adresse trouvée.'));
       } else {
-        setError(`Aucune adresse trouvée pour « ${query} ».`);
+        setError(t('Aucune adresse trouvée pour « {q} ».', { q: query }));
       }
     } catch (err) {
       console.error(err);
-      setError('Recherche impossible. Clique sur la carte pour choisir un point.');
+      setError(t('Recherche impossible. Clique sur la carte pour choisir un point.'));
     } finally {
       setSearching(false);
     }
@@ -601,11 +602,11 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
 
   const handleUseGeolocation = () => {
     if (!navigator.geolocation) {
-      setError('Géolocalisation non supportée.');
+      setError(t('Géolocalisation non supportée.'));
       return;
     }
 
-    setInfo('Récupération de ta position...');
+    setInfo(t('Récupération de ta position...'));
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -618,12 +619,12 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
           localisation: address,
         }));
         setMapCenter([latitude, longitude]);
-        setInfo('Position récupérée.');
+        setInfo(t('Position récupérée.'));
         setError(null);
       },
       (err) => {
         console.error(err);
-        setError('Position indisponible.');
+        setError(t('Position indisponible.'));
         setInfo(null);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -634,43 +635,43 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     if (e) e.preventDefault();
 
     if (!formData.vehiculeId) {
-      setError('Le véhicule est obligatoire.');
+      setError(t('Le véhicule est obligatoire.'));
       setActiveSection('vehicule');
       return;
     }
 
     if (!formData.conducteurId) {
-      setError('Le conducteur est obligatoire.');
+      setError(t('Le conducteur est obligatoire.'));
       setActiveSection('vehicule');
       return;
     }
 
     if (!formData.dateDepart) {
-      setError('La date de début est obligatoire.');
+      setError(t('La date de début est obligatoire.'));
       setActiveSection('trajet');
       return;
     }
 
     if (!formData.sourceId) {
-      setError("L'emplacement de départ est obligatoire.");
+      setError(t("L'emplacement de départ est obligatoire."));
       setActiveSection('trajet');
       return;
     }
 
     if (!formData.destinationId) {
-      setError("L'emplacement de destination est obligatoire.");
+      setError(t("L'emplacement de destination est obligatoire."));
       setActiveSection('trajet');
       return;
     }
 
     if (formData.dateRetour && formData.dateDepart > formData.dateRetour) {
-      setError('La date de fin doit être supérieure à la date de début.');
+      setError(t('La date de fin doit être supérieure à la date de début.'));
       setActiveSection('trajet');
       return;
     }
 
     if (eligibilite && !eligibilite.eligible) {
-      setError(eligibilite.motif || "Ce conducteur n'est pas habilité pour ce véhicule (catégorie de permis incompatible).");
+      setError(eligibilite.motif || t("Ce conducteur n'est pas habilité pour ce véhicule (catégorie de permis incompatible)."));
       setActiveSection('vehicule');
       return;
     }
@@ -714,7 +715,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
       const missionId = enregistree?.id ?? vehiculeMission?.id ?? null;
       if (bonsAAjouter.length > 0) {
         if (missionId == null) {
-          setError("La mission est enregistrée, mais ses bons de carburant n'ont pas pu y être liés. Ajoutez-les depuis la mission.");
+          setError(t("La mission est enregistrée, mais ses bons de carburant n'ont pas pu y être liés. Ajoutez-les depuis la mission."));
           return;
         }
         const echecs = [];
@@ -728,7 +729,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         }
         if (echecs.length > 0) {
           setBonsAAjouter(echecs);
-          setError(`La mission est enregistrée, mais ${echecs.length} bon(s) de carburant n'ont pas pu être créés.`);
+          setError(t("La mission est enregistrée, mais {n} bon(s) de carburant n'ont pas pu être créés.", { n: echecs.length }));
           return;
         }
       }
@@ -738,7 +739,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
       setError(
         err?.response?.data?.message ||
           err?.response?.data?.error ||
-          "Échec de l'enregistrement."
+          t("Échec de l'enregistrement.")
       );
     } finally {
       setLoading(false);
@@ -747,7 +748,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
 
   if (!isOpen) return null;
 
-  const etatLabel = ETAT_OPTIONS.find((o) => o.value === Number(formData.etat))?.label ?? '';
+  const etatLabel = t(ETAT_OPTIONS.find((o) => o.value === Number(formData.etat))?.label ?? '');
   const hasMarker = formData.latitude != null && formData.longitude != null;
   const markerPos = hasMarker ? [Number(formData.latitude), Number(formData.longitude)] : null;
 
@@ -771,26 +772,26 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Informations générales</h3>
-              <p>Identification et statut de la mission</p>
+              <h3>{t('Informations générales')}</h3>
+              <p>{t('Identification et statut de la mission')}</p>
             </div>
 
             <div className="bmm-grid">
               <div className="bmm-field">
-                <label htmlFor="vm-num">Numéro de mission</label>
+                <label htmlFor="vm-num">{t('Numéro de mission')}</label>
                 <input
                   id="vm-num"
                   type="text"
                   name="num"
                   value={formData.num}
                   onChange={handleChange}
-                  placeholder={loadingNumero ? 'Génération...' : 'MIS-2026-001'}
+                  placeholder={loadingNumero ? t('Génération...') : 'MIS-2026-001'}
                 />
-                <p className="bmm-hint">Généré automatiquement si laissé vide.</p>
+                <p className="bmm-hint">{t('Généré automatiquement si laissé vide.')}</p>
               </div>
 
               <div className="bmm-field">
-                <label htmlFor="vm-etat">État</label>
+                <label htmlFor="vm-etat">{t('État')}</label>
                 <select
                   id="vm-etat"
                   name="etat"
@@ -799,21 +800,21 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                 >
                   {ETAT_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
-                      {option.label}
+                      {t(option.label)}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div className="bmm-field bmm-field--full">
-                <label htmlFor="vm-objet">Objet de la mission</label>
+                <label htmlFor="vm-objet">{t('Objet de la mission')}</label>
                 <input
                   id="vm-objet"
                   type="text"
                   name="objet"
                   value={formData.objet}
                   onChange={handleChange}
-                  placeholder="Ex : Transport de matériel médical"
+                  placeholder={t('Ex : Transport de matériel médical')}
                   autoFocus
                 />
               </div>
@@ -825,14 +826,14 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Véhicule &amp; conducteur</h3>
-              <p>Qui part et avec quel véhicule ?</p>
+              <h3>{t('Véhicule & conducteur')}</h3>
+              <p>{t('Qui part et avec quel véhicule ?')}</p>
             </div>
 
             <div className="bmm-grid">
               <div className="bmm-field">
                 <label htmlFor="vm-vehicule">
-                  Véhicule <span className="bmm-required">*</span>
+                  {t('Véhicule')} <span className="bmm-required">*</span>
                 </label>
                 <SearchableSelect
                   id="vm-vehicule"
@@ -846,15 +847,15 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                   getValue={(v) => v.id}
                   getLabel={(v) => {
                     const dispo = isVehiculeDisponiblePourMission(v.etat);
-                    const suffix = !dispo ? ` (${etatVehiculeLabel(v.etat)})` : '';
-                    const base = v.matricule || v.marque || `Véhicule #${v.id}`;
+                    const suffix = !dispo ? ` (${t(etatVehiculeLabel(v.etat))})` : '';
+                    const base = v.matricule || v.marque || t('Véhicule #{id}', { id: v.id });
                     return `${base}${v.marque && v.matricule ? ` — ${v.marque}` : ''}${suffix}`;
                   }}
                   getOptionHint={(v) => {
                     const parts = [];
                     if (v.marque && v.matricule) parts.push(v.marque);
                     if (!isVehiculeDisponiblePourMission(v.etat)) {
-                      parts.push(etatVehiculeLabel(v.etat));
+                      parts.push(t(etatVehiculeLabel(v.etat)));
                     }
                     return parts.join(' • ') || null;
                   }}
@@ -867,19 +868,19 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                 />
                 {vehiculeLabel && !isVehiculeDisponiblePourMission(vehiculeLabel.etat) && (
                   <p className="bmm-hint" style={{ color: '#b45309' }}>
-                    Ce véhicule n'est pas disponible ({etatVehiculeLabel(vehiculeLabel.etat)}) — l'enregistrement sera refusé tant qu'il n'est pas remis en état Disponible ou Réservé.
+                    {t("Ce véhicule n'est pas disponible ({etat}) — l'enregistrement sera refusé tant qu'il n'est pas remis en état Disponible ou Réservé.", { etat: t(etatVehiculeLabel(vehiculeLabel.etat)) })}
                   </p>
                 )}
                 {!loadingVehicules && vehicules.length === 0 && (
                   <p className="bmm-hint" style={{ color: '#dc2626' }}>
-                    Aucun véhicule trouvé.
+                    {t('Aucun véhicule trouvé.')}
                   </p>
                 )}
               </div>
 
               <div className="bmm-field">
                 <label htmlFor="vm-conducteur">
-                  Conducteur <span className="bmm-required">*</span>
+                  {t('Conducteur')} <span className="bmm-required">*</span>
                 </label>
                 <SearchableSelect
                   id="vm-conducteur"
@@ -895,7 +896,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                     `${p.nom || ''} ${p.prenom || ''}`.trim() +
                     (p.matricule ? ` (${p.matricule})` : '')
                   }
-                  getOptionHint={(p) => p.matricule ? `Matricule : ${p.matricule}` : null}
+                  getOptionHint={(p) => p.matricule ? t('Matricule : {m}', { m: p.matricule }) : null}
                 />
                 {conducteurLabel && (
                   <p className="bmm-hint">
@@ -912,18 +913,18 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                 {checkingEligibilite ? (
                   <>
                     <Loader2 size={16} strokeWidth={2.5} className="bmm-spin" />
-                    <span>Vérification du permis du conducteur...</span>
+                    <span>{t('Vérification du permis du conducteur...')}</span>
                   </>
                 ) : eligibilite?.eligible ? (
                   <>
                     <ShieldCheck size={16} strokeWidth={2.5} />
-                    <span>{eligibilite.motif || 'Conducteur habilité pour ce véhicule.'}</span>
+                    <span>{eligibilite.motif || t('Conducteur habilité pour ce véhicule.')}</span>
                   </>
                 ) : eligibilite ? (
                   <>
                     <ShieldAlert size={16} strokeWidth={2.5} />
                     <span>
-                      {eligibilite.motif || "Ce conducteur n'est pas habilité pour ce véhicule."}
+                      {eligibilite.motif || t("Ce conducteur n'est pas habilité pour ce véhicule.")}
                       {eligibilite.categoriesRequises?.length > 0 && (
                         <> Catégorie requise : {eligibilite.categoriesRequises.join(' ou ')}.</>
                       )}
@@ -939,8 +940,8 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Période &amp; trajet</h3>
-              <p>Quand et où va cette mission ?</p>
+              <h3>{t('Période & trajet')}</h3>
+              <p>{t('Quand et où va cette mission ?')}</p>
             </div>
 
             <div className="bmm-timeline">
@@ -948,7 +949,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                 <span className="bmm-timeline-dot start" />
                 <div className="bmm-field">
                   <label htmlFor="vm-depart">
-                    Départ <span className="bmm-required">*</span>
+                    {t('Départ')} <span className="bmm-required">*</span>
                   </label>
                   <input
                     id="vm-depart"
@@ -965,7 +966,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               <div className="bmm-timeline-item">
                 <span className="bmm-timeline-dot end" />
                 <div className="bmm-field">
-                  <label htmlFor="vm-retour">Retour</label>
+                  <label htmlFor="vm-retour">{t('Retour')}</label>
                   <input
                     id="vm-retour"
                     type="datetime-local"
@@ -981,7 +982,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
             <div className="bmm-grid" style={{ marginTop: 18 }}>
               <div className="bmm-field">
                 <label htmlFor="vm-source">
-                  Emplacement de départ <span className="bmm-required">*</span>
+                  {t('Emplacement de départ')} <span className="bmm-required">*</span>
                 </label>
                 <SearchableSelect
                   id="vm-source"
@@ -993,19 +994,19 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                   placeholder="Rechercher un emplacement..."
                   emptyMessage="Aucun emplacement ne correspond"
                   getValue={(e) => e.id}
-                  getLabel={(e) => e.nom || `Emplacement #${e.id}`}
+                  getLabel={(e) => e.nom || t('Emplacement #{id}', { id: e.id })}
                   getOptionHint={(e) => e.adresse || null}
                 />
                 {!loadingEmplacements && emplacements.length === 0 && (
                   <p className="bmm-hint" style={{ color: '#dc2626' }}>
-                    Aucun emplacement trouvé.
+                    {t('Aucun emplacement trouvé.')}
                   </p>
                 )}
               </div>
 
               <div className="bmm-field">
                 <label htmlFor="vm-destination">
-                  Emplacement de destination <span className="bmm-required">*</span>
+                  {t('Emplacement de destination')} <span className="bmm-required">*</span>
                 </label>
                 <SearchableSelect
                   id="vm-destination"
@@ -1017,13 +1018,13 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                   placeholder="Rechercher un emplacement..."
                   emptyMessage="Aucun emplacement ne correspond"
                   getValue={(e) => e.id}
-                  getLabel={(e) => e.nom || `Emplacement #${e.id}`}
+                  getLabel={(e) => e.nom || t('Emplacement #{id}', { id: e.id })}
                   getOptionHint={(e) => e.adresse || null}
                 />
               </div>
 
               <div className="bmm-field">
-                <label htmlFor="vm-distance">Distance estimée</label>
+                <label htmlFor="vm-distance">{t('Distance estimée')}</label>
                 <div className="bmm-km-card bmm-km-card--inline">
                   <input
                     id="vm-distance"
@@ -1034,13 +1035,13 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                     placeholder="0"
                     min="0"
                   />
-                  <span className="bmm-km-unit">km</span>
+                  <span className="bmm-km-unit">{t('km')}</span>
                 </div>
               </div>
             </div>
 
             <div className="bmm-field" style={{ marginTop: 16 }}>
-              <label htmlFor="vm-localisation">Point GPS (optionnel)</label>
+              <label htmlFor="vm-localisation">{t('Point GPS (optionnel)')}</label>
               <div className="bmm-localisation-wrap">
                 <input
                   id="vm-localisation"
@@ -1054,12 +1055,12 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                       handleSearchAddress();
                     }
                   }}
-                  placeholder="Rechercher une adresse..."
+                  placeholder={t('Rechercher une adresse...')}
                 />
                 <button
                   type="button"
                   className="bmm-geo-btn"
-                  title="Rechercher"
+                  title={t('Rechercher')}
                   onClick={handleSearchAddress}
                   disabled={searching}
                 >
@@ -1072,7 +1073,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                 <button
                   type="button"
                   className="bmm-geo-btn"
-                  title="Ma position"
+                  title={t('Ma position')}
                   onClick={handleUseGeolocation}
                 >
                   <MapPin size={18} strokeWidth={2.2} />
@@ -1094,7 +1095,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                   <MapRecenter center={mapCenter} />
                   {markerPos && (
                     <Marker position={markerPos}>
-                      <Popup>{formData.localisation || 'Position sélectionnée'}</Popup>
+                      <Popup>{formData.localisation || t('Position sélectionnée')}</Popup>
                     </Marker>
                   )}
                 </MapContainer>
@@ -1110,7 +1111,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Ouvrir dans OpenStreetMap
+                    {t('Ouvrir dans OpenStreetMap')}
                   </a>
                 </p>
               )}
@@ -1129,23 +1130,23 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Kilométrage</h3>
-              <p>Relevé compteur au départ et au retour</p>
+              <h3>{t('Kilométrage')}</h3>
+              <p>{t('Relevé compteur au départ et au retour')}</p>
             </div>
 
             <div className="bmm-km-grid">
               <div className="bmm-km-card">
-                <span className="bmm-km-label">Départ</span>
+                <span className="bmm-km-label">{t('Départ')}</span>
                 <input
                   type="number"
                   name="kilometrageDepart"
                   value={formData.kilometrageDepart}
                   readOnly
                   disabled
-                  title="Repris automatiquement du dernier kilométrage validé du véhicule"
+                  title={t('Repris automatiquement du dernier kilométrage validé du véhicule')}
                   placeholder="—"
                 />
-                <span className="bmm-km-unit">km</span>
+                <span className="bmm-km-unit">{t('km')}</span>
               </div>
 
               <div className="bmm-km-arrow">
@@ -1153,7 +1154,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               </div>
 
               <div className="bmm-km-card">
-                <span className="bmm-km-label">Retour</span>
+                <span className="bmm-km-label">{t('Retour')}</span>
                 <input
                   type="number"
                   min="0"
@@ -1163,16 +1164,14 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                   onChange={handleChange}
                   placeholder="0"
                 />
-                <span className="bmm-km-unit">km</span>
+                <span className="bmm-km-unit">{t('km')}</span>
               </div>
             </div>
 
             <div className="bmm-info" style={{ marginTop: 12 }}>
               <Gauge size={16} strokeWidth={2.5} />
               <span>
-                Le kilométrage de départ est repris automatiquement du compteur
-                du véhicule au démarrage de la mission. Le kilométrage de retour
-                se saisit à la clôture.
+                {t('Le kilométrage de départ est repris automatiquement du compteur du véhicule au démarrage de la mission. Le kilométrage de retour se saisit à la clôture.')}
               </span>
             </div>
 
@@ -1180,12 +1179,12 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               <div className="bmm-info" style={{ marginTop: 16 }}>
                 <CheckCircle2 size={16} strokeWidth={2.5} />
                 <span>
-                  Distance parcourue :{' '}
+                  {t('Distance parcourue :')}{' '}
                   {Math.max(
                     0,
                     Number(formData.kilometrageRetour) - Number(formData.kilometrageDepart)
                   )}{' '}
-                  km
+                  {t('km')}
                 </span>
               </div>
             )}
@@ -1196,27 +1195,27 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         const tousBons = [...bonsMission.map((b) => ({ ...b, enAttente: false })), ...bonsAAjouter.map((b, i) => ({ ...b, enAttente: true, index: i }))];
         const totalMontant = tousBons.reduce((s, b) => s + (Number(b.montant) || 0), 0);
         const totalLitres = tousBons.reduce((s, b) => s + (Number(b.litres) || 0), 0);
-        const formatDate = (v) => (v ? new Date(v).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
+        const formatDate = (v) => (v ? new Date(v).toLocaleString(locale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Carburant</h3>
-              <p>Pleins faits pendant cette mission</p>
+              <h3>{t('Carburant')}</h3>
+              <p>{t('Pleins faits pendant cette mission')}</p>
             </div>
 
             {/* Résumé */}
             <div className="vmb-resume">
               <div className="vmb-stat">
-                <span className="vmb-stat-label">Pleins</span>
+                <span className="vmb-stat-label">{t('Pleins')}</span>
                 <strong>{tousBons.length}</strong>
               </div>
               <div className="vmb-stat">
-                <span className="vmb-stat-label">Litres</span>
-                <strong>{totalLitres ? totalLitres.toLocaleString('fr-FR') : '—'}</strong>
+                <span className="vmb-stat-label">{t('Litres')}</span>
+                <strong>{totalLitres ? totalLitres.toLocaleString(locale()) : '—'}</strong>
               </div>
               <div className="vmb-stat vmb-stat--montant">
-                <span className="vmb-stat-label">Total</span>
-                <strong>{totalMontant.toFixed(2)} <small>DT</small></strong>
+                <span className="vmb-stat-label">{t('Total')}</span>
+                <strong>{totalMontant.toFixed(2)} <small>{t('DT')}</small></strong>
               </div>
             </div>
 
@@ -1224,7 +1223,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
             {tousBons.length === 0 && !saisieBonOuverte ? (
               <div className="vmb-vide">
                 <span className="vmb-vide-icone"><Fuel size={22} /></span>
-                <p>Aucun plein pour cette mission.</p>
+                <p>{t('Aucun plein pour cette mission.')}</p>
               </div>
             ) : (
               <ul className="vmb-liste">
@@ -1234,20 +1233,20 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                     <div className="vmb-texte">
                       <strong>{formatDate(b.date)}{b.station ? ' · ' + b.station : ''}</strong>
                       <span className="vmb-puces">
-                        {b.litres != null && <span className="vmb-puce">{b.litres} L</span>}
-                        {b.kilometrage != null && <span className="vmb-puce">{Number(b.kilometrage).toLocaleString('fr-FR')} km</span>}
-                        {b.typeCarburant != null && <span className="vmb-puce">{carburantTypeLabel(b.typeCarburant)}</span>}
-                        {b.enAttente && <span className="vmb-puce vmb-puce--attente">Enregistré avec la mission</span>}
+                        {b.litres != null && <span className="vmb-puce">{b.litres} {t('L')}</span>}
+                        {b.kilometrage != null && <span className="vmb-puce">{Number(b.kilometrage).toLocaleString(locale())} {t('km')}</span>}
+                        {b.typeCarburant != null && <span className="vmb-puce">{t(carburantTypeLabel(b.typeCarburant))}</span>}
+                        {b.enAttente && <span className="vmb-puce vmb-puce--attente">{t('Enregistré avec la mission')}</span>}
                       </span>
                     </div>
-                    <span className="vmb-montant">{b.montant != null ? Number(b.montant).toFixed(2) + ' DT' : '—'}</span>
+                    <span className="vmb-montant">{b.montant != null ? Number(b.montant).toFixed(2) + ' ' + t('DT') : '—'}</span>
                     {b.enAttente && (
                       <button
                         type="button"
                         className="vmb-retirer"
                         onClick={() => setBonsAAjouter((l) => l.filter((_, i) => i !== b.index))}
-                        aria-label="Retirer ce plein"
-                        title="Retirer ce plein"
+                        aria-label={t('Retirer ce plein')}
+                        title={t('Retirer ce plein')}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -1262,45 +1261,45 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               <div className="vmb-saisie">
                 <div className="vmb-saisie-entete">
                   <Fuel size={16} />
-                  <strong>Nouveau plein</strong>
+                  <strong>{t('Nouveau plein')}</strong>
                 </div>
                 <div className="vmb-saisie-grille">
                   <label className="vmb-champ vmb-champ--large">
-                    <span>Date <em>*</em></span>
+                    <span>{t('Date')} <em>*</em></span>
                     <input type="datetime-local" name="date" value={formBon.date} onChange={changerBon} />
                   </label>
                   <label className="vmb-champ">
-                    <span>Montant (DT) <em>*</em></span>
+                    <span>{t('Montant (DT)')} <em>*</em></span>
                     <input type="number" name="montant" min="0" step="0.01" value={formBon.montant} onChange={changerBon} placeholder="0.00" />
                   </label>
                   <label className="vmb-champ">
-                    <span>Litres</span>
+                    <span>{t('Litres')}</span>
                     <input type="number" name="litres" min="0" step="0.01" value={formBon.litres} onChange={changerBon} placeholder="0" />
                   </label>
                   <label className="vmb-champ">
-                    <span>Kilométrage</span>
-                    <input type="number" name="kilometrage" min="0" value={formBon.kilometrage} onChange={changerBon} placeholder="km" />
+                    <span>{t('Kilométrage')}</span>
+                    <input type="number" name="kilometrage" min="0" value={formBon.kilometrage} onChange={changerBon} placeholder={t('km')} />
                   </label>
                   <label className="vmb-champ">
-                    <span>Carburant</span>
+                    <span>{t('Carburant')}</span>
                     <select name="typeCarburant" value={formBon.typeCarburant} onChange={changerBon}>
                       <option value="">—</option>
-                      {CARBURANT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      {CARBURANT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                     </select>
                   </label>
                   <label className="vmb-champ vmb-champ--large">
-                    <span>Station</span>
-                    <input type="text" name="station" value={formBon.station} onChange={changerBon} placeholder="Nom de la station" />
+                    <span>{t('Station')}</span>
+                    <input type="text" name="station" value={formBon.station} onChange={changerBon} placeholder={t('Nom de la station')} />
                   </label>
                 </div>
                 {erreurBon && <p className="vmb-erreur"><AlertTriangle size={14} /> {erreurBon}</p>}
                 <div className="vmb-saisie-actions">
                   <button type="button" className="vmb-btn vmb-btn--clair" onClick={() => setSaisieBonOuverte(false)} disabled={enregistrementBon}>
-                    Annuler
+                    {t('Annuler')}
                   </button>
                   <button type="button" className="vmb-btn vmb-btn--plein" onClick={ajouterBon} disabled={enregistrementBon}>
                     {enregistrementBon ? <Loader2 size={15} className="vmb-tourne" /> : <Check size={15} />}
-                    {isEditing ? 'Enregistrer le plein' : 'Ajouter le plein'}
+                    {isEditing ? t('Enregistrer le plein') : t('Ajouter le plein')}
                   </button>
                 </div>
               </div>
@@ -1311,10 +1310,10 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                 onClick={ouvrirSaisieBon}
                 disabled={!formData.vehiculeId}
               >
-                <Plus size={16} /> Ajouter un plein
+                <Plus size={16} /> {t('Ajouter un plein')}
               </button>
             )}
-            {!formData.vehiculeId && <p className="bmm-hint">Choisissez d’abord le véhicule de la mission (onglet Véhicule).</p>}
+            {!formData.vehiculeId && <p className="bmm-hint">{t('Choisissez d’abord le véhicule de la mission (onglet Véhicule).')}</p>}
           </div>
         );
       }
@@ -1323,37 +1322,37 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Notes &amp; récapitulatif</h3>
-              <p>Vérifie les informations avant de valider</p>
+              <h3>{t('Notes & récapitulatif')}</h3>
+              <p>{t('Vérifie les informations avant de valider')}</p>
             </div>
 
             <div className="bmm-field">
-              <label htmlFor="vm-obs">Observations</label>
+              <label htmlFor="vm-obs">{t('Observations')}</label>
               <textarea
                 id="vm-obs"
                 name="observations"
                 value={formData.observations}
                 onChange={handleChange}
-                placeholder="Remarques éventuelles..."
+                placeholder={t('Remarques éventuelles...')}
                 rows={4}
               />
             </div>
 
             <div className="bmm-summary">
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Numéro</span>
+                <span className="bmm-summary-label">{t('Numéro')}</span>
                 <span className="bmm-summary-value">{formData.num || '—'}</span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">État</span>
+                <span className="bmm-summary-label">{t('État')}</span>
                 <span className={`bmm-etat-badge etat-${formData.etat}`}>
                   {etatLabel}
                 </span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Véhicule</span>
+                <span className="bmm-summary-label">{t('Véhicule')}</span>
                 <span className="bmm-summary-value">
                   {vehiculeLabel
                     ? `${vehiculeLabel.matricule || ''}${
@@ -1364,7 +1363,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Conducteur</span>
+                <span className="bmm-summary-label">{t('Conducteur')}</span>
                 <span className="bmm-summary-value">
                   {conducteurLabel
                     ? `${conducteurLabel.nom || ''} ${conducteurLabel.prenom || ''}`.trim()
@@ -1373,42 +1372,42 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Départ</span>
+                <span className="bmm-summary-label">{t('Départ')}</span>
                 <span className="bmm-summary-value">{formData.dateDepart || '—'}</span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Retour</span>
+                <span className="bmm-summary-label">{t('Retour')}</span>
                 <span className="bmm-summary-value">{formData.dateRetour || '—'}</span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Emplacement de départ</span>
+                <span className="bmm-summary-label">{t('Emplacement de départ')}</span>
                 <span className="bmm-summary-value">{sourceLabel?.nom || '—'}</span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Emplacement de destination</span>
+                <span className="bmm-summary-label">{t('Emplacement de destination')}</span>
                 <span className="bmm-summary-value">{destinationLabel?.nom || '—'}</span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Point GPS</span>
+                <span className="bmm-summary-label">{t('Point GPS')}</span>
                 <span className="bmm-summary-value">{formData.localisation || '—'}</span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Distance estimée</span>
+                <span className="bmm-summary-label">{t('Distance estimée')}</span>
                 <span className="bmm-summary-value">
-                  {formData.distanceEstimee ? `${formData.distanceEstimee} km` : '—'}
+                  {formData.distanceEstimee ? `${formData.distanceEstimee} ${t('km')}` : '—'}
                 </span>
               </div>
 
               <div className="bmm-summary-row">
-                <span className="bmm-summary-label">Kilométrage</span>
+                <span className="bmm-summary-label">{t('Kilométrage')}</span>
                 <span className="bmm-summary-value">
                   {formData.kilometrageDepart || '—'} →{' '}
-                  {formData.kilometrageRetour || '—'} km
+                  {formData.kilometrageRetour || '—'} {t('km')}
                 </span>
               </div>
             </div>
@@ -1433,10 +1432,10 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
             </div>
             <div>
               <span className="bmm-eyebrow">
-                {isEditing ? 'Modification' : 'Création'}
+                {isEditing ? t('Modification') : t('Création')}
               </span>
               <h2>
-                {isEditing ? 'Modifier la mission' : 'Nouvelle mission véhicule'}
+                {isEditing ? t('Modifier la mission') : t('Nouvelle mission véhicule')}
               </h2>
             </div>
           </div>
@@ -1449,7 +1448,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               type="button"
               className="bmm-close-btn"
               onClick={onClose}
-              aria-label="Fermer"
+              aria-label={t('Fermer')}
             >
               <X size={18} strokeWidth={2.5} />
             </button>
@@ -1461,7 +1460,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
 
           {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
-            <div className="bmm-nav-title">Sections</div>
+            <div className="bmm-nav-title">{t('Sections')}</div>
             <nav className="bmm-nav-list">
               {NAV_SECTIONS.map((s) => {
                 const isActive = activeSection === s.id;
@@ -1480,7 +1479,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
                     <span className="bmm-nav-item-icon">
                       <Icon size={15} strokeWidth={2.3} />
                     </span>
-                    <span className="bmm-nav-item-label">{s.label}</span>
+                    <span className="bmm-nav-item-label">{t(s.label)}</span>
                     {count != null && count > 0 && (
                       <span className="bmm-nav-item-count">{count}</span>
                     )}
@@ -1512,7 +1511,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
           </div>
           <div className="bmm-footer-right">
             <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
-              Annuler
+              {t('Annuler')}
             </Button>
             <Button
               type="button"
@@ -1523,12 +1522,12 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               {loading ? (
                 <>
                   <Loader2 size={16} strokeWidth={2.5} className="bmm-spin" style={{ marginRight: 6 }} />
-                  Enregistrement...
+                  {t('Enregistrement...')}
                 </>
               ) : (
                 <>
                   <Save size={16} strokeWidth={2.5} style={{ marginRight: 6 }} />
-                  {isEditing ? 'Mettre à jour' : 'Créer la mission'}
+                  {isEditing ? t('Mettre à jour') : t('Créer la mission')}
                 </>
               )}
             </Button>
