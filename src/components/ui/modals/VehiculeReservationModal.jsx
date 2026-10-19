@@ -7,6 +7,7 @@ import projetService from '../../../services/projetService';
 import vehiculeReservationService from '../../../services/vehiculeReservationService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
 import authService from '../../../services/Authservice';
+import { t, locale } from '../../../i18n';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
 import { CARBURANT_TYPE_OPTIONS, carburantTypeLabel } from '../../../constants/carburantType';
 import {
@@ -67,7 +68,7 @@ function formatDateFr(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('fr-FR', {
+  return d.toLocaleString(locale(), {
     day: '2-digit', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
@@ -80,20 +81,20 @@ function durationLabel(debut, fin) {
   if (isNaN(d1) || isNaN(d2) || d2 <= d1) return null;
   const diffMs = d2 - d1;
   const hours = diffMs / (1000 * 60 * 60);
-  if (hours < 24) return `${hours.toFixed(1)} h`;
+  if (hours < 24) return t('{n} h', { n: hours.toFixed(1) });
   const days = hours / 24;
-  return `${days.toFixed(1)} j`;
+  return t('{n} j', { n: days.toFixed(1) });
 }
 
 function emplacementLabel(e) {
   if (!e) return null;
-  return e.nom || e.adresse || `Emplacement #${e.id}`;
+  return e.nom || e.adresse || t('Emplacement #{id}', { id: e.id });
 }
 
 function projetLabel(p) {
   if (!p) return null;
   if (p.code && p.nom) return `${p.code} — ${p.nom}`;
-  return p.nom || p.code || `Projet #${p.id}`;
+  return p.nom || p.code || t('Projet #{id}', { id: p.id });
 }
 
 // ─── Select avec recherche intégrée (combobox) ───
@@ -191,7 +192,7 @@ const SearchableSelect = ({
           value={displayValue}
           onChange={handleInputChange}
           onFocus={handleFocus}
-          placeholder={loading ? 'Chargement...' : (selected ? '' : placeholder)}
+          placeholder={loading ? t('Chargement...') : (selected ? '' : t(placeholder))}
           disabled={disabled || loading}
           autoComplete="off"
         />
@@ -201,7 +202,7 @@ const SearchableSelect = ({
             type="button"
             className="vrm-searchable-clear-inline"
             onClick={handleClear}
-            aria-label="Effacer"
+            aria-label={t('Effacer')}
             tabIndex={-1}
           >
             <X size={13} strokeWidth={2.5} />
@@ -225,14 +226,14 @@ const SearchableSelect = ({
                 onClick={() => handleSelect({ id: '' })}
               >
                 <span className="vrm-searchable-option-main">
-                  <span className="vrm-searchable-option-label">{emptyOptionLabel}</span>
+                  <span className="vrm-searchable-option-label">{t(emptyOptionLabel)}</span>
                 </span>
                 {!value && <Check size={14} strokeWidth={3} />}
               </button>
             )}
 
             {filtered.length === 0 && (!allowEmpty || term) ? (
-              <div className="vrm-searchable-empty">{emptyMessage}</div>
+              <div className="vrm-searchable-empty">{t(emptyMessage)}</div>
             ) : (
               filtered.map((o) => {
                 const val = String(getValue(o));
@@ -318,8 +319,8 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
   };
 
   const ajouterBon = async () => {
-    if (!formBon.date) { setErreurBon('La date du plein est obligatoire.'); return; }
-    if (formBon.montant === '' || Number(formBon.montant) <= 0) { setErreurBon('Le montant est obligatoire.'); return; }
+    if (!formBon.date) { setErreurBon(t('La date du plein est obligatoire.')); return; }
+    if (formBon.montant === '' || Number(formBon.montant) <= 0) { setErreurBon(t('Le montant est obligatoire.')); return; }
     const bon = {
       vehiculeId: Number(formData.vehiculeId),
       personnelId: formData.conducteurId ? Number(formData.conducteurId) : (formData.personnelId ? Number(formData.personnelId) : null),
@@ -343,7 +344,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
       setFormBon(BON_VIDE);
     } catch (err) {
       console.error('Erreur ajout bon de carburant :', err);
-      setErreurBon(err?.response?.data?.message || "Le bon n'a pas pu être enregistré.");
+      setErreurBon(err?.response?.data?.message || t("Le bon n'a pas pu être enregistré."));
     } finally {
       setEnregistrementBon(false);
     }
@@ -526,27 +527,27 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
     if (e) e.preventDefault();
 
     if (!formData.vehiculeId) {
-      setError('Le véhicule est obligatoire.');
+      setError(t('Le véhicule est obligatoire.'));
       setActiveSection('vehicule');
       return;
     }
     if (!formData.dateDebut) {
-      setError('La date de début est obligatoire.');
+      setError(t('La date de début est obligatoire.'));
       setActiveSection('periode');
       return;
     }
     if (formData.dateFin && formData.dateFin < formData.dateDebut) {
-      setError('La date de fin ne peut pas être antérieure à la date de début.');
+      setError(t('La date de fin ne peut pas être antérieure à la date de début.'));
       setActiveSection('periode');
       return;
     }
     if (!formData.personnelId) {
-      setError('Le personnel demandeur est obligatoire.');
+      setError(t('Le personnel demandeur est obligatoire.'));
       setActiveSection('equipe');
       return;
     }
     if (eligibilite && !eligibilite.eligible) {
-      setError(eligibilite.motif || "Ce conducteur n'est pas habilité pour ce véhicule (catégorie de permis incompatible).");
+      setError(eligibilite.motif || t("Ce conducteur n'est pas habilité pour ce véhicule (catégorie de permis incompatible)."));
       setActiveSection('equipe');
       return;
     }
@@ -578,7 +579,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
       const reservationId = enregistree?.id ?? reservation?.id ?? null;
       if (bonsAAjouter.length > 0) {
         if (reservationId == null) {
-          setError("La réservation est enregistrée, mais ses bons de carburant n'ont pas pu y être liés. Ajoutez-les depuis la réservation.");
+          setError(t("La réservation est enregistrée, mais ses bons de carburant n'ont pas pu y être liés. Ajoutez-les depuis la réservation."));
           return;
         }
         const echecs = [];
@@ -592,13 +593,13 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         }
         if (echecs.length > 0) {
           setBonsAAjouter(echecs);
-          setError(`La réservation est enregistrée, mais ${echecs.length} bon(s) de carburant n'ont pas pu être créés.`);
+          setError(t("La réservation est enregistrée, mais {n} bon(s) de carburant n'ont pas pu être créés.", { n: echecs.length }));
           return;
         }
       }
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || "Échec de l'enregistrement.");
+      setError(err.response?.data?.message || t("Échec de l'enregistrement."));
       console.error(err);
     } finally {
       setLoading(false);
@@ -640,15 +641,15 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Choisir un véhicule</h3>
-              <p>Sélectionne le véhicule à réserver</p>
+              <h3>{t('Choisir un véhicule')}</h3>
+              <p>{t('Sélectionne le véhicule à réserver')}</p>
             </div>
 
             <div className="vrm-search">
               <Search size={16} strokeWidth={2.3} className="vrm-search-icon" />
               <input
                 type="text"
-                placeholder="Rechercher par matricule, marque..."
+                placeholder={t('Rechercher par matricule, marque...')}
                 value={vehiculeSearch}
                 onChange={(e) => setVehiculeSearch(e.target.value)}
               />
@@ -657,12 +658,12 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
             {loadingVehicules ? (
               <div className="vrm-vehicules-loading">
                 <Loader2 size={20} className="vrm-spin" />
-                <span>Chargement des véhicules...</span>
+                <span>{t('Chargement des véhicules...')}</span>
               </div>
             ) : vehiculesFiltres.length === 0 ? (
               <div className="vrm-vehicules-empty">
                 <Car size={24} strokeWidth={1.6} />
-                <span>Aucun véhicule trouvé</span>
+                <span>{t('Aucun véhicule trouvé')}</span>
               </div>
             ) : (
               <div className="vrm-vehicules-grid">
@@ -680,7 +681,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                       </div>
                       <div className="vrm-vehicule-text">
                         <span className="vrm-vehicule-matricule">
-                          {v.matricule || `Véhicule #${v.id}`}
+                          {v.matricule || t('Véhicule #{id}', { id: v.id })}
                         </span>
                         <span className="vrm-vehicule-marque">
                           {v.marque || '—'}{v.modele ? ` · ${v.modele}` : ''}
@@ -703,15 +704,15 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Période de réservation</h3>
-              <p>Date de départ et de retour</p>
+              <h3>{t('Période de réservation')}</h3>
+              <p>{t('Date de départ et de retour')}</p>
             </div>
 
             <div className="vrm-timeline">
               <div className="vrm-timeline-item">
                 <span className="vrm-timeline-dot start" />
                 <div className="vrm-timeline-field">
-                  <label>Début <span className="bmm-required">*</span></label>
+                  <label>{t('Début')} <span className="bmm-required">*</span></label>
                   <input
                     type="datetime-local"
                     name="dateDebut"
@@ -728,7 +729,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               <div className="vrm-timeline-item">
                 <span className="vrm-timeline-dot end" />
                 <div className="vrm-timeline-field">
-                  <label>Fin</label>
+                  <label>{t('Fin')}</label>
                   <input
                     type="datetime-local"
                     name="dateFin"
@@ -742,7 +743,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
             {checkingConflicts && (
               <div className="vrm-conflict-banner checking">
                 <Loader2 size={15} strokeWidth={2.5} className="vrm-spin" />
-                Vérification de la disponibilité du véhicule...
+                {t('Vérification de la disponibilité du véhicule...')}
               </div>
             )}
 
@@ -752,21 +753,20 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                 <div>
                   <strong>
                     {conflicts.length === 1
-                      ? 'Ce véhicule a déjà une réservation sur cette période :'
-                      : `Ce véhicule a déjà ${conflicts.length} réservations sur cette période :`}
+                      ? t('Ce véhicule a déjà une réservation sur cette période :')
+                      : t('Ce véhicule a déjà {n} réservations sur cette période :', { n: conflicts.length })}
                   </strong>
                   <ul>
                     {conflicts.slice(0, 3).map((c) => (
                       <li key={c.id}>
                         {formatDateFr(c.dateDebut)} → {formatDateFr(c.dateFin)}
-                        {' '}({ETAT_OPTIONS.find((o) => o.value === c.etat)?.label ?? c.etat})
+                        {' '}({t(ETAT_OPTIONS.find((o) => o.value === c.etat)?.label) ?? c.etat})
                         {c.personnelNom ? ` — ${c.personnelNom}` : ''}
                       </li>
                     ))}
                   </ul>
                   <span className="vrm-conflict-hint">
-                    Vous pouvez tout de même essayer d'enregistrer, mais le serveur refusera
-                    si le conflit persiste.
+                    {t("Vous pouvez tout de même essayer d'enregistrer, mais le serveur refusera si le conflit persiste.")}
                   </span>
                 </div>
               </div>
@@ -778,13 +778,13 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Conducteur &amp; demandeur</h3>
-              <p>Qui demande et qui conduit ?</p>
+              <h3>{t('Conducteur & demandeur')}</h3>
+              <p>{t('Qui demande et qui conduit ?')}</p>
             </div>
 
             <div className="bmm-grid">
               <div className="bmm-field bmm-field--full">
-                <label>Personnel demandeur</label>
+                <label>{t('Personnel demandeur')}</label>
                 <SearchableSelect
                   id="vrm-personnel"
                   name="personnelId"
@@ -799,12 +799,12 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                     `${p.nom || ''} ${p.prenom || ''}`.trim() +
                     (p.matricule ? ` (${p.matricule})` : '')
                   }
-                  getOptionHint={(p) => (p.matricule ? `Matricule : ${p.matricule}` : null)}
+                  getOptionHint={(p) => (p.matricule ? t('Matricule : {m}', { m: p.matricule }) : null)}
                 />
               </div>
 
               <div className="bmm-field bmm-field--full">
-                <label>Conducteur</label>
+                <label>{t('Conducteur')}</label>
                 <SearchableSelect
                   id="vrm-conducteur"
                   name="conducteurId"
@@ -821,7 +821,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                     `${p.nom || ''} ${p.prenom || ''}`.trim() +
                     (p.matricule ? ` (${p.matricule})` : '')
                   }
-                  getOptionHint={(p) => (p.matricule ? `Matricule : ${p.matricule}` : null)}
+                  getOptionHint={(p) => (p.matricule ? t('Matricule : {m}', { m: p.matricule }) : null)}
                 />
               </div>
             </div>
@@ -833,20 +833,20 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                 {checkingEligibilite ? (
                   <>
                     <Loader2 size={16} strokeWidth={2.5} className="vrm-spin" />
-                    <span>Vérification du permis du conducteur...</span>
+                    <span>{t('Vérification du permis du conducteur...')}</span>
                   </>
                 ) : eligibilite?.eligible ? (
                   <>
                     <ShieldCheck size={16} strokeWidth={2.5} />
-                    <span>{eligibilite.motif || 'Conducteur habilité pour ce véhicule.'}</span>
+                    <span>{eligibilite.motif || t('Conducteur habilité pour ce véhicule.')}</span>
                   </>
                 ) : eligibilite ? (
                   <>
                     <ShieldAlert size={16} strokeWidth={2.5} />
                     <span>
-                      {eligibilite.motif || "Ce conducteur n'est pas habilité pour ce véhicule."}
+                      {eligibilite.motif || t("Ce conducteur n'est pas habilité pour ce véhicule.")}
                       {eligibilite.categoriesRequises?.length > 0 && (
-                        <> Catégorie requise : {eligibilite.categoriesRequises.join(' ou ')}.</>
+                        <> {t('Catégorie requise : {c}.', { c: eligibilite.categoriesRequises.join(t(' ou ')) })}</>
                       )}
                     </span>
                   </>
@@ -860,13 +860,13 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Trajet &amp; motif</h3>
-              <p>D'où vient-on et où va-t-on ?</p>
+              <h3>{t('Trajet & motif')}</h3>
+              <p>{t("D'où vient-on et où va-t-on ?")}</p>
             </div>
 
             <div className="bmm-grid">
               <div className="bmm-field">
-                <label>Emplacement source</label>
+                <label>{t('Emplacement source')}</label>
                 <select
                   name="sourceId"
                   value={formData.sourceId}
@@ -874,7 +874,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                   disabled={loadingEmplacements}
                 >
                   <option value="">
-                    {loadingEmplacements ? 'Chargement...' : '— Sélectionner —'}
+                    {loadingEmplacements ? t('Chargement...') : t('— Sélectionner —')}
                   </option>
                   {emplacements.map((e) => (
                     <option key={e.id} value={e.id}>
@@ -885,7 +885,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               </div>
 
               <div className="bmm-field">
-                <label>Emplacement destination</label>
+                <label>{t('Emplacement destination')}</label>
                 <select
                   name="destinationId"
                   value={formData.destinationId}
@@ -893,7 +893,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                   disabled={loadingEmplacements}
                 >
                   <option value="">
-                    {loadingEmplacements ? 'Chargement...' : '— Sélectionner —'}
+                    {loadingEmplacements ? t('Chargement...') : t('— Sélectionner —')}
                   </option>
                   {emplacements.map((e) => (
                     <option key={e.id} value={e.id}>
@@ -904,13 +904,13 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               </div>
 
               <div className="bmm-field bmm-field--full">
-                <label>Motif</label>
+                <label>{t('Motif')}</label>
                 <input
                   type="text"
                   name="motif"
                   value={formData.motif}
                   onChange={handleChange}
-                  placeholder="Ex : Transport de matériel médical"
+                  placeholder={t('Ex : Transport de matériel médical')}
                 />
               </div>
             </div>
@@ -921,13 +921,13 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Projet &amp; statut</h3>
-              <p>Rattachement et état de la réservation</p>
+              <h3>{t('Projet & statut')}</h3>
+              <p>{t('Rattachement et état de la réservation')}</p>
             </div>
 
             <div className="bmm-grid">
               <div className="bmm-field bmm-field--full">
-                <label>Projet</label>
+                <label>{t('Projet')}</label>
                 <select
                   name="projetId"
                   value={formData.projetId}
@@ -935,7 +935,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                   disabled={loadingProjets}
                 >
                   <option value="">
-                    {loadingProjets ? 'Chargement...' : '— Aucun projet —'}
+                    {loadingProjets ? t('Chargement...') : t('— Aucun projet —')}
                   </option>
                   {projets.map((p) => (
                     <option key={p.id} value={p.id}>
@@ -946,7 +946,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               </div>
 
               <div className="bmm-field bmm-field--full">
-                <label>État de la réservation</label>
+                <label>{t('État de la réservation')}</label>
                 <div className="vrm-etat-chips">
                   {ETAT_OPTIONS.map((o) => {
                     const isActive = Number(formData.etat) === o.value;
@@ -958,7 +958,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                         onClick={() => setFormData((prev) => ({ ...prev, etat: o.value }))}
                       >
                         {isActive && <Check size={12} strokeWidth={3} />}
-                        {o.label}
+                        {t(o.label)}
                       </button>
                     );
                   })}
@@ -966,13 +966,13 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               </div>
 
               <div className="bmm-field bmm-field--full">
-                <label>Commentaire</label>
+                <label>{t('Commentaire')}</label>
                 <textarea
                   name="commentaire"
                   value={formData.commentaire}
                   onChange={handleChange}
                   rows={3}
-                  placeholder="Notes internes, contexte particulier..."
+                  placeholder={t('Notes internes, contexte particulier...')}
                 />
               </div>
             </div>
@@ -983,27 +983,27 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         const tousBons = [...bonsReservation.map((b) => ({ ...b, enAttente: false })), ...bonsAAjouter.map((b, i) => ({ ...b, enAttente: true, index: i }))];
         const totalMontant = tousBons.reduce((s, b) => s + (Number(b.montant) || 0), 0);
         const totalLitres = tousBons.reduce((s, b) => s + (Number(b.litres) || 0), 0);
-        const formatDate = (v) => (v ? new Date(v).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
+        const formatDate = (v) => (v ? new Date(v).toLocaleString(locale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
         return (
           <div className="bmm-content-pane">
             <div className="bmm-pane-header">
-              <h3>Carburant</h3>
-              <p>Pleins faits pendant cette réservation</p>
+              <h3>{t('Carburant')}</h3>
+              <p>{t('Pleins faits pendant cette réservation')}</p>
             </div>
 
             {/* Résumé */}
             <div className="vmb-resume">
               <div className="vmb-stat">
-                <span className="vmb-stat-label">Pleins</span>
+                <span className="vmb-stat-label">{t('Pleins')}</span>
                 <strong>{tousBons.length}</strong>
               </div>
               <div className="vmb-stat">
-                <span className="vmb-stat-label">Litres</span>
-                <strong>{totalLitres ? totalLitres.toLocaleString('fr-FR') : '—'}</strong>
+                <span className="vmb-stat-label">{t('Litres')}</span>
+                <strong>{totalLitres ? totalLitres.toLocaleString(locale()) : '—'}</strong>
               </div>
               <div className="vmb-stat vmb-stat--montant">
-                <span className="vmb-stat-label">Total</span>
-                <strong>{totalMontant.toFixed(2)} <small>DT</small></strong>
+                <span className="vmb-stat-label">{t('Total')}</span>
+                <strong>{totalMontant.toFixed(2)} <small>{t('DT')}</small></strong>
               </div>
             </div>
 
@@ -1011,7 +1011,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
             {tousBons.length === 0 && !saisieBonOuverte ? (
               <div className="vmb-vide">
                 <span className="vmb-vide-icone"><Fuel size={22} /></span>
-                <p>Aucun plein pour cette réservation.</p>
+                <p>{t('Aucun plein pour cette réservation.')}</p>
               </div>
             ) : (
               <ul className="vmb-liste">
@@ -1021,20 +1021,20 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                     <div className="vmb-texte">
                       <strong>{formatDate(b.date)}{b.station ? ' · ' + b.station : ''}</strong>
                       <span className="vmb-puces">
-                        {b.litres != null && <span className="vmb-puce">{b.litres} L</span>}
-                        {b.kilometrage != null && <span className="vmb-puce">{Number(b.kilometrage).toLocaleString('fr-FR')} km</span>}
-                        {b.typeCarburant != null && <span className="vmb-puce">{carburantTypeLabel(b.typeCarburant)}</span>}
-                        {b.enAttente && <span className="vmb-puce vmb-puce--attente">Enregistré avec la réservation</span>}
+                        {b.litres != null && <span className="vmb-puce">{b.litres} {t('L')}</span>}
+                        {b.kilometrage != null && <span className="vmb-puce">{Number(b.kilometrage).toLocaleString(locale())} {t('km')}</span>}
+                        {b.typeCarburant != null && <span className="vmb-puce">{t(carburantTypeLabel(b.typeCarburant))}</span>}
+                        {b.enAttente && <span className="vmb-puce vmb-puce--attente">{t('Enregistré avec la réservation')}</span>}
                       </span>
                     </div>
-                    <span className="vmb-montant">{b.montant != null ? Number(b.montant).toFixed(2) + ' DT' : '—'}</span>
+                    <span className="vmb-montant">{b.montant != null ? Number(b.montant).toFixed(2) + ' ' + t('DT') : '—'}</span>
                     {b.enAttente && (
                       <button
                         type="button"
                         className="vmb-retirer"
                         onClick={() => setBonsAAjouter((l) => l.filter((_, i) => i !== b.index))}
-                        aria-label="Retirer ce plein"
-                        title="Retirer ce plein"
+                        aria-label={t('Retirer ce plein')}
+                        title={t('Retirer ce plein')}
                       >
                         <Trash2 size={14} />
                       </button>
@@ -1049,45 +1049,45 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               <div className="vmb-saisie">
                 <div className="vmb-saisie-entete">
                   <Fuel size={16} />
-                  <strong>Nouveau plein</strong>
+                  <strong>{t('Nouveau plein')}</strong>
                 </div>
                 <div className="vmb-saisie-grille">
                   <label className="vmb-champ vmb-champ--large">
-                    <span>Date <em>*</em></span>
+                    <span>{t('Date')} <em>*</em></span>
                     <input type="datetime-local" name="date" value={formBon.date} onChange={changerBon} />
                   </label>
                   <label className="vmb-champ">
-                    <span>Montant (DT) <em>*</em></span>
+                    <span>{t('Montant (DT)')} <em>*</em></span>
                     <input type="number" name="montant" min="0" step="0.01" value={formBon.montant} onChange={changerBon} placeholder="0.00" />
                   </label>
                   <label className="vmb-champ">
-                    <span>Litres</span>
+                    <span>{t('Litres')}</span>
                     <input type="number" name="litres" min="0" step="0.01" value={formBon.litres} onChange={changerBon} placeholder="0" />
                   </label>
                   <label className="vmb-champ">
-                    <span>Kilométrage</span>
-                    <input type="number" name="kilometrage" min="0" value={formBon.kilometrage} onChange={changerBon} placeholder="km" />
+                    <span>{t('Kilométrage')}</span>
+                    <input type="number" name="kilometrage" min="0" value={formBon.kilometrage} onChange={changerBon} placeholder={t('km')} />
                   </label>
                   <label className="vmb-champ">
-                    <span>Carburant</span>
+                    <span>{t('Carburant')}</span>
                     <select name="typeCarburant" value={formBon.typeCarburant} onChange={changerBon}>
                       <option value="">—</option>
-                      {CARBURANT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                      {CARBURANT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                     </select>
                   </label>
                   <label className="vmb-champ vmb-champ--large">
-                    <span>Station</span>
-                    <input type="text" name="station" value={formBon.station} onChange={changerBon} placeholder="Nom de la station" />
+                    <span>{t('Station')}</span>
+                    <input type="text" name="station" value={formBon.station} onChange={changerBon} placeholder={t('Nom de la station')} />
                   </label>
                 </div>
                 {erreurBon && <p className="vmb-erreur"><AlertTriangle size={14} /> {erreurBon}</p>}
                 <div className="vmb-saisie-actions">
                   <button type="button" className="vmb-btn vmb-btn--clair" onClick={() => setSaisieBonOuverte(false)} disabled={enregistrementBon}>
-                    Annuler
+                    {t('Annuler')}
                   </button>
                   <button type="button" className="vmb-btn vmb-btn--plein" onClick={ajouterBon} disabled={enregistrementBon}>
                     {enregistrementBon ? <Loader2 size={15} className="vmb-tourne" /> : <Check size={15} />}
-                    {isEditing ? 'Enregistrer le plein' : 'Ajouter le plein'}
+                    {isEditing ? t('Enregistrer le plein') : t('Ajouter le plein')}
                   </button>
                 </div>
               </div>
@@ -1098,10 +1098,10 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                 onClick={ouvrirSaisieBon}
                 disabled={!formData.vehiculeId}
               >
-                <Plus size={16} /> Ajouter un plein
+                <Plus size={16} /> {t('Ajouter un plein')}
               </button>
             )}
-            {!formData.vehiculeId && <p className="bmm-hint">Choisissez d’abord le véhicule de la réservation (onglet Véhicule).</p>}
+            {!formData.vehiculeId && <p className="bmm-hint">{t('Choisissez d’abord le véhicule de la réservation (onglet Véhicule).')}</p>}
           </div>
         );
       }
@@ -1123,17 +1123,17 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
             </div>
             <div>
               <span className="bmm-eyebrow">
-                {isEditing ? 'Modification' : 'Nouvelle réservation'}
+                {isEditing ? t('Modification') : t('Nouvelle réservation')}
               </span>
-              <h2>Réserver un véhicule</h2>
+              <h2>{t('Réserver un véhicule')}</h2>
             </div>
           </div>
           <div className="bmm-header-right">
             <span className={`bmm-etat-chip chip-${etatMeta.color}`}>
               <span className="bmm-chip-dot" />
-              {etatMeta.label}
+              {t(etatMeta.label)}
             </span>
-            <button type="button" className="bmm-close-btn" onClick={onClose} aria-label="Fermer">
+            <button type="button" className="bmm-close-btn" onClick={onClose} aria-label={t('Fermer')}>
               <X size={18} strokeWidth={2.5} />
             </button>
           </div>
@@ -1144,7 +1144,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
 
           {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
-            <div className="bmm-nav-title">Sections</div>
+            <div className="bmm-nav-title">{t('Sections')}</div>
             <nav className="bmm-nav-list">
               {NAV_SECTIONS.map((s) => {
                 const isActive = activeSection === s.id;
@@ -1163,7 +1163,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
                     <span className="bmm-nav-item-icon">
                       <Icon size={15} strokeWidth={2.3} />
                     </span>
-                    <span className="bmm-nav-item-label">{s.label}</span>
+                    <span className="bmm-nav-item-label">{t(s.label)}</span>
                     {count != null && count > 0 && (
                       <span className="bmm-nav-item-count">{count}</span>
                     )}
@@ -1195,7 +1195,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
           </div>
           <div className="bmm-footer-right">
             <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
-              Annuler
+              {t('Annuler')}
             </Button>
             <Button
               type="button"
@@ -1206,12 +1206,12 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               {loading ? (
                 <>
                   <Loader2 size={16} strokeWidth={2.5} className="vrm-spin" style={{ marginRight: 6 }} />
-                  Enregistrement...
+                  {t('Enregistrement...')}
                 </>
               ) : (
                 <>
                   <Save size={16} strokeWidth={2.5} style={{ marginRight: 6 }} />
-                  {isEditing ? 'Mettre à jour' : 'Créer la réservation'}
+                  {isEditing ? t('Mettre à jour') : t('Créer la réservation')}
                 </>
               )}
             </Button>
