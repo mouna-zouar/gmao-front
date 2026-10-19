@@ -952,3 +952,60 @@
   border-color: #d5f0f3;
   color: #067a87;
 }
+
+/* ─── Onglet « Carburant » de la mission ─── */
+.vmb-resume { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.vmb-stat { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid #d7e3e5; border-radius: 14px; background: #fff; }
+.vmb-stat-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #7f969d; }
+.vmb-stat strong { font-size: 20px; color: #12303a; font-variant-numeric: tabular-nums; }
+.vmb-stat strong small { font-size: 12px; color: #7f969d; font-weight: 600; }
+.vmb-stat--montant { background: #e3f3f5; border-color: transparent; }
+.vmb-stat--montant strong { color: #05606b; }
+
+.vmb-vide { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 22px 12px; margin-bottom: 14px; border: 1.5px dashed #d7e3e5; border-radius: 14px; color: #7f969d; text-align: center; }
+.vmb-vide p { margin: 0; font-size: 13.5px; }
+.vmb-vide-icone { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 50%; background: #fdf1e1; color: #c47a12; }
+
+.vmb-liste { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.vmb-ligne { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #d7e3e5; border-left: 4px solid #e8962e; border-radius: 12px; background: #fff; }
+.vmb-ligne--attente { border-style: dashed; border-left-style: solid; background: #fffbf4; }
+.vmb-icone { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 10px; background: #fdf1e1; color: #c47a12; flex: none; }
+.vmb-texte { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.vmb-texte strong { font-size: 13.5px; color: #12303a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vmb-puces { display: flex; flex-wrap: wrap; gap: 4px; }
+.vmb-puce { padding: 1px 8px; border-radius: 999px; background: #f2f6f6; color: #4b6670; font-size: 11.5px; font-weight: 600; }
+.vmb-puce--attente { background: #fdf1e1; color: #b0661a; }
+.vmb-montant { font-weight: 800; font-size: 14px; color: #12303a; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.vmb-retirer { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid #d7e3e5; border-radius: 8px; background: #fff; color: #d9434b; cursor: pointer; flex: none; }
+.vmb-retirer:hover { border-color: #d9434b; background: #fde8e9; }
+
+.vmb-ajouter { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 11px 14px; border: 1.5px dashed #0794a4; border-radius: 12px; background: #f3fbfc; color: #05606b; font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.15s; }
+.vmb-ajouter:hover:not(:disabled) { background: #e3f3f5; }
+.vmb-ajouter:disabled { opacity: 0.5; cursor: not-allowed; }
+.vmb-ajouter:focus-visible, .vmb-btn:focus-visible { outline: 2px solid #0794a4; outline-offset: 2px; }
+
+.vmb-saisie { padding: 14px; border: 1.5px solid #0794a4; border-radius: 14px; background: #fff; box-shadow: 0 4px 14px rgba(7, 148, 164, 0.08); }
+.vmb-saisie-entete { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: #05606b; }
+.vmb-saisie-entete strong { font-size: 14px; }
+.vmb-saisie-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 12px; }
+.vmb-champ { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.vmb-champ--large { grid-column: 1 / -1; }
+.vmb-champ span { font-size: 12.5px; font-weight: 600; color: #4b6670; }
+.vmb-champ em { color: #d9434b; font-style: normal; }
+.vmb-champ input, .vmb-champ select { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d7e3e5; border-radius: 10px; font: inherit; font-size: 14px; color: #12303a; background: #fff; }
+.vmb-champ input:focus, .vmb-champ select:focus { outline: none; border-color: #0794a4; box-shadow: 0 0 0 3px #e3f3f5; }
+.vmb-erreur { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; padding: 8px 10px; border-radius: 10px; background: #fde8e9; color: #b3262f; font-size: 13px; }
+.vmb-saisie-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.vmb-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; font-size: 13.5px; font-weight: 700; cursor: pointer; border: 1px solid transparent; }
+.vmb-btn:disabled { opacity: 0.6; cursor: default; }
+.vmb-btn--clair { background: #fff; border-color: #d7e3e5; color: #4b6670; }
+.vmb-btn--plein { background: #0794a4; color: #fff; }
+.vmb-btn--plein:hover:not(:disabled) { background: #05606b; }
+.vmb-tourne { animation: vmb-rotation 0.9s linear infinite; }
+@keyframes vmb-rotation { to { transform: rotate(360deg); } }
+
+@media (max-width: 560px) {
+  .vmb-resume { grid-template-columns: 1fr 1fr; }
+  .vmb-stat--montant { grid-column: 1 / -1; }
+  .vmb-saisie-grille { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,93 @@
+/* Sélection multiple : cases à cocher + barre d'actions */
+
+.case-selection {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: #05606b;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.case-selection:disabled { cursor: not-allowed; opacity: .5; }
+
+/* Colonne des cases dans un tableau */
+th.selection-col,
+td.selection-col {
+  width: 44px;
+  padding-inline: 14px 4px !important;
+  text-align: center;
+}
+tr.is-coche td { background: #f0f8f9; }
+
+.selection-barre {
+  position: sticky;
+  top: 72px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  border: 1px solid #b4e0e5;
+  border-radius: 14px;
+  background: #e3f3f5;
+  color: #05606b;
+  box-shadow: 0 4px 14px rgba(5, 96, 107, .10);
+  animation: selection-entree .15s ease-out;
+}
+@keyframes selection-entree { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) { .selection-barre { animation: none; } }
+
+.selection-barre__compte {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.selection-barre__lien {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #05606b;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.selection-barre__lien:hover { background: rgba(5, 96, 107, .08); }
+.selection-barre__espace { flex: 1; }
+.selection-barre__supprimer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 1px solid #b8323a;
+  border-radius: 10px;
+  background: #b8323a;
+  color: #fff;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.selection-barre__supprimer:hover { background: #9c2a31; }
+.selection-barre__supprimer:disabled { opacity: .6; cursor: progress; }
+.selection-barre :focus-visible { outline: 2px solid #05606b; outline-offset: 2px; }
+
+/* Case sur les cartes (téléphone) */
+.carte-ligne__case { display: inline-flex; align-items: center; gap: 8px; }
+
+@media (max-width: 760px) {
+  .selection-barre { top: 60px; }
+  .selection-barre__espace { display: none; }
+  .selection-barre__supprimer { width: 100%; justify-content: center; }
+}

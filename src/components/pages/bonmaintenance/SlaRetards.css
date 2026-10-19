@@ -1,0 +1,235 @@
+/* Bons en dépassement SLA (fenêtre ouverte depuis la barre de statistiques ou une notification) */
+
+.sla-retards { display: flex; flex-direction: column; gap: 14px; padding: 18px 22px 22px; }
+
+.sla-retards__resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 10px;
+}
+.sla-retards__chiffre {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  color: #4b6670;
+}
+.sla-retards__chiffre strong { font-size: 1.35rem; font-weight: 800; color: #0f172a; line-height: 1; }
+.sla-retards__chiffre span { font-size: 0.8rem; font-weight: 600; }
+.sla-retards__chiffre--alerte { border-color: #f6c2c5; background: #fde8e9; color: #b8323a; }
+.sla-retards__chiffre--alerte strong { color: #b8323a; }
+
+.sla-retards__recharger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: auto;
+  padding: 8px 14px;
+  border: 1px solid #b4e0e5;
+  border-radius: 10px;
+  background: #e3f3f5;
+  color: #05606b;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.sla-retards__recharger:disabled { opacity: .6; cursor: progress; }
+
+.sla-retards__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.sla-retards__filtres { display: flex; flex-wrap: wrap; gap: 6px; }
+.sla-retards__filtre {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #d0dcdf;
+  border-radius: 999px;
+  background: #fff;
+  color: #33484f;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sla-retards__filtre span {
+  min-width: 20px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e8eef0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+}
+.sla-retards__filtre.is-actif { border-color: #b8323a; background: #b8323a; color: #fff; }
+.sla-retards__filtre.is-actif span { background: rgba(255, 255, 255, .25); color: #fff; }
+
+.sla-retards__recherche {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 240px;
+  padding: 7px 12px;
+  border: 1px solid #d0dcdf;
+  border-radius: 10px;
+  background: #fff;
+  color: #64748b;
+}
+.sla-retards__recherche input { flex: 1; min-width: 0; border: none; outline: none; background: none; font: inherit; font-size: 0.85rem; }
+.sla-retards__recherche:focus-within { border-color: #0794a4; box-shadow: 0 0 0 3px rgba(7, 148, 164, .15); }
+
+.sla-retards__erreur {
+  padding: 10px 14px;
+  border: 1px solid #f6c2c5;
+  border-radius: 10px;
+  background: #fde8e9;
+  color: #b8323a;
+  font-size: 0.85rem;
+}
+
+.sla-retards__table-wrap {
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+}
+.sla-retards__table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.sla-retards__table th {
+  position: sticky;
+  top: 0;
+  padding: 11px 12px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #4b6670;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-align: start;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.sla-retards__table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; color: #0f172a; vertical-align: middle; }
+.sla-retards__ligne { cursor: pointer; transition: background .15s ease; }
+.sla-retards__ligne:hover td { background: #fff7f7; }
+.sla-retards__num { font-weight: 700; white-space: nowrap; }
+.sla-retards__titre { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sla-retards__depasse { color: #b8323a; font-weight: 700; white-space: nowrap; }
+.sla-retards__table td:nth-child(5), .sla-retards__table td:nth-child(6) { white-space: nowrap; }
+.sla-retards__retard { color: #b8323a; white-space: nowrap; }
+
+.sla-retards__types { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.sla-retards__type {
+  padding: 2px 8px;
+  border: 1px solid #f6d5a8;
+  border-radius: 999px;
+  background: #fdf1e1;
+  color: #97570e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sla-retards__type--resolution { border-color: #f6c2c5; background: #fde8e9; color: #b8323a; }
+
+.sla-retards__prio {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #e8eef0;
+  color: #33484f;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sla-retards__prio--P1 { background: #fde8e9; color: #b8323a; }
+.sla-retards__prio--P2 { background: #fdf1e1; color: #97570e; }
+.sla-retards__prio--P3 { background: #e6eefb; color: #2c5fb8; }
+
+.sla-retards__ouvrir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #b4e0e5;
+  border-radius: 8px;
+  background: #e3f3f5;
+  color: #05606b;
+  cursor: pointer;
+}
+.sla-retards__vide { padding: 32px 12px !important; color: #64748b !important; text-align: center; }
+.sla-retards__spin { animation: sla-retards-tourne 1s linear infinite; vertical-align: middle; }
+@keyframes sla-retards-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .sla-retards__spin { animation: none; } }
+
+/* Case « SLA en retard » dans la barre de statistiques des bons */
+.bons-stat-item.bons-stat-item--sla { position: relative; }
+.bons-stat-item--sla.is-retard { border-color: #f6c2c5; background: #fff5f5; }
+.bons-stat-item--sla.is-retard .bons-stat-count { color: #b8323a; }
+.bons-stat-item--sla .bons-stat-point {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d9434b;
+  box-shadow: 0 0 0 0 rgba(217, 67, 75, .5);
+  animation: sla-retards-pulse 1.8s ease-out infinite;
+}
+@keyframes sla-retards-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(217, 67, 75, .5); }
+  100% { box-shadow: 0 0 0 8px rgba(217, 67, 75, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .bons-stat-item--sla .bons-stat-point { animation: none; } }
+
+@media (max-width: 760px) {
+  .sla-retards__recherche { min-width: 0; width: 100%; }
+  .sla-retards__recharger { margin-inline-start: 0; }
+}
+
+/* Bandeau d'alerte au-dessus de la liste des bons */
+.bons-sla-bandeau {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid #f6c2c5;
+  border-radius: 12px;
+  background: #fde8e9;
+  color: #b8323a;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.bons-sla-bandeau > span { flex: 1; }
+.bons-sla-bandeau__voir {
+  padding: 6px 12px;
+  border: 1px solid #b8323a;
+  border-radius: 8px;
+  background: #b8323a;
+  color: #fff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.bons-sla-bandeau__voir:hover { background: #9c2a31; }
+.bons-sla-bandeau__fermer {
+  display: inline-flex;
+  padding: 4px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #b8323a;
+  cursor: pointer;
+}
+.bons-sla-bandeau__fermer:hover { background: rgba(184, 50, 58, .1); }

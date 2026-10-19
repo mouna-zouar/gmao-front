@@ -32,6 +32,8 @@ import { t, tp, locale } from '../../../i18n';
 import { imprimerFiche } from '../../../utils/imprimerListe';
 import { qrSvg, urlReclamation } from '../../../utils/qrCode';
 import ModaleQrCode from '../../ui/QrCode/ModaleQrCode';
+import BmdChat from '../bonmaintenance/BmdChat';
+import { chatReclamationService } from '../../../services/chatBonService';
 import './ReclamationDetails.css';
 
 // États de la réclamation (identiques à Reclamations.jsx)
@@ -199,6 +201,7 @@ export default function ReclamationDetails({
   onCreerBon,
   onAssocier,
   onOuvrirBon,
+  libelleRetour, // texte du bouton retour (ex. « Retour à mon espace »)
 }) {
   const { reclamation, bons } = normaliser(data);
   const [equipement, setEquipement] = useState(null);
@@ -239,7 +242,7 @@ export default function ReclamationDetails({
           <AlertCircle size={36} />
           <p>{t("Cette réclamation est introuvable. Elle a peut-être été supprimée.")}</p>
           <button type="button" className="rcx-btn rcx-btn--clair" onClick={onBack}>
-            <ArrowLeft size={18} /> {t("Revenir à la liste")}
+            <ArrowLeft size={18} /> {libelleRetour || t("Revenir à la liste")}
           </button>
         </div>
       </div>
@@ -337,7 +340,7 @@ export default function ReclamationDetails({
       {/* ===== Barre du haut ===== */}
       <div className="rcx-barre">
         <button type="button" className="rcx-btn rcx-btn--clair" onClick={onBack}>
-          <ArrowLeft size={18} /> {t("Toutes les réclamations")}
+          <ArrowLeft size={18} /> {libelleRetour || t("Toutes les réclamations")}
         </button>
         <div className="rcx-barre-droite">
           {aideMasquee && (
@@ -402,6 +405,10 @@ export default function ReclamationDetails({
         </dl>
       </section>
 
+      {/* ===== Deux colonnes : le suivi à gauche, l'essentiel et la discussion à droite ===== */}
+      <div className="rcx-grille">
+      <div className="rcx-col-principale">
+
       {!aideMasquee && (
         <section className="rcx-aide" aria-label={t("Aide")}>
           <div>
@@ -448,8 +455,8 @@ export default function ReclamationDetails({
         </ol>
       </section>
 
-      {/* ===== À faire maintenant + coup d'œil ===== */}
-      <div className="rcx-duo">
+      {/* ===== À faire maintenant ===== */}
+      <div className="rcx-duo rcx-duo--seul">
         {action && (
           <section className={`rcx-maintenant rcx-maintenant--${action.ton}`} aria-label={t("À faire maintenant")}>
             <span className="rcx-maintenant-icone"><ActionIcon size={26} /></span>
@@ -484,33 +491,6 @@ export default function ReclamationDetails({
           </section>
         )}
 
-        <section className="rcx-vitaux" aria-label={t("En un coup d'œil")}>
-          <h2>{t("En un coup d'œil")}</h2>
-          <ul>
-            {vitaux.map((v) => {
-              const Icon = v.icon;
-              const contenu = (
-                <>
-                  <span className="rcx-vital-icone"><Icon size={17} /></span>
-                  <span className="rcx-vital-label">{t(v.label)}</span>
-                  <span className={`rcx-vital-valeur rcx-ton--${v.ton}`}>{t(v.valeur)}</span>
-                </>
-              );
-              return (
-                <li key={v.key}>
-                  {v.onClick ? (
-                    <button type="button" className="rcx-vital" onClick={v.onClick}>
-                      {contenu}
-                      <ChevronRight size={16} className="rcx-vital-fleche" />
-                    </button>
-                  ) : (
-                    <div className="rcx-vital">{contenu}</div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
       </div>
 
       {/* ===== Motif de rejet ===== */}
@@ -575,6 +555,53 @@ export default function ReclamationDetails({
           </ul>
         )}
       </section>
+
+      </div>
+
+      <aside className="rcx-col-cote">
+        <section className="rcx-vitaux" aria-label={t("En un coup d'œil")}>
+          <h2>{t("En un coup d'œil")}</h2>
+          <ul>
+            {vitaux.map((v) => {
+              const Icon = v.icon;
+              const contenu = (
+                <>
+                  <span className="rcx-vital-icone"><Icon size={17} /></span>
+                  <span className="rcx-vital-label">{t(v.label)}</span>
+                  <span className={`rcx-vital-valeur rcx-ton--${v.ton}`}>{t(v.valeur)}</span>
+                </>
+              );
+              return (
+                <li key={v.key}>
+                  {v.onClick ? (
+                    <button type="button" className="rcx-vital" onClick={v.onClick}>
+                      {contenu}
+                      <ChevronRight size={16} className="rcx-vital-fleche" />
+                    </button>
+                  ) : (
+                    <div className="rcx-vital">{contenu}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+      {/* ===== Discussion en direct (demandeur, personne affectée, équipe du bon lié) ===== */}
+      <section className="rcx-chat" aria-label={t("Discussion")}>
+        <div className="rcx-chat-entete">
+          <h2>{t("Discussion")}</h2>
+          <span>{t("Demandeur, personne affectée et équipe du bon")}</span>
+        </div>
+        <BmdChat
+          key={reclamation.id}
+          bonId={reclamation.id}
+          service={chatReclamationService}
+          sujet="reclamation"
+        />
+      </section>
+      </aside>
+      </div>
     </div>
   );
 }

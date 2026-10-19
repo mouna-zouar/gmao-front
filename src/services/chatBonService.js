@@ -26,8 +26,6 @@ const enTeteSession = () => {
   };
 };
 
-// Personnel déjà refusé par le serveur : on n'insiste pas (évite une erreur 403 à chaque page)
-let personnelRefuse = null;
 
 const config = (extra = {}) => ({ ...extra, headers: { ...enTeteSession(), ...(extra.headers || {}) } });
 
@@ -48,30 +46,38 @@ export const typeErreurChat = (err) => {
   return 'reseau';
 };
 
-const chatBonService = {
+/**
+ * Fabrique le client d'un chat : 'chat-bon' (bons de maintenance) ou 'chat-reclamation'
+ * (réclamations). Les deux backends exposent exactement les mêmes routes.
+ */
+export function creerServiceChat(base) {
+  // Personnel déjà refusé par le serveur : on n'insiste pas (évite une erreur 403 à chaque page)
+  let personnelRefuse = null;
+
+  return {
   /** { participants, messages (50 derniers), plusAnciens, dernierMessageLuId, moiPersonnelId } */
   async getConversation(bonId) {
-    const { data } = await api.get(`/chat-bon/${bonId}`, config());
+    const { data } = await api.get(`/${base}/${bonId}`, config());
     return data;
   },
 
   async getMessagesAvant(bonId, avantId) {
-    const { data } = await api.get(`/chat-bon/${bonId}/messages`, config({ params: { avant: avantId } }));
+    const { data } = await api.get(`/${base}/${bonId}/messages`, config({ params: { avant: avantId } }));
     return data;
   },
 
   async getMessagesApres(bonId, apresId) {
-    const { data } = await api.get(`/chat-bon/${bonId}/messages`, config({ params: { apres: apresId } }));
+    const { data } = await api.get(`/${base}/${bonId}/messages`, config({ params: { apres: apresId } }));
     return data;
   },
 
   async envoyer(bonId, contenu) {
-    const { data } = await api.post(`/chat-bon/${bonId}/messages`, { contenu }, config());
+    const { data } = await api.post(`/${base}/${bonId}/messages`, { contenu }, config());
     return data;
   },
 
   async marquerLu(bonId, dernierMessageId) {
-    await api.post(`/chat-bon/${bonId}/lu`, { dernierMessageId }, config());
+    await api.post(`/${base}/${bonId}/lu`, { dernierMessageId }, config());
   },
 
   /**
@@ -80,7 +86,7 @@ const chatBonService = {
   async getResumes(bonIds) {
     const ids = [...new Set((bonIds || []).filter((id) => id != null))];
     if (ids.length === 0 || personnelConnecte() == null) return [];
-    const { data } = await api.get('/chat-bon/resumes', config({ params: { bons: ids.join(',') } }));
+    const { data } = await api.get(`/${base}/resumes`, config({ params: { bons: ids.join(',') } }));
     return data || [];
   },
 
@@ -92,7 +98,7 @@ const chatBonService = {
     if (ids.length === 0 || personnelId == null || personnelId === personnelRefuse) return {};
     let data;
     try {
-      ({ data } = await api.get('/chat-bon/non-lus', config({ params: { bons: ids.join(',') } })));
+      ({ data } = await api.get(`/${base}/non-lus`, config({ params: { bons: ids.join(',') } })));
     } catch (err) {
       if (err?.response?.status === 403) {
         personnelRefuse = personnelId;
@@ -118,7 +124,7 @@ const chatBonService = {
     let delai = 1000;
     let minuterie = null;
 
-    const url = `${api.defaults.baseURL.replace(/\/$/, '')}/chat-bon/${bonId}/flux`;
+    const url = `${api.defaults.baseURL.replace(/\/$/, '')}/${base}/${bonId}/flux`;
 
     const traiterEvenement = (bloc) => {
       let nom = 'message';
@@ -192,5 +198,9 @@ const chatBonService = {
     };
   },
 };
+}
+
+const chatBonService = creerServiceChat('chat-bon');
+export const chatReclamationService = creerServiceChat('chat-reclamation');
 
 export default chatBonService;

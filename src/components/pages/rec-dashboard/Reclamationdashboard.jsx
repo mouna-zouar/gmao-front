@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import reclamationService from '../../../services/reclamationService';
 import { t, tp, locale } from '../../../i18n';
 import './ReclamationDashboard.css';
+import IndicateursReclamations from './IndicateursReclamations';
 
-const ETAT_LABELS = { 0: 'Ouverte', 1: 'En cours', 2: 'Clôturée', 3: 'En attente de validation', 4: 'Rejetée' };
+const ETAT_LABELS = { 0: 'Ouverte', 1: 'En cours', 2: 'Clôturée'};
 const NIVEAU_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
 const MOIS_LABELS = {
   '01': 'Jan', '02': 'Fév', '03': 'Mar', '04': 'Avr', '05': 'Mai', '06': 'Juin',
@@ -48,8 +49,6 @@ const CARD_DEFS = [
   { id: 'ouverte',  label: 'Ouvertes',                    field: 'ouvertes',                   colorClass: 'reclamation-dashboard-stat--ouverte',  icon: ICONS.ouverte },
   { id: 'encours',  label: 'En cours',                    field: 'enCours',                    colorClass: 'reclamation-dashboard-stat--encours',  icon: ICONS.encours },
   { id: 'cloturee', label: 'Clôturées',                   field: 'cloturees',                  colorClass: 'reclamation-dashboard-stat--cloturee', icon: ICONS.cloturee },
-  { id: 'attente',  label: 'En attente de validation',    field: 'enAttenteValidation',        colorClass: 'reclamation-dashboard-stat--attente',  icon: ICONS.attente },
-  { id: 'rejetee',  label: 'Rejetées',                    field: 'rejetees',                   colorClass: 'reclamation-dashboard-stat--rejetee',  icon: ICONS.rejetee },
   { id: 'alerte',   label: 'Non affectées',               field: 'nonAffectees',               colorClass: 'reclamation-dashboard-stat--alerte',   icon: ICONS.alerte },
   { id: 'delai',    label: 'Délai moyen résolution',      field: 'delaiMoyenResolutionJours',  colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.delai },
 ];
@@ -293,7 +292,7 @@ export default function ReclamationDashboard() {
               <span className="reclamation-dashboard-niveau-total">{totalCriticite}</span>
             </div>
             <div className="reclamation-dashboard-hbar-list">
-              {criticiteEntries.map(([niveau, valeur]) => (
+              {criticiteEntries.filter(([, valeur]) => valeur > 0).map(([niveau, valeur]) => (
                 <div key={niveau} className="reclamation-dashboard-hbar-row">
                   <span className="reclamation-dashboard-hbar-label">{t(NIVEAU_LABELS[niveau])}</span>
                   <div className="reclamation-dashboard-hbar-track">
@@ -314,7 +313,7 @@ export default function ReclamationDashboard() {
               <span className="reclamation-dashboard-niveau-total">{totalUrgence}</span>
             </div>
             <div className="reclamation-dashboard-hbar-list">
-              {urgenceEntries.map(([niveau, valeur]) => (
+              {urgenceEntries.filter(([, valeur]) => valeur > 0).map(([niveau, valeur]) => (
                 <div key={niveau} className="reclamation-dashboard-hbar-row">
                   <span className="reclamation-dashboard-hbar-label">{t(NIVEAU_LABELS[niveau])}</span>
                   <div className="reclamation-dashboard-hbar-track">
@@ -367,6 +366,7 @@ export default function ReclamationDashboard() {
           const def = cardsById[id];
           if (!def) return null;
           const rawValue = data[def.field];
+          if (rawValue == null || Number(rawValue) === 0) return null; // valeur à 0 : carte masquée
           return (
             <StatCard
               key={id}
@@ -382,6 +382,9 @@ export default function ReclamationDashboard() {
           );
         })}
       </div>
+
+      {/* Indicateurs de performance (30 j vs 30 j précédents, délais, conversion, classements) */}
+      <IndicateursReclamations />
 
       {/* Graphiques (drag & drop) — la grille s'adapte à l'ordre */}
       <div className={`reclamation-dashboard-charts-row ${chartOrder[0] === 'niveau' ? 'is-swapped' : ''}`}>

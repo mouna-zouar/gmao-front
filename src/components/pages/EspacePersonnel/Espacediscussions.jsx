@@ -136,7 +136,7 @@ export default function EspaceDiscussions({ bons, personnelId, bonInitial, onOuv
                     <span className="ep-disc-ligne">
                       <span className="ep-disc-apercu">
                         {m
-                          ? `${deMoi ? t('Vous') : (m.personnelNom || t('Personnel #{id}', { id: m.personnelId }))} : ${m.contenu}`
+                          ? `${deMoi ? t('Vous') : (m.personnelNom || t('Un participant'))} : ${m.contenu}`
                           : t('Aucun message pour l’instant')}
                       </span>
                       {nonLus > 0 && <span className="ep-disc-nb">{nonLus}</span>}

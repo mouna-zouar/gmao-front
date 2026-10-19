@@ -2,7 +2,7 @@
 
 /* Couleur de chaque groupe, reprise de Layout.css */
 .nav-theme--dashboard      { --menu-c: var(--color-dashboard, #3b5bdb);      --menu-bg: var(--color-dashboard-bg, #eef2ff); }
-.nav-theme--mon-espace     { --menu-c: #0f766e;                               --menu-bg: #eefaf8; }
+.nav-theme--mon-espace     { --menu-c: var(--color-mon-espace, #c2255c);     --menu-bg: var(--color-mon-espace-bg, #fff0f6); }
 .nav-theme--maintenance    { --menu-c: var(--color-maintenance, #0f766e);    --menu-bg: var(--color-maintenance-bg, #eefaf8); }
 .nav-theme--reclamations   { --menu-c: var(--color-reclamations, #e03131);   --menu-bg: var(--color-reclamations-bg, #fff5f5); }
 .nav-theme--taches         { --menu-c: var(--color-taches, #e67700);         --menu-bg: var(--color-taches-bg, #fff8eb); }
@@ -111,3 +111,39 @@
   color: var(--color-muted, #64748b);
   line-height: 1.25;
 }
+
+/* Menu réduit : les icônes défilent si l'écran est trop petit (la fenêtre d'un groupe est placée par Layout.jsx) */
+.sidebar--closed .sidebar__nav {
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  scrollbar-width: none;
+}
+.sidebar--closed .sidebar__nav::-webkit-scrollbar { display: none; }
+.sidebar--closed .nav-popup { z-index: 200; }
+
+/* « Mon espace » : même style que les autres entrées (couleur propre, fond, icône) */
+:root {
+  --color-mon-espace: #c2255c;
+  --color-mon-espace-bg: #fff0f6;
+}
+.sidebar--closed .nav-item--mon-espace {
+  background: white !important;
+  color: var(--color-mon-espace) !important;
+}
+.nav-item--mon-espace .nav-item__icon { color: var(--color-mon-espace); }
+.nav-item--mon-espace,
+.nav-item--mon-espace:is(:hover, .nav-item--active) {
+  background: var(--color-mon-espace-bg);
+  color: var(--color-mon-espace);
+}
+.nav-item__chevron--mon-espace {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--color-mon-espace);
+  transition: transform var(--transition);
+}
+.nav-popup__card-icon--mon-espace,
+.nav-popup__simple-link--mon-espace .nav-popup__card-icon,
+.submenu__link-icon--mon-espace { background: var(--color-mon-espace-bg); color: var(--color-mon-espace); }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_PAGES, NAV_SECTIONS, trouverPage } from '../../constants/navigation';
 import notificationService from '../../services/notificationService';
@@ -59,6 +59,37 @@ export default function Layout({ children }) {
     .map((p) => NAV_PAGES.find((page) => page.path === p))
     .filter((page) => page && page !== pageActive)
     .slice(0, 4);
+
+  /* ── Fenêtre d'un groupe (menu réduit) : placée à côté de son icône, toujours entière à l'écran ── */
+  const popupRef = useRef(null);
+  useLayoutEffect(() => {
+    const el = popupRef.current;
+    if (!el) return undefined;
+    const placer = () => {
+      const bouton = el.parentElement?.querySelector('.nav-item');
+      if (!bouton) return;
+      const marge = 12;
+      const b = bouton.getBoundingClientRect();
+      const aDroite = b.left > window.innerWidth / 2; // menu collé au bord droit : fenêtre à gauche de l'icône
+      el.style.position = 'fixed';
+      el.style.maxHeight = `${window.innerHeight - 2 * marge}px`;
+      el.style.overflowY = 'auto';
+      if (aDroite) { el.style.left = 'auto'; el.style.right = `${window.innerWidth - b.left + 8}px`; }
+      else { el.style.right = 'auto'; el.style.left = `${b.right + 8}px`; }
+      const h = el.offsetHeight;
+      // En face de l'icône, remontée si elle dépasse le bas de l'écran
+      el.style.top = `${Math.max(marge, Math.min(b.top, window.innerHeight - marge - h))}px`;
+    };
+    placer();
+    const fermer = () => setActivePopup(null);
+    const nav = el.closest('.sidebar__nav');
+    window.addEventListener('resize', placer);
+    nav?.addEventListener('scroll', fermer, { passive: true });
+    return () => {
+      window.removeEventListener('resize', placer);
+      nav?.removeEventListener('scroll', fermer);
+    };
+  }, [activePopup, sidebarOpen]);
 
   /* ── Recherche dans le menu ── */
   const [recherche, setRecherche] = useState('');
@@ -277,7 +308,7 @@ export default function Layout({ children }) {
 
               {/* Popup (collapsed) — scroll si > 6 enfants */}
               {!sidebarOpen && activePopup === item.id && (
-                <div className="nav-popup">
+                <div className="nav-popup" ref={popupRef}>
                   <span className="nav-popup__title">{t(item.label)}</span>
                   {item.children ? (
                     <div

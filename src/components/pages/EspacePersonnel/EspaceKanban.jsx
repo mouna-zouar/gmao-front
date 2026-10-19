@@ -53,7 +53,7 @@ function CarteTache({ tache, bon, enCours, glissee, onDragStart, onDragEnd, onDe
             aria-label={t('Effectuée')}
           />
         )}
-        <h3>{tache.designation || tache.nom || t('Tâche #{id}', { id: tache.id })}</h3>
+        <h3>{tache.designation || tache.nom || t('Tâche sans nom')}</h3>
         {enCours && <Loader2 size={14} className="ep-spin" aria-label={t('Enregistrement…')} />}
       </div>
 
@@ -146,10 +146,7 @@ export default function EspaceKanban({ taches, bonsParId, enCours, onDeplacer, o
   return (
     <div className="ep-kanban-zone">
       <div className="ep-kanban-outils">
-        <p className="ep-kanban-aide">
-          <MoveRight size={14} className="rtl-miroir" />
-          {t('Glissez une carte vers une autre colonne pour changer l’état de la tâche.')}
-        </p>
+    
         {nbAnnulees > 0 && (
           <button type="button" className="ep-klien" onClick={() => setAfficherAnnulees((v) => !v)} aria-pressed={afficherAnnulees}>
             {afficherAnnulees ? t('Masquer les tâches annulées') : tp('tâche annulée masquée', nbAnnulees)}

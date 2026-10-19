@@ -19,7 +19,9 @@ import {
   ChevronRight,
   ArrowUp,
   ArrowDown,
-  ArrowUpDown
+  ArrowUpDown,
+  Building2,
+  Calendar
 } from 'lucide-react';
 import reclamationService from '../../../services/reclamationService';
 import ReclamationModal from '../../ui/modals/ReclamationModal';
@@ -33,24 +35,22 @@ import reclamationBonMaintenanceService from '../../../services/Reclamationbonma
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import { t, locale } from '../../../i18n';
+import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
+import { STATUTS, TONS, optionsStatut } from '../../../constants/statuts';
 import { imprimerListe } from '../../../utils/imprimerListe';
+import VuesListe from '../../ui/Listes/VuesListe';
+import CartesListe from '../../ui/Listes/CartesListe';
+import SelectionMultiple, { CaseSelection } from '../../ui/Listes/SelectionMultiple';
+import { useVueActive } from '../../ui/Listes/stockageVues';
+import { contexteUtilisateur, vuesReclamations } from '../../ui/Listes/vuesMetier';
 import './Reclamations.css';
+import './ReclamationsStats.css';
 
-const ETAT_LABELS = {
-  0: 'Ouverte',
-  1: 'En cours',
-  2: 'Clôturée',
-  3: 'En attente de validation',
-  4: 'Rejetée',
-};
+// Barre de statistiques : un compteur par état, mêmes couleurs et icônes que les pastilles
+const ETATS_STATS = optionsStatut('reclamation');
 
-const ETAT_BADGE_CLASS = {
-  0: 'reclamations-badge--ouverte',
-  1: 'reclamations-badge--encours',
-  2: 'reclamations-badge--cloturee',
-  3: 'reclamations-badge--attente',
-  4: 'reclamations-badge--rejetee',
-};
+// Libellés, couleurs et icônes des états : registre commun (constants/statuts.js)
+const ETAT_LABELS = Object.fromEntries(Object.entries(STATUTS.reclamation).map(([k, v]) => [k, v.libelle]));
 
 const NIVEAU_LABELS = {
   1: 'Faible',
@@ -130,6 +130,19 @@ export default function Reclamations() {
   const [sortColumn, setSortColumn] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
 
+  // Vues de la liste (« Affectées à moi », « Urgentes de mon service »…) et vues enregistrées
+  const [moi] = useState(contexteUtilisateur);
+  const [vueId, setVueId] = useVueActive('reclamations', moi.cle, 'toutes');
+  const vuesListe = useMemo(() => vuesReclamations(moi), [moi]);
+  const vueCourante = vuesListe.find((v) => v.id === vueId) || vuesListe[0];
+  const choisirVue = (id, reglages) => {
+    setVueId(id);
+    if (!reglages) return;
+    setSearchTerm(reglages.recherche ?? '');
+    setEtatFilter(String(reglages.etat ?? 'all'));
+    if (reglages.tri) { setSortColumn(reglages.tri); setSortDirection(reglages.sens || 'asc'); }
+  };
+
   const [columnSettings, setColumnSettings] = useState(RECLAMATION_COLUMNS_DEFAULT);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
@@ -159,6 +172,14 @@ export default function Reclamations() {
   });
 
   const [rejetModal, setRejetModal] = useState({ show: false, motif: '' });
+
+  // Statistiques par état (comme dans « Bons de maintenance »), calculées sur toutes les réclamations
+  const [showStats, setShowStats] = useState(true);
+  const etatStats = useMemo(() => {
+    const stats = {};
+    reclamations.forEach((r) => { stats[r.etat] = (stats[r.etat] || 0) + 1; });
+    return stats;
+  }, [reclamations]);
   const [validating, setValidating] = useState(false);
 
   const load = async () => {
@@ -188,8 +209,9 @@ export default function Reclamations() {
         || searchableCols.some((key) => getColumnSearchValue(r, key).toLowerCase().includes(term));
 
       const matchesEtat = etatFilter === 'all' || String(r.etat) === etatFilter;
+      const matchesVue = !vueCourante.filtre || vueCourante.filtre(r);
 
-      return matchesSearch && matchesEtat;
+      return matchesSearch && matchesEtat && matchesVue;
     });
 
     const extractor = sortColumn ? SORTABLE_COLUMNS[sortColumn] : null;
@@ -202,13 +224,13 @@ export default function Reclamations() {
       return va - vb;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
-  }, [reclamations, searchTerm, etatFilter, columnSettings, sortColumn, sortDirection]);
+  }, [reclamations, searchTerm, etatFilter, columnSettings, sortColumn, sortDirection, vueCourante]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReclamations.length / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, etatFilter, sortColumn, sortDirection]);
+  }, [searchTerm, etatFilter, sortColumn, sortDirection, vueId]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -280,16 +302,14 @@ export default function Reclamations() {
     num: { cell: (r) => <td key="num" style={{ fontWeight: 600 }}>{r.num || '—'}</td> },
     description: { cell: (r) => <td key="description" className="reclamations-desc-cell">{t(r.description)}</td> },
     service: { cell: (r) => <td key="service">{r.serviceNom || r.service?.description || '—'}</td> },
-    criticite: { cell: (r) => <td key="criticite">{t(niveauLabel(r.criticite))}</td> },
-    urgence: { cell: (r) => <td key="urgence">{t(niveauLabel(r.urgence))}</td> },
+    criticite: { cell: (r) => <td key="criticite">{r.criticite ? <BadgeStatut type="niveau" valeur={r.criticite} taille="petit" /> : '—'}</td> },
+    urgence: { cell: (r) => <td key="urgence">{r.urgence ? <BadgeStatut type="niveau" valeur={r.urgence} taille="petit" /> : '—'}</td> },
     personnel: { cell: (r) => <td key="personnel">{personnelLabel(r) || '—'}</td> },
     date: { cell: (r) => <td key="date">{formatDate(r.date)}</td> },
     etat: {
       cell: (r) => (
         <td key="etat">
-          <span className={`reclamations-badge ${ETAT_BADGE_CLASS[r.etat] || ''}`}>
-            {t(etatLabel(r.etat))}
-          </span>
+          <BadgeStatut type="reclamation" valeur={r.etat} />
         </td>
       ),
     },
@@ -298,6 +318,7 @@ export default function Reclamations() {
   const handleResetFilters = () => {
     setSearchTerm('');
     setEtatFilter('all');
+    setVueId('toutes');
   };
 
   const handleRowClick = (reclamation) => {
@@ -418,7 +439,7 @@ export default function Reclamations() {
     await apresAction();
   };
 
-  const closeConfirmModal = () => setConfirmModal((prev) => ({ ...prev, show: false }));
+  const closeConfirmModal = () => setConfirmModal((prev) => ({ ...prev, show: false, error: null, confirming: false }));
 
   const handleDelete = () => {
     if (!selectedReclamation || isDeleting) return;
@@ -445,6 +466,83 @@ export default function Reclamations() {
         }
       },
     });
+  };
+
+  /* ── Sélection multiple (cases à cocher) pour supprimer plusieurs réclamations d'un coup ── */
+  const [coches, setCoches] = useState(() => new Set());
+  const [derniereCoche, setDerniereCoche] = useState(null);
+  // On ne garde que les réclamations encore présentes (après suppression, rechargement…)
+  const cochesValides = useMemo(() => reclamations.filter((r) => coches.has(r.id)).map((r) => r.id), [reclamations, coches]);
+  const basculerCoche = (rec, index, plage) => {
+    setCoches((prev) => {
+      const suite = new Set(prev);
+      const cocher = !prev.has(rec.id);
+      // Maj+clic : coche (ou décoche) toute la plage depuis la dernière case cliquée
+      if (plage && derniereCoche != null) {
+        const [a, b] = [Math.min(derniereCoche, index), Math.max(derniereCoche, index)];
+        paginatedReclamations.slice(a, b + 1).forEach((x) => (cocher ? suite.add(x.id) : suite.delete(x.id)));
+      } else if (cocher) suite.add(rec.id);
+      else suite.delete(rec.id);
+      return suite;
+    });
+    setDerniereCoche(index);
+  };
+  const pageCochee = paginatedReclamations.length > 0 && paginatedReclamations.every((r) => coches.has(r.id));
+  const pagePartielle = !pageCochee && paginatedReclamations.some((r) => coches.has(r.id));
+  const basculerPage = () => setCoches((prev) => {
+    const suite = new Set(prev);
+    paginatedReclamations.forEach((r) => (pageCochee ? suite.delete(r.id) : suite.add(r.id)));
+    return suite;
+  });
+  const toutCocher = () => setCoches(new Set(filteredReclamations.map((r) => r.id)));
+  const viderCoches = () => { setCoches(new Set()); setDerniereCoche(null); };
+
+  // Confirmation puis suppression ; en cas d'échec partiel, « Réessayer » ne reprend que les restantes
+  const demanderSuppression = (ids, erreur = null) => {
+    const apercu = reclamations.filter((r) => ids.includes(r.id)).slice(0, 5).map((r) => r.num || `#${r.id}`).join(', ');
+    setConfirmModal({
+      show: true,
+      type: 'danger',
+      title: ids.length === 1 ? t('Supprimer la réclamation') : t('Supprimer {n} réclamations', { n: ids.length }),
+      message: ids.length === 1
+        ? t('Supprimer la réclamation « {num} » ? Cette action est irréversible.', { num: apercu })
+        : `${t('Supprimer les {n} réclamations sélectionnées ? Cette action est irréversible.', { n: ids.length })} (${apercu}${ids.length > 5 ? '…' : ''})`,
+      confirmText: erreur ? t('Réessayer') : t('Supprimer la sélection'),
+      error: erreur,
+      confirming: false,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, confirming: true, error: null }));
+        setIsDeleting(true);
+        try {
+          const resultats = await Promise.allSettled(ids.map((id) => reclamationService.remove(id)));
+          const supprimees = ids.filter((_, i) => resultats[i].status === 'fulfilled');
+          const echecs = ids.filter((_, i) => resultats[i].status === 'rejected');
+          setReclamations((prev) => prev.filter((r) => !supprimees.includes(r.id)));
+          if (selectedReclamation && supprimees.includes(selectedReclamation.id)) {
+            setSelectedReclamation(null);
+            setDetailsOpen(false);
+            setDetailsData(null);
+          }
+          setCoches(new Set(echecs)); // les réclamations non supprimées restent cochées
+          if (echecs.length === 0) {
+            closeConfirmModal();
+          } else {
+            const raison = resultats.find((r) => r.status === 'rejected')?.reason?.response?.data?.message;
+            demanderSuppression(
+              echecs,
+              t('Supprimées : {ok} · non supprimées : {ko} (elles restent cochées).', { ok: supprimees.length, ko: echecs.length }) + (raison ? ` ${raison}` : ''),
+            );
+          }
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
+  };
+
+  const handleDeleteSelection = () => {
+    if (!cochesValides.length || isDeleting) return;
+    demanderSuppression(cochesValides);
   };
 
   const handleValider = async () => {
@@ -529,15 +627,14 @@ export default function Reclamations() {
       colonnes: entetes,
       lignes,
       filtres: [
+        { label: t('Vue'), valeur: vueCourante.filtre ? t(vueCourante.label) : '' },
         { label: t('Recherche'), valeur: searchTerm.trim() },
         { label: t('État'), valeur: etatFilter !== 'all' ? t(etatLabel(Number(etatFilter))) : '' },
       ],
     });
   };
 
-  const handleStats = () => {
-    alert(t("Ouvre le dashboard des réclamations pour les statistiques détaillées."));
-  };
+  const handleStats = () => setShowStats((v) => !v);
 
   // Un bon ouvert depuis la page de détail s'affiche en plein écran, avec retour vers la réclamation
   if (bonOuvert) {
@@ -588,8 +685,52 @@ export default function Reclamations() {
             </p>
           </div>
         </div>
-        <span className="reclamations-badge-total">{t("Total :")} {filteredReclamations.length}</span>
+        <div className="reclamations-header-stats">
+          <span className="reclamations-badge-total">{t("Total :")} {filteredReclamations.length}</span>
+          <button
+            type="button"
+            className={`reclamations-toggle-stats ${showStats ? 'is-actif' : ''}`}
+            onClick={() => setShowStats((v) => !v)}
+            title={showStats ? t('Masquer les statistiques') : t('Afficher les statistiques')}
+            aria-label={showStats ? t('Masquer les statistiques') : t('Afficher les statistiques')}
+            aria-pressed={showStats}
+          >
+            <BarChart3 size={18} />
+          </button>
+        </div>
       </div>
+
+      {showStats && (
+        <div className="reclamations-stats-bar" role="group" aria-label={t('Réclamations par état')}>
+          {ETATS_STATS.map((option) => {
+            const count = etatStats[option.valeur] || 0;
+            const total = reclamations.length || 1;
+            const percentage = Math.round((count / total) * 100);
+            const valeur = String(option.valeur);
+            const isActive = etatFilter === valeur;
+            const couleur = TONS[option.ton].couleur;
+            const Icone = option.Icone;
+            return (
+              <button
+                type="button"
+                key={valeur}
+                className={`reclamations-stat-item ${isActive ? 'active' : ''}`}
+                onClick={() => setEtatFilter(isActive ? 'all' : valeur)}
+                style={{ '--stat-color': couleur }}
+                aria-pressed={isActive}
+                title={isActive ? t('Retirer le filtre « {etat} »', { etat: t(option.libelle) }) : t('Afficher seulement : {etat}', { etat: t(option.libelle) })}
+              >
+                <Icone size={18} style={{ color: couleur }} aria-hidden="true" />
+                <span className="reclamations-stat-label">{t(option.libelle)}</span>
+                <span className="reclamations-stat-count">{loading ? '…' : count}</span>
+                <span className="reclamations-stat-bar-bg" aria-hidden="true">
+                  <span className="reclamations-stat-bar-fill" style={{ width: `${percentage}%`, backgroundColor: couleur }} />
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       <div className="reclamations-actions-bar">
         <button className="reclamations-action-btn ajouter" onClick={openCreate}>
@@ -637,24 +778,6 @@ export default function Reclamations() {
         <div className="reclamations-actions-divider" />
 
         <button
-          className={`reclamations-action-btn valider ${(!selectedReclamation || validating) ? 'disabled' : ''}`}
-          disabled={!selectedReclamation || validating}
-          onClick={handleValider}
-        >
-          <CheckCircle size={18} />
-          <span>{t("Valider")}</span>
-        </button>
-
-        <button
-          className={`reclamations-action-btn rejeter ${(!selectedReclamation || validating) ? 'disabled' : ''}`}
-          disabled={!selectedReclamation || validating}
-          onClick={openRejetModal}
-        >
-          <XCircle size={18} />
-          <span>{t("Rejeter")}</span>
-        </button>
-
-        <button
           className={`reclamations-action-btn supprimer ${(!selectedReclamation || isDeleting) ? 'disabled' : ''}`}
           disabled={!selectedReclamation || isDeleting}
           onClick={handleDelete}
@@ -663,6 +786,17 @@ export default function Reclamations() {
           <span>{t("Supprimer")}</span>
         </button>
       </div>
+
+      <VuesListe
+        liste="reclamations"
+        userKey={moi.cle}
+        vues={vuesListe}
+        items={reclamations}
+        chargement={loading}
+        vueActive={vueCourante.id}
+        reglages={{ recherche: searchTerm, etat: etatFilter, tri: sortColumn, sens: sortDirection }}
+        onChoisir={choisirVue}
+      />
 
       <div className="reclamations-filter-panel">
         <div className="reclamations-filter-group">
@@ -687,8 +821,7 @@ export default function Reclamations() {
               <option value="0">{t("Ouverte")}</option>
               <option value="1">{t("En cours")}</option>
               <option value="2">{t("Clôturée")}</option>
-              <option value="3">{t("En attente de validation")}</option>
-              <option value="4">{t("Rejetée")}</option>
+         
             </select>
           </div>
         </div>
@@ -712,10 +845,30 @@ export default function Reclamations() {
 
       {error && <div className="reclamations-error-banner">{error}</div>}
 
-      <div className="reclamations-table-wrap">
+      {/* SÉLECTION MULTIPLE */}
+      <SelectionMultiple
+        nombre={cochesValides.length}
+        total={filteredReclamations.length}
+        libelle={(n) => t('Réclamations sélectionnées : {n}', { n })}
+        onToutSelectionner={toutCocher}
+        onVider={viderCoches}
+        onSupprimer={handleDeleteSelection}
+        suppressionEnCours={isDeleting}
+      />
+
+      <div className="reclamations-table-wrap liste-adaptative__tableau">
         <table className="reclamations-table">
           <thead>
             <tr>
+              <th className="selection-col">
+                <CaseSelection
+                  coche={pageCochee}
+                  partiel={pagePartielle}
+                  disabled={paginatedReclamations.length === 0}
+                  onChange={basculerPage}
+                  label={pageCochee ? t('Décocher les réclamations de cette page') : t('Cocher les réclamations de cette page')}
+                />
+              </th>
               {visibleColumns.map((c) => (
                 <th
                   key={c.key}
@@ -735,25 +888,32 @@ export default function Reclamations() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={visibleColumns.length || 1} className="reclamations-table-empty">{t("Chargement...")}</td>
+                <td colSpan={visibleColumns.length + 1} className="reclamations-table-empty">{t("Chargement...")}</td>
               </tr>
             ) : filteredReclamations.length === 0 ? (
               <tr>
-                <td colSpan={visibleColumns.length || 1} className="reclamations-table-empty">
+                <td colSpan={visibleColumns.length + 1} className="reclamations-table-empty">
                   {reclamations.length === 0
                     ? t("Aucune réclamation pour l'instant. Ajoute la première avec le bouton ci-dessus.")
                     : t("Aucune réclamation ne correspond à ces filtres.")}
                 </td>
               </tr>
             ) : (
-              paginatedReclamations.map((r) => (
+              paginatedReclamations.map((r, index) => (
                 <tr
                   key={r.id}
-                  className={`reclamations-row ${selectedReclamation?.id === r.id ? 'selected' : ''}`}
+                  className={`reclamations-row ${selectedReclamation?.id === r.id ? 'selected' : ''} ${coches.has(r.id) ? 'is-coche' : ''}`}
                   onClick={() => handleRowClick(r)}
                   onDoubleClick={() => openDetails(r)}
                   title={t("Double-cliquez pour voir le détail")}
                 >
+                  <td className="selection-col" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
+                    <CaseSelection
+                      coche={coches.has(r.id)}
+                      onChange={(e) => basculerCoche(r, index, e.nativeEvent?.shiftKey)}
+                      label={t('Sélectionner la réclamation {num}', { num: r.num || r.id })}
+                    />
+                  </td>
                   {visibleColumns.map((c) => TABLE_COLUMNS_DEF[c.key]?.cell(r))}
                 </tr>
               ))
@@ -761,6 +921,30 @@ export default function Reclamations() {
           </tbody>
         </table>
       </div>
+
+      {/* CARTES (téléphone) */}
+      <CartesListe
+        lignes={loading ? [] : paginatedReclamations.map((r) => ({
+          id: r.id,
+          source: r,
+          num: r.num || `#${r.id}`,
+          titre: r.description,
+          statut: { type: 'reclamation', valeur: r.etat },
+          niveau: r.urgence ? { valeur: r.urgence, prefixe: 'Urgence' } : null,
+          meta: [
+            { icone: Building2, texte: r.serviceNom || r.service?.description },
+            { icone: Calendar, texte: formatDate(r.date) },
+          ],
+        }))}
+        selectionId={selectedReclamation?.id}
+        onChoisir={handleRowClick}
+        coches={coches}
+        onCocher={(r) => basculerCoche(r, paginatedReclamations.indexOf(r), false)}
+        onOuvrir={(r) => { setSelectedReclamation(r); openDetails(r); }}
+        vide={loading ? t('Chargement...') : (reclamations.length === 0
+          ? t("Aucune réclamation pour l'instant. Ajoute la première avec le bouton ci-dessus.")
+          : t('Aucune réclamation ne correspond à ces filtres.'))}
+      />
 
       {!loading && filteredReclamations.length > 0 && (
         <div className="reclamations-pagination">
@@ -839,6 +1023,8 @@ export default function Reclamations() {
         title={confirmModal.title}
         message={confirmModal.message}
         confirmText={confirmModal.confirmText}
+        error={confirmModal.error}
+        confirming={confirmModal.confirming}
       />
 
       <ColumnSettingsModal

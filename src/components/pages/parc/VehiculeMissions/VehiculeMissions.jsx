@@ -391,14 +391,14 @@ export default function VehiculeMissions() {
     setModalOpen(true);
   };
 
+  // Renvoie la mission enregistrée : la fenêtre s'en sert pour lier les bons de carburant ajoutés à la création
   const handleSave = async (payload) => {
-    if (selected) {
-      await vehiculeMissionService.update(selected.id, payload);
-    } else {
-      await vehiculeMissionService.create(payload);
-    }
+    const enregistree = selected
+      ? await vehiculeMissionService.update(selected.id, payload)
+      : await vehiculeMissionService.create(payload);
     setSelected(null);
     await load();
+    return enregistree;
   };
 
   const closeConfirmModal = () => setConfirmModal((prev) => ({ ...prev, show: false }));

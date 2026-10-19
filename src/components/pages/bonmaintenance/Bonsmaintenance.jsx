@@ -5,8 +5,8 @@ import {
   Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw,
   Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, BarChart3, Search,
   Filter, RefreshCw, AlertCircle, Clock, Calendar, Users, Building2,
-  Activity, ChevronLeft, ChevronRight, Circle, Loader2, Info,
-  AlertTriangle, Ban, Gauge, Sparkles, ArrowUp, ArrowDown, ArrowUpDown
+  Activity, ChevronLeft, ChevronRight, Loader2, Info,
+  AlertTriangle, Ban, Gauge, Sparkles, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, X
 } from 'lucide-react';
 
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
@@ -26,6 +26,8 @@ import Anomalies from '../Anomalies/Anomalies';
 import BlocagesImmobilisation from '../BlocagesImmobilisation/BlocagesImmobilisation';
 import EquipementsEtEtat from '../Equipements/EquipementsEtEtat';
 import Intelligence from '../Intelligence/Intelligence';
+import SlaRetards from './SlaRetards';
+import slaService from '../../../services/slaService';
 
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
 import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenancedocumentachatservice';
@@ -35,33 +37,46 @@ import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 
 import { t, tp, locale } from '../../../i18n';
+import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
+import { STATUTS, TONS } from '../../../constants/statuts';
 import { imprimerListe } from '../../../utils/imprimerListe';
+import api from '../../../services/api';
+import VuesListe from '../../ui/Listes/VuesListe';
+import { useVueActive } from '../../ui/Listes/stockageVues';
+import CartesListe from '../../ui/Listes/CartesListe';
+import SelectionMultiple, { CaseSelection } from '../../ui/Listes/SelectionMultiple';
+import { bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
 import './BonsMaintenance.css';
 
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
 
+// Libellé, couleur et icône de chaque état : registre commun (constants/statuts.js)
+const avecStatut = (etat, def) => ({
+  ...def,
+  label: STATUTS.bon[etat].libelle,
+  color: TONS[STATUTS.bon[etat].ton].couleur,
+  icon: STATUTS.bon[etat].Icone,
+});
+
 const TRANSITIONS = {
-  [ETAT.NOUVEAU]: { actions: ['demarrer', 'suspendre', 'annuler'], label: 'Nouveau', color: '#2563eb', icon: Circle },
-  [ETAT.EN_COURS]: { actions: ['suspendre', 'effectuer', 'annuler'], label: 'En cours', color: '#0f766e', icon: Activity },
-  [ETAT.SUSPENDU]: { actions: ['reprendre', 'annuler'], label: 'Suspendu', color: '#b45309', icon: Pause },
-  [ETAT.EFFECTUE]: { actions: [], label: 'Effectué', isTerminal: true, color: '#16a34a', icon: CheckCircle },
-  [ETAT.ANNULE]: { actions: [], label: 'Annulé', isTerminal: true, color: '#64748b', icon: XCircle },
+  [ETAT.NOUVEAU]: avecStatut(ETAT.NOUVEAU, { actions: ['demarrer', 'suspendre', 'annuler'] }),
+  [ETAT.EN_COURS]: avecStatut(ETAT.EN_COURS, { actions: ['suspendre', 'effectuer', 'annuler'] }),
+  [ETAT.SUSPENDU]: avecStatut(ETAT.SUSPENDU, { actions: ['reprendre', 'annuler'] }),
+  [ETAT.EFFECTUE]: avecStatut(ETAT.EFFECTUE, { actions: [], isTerminal: true }),
+  [ETAT.ANNULE]: avecStatut(ETAT.ANNULE, { actions: [], isTerminal: true }),
 };
 
 const ACTION_LABELS = { demarrer: 'Démarrer', reprendre: 'Reprendre', suspendre: 'Suspendre', effectuer: 'Effectuer', annuler: 'Annuler' };
 const ACTION_CLASSES = { demarrer: 'bons-action-btn demarrer', reprendre: 'bons-action-btn reprendre', suspendre: 'bons-action-btn suspendre', effectuer: 'bons-action-btn effectuer', annuler: 'bons-action-btn annuler' };
 const ACTION_ICONS = { demarrer: Play, reprendre: RotateCcw, suspendre: Pause, effectuer: CheckCircle, annuler: XCircle };
 
-const ETAT_LABELS = { 1: 'Nouveau', 2: 'Suspendu', 3: 'En cours', 4: 'Effectué', 10: 'Annulé' };
-const ETAT_BADGE_CLASS = { 1: 'bons-badge--nouveau', 2: 'bons-badge--suspendu', 3: 'bons-badge--encours', 4: 'bons-badge--effectue', 10: 'bons-badge--annule' };
+const ETAT_LABELS = Object.fromEntries(Object.entries(STATUTS.bon).map(([k, v]) => [k, v.libelle]));
 
 const ETAT_FILTER_OPTIONS = [
   { value: 'all', label: 'Tous les états', icon: Filter },
-  { value: '1', label: 'Nouveau', icon: Circle, color: '#2563eb' },
-  { value: '2', label: 'Suspendu', icon: Pause, color: '#b45309' },
-  { value: '3', label: 'En cours', icon: Activity, color: '#0f766e' },
-  { value: '4', label: 'Effectué', icon: CheckCircle, color: '#16a34a' },
-  { value: '10', label: 'Annulé', icon: XCircle, color: '#64748b' },
+  ...[ETAT.NOUVEAU, ETAT.SUSPENDU, ETAT.EN_COURS, ETAT.EFFECTUE, ETAT.ANNULE].map((e) => ({
+    value: String(e), label: TRANSITIONS[e].label, icon: TRANSITIONS[e].icon, color: TRANSITIONS[e].color,
+  })),
 ];
 
 const NIVEAU_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
@@ -256,10 +271,6 @@ const EXCEL_ALL_FIELDS = [
   { key: 'depotId',                     label: 'Dépôt ID',                  extract: (b) => b.depotId ?? b.depot?.id ?? '' },
   { key: 'depotNom',                    label: 'Dépôt',                     extract: (b) => b.depotNom || b.depot?.codeDepots || b.depot?.libelle || '' },
 
-  // --- Clinique ---
-  { key: 'cliniqueId',                  label: 'Clinique ID',               extract: (b) => b.cliniqueId ?? b.clinique?.id ?? '' },
-  { key: 'cliniqueNom',                 label: 'Clinique',                  extract: (b) => b.cliniqueNom || b.clinique?.nom || '' },
-
   // --- Équipement / Immobilisation ---
   { key: 'lotArticleImmobilistationId', label: 'Immobilisation ID',         extract: (b) => b.lotArticleImmobilistationId ?? '' },
 
@@ -291,7 +302,7 @@ const EXCEL_COLUMNS_OPTIONS = EXCEL_ALL_FIELDS.map(({ key, label }) => ({ key, l
 function collectDynamicFields(bons) {
   const knownKeys = new Set(EXCEL_ALL_FIELDS.map((f) => f.key));
   const skipKeys = new Set([
-    'prestataire', 'service', 'depot', 'clinique', 'personnel',
+    'prestataire', 'service', 'depot', 'clinique', 'cliniqueId', 'cliniqueNom', 'personnel',
     'sla', 'cout', 'rcaAnalyses', 'commentaires', 'intervenants',
     'taches', 'diagnostics', 'controles', 'remisesEnService',
     'documents', 'historique', 'reclamations', 'pieces', 'lignes',
@@ -369,6 +380,31 @@ export default function BonsMaintenance() {
   const [transitioning, setTransitioning] = useState(false);
   const [viewMode, setViewMode] = useState('list');
 
+  // Vues de la liste (« Mes bons en retard », « Urgents de mon service »…) et vues enregistrées
+  const [moi] = useState(contexteUtilisateur);
+  const [vueId, setVueId] = useVueActive('bons', moi.cle, 'tous');
+  const [mesBonIds, setMesBonIds] = useState(null);
+  useEffect(() => {
+    if (moi.personnelId == null) return undefined;
+    let annule = false;
+    const ids = (liste) => new Set((liste || []).map((x) => String(x?.bon?.id ?? x?.id)).filter((x) => x !== 'undefined'));
+    api.get(`/espace-personnel/${moi.personnelId}/bons-roles`)
+      .then(({ data }) => { if (!annule) setMesBonIds(ids(data)); })
+      .catch(() => api.get(`/espace-personnel/${moi.personnelId}/bons`)
+        .then(({ data }) => { if (!annule) setMesBonIds(ids(data)); })
+        .catch(() => { /* « Mes bons » se limite alors aux bons créés ou demandés */ }));
+    return () => { annule = true; };
+  }, [moi.personnelId]);
+  const vuesListe = useMemo(() => vuesBons(moi, mesBonIds), [moi, mesBonIds]);
+  const vueCourante = vuesListe.find((v) => v.id === vueId) || vuesListe[0];
+  const choisirVue = (id, reglages) => {
+    setVueId(id);
+    if (!reglages) return;
+    setSearchTerm(reglages.recherche ?? '');
+    setEtatFilter(String(reglages.etat ?? 'all'));
+    if (reglages.tri) { setSortColumn(reglages.tri); setSortDirection(reglages.sens || 'asc'); }
+  };
+
   // Lien direct /bons-maintenance?id=12 (QR code d'une fiche, notification) : ouvre ce bon
   const [parametres, setParametres] = useSearchParams();
   const idLien = Number(parametres.get('id')) || null;
@@ -389,6 +425,17 @@ export default function BonsMaintenance() {
   const ongletEquipements = parametres.get('onglet') === 'liste' ? 'liste' : 'etat';
   const ouvrirEquipements = (onglet = 'etat') => setParametres({ vue: 'equipements', onglet }, { replace: true });
   const fermerEquipements = useCallback(() => setParametres({}, { replace: true }), [setParametres]);
+
+  // Bons en retard SLA dans une fenêtre (?sla=retard) : lien des notifications « délai SLA dépassé »
+  const slaOpen = parametres.get('sla') === 'retard';
+  const ouvrirSlaRetards = () => setParametres({ sla: 'retard' }, { replace: true });
+  const fermerSlaRetards = useCallback(() => setParametres({}, { replace: true }), [setParametres]);
+  const ouvrirBonEnRetard = (ligne) => {
+    const bon = bons.find((b) => b.id === ligne.bonMaintenanceId) || { id: ligne.bonMaintenanceId };
+    setParametres({}, { replace: true });
+    setSelectedBon(bon);
+    setViewMode('details');
+  };
   const [demanderAllume, setDemanderAllume] = useState(false);
   const [commanderAllume, setCommanderAllume] = useState(false);
   const [actionsRefreshKey, setActionsRefreshKey] = useState(0);
@@ -430,6 +477,27 @@ export default function BonsMaintenance() {
   };
 
   useEffect(() => { load(); }, []);
+
+  /* ── SLA : bons ouverts dont le délai de réponse ou de résolution est dépassé ── */
+  const [slaRetards, setSlaRetards] = useState(null);
+  const [slaChargement, setSlaChargement] = useState(false);
+  const [slaErreur, setSlaErreur] = useState(null);
+  const [slaBandeauMasque, setSlaBandeauMasque] = useState(false);
+  // Lecture des retards : les mises à jour d'état ont lieu à l'arrivée de la réponse
+  const recupererSlaRetards = useCallback(() => slaService.getDepassements()
+    .then((data) => { setSlaRetards(Array.isArray(data) ? data : []); setSlaErreur(null); })
+    .catch((err) => {
+      console.error('Erreur chargement dépassements SLA :', err);
+      setSlaErreur(t('Impossible de charger les retards SLA.'));
+    })
+    .finally(() => setSlaChargement(false)), []);
+  const chargerSlaRetards = () => { setSlaChargement(true); recupererSlaRetards(); };
+  useEffect(() => {
+    recupererSlaRetards();
+    const minuterie = setInterval(recupererSlaRetards, 5 * 60 * 1000); // les délais SLA se comptent en heures
+    return () => clearInterval(minuterie);
+  }, [recupererSlaRetards]);
+  const nbSlaRetards = slaRetards?.length ?? 0;
 
   const loadDemandes = async () => {
     if (!selectedBon?.id) return;
@@ -518,9 +586,10 @@ export default function BonsMaintenance() {
       const matchesSearch = !term
         || searchableCols.some((key) => getColumnSearchValue(b, key).toLowerCase().includes(term));
       const matchesEtat = etatFilter === 'all' || String(b.etat) === etatFilter;
-      return matchesSearch && matchesEtat;
+      const matchesVue = !vueCourante.filtre || vueCourante.filtre(b);
+      return matchesSearch && matchesEtat && matchesVue;
     });
-  }, [bons, searchTerm, etatFilter, columnSettings]);
+  }, [bons, searchTerm, etatFilter, columnSettings, vueCourante]);
 
   const sortedBons = useMemo(() => {
     const extractor = SORTABLE_COLUMNS[sortColumn];
@@ -536,7 +605,7 @@ export default function BonsMaintenance() {
 
   const totalPages = Math.max(1, Math.ceil(sortedBons.length / PAGE_SIZE));
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, etatFilter, sortColumn, sortDirection]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, etatFilter, sortColumn, sortDirection, vueId]);
   useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
 
   const paginatedBons = useMemo(() => {
@@ -609,7 +678,7 @@ export default function BonsMaintenance() {
     urgence: {
       cell: (b) => (
         <td key="urgence">
-          <span className={`bons-urgence-badge urgence-${b.urgence || 0}`}>{t(niveauLabel(b.urgence))}</span>
+          {b.urgence ? <BadgeStatut type="niveau" valeur={b.urgence} taille="petit" /> : '—'}
         </td>
       ),
     },
@@ -632,10 +701,7 @@ export default function BonsMaintenance() {
     etat: {
       cell: (b) => (
         <td key="etat">
-          <span className={`bons-badge ${ETAT_BADGE_CLASS[b.etat] || ''}`}>
-            {renderEtatIcon(b.etat)}
-            {t(etatLabel(b.etat))}
-          </span>
+          <BadgeStatut type="bon" valeur={b.etat} />
         </td>
       ),
     },
@@ -753,12 +819,13 @@ export default function BonsMaintenance() {
       colonnes: visibleColumns.map((c) => t(c.label)),
       lignes: sortedBons.map((b) => visibleColumns.map((c) => valeur(b, c.key))),
       filtres: [
+        { label: t('Vue'), valeur: vueCourante.filtre ? t(vueCourante.label) : '' },
         { label: t('Recherche'), valeur: searchTerm.trim() },
         { label: t('État'), valeur: etatFilter !== 'all' ? t(etatLabel(Number(etatFilter))) : '' },
       ],
     });
   };
-  const handleResetFilters = () => { setSearchTerm(''); setEtatFilter('all'); };
+  const handleResetFilters = () => { setSearchTerm(''); setEtatFilter('all'); setVueId('tous'); };
 
   const handleRowClick = (bon) => {
     setSelectedBon((prev) => (prev?.id === bon.id ? null : bon));
@@ -817,6 +884,80 @@ export default function BonsMaintenance() {
         }
       },
     });
+  };
+
+  /* ── Sélection multiple (cases à cocher) pour supprimer plusieurs bons d'un coup ── */
+  const [coches, setCoches] = useState(() => new Set());
+  const [derniereCoche, setDerniereCoche] = useState(null);
+  // On ne garde que les bons encore présents (après suppression, rechargement…)
+  const cochesValides = useMemo(() => bons.filter((b) => coches.has(b.id)).map((b) => b.id), [bons, coches]);
+  const basculerCoche = (bon, index, plage) => {
+    setCoches((prev) => {
+      const suite = new Set(prev);
+      const cocher = !prev.has(bon.id);
+      // Maj+clic : coche (ou décoche) toute la plage depuis la dernière case cliquée
+      if (plage && derniereCoche != null) {
+        const [a, b] = [Math.min(derniereCoche, index), Math.max(derniereCoche, index)];
+        paginatedBons.slice(a, b + 1).forEach((x) => (cocher ? suite.add(x.id) : suite.delete(x.id)));
+      } else if (cocher) suite.add(bon.id);
+      else suite.delete(bon.id);
+      return suite;
+    });
+    setDerniereCoche(index);
+  };
+  const pageCochee = paginatedBons.length > 0 && paginatedBons.every((b) => coches.has(b.id));
+  const pagePartielle = !pageCochee && paginatedBons.some((b) => coches.has(b.id));
+  const basculerPage = () => setCoches((prev) => {
+    const suite = new Set(prev);
+    paginatedBons.forEach((b) => (pageCochee ? suite.delete(b.id) : suite.add(b.id)));
+    return suite;
+  });
+  const toutCocher = () => setCoches(new Set(sortedBons.map((b) => b.id)));
+  const viderCoches = () => { setCoches(new Set()); setDerniereCoche(null); };
+
+  // Confirmation puis suppression d'une liste de bons ; en cas d'échec partiel,
+  // la fenêtre propose de réessayer avec les seuls bons restants.
+  const demanderSuppression = (ids, erreur = null) => {
+    const apercu = bons.filter((b) => ids.includes(b.id)).slice(0, 5).map((b) => b.num || `#${b.id}`).join(', ');
+    setConfirmModal({
+      show: true,
+      type: 'danger',
+      title: ids.length === 1 ? t('Supprimer le bon de maintenance') : t('Supprimer {n} bons de maintenance', { n: ids.length }),
+      message: ids.length === 1
+        ? t('Supprimer le bon « {titre} » ? Cette action est irréversible.', { titre: apercu })
+        : `${t('Supprimer les {n} bons sélectionnés ? Cette action est irréversible.', { n: ids.length })} (${apercu}${ids.length > 5 ? '…' : ''})`,
+      confirmText: erreur ? t('Réessayer') : t('Supprimer la sélection'),
+      error: erreur,
+      confirming: false,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, confirming: true, error: null }));
+        setIsDeleting(true);
+        try {
+          const resultats = await Promise.allSettled(ids.map((id) => bonMaintenanceService.remove(id)));
+          const supprimes = ids.filter((_, i) => resultats[i].status === 'fulfilled');
+          const echecs = ids.filter((_, i) => resultats[i].status === 'rejected');
+          setBons((prev) => prev.filter((b) => !supprimes.includes(b.id)));
+          setSelectedBon((actuel) => (actuel && supprimes.includes(actuel.id) ? null : actuel));
+          setCoches(new Set(echecs)); // les bons non supprimés restent cochés
+          if (echecs.length === 0) {
+            closeConfirmModal();
+          } else {
+            const raison = resultats.find((r) => r.status === 'rejected')?.reason?.response?.data?.message;
+            demanderSuppression(
+              echecs,
+              t('Supprimés : {ok} · non supprimés : {ko} (ils restent cochés).', { ok: supprimes.length, ko: echecs.length }) + (raison ? ` ${raison}` : ''),
+            );
+          }
+        } finally {
+          setIsDeleting(false);
+        }
+      },
+    });
+  };
+
+  const handleDeleteSelection = () => {
+    if (!cochesValides.length || isDeleting) return;
+    demanderSuppression(cochesValides);
   };
 
   const runTransition = async (action) => {
@@ -913,16 +1054,9 @@ export default function BonsMaintenance() {
     return option ? option.label : t("Tous les états");
   };
 
-  const renderEtatIcon = (etat, size = 16) => {
-    const transition = TRANSITIONS[etat];
-    if (!transition) return null;
-    const Icon = transition.icon;
-    return <Icon size={size} style={{ color: transition.color }} />;
-  };
-
   if (viewMode === 'details' && selectedBon) {
     return (
-      <div className="bons-container">
+      <div>
         <BonMaintenanceDetails
           bonMaintenance={selectedBon}
           onBack={retourListe}
@@ -1021,6 +1155,44 @@ export default function BonsMaintenance() {
               </div>
             );
           })}
+          <div
+            className={`bons-stat-item bons-stat-item--sla ${nbSlaRetards > 0 ? 'is-retard' : ''}`}
+            onClick={ouvrirSlaRetards}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrirSlaRetards(); } }}
+            role="button"
+            tabIndex={0}
+            style={{ '--stat-color': '#d9434b' }}
+            title={t('Voir les bons en retard SLA')}
+          >
+            {nbSlaRetards > 0 && <span className="bons-stat-point" aria-hidden="true" />}
+            <AlarmClock size={18} style={{ color: nbSlaRetards > 0 ? '#d9434b' : '#7f969d' }} />
+            <span className="bons-stat-label">{t('SLA en retard')}</span>
+            <span className="bons-stat-count">{slaRetards == null ? '…' : nbSlaRetards}</span>
+            <div className="bons-stat-bar-bg">
+              <div
+                className="bons-stat-bar-fill"
+                style={{ width: `${Math.round((nbSlaRetards / (bons.length || 1)) * 100)}%`, backgroundColor: '#d9434b' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ALERTE SLA */}
+      {nbSlaRetards > 0 && !slaBandeauMasque && (
+        <div className="bons-sla-bandeau" role="alert">
+          <AlarmClock size={18} aria-hidden="true" />
+          <span>
+            {nbSlaRetards === 1
+              ? t('1 bon a dépassé son délai SLA.')
+              : t('{n} bons ont dépassé leur délai SLA.', { n: nbSlaRetards })}
+          </span>
+          <button type="button" className="bons-sla-bandeau__voir" onClick={ouvrirSlaRetards}>
+            {t('Voir les bons en retard')}
+          </button>
+          <button type="button" className="bons-sla-bandeau__fermer" onClick={() => setSlaBandeauMasque(true)} aria-label={t('Masquer')}>
+            <X size={15} aria-hidden="true" />
+          </button>
         </div>
       )}
 
@@ -1101,10 +1273,7 @@ export default function BonsMaintenance() {
 
         {selectedBon && isTerminalState(selectedBon) && (
           <div className="bons-terminal-state">
-            <span className="bons-terminal-badge">
-              {renderEtatIcon(selectedBon.etat)}
-              {t(TRANSITIONS[selectedBon.etat]?.label || 'Terminé')}
-            </span>
+            <BadgeStatut type="bon" valeur={selectedBon.etat} taille="grand" />
           </div>
         )}
 
@@ -1115,6 +1284,18 @@ export default function BonsMaintenance() {
           </span>
         )}
       </div>
+
+      {/* VUES */}
+      <VuesListe
+        liste="bons"
+        userKey={moi.cle}
+        vues={vuesListe}
+        items={bons}
+        chargement={loading}
+        vueActive={vueCourante.id}
+        reglages={{ recherche: searchTerm, etat: etatFilter, tri: sortColumn, sens: sortDirection }}
+        onChoisir={choisirVue}
+      />
 
       {/* FILTRES */}
       <div className="bons-filter-panel">
@@ -1160,6 +1341,7 @@ export default function BonsMaintenance() {
         <div className="bons-filter-info">
           <span className="bons-filter-result">
             {tp('résultat', filteredBons.length)}
+            {vueCourante.filtre && ` • ${t(vueCourante.label)}`}
             {etatFilter !== 'all' && ` • ${t(getActiveFilterLabel())}`}
             {searchTerm && ` • "${searchTerm}"`}
           </span>
@@ -1186,11 +1368,31 @@ export default function BonsMaintenance() {
         </div>
       )}
 
+      {/* SÉLECTION MULTIPLE */}
+      <SelectionMultiple
+        nombre={cochesValides.length}
+        total={sortedBons.length}
+        libelle={(n) => t('Bons sélectionnés : {n}', { n })}
+        onToutSelectionner={toutCocher}
+        onVider={viderCoches}
+        onSupprimer={handleDeleteSelection}
+        suppressionEnCours={isDeleting}
+      />
+
       {/* TABLE */}
-      <div className="bons-table-wrap">
+      <div className="bons-table-wrap liste-adaptative__tableau">
         <table className="bons-table">
           <thead>
             <tr>
+              <th className="selection-col">
+                <CaseSelection
+                  coche={pageCochee}
+                  partiel={pagePartielle}
+                  disabled={paginatedBons.length === 0}
+                  onChange={basculerPage}
+                  label={pageCochee ? t('Décocher les bons de cette page') : t('Cocher les bons de cette page')}
+                />
+              </th>
               {visibleColumns.map((c) => (
                 <th
                   key={c.key}
@@ -1210,12 +1412,12 @@ export default function BonsMaintenance() {
 
           <tbody>
             {loading ? (
-              <tr><td colSpan={visibleColumns.length || 1} className="bons-table-empty">
+              <tr><td colSpan={visibleColumns.length + 1} className="bons-table-empty">
                 <Loader2 size={24} className="bons-spinner" />
                 <span>{t("Chargement...")}</span>
               </td></tr>
             ) : sortedBons.length === 0 ? (
-              <tr><td colSpan={visibleColumns.length || 1} className="bons-table-empty">
+              <tr><td colSpan={visibleColumns.length + 1} className="bons-table-empty">
                 {bons.length === 0 ? (
                   <><AlertCircle size={24} /><span>{t("Aucun bon de maintenance pour l'instant. Ajoute le premier avec le bouton ci-dessus.")}</span></>
                 ) : (
@@ -1223,13 +1425,20 @@ export default function BonsMaintenance() {
                 )}
               </td></tr>
             ) : (
-              paginatedBons.map((b) => (
+              paginatedBons.map((b, index) => (
                 <tr
                   key={b.id}
-                  className={`bons-row ${selectedBon?.id === b.id ? 'selected' : ''} ${rowInfo[b.id]?.stockInsuffisant ? 'stock-insuffisant' : ''}`}
+                  className={`bons-row ${selectedBon?.id === b.id ? 'selected' : ''} ${coches.has(b.id) ? 'is-coche' : ''} ${rowInfo[b.id]?.stockInsuffisant ? 'stock-insuffisant' : ''}`}
                   onClick={() => handleRowClick(b)}
                   title={rowInfo[b.id]?.tooltip || ''}
                 >
+                  <td className="selection-col" onClick={(e) => e.stopPropagation()}>
+                    <CaseSelection
+                      coche={coches.has(b.id)}
+                      onChange={(e) => basculerCoche(b, index, e.nativeEvent?.shiftKey)}
+                      label={t('Sélectionner le bon {num}', { num: b.num || b.id })}
+                    />
+                  </td>
                   {visibleColumns.map((c) => TABLE_COLUMNS_DEF[c.key]?.cell(b))}
                 </tr>
               ))
@@ -1237,6 +1446,31 @@ export default function BonsMaintenance() {
           </tbody>
         </table>
       </div>
+
+      {/* CARTES (téléphone) */}
+      <CartesListe
+        lignes={loading ? [] : paginatedBons.map((b) => {
+          const retard = bonEnRetard(b);
+          return {
+            id: b.id,
+            source: b,
+            num: b.num || `#${b.id}`,
+            titre: b.titre,
+            statut: { type: 'bon', valeur: b.etat },
+            niveau: b.urgence ? { valeur: b.urgence, prefixe: 'Urgence' } : null,
+            meta: [
+              { icone: Building2, texte: b.serviceNom },
+              { icone: retard ? AlertTriangle : Calendar, texte: retard ? t('En retard depuis le {date}', { date: formatDate(echeanceBon(b)) }) : formatDate(b.date), alerte: retard },
+            ],
+          };
+        })}
+        selectionId={selectedBon?.id}
+        onChoisir={handleRowClick}
+        coches={coches}
+        onCocher={(b) => basculerCoche(b, paginatedBons.indexOf(b), false)}
+        onOuvrir={(b) => { setSelectedBon(b); setViewMode('details'); }}
+        vide={loading ? t('Chargement...') : (bons.length === 0 ? t("Aucun bon de maintenance pour l'instant. Ajoute le premier avec le bouton ci-dessus.") : t('Aucun bon ne correspond à ces filtres. Essaye de modifier ta recherche.'))}
+      />
 
       {/* PAGINATION */}
       {!loading && sortedBons.length > 0 && (
@@ -1738,6 +1972,24 @@ export default function BonsMaintenance() {
 
       {/* MODALES PAGES EXTERNES */}
       <PageModal
+        isOpen={slaOpen}
+        onClose={fermerSlaRetards}
+        title={t('Bons en retard SLA')}
+        subtitle={t('Bons ouverts dont le délai de réponse ou de résolution est dépassé — cliquez sur un bon pour l\'ouvrir')}
+        icon={AlarmClock}
+        accent="#d9434b"
+        size="full"
+      >
+        <SlaRetards
+          bons={slaRetards}
+          chargement={slaChargement}
+          erreur={slaErreur}
+          onRecharger={chargerSlaRetards}
+          onOuvrir={ouvrirBonEnRetard}
+        />
+      </PageModal>
+
+      <PageModal
         isOpen={anomaliesOpen}
         onClose={() => setAnomaliesOpen(false)}
         title={t("Détection d'anomalies")}
@@ -1761,15 +2013,15 @@ export default function BonsMaintenance() {
         <BlocagesImmobilisation isModal />
       </PageModal>
 
- <PageModal
-  isOpen={equipementsOpen}
-  onClose={fermerEquipements}
-  title={t("Équipements")}
-  subtitle={t("Suivi, fiches et étiquettes QR")}
-  icon={Gauge}
-  accent="#0794a4"
-  size="full"
->
+      <PageModal
+        isOpen={equipementsOpen}
+        onClose={fermerEquipements}
+        title={t("Équipements")}
+        subtitle={t("État, fiche, historique des pannes, documents et étiquettes QR")}
+        icon={Gauge}
+        accent="#0794a4"
+        size="full"
+      >
         <EquipementsEtEtat onglet={ongletEquipements} onChangerOnglet={ouvrirEquipements} />
       </PageModal>
 

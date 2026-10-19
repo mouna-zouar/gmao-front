@@ -57,6 +57,9 @@ import {
   MessageCircle,
   QrCode,
   History,
+  Phone,
+  Tag,
+  UserRound,
 } from 'lucide-react';
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
 import { prioriteLabel, prioriteColor } from '../../../constants/Priorite';
@@ -88,6 +91,7 @@ import pieceService from '../../../services/Pieceservice';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import Tracage3DTab from './Tracage3DTab';
+import { libelleTypeEntretien, libelleSourceInformation } from '../../../constants/FicheIntervention';
 import { useCelebration } from './BmdCelebration';
 import { t, tp, locale } from '../../../i18n';
 import { imprimerFiche } from '../../../utils/imprimerListe';
@@ -879,8 +883,10 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
               { label: t('Date de clôture'), valeur: bon.dateCloture ? formatDate(bon.dateCloture) : '' },
               { label: t('Priorité'), valeur: bon.priorite ? `${bon.priorite} · ${t(prioriteLabel(bon.priorite))}` : '' },
               { label: t('Urgence'), valeur: t(urgenceTexte) },
+              { label: t("Type d'entretien"), valeur: bon.type != null ? t(libelleTypeEntretien(bon.type)) : '' },
+              { label: t("Source de l'information"), valeur: bon.sourceInformation != null ? t(libelleSourceInformation(bon.sourceInformation)) : '' },
+              { label: t('Demandeur'), valeur: bon.personnelDemandantNom },
               { label: t('Service'), valeur: bon.serviceNom || bon.service?.description },
-              { label: t('Clinique'), valeur: bon.cliniqueNom || bon.clinique?.nom },
               { label: t('Dépôt'), valeur: bon.depotNom || bon.depot?.codeDepots },
               { label: t('Modèle'), valeur: [equipement?.marque, equipement?.modele].filter(Boolean).join(' ') },
               { label: t('Prestataire'), valeur: bon.prestataire?.raisonSociale || bon.prestataire?.nom },
@@ -1260,14 +1266,20 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         </p>
 
         <dl className="bmx-fiche">
+          <div><dt><Users size={15} /> {t("Prestataire")}</dt><dd>{bon.prestataire?.raisonSociale || bon.prestataire?.nom || '—'}</dd></div>
           <div><dt><Building2 size={15} /> {t("Service")}</dt><dd>{bon.serviceNom || bon.service?.description || '—'}</dd></div>
-          <div><dt><Building2 size={15} /> {t("Clinique")}</dt><dd>{bon.cliniqueNom || bon.clinique?.nom || '—'}</dd></div>
           <div><dt><PackageSearch size={15} /> {t("Dépôt")}</dt><dd>{bon.depotNom || bon.depot?.codeDepots || '—'}</dd></div>
+          {bon.personnelDemandantNom && (
+            <div><dt><UserRound size={15} /> {t("Demandeur")}</dt><dd>{bon.personnelDemandantNom}</dd></div>
+          )}
+          {bon.type != null && (
+            <div><dt><Tag size={15} /> {t("Type d'entretien")}</dt><dd>{t(libelleTypeEntretien(bon.type))}</dd></div>
+          )}
+          {bon.sourceInformation != null && (
+            <div><dt><Phone size={15} /> {t("Source de l'information")}</dt><dd>{t(libelleSourceInformation(bon.sourceInformation))}</dd></div>
+          )}
           {(equipement?.marque || equipement?.modele) && (
             <div><dt><Wrench size={15} /> {t("Modèle")}</dt><dd>{[equipement.marque, equipement.modele].filter(Boolean).join(' ')}</dd></div>
-          )}
-          {(bon.prestataire?.raisonSociale || bon.prestataire?.nom) && (
-            <div><dt><Users size={15} /> {t("Prestataire")}</dt><dd>{bon.prestataire.raisonSociale || bon.prestataire.nom}</dd></div>
           )}
         </dl>
       </section>

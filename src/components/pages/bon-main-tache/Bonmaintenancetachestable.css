@@ -369,3 +369,118 @@
 @media (prefers-reduced-motion: reduce) {
   .bmk-container, .bmk-card, .bmk-column { animation: none !important; transition: none !important; }
 }
+/* ---------- Choix de l'affichage : tableau / kanban ---------- */
+.bmk-vues {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-inline-start: auto;
+  background: var(--slate-100);
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
+}
+.bmk-vue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--slate-500);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.bmk-vue:hover { color: var(--slate-900); }
+.bmk-vue.is-active {
+  background: #ffffff;
+  color: var(--teal-700);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+.bmk-vue:focus-visible { outline: 2px solid var(--teal-600); outline-offset: 2px; }
+
+.bmk-filtre-etat {
+  height: 40px;
+  padding: 0 10px;
+  border: 1px solid var(--slate-200);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--slate-700);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bmk-filtre-etat:focus { outline: none; border-color: var(--teal-600); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12); }
+
+/* ---------- Tableau ---------- */
+.bmk-table-carte {
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
+}
+.bmk-table-defilement { overflow-x: auto; }
+.bmk-table-vide { padding: 48px 20px; text-align: center; color: var(--slate-400); }
+
+.bmk-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 0.85rem; }
+.bmk-table thead th {
+  position: sticky;
+  top: 0;
+  padding: 0;
+  background: var(--slate-50);
+  border-bottom: 1px solid var(--slate-200);
+  color: var(--slate-500);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: start;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.bmk-table thead th:not(:has(.bmk-th-tri)) { padding: 11px 14px; }
+.bmk-th-tri {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 14px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+.bmk-th-tri:hover { color: var(--slate-900); }
+.bmk-th-tri:focus-visible { outline: 2px solid var(--teal-600); outline-offset: -2px; }
+.bmk-th-fleche { font-size: 0.65rem; color: var(--slate-300); }
+th[aria-sort="ascending"] .bmk-th-fleche,
+th[aria-sort="descending"] .bmk-th-fleche { color: var(--teal-600); }
+
+.bmk-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--slate-100);
+  color: var(--slate-700);
+  vertical-align: middle;
+}
+.bmk-table tbody tr:last-child td { border-bottom: none; }
+.bmk-table tbody tr:hover td { background: var(--teal-50); }
+.bmk-table tbody tr.is-saving { opacity: 0.6; }
+.bmk-td-bon { font-weight: 800; color: var(--teal-700); white-space: nowrap; }
+.bmk-td-designation { font-weight: 600; color: var(--slate-900); min-width: 220px; }
+.bmk-ordre { color: var(--slate-400); font-weight: 700; }
+.bmk-td-date { white-space: nowrap; color: var(--slate-500); font-variant-numeric: tabular-nums; }
+.bmk-num { text-align: end; font-variant-numeric: tabular-nums; }
+.bmk-table .bmk-card-move { font-size: 0.8rem; padding: 5px 8px; }
+
+@media (max-width: 768px) {
+  .bmk-vues { margin-inline-start: 0; }
+  .bmk-search { min-width: 100%; }
+}

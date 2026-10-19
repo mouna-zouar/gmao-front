@@ -622,3 +622,115 @@ button.rcx-vital:hover { background: var(--paper); }
   .rcx-station.is-actuel .rcx-station-point { animation: none; }
   .rcx-ligne::after { transition: none; }
 }
+
+/* ============================================================
+   MISE EN PAGE v2 : carte d'identité, puis deux colonnes
+   (suivi à gauche ; « en un coup d'œil » et discussion à droite)
+   ============================================================ */
+
+/* Carte d'identité de la réclamation */
+.rcx-identite {
+  max-width: none;
+  margin-bottom: 22px;
+  padding: 26px 30px 24px;
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  box-shadow: 0 1px 2px rgba(18, 48, 58, 0.04);
+}
+.rcx-identite .rcx-titre { margin-bottom: 4px; }
+.rcx-identite .rcx-citation {
+  margin: 18px 0 18px;
+  background: var(--now-wash);
+  border-color: transparent;
+  border-left-color: var(--now);
+}
+.rcx-identite .rcx-citation blockquote { max-width: none; }
+
+/* Informations clés en pastilles */
+.rcx-identite .rcx-fiche {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding-top: 18px;
+  border-top: 1px dashed var(--line);
+}
+.rcx-identite .rcx-fiche > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--paper);
+}
+.rcx-identite .rcx-fiche dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--ink-faint);
+}
+.rcx-identite .rcx-fiche dd { margin: 0; font-weight: 700; color: var(--ink); }
+
+/* Deux colonnes */
+.rcx-grille {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 22px;
+  align-items: start;
+}
+.rcx-col-principale { min-width: 0; }
+.rcx-col-principale > section,
+.rcx-col-principale > .rcx-duo { margin-bottom: 20px; }
+.rcx-col-cote {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+/* « À faire maintenant » seul sur sa ligne */
+.rcx-duo--seul { grid-template-columns: 1fr; }
+
+/* Bons liés : dans une carte */
+.rcx-bons {
+  padding: 22px 22px 20px;
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+}
+.rcx-bons-entete h2 { font-size: 19px; }
+.rcx-bons .rcx-bon { background: var(--paper); border-color: transparent; }
+.rcx-bons .rcx-bon:hover { border-color: var(--brand); }
+
+/* Discussion dans la colonne de droite */
+.rcx-chat {
+  margin: 0;
+  padding: 18px 16px 14px;
+  border-radius: 28px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+}
+.rcx-chat-entete { margin: 0 4px 12px; }
+.rcx-chat-entete h2 { margin: 0; font-size: 18px; font-weight: 700; }
+.rcx-chat-entete span { font-size: 13px; color: var(--ink-faint); }
+.rcx-chat .bch { height: 520px; min-height: 360px; }
+/* Colonne étroite : les participants passent à la ligne au lieu de défiler */
+.rcx-chat .bch-participants { flex-wrap: wrap; overflow-x: visible; }
+
+@media (max-width: 1180px) {
+  .rcx-grille { grid-template-columns: minmax(0, 1fr); }
+  .rcx-col-cote { position: static; }
+  .rcx-chat .bch { height: 560px; }
+}
+
+@media (max-width: 760px) {
+  .rcx-identite { padding: 18px 16px; border-radius: 20px; }
+  .rcx-identite .rcx-fiche > div { flex: 1 1 140px; min-width: 0; }
+  .rcx-bons, .rcx-chat { padding: 16px 12px; border-radius: 20px; }
+  .rcx-chat .bch { height: 70dvh; }
+}

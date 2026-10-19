@@ -1,0 +1,33 @@
+/* Pastille de statut commune (couleurs : constants/statuts.js → TONS) */
+.statut {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  padding: 3px 10px 3px 8px;
+  padding-inline: 8px 10px;
+  border: 1px solid var(--statut-bord);
+  border-radius: 999px;
+  background: var(--statut-fond);
+  color: var(--statut-texte);
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.statut__icone { width: 14px; height: 14px; flex-shrink: 0; stroke-width: 2.4; }
+.statut__texte { overflow: hidden; text-overflow: ellipsis; }
+
+.statut--petit { padding: 1px 8px 1px 6px; padding-inline: 6px 8px; font-size: 11.5px; gap: 4px; }
+.statut--petit .statut__icone { width: 12px; height: 12px; }
+.statut--grand { padding: 5px 12px 5px 10px; padding-inline: 10px 12px; font-size: 14px; }
+.statut--grand .statut__icone { width: 16px; height: 16px; }
+
+.statut--info      { --statut-texte: #2c5fb8; --statut-fond: #e6eefb; --statut-bord: #c4d5f5; }
+.statut--action    { --statut-texte: #05606b; --statut-fond: #e3f3f5; --statut-bord: #b4e0e5; }
+.statut--attention { --statut-texte: #97570e; --statut-fond: #fdf1e1; --statut-bord: #f6d5a8; }
+.statut--ok        { --statut-texte: #157553; --statut-fond: #e2f5ee; --statut-bord: #b3e3d1; }
+.statut--alerte    { --statut-texte: #b8323a; --statut-fond: #fde8e9; --statut-bord: #f6c2c5; }
+.statut--neutre    { --statut-texte: #4b6670; --statut-fond: #e8eef0; --statut-bord: #d0dcdf; }

@@ -142,7 +142,6 @@ export async function exporterBonMaintenancePDF(bon, { personnels = [], prestata
   ligne('Équipement', bon.immobilisation || immobilisations.find((i) => i.id === bon.lotArticleImmobilistationId)?.designation || '—');
   ligne('Prestataire', bon.prestataire?.raisonSociale || prestataires.find((p) => p.id === bon.prestataireId)?.raisonSociale || '—');
   ligne('Service', bon.serviceNom || '—');
-  ligne('Clinique', bon.cliniqueNom || '—');
   ligne('Dépôt', bon.depotNom || '—');
   ligne('Arrêt obligatoire', bon.arretOblig ? 'Oui' : 'Non');
   ligne('Créé le', formatDateTime(bon.dateCreation));

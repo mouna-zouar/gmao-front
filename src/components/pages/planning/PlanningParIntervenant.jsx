@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import planningService from '../../../services/planningService';
 import personnelService from '../../../services/personnelService';
-import prestataireService from '../../../services/prestataireService';
 import './PlanningParIntervenant.css';
 import { t, locale } from '../../../i18n';
 
@@ -71,26 +70,20 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
   // Charger la config et la liste des intervenants
   useEffect(() => {
     planningService.findConfig().then(setConfig).catch(() => setConfig(null));
-    Promise.all([
-      personnelService.getAll(0, 200).then(res => res.content || []),
-      prestataireService.getAll(0, 200).then(res => res.content || [])
-    ])
-      .then(([personnels, prestataires]) => {
-        const all = [
-          ...personnels.map(p => ({ 
-            id: `personnel-${p.id}`, 
-            originalId: p.id, 
-            nom: `${p.nom} ${p.prenom}`, 
-            type: 'personnel' 
-          })),
-          ...prestataires.map(p => ({ 
-            id: `prestataire-${p.id}`, 
-            originalId: p.id, 
-            nom: p.raisonSociale || `${p.nom} ${p.prenom}`, 
-            type: 'prestataire' 
-          }))
-        ];
-        setIntervenants(all);
+    // Seulement le personnel du service maintenance (63), trié par nom
+    personnelService.getMaintenance(0, 200)
+      .then((res) => {
+        const personnels = res.content || [];
+        setIntervenants(
+          personnels
+            .map((p) => ({
+              id: `personnel-${p.id}`,
+              originalId: p.id,
+              nom: [p.nom, p.prenom].filter(Boolean).join(' ') || t('Personnel #{id}', { id: p.id }),
+              type: 'personnel',
+            }))
+            .sort((a, b) => a.nom.localeCompare(b.nom)),
+        );
       })
       .catch(console.error);
   }, []);
@@ -260,7 +253,7 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
             <option value="">{t('— Sélectionner un intervenant —')}</option>
             {intervenants.map((i) => (
               <option key={i.id} value={i.id}>
-                {i.nom} {i.type === 'prestataire' ? t('(prestataire)') : ''}
+                {i.nom}
               </option>
             ))}
           </select>

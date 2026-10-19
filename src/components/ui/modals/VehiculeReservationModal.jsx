@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Button from '../Button';
 import vehiculeService from '../../../services/vehiculeService';
 import personnelService from '../../../services/personnelService';
@@ -7,10 +7,13 @@ import projetService from '../../../services/projetService';
 import vehiculeReservationService from '../../../services/vehiculeReservationService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
 import authService from '../../../services/Authservice';
+import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
+import { CARBURANT_TYPE_OPTIONS, carburantTypeLabel } from '../../../constants/carburantType';
 import {
   X, Car, User, Calendar, MapPin, Flag, Check, Loader2,
   AlertTriangle, Save, Search, Clock, Route, FileText,
   ChevronRight, ChevronDown, Sparkles, Shield, ShieldCheck, ShieldAlert,
+  Fuel, Plus, Trash2,
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeReservationModal.css';
@@ -47,6 +50,7 @@ const NAV_SECTIONS = [
   { id: 'equipe',   label: 'Équipe',        Icon: User },
   { id: 'trajet',   label: 'Trajet',        Icon: Route },
   { id: 'projet',   label: 'Projet & statut', Icon: FileText },
+  { id: 'carburant', label: 'Carburant',     Icon: Fuel },
 ];
 
 function toInputDateTime(iso) {
@@ -285,6 +289,83 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
   const [eligibilite, setEligibilite] = useState(null);
   const [checkingEligibilite, setCheckingEligibilite] = useState(false);
 
+  // Bons de carburant de la réservation : déjà enregistrés (modification) ou à créer avec la réservation
+  const [bonsReservation, setBonsReservation] = useState([]);
+  const [bonsAAjouter, setBonsAAjouter] = useState([]);
+  // Saisie d'un plein directement dans l'onglet « Carburant » (pas de seconde fenêtre)
+  const BON_VIDE = { date: '', montant: '', litres: '', kilometrage: '', typeCarburant: '', station: '' };
+  const [formBon, setFormBon] = useState(BON_VIDE);
+  const [saisieBonOuverte, setSaisieBonOuverte] = useState(false);
+  const [erreurBon, setErreurBon] = useState(null);
+  const [enregistrementBon, setEnregistrementBon] = useState(false);
+
+  const maintenantLocal = () => {
+    const d = new Date();
+    const p2 = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate()) + 'T' + p2(d.getHours()) + ':' + p2(d.getMinutes());
+  };
+
+  const ouvrirSaisieBon = () => {
+    setFormBon({ ...BON_VIDE, date: maintenantLocal() });
+    setErreurBon(null);
+    setSaisieBonOuverte(true);
+  };
+
+  const changerBon = (e) => {
+    const { name, value } = e.target;
+    setFormBon((f) => ({ ...f, [name]: value }));
+    setErreurBon(null);
+  };
+
+  const ajouterBon = async () => {
+    if (!formBon.date) { setErreurBon('La date du plein est obligatoire.'); return; }
+    if (formBon.montant === '' || Number(formBon.montant) <= 0) { setErreurBon('Le montant est obligatoire.'); return; }
+    const bon = {
+      vehiculeId: Number(formData.vehiculeId),
+      personnelId: formData.conducteurId ? Number(formData.conducteurId) : (formData.personnelId ? Number(formData.personnelId) : null),
+      date: formBon.date,
+      montant: Number(formBon.montant),
+      litres: formBon.litres === '' ? null : Number(formBon.litres),
+      kilometrage: formBon.kilometrage === '' ? null : Number(formBon.kilometrage),
+      typeCarburant: formBon.typeCarburant === '' ? null : Number(formBon.typeCarburant),
+      station: formBon.station.trim() || null,
+    };
+    setEnregistrementBon(true);
+    try {
+      if (isEditing && reservation?.id) {
+        await vehiculeBonCarburantService.create({ ...bon, reservationId: reservation.id });
+        await chargerBonsReservation();
+      } else {
+        // Réservation pas encore créée : le bon sera enregistré avec elle
+        setBonsAAjouter((l) => [...l, bon]);
+      }
+      setSaisieBonOuverte(false);
+      setFormBon(BON_VIDE);
+    } catch (err) {
+      console.error('Erreur ajout bon de carburant :', err);
+      setErreurBon(err?.response?.data?.message || "Le bon n'a pas pu être enregistré.");
+    } finally {
+      setEnregistrementBon(false);
+    }
+  };
+
+  const chargerBonsReservation = useCallback(async () => {
+    if (!reservation?.id) { setBonsReservation([]); return; }
+    try {
+      setBonsReservation(await vehiculeBonCarburantService.getByReservation(reservation.id));
+    } catch (err) {
+      console.error('Erreur chargement des bons de carburant :', err);
+      setBonsReservation([]);
+    }
+  }, [reservation?.id]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setBonsAAjouter([]);
+    setSaisieBonOuverte(false);
+    if (isEditing) chargerBonsReservation(); else setBonsReservation([]);
+  }, [isOpen, isEditing, chargerBonsReservation]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -422,6 +503,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
   useEffect(() => {
     if (!isOpen || !formData.vehiculeId || !formData.conducteurId) {
       setEligibilite(null);
+      setCheckingEligibilite(false); // un contrôle interrompu ne doit pas bloquer le bouton
       return;
     }
 
@@ -490,7 +572,30 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         personnelCreationNom: personnelNomComplet,
         commentaire: formData.commentaire.trim() || null,
       };
-      await onSave(payload);
+      const enregistree = await onSave(payload);
+
+      // Bons de carburant ajoutés pendant la création : liés à la réservation maintenant qu'elle existe
+      const reservationId = enregistree?.id ?? reservation?.id ?? null;
+      if (bonsAAjouter.length > 0) {
+        if (reservationId == null) {
+          setError("La réservation est enregistrée, mais ses bons de carburant n'ont pas pu y être liés. Ajoutez-les depuis la réservation.");
+          return;
+        }
+        const echecs = [];
+        for (const bon of bonsAAjouter) {
+          try {
+            await vehiculeBonCarburantService.create({ ...bon, reservationId });
+          } catch (err) {
+            console.error('Erreur création bon de carburant :', err);
+            echecs.push(bon);
+          }
+        }
+        if (echecs.length > 0) {
+          setBonsAAjouter(echecs);
+          setError(`La réservation est enregistrée, mais ${echecs.length} bon(s) de carburant n'ont pas pu être créés.`);
+          return;
+        }
+      }
       onClose();
     } catch (err) {
       setError(err.response?.data?.message || "Échec de l'enregistrement.");
@@ -524,6 +629,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
     equipe: [formData.personnelId, formData.conducteurId].filter(Boolean).length,
     trajet: [formData.sourceId, formData.destinationId, formData.motif].filter(Boolean).length,
     projet: [formData.projetId, formData.commentaire].filter(Boolean).length,
+    carburant: bonsReservation.length + bonsAAjouter.length,
   };
 
   if (!isOpen) return null;
@@ -873,6 +979,133 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
           </div>
         );
 
+      case 'carburant': {
+        const tousBons = [...bonsReservation.map((b) => ({ ...b, enAttente: false })), ...bonsAAjouter.map((b, i) => ({ ...b, enAttente: true, index: i }))];
+        const totalMontant = tousBons.reduce((s, b) => s + (Number(b.montant) || 0), 0);
+        const totalLitres = tousBons.reduce((s, b) => s + (Number(b.litres) || 0), 0);
+        const formatDate = (v) => (v ? new Date(v).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
+        return (
+          <div className="bmm-content-pane">
+            <div className="bmm-pane-header">
+              <h3>Carburant</h3>
+              <p>Pleins faits pendant cette réservation</p>
+            </div>
+
+            {/* Résumé */}
+            <div className="vmb-resume">
+              <div className="vmb-stat">
+                <span className="vmb-stat-label">Pleins</span>
+                <strong>{tousBons.length}</strong>
+              </div>
+              <div className="vmb-stat">
+                <span className="vmb-stat-label">Litres</span>
+                <strong>{totalLitres ? totalLitres.toLocaleString('fr-FR') : '—'}</strong>
+              </div>
+              <div className="vmb-stat vmb-stat--montant">
+                <span className="vmb-stat-label">Total</span>
+                <strong>{totalMontant.toFixed(2)} <small>DT</small></strong>
+              </div>
+            </div>
+
+            {/* Liste des pleins */}
+            {tousBons.length === 0 && !saisieBonOuverte ? (
+              <div className="vmb-vide">
+                <span className="vmb-vide-icone"><Fuel size={22} /></span>
+                <p>Aucun plein pour cette réservation.</p>
+              </div>
+            ) : (
+              <ul className="vmb-liste">
+                {tousBons.map((b) => (
+                  <li key={b.enAttente ? 'a-' + b.index : 'e-' + b.id} className={'vmb-ligne' + (b.enAttente ? ' vmb-ligne--attente' : '')}>
+                    <span className="vmb-icone"><Fuel size={16} /></span>
+                    <div className="vmb-texte">
+                      <strong>{formatDate(b.date)}{b.station ? ' · ' + b.station : ''}</strong>
+                      <span className="vmb-puces">
+                        {b.litres != null && <span className="vmb-puce">{b.litres} L</span>}
+                        {b.kilometrage != null && <span className="vmb-puce">{Number(b.kilometrage).toLocaleString('fr-FR')} km</span>}
+                        {b.typeCarburant != null && <span className="vmb-puce">{carburantTypeLabel(b.typeCarburant)}</span>}
+                        {b.enAttente && <span className="vmb-puce vmb-puce--attente">Enregistré avec la réservation</span>}
+                      </span>
+                    </div>
+                    <span className="vmb-montant">{b.montant != null ? Number(b.montant).toFixed(2) + ' DT' : '—'}</span>
+                    {b.enAttente && (
+                      <button
+                        type="button"
+                        className="vmb-retirer"
+                        onClick={() => setBonsAAjouter((l) => l.filter((_, i) => i !== b.index))}
+                        aria-label="Retirer ce plein"
+                        title="Retirer ce plein"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Saisie d'un plein, directement ici */}
+            {saisieBonOuverte ? (
+              <div className="vmb-saisie">
+                <div className="vmb-saisie-entete">
+                  <Fuel size={16} />
+                  <strong>Nouveau plein</strong>
+                </div>
+                <div className="vmb-saisie-grille">
+                  <label className="vmb-champ vmb-champ--large">
+                    <span>Date <em>*</em></span>
+                    <input type="datetime-local" name="date" value={formBon.date} onChange={changerBon} />
+                  </label>
+                  <label className="vmb-champ">
+                    <span>Montant (DT) <em>*</em></span>
+                    <input type="number" name="montant" min="0" step="0.01" value={formBon.montant} onChange={changerBon} placeholder="0.00" />
+                  </label>
+                  <label className="vmb-champ">
+                    <span>Litres</span>
+                    <input type="number" name="litres" min="0" step="0.01" value={formBon.litres} onChange={changerBon} placeholder="0" />
+                  </label>
+                  <label className="vmb-champ">
+                    <span>Kilométrage</span>
+                    <input type="number" name="kilometrage" min="0" value={formBon.kilometrage} onChange={changerBon} placeholder="km" />
+                  </label>
+                  <label className="vmb-champ">
+                    <span>Carburant</span>
+                    <select name="typeCarburant" value={formBon.typeCarburant} onChange={changerBon}>
+                      <option value="">—</option>
+                      {CARBURANT_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </label>
+                  <label className="vmb-champ vmb-champ--large">
+                    <span>Station</span>
+                    <input type="text" name="station" value={formBon.station} onChange={changerBon} placeholder="Nom de la station" />
+                  </label>
+                </div>
+                {erreurBon && <p className="vmb-erreur"><AlertTriangle size={14} /> {erreurBon}</p>}
+                <div className="vmb-saisie-actions">
+                  <button type="button" className="vmb-btn vmb-btn--clair" onClick={() => setSaisieBonOuverte(false)} disabled={enregistrementBon}>
+                    Annuler
+                  </button>
+                  <button type="button" className="vmb-btn vmb-btn--plein" onClick={ajouterBon} disabled={enregistrementBon}>
+                    {enregistrementBon ? <Loader2 size={15} className="vmb-tourne" /> : <Check size={15} />}
+                    {isEditing ? 'Enregistrer le plein' : 'Ajouter le plein'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                className="vmb-ajouter"
+                onClick={ouvrirSaisieBon}
+                disabled={!formData.vehiculeId}
+              >
+                <Plus size={16} /> Ajouter un plein
+              </button>
+            )}
+            {!formData.vehiculeId && <p className="bmm-hint">Choisissez d’abord le véhicule de la réservation (onglet Véhicule).</p>}
+          </div>
+        );
+      }
+
       default:
         return null;
     }
@@ -906,8 +1139,8 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
           </div>
         </div>
 
-        {/* LAYOUT : NAV + CONTENU + APERÇU */}
-        <form className="bmm-layout bmm-layout--with-preview" onSubmit={handleSubmit}>
+        {/* LAYOUT : NAV + CONTENU */}
+        <form className="bmm-layout bmm-layout--with-preview vrm-layout--sans-apercu" onSubmit={handleSubmit}>
 
           {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
@@ -951,121 +1184,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               </div>
             )}
           </div>
-
-          {/* APERÇU */}
-          <aside className="vrm-preview-wrap">
-            <div className="vrm-preview">
-              <div className="vrm-preview-head">
-                <Sparkles size={16} strokeWidth={2.2} />
-                <span>Aperçu</span>
-              </div>
-
-              <div className="vrm-preview-card">
-                <div className="vrm-preview-label">Véhicule</div>
-                <div className="vrm-preview-vehicule">
-                  <div className="vrm-preview-vehicule-icon">
-                    <Car size={18} strokeWidth={2.2} />
-                  </div>
-                  <div>
-                    <div className="vrm-preview-vehicule-matricule">
-                      {vehiculeLabel?.matricule || 'Non sélectionné'}
-                    </div>
-                    {vehiculeLabel && (
-                      <div className="vrm-preview-vehicule-marque">
-                        {vehiculeLabel.marque}
-                        {vehiculeLabel.modele ? ` · ${vehiculeLabel.modele}` : ''}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="vrm-preview-card">
-                <div className="vrm-preview-label">Période</div>
-                <div className="vrm-preview-timeline">
-                  <div className="vrm-preview-time">
-                    <span className="vrm-preview-time-dot start" />
-                    <div>
-                      <div className="vrm-preview-time-label">Début</div>
-                      <div className="vrm-preview-time-value">
-                        {formatDateFr(formData.dateDebut)}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="vrm-preview-bar">
-                    <div className="vrm-preview-bar-fill" />
-                    {duree && <span className="vrm-preview-duration">{duree}</span>}
-                  </div>
-
-                  <div className="vrm-preview-time">
-                    <span className="vrm-preview-time-dot end" />
-                    <div>
-                      <div className="vrm-preview-time-label">Fin</div>
-                      <div className="vrm-preview-time-value">
-                        {formatDateFr(formData.dateFin)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {(personnelLabel || conducteurLabel) && (
-                <div className="vrm-preview-card">
-                  <div className="vrm-preview-label">Personnes</div>
-                  {personnelLabel && (
-                    <div className="vrm-preview-person">
-                      <User size={14} strokeWidth={2.3} />
-                      <div>
-                        <div className="vrm-preview-person-role">Demandeur</div>
-                        <div className="vrm-preview-person-name">
-                          {personnelLabel.nom} {personnelLabel.prenom}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {conducteurLabel && (
-                    <div className="vrm-preview-person">
-                      <Shield size={14} strokeWidth={2.3} />
-                      <div>
-                        <div className="vrm-preview-person-role">Conducteur</div>
-                        <div className="vrm-preview-person-name">
-                          {conducteurLabel.nom} {conducteurLabel.prenom}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="vrm-preview-card">
-                <div className="vrm-preview-label">Statut</div>
-                <div className={`vrm-preview-etat chip-${etatMeta.color}`}>
-                  <span className="bmm-chip-dot" />
-                  {etatMeta.label}
-                </div>
-              </div>
-
-              <div className="vrm-preview-summary">
-                <div className="vrm-preview-summary-row">
-                  <span>Motif</span>
-                  <span>{formData.motif || '—'}</span>
-                </div>
-                <div className="vrm-preview-summary-row">
-                  <span>Trajet</span>
-                  <span>
-                    {sourceLabel ? emplacementLabel(sourceLabel) : '—'}
-                    <ChevronRight size={12} style={{ display: 'inline', verticalAlign: 'middle', margin: '0 4px' }} />
-                    {destinationLabel ? emplacementLabel(destinationLabel) : '—'}
-                  </span>
-                </div>
-                <div className="vrm-preview-summary-row">
-                  <span>Projet</span>
-                  <span>{projetLabel_ ? projetLabel(projetLabel_) : '—'}</span>
-                </div>
-              </div>
-            </div>
-          </aside>
         </form>
 
         {/* FOOTER */}

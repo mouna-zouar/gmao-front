@@ -12,6 +12,17 @@ const vehiculeBonCarburantService = {
     return data;
   },
 
+  /** Bons de carburant faits pendant une mission. */
+  async getByMission(missionId) {
+    const { data } = await api.get(`/vehicule-bon-carburant/mission/${missionId}`);
+    return Array.isArray(data) ? data : [];
+  },
+
+  async getByReservation(reservationId) {
+    const { data } = await api.get(`/vehicule-bon-carburant/reservation/${reservationId}`);
+    return Array.isArray(data) ? data : [];
+  },
+
   async getById(id) {
     const { data } = await api.get(
       `/vehicule-bon-carburant/${id}`

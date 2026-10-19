@@ -66,7 +66,12 @@ function Avatar({ id, nom, enLigne, taille = 'normal' }) {
   );
 }
 
-export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
+/**
+ * service : client du chat (chat des bons par défaut, chatReclamationService pour une réclamation)
+ * sujet   : 'bon' ou 'reclamation' (textes affichés)
+ * bonId   : id du bon, ou de la réclamation quand sujet = 'reclamation'
+ */
+export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, service = chatBonService, sujet = 'bon' }) {
   const [statut, setStatut] = useState('chargement'); // chargement | pret | session | acces | reseau
   const [participants, setParticipants] = useState([]);
   const [moi, setMoi] = useState(null);
@@ -105,7 +110,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
     let fermerFlux = null;
     collerEnBas.current = true;
 
-    chatBonService.getConversation(bonId)
+    service.getConversation(bonId)
       .then((conv) => {
         if (!actif) return;
         setParticipants(conv.participants || []);
@@ -121,14 +126,14 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
         setSeparateurId(premierNonLu ? premierNonLu.id : null);
         setStatut('pret');
 
-        fermerFlux = chatBonService.ouvrirFlux(bonId, {
+        fermerFlux = service.ouvrirFlux(bonId, {
           onMessage: (m) => setMessages((prev) => fusionner(prev, [m])),
           onPresence: (ids) => setEnLigne(new Set(ids || [])),
           onConnecte: () => {
             setConnecte(true);
             // Rattrape ce qui a pu arriver pendant la coupure
             if (dernierIdRef.current) {
-              chatBonService.getMessagesApres(bonId, dernierIdRef.current)
+              service.getMessagesApres(bonId, dernierIdRef.current)
                 .then((manques) => setMessages((prev) => fusionner(prev, manques)))
                 .catch(() => {});
             }
@@ -143,7 +148,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
       actif = false;
       fermerFlux?.();
     };
-  }, [bonId, tentative]);
+  }, [bonId, tentative, service]);
 
   // ---------- Marquer comme lu (onglet visible uniquement) ----------
   useEffect(() => {
@@ -151,7 +156,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
     const marquer = () => {
       if (document.visibilityState !== 'visible' || dernierId <= dernierLuEnvoye.current) return;
       dernierLuEnvoye.current = dernierId;
-      chatBonService.marquerLu(bonId, dernierId)
+      service.marquerLu(bonId, dernierId)
         .then(() => onNonLusChange?.(0))
         .catch(() => { dernierLuEnvoye.current = 0; });
     };
@@ -161,7 +166,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
       clearTimeout(minuterie);
       document.removeEventListener('visibilitychange', marquer);
     };
-  }, [bonId, dernierId, statut, onNonLusChange]);
+  }, [bonId, dernierId, statut, onNonLusChange, service]);
 
   // ---------- Défilement ----------
   useLayoutEffect(() => {
@@ -208,7 +213,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
     if (chargementAnciens || messages.length === 0) return;
     setChargementAnciens(true);
     try {
-      const anciens = await chatBonService.getMessagesAvant(bonId, messages[0].id);
+      const anciens = await service.getMessagesAvant(bonId, messages[0].id);
       hauteurAvantAnciens.current = listeRef.current?.scrollHeight ?? null;
       setMessages((prev) => fusionner(prev, anciens));
       setPlusAnciens(anciens.length >= 50);
@@ -224,7 +229,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
     setEnAttente((prev) => [...prev.filter((p) => p.cle !== cle), { cle, contenu, etat: 'envoi' }]);
     collerEnBas.current = true;
     try {
-      const message = await chatBonService.envoyer(bonId, contenu);
+      const message = await service.envoyer(bonId, contenu);
       setMessages((prev) => fusionner(prev, [message]));
       setEnAttente((prev) => prev.filter((p) => p.cle !== cle));
       dernierLuEnvoye.current = Math.max(dernierLuEnvoye.current, message.id);
@@ -234,7 +239,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
       if (type === 'session' || type === 'acces') setStatut(type);
       setEnAttente((prev) => prev.map((p) => (p.cle === cle ? { ...p, etat: 'echec' } : p)));
     }
-  }, [bonId]);
+  }, [bonId, service]);
 
   const envoyer = (e) => {
     e?.preventDefault();
@@ -308,8 +313,10 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
       },
       acces: {
         icone: Lock,
-        titre: t('Chat réservé à l’équipe du bon'),
-        texte: t('Seules les personnes qui travaillent sur ce bon peuvent lire et écrire ici : intervenants, auteurs du diagnostic, contrôleur, responsable de la remise en service, créateur et demandeur.'),
+        titre: sujet === 'reclamation' ? t('Chat réservé aux personnes de la réclamation') : t('Chat réservé à l’équipe du bon'),
+        texte: sujet === 'reclamation'
+          ? t('Seules les personnes qui suivent cette réclamation peuvent lire et écrire ici : le demandeur, la personne affectée et l’équipe du bon de maintenance lié.')
+          : t('Seules les personnes qui travaillent sur ce bon peuvent lire et écrire ici : intervenants, auteurs du diagnostic, contrôleur, responsable de la remise en service, créateur et demandeur.'),
       },
       reseau: {
         icone: AlertCircle,
@@ -396,7 +403,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage }) {
             <div className="bch-vide">
               <span className="bch-vide-icone"><MessageCircle size={26} /></span>
               <p className="bch-vide-titre">{t('Aucun message pour l’instant')}</p>
-              <p>{t('Écrivez le premier : toutes les personnes du bon le verront aussitôt.')}</p>
+              <p>{sujet === 'reclamation' ? t('Écrivez le premier : toutes les personnes de la réclamation le verront aussitôt.') : t('Écrivez le premier : toutes les personnes du bon le verront aussitôt.')}</p>
             </div>
           )}
 

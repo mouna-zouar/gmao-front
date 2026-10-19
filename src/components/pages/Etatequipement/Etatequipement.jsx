@@ -401,18 +401,39 @@ export default function EtatEquipement({ isModal = false }) {
 
   const fermerScanner = useCallback(() => setScanner(false), []);
 
-  const etatsAffiches = etats
+  // Recherche insensible à la casse et aux accents, sur le nom et le n° de l'équipement ;
+  // plusieurs mots : chacun doit être présent (« moniteur rea » trouve « Moniteur réanimation »).
+  const sansAccents = (v) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const motsRecherche = sansAccents(recherche).split(/\s+/).filter(Boolean);
+  const correspond = (e) => {
+    if (motsRecherche.length === 0) return true;
+    const texte = sansAccents([e.cibleNom, e.lotArticleImmobilistationId, e.bonMaintenanceReferenceNum].filter((x) => x != null).join(' '));
+    return motsRecherche.every((m) => texte.includes(m.replace(/^#/, '')));
+  };
+
+  // Un seul état par équipement (au cas où le serveur en renverrait deux pour le même)
+  const etatsUniques = useMemo(() => {
+    const parId = new Map();
+    etats.forEach((e) => {
+      const id = e.lotArticleImmobilistationId;
+      const deja = parId.get(id);
+      if (!deja || String(e.derniereMiseAJour || '') > String(deja.derniereMiseAJour || '')) parId.set(id, e);
+    });
+    return [...parId.values()];
+  }, [etats]);
+
+  const etatsAffiches = etatsUniques
     .filter((e) => filtreEtat === 'TOUS' || e.etatActuel === filtreEtat)
-    .filter((e) => !recherche.trim() || (e.cibleNom || '').toLowerCase().includes(recherche.trim().toLowerCase()));
+    .filter(correspond);
 
   const compteurs = useMemo(() => {
-    return etats.reduce((acc, e) => {
+    return etatsUniques.reduce((acc, e) => {
       acc[e.etatActuel] = (acc[e.etatActuel] || 0) + 1;
       return acc;
     }, {});
-  }, [etats]);
+  }, [etatsUniques]);
 
-  const total = etats.length;
+  const total = etatsUniques.length;
 
   return (
     <div className={`ee-page ${isModal ? 'ee-page--modal' : ''}`}>

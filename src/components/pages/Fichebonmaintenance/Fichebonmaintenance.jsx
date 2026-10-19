@@ -5,10 +5,10 @@ import prestataireService from '../../../services/prestataireService';
 import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
 import lotArticleService from '../../../services/lotArticleService';
 import serviceService from '../../../services/Serviceservice';
-import cliniqueService from '../../../services/cliniqueService';
 import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import { t, locale } from '../../../i18n';
+import { optionsTypeEntretien } from '../../../constants/FicheIntervention';
 import './FicheBonMaintenance.css';
 
 const ETAT_OPTIONS = [
@@ -31,13 +31,6 @@ function etatLabel(etat) {
   return t(ETAT_OPTIONS.find((o) => o.value === etat)?.label ?? 'État {n}', { n: etat });
 }
 
-const TYPE_OPTIONS = [
-  { value: 1, label: 'Curatif' },
-  { value: 2, label: 'Correctif' },
-  { value: 3, label: 'Préventif' },
-  { value: 4, label: 'Installation' },
-  { value: 5, label: 'Autre' },
-];
 
 const NIVEAU_OPTIONS = [
   { value: 1, label: 'Faible' },
@@ -95,7 +88,6 @@ const emptyBonForm = {
   dateIntervention: '',
   serviceId: '',
   depotId: '',
-  cliniqueId: '',
 };
 
 export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack, startInEditMode = false }) {
@@ -111,7 +103,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
   const [immobilisations, setImmobilisations] = useState([]);
   const [personnels, setPersonnels] = useState([]);
   const [services, setServices] = useState([]);
-  const [cliniques, setCliniques] = useState([]);
   const [depots, setDepots] = useState([]);
   const [depotIdsDuService, setDepotIdsDuService] = useState(null);
 
@@ -136,7 +127,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     lotArticleImmobilistationService.getAll(0, 200).then((p) => setImmobilisations(p.content ?? [])).catch(() => setImmobilisations([]));
     personnelService.getAll(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(() => setPersonnels([]));
     serviceService.getAll(0, 200).then((p) => setServices(p.content ?? [])).catch(() => setServices([]));
-    cliniqueService.getAll(0, 200).then((p) => setCliniques(p.content ?? [])).catch(() => setCliniques([]));
     prestataireDepotService.getAll(0, 200).then((p) => setDepots(p.content ?? [])).catch(() => setDepots([]));
   }, []);
 
@@ -157,10 +147,11 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     ? depots
     : depots.filter((d) => depotIdsDuService.includes(d.id));
 
-  // Services filtrés par la clinique choisie (Service.CliniqueID)
-  const servicesDisponibles = !formData.cliniqueId
+  // Services filtrés par le prestataire choisi (Service.PrestataireID).
+  // Un service sans prestataire reste proposé partout.
+  const servicesDisponibles = !formData.prestataireId
     ? services
-    : services.filter((s) => String(s.cliniqueId) === String(formData.cliniqueId));
+    : services.filter((s) => s.prestataireId == null || String(s.prestataireId) === String(formData.prestataireId));
 
   useEffect(() => {
     if (!formData.serviceId) return;
@@ -169,7 +160,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       setFormData((prev) => ({ ...prev, serviceId: '', depotId: '' }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.cliniqueId, services]);
+  }, [formData.prestataireId, services]);
 
   const loadBon = useCallback(async () => {
     if (isNew) return;
@@ -194,7 +185,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
         dateIntervention: toDateTimeLocalInput(data.dateIntervention),
         serviceId: data.serviceId ?? '',
         depotId: data.depotId ?? '',
-        cliniqueId: data.cliniqueId ?? '',
       });
     } catch (err) {
       console.error('Erreur chargement bon de maintenance :', err);
@@ -265,10 +255,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
               const d = depots.find((d) => String(d.id) === String(formData.depotId));
               return d ? (d.nom || d.codeDepots) : null;
             })(),
-        cliniqueId: formData.cliniqueId === '' ? null : Number(formData.cliniqueId),
-        cliniqueNom: formData.cliniqueId === ''
-          ? null
-          : cliniques.find((c) => String(c.id) === String(formData.cliniqueId))?.nom || null,
       };
 
       let saved;
@@ -473,7 +459,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
               <div className="input-group full"><label>{t("Description")}</label><textarea name="description" rows={3} value={formData.description} onChange={handleChange} /></div>
             </div>
             <div className="form-group-row">
-              <div className="input-group">
+              <div className="input-group full">
                 <label>{t("Immobilisation")}</label>
                 <select name="lotArticleImmobilistationId" value={formData.lotArticleImmobilistationId} onChange={handleChange}>
                   <option value="">—</option>
@@ -490,20 +476,13 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
                   <p className="cem-warning">{t("⚠ Quantité non disponible pour cette immobilisation.")}</p>
                 )}
               </div>
+            </div>
+            <div className="form-group-row">
               <div className="input-group">
                 <label>{t("Prestataire")}</label>
                 <select name="prestataireId" value={formData.prestataireId} onChange={handleChange}>
                   <option value="">—</option>
                   {prestataires.map((p) => <option key={p.id} value={p.id}>{t(prestataireLabel(p))}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="form-group-row">
-              <div className="input-group">
-                <label>{t("Clinique")}</label>
-                <select name="cliniqueId" value={formData.cliniqueId} onChange={handleChange}>
-                  <option value="">—</option>
-                  {cliniques.map((c) => <option key={c.id} value={c.id}>{c.nom || `#${c.id}`}</option>)}
                 </select>
               </div>
               <div className="input-group">
@@ -523,10 +502,10 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
             </div>
             <div className="form-group-row">
               <div className="input-group">
-                <label>{t("Type")}</label>
+                <label>{t("Type d'entretien")}</label>
                 <select name="type" value={formData.type} onChange={handleChange}>
                   <option value="">—</option>
-                  {TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
+                  {optionsTypeEntretien(formData.type).map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
                 </select>
               </div>
               <div className="input-group">

@@ -1147,3 +1147,99 @@ color: #ffffff;
 .bmm-searchable--compact .bmm-searchable-menu {
   z-index: 70;
 }
+/* Étape Tâches : aucun sous-traitant sur le bon → raccourci vers l'étape Intervenants */
+.bmm-st-vide {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px dashed #b4c4c8;
+  border-radius: 10px;
+  background: #f8fafb;
+  color: #05606b;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.bmm-st-vide:hover { border-color: #0794a4; background: #e3f3f5; }
+.bmm-st-vide:focus-visible { outline: 2px solid #0794a4; outline-offset: 2px; }
+
+/* ─────────── CORRECTIF AFFICHAGE : les champs restent dans la fenêtre ───────────
+   Dans une grille, un enfant ne rétrécit pas sous la largeur « naturelle » de son contenu
+   (min-width: auto) : les champs date/heure et les listes avec recherche débordaient à droite
+   et étaient coupés. On autorise les colonnes à rétrécir et les champs à prendre 100 %. */
+.bmm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.bmm-inline-form { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.bmm-content { min-width: 0; }
+.bmm-content-pane { min-width: 0; max-width: 100%; }
+.bmm-grid > *,
+.bmm-inline-form > *,
+.bmm-field,
+.bmm-inline-field { min-width: 0; }
+.bmm-field input,
+.bmm-field select,
+.bmm-field textarea,
+.bmm-inline-field input,
+.bmm-inline-field select {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.bmm-content-pane .bmd-searchable,
+.bmm-content-pane .bmd-searchable-input-wrap,
+.bmm-content-pane .bmd-searchable-input {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+.bmm-content-pane .bmd-searchable-input { width: 100%; }
+
+/* Écrans moyens : formulaire des tâches et intervenants sur 2 colonnes */
+@media (max-width: 1100px) {
+  .bmm-inline-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Les champs date + heure ont besoin de place : ils prennent 2 colonnes du formulaire en ligne */
+.bmm-inline-field:has(> input[type="datetime-local"]),
+.bmm-inline-field:has(> input[type="date"]) { grid-column: span 2; }
+
+/* ─────────── TYPE D'ENTRETIEN (cases de la fiche ENR-MMT 10) ─────────── */
+.bmm-types { margin: 0; padding: 0; border: 0; min-width: 0; }
+.bmm-types legend { padding: 0; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: #334155; }
+.bmm-types__options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.bmm-field label.bmm-type-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px 10px 36px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+[dir="rtl"] .bmm-field label.bmm-type-option { padding: 10px 36px 10px 12px; }
+.bmm-field label.bmm-type-option:hover { border-color: #a7d5ce; }
+.bmm-field label.bmm-type-option.active { border-color: #0f766e; background: #f0fdfa; }
+.bmm-field .bmm-type-option input[type="radio"] {
+  position: absolute;
+  top: 12px;
+  inset-inline-start: 12px;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  accent-color: #0f766e;
+  box-shadow: none;
+}
+.bmm-field .bmm-type-option input[type="radio"]:focus-visible { outline: 2px solid #0f766e; outline-offset: 2px; }
+.bmm-type-option__nom { font-size: 0.86rem; font-weight: 700; color: #0f172a; }
+.bmm-type-option__aide { font-size: 0.74rem; font-weight: 500; color: #64748b; }
+.bmm-field .bmm-type-option input[type="radio"]:focus { border: 0; box-shadow: none; background: transparent; }

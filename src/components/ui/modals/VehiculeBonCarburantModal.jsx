@@ -3,6 +3,7 @@ import Button from '../Button';
 import vehiculeService from '../../../services/vehiculeService';
 import personnelService from '../../../services/personnelService';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
+import vehiculeMissionService from '../../../services/vehiculeMissionService';
 import {
   CARBURANT_TYPE_OPTIONS,
   libelleQuantiteCarburant,
@@ -32,6 +33,9 @@ const emptyForm = {
   litres: '',
   typeCarburant: '',
   station: '',
+  // 'simple' : bon de carburant seul ; 'mission' : plein fait pendant une mission
+  typeBon: 'simple',
+  missionId: '',
 };
 
 // ─── Sections de navigation ───
@@ -66,6 +70,8 @@ const VehiculeBonCarburantModal = ({
   onSave,
   bonCarburant,
   isEditing,
+  // Création depuis une mission : { missionId, vehiculeId, personnelId } pré-remplis
+  valeursInitiales,
 }) => {
   const [formData, setFormData] = useState(emptyForm);
   const [loading, setLoading] = useState(false);
@@ -80,6 +86,9 @@ const VehiculeBonCarburantModal = ({
   const [loadingPersonnels, setLoadingPersonnels] = useState(false);
 
   const [consommation, setConsommation] = useState(null);
+
+  const [missions, setMissions] = useState([]);
+  const [loadingMissions, setLoadingMissions] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -132,14 +141,40 @@ const VehiculeBonCarburantModal = ({
         litres: bonCarburant.litres ?? '',
         typeCarburant: bonCarburant.typeCarburant ?? '',
         station: bonCarburant.station ?? '',
+        typeBon: bonCarburant.missionId ? 'mission' : 'simple',
+        missionId: bonCarburant.missionId ?? '',
       });
     } else {
       setFormData({
         ...emptyForm,
         date: toInputDateTime(new Date().toISOString()),
+        ...(valeursInitiales?.missionId || valeursInitiales?.missionEnCreation
+          ? {
+              typeBon: 'mission',
+              missionId: valeursInitiales.missionId ?? '',
+              vehiculeId: valeursInitiales.vehiculeId ?? '',
+              personnelId: valeursInitiales.personnelId ?? '',
+            }
+          : {}),
       });
     }
-  }, [isOpen, bonCarburant, isEditing]);
+  }, [isOpen, bonCarburant, isEditing, valeursInitiales]);
+
+  // Missions du véhicule choisi (pour un bon lié à une mission)
+  useEffect(() => {
+    if (!isOpen || !formData.vehiculeId) {
+      setMissions([]);
+      return;
+    }
+    let actif = true;
+    setLoadingMissions(true);
+    vehiculeMissionService
+      .getByVehicule(formData.vehiculeId, 0, 100)
+      .then((page) => { if (actif) setMissions(page?.content ?? (Array.isArray(page) ? page : [])); })
+      .catch(() => { if (actif) setMissions([]); })
+      .finally(() => { if (actif) setLoadingMissions(false); });
+    return () => { actif = false; };
+  }, [isOpen, formData.vehiculeId]);
 
   // Consommation déjà enregistrée pour ce bon.
   // Disponible uniquement en édition : un bon pas encore créé
@@ -194,6 +229,12 @@ const VehiculeBonCarburantModal = ({
       return;
     }
 
+    if (formData.typeBon === 'mission' && !formData.missionId && !valeursInitiales?.missionEnCreation) {
+      setError('Choisissez la mission, ou passez en « Bon simple ».');
+      setActiveSection('identification');
+      return;
+    }
+
     if (!formData.date) {
       setError('La date est obligatoire.');
       setActiveSection('details');
@@ -233,6 +274,10 @@ const VehiculeBonCarburantModal = ({
             ? null
             : Number(formData.typeCarburant),
         station: formData.station.trim() || null,
+        missionId:
+          formData.typeBon === 'mission' && formData.missionId !== ''
+            ? Number(formData.missionId)
+            : null,
       };
 
       await onSave(payload);
@@ -262,6 +307,7 @@ const VehiculeBonCarburantModal = ({
     identification: [
       formData.vehiculeId,
       formData.personnelId,
+      formData.typeBon === 'mission' ? formData.missionId : null,
     ].filter(Boolean).length,
 
     details: [
@@ -284,6 +330,46 @@ const VehiculeBonCarburantModal = ({
               <h3>Identification</h3>
               <p>Véhicule concerné et conducteur</p>
             </div>
+
+            {/* Ouvert depuis une mission : le bon lui est lié d'office */}
+            {(valeursInitiales?.missionId || valeursInitiales?.missionEnCreation) ? (
+              <p className="vbc-mission-info">
+                <Car size={15} />
+                {valeursInitiales?.missionEnCreation
+                  ? `Ce bon sera lié à la mission${valeursInitiales.missionLibelle ? ` ${valeursInitiales.missionLibelle}` : ''} dès son enregistrement.`
+                  : `Ce bon est lié à la mission${valeursInitiales.missionLibelle ? ` ${valeursInitiales.missionLibelle}` : ''}.`}
+              </p>
+            ) : (
+            /* Bon simple ou lié à une mission */
+            <div className="vbc-type" role="radiogroup" aria-label="Type de bon">
+              <button
+                type="button"
+                role="radio"
+                aria-checked={formData.typeBon === 'simple'}
+                className={`vbc-type-option ${formData.typeBon === 'simple' ? 'is-actif' : ''}`}
+                onClick={() => setFormData((f) => ({ ...f, typeBon: 'simple', missionId: '' }))}
+              >
+                <Fuel size={16} />
+                <span>
+                  <strong>Bon simple</strong>
+                  <small>Plein sans mission</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={formData.typeBon === 'mission'}
+                className={`vbc-type-option ${formData.typeBon === 'mission' ? 'is-actif' : ''}`}
+                onClick={() => setFormData((f) => ({ ...f, typeBon: 'mission' }))}
+              >
+                <Car size={16} />
+                <span>
+                  <strong>Lié à une mission</strong>
+                  <small>Plein fait pendant une mission</small>
+                </span>
+              </button>
+            </div>
+            )}
 
             <div className="bmm-grid">
               <div className="bmm-field bmm-field--full">
@@ -363,6 +449,43 @@ const VehiculeBonCarburantModal = ({
                   </p>
                 )}
               </div>
+
+              {formData.typeBon === 'mission' && !valeursInitiales?.missionId && !valeursInitiales?.missionEnCreation && (
+                <div className="bmm-field bmm-field--full">
+                  <label htmlFor="vbc-mission">
+                    Mission <span className="bmm-required">*</span>
+                  </label>
+
+                  <select
+                    id="vbc-mission"
+                    name="missionId"
+                    value={formData.missionId}
+                    onChange={handleChange}
+                    disabled={!formData.vehiculeId || loadingMissions}
+                  >
+                    <option value="">
+                      {!formData.vehiculeId
+                        ? 'Choisissez d’abord le véhicule'
+                        : loadingMissions
+                          ? 'Chargement...'
+                          : 'Sélectionner une mission...'}
+                    </option>
+                    {missions.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.num || 'Mission'}
+                        {m.dateDebut ? ` — ${new Date(m.dateDebut).toLocaleDateString('fr-FR')}` : ''}
+                        {m.description ? ` — ${m.description}` : ''}
+                      </option>
+                    ))}
+                  </select>
+
+                  {formData.vehiculeId && !loadingMissions && missions.length === 0 && (
+                    <p className="bmm-hint" style={{ color: '#b45309' }}>
+                      Aucune mission pour ce véhicule.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         );

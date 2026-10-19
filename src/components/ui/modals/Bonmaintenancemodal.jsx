@@ -4,7 +4,7 @@ import personnelService from '../../../services/personnelService';
 import prestataireService from '../../../services/prestataireService';
 import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
 import lotArticleService from '../../../services/lotArticleService';
-import articleService from '../../../services/articleService';
+import prestataireArticleService from '../../../services/prestataireArticleService';
 import pieceLigneService from '../../../services/pieceLigneService';
 import diagnosticAssistantService from '../../../services/Diagnosticassistantservice';
 import repartitionInterventionsService from '../../../services/repartitionInterventionsService';
@@ -18,6 +18,7 @@ import {
 import './Modal.css';
 import './BonMaintenanceModal.css';
 import ChampEquipement from '../ChampEquipement/ChampEquipement';
+import { SOURCES_INFORMATION, optionsTypeEntretien } from '../../../constants/FicheIntervention';
 
 const NIVEAU_OPTIONS = [
   { value: 1, label: 'Faible' },
@@ -29,7 +30,7 @@ const emptyForm = {
   num: '', n: '', titre: '', description: '', type: '', urgence: '',
   prestataireId: '', lotArticleImmobilistationId: '', personnelDemandantId: '',
   date: '', dateFinIntervention: '', effet: '', cause: '', remede: '',
-  commentaire: '', arretOblig: false,
+  commentaire: '', arretOblig: false, sourceInformation: '',
 };
 
 const emptyTache = {
@@ -40,8 +41,11 @@ const emptyTache = {
 const emptyIntervenant = {
   personnelId: '', sousTraitantId: '',
   dateDebutIntervention: '', dateFinIntervention: '',
-  nbrHeure: '', coutUnitaire: '', commentaire: '',
+  nbrHeure: '', coutUnitaire: '', forfait: '', commentaire: '',
 };
+
+const nomPrestataire = (p) =>
+  p?.raisonSociale || `${p?.nom ?? ''} ${p?.prenom ?? ''}`.trim() || (p ? `Prestataire #${p.id}` : '—');
 
 function toInputDateTime(iso) {
   if (!iso) return '';
@@ -236,7 +240,8 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
   const [formData, setFormData] = useState(emptyForm);
   const [activeSection, setActiveSection] = useState('general');
 
-  const [personnels, setPersonnels] = useState([]);
+  const [personnels, setPersonnels] = useState([]);   // tout le personnel : demandeur
+  const [techniciens, setTechniciens] = useState([]); // service maintenance (63) : intervenants
   const [prestataires, setPrestataires] = useState([]);
   const [immobilisations, setImmobilisations] = useState([]);
   const [articles, setArticles] = useState([]);
@@ -295,16 +300,18 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
     const fetchLists = async () => {
       setLoadingLists(true);
       try {
-        const [persPage, prestPage, immoPage, articlesPage] = await Promise.all([
+        const [persPage, prestPage, immoPage, articlesPage, techPage] = await Promise.all([
           personnelService.getAll(0, 200),
           prestataireService.getAll(0, 200),
           lotArticleImmobilistationService.getAll(0, 200),
-          articleService.getAll(0, 300),
+          prestataireArticleService.getMaintenance(), // articles du prestataire, catégorie 15
+          personnelService.getMaintenance(0, 200),
         ]);
         setPersonnels(persPage.content ?? []);
+        setTechniciens(techPage.content ?? []);
         setPrestataires(prestPage.content ?? []);
         setImmobilisations(immoPage.content ?? []);
-        setArticles(articlesPage.content ?? []);
+        setArticles(Array.isArray(articlesPage) ? articlesPage : []);
       } catch (err) {
         console.error('Erreur chargement :', err);
       } finally {
@@ -336,6 +343,7 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
         remede: bonMaintenance.remede || '',
         commentaire: bonMaintenance.commentaire || '',
         arretOblig: bonMaintenance.arretOblig ?? false,
+        sourceInformation: bonMaintenance.sourceInformation ?? '',
       });
     } else {
       const ctx = authService.getContexteMetier();
@@ -417,7 +425,22 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
     setIntervenants((prev) => [...prev, { ...intervenantForm, _localId: Date.now() }]);
     setIntervenantForm(emptyIntervenant);
   };
-  const removeIntervenant = (id) => setIntervenants((prev) => prev.filter((i) => i._localId !== id));
+  const removeIntervenant = (id) => {
+    const retire = intervenants.find((i) => i._localId === id);
+    const reste = intervenants.filter((i) => i._localId !== id);
+    setIntervenants(reste);
+    // Comme dans Cubix : un article ne peut être commandé qu'auprès d'un sous-traitant du bon.
+    // Si ce sous-traitant n'est plus sur le bon, on le retire des tâches qui l'utilisaient.
+    const stId = retire?.sousTraitantId;
+    if (stId && !reste.some((i) => String(i.sousTraitantId) === String(stId))) {
+      setTaches((prev) => prev.map((t) => (String(t.sousTraitantId) === String(stId) ? { ...t, sousTraitantId: '' } : t)));
+      setTacheForm((f) => (String(f.sousTraitantId) === String(stId) ? { ...f, sousTraitantId: '' } : f));
+    }
+  };
+
+  // Sous-traitants ajoutés dans l'étape « Intervenants » : seuls choix possibles pour l'article d'une tâche
+  const sousTraitantsDuBon = prestataires.filter((p) =>
+    intervenants.some((i) => i.sousTraitantId !== '' && String(i.sousTraitantId) === String(p.id)));
 
   const addCommentaire = () => {
     if (!commentaireText.trim()) return;
@@ -532,6 +555,7 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
         remede: formData.remede.trim() || null,
         commentaire: formData.commentaire.trim() || null,
         arretOblig: formData.arretOblig,
+        sourceInformation: formData.sourceInformation === '' ? null : Number(formData.sourceInformation),
       };
 
       const children = isEditing ? null : {
@@ -551,6 +575,7 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
           dateFinIntervention: i.dateFinIntervention || null,
           nbrHeure: i.nbrHeure === '' ? null : Number(i.nbrHeure),
           coutUnitaire: i.coutUnitaire === '' ? null : Number(i.coutUnitaire),
+          forfait: i.forfait === '' || !i.sousTraitantId ? null : Number(i.forfait),
           commentaire: i.commentaire.trim() || null,
         })),
         commentaires: stripLocalId(commentaires),
@@ -632,9 +657,34 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
               </div>
 
               <div className="bmm-field">
-                <label>Type (code)</label>
-                <input type="number" name="type" value={formData.type} onChange={handleChange} />
+                <label htmlFor="bmm-source">Source de l'information</label>
+                <select id="bmm-source" name="sourceInformation" value={formData.sourceInformation} onChange={handleChange}>
+                  <option value="">—</option>
+                  {SOURCES_INFORMATION.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
               </div>
+
+              {/* Type d'entretien : les cases de la fiche d'intervention ENR-MMT 10 */}
+              <fieldset className="bmm-field bmm-field--full bmm-types">
+                <legend>Type d'entretien</legend>
+                <div className="bmm-types__options">
+                  {optionsTypeEntretien(formData.type).map((o) => (
+                    <label key={o.value} className={`bmm-type-option ${String(formData.type) === String(o.value) ? 'active' : ''}`}>
+                      <input
+                        type="radio"
+                        name="type"
+                        value={o.value}
+                        checked={String(formData.type) === String(o.value)}
+                        onChange={handleChange}
+                      />
+                      <span className="bmm-type-option__nom">{o.label}</span>
+                      {o.aide && <span className="bmm-type-option__aide">{o.aide}</span>}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
 
             <label className={`bmm-toggle-card ${formData.arretOblig ? 'active' : ''}`}>
@@ -904,27 +954,35 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
                     />
                   </div>
 
-                  {/* ✅ Sous-traitant avec recherche (compact) */}
+                  {/* Sous-traitant de l'article : uniquement ceux ajoutés au bon (étape « Intervenants ») */}
                   <div className="bmm-inline-field bmm-inline-field--wide">
-                    <SearchableSelect
-                      id="bmm-tache-soustraitant"
-                      name="sousTraitantId"
-                      value={tacheForm.sousTraitantId}
-                      onChange={(e) => setTacheForm({ ...tacheForm, sousTraitantId: e.target.value })}
-                      options={prestataires}
-                      placeholder="Rechercher un sous-traitant..."
-                      emptyMessage="Aucun sous-traitant ne correspond"
-                      allowEmpty
-                      emptyOptionLabel="— Sous-traitant —"
-                      getValue={(p) => p.id}
-                      getLabel={(p) =>
-                        p.raisonSociale ||
-                        `${p.nom ?? ''} ${p.prenom ?? ''}`.trim() ||
-                        `Prestataire #${p.id}`
-                      }
-                      getOptionHint={(p) => (p.code ? `Code : ${p.code}` : null)}
-                      compact
-                    />
+                    {sousTraitantsDuBon.length > 0 ? (
+                      <SearchableSelect
+                        id="bmm-tache-soustraitant"
+                        name="sousTraitantId"
+                        value={tacheForm.sousTraitantId}
+                        onChange={(e) => setTacheForm({ ...tacheForm, sousTraitantId: e.target.value })}
+                        options={sousTraitantsDuBon}
+                        placeholder="Sous-traitant du bon..."
+                        emptyMessage="Aucun sous-traitant ne correspond"
+                        allowEmpty
+                        emptyOptionLabel="— Sous-traitant —"
+                        getValue={(p) => p.id}
+                        getLabel={nomPrestataire}
+                        getOptionHint={(p) => (p.code ? `Code : ${p.code}` : null)}
+                        compact
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="bmm-st-vide"
+                        onClick={() => setActiveSection('intervenants')}
+                        title="Le sous-traitant d'un article doit d'abord être ajouté au bon"
+                      >
+                        <UserPlus size={13} strokeWidth={2.4} />
+                        Ajouter un sous-traitant au bon
+                      </button>
+                    )}
                   </div>
 
                   <div className="bmm-inline-field">
@@ -934,6 +992,12 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
                     </button>
                   </div>
                 </div>
+
+                {tacheForm.prestataireArticlesId && sousTraitantsDuBon.length === 0 && (
+                  <p className="bmm-hint">
+                    Pour commander cet article chez un sous-traitant, ajoutez d'abord ce sous-traitant dans l'étape « Intervenants ».
+                  </p>
+                )}
 
                 {tacheForm.prestataireArticlesId && (
                   <p className="bmm-hint">
@@ -950,6 +1014,7 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
                   <ul className="bmm-list bmm-list--scrollable">
                     {taches.map((t) => {
                       const article = articles.find((a) => String(a.id) === String(t.prestataireArticlesId));
+                      const st = t.sousTraitantId ? prestataires.find((p) => String(p.id) === String(t.sousTraitantId)) : null;
                       return (
                         <li key={t._localId} className="bmm-list-item">
                           <div className="bmm-list-item-content">
@@ -957,6 +1022,7 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
                             <span className="bmm-list-item-meta">
                               {article && <><Package size={12} strokeWidth={2.5} /> {article.designation}</>}
                               {t.qte && <> · Qté {t.qte}</>}
+                              {st && <> · {nomPrestataire(st)}</>}
                             </span>
                           </div>
                           <button type="button" className="bmm-list-item-remove" onClick={() => removeTache(t._localId)}>
@@ -1059,7 +1125,7 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
                       name="personnelId"
                       value={intervenantForm.personnelId}
                       onChange={(e) => setIntervenantForm({ ...intervenantForm, personnelId: e.target.value })}
-                      options={personnels}
+                      options={techniciens}
                       placeholder="Rechercher un technicien..."
                       emptyMessage="Aucun technicien ne correspond"
                       allowEmpty
@@ -1121,14 +1187,29 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
                       onChange={(e) => setIntervenantForm({ ...intervenantForm, nbrHeure: e.target.value })}
                     />
                   </div>
-                  <div className="bmm-inline-field bmm-inline-field--narrow">
-                    <input
-                      type="number"
-                      placeholder="Coût unitaire"
-                      value={intervenantForm.coutUnitaire}
-                      onChange={(e) => setIntervenantForm({ ...intervenantForm, coutUnitaire: e.target.value })}
-                    />
-                  </div>
+                  {intervenantForm.sousTraitantId ? (
+                    // Sous-traitant : prix forfaitaire de la prestation (BonMaintenanceIntervenant.forfait), comme dans Cubix
+                    <div className="bmm-inline-field bmm-inline-field--narrow">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.001"
+                        placeholder="Forfait (DT)"
+                        title="Prix forfaitaire du sous-traitant"
+                        value={intervenantForm.forfait}
+                        onChange={(e) => setIntervenantForm({ ...intervenantForm, forfait: e.target.value })}
+                      />
+                    </div>
+                  ) : (
+                    <div className="bmm-inline-field bmm-inline-field--narrow">
+                      <input
+                        type="number"
+                        placeholder="Coût unitaire"
+                        value={intervenantForm.coutUnitaire}
+                        onChange={(e) => setIntervenantForm({ ...intervenantForm, coutUnitaire: e.target.value })}
+                      />
+                    </div>
+                  )}
                   <div className="bmm-inline-field bmm-inline-field--wide">
                     <input
                       type="text"
@@ -1161,8 +1242,12 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
                             <span className="bmm-list-item-title">
                               {personnel ? `${personnel.nom} ${personnel.prenom}` : (prest?.raisonSociale || '—')}
                             </span>
-                            {i.nbrHeure && (
-                              <span className="bmm-list-item-meta">{i.nbrHeure}h</span>
+                            {(i.nbrHeure || (i.sousTraitantId && i.forfait)) && (
+                              <span className="bmm-list-item-meta">
+                                {i.nbrHeure && `${i.nbrHeure}h`}
+                                {i.nbrHeure && i.sousTraitantId && i.forfait && ' · '}
+                                {i.sousTraitantId && i.forfait && `Forfait ${Number(i.forfait).toLocaleString('fr-FR', { minimumFractionDigits: 3 })} DT`}
+                              </span>
                             )}
                           </div>
                           <button type="button" className="bmm-list-item-remove" onClick={() => removeIntervenant(i._localId)}>

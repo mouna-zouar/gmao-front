@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import bonMaintenanceTacheService from '../../../services/bonMaintenanceTacheService';
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
+import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import { t, locale } from '../../../i18n';
 import './Bonmaintenancetachestable.css';
 
@@ -14,9 +15,34 @@ const COLONNES = [
   { etat: 10, label: 'Annulé', cls: 'annule' },
 ];
 
-function etatLabel(etat) {
-  return t(COLONNES.find((c) => c.etat === etat)?.label ?? 'État {n}', { n: etat });
+// Affichage choisi (tableau ou kanban), mémorisé pour ce navigateur
+const CLE_VUE = 'bmk-vue';
+function lireVue() {
+  try { return window.localStorage.getItem(CLE_VUE) === 'tableau' ? 'tableau' : 'kanban'; } catch { return 'kanban'; }
 }
+function ecrireVue(v) {
+  try { window.localStorage.setItem(CLE_VUE, v); } catch { /* stockage indisponible */ }
+}
+
+const IconeKanban = () => (
+  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3" y="4" width="5" height="16" rx="1.5" /><rect x="10" y="4" width="5" height="10" rx="1.5" /><rect x="17" y="4" width="4" height="13" rx="1.5" />
+  </svg>
+);
+const IconeTableau = () => (
+  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
+    <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9.5h18M3 15h18M9 4v16" />
+  </svg>
+);
+
+// Tri du tableau
+const TRIS = {
+  bon: (a, b) => String(a.bon).localeCompare(String(b.bon), undefined, { numeric: true }) || (a.t.ordre ?? 0) - (b.t.ordre ?? 0),
+  designation: (a, b) => String(a.t.designation || '').localeCompare(String(b.t.designation || '')),
+  debut: (a, b) => (Date.parse(a.t.dateDebut) || 0) - (Date.parse(b.t.dateDebut) || 0),
+  fin: (a, b) => (Date.parse(a.t.dateFin) || 0) - (Date.parse(b.t.dateFin) || 0),
+  etat: (a, b) => COLONNES.findIndex((c) => c.etat === a.t.etat) - COLONNES.findIndex((c) => c.etat === b.t.etat),
+};
 
 function formatDateTime(iso) {
   if (!iso) return '—';
@@ -38,6 +64,12 @@ export default function BonMaintenanceTachesKanban() {
   const [error, setError] = useState(null);
   const [savingId, setSavingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [vue, setVue] = useState(lireVue);
+  const [filtreEtat, setFiltreEtat] = useState('tous');
+  const [tri, setTri] = useState({ cle: 'bon', sens: 1 });
+
+  const changerVue = (v) => { setVue(v); ecrireVue(v); };
+  const trierPar = (cle) => setTri((t_) => ({ cle, sens: t_.cle === cle ? -t_.sens : 1 }));
 
   const [draggingId, setDraggingId] = useState(null);
   const [dragOverEtat, setDragOverEtat] = useState(null);
@@ -47,29 +79,27 @@ export default function BonMaintenanceTachesKanban() {
     show: false, title: '', message: '', confirmText: t("Confirmer"), onConfirm: null, error: null, confirming: false,
   });
 
-  const load = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [tachesPage, bonsPage] = await Promise.all([
-        bonMaintenanceTacheService.getAll(0, 500),
-        bonMaintenanceService.getAll(0, 500),
-      ]);
-
-      setTaches(tachesPage.content ?? []);
-
-      const map = {};
-      (bonsPage.content ?? []).forEach((b) => { map[b.id] = b; });
-      setBonsParId(map);
-    } catch (err) {
-      console.error(err);
-      setError(t("Impossible de charger les tâches. Vérifie que le serveur est bien lancé."));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { load(); }, []);
+  // Chargement à l'ouverture (loading vaut déjà true au départ)
+  useEffect(() => {
+    let actif = true;
+    Promise.all([
+      bonMaintenanceTacheService.getAll(0, 500),
+      bonMaintenanceService.getAll(0, 500),
+    ])
+      .then(([tachesPage, bonsPage]) => {
+        if (!actif) return;
+        setTaches(tachesPage.content ?? []);
+        const map = {};
+        (bonsPage.content ?? []).forEach((b) => { map[b.id] = b; });
+        setBonsParId(map);
+      })
+      .catch((err) => {
+        console.error(err);
+        if (actif) setError(t("Impossible de charger les tâches. Vérifie que le serveur est bien lancé."));
+      })
+      .finally(() => { if (actif) setLoading(false); });
+    return () => { actif = false; };
+  }, []);
 
   // ---------- Changement d'état (optimiste, avec retour arrière si refus) ----------
   const appliquerEtat = async (tache, nouvelEtat, { onError } = {}) => {
@@ -171,6 +201,44 @@ export default function BonMaintenanceTachesKanban() {
     return map;
   }, [filteredTaches]);
 
+  const nomBon = (tache) => {
+    const bon = bonsParId[tache.bonMaintenanceId];
+    return bon ? (bon.num || bon.titre || t('Bon #{id}', { id: bon.id })) : t('Bon #{id}', { id: tache.bonMaintenanceId });
+  };
+
+  // Lignes du tableau : filtre d'état + tri par colonne
+  const lignesTableau = useMemo(() => {
+    const lignes = filteredTaches
+      .filter((tache) => filtreEtat === 'tous' || tache.etat === Number(filtreEtat))
+      .map((tache) => ({ t: tache, bon: nomBon(tache) }));
+    lignes.sort((a, b) => TRIS[tri.cle](a, b) * tri.sens);
+    return lignes;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredTaches, filtreEtat, tri, bonsParId]);
+
+  const entete = (cle, libelle) => (
+    <th aria-sort={tri.cle === cle ? (tri.sens === 1 ? 'ascending' : 'descending') : 'none'}>
+      <button type="button" className="bmk-th-tri" onClick={() => trierPar(cle)}>
+        {libelle}
+        <span className="bmk-th-fleche" aria-hidden="true">{tri.cle === cle ? (tri.sens === 1 ? '▲' : '▼') : '↕'}</span>
+      </button>
+    </th>
+  );
+
+  const selectEtat = (tache) => (
+    <select
+      className="bmk-card-move"
+      value={tache.etat}
+      disabled={savingId === tache.id}
+      onChange={(e) => deplacerTache(tache, Number(e.target.value))}
+      aria-label={t('Changer l\'état de « {nom} »', { nom: tache.designation || '' })}
+    >
+      {COLONNES.map((c) => (
+        <option key={c.etat} value={c.etat}>{t(c.label)}</option>
+      ))}
+    </select>
+  );
+
   return (
     <div className="bmk-container">
       <div className="bmk-header-card">
@@ -180,10 +248,14 @@ export default function BonMaintenanceTachesKanban() {
           </svg>
           <div>
             <h2>{t("Tâches — tous bons de maintenance")}</h2>
-            <p className="bmk-header-subtitle">{t("Glissez une carte d'une colonne à l'autre pour changer son état")}</p>
+            <p className="bmk-header-subtitle">
+              {vue === 'kanban'
+                ? t("Glissez une carte d'une colonne à l'autre pour changer son état")
+                : t("Cliquez sur un titre de colonne pour trier ; changez l'état depuis la dernière colonne")}
+            </p>
           </div>
         </div>
-        <span className="bmk-badge-total">{t('Total : {n}', { n: filteredTaches.length })}</span>
+        <span className="bmk-badge-total">{t('Total : {n}', { n: vue === 'tableau' ? lignesTableau.length : filteredTaches.length })}</span>
       </div>
 
       <div className="bmk-toolbar">
@@ -198,13 +270,64 @@ export default function BonMaintenanceTachesKanban() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="bmk-reset" onClick={() => setSearchTerm('')}>{t("Réinitialiser")}</button>
+        {vue === 'tableau' && (
+          <select className="bmk-filtre-etat" value={filtreEtat} onChange={(e) => setFiltreEtat(e.target.value)} aria-label={t('Filtrer par état')}>
+            <option value="tous">{t('Tous les états')}</option>
+            {COLONNES.map((c) => <option key={c.etat} value={c.etat}>{t(c.label)}</option>)}
+          </select>
+        )}
+        <button className="bmk-reset" onClick={() => { setSearchTerm(''); setFiltreEtat('tous'); }}>{t("Réinitialiser")}</button>
+
+        {/* Choix de l'affichage */}
+        <div className="bmk-vues" role="group" aria-label={t("Affichage")}>
+          <button type="button" className={`bmk-vue ${vue === 'tableau' ? 'is-active' : ''}`} aria-pressed={vue === 'tableau'} onClick={() => changerVue('tableau')}>
+            <IconeTableau /> {t('Tableau')}
+          </button>
+          <button type="button" className={`bmk-vue ${vue === 'kanban' ? 'is-active' : ''}`} aria-pressed={vue === 'kanban'} onClick={() => changerVue('kanban')}>
+            <IconeKanban /> {t('Kanban')}
+          </button>
+        </div>
       </div>
 
       {error && <div className="bmk-error-banner">{error}</div>}
 
       {loading ? (
         <div className="bmk-loading">{t("Chargement...")}</div>
+      ) : vue === 'tableau' ? (
+        <div className="bmk-table-carte">
+          {lignesTableau.length === 0 ? (
+            <div className="bmk-table-vide">{searchTerm || filtreEtat !== 'tous' ? t('Aucune tâche ne correspond à ces filtres.') : t('Aucune tâche')}</div>
+          ) : (
+            <div className="bmk-table-defilement">
+              <table className="bmk-table">
+                <thead>
+                  <tr>
+                    {entete('bon', t('Bon'))}
+                    {entete('designation', t('Désignation'))}
+                    {entete('debut', t('Début'))}
+                    {entete('fin', t('Fin'))}
+                    <th className="bmk-num">{t('Qté')}</th>
+                    {entete('etat', t('État'))}
+                    <th>{t("Changer l'état")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lignesTableau.map(({ t: tache, bon }) => (
+                    <tr key={tache.id} className={savingId === tache.id ? 'is-saving' : ''}>
+                      <td className="bmk-td-bon">{bon}</td>
+                      <td className="bmk-td-designation">{tache.ordre != null ? <span className="bmk-ordre">{tache.ordre}.</span> : null} {tache.designation}</td>
+                      <td className="bmk-td-date">{formatDateTime(tache.dateDebut)}</td>
+                      <td className="bmk-td-date">{formatDateTime(tache.dateFin)}</td>
+                      <td className="bmk-num">{tache.qte ?? '—'}</td>
+                      <td><BadgeStatut type="tache" valeur={tache.etat} taille="petit" /></td>
+                      <td>{selectEtat(tache)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="bmk-board">
           {COLONNES.map((col) => {
@@ -233,7 +356,6 @@ export default function BonMaintenanceTachesKanban() {
                     <div className="bmk-column-empty">{t("Aucune tâche")}</div>
                   ) : (
                     cartes.map((tache) => {
-                      const bon = bonsParId[tache.bonMaintenanceId];
                       return (
                         <article
                           key={tache.id}
@@ -242,9 +364,7 @@ export default function BonMaintenanceTachesKanban() {
                           onDragStart={(e) => handleDragStart(e, tache)}
                           onDragEnd={handleDragEnd}
                         >
-                          <div className="bmk-card-bon">
-                            {bon ? (bon.num || bon.titre || t('Bon #{id}', { id: bon.id })) : t('Bon #{id}', { id: tache.bonMaintenanceId })}
-                          </div>
+                          <div className="bmk-card-bon">{nomBon(tache)}</div>
                           <div className="bmk-card-title">
                             {tache.ordre != null ? `${tache.ordre}. ` : ''}{tache.designation}
                           </div>
@@ -259,17 +379,7 @@ export default function BonMaintenanceTachesKanban() {
                             {tache.qte != null ? <span className="bmk-card-qte">{t('Qté')} {tache.qte}</span> : <span />}
 
                             {/* Alternative au glisser-déposer (tactile / clavier) */}
-                            <select
-                              className="bmk-card-move"
-                              value={tache.etat}
-                              disabled={savingId === tache.id}
-                              onChange={(e) => deplacerTache(tache, Number(e.target.value))}
-                              aria-label={t("Changer l'état")}
-                            >
-                              {COLONNES.map((c) => (
-                                <option key={c.etat} value={c.etat}>{t(c.label)}</option>
-                              ))}
-                            </select>
+                            {selectEtat(tache)}
                           </div>
                         </article>
                       );

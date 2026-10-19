@@ -28,8 +28,7 @@ export const ETATS_RECLAMATION = {
   0: { label: 'Ouverte', ton: 'info' },
   1: { label: 'En cours', ton: 'action' },
   2: { label: 'Clôturée', ton: 'ok' },
-  3: { label: 'En attente de validation', ton: 'attention' },
-  4: { label: 'Rejetée', ton: 'neutre' },
+  
 };
 
 export const CATEGORIES_DOCUMENT = {

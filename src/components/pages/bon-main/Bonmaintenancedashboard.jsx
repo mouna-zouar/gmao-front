@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
 import { t, tp, locale } from '../../../i18n';
 import './BonMaintenanceDashboard.css';
+import IndicateursBons from './IndicateursBons';
 
 const ETAT_LABELS = { 1: 'Nouveau', 2: 'Suspendu', 3: 'En cours', 4: 'Effectué', 10: 'Annulé' };
 const NIVEAU_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
@@ -295,7 +296,7 @@ export default function BonMaintenanceDashboard() {
               <span>{t("Par état")}</span>
             </div>
             <div className="bon-maintenance-dashboard-hbar-list">
-              {etats.map((etat) => (
+              {etats.filter((etat) => (data.parEtat?.[etat] ?? 0) > 0).map((etat) => (
                 <div key={etat} className="bon-maintenance-dashboard-hbar-row">
                   <span className="bon-maintenance-dashboard-hbar-label">{t(ETAT_LABELS[etat])}</span>
                   <div className="bon-maintenance-dashboard-hbar-track">
@@ -315,7 +316,7 @@ export default function BonMaintenanceDashboard() {
               <span>{t("Par urgence")}</span>
             </div>
             <div className="bon-maintenance-dashboard-hbar-list">
-              {urgenceEntries.map(([niveau, valeur]) => (
+              {urgenceEntries.filter(([, valeur]) => valeur > 0).map(([niveau, valeur]) => (
                 <div key={niveau} className="bon-maintenance-dashboard-hbar-row">
                   <span className="bon-maintenance-dashboard-hbar-label">{t(NIVEAU_LABELS[niveau])}</span>
                   <div className="bon-maintenance-dashboard-hbar-track">
@@ -368,6 +369,7 @@ export default function BonMaintenanceDashboard() {
           const def = cardsById[id];
           if (!def) return null;
           const rawValue = getFieldValue(data, def.field);
+          if (rawValue == null || Number(rawValue) === 0) return null; // valeur à 0 : carte masquée
           return (
             <StatCard
               key={id}
@@ -383,6 +385,9 @@ export default function BonMaintenanceDashboard() {
           );
         })}
       </div>
+
+      {/* Indicateurs de performance (30 j vs 30 j précédents, SLA, coûts, classements) */}
+      <IndicateursBons />
 
       {/* Graphiques */}
       <div className="bon-maintenance-dashboard-charts-row">

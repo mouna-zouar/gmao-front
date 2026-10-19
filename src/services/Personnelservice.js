@@ -6,6 +6,12 @@ const personnelService = {
     return data; // Page<PersonnelSummaryDTO>
   },
 
+  /** Personnel du service maintenance (63) : « Affecté à », intervenants, contrôles des bons. */
+  async getMaintenance(page = 0, size = 200) {
+    const { data } = await api.get('/personnel/maintenance', { params: { page, size } });
+    return data; // Page<PersonnelSummaryDTO>
+  },
+
   async getById(id) {
     const { data } = await api.get(`/personnel/${id}`);
     return data;

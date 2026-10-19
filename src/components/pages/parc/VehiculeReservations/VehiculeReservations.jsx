@@ -316,10 +316,12 @@ export default function VehiculeReservations() {
   const openEdit = () => { if (selected) setModalOpen(true); };
 
   const handleSave = async (payload) => {
-    if (selected) await vehiculeReservationService.update(selected.id, payload);
-    else await vehiculeReservationService.create(payload);
+    const enregistree = selected
+      ? await vehiculeReservationService.update(selected.id, payload)
+      : await vehiculeReservationService.create(payload);
     setSelected(null);
     await load();
+    return enregistree;
   };
 
   // Changement rapide d'état depuis la barre d'action, sans passer par la

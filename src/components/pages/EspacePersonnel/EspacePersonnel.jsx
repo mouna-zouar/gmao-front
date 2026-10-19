@@ -19,11 +19,16 @@ import {
   Stethoscope,
   Undo2,
   ChevronDown,
+  Hourglass,
 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 import authService from '../../../services/Authservice';
 import espacePersonnelService from '../../../services/espacePersonnelService';
 import chatBonService from '../../../services/chatBonService';
+import suiviDemandeService from '../../../services/suiviDemandeService';
+import MesDemandes from '../MesDemandes/MesDemandes';
+import EspaceReclamation from './EspaceReclamation';
 import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
 import {
   INTERVENANT_ETAT_LABELS,
@@ -32,6 +37,8 @@ import {
   ETAT_IMMOBILISATION_OPTIONS,
 } from '../bonmaintenance/Bmdshared';
 import { t, tp, locale } from '../../../i18n';
+import { libelleTypeEntretien, libelleSourceInformation } from '../../../constants/FicheIntervention';
+import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import EspaceKanban from './EspaceKanban';
 import EspaceDiscussions from './EspaceDiscussions';
 import { MiniCalendrier, ASurveiller } from './EspaceAgenda';
@@ -50,20 +57,26 @@ const ETAT_LABELS = {
     0: 'Ouverte',
     1: 'En cours',
     2: 'Clôturée',
-    3: 'En attente de validation',
-    4: 'Rejetée'
+   
   },
   // Valeurs réelles de BonMaintenanceTache.etat (1 Nouveau … 10 Annulé)
   taches: TACHE_ETAT_LABELS,
   interventions: INTERVENANT_ETAT_LABELS,
 };
 
+// Mêmes tons que partout dans la GMAO (constants/statuts.js) : Annulé et Rejetée en gris
 const ETAT_TONS = {
-  bons: { 1: 'info', 2: 'attention', 3: 'action', 4: 'ok', 10: 'alerte' },
-  reclamations: { 0: 'info', 1: 'action', 2: 'ok', 3: 'attention', 4: 'alerte' },
-  taches: { 1: 'info', 2: 'attention', 3: 'action', 4: 'ok', 10: 'alerte' },
-  interventions: { 0: 'info', 1: 'action', 2: 'ok', 10: 'alerte' },
+  bons: { 1: 'info', 2: 'attention', 3: 'action', 4: 'ok', 10: 'neutre' },
+  reclamations: { 0: 'info', 1: 'action', 2: 'ok', 3: 'attention', 4: 'neutre' },
+  taches: { 1: 'info', 2: 'attention', 3: 'action', 4: 'ok', 10: 'neutre' },
+  interventions: { 0: 'info', 1: 'action', 2: 'ok', 10: 'neutre' },
 };
+
+// Types de la pastille commune (BadgeStatut) pour les bons et les réclamations
+const TYPE_BADGE = { bons: 'bon', reclamations: 'reclamation' };
+
+// Étapes du suivi des demandes qui ne comptent plus comme « en cours »
+const DEMANDES_TERMINEES = ['REPAREE', 'REFUSEE', 'ANNULEE'];
 
 const ACTIVE_STATES = {
   bons: [1, 2, 3],
@@ -251,8 +264,15 @@ const MODAL_CONFIG = {
       ['dateCloture', 'Date de clôture', dateLabel],
       ['personnelDemandantNom', 'Demandeur'],
       ['personnelCreationNom', 'Créé par'],
-      ['prestataireId', 'Identifiant prestataire'],
-      ['lotArticleImmobilistationId', 'Équipement / immobilisation'],
+      ['type', 'Type d’entretien', (v) => t(libelleTypeEntretien(v))],
+      ['urgence', 'Urgence', (v) => t(NIVEAUX_URGENCE[v] || '')],
+      ['sourceInformation', 'Source de l’information', (v) => t(libelleSourceInformation(v))],
+      ['etatImmoABM', 'État de l’équipement', (v) => t(ETAT_IMMOBILISATION_OPTIONS.find((o) => Number(o.value) === Number(v))?.label || '')],
+      ['arretOblig', 'Arrêt obligatoire', (v) => (v ? t('Oui') : t('Non'))],
+      ['equipementNom', 'Équipement'],
+      ['serviceNom', 'Service'],
+      ['prestataireNom', 'Prestataire'],
+      ['depotNom', 'Dépôt'],
       ['cause', 'Cause']
     ]
   },
@@ -260,14 +280,13 @@ const MODAL_CONFIG = {
     eyebrow: 'Tâche',
     icon: ClipboardList,
     primaryKey: 'designation',
-    referenceKey: 'id',
+    referenceKey: null, // pas d'identifiant technique affiché
     dateKey: 'dateDebut',
     etatKey: 'etat',
     fields: [
-      ['id', 'Identifiant'],
       ['designation', 'Désignation'],
       ['description', 'Description'],
-      ['bonMaintenanceId', 'Bon de maintenance associé'],
+      ['bonMaintenanceNum', 'Bon de maintenance associé'],
       ['dateDebut', 'Début prévu', dateLabel],
       ['dateFin', 'Fin prévue', dateLabel],
       ['dateCreation', 'Date de création', dateLabel],
@@ -294,7 +313,25 @@ const MODAL_CONFIG = {
 };
 
 // Clés techniques du bon à ne pas afficher dans « autres informations »
-const CLES_MASQUEES = new Set(['id', 'etat', 'createdAt', 'updatedAt', 'roles', 'intervention', 'diagnostic', 'controle', 'remiseEnService']);
+// Libellés de l'urgence (codes du backend)
+const NIVEAUX_URGENCE = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée', 4: 'Urgente' };
+
+const CLES_MASQUEES = new Set(['id', 'n', 'etat', 'createdAt', 'updatedAt', 'roles', 'intervention', 'diagnostic', 'controle', 'remiseEnService']);
+// Identifiants techniques (id, personnelId, lotArticleImmobilistationId…) : jamais affichés
+const estIdentifiant = (cle) => cle === 'id' || /Ids?$/.test(cle);
+
+// Noms lisibles à la place des identifiants (équipement, prestataire, service)
+const nomPrestataire = (p) => (p ? (p.raisonSociale || [p.prenom, p.nom].filter(Boolean).join(' ') || null) : null);
+const enrichirPourAffichage = (item, type) => {
+  if (!item || type !== 'bons') return item;
+  return {
+    ...item,
+    equipementNom: item.equipementNom || item.lotArticleImmobilistation?.designation || item.immobilisation || null,
+    prestataireNom: item.prestataireNom || nomPrestataire(item.prestataire),
+    serviceNom: item.serviceNom || item.service?.description || null,
+    depotNom: item.depotNom || item.depot?.nom || null,
+  };
+};
 
 function Participation({ item }) {
   const blocs = [];
@@ -402,17 +439,18 @@ function Participation({ item }) {
   );
 }
 
-function DetailModal({ item, type, onClose, onOuvrirBon }) {
+function DetailModal({ item: itemBrut, type, onClose, onOuvrirBon, onOuvrirReclamation }) {
   useEffect(() => {
-    if (!item) return undefined;
+    if (!itemBrut) return undefined;
     const handleEscape = (event) => {
       if (event.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [item, onClose]);
+  }, [itemBrut, onClose]);
 
-  if (!item) return null;
+  if (!itemBrut) return null;
+  const item = enrichirPourAffichage(itemBrut, type);
 
   const config = MODAL_CONFIG[type] ?? MODAL_CONFIG.bons;
   const Icon = config.icon;
@@ -420,11 +458,11 @@ function DetailModal({ item, type, onClose, onOuvrirBon }) {
   const ton = etatTon(type, etatValue);
   const label = etatLabel(type, etatValue);
 
-  const reference = item[config.referenceKey];
+  const reference = config.referenceKey ? item[config.referenceKey] : undefined;
   const titre = item[config.primaryKey] ?? '—';
 
   const displayedFields = config.fields.filter(([key]) =>
-    Object.prototype.hasOwnProperty.call(item, key)
+    !estIdentifiant(key) && item[key] !== null && item[key] !== undefined && item[key] !== ''
   );
 
   const knownKeys = new Set(config.fields.map(([key]) => key));
@@ -433,6 +471,7 @@ function DetailModal({ item, type, onClose, onOuvrirBon }) {
       ([key, value]) =>
         !knownKeys.has(key) &&
         !CLES_MASQUEES.has(key) &&
+        !estIdentifiant(key) &&
         value !== null &&
         value !== undefined &&
         typeof value !== 'object'
@@ -478,7 +517,9 @@ function DetailModal({ item, type, onClose, onOuvrirBon }) {
             {reference !== undefined && (
               <span className="ep-modal-ref">#{reference}</span>
             )}
-            <StatusPill ton={ton}>{label}</StatusPill>
+            {TYPE_BADGE[type]
+              ? <BadgeStatut type={TYPE_BADGE[type]} valeur={etatValue} />
+              : <StatusPill ton={ton}>{label}</StatusPill>}
             {type === 'bons' && <RolePills roles={item.roles} />}
             {item[config.dateKey] && (
               <span className="ep-modal-date">
@@ -517,6 +558,12 @@ function DetailModal({ item, type, onClose, onOuvrirBon }) {
               {t('Ouvrir le bon')}
             </button>
           )}
+          {type === 'reclamations' && item.id != null && (
+            <button type="button" className="ep-btn ep-btn--primaire" onClick={() => onOuvrirReclamation(item.id)}>
+              <ExternalLink size={15} />
+              {t('Ouvrir la réclamation')}
+            </button>
+          )}
           <button type="button" className="ep-btn ep-btn--ghost" onClick={onClose}>
             {t('Fermer')}
           </button>
@@ -537,12 +584,6 @@ const GROUPES_BONS = [
   { id: 'suspendus', etats: [2], label: 'Suspendus', ton: 'attention' },
   { id: 'effectues', etats: [4], label: 'Effectués', ton: 'ok', replie: true },
   { id: 'annules', etats: [10], label: 'Annulés', ton: 'neutre', replie: true },
-];
-
-const GROUPES_RECLAMATIONS = [
-  { id: 'ouvertes', etats: [0, 1], label: 'À traiter', ton: 'action' },
-  { id: 'attente', etats: [3], label: 'En attente de validation', ton: 'attention' },
-  { id: 'fermees', etats: [2, 4], label: 'Clôturées ou rejetées', ton: 'neutre', replie: true },
 ];
 
 function grouper(liste, groupes) {
@@ -573,7 +614,7 @@ function FicheBon({ bon, nonLus, onApercu, onOuvrir, onDiscuter }) {
   return (
     <li className={`ep-fiche ep-ton--${etatTon('bons', bon.etat)}`}>
       <div className="ep-fiche-ref">
-        <strong>{bon.num || `#${bon.id}`}</strong>
+        <strong>{bon.num || t('Sans numéro')}</strong>
         <span className="ep-date"><CalendarDays size={12} />{dateLabel(bon.dateCreation)}</span>
       </div>
       <div className="ep-fiche-corps">
@@ -605,31 +646,6 @@ function FicheBon({ bon, nonLus, onApercu, onOuvrir, onDiscuter }) {
   );
 }
 
-function FicheReclamation({ reclamation, onApercu }) {
-  return (
-    <li className={`ep-fiche ep-ton--${etatTon('reclamations', reclamation.etat)}`}>
-      <div className="ep-fiche-ref">
-        <strong>{reclamation.num || `#${reclamation.id}`}</strong>
-        <span className="ep-date"><CalendarDays size={12} />{dateLabel(reclamation.date)}</span>
-      </div>
-      <div className="ep-fiche-corps">
-        <h4 className="ep-fiche-texte">{reclamation.description || t('Sans description')}</h4>
-        <div className="ep-fiche-meta">
-          <StatusPill ton={etatTon('reclamations', reclamation.etat)}>{etatLabel('reclamations', reclamation.etat)}</StatusPill>
-          {reclamation.personnelAffecteNom && (
-            <span className="ep-person"><UserRound size={13} />{reclamation.personnelAffecteNom}</span>
-          )}
-        </div>
-      </div>
-      <div className="ep-fiche-actions">
-        <button type="button" className="ep-ouvrir ep-ouvrir--clair" onClick={() => onApercu(reclamation)}>
-          <Eye size={15} /> {t('Aperçu')}
-        </button>
-      </div>
-    </li>
-  );
-}
-
 const initialesDe = (nom) => {
   const mots = String(nom || '').trim().split(/\s+/).filter(Boolean);
   if (!mots.length) return '?';
@@ -646,15 +662,23 @@ export default function EspacePersonnel() {
   const personnelId =
     user?.personnelId ?? user?.personnel?.id ?? user?.userId;
 
+  // Nom de l'utilisateur connecté : userNom vient du login (fiche Personnel de Cubix),
+  // sinon prénom + nom, sinon l'identifiant de connexion.
   const displayName =
+    user?.userNom ||
     [user?.prenom, user?.nom].filter(Boolean).join(' ') ||
     user?.username ||
+    user?.login ||
     user?.email ||
     '';
 
-  const [activeTab, setActiveTab] = useState('bons');
+  // ?onglet=demandes (lien des notifications « Votre demande … ») ouvre directement l'onglet voulu
+  const [searchParams] = useSearchParams();
+  const ongletUrl = searchParams.get('onglet');
+  const [activeTab, setActiveTab] = useState(ongletUrl || 'bons');
+  useEffect(() => { if (ongletUrl) setActiveTab(ongletUrl); }, [ongletUrl, searchParams]);
   const [filtreRole, setFiltreRole] = useState('tous');
-  const [data, setData] = useState({ bons: [], taches: [], reclamations: [] });
+  const [data, setData] = useState({ bons: [], taches: [], reclamations: [], demandes: [] });
   const [nonLusChat, setNonLusChat] = useState({});
   // Bon dont on ouvre directement la conversation (clic sur la pastille de messages non lus)
   const [chatInitial, setChatInitial] = useState(null);
@@ -664,6 +688,8 @@ export default function EspacePersonnel() {
   const [selectedType, setSelectedType] = useState(null);
   // Bon ouvert en pleine page (même écran de détail que dans « Bons de maintenance »)
   const [bonOuvert, setBonOuvert] = useState(null);
+  // Réclamation ouverte en pleine page (même écran de détail que dans « Réclamations »)
+  const [reclamationOuverte, setReclamationOuverte] = useState(null);
   // Kanban : tâches en cours d'enregistrement et message en bas d'écran (avec « Annuler »)
   const [tachesEnCours, setTachesEnCours] = useState(() => new Set());
   const [toast, setToast] = useState(null);
@@ -689,17 +715,21 @@ export default function EspacePersonnel() {
         .catch(() => espacePersonnelService.getMesBons(personnelId)
           .then((liste) => (Array.isArray(liste) ? liste.map((b) => versLigneBon(b, personnelId)) : [])));
 
-      const [bons, taches, reclamations] = await Promise.all([
+      const [bons, taches] = await Promise.all([
         chargerBons,
-        espacePersonnelService.getMesTaches(personnelId),
-        espacePersonnelService.getMesReclamations(personnelId)
+        espacePersonnelService.getMesTaches(personnelId)
       ]);
 
-      setData({
+      setData((d) => ({
+        ...d,
         bons,
-        taches: Array.isArray(taches) ? taches : [],
-        reclamations: Array.isArray(reclamations) ? reclamations : []
-      });
+        taches: Array.isArray(taches) ? taches : []
+      }));
+
+      // Suivi de mes demandes (compteur de l'onglet), sans bloquer la page si indisponible
+      suiviDemandeService.getMesDemandes(personnelId)
+        .then((demandes) => setData((d) => ({ ...d, demandes })))
+        .catch(() => {});
 
       // Messages non lus du chat de chaque bon (sans bloquer la page si indisponible)
       chatBonService.getNonLus(bons.map((b) => b.id))
@@ -731,7 +761,14 @@ export default function EspacePersonnel() {
 
   const ouvrirBon = (bon) => {
     closeDetails();
+    setReclamationOuverte(null);
     setBonOuvert(bon);
+  };
+
+  const ouvrirReclamation = (id) => {
+    if (id == null) return;
+    closeDetails();
+    setReclamationOuverte(id);
   };
 
   // ---------- Travaux à faire (calendrier, « À surveiller ») ----------
@@ -769,7 +806,7 @@ export default function EspacePersonnel() {
       const maj = await espacePersonnelService.changerEtatTache(personnelId, tache.id, nouvelEtat);
       if (maj) remplacerTache(tache.id, maj);
       afficherToast({
-        texte: t('« {nom} » → {etat}', { nom: tache.designation || t('Tâche #{id}', { id: tache.id }), etat: libelle(nouvelEtat) }),
+        texte: t('« {nom} » → {etat}', { nom: tache.designation || t('Tâche sans nom'), etat: libelle(nouvelEtat) }),
         // « Annuler » remet l'ancien état (sans proposer d'annuler l'annulation)
         annuler: annulable ? { tache: { ...tache, ...(maj || {}), etat: nouvelEtat }, etat: ancienEtat } : null,
       });
@@ -804,11 +841,11 @@ export default function EspacePersonnel() {
         activeStates: ACTIVE_STATES.taches
       },
       {
-        id: 'reclamations',
-        label: t('Mes réclamations'),
-        icon: FileText,
-        items: data.reclamations,
-        activeStates: ACTIVE_STATES.reclamations
+        id: 'demandes',
+        label: t('Mes demandes'),
+        icon: Hourglass,
+        items: data.demandes,
+        activeStates: []
       },
       {
         id: 'discussions',
@@ -841,7 +878,18 @@ export default function EspacePersonnel() {
   }, [data.bons, filtreRole]);
 
 
-  const currentTab = tabs.find((tab) => tab.id === activeTab);
+  const currentTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
+
+  // Réclamation ouverte : écran de détail complet, avec retour à l'espace (rechargé au retour)
+  if (reclamationOuverte != null) {
+    return (
+      <EspaceReclamation
+        reclamationId={reclamationOuverte}
+        onBack={() => { setReclamationOuverte(null); load(); }}
+        onOuvrirBon={ouvrirBon}
+      />
+    );
+  }
 
   // Bon ouvert : on affiche l'écran de détail complet, avec retour à l'espace (rechargé au retour)
   if (bonOuvert) {
@@ -863,12 +911,16 @@ export default function EspacePersonnel() {
     totalNonLus > 0 && { cle: 'messages', texte: tp('message non lu', totalNonLus), onglet: 'discussions', alerte: true },
   ].filter(Boolean);
 
-  const compteOnglet = (tab) => (tab.id === 'discussions' ? totalNonLus : tab.items.filter((x) => tab.activeStates.includes(x.etat)).length);
+  const compteOnglet = (tab) => {
+    if (tab.id === 'discussions') return totalNonLus;
+    if (tab.id === 'demandes') return tab.items.filter((x) => !DEMANDES_TERMINEES.includes(x.etape)).length;
+    return tab.items.filter((x) => tab.activeStates.includes(x.etat)).length;
+  };
 
   const aideOnglet = {
     bons: t('Groupés par état : ce qui est en cours d’abord'),
     taches: t('Glissez les cartes d’une colonne à l’autre'),
-    reclamations: t('Les réclamations que vous avez créées ou qui vous sont affectées'),
+    demandes: t('Où en sont les pannes que vous avez signalées, jusqu\'à la réparation'),
     discussions: t('Les messages arrivent en direct'),
   }[activeTab];
 
@@ -968,7 +1020,13 @@ export default function EspacePersonnel() {
             </div>
           )}
 
-          {loading ? (
+          {activeTab === 'demandes' ? (
+            <MesDemandes
+              integre
+              onCharge={(demandes) => setData((d) => ({ ...d, demandes }))}
+              onOuvrir={ouvrirReclamation}
+            />
+          ) : loading ? (
             <div className="ep-empty">
               <RefreshCw size={18} className="ep-spin" />
               <span>{t('Chargement de vos données…')}</span>
@@ -1022,20 +1080,7 @@ export default function EspacePersonnel() {
                 onOuvrirBon={ouvrirBon}
               />
             )
-          ) : data.reclamations.length === 0 ? (
-            <div className="ep-empty">
-              <FileText size={18} />
-              <span>{t('Aucune réclamation créée par vous ou qui vous est affectée.')}</span>
-            </div>
-          ) : (
-            grouper(data.reclamations, GROUPES_RECLAMATIONS).map((g) => (
-              <Groupe key={g.id} groupe={g}>
-                {g.items.map((rec) => (
-                  <FicheReclamation key={rec.id} reclamation={rec} onApercu={(r) => openDetails(r, 'reclamations')} />
-                ))}
-              </Groupe>
-            ))
-          )}
+          ) : null}
         </div>
 
         {/* ------- À DROITE : calendrier des travaux et échéances ------- */}
@@ -1072,6 +1117,7 @@ export default function EspacePersonnel() {
         type={selectedType}
         onClose={closeDetails}
         onOuvrirBon={ouvrirBon}
+        onOuvrirReclamation={ouvrirReclamation}
       />
     </main>
   );

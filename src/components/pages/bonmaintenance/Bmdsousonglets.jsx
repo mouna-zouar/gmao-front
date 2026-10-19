@@ -47,7 +47,7 @@ import prestataireService from '../../../services/prestataireService';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../services/lotArticleService';
 import pieceLigneService from '../../../services/PieceLigneService';
-import articleService from '../../../services/articleService';
+import prestataireArticleService from '../../../services/prestataireArticleService';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 
@@ -223,10 +223,11 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   }, [form.prestataireArticlesId]);
 
   useEffect(() => {
-    personnelService.getAll(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
+    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
     lotArticleImmobilistationService.getAll(0, 200).then((p) => setImmobilisations(p.content ?? [])).catch(console.error);
     bonMaintenancePieceImmoService.findByBonMaintenanceId(bonMaintenanceId).then((data) => setPiecesImmo(data ?? [])).catch(console.error);
-    articleService.getAll(0, 300).then((p) => setArticles(p.content ?? [])).catch(console.error);
+    // Articles du prestataire de catégorie 15 (id = prestataireArticlesId)
+    prestataireArticleService.getMaintenance().then(setArticles).catch(console.error);
     prestataireService.getAll(0, 200).then((p) => setPrestataires(p.content ?? [])).catch(console.error);
   }, [bonMaintenanceId]);
 
@@ -652,7 +653,8 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
   useEffect(() => { if (autoOpenForm) setShowForm(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    articleService.getAll(0, 300).then((p) => setArticles(p.content ?? [])).catch(console.error);
+    // Articles du prestataire de catégorie 15 (id = prestataireArticlesId)
+    prestataireArticleService.getMaintenance().then(setArticles).catch(console.error);
     prestataireService.getAll(0, 200).then((p) => setPrestataires(p.content ?? [])).catch(console.error);
     bonMaintenanceIntervenantService.getByBonMaintenance(bonMaintenanceId)
       .then((data) => setIntervenants(data ?? []))
@@ -678,6 +680,12 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
     setEditingId(null);
     setShowForm(false);
   };
+
+  // Comme dans Cubix : le sous-traitant d'une tâche est choisi parmi les sous-traitants du bon
+  // (onglet « Intervenants »). La valeur déjà enregistrée reste affichée même si elle n'y est plus.
+  const sousTraitantsDuBon = prestataires.filter((p) =>
+    intervenants.some((i) => i.sousTraitantId != null && String(i.sousTraitantId) === String(p.id))
+    || (form.sousTraitantId !== '' && String(form.sousTraitantId) === String(p.id)));
 
   const startEdit = (tache) => {
     setForm({
@@ -988,9 +996,9 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
                 name="sousTraitantId"
                 value={form.sousTraitantId}
                 onChange={(e) => setForm({ ...form, sousTraitantId: e.target.value })}
-                options={prestataires}
-                placeholder={t("Tapez un nom...")}
-                emptyMessage={t("Aucun sous-traitant ne correspond")}
+                options={sousTraitantsDuBon}
+                placeholder={sousTraitantsDuBon.length ? t("Tapez un nom...") : t("Aucun sous-traitant sur ce bon")}
+                emptyMessage={t("Ajoutez d'abord le sous-traitant dans l'onglet « Intervenants »")}
                 allowEmpty
                 emptyOptionLabel={t("Aucun")}
                 getValue={(p) => p.id}
@@ -1098,7 +1106,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
 
   useEffect(() => {
     if (!showForm) return;
-    personnelService.getAll(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
+    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
     prestataireService.getAll(0, 200).then((p) => setPrestataires(p.content ?? [])).catch(console.error);
   }, [showForm]);
 
@@ -1500,7 +1508,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
   useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    personnelService.getAll(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
+    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
     lotArticleImmobilistationService.getAll(0, 200).then((p) => setImmobilisations(p.content ?? [])).catch(console.error);
   }, []);
 
@@ -1815,7 +1823,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    personnelService.getAll(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
+    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
     lotArticleImmobilistationService.getAll(0, 200).then((p) => setImmobilisations(p.content ?? [])).catch(console.error);
   }, []);
 

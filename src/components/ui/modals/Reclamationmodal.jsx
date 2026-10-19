@@ -8,19 +8,19 @@ import Button from '../Button';
 import personnelService from '../../../services/personnelService';
 import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
 import serviceService from '../../../services/Serviceservice';
-import cliniqueService from '../../../services/cliniqueService';
+import prestataireService from '../../../services/prestataireService';
 import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import authService from '../../../services/Authservice';
 import './Modal.css';
 import './ReclamationModal.css';
 import ChampEquipement from '../ChampEquipement/ChampEquipement';
+import { SOURCES_INFORMATION, optionsTypeEntretien } from '../../../constants/FicheIntervention';
 
 const ETAT_OPTIONS = [
   { value: 0, label: 'Ouverte' },
   { value: 1, label: 'En cours' },
   { value: 2, label: 'Clôturée' },
-  { value: 3, label: 'En attente de validation' },
-  { value: 4, label: 'Rejetée' },
+
 ];
 
 const NIVEAU_OPTIONS = [
@@ -29,13 +29,8 @@ const NIVEAU_OPTIONS = [
   { value: 3, label: 'Élevée' },
 ];
 
-const TYPE_OPTIONS = [
-  { value: 1, label: 'Curatif' },
-  { value: 2, label: 'Correctif' },
-  { value: 3, label: 'Préventif' },
-  { value: 4, label: 'Installation' },
-  { value: 5, label: 'Autre' },
-];
+
+const nomPrestataire = (p) => (p ? (p.raisonSociale || `${p.nom || ''} ${p.prenom || ''}`.trim() || null) : null);
 
 const emptyForm = {
   num: '',
@@ -45,11 +40,12 @@ const emptyForm = {
   criticite: '',
   urgence: '',
   type: '',
+  sourceInformation: '',
   personnelAffecteId: '',
   lotArticleImmobilistationId: '',
   serviceId: '',
   depotId: '',
-  cliniqueId: '',
+  prestataireId: '',
 };
 
 // ─── Sections de navigation ───
@@ -245,8 +241,8 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
   const [services, setServices] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
 
-  const [cliniques, setCliniques] = useState([]);
-  const [loadingCliniques, setLoadingCliniques] = useState(false);
+  const [prestataires, setPrestataires] = useState([]);
+  const [loadingPrestataires, setLoadingPrestataires] = useState(false);
 
   const [depots, setDepots] = useState([]);
   const [loadingDepots, setLoadingDepots] = useState(false);
@@ -267,7 +263,8 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
     const fetchPersonnels = async () => {
       setLoadingPersonnels(true);
       try {
-        const page = await personnelService.getAll(0, 200);
+        // « Affecté à » : seulement le personnel du service maintenance (63)
+        const page = await personnelService.getMaintenance(0, 200);
         setPersonnels(page.content ?? []);
       } catch (err) {
         console.error('Erreur chargement personnel :', err);
@@ -307,16 +304,16 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
       }
     };
 
-    const fetchCliniques = async () => {
-      setLoadingCliniques(true);
+    const fetchPrestataires = async () => {
+      setLoadingPrestataires(true);
       try {
-        const page = await cliniqueService.getAll(0, 200);
-        setCliniques(page.content ?? []);
+        const page = await prestataireService.getAll(0, 200);
+        setPrestataires(page.content ?? []);
       } catch (err) {
-        console.error('Erreur chargement cliniques :', err);
-        setCliniques([]);
+        console.error('Erreur chargement prestataires :', err);
+        setPrestataires([]);
       } finally {
-        setLoadingCliniques(false);
+        setLoadingPrestataires(false);
       }
     };
 
@@ -336,7 +333,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
     fetchPersonnels();
     fetchImmobilisations();
     fetchServices();
-    fetchCliniques();
+    fetchPrestataires();
     fetchDepots();
   }, [isOpen, valeursInitiales?.immobilisation]);
 
@@ -361,10 +358,11 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
     return depots.filter((d) => depotIdsDuService.includes(d.id));
   }, [depots, depotIdsDuService]);
 
+  // Services filtrés par le prestataire choisi (Service.PrestataireID) ; un service sans prestataire reste proposé
   const servicesDisponibles = useMemo(() => {
-    if (!formData.cliniqueId) return services;
-    return services.filter((s) => String(s.cliniqueId) === String(formData.cliniqueId));
-  }, [services, formData.cliniqueId]);
+    if (!formData.prestataireId) return services;
+    return services.filter((s) => s.prestataireId == null || String(s.prestataireId) === String(formData.prestataireId));
+  }, [services, formData.prestataireId]);
 
   useEffect(() => {
     if (!formData.serviceId) return;
@@ -372,7 +370,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
     if (!toujoursValide) {
       setFormData((prev) => ({ ...prev, serviceId: '', depotId: '' }));
     }
-  }, [formData.cliniqueId, servicesDisponibles]);
+  }, [formData.prestataireId, servicesDisponibles]);
 
   // ─── Pré-remplissage ───
   useEffect(() => {
@@ -385,18 +383,19 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
         criticite: reclamation.criticite ?? '',
         urgence: reclamation.urgence ?? '',
         type: reclamation.type ?? '',
+        sourceInformation: reclamation.sourceInformation ?? '',
         personnelAffecteId: reclamation.personnelAffecteId ?? '',
         lotArticleImmobilistationId: reclamation.lotArticleImmobilistationId ?? '',
         serviceId: reclamation.serviceId ?? '',
         depotId: reclamation.depotId ?? '',
-        cliniqueId: reclamation.cliniqueId ?? '',
+        prestataireId: reclamation.prestataireId ?? '',
       });
     } else if (isOpen) {
       const ctx = authService.getContexteMetier();
       setFormData({
         ...emptyForm,
         serviceId: ctx.serviceId ?? '',
-        cliniqueId: ctx.cliniqueId ?? '',
+        prestataireId: ctx.prestataireId ?? '',
         ...(valeursInitiales?.lotArticleImmobilistationId != null
           ? { lotArticleImmobilistationId: String(valeursInitiales.lotArticleImmobilistationId) }
           : {}),
@@ -436,6 +435,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
         criticite: formData.criticite === '' ? null : Number(formData.criticite),
         urgence: formData.urgence === '' ? null : Number(formData.urgence),
         type: formData.type === '' ? null : Number(formData.type),
+        sourceInformation: formData.sourceInformation === '' ? null : Number(formData.sourceInformation),
         personnelAffecteId: formData.personnelAffecteId === '' ? null : Number(formData.personnelAffecteId),
         lotArticleImmobilistationId: formData.lotArticleImmobilistationId === ''
           ? null
@@ -451,11 +451,23 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
               const d = depots.find((d) => String(d.id) === String(formData.depotId));
               return d ? (d.nom || d.codeDepots) : null;
             })(),
-        cliniqueId: formData.cliniqueId === '' ? null : Number(formData.cliniqueId),
-        cliniqueNom: formData.cliniqueId === ''
+        prestataireId: formData.prestataireId === '' ? null : Number(formData.prestataireId),
+        prestataireNom: formData.prestataireId === ''
           ? null
-          : cliniques.find((c) => String(c.id) === String(formData.cliniqueId))?.nom || null,
+          : nomPrestataire(prestataires.find((p) => String(p.id) === String(formData.prestataireId))),
       };
+
+      // Création : on enregistre qui fait la demande (suivi dans Mon espace → « Mes demandes »)
+      if (!isEditing) {
+        const user = authService.getCurrentUser();
+        const createurId = user?.personnelId ?? user?.personnel?.id ?? user?.userId ?? null;
+        payload.personnelCreationId = createurId != null ? Number(createurId) : null;
+        payload.personnelCreationNom = user?.userNom
+          || [user?.prenom, user?.nom].filter(Boolean).join(' ')
+          || user?.login
+          || null;
+      }
+
       await onSave(payload);
       onClose();
     } catch (err) {
@@ -474,7 +486,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
     general: formData.description.trim() ? 1 : 0,
     immobilisation: formData.lotArticleImmobilistationId ? 1 : 0,
     localisation: [
-      formData.cliniqueId,
+      formData.prestataireId,
       formData.serviceId,
       formData.depotId,
     ].filter(Boolean).length,
@@ -482,6 +494,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
       formData.criticite,
       formData.urgence,
       formData.type,
+      formData.sourceInformation,
     ].filter(Boolean).length,
     affectation: formData.personnelAffecteId ? 1 : 0,
   };
@@ -577,25 +590,25 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
           <div className="rm-content-pane">
             <div className="rm-pane-header">
               <h3>Localisation</h3>
-              <p>Clinique, service et dépôt concernés</p>
+              <p>Prestataire, service et dépôt concernés</p>
             </div>
 
             <div className="rm-grid">
               <div className="rm-field">
-                <label htmlFor="rcm-clinique">Clinique</label>
+                <label htmlFor="rcm-prestataire">Prestataire</label>
                 <select
-                  id="rcm-clinique"
-                  name="cliniqueId"
-                  value={formData.cliniqueId}
+                  id="rcm-prestataire"
+                  name="prestataireId"
+                  value={formData.prestataireId}
                   onChange={handleChange}
-                  disabled={loadingCliniques}
+                  disabled={loadingPrestataires}
                 >
-                  <option value="">— Sélectionner une clinique —</option>
-                  {loadingCliniques ? (
+                  <option value="">— Sélectionner un prestataire —</option>
+                  {loadingPrestataires ? (
                     <option disabled>Chargement...</option>
                   ) : (
-                    cliniques.map((c) => (
-                      <option key={c.id} value={c.id}>{c.nom || `Clinique #${c.id}`}</option>
+                    prestataires.map((p) => (
+                      <option key={p.id} value={p.id}>{nomPrestataire(p) || `Prestataire #${p.id}`}</option>
                     ))
                   )}
                 </select>
@@ -611,7 +624,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
                   options={servicesDisponibles}
                   loading={loadingServices}
                   placeholder="Rechercher un service..."
-                  emptyMessage="Aucun service pour cette clinique"
+                  emptyMessage="Aucun service pour ce prestataire"
                   allowEmpty
                   emptyOptionLabel="— Aucun service —"
                   getValue={(s) => s.id}
@@ -647,7 +660,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
           <div className="rm-content-pane">
             <div className="rm-pane-header">
               <h3>Classification</h3>
-              <p>Criticité, urgence, type et état de la réclamation</p>
+              <p>Criticité, urgence, type d'entretien, source et état de la réclamation</p>
             </div>
 
             <div className="rm-grid">
@@ -672,10 +685,20 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
               </div>
 
               <div className="rm-field">
-                <label htmlFor="rcm-type">Type</label>
+                <label htmlFor="rcm-type">Type d'entretien</label>
                 <select id="rcm-type" name="type" value={formData.type} onChange={handleChange}>
                   <option value="">—</option>
-                  {TYPE_OPTIONS.map((o) => (
+                  {optionsTypeEntretien(formData.type).map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="rm-field">
+                <label htmlFor="rcm-source">Source de l'information</label>
+                <select id="rcm-source" name="sourceInformation" value={formData.sourceInformation} onChange={handleChange}>
+                  <option value="">—</option>
+                  {SOURCES_INFORMATION.map((o) => (
                     <option key={o.value} value={o.value}>{o.label}</option>
                   ))}
                 </select>

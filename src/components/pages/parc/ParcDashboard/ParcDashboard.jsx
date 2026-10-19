@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import parcDashboardService from '../../../../services/parcDashboardService';
 import { t, tp, locale } from '../../../../i18n';
 import './ParcDashboard.css';
+import IndicateursParc from './IndicateursParc';
 
 const ETAT_LABELS = {
   0: 'Disponible',
@@ -113,87 +114,114 @@ export default function ParcDashboard() {
         <div className="parcdash-error-banner">{error}</div>
       )}
 
-      {/* CARTES KPI */}
+      {/* CARTES KPI — une carte à 0 n'est pas affichée */}
       <div className="parcdash-stats-grid">
-        <div className="parcdash-stat-card parcdash-stat--featured">
-          <div className="parcdash-stat-icon">{ICONS.total}</div>
-          <div className="parcdash-stat-value">{fmtNombre(totalVehicules)}</div>
-          <div className="parcdash-stat-label">{t("Total véhicules")}</div>
-        </div>
+        {Number(totalVehicules) ? (
+          <div className="parcdash-stat-card parcdash-stat--featured">
+            <div className="parcdash-stat-icon">{ICONS.total}</div>
+            <div className="parcdash-stat-value">{fmtNombre(totalVehicules)}</div>
+            <div className="parcdash-stat-label">{t("Total véhicules")}</div>
+          </div>
+        ) : null}
 
-        <div className="parcdash-stat-card parcdash-stat--green">
-          <div className="parcdash-stat-icon">{ICONS.dispo}</div>
-          <div className="parcdash-stat-value">{fmtPourcentage(data?.tauxDisponibilite)}</div>
-          <div className="parcdash-stat-label">{t("Taux de disponibilité")}</div>
-        </div>
+        {Number(data?.tauxDisponibilite) ? (
+          <div className="parcdash-stat-card parcdash-stat--green">
+            <div className="parcdash-stat-icon">{ICONS.dispo}</div>
+            <div className="parcdash-stat-value">{fmtPourcentage(data?.tauxDisponibilite)}</div>
+            <div className="parcdash-stat-label">{t("Taux de disponibilité")}</div>
+          </div>
+        ) : null}
 
-        <div className={`parcdash-stat-card ${data?.vehiculesCritiquesIndisponibles > 0 ? 'parcdash-stat--red' : 'parcdash-stat--neutral'}`}>
-          <div className="parcdash-stat-icon">{ICONS.alerte}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.vehiculesCritiquesIndisponibles)}</div>
-          <div className="parcdash-stat-label">{t("Véhicules C1 indisponibles")}</div>
-        </div>
+        {Number(data?.vehiculesCritiquesIndisponibles) ? (
+          <div className={`parcdash-stat-card ${data?.vehiculesCritiquesIndisponibles > 0 ? 'parcdash-stat--red' : 'parcdash-stat--neutral'}`}>
+            <div className="parcdash-stat-icon">{ICONS.alerte}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.vehiculesCritiquesIndisponibles)}</div>
+            <div className="parcdash-stat-label">{t("Véhicules C1 indisponibles")}</div>
+          </div>
+        ) : null}
 
-        <div className={`parcdash-stat-card ${data?.documentsExpires > 0 ? 'parcdash-stat--red' : 'parcdash-stat--neutral'}`}>
-          <div className="parcdash-stat-icon">{ICONS.alerte}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.documentsExpires)}</div>
-          <div className="parcdash-stat-label">{t("Documents expirés")}</div>
-        </div>
+        {Number(data?.documentsExpires) ? (
+          <div className={`parcdash-stat-card ${data?.documentsExpires > 0 ? 'parcdash-stat--red' : 'parcdash-stat--neutral'}`}>
+            <div className="parcdash-stat-icon">{ICONS.alerte}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.documentsExpires)}</div>
+            <div className="parcdash-stat-label">{t("Documents expirés")}</div>
+          </div>
+        ) : null}
 
-        <div className={`parcdash-stat-card ${data?.documentsExpirantSous30Jours > 0 ? 'parcdash-stat--amber' : 'parcdash-stat--neutral'}`}>
-          <div className="parcdash-stat-icon">{ICONS.alerte}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.documentsExpirantSous30Jours)}</div>
-          <div className="parcdash-stat-label">{t("Documents expirant sous 30j")}</div>
-        </div>
+        {Number(data?.documentsExpirantSous30Jours) ? (
+          <div className={`parcdash-stat-card ${data?.documentsExpirantSous30Jours > 0 ? 'parcdash-stat--amber' : 'parcdash-stat--neutral'}`}>
+            <div className="parcdash-stat-icon">{ICONS.alerte}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.documentsExpirantSous30Jours)}</div>
+            <div className="parcdash-stat-label">{t("Documents expirant sous 30j")}</div>
+          </div>
+        ) : null}
 
-        <div className="parcdash-stat-card parcdash-stat--neutral">
-          <div className="parcdash-stat-icon">{ICONS.incident}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.incidentsOuverts)}</div>
-          <div className="parcdash-stat-label">{t("Incidents ouverts")}</div>
-        </div>
+        {Number(data?.incidentsOuverts) ? (
+          <div className="parcdash-stat-card parcdash-stat--neutral">
+            <div className="parcdash-stat-icon">{ICONS.incident}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.incidentsOuverts)}</div>
+            <div className="parcdash-stat-label">{t("Incidents ouverts")}</div>
+          </div>
+        ) : null}
 
-        <div className="parcdash-stat-card parcdash-stat--neutral">
-          <div className="parcdash-stat-icon">{ICONS.mission}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.missionsEnCours)}</div>
-          <div className="parcdash-stat-label">{t("Missions en cours")}</div>
-        </div>
+        {Number(data?.missionsEnCours) ? (
+          <div className="parcdash-stat-card parcdash-stat--neutral">
+            <div className="parcdash-stat-icon">{ICONS.mission}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.missionsEnCours)}</div>
+            <div className="parcdash-stat-label">{t("Missions en cours")}</div>
+          </div>
+        ) : null}
 
-        <div className="parcdash-stat-card parcdash-stat--neutral">
-          <div className="parcdash-stat-icon">{ICONS.reservation}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.reservationsEnAttente)}</div>
-          <div className="parcdash-stat-label">{t("Réservations en attente")}</div>
-        </div>
+        {Number(data?.reservationsEnAttente) ? (
+          <div className="parcdash-stat-card parcdash-stat--neutral">
+            <div className="parcdash-stat-icon">{ICONS.reservation}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.reservationsEnAttente)}</div>
+            <div className="parcdash-stat-label">{t("Réservations en attente")}</div>
+          </div>
+        ) : null}
 
-        <div className="parcdash-stat-card parcdash-stat--neutral">
-          <div className="parcdash-stat-icon">{ICONS.carburant}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.carburantMontantMoisCourant, 2)} <span className="parcdash-stat-unit">{t("DT")}</span></div>
-          <div className="parcdash-stat-label">{t("Carburant — mois courant")}</div>
-        </div>
+        {Number(data?.carburantMontantMoisCourant) ? (
+          <div className="parcdash-stat-card parcdash-stat--neutral">
+            <div className="parcdash-stat-icon">{ICONS.carburant}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.carburantMontantMoisCourant, 2)} <span className="parcdash-stat-unit">{t("DT")}</span></div>
+            <div className="parcdash-stat-label">{t("Carburant — mois courant")}</div>
+          </div>
+        ) : null}
 
-        <div className="parcdash-stat-card parcdash-stat--neutral">
-          <div className="parcdash-stat-icon">{ICONS.km}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.kilometrageMoyen)} <span className="parcdash-stat-unit">{t("km")}</span></div>
-          <div className="parcdash-stat-label">{t("Kilométrage moyen")}</div>
-        </div>
+        {Number(data?.kilometrageMoyen) ? (
+          <div className="parcdash-stat-card parcdash-stat--neutral">
+            <div className="parcdash-stat-icon">{ICONS.km}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.kilometrageMoyen)} <span className="parcdash-stat-unit">{t("km")}</span></div>
+            <div className="parcdash-stat-label">{t("Kilométrage moyen")}</div>
+          </div>
+        ) : null}
 
-        <div className="parcdash-stat-card parcdash-stat--neutral">
-          <div className="parcdash-stat-icon">{ICONS.km}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.kilometrageTotalCumule)} <span className="parcdash-stat-unit">{t("km")}</span></div>
-          <div className="parcdash-stat-label">{t("Kilométrage cumulé")}</div>
-        </div>
+        {Number(data?.kilometrageTotalCumule) ? (
+          <div className="parcdash-stat-card parcdash-stat--neutral">
+            <div className="parcdash-stat-icon">{ICONS.km}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.kilometrageTotalCumule)} <span className="parcdash-stat-unit">{t("km")}</span></div>
+            <div className="parcdash-stat-label">{t("Kilométrage cumulé")}</div>
+          </div>
+        ) : null}
 
-        <div className={`parcdash-stat-card ${data?.coutIncidentsCumule > 0 ? 'parcdash-stat--amber' : 'parcdash-stat--neutral'}`}>
-          <div className="parcdash-stat-icon">{ICONS.incident}</div>
-          <div className="parcdash-stat-value">{fmtNombre(data?.coutIncidentsCumule, 2)} <span className="parcdash-stat-unit">{t("DT")}</span></div>
-          <div className="parcdash-stat-label">{t("Coût incidents cumulé")}</div>
-        </div>
+        {Number(data?.coutIncidentsCumule) ? (
+          <div className={`parcdash-stat-card ${data?.coutIncidentsCumule > 0 ? 'parcdash-stat--amber' : 'parcdash-stat--neutral'}`}>
+            <div className="parcdash-stat-icon">{ICONS.incident}</div>
+            <div className="parcdash-stat-value">{fmtNombre(data?.coutIncidentsCumule, 2)} <span className="parcdash-stat-unit">{t("DT")}</span></div>
+            <div className="parcdash-stat-label">{t("Coût incidents cumulé")}</div>
+          </div>
+        ) : null}
       </div>
+
+      {/* INDICATEURS DE PERFORMANCE (30 j vs 30 j précédents, coûts, classements) */}
+      <IndicateursParc />
 
       {/* RÉPARTITIONS */}
       <div className="parcdash-panels-row">
         <div className="parcdash-panel">
           <h3>{t("Répartition par état")}</h3>
           <div className="parcdash-breakdown">
-            {ETAT_ORDER.map((etat) => {
+            {ETAT_ORDER.filter((etat) => (parEtat[etat] || 0) > 0).map((etat) => {
               const count = parEtat[etat] || 0;
               const pct = totalVehicules > 0 ? Math.round((count / totalVehicules) * 100) : 0;
               return (
@@ -213,7 +241,7 @@ export default function ParcDashboard() {
         <div className="parcdash-panel">
           <h3>{t("Répartition par criticité")}</h3>
           <div className="parcdash-breakdown">
-            {CRITICITE_ORDER.map((c) => {
+            {CRITICITE_ORDER.filter((c) => (parCriticite[c] || 0) > 0).map((c) => {
               const count = parCriticite[c] || 0;
               const pct = totalVehicules > 0 ? Math.round((count / totalVehicules) * 100) : 0;
               return (

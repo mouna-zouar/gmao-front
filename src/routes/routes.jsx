@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Dashboard from '../components/pages/Dashboard/Dashboard';
 import CompteurList from '../components/pages/Compteurs/Compteurs';
 import Reclamations from '../components/pages/Reclamations/Reclamations';
@@ -46,6 +46,13 @@ import VehiculeCouts from '../components/pages/parc/VehiculeCouts/VehiculeCouts'
 
 
 
+// Ancien lien des notifications « Votre demande … » : le suivi est maintenant un onglet de Mon espace
+const VersMesDemandes = () => {
+    const params = new URLSearchParams(useLocation().search);
+    params.set('onglet', 'demandes');
+    return <Navigate to={`/mon-espace?${params.toString()}`} replace />;
+};
+
 const AppRoutes = () => {
     return (
         <Routes>
@@ -55,6 +62,7 @@ const AppRoutes = () => {
 
             <Route path="/referentiels/compteurs" element={<CompteurList />} />
             <Route path="/reclamations" element={<Reclamations />} />
+            <Route path="/mes-demandes" element={<VersMesDemandes />} />
             <Route path="/mon-espace" element={<EspacePersonnel />} />
             <Route path="/equipements" element={<EtatEquipement />} />
             {/* Ouverte aussi en scannant le QR code collé sur l'appareil */}

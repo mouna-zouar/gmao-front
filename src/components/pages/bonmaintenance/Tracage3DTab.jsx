@@ -140,7 +140,6 @@ function construireEtapes({ bon, reclamations, historique, diagnostics, taches, 
       ['Description', bon.description],
       ['Urgence', bon.urgence ? ['Faible', 'Moyenne', 'Élevée'][bon.urgence - 1] : null],
       ['Service', bon.serviceNom || bon.service?.description],
-      ['Clinique', bon.cliniqueNom || bon.clinique?.nom],
       ['Prestataire', bon.prestataire?.raisonSociale || bon.prestataire?.nom],
     ]),
   });

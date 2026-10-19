@@ -18,8 +18,6 @@ import {
   Activity,
   TrendingUp,
   Pause,
-  ChevronDown,
-  Check,
   Boxes,
 } from 'lucide-react';
 import equipementMaintenanceService from '../../../services/equipementMaintenanceService';
@@ -34,172 +32,93 @@ import '../bonmaintenance/Bonmaintenancedetails.css';
 // Overrides spécifiques à ce panneau (ex. ascenseur de secours sur la modale).
 import './EquipementMaintenanceTypesSettings.css';
 
-// ─── Select avec recherche intégrée (combobox), identique au composant
-// local déjà dupliqué dans BonMaintenanceDetails.jsx / VehiculeMissionModal.jsx. ───
-const SearchableSelect = ({
-  id,
-  name,
-  value,
-  onChange,
-  options,
-  getValue = (o) => o.id,
-  getLabel = (o) => o.label ?? o.nom ?? String(o),
-  getOptionHint = () => null,
-  placeholder = 'Sélectionner...',
-  emptyMessage = 'Aucun résultat',
-  allowEmpty = false,
-  emptyOptionLabel = '— Aucun —',
-  disabled = false,
-  loading = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const containerRef = useRef(null);
-  const inputRef = useRef(null);
+// ─── Sélection de plusieurs équipements : recherche + cases à cocher ───
+const normaliser = (v) => String(v ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-  const selected = options.find((o) => String(getValue(o)) === String(value));
-  const selectedLabel = selected ? getLabel(selected) : '';
+function SelectionEquipements({ id, valeurs, onChange, options, loading = false, disabled = false }) {
+  const [recherche, setRecherche] = useState('');
+  const choisis = useMemo(() => new Set(valeurs.map(String)), [valeurs]);
+  const parId = useMemo(() => new Map(options.map((o) => [String(o.id), o])), [options]);
+  const nom = (cle) => parId.get(cle)?.designation || t('Équipement #{id}', { id: cle });
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-        setSearch('');
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const visibles = useMemo(() => {
+    const q = normaliser(recherche.trim());
+    if (!q) return options;
+    return options.filter((o) => [o.designation, o.numPiece, o.codeBarre, o.marque, o.modele]
+      .some((v) => normaliser(v).includes(q)));
+  }, [options, recherche]);
 
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-        setSearch('');
-        inputRef.current?.blur();
-      }
-    };
-    if (isOpen) document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
-
-  const handleFocus = () => {
-    if (disabled) return;
-    setIsOpen(true);
-    setSearch(selectedLabel);
-    setTimeout(() => inputRef.current?.select(), 0);
+  const basculer = (cle) => {
+    const suivant = new Set(choisis);
+    if (suivant.has(cle)) suivant.delete(cle); else suivant.add(cle);
+    onChange([...suivant]);
   };
-
-  const handleInputChange = (e) => {
-    setSearch(e.target.value);
-    if (!isOpen) setIsOpen(true);
-  };
-
-  const handleSelect = (opt) => {
-    onChange({ target: { name, value: String(getValue(opt)) } });
-    setIsOpen(false);
-    setSearch('');
-    inputRef.current?.blur();
-  };
-
-  const handleClear = (e) => {
-    e.stopPropagation();
-    onChange({ target: { name, value: '' } });
-    setSearch('');
-    inputRef.current?.focus();
-  };
-
-  const term = search.trim().toLowerCase();
-  const isSelectedLabel = selected && term === selectedLabel.toLowerCase();
-  const filtered = (!term || isSelectedLabel)
-    ? options
-    : options.filter((o) => getLabel(o).toLowerCase().includes(term));
-
-  const displayValue = isOpen ? search : selectedLabel;
+  const toutCocher = () => onChange([...new Set([...choisis, ...visibles.map((o) => String(o.id))])]);
 
   return (
-    <div className="bmd-searchable" ref={containerRef}>
-      <div className={`bmd-searchable-input-wrap ${isOpen ? 'is-open' : ''}`}>
-        <Search size={15} strokeWidth={2.3} className="bmd-searchable-icon" />
-
-        <input
-          ref={inputRef}
-          id={id}
-          type="text"
-          className="bmd-searchable-input"
-          value={displayValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          placeholder={loading ? t("Chargement...") : (selected ? '' : placeholder)}
-          disabled={disabled || loading}
-          autoComplete="off"
-        />
-
-        {(selected || search) && !disabled && !loading && (
-          <button
-            type="button"
-            className="bmd-searchable-clear-inline"
-            onClick={handleClear}
-            aria-label={t("Effacer")}
-            tabIndex={-1}
-          >
-            <X size={13} strokeWidth={2.5} />
-          </button>
+    <div className={`emt-multi ${disabled ? 'is-disabled' : ''}`}>
+      {/* Équipements déjà choisis */}
+      <div className="emt-multi__choisis" aria-live="polite">
+        {choisis.size === 0 ? (
+          <span className="emt-multi__aucun">{t('Aucun équipement choisi : le type s’applique à tous les équipements.')}</span>
+        ) : (
+          [...choisis].map((cle) => (
+            <span key={cle} className="emt-multi__puce">
+              {nom(cle)}
+              <button type="button" onClick={() => basculer(cle)} disabled={disabled} aria-label={t('Retirer {nom}', { nom: nom(cle) })}>
+                <X size={12} />
+              </button>
+            </span>
+          ))
         )}
-
-        <ChevronDown
-          size={15}
-          strokeWidth={2.3}
-          className={`bmd-searchable-chevron ${isOpen ? 'rotated' : ''}`}
-        />
       </div>
 
-      {isOpen && (
-        <div className="bmd-searchable-menu">
-          <div className="bmd-searchable-options">
-            {allowEmpty && !term && (
-              <button
-                type="button"
-                className={`bmd-searchable-option ${!value ? 'is-selected' : ''}`}
-                onClick={() => handleSelect({ id: '' })}
-              >
-                <span className="bmd-searchable-option-main">
-                  <span className="bmd-searchable-option-label">{emptyOptionLabel}</span>
-                </span>
-                {!value && <Check size={14} strokeWidth={2.5} />}
-              </button>
-            )}
-            {filtered.length === 0 ? (
-              <div className="bmd-searchable-empty">{emptyMessage}</div>
-            ) : (
-              filtered.map((o) => {
-                const val = String(getValue(o));
-                const isSelected = val === String(value);
-                const hint = getOptionHint(o);
-                return (
-                  <button
-                    key={val}
-                    type="button"
-                    className={`bmd-searchable-option ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => handleSelect(o)}
-                  >
-                    <span className="bmd-searchable-option-main">
-                      <span className="bmd-searchable-option-label">{t(getLabel(o))}</span>
-                      {hint && (
-                        <span className="bmd-searchable-option-hint">{hint}</span>
-                      )}
-                    </span>
-                    {isSelected && <Check size={14} strokeWidth={2.5} />}
-                  </button>
-                );
-              })
-            )}
-          </div>
+      <div className="emt-multi__barre">
+        <div className="emt-multi__recherche">
+          <Search size={14} aria-hidden="true" />
+          <input
+            id={id}
+            type="search"
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            placeholder={t('Rechercher par nom, n° de pièce ou code-barres…')}
+            disabled={disabled}
+          />
         </div>
-      )}
+        <button type="button" className="emt-multi__action" onClick={toutCocher} disabled={disabled || visibles.length === 0}>
+          {recherche.trim() ? t('Cocher les {n} résultats', { n: visibles.length }) : t('Tout cocher')}
+        </button>
+        <button type="button" className="emt-multi__action" onClick={() => onChange([])} disabled={disabled || choisis.size === 0}>
+          {t('Tout décocher')}
+        </button>
+      </div>
+
+      <ul className="emt-multi__liste" role="group" aria-label={t('Équipements')}>
+        {loading ? (
+          <li className="emt-multi__vide"><Loader2 size={14} className="mtp-spin" /> {t('Chargement…')}</li>
+        ) : visibles.length === 0 ? (
+          <li className="emt-multi__vide">{t('Aucun équipement ne correspond')}</li>
+        ) : (
+          visibles.map((o) => {
+            const cle = String(o.id);
+            return (
+              <li key={cle}>
+                <label className={`emt-multi__ligne ${choisis.has(cle) ? 'is-choisi' : ''}`}>
+                  <input type="checkbox" checked={choisis.has(cle)} onChange={() => basculer(cle)} disabled={disabled} />
+                  <span className="emt-multi__nom">{o.designation || t('Équipement #{id}', { id: o.id })}</span>
+                  {(o.numPiece || o.marque) && (
+                    <span className="emt-multi__hint">{o.numPiece ? t('N° pièce : {num}', { num: o.numPiece }) : o.marque}</span>
+                  )}
+                </label>
+              </li>
+            );
+          })
+        )}
+      </ul>
+      <small className="emt-multi__compte">{t('{n} équipement(s) choisi(s)', { n: choisis.size })}</small>
     </div>
   );
-};
+}
 
 /**
  * Miroir de VehiculeMaintenanceTypesSettings.jsx, mais pour le référentiel
@@ -215,7 +134,7 @@ const emptyForm = {
   urgenceBon: '',
   baseRecalcul: 0,
   actif: true,
-  lotArticleImmobilistationId: '',
+  lotArticleImmobilistationIds: [],
 };
 
 // Format des nombres selon la langue choisie
@@ -253,7 +172,7 @@ export default function EquipementMaintenanceTypesSettings() {
   const [sortBy, setSortBy] = useState('code');
 
   const [immobilisations, setImmobilisations] = useState([]);
-  const [loadingImmobilisations, setLoadingImmobilisations] = useState(false);
+  const [loadingImmobilisations, setLoadingImmobilisations] = useState(true);
 
   const codeInputRef = useRef(null);
 
@@ -281,8 +200,8 @@ export default function EquipementMaintenanceTypesSettings() {
 
   useEffect(() => {
     let active = true;
-    setLoadingImmobilisations(true);
-    lotArticleImmobilistationService.getAll(0, 200)
+    // Assez large pour cocher des équipements dans tout le parc (la recherche se fait dans la liste)
+    lotArticleImmobilistationService.getAll(0, 2000)
       .then((page) => {
         if (!active) return;
         const data = page?.content ?? page?.data ?? page ?? [];
@@ -315,9 +234,10 @@ export default function EquipementMaintenanceTypesSettings() {
       urgenceBon: tache.urgenceBon ?? '',
       baseRecalcul: tache.baseRecalcul ?? 0,
       actif: tache.actif ?? true,
-      lotArticleImmobilistationId: tache.lotArticleImmobilistationId != null
-        ? String(tache.lotArticleImmobilistationId)
-        : '',
+      // Plusieurs équipements possibles ; l'ancien champ unique sert pour les types existants
+      lotArticleImmobilistationIds: (tache.lotArticleImmobilistationIds?.length
+        ? tache.lotArticleImmobilistationIds
+        : (tache.lotArticleImmobilistationId != null ? [tache.lotArticleImmobilistationId] : [])).map(String),
     });
     setFormError(null);
     setFormOpen(true);
@@ -380,9 +300,7 @@ export default function EquipementMaintenanceTypesSettings() {
         urgenceBon: form.urgenceBon === '' ? null : Number(form.urgenceBon),
         baseRecalcul: Number(form.baseRecalcul),
         actif: form.actif,
-        lotArticleImmobilistationId: form.lotArticleImmobilistationId === ''
-          ? null
-          : Number(form.lotArticleImmobilistationId),
+        lotArticleImmobilistationIds: form.lotArticleImmobilistationIds.map(Number),
       };
 
       if (editingId) {
@@ -760,14 +678,18 @@ export default function EquipementMaintenanceTypesSettings() {
                       <Boxes size={12} /> {t("Portée")}
                     </dt>
                     <dd>
-                      {tache.lotArticleImmobilistationId ? (
-                        <span className="mtp-card__tag">
-                          {immobilisationsMap.get(String(tache.lotArticleImmobilistationId))?.designation
-                            || t('Équipement #{id}', { id: tache.lotArticleImmobilistationId })}
-                        </span>
-                      ) : (
-                        <span className="mtp-card__muted">{t("Tous les équipements")}</span>
-                      )}
+                      {(() => {
+                        const ids = tache.lotArticleImmobilistationIds?.length
+                          ? tache.lotArticleImmobilistationIds
+                          : (tache.lotArticleImmobilistationId != null ? [tache.lotArticleImmobilistationId] : []);
+                        if (ids.length === 0) return <span className="mtp-card__muted">{t("Tous les équipements")}</span>;
+                        const noms = ids.map((i) => immobilisationsMap.get(String(i))?.designation || t('Équipement #{id}', { id: i }));
+                        return (
+                          <span className="mtp-card__tag" title={noms.join('\n')}>
+                            {ids.length === 1 ? noms[0] : t('{n} équipements', { n: ids.length })}
+                          </span>
+                        );
+                      })()}
                     </dd>
                   </div>
                 </dl>
@@ -1051,36 +973,23 @@ export default function EquipementMaintenanceTypesSettings() {
 
                   <section className="mtp-group" aria-labelledby="mtp-group-cible">
                     <div>
-                      <h5 id="mtp-group-cible" className="mtp-group__title">{t("Équipement ciblé")}</h5>
+                      <h5 id="mtp-group-cible" className="mtp-group__title">{t("Équipements ciblés")}</h5>
                       <p className="mtp-group__desc">
-                        {t("Laissez vide pour appliquer ce type à tous les équipements (ou à toute la catégorie) ; choisissez un lot d'immobilisation pour le restreindre à un équipement précis.")}
+                        {t("Cochez un ou plusieurs équipements : le déclenchement automatique ne créera des bons que pour eux. Sans aucun équipement coché, le type s'applique à tous les équipements (ou à toute la catégorie).")}
                       </p>
                     </div>
 
-                    <label className="mtp-field">
-                      <span className="mtp-field__label">{t("Lot d'immobilisation")}</span>
-                      <SearchableSelect
+                    <div className="mtp-field">
+                      <label className="mtp-field__label" htmlFor="emt-lot-immob">{t("Lots d'immobilisation")}</label>
+                      <SelectionEquipements
                         id="emt-lot-immob"
-                        name="lotArticleImmobilistationId"
-                        value={form.lotArticleImmobilistationId}
-                        onChange={handleChange}
+                        valeurs={form.lotArticleImmobilistationIds}
+                        onChange={(ids) => setForm((prev) => ({ ...prev, lotArticleImmobilistationIds: ids }))}
                         options={immobilisations}
                         loading={loadingImmobilisations}
-                        allowEmpty
-                        emptyOptionLabel={t("— Tous les équipements —")}
-                        placeholder={t("Rechercher un équipement…")}
-                        emptyMessage={t("Aucun équipement ne correspond")}
-                        getValue={(i) => i.id}
-                        getLabel={(i) => i.designation || t('Équipement #{id}', { id: i.id })}
-                        getOptionHint={(i) => i.numPiece ? t('N° pièce : {num}', { num: i.numPiece }) : (i.marque || null)}
                         disabled={saving}
                       />
-                      <small className="mtp-field__hint">
-                        {form.lotArticleImmobilistationId
-                          ? t("Ce type ne s'appliquera qu'à cet équipement.")
-                          : t("Applicable à tous les équipements (selon la catégorie éventuelle).")}
-                      </small>
-                    </label>
+                    </div>
                   </section>
 
                   <section className="mtp-group" aria-labelledby="mtp-group-avance">

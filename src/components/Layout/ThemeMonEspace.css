@@ -1,0 +1,21 @@
+/*
+ * Page « Mon espace » aux couleurs de son entrée dans le menu (rose, voir MenuMetier.css) — le bandeau d'accueil reste inchangé —
+ * et aux couleurs de statut communes (constants/statuts.js → TONS).
+ * Feuille chargée par Layout.jsx : elle ne touche qu'aux couleurs de .ep-page, pas à la mise en page.
+ */
+html body .ep-page {
+  --ep-brand: var(--color-mon-espace, #c2255c);
+  --ep-brand-deep: #a61e4d;
+  --ep-brand-wash: var(--color-mon-espace-bg, #fff0f6);
+}
+
+/* Statuts : exactement les couleurs des listes Bons et Réclamations
+   (« En cours » reste turquoise même si la page est rose) */
+html body .ep-page .ep-ton--info      { --ep-ton: #2c5fb8; --ep-ton-wash: #e6eefb; }
+html body .ep-page .ep-ton--action    { --ep-ton: #05606b; --ep-ton-wash: #e3f3f5; }
+html body .ep-page .ep-ton--attention { --ep-ton: #97570e; --ep-ton-wash: #fdf1e1; }
+html body .ep-page .ep-ton--ok        { --ep-ton: #157553; --ep-ton-wash: #e2f5ee; }
+html body .ep-page .ep-ton--alerte    { --ep-ton: #b8323a; --ep-ton-wash: #fde8e9; }
+html body .ep-page .ep-ton--neutre    { --ep-ton: #4b6670; --ep-ton-wash: #e8eef0; }
+html body .ep-page .ep-pill { border: 1px solid color-mix(in srgb, var(--ep-ton) 28%, transparent); }
+
