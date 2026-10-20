@@ -409,7 +409,7 @@ const GROUPES_RUBRIQUES = [
     aide: 'Voir où en est le dossier',
     rubriques: [
       { key: 'flow', label: "Vue d'ensemble", aide: 'Tout le dossier, étape par étape', icon: Eye },
-      { key: 'tracage', label: 'Traçage 3D', aide: 'Qui a fait quoi, et quand', icon: Activity },
+      { key: 'tracage', label: 'Traçage ', aide: 'Qui a fait quoi, et quand', icon: Activity },
       { key: 'historique', label: 'Historique', aide: 'Le journal des actions', icon: History },
     ],
   },
@@ -2588,6 +2588,10 @@ function CommentairesTab({ bonMaintenanceId }) {
   const [text, setText] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
+  // Modification sur place : un seul commentaire à la fois
+  const [editionId, setEditionId] = useState(null);
+  const [texteEdition, setTexteEdition] = useState('');
+  const [savingEdition, setSavingEdition] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -2620,6 +2624,31 @@ function CommentairesTab({ bonMaintenanceId }) {
   };
 
   const closeConfirmModal = () => setConfirmModal((prev) => ({ ...prev, show: false }));
+
+  const commencerEdition = (c) => {
+    setEditionId(c.id);
+    setTexteEdition(c.commentaire || '');
+  };
+  const annulerEdition = () => {
+    setEditionId(null);
+    setTexteEdition('');
+  };
+  const enregistrerEdition = async (c) => {
+    const texte = texteEdition.trim();
+    if (!texte) return;
+    setSavingEdition(true);
+    try {
+      // Le serveur remplace l'enregistrement : on renvoie le commentaire complet (auteur conservé)
+      const maj = await bonMaintenanceCommentaireService.update(c.id, { ...c, commentaire: texte });
+      setCommentaires((prev) => prev.map((x) => (x.id === c.id ? { ...x, ...(maj || {}), commentaire: texte } : x)));
+      annulerEdition();
+    } catch (err) {
+      console.error(err);
+      alert(t("Échec de la modification du commentaire."));
+    } finally {
+      setSavingEdition(false);
+    }
+  };
 
   const handleDelete = (id) => {
     setConfirmModal({
@@ -2666,11 +2695,39 @@ function CommentairesTab({ bonMaintenanceId }) {
               <div>
                 <span className="bmd-item-title">{c.personnelCreation ? `${c.personnelCreation.nom} ${c.personnelCreation.prenom}` : (c.personnelCreationNom || t("Anonyme"))}</span>
                 <span className="bmd-item-sub">{formatDateTime(c.date)}</span>
-                <p className="bmd-comment-text">{c.commentaire}</p>
+                {editionId === c.id ? (
+                  <div className="bmd-comment-edition">
+                    <textarea
+                      value={texteEdition}
+                      onChange={(e) => setTexteEdition(e.target.value)}
+                      rows={3}
+                      autoFocus
+                      aria-label={t("Modifier le commentaire")}
+                      onKeyDown={(e) => { if (e.key === 'Escape') annulerEdition(); }}
+                    />
+                    <div className="bmd-comment-actions">
+                      <Button type="button" variant="secondary" onClick={annulerEdition} disabled={savingEdition}>
+                        {t("Annuler")}
+                      </Button>
+                      <Button type="button" variant="primary" onClick={() => enregistrerEdition(c)} disabled={savingEdition || !texteEdition.trim()}>
+                        {savingEdition ? t("Enregistrement…") : t("Enregistrer")}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="bmd-comment-text">{c.commentaire}</p>
+                )}
               </div>
-              <button className="bmd-delete-btn" onClick={() => handleDelete(c.id)}>
-                <Trash2 size={14} />
-              </button>
+              {editionId !== c.id && (
+                <div className="bmd-comment-actions">
+                  <button type="button" className="bmd-edit-btn" onClick={() => commencerEdition(c)} title={t("Modifier")} aria-label={t("Modifier le commentaire")}>
+                    <Edit size={14} />
+                  </button>
+                  <button type="button" className="bmd-delete-btn" onClick={() => handleDelete(c.id)} title={t("Supprimer")} aria-label={t("Supprimer le commentaire")}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
             </li>
           ))}
         </ul>

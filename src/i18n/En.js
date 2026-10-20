@@ -165,7 +165,7 @@ const en = {
   'Commentaire': 'Comment',
   "Documents d'achat": 'Purchase documents',
   "Vue d'ensemble": 'Overview',
-  'Traçage 3D': '3D tracking',
+  'Traçage ': ' tracking',
   'Équipement': 'Equipment',
   'Immobilisation': 'Asset',
   'Article': 'Item',
@@ -2675,6 +2675,16 @@ const en = {
   "{phase} · retard {d}": "{phase} · {d} late",
   "{phase} · {d} restantes": "{phase} · {d} left",
   "Échéance {phase} : {date} (délai {n} h selon la priorité {p})": "{phase} deadline: {date} ({n} h allowed for priority {p})",
+  "Modifier le diagnostic": "Edit the diagnosis",
+  "Modifier l'intervenant": "Edit the technician",
+  "Modifier le contrôle": "Edit the check",
+  "Modifier la décision": "Edit the decision",
+  "Échec de la modification du diagnostic.": "Failed to update the diagnosis.",
+  "Échec de la modification de l'intervenant.": "Failed to update the technician.",
+  "Échec de la modification du contrôle.": "Failed to update the check.",
+  "Échec de la modification de la décision.": "Failed to update the decision.",
+  "Modifier le commentaire": "Edit the comment",
+  "Échec de la modification du commentaire.": "Failed to update the comment.",
 };
 
 export default en;

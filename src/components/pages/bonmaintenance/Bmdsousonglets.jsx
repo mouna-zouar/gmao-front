@@ -152,6 +152,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   const [form, setForm] = useState(emptyDiagnosticForm);
   const [lastPersonnelId, setLastPersonnelId] = useState('');
   const [selectedId, setSelectedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
 
   const [immoQteDisponible, setImmoQteDisponible] = useState(null);
@@ -165,6 +166,32 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
       lotArticleImmobilistationId: defaultLotArticleImmobilistationId != null ? String(defaultLotArticleImmobilistationId) : '',
       personnelId: lastPersonnelId,
     });
+    setEditingId(null);
+    setShowForm(true);
+  };
+
+  const fermerForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+  };
+
+  // Modification : le formulaire s'ouvre au-dessus du tableau, pré-rempli
+  const startEdit = (d) => {
+    setForm({
+      personnelId: d.personnelId ?? '',
+      observations: d.observations || '',
+      besoinPiece: d.besoinPiece == null ? '' : String(d.besoinPiece),
+      prestataireArticlesId: d.prestataireArticlesId ?? '',
+      qteNecessaire: d.qteNecessaire ?? '',
+      sousTraitantId: d.sousTraitantId ?? '',
+      lotArticleImmobilistationId: d.lotArticleImmobilistationId != null ? String(d.lotArticleImmobilistationId) : '',
+      bonMaintenancePieceImmoId: d.bonMaintenancePieceImmoId ?? '',
+      causeProbable: d.causeProbable || '',
+      gravite: d.gravite != null ? String(d.gravite) : '',
+      dureeEstimeeHeures: d.dureeEstimeeHeures ?? '',
+    });
+    setEditingId(d.id);
+    setSelectedId(null);
     setShowForm(true);
   };
 
@@ -240,7 +267,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
     try {
       const personnel = personnels.find((p) => String(p.id) === String(form.personnelId));
       const besoinPieceBool = form.besoinPiece === '' ? null : form.besoinPiece === 'true';
-      await bonMaintenanceDiagnosticService.create({
+      const payload = {
         bonMaintenanceId,
         personnelId: form.personnelId === '' ? null : Number(form.personnelId),
         personnelNom: personnel ? `${personnel.nom} ${personnel.prenom}` : null,
@@ -254,14 +281,24 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
         causeProbable: form.causeProbable.trim() || null,
         gravite: form.gravite === '' ? null : Number(form.gravite),
         dureeEstimeeHeures: form.dureeEstimeeHeures === '' ? null : Number(form.dureeEstimeeHeures),
-      });
+      };
+      const idModifie = editingId;
+      if (idModifie) {
+        // Le serveur remplace tout l'enregistrement : on repart de l'existant (date, champs non affichés)
+        const existant = diagnostics.find((x) => x.id === idModifie) || {};
+        if (!payload.personnelNom && payload.personnelId === existant.personnelId) payload.personnelNom = existant.personnelNom ?? null;
+        await bonMaintenanceDiagnosticService.update(idModifie, { ...existant, ...payload });
+      } else {
+        await bonMaintenanceDiagnosticService.create(payload);
+      }
       setLastPersonnelId(form.personnelId);
       setForm(emptyDiagnosticForm);
-      setShowForm(false);
+      fermerForm();
       await load();
+      if (idModifie) setSelectedId(idModifie);
     } catch (err) {
       console.error(err);
-      alert(t("Échec de l'ajout du diagnostic."));
+      alert(editingId ? t("Échec de la modification du diagnostic.") : t("Échec de l'ajout du diagnostic."));
     } finally {
       setSaving(false);
     }
@@ -326,6 +363,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
           icon={Search}
           surtitre={t('Diagnostic #{id}', { id: d.id })}
           title={d.personnelNom || (d.personnelId != null ? t('Technicien #{id}', { id: d.personnelId }) : t("Technicien non renseigné"))}
+          onEdit={() => startEdit(d)}
           badges={(
             <>
               {d.gravite != null && (
@@ -414,13 +452,13 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
         titre={t("Diagnostics")}
         count={diagnostics.length}
         showForm={showForm}
-        onToggle={() => (showForm ? setShowForm(false) : openForm())}
+        onToggle={() => (showForm ? fermerForm() : openForm())}
         labelAjout="Ajouter un diagnostic"
       />
 
       {showForm && (
         <BmfFormulaire
-          titre={t("Nouveau diagnostic")}
+          titre={editingId ? t("Modifier le diagnostic") : t("Nouveau diagnostic")}
           intro={t("Décrivez la panne en trois étapes. Seuls les champs marqués « obligatoire » sont nécessaires.")}
           onSubmit={handleAdd}
         >
@@ -592,7 +630,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
             )}
           </BmfEtape>
 
-          <BmfActions enregistrement={saving} label={t("Enregistrer le diagnostic")} onAnnuler={() => setShowForm(false)} />
+          <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Enregistrer le diagnostic")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
 
@@ -1084,6 +1122,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
   const [prestataires, setPrestataires] = useState([]);
   const [form, setForm] = useState(emptyIntervenantForm);
   const [selectedId, setSelectedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const [historiqueParIntervenant, setHistoriqueParIntervenant] = useState({});
   const [loadingHistoId, setLoadingHistoId] = useState(null);
   const [savingEtatId, setSavingEtatId] = useState(null);
@@ -1123,6 +1162,30 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
     }
   };
 
+  const fermerForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyIntervenantForm);
+  };
+
+  // Modification : le formulaire s'ouvre au-dessus du tableau, pré-rempli
+  const startEdit = (i) => {
+    setForm({
+      personnelId: i.personnelId ?? '',
+      sousTraitantId: i.sousTraitantId ?? '',
+      etat: i.etat != null ? String(i.etat) : '0',
+      dateDebutIntervention: i.dateDebutIntervention ? i.dateDebutIntervention.slice(0, 16) : '',
+      dateFinIntervention: i.dateFinIntervention ? i.dateFinIntervention.slice(0, 16) : '',
+      nbrHeure: i.nbrHeure ?? '',
+      coutUnitaire: i.coutUnitaire ?? '',
+      forfait: i.forfait ?? '',
+      commentaire: i.commentaire || '',
+    });
+    setEditingId(i.id);
+    setSelectedId(null);
+    setShowForm(true);
+  };
+
   const ouvrirDetail = (i) => {
     setSelectedId(i.id);
     if (!historiqueParIntervenant[i.id]) chargerHistorique(i.id);
@@ -1138,7 +1201,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
         ? `${personnel.nom} ${personnel.prenom}`
         : (sousTraitant ? (sousTraitant.raisonSociale || `${sousTraitant.nom ?? ''} ${sousTraitant.prenom ?? ''}`.trim()) : null);
 
-      const cree = await bonMaintenanceIntervenantService.create({
+      const payload = {
         bonMaintenanceId,
         personnelId: form.personnelId === '' ? null : Number(form.personnelId),
         sousTraitantId: form.sousTraitantId === '' ? null : Number(form.sousTraitantId),
@@ -1150,18 +1213,27 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
         coutUnitaire: form.coutUnitaire === '' ? null : Number(form.coutUnitaire),
         forfait: form.forfait === '' ? null : Number(form.forfait),
         commentaire: form.commentaire.trim() || null,
-      });
-      setForm(emptyIntervenantForm);
-      setShowForm(false);
+      };
+      const idModifie = editingId;
+      const existant = idModifie ? (intervenants.find((x) => x.id === idModifie) || {}) : null;
+      // Sans changement de personne, on garde le nom déjà enregistré (listes chargées en arrière-plan)
+      if (existant && !payload.intervenantNom) payload.intervenantNom = existant.intervenantNom ?? null;
+      const resultat = idModifie
+        ? await bonMaintenanceIntervenantService.update(idModifie, { ...existant, ...payload })
+        : await bonMaintenanceIntervenantService.create(payload);
+      const devientTermine = Number(form.etat) === 2 && (!existant || Number(existant.etat) !== 2);
+      fermerForm();
       await load();
-      if (Number(form.etat) === 2) {
-        onCelebrer?.('intervenant-termine', intervenantNom);
-        onBonMaybeChanged?.();
+      if (idModifie) {
+        setSelectedId(idModifie);
+        chargerHistorique(idModifie);
       }
-      if (cree?.conflitMessage) alert(t('Attention : {message}', { message: cree.conflitMessage }));
+      if (devientTermine) onCelebrer?.('intervenant-termine', intervenantNom || existant?.intervenantNom);
+      if (devientTermine || idModifie) onBonMaybeChanged?.();
+      if (resultat?.conflitMessage) alert(t('Attention : {message}', { message: resultat.conflitMessage }));
     } catch (err) {
       console.error(err);
-      alert(t("Échec de l'ajout de l'intervenant."));
+      alert(err.response?.data?.message || (editingId ? t("Échec de la modification de l'intervenant.") : t("Échec de l'ajout de l'intervenant.")));
     } finally {
       setSaving(false);
     }
@@ -1240,6 +1312,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
           icon={Users}
           surtitre={typeIntervenant(i) ? t('Intervenant {type}', { type: t(typeIntervenant(i)).toLowerCase() }) : t('Intervenant #{id}', { id: i.id })}
           title={nomIntervenantAffiche(i)}
+          onEdit={() => startEdit(i)}
           badges={(
             <>
               {i.etat != null && (
@@ -1354,13 +1427,13 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
         count={intervenants.length}
         extra={coutTotal > 0 && <span className="bmd-panel-cout-total">{t("Total :")} {formatMontant(coutTotal)}</span>}
         showForm={showForm}
-        onToggle={() => setShowForm((s) => !s)}
+        onToggle={() => (showForm ? fermerForm() : (setForm(emptyIntervenantForm), setEditingId(null), setShowForm(true)))}
         labelAjout="Ajouter un intervenant"
       />
 
       {showForm && (
         <BmfFormulaire
-          titre={t("Nouvel intervenant")}
+          titre={editingId ? t("Modifier l'intervenant") : t("Nouvel intervenant")}
           intro={t("Ajoutez la personne ou l'entreprise qui répare l'équipement.")}
           onSubmit={handleAdd}
         >
@@ -1439,7 +1512,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
             </BmfChamp>
           </BmfEtape>
 
-          <BmfActions enregistrement={saving} label={t("Ajouter l'intervenant")} onAnnuler={() => setShowForm(false)} />
+          <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Ajouter l'intervenant")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
 
@@ -1481,6 +1554,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
   const [form, setForm] = useState(emptyControleForm);
   const [lastPersonnelId, setLastPersonnelId] = useState('');
   const [selectedId, setSelectedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
 
   const openForm = () => {
@@ -1489,6 +1563,29 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
       lotArticleImmobilistationId: defaultLotArticleImmobilistationId != null ? String(defaultLotArticleImmobilistationId) : '',
       personnelId: lastPersonnelId,
     });
+    setEditingId(null);
+    setShowForm(true);
+  };
+
+  const fermerForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+  };
+
+  // Modification : le formulaire s'ouvre au-dessus du tableau, pré-rempli
+  const startEdit = (c) => {
+    setForm({
+      personnelId: c.personnelId ?? '',
+      typeControle: c.typeControle || '',
+      resultat: c.resultat || '',
+      valeurMesuree: c.valeurMesuree ?? '',
+      valeurAttendue: c.valeurAttendue ?? '',
+      conforme: c.conforme == null ? '' : String(c.conforme),
+      observations: c.observations || '',
+      lotArticleImmobilistationId: c.lotArticleImmobilistationId != null ? String(c.lotArticleImmobilistationId) : '',
+    });
+    setEditingId(c.id);
+    setSelectedId(null);
     setShowForm(true);
   };
 
@@ -1517,7 +1614,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
     setSaving(true);
     try {
       const personnel = personnels.find((p) => String(p.id) === String(form.personnelId));
-      await bonMaintenanceControleEquipementService.create({
+      const payload = {
         bonMaintenanceId,
         personnelId: form.personnelId === '' ? null : Number(form.personnelId),
         personnelNom: personnel ? `${personnel.nom} ${personnel.prenom}` : null,
@@ -1528,14 +1625,23 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
         conforme: form.conforme === '' ? null : form.conforme === 'true',
         observations: form.observations.trim() || null,
         lotArticleImmobilistationId: form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId),
-      });
+      };
+      const idModifie = editingId;
+      if (idModifie) {
+        const existant = controles.find((x) => x.id === idModifie) || {};
+        if (!payload.personnelNom && payload.personnelId === existant.personnelId) payload.personnelNom = existant.personnelNom ?? null;
+        await bonMaintenanceControleEquipementService.update(idModifie, { ...existant, ...payload });
+      } else {
+        await bonMaintenanceControleEquipementService.create(payload);
+      }
       setLastPersonnelId(form.personnelId);
       setForm(emptyControleForm);
-      setShowForm(false);
+      fermerForm();
       await load();
+      if (idModifie) setSelectedId(idModifie);
     } catch (err) {
       console.error(err);
-      alert(t("Échec de l'ajout du contrôle."));
+      alert(editingId ? t("Échec de la modification du contrôle.") : t("Échec de l'ajout du contrôle."));
     } finally {
       setSaving(false);
     }
@@ -1595,6 +1701,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
           icon={FileCheck}
           surtitre={t('Contrôle #{id}', { id: c.id })}
           title={c.typeControle || t("Contrôle équipement")}
+          onEdit={() => startEdit(c)}
           badges={pillConformite(c.conforme)}
           onDelete={() => handleDelete(c.id)}
           infos={[
@@ -1672,13 +1779,13 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
         titre={t("Contrôles équipement")}
         count={controles.length}
         showForm={showForm}
-        onToggle={() => (showForm ? setShowForm(false) : openForm())}
+        onToggle={() => (showForm ? fermerForm() : openForm())}
         labelAjout="Ajouter un contrôle"
       />
 
       {showForm && (
         <BmfFormulaire
-          titre={t("Nouveau contrôle")}
+          titre={editingId ? t("Modifier le contrôle") : t("Nouveau contrôle")}
           intro={t("Testez l'équipement, puis dites simplement s'il fonctionne.")}
           onSubmit={handleAdd}
         >
@@ -1760,7 +1867,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
             </BmfChamp>
           </BmfEtape>
 
-          <BmfActions enregistrement={saving} label={t("Enregistrer le contrôle")} onAnnuler={() => setShowForm(false)} />
+          <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Enregistrer le contrôle")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
 
@@ -1796,6 +1903,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   const [form, setForm] = useState(emptyRemiseForm);
   const [lastAutoriseParId, setLastAutoriseParId] = useState('');
   const [selectedId, setSelectedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
 
   const openForm = () => {
@@ -1804,6 +1912,27 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
       lotArticleImmobilistationId: defaultLotArticleImmobilistationId != null ? String(defaultLotArticleImmobilistationId) : '',
       autoriseParId: lastAutoriseParId,
     });
+    setEditingId(null);
+    setShowForm(true);
+  };
+
+  const fermerForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+  };
+
+  // Modification : le formulaire s'ouvre au-dessus du tableau, pré-rempli
+  const startEdit = (d) => {
+    setForm({
+      lotArticleImmobilistationId: d.lotArticleImmobilistationId != null ? String(d.lotArticleImmobilistationId) : '',
+      conforme: d.conforme == null ? '' : String(d.conforme),
+      autoriseParId: d.autoriseParId ?? '',
+      observations: d.observations || '',
+      etatAvant: d.etatAvant != null ? String(d.etatAvant) : '',
+      etatApres: d.etatApres != null ? String(d.etatApres) : '',
+    });
+    setEditingId(d.id);
+    setSelectedId(null);
     setShowForm(true);
   };
 
@@ -1836,7 +1965,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
     setSaving(true);
     try {
       const personnel = personnels.find((p) => String(p.id) === String(form.autoriseParId));
-      await bonMaintenanceRemiseEnServiceService.create({
+      const payload = {
         bonMaintenanceId,
         lotArticleImmobilistationId: form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId),
         conforme: form.conforme === 'true',
@@ -1845,18 +1974,30 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
         observations: form.observations.trim() || null,
         etatAvant: form.etatAvant === '' ? null : Number(form.etatAvant),
         etatApres: form.etatApres === '' ? null : Number(form.etatApres),
-      });
+      };
+      const idModifie = editingId;
+      const existant = idModifie ? (decisions.find((x) => x.id === idModifie) || {}) : null;
+      if (idModifie) {
+        if (!payload.autoriseParNom && payload.autoriseParId === existant.autoriseParId) payload.autoriseParNom = existant.autoriseParNom ?? null;
+        await bonMaintenanceRemiseEnServiceService.update(idModifie, { ...existant, ...payload });
+      } else {
+        await bonMaintenanceRemiseEnServiceService.create(payload);
+      }
       const autorisee = form.conforme === 'true';
       const immo = immobilisations.find((i) => String(i.id) === String(form.lotArticleImmobilistationId));
       setLastAutoriseParId(form.autoriseParId);
       setForm(emptyRemiseForm);
-      setShowForm(false);
+      fermerForm();
       await load();
-      onCelebrer?.(autorisee ? 'remise-autorisee' : 'remise-refusee', immo?.designation || null);
+      if (idModifie) {
+        setSelectedId(idModifie);
+      } else {
+        onCelebrer?.(autorisee ? 'remise-autorisee' : 'remise-refusee', immo?.designation || null);
+      }
       onBonMaybeChanged?.(); // une remise en service conforme peut déclencher la clôture automatique
     } catch (err) {
       console.error(err);
-      alert(t("Échec de l'enregistrement de la décision."));
+      alert(editingId ? t("Échec de la modification de la décision.") : t("Échec de l'enregistrement de la décision."));
     } finally {
       setSaving(false);
     }
@@ -1911,6 +2052,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
           icon={RotateCw}
           surtitre={t('Décision #{id}', { id: d.id })}
           title={d.conforme ? t("Remise en service autorisée") : t("Remise en service refusée")}
+          onEdit={() => startEdit(d)}
           badges={pillDecision(d.conforme)}
           onDelete={() => handleDelete(d.id)}
           infos={[
@@ -1969,13 +2111,13 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
         titre={t("Remise en service")}
         count={decisions.length}
         showForm={showForm}
-        onToggle={() => (showForm ? setShowForm(false) : openForm())}
+        onToggle={() => (showForm ? fermerForm() : openForm())}
         labelAjout="Ajouter une décision"
       />
 
       {showForm && (
         <BmfFormulaire
-          titre={t("Remise en service")}
+          titre={editingId ? t("Modifier la décision") : t("Remise en service")}
           intro={t("Décidez si l'équipement peut retourner dans son service.")}
           onSubmit={handleAdd}
         >
@@ -2044,7 +2186,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
             </BmfChamp>
           </BmfEtape>
 
-          <BmfActions enregistrement={saving} label={t("Enregistrer la décision")} onAnnuler={() => setShowForm(false)} />
+          <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Enregistrer la décision")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
 

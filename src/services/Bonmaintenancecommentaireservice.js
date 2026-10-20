@@ -9,6 +9,10 @@ const bonMaintenanceCommentaireService = {
     const { data } = await api.post('/bon-maintenance-commentaire', commentaire);
     return data;
   },
+  async update(id, commentaire) {
+    const { data } = await api.put(`/bon-maintenance-commentaire/${id}`, commentaire);
+    return data;
+  },
   async remove(id) {
     await api.delete(`/bon-maintenance-commentaire/${id}`);
   },

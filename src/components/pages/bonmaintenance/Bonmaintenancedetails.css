@@ -1115,6 +1115,17 @@
 }
 
 .bmd-comment-item { flex-direction: column; align-items: stretch; }
+.bmd-comment-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.bmd-comment-edition { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.bmd-comment-edition textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--g-bordure);
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+.bmd-comment-edition textarea:focus { outline: none; border-color: var(--g-marque); box-shadow: 0 0 0 3px var(--g-brand-50); }
 
 .bmd-comment-text {
   margin: 8px 0 0;
@@ -1972,9 +1983,7 @@
   height: 16px;
 }
 
-/* ============================================================
-   ONGLET TRAÇAGE 3D
-   ============================================================ */
+
 .bmd-tracage {
   display: flex;
   flex-direction: column;
@@ -2269,9 +2278,7 @@
     padding: 2px 8px;
   }
 }
-/* ============================================================
-   CONTENU DES CARTES 3D (rendues via Html)
-   ============================================================ */
+
 .bmd-3d__card-content {
   display: flex;
   flex-direction: column;

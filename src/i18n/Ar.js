@@ -167,7 +167,7 @@ const ar = {
   'Commentaire': 'تعليق',
   "Documents d'achat": 'وثائق الشراء',
   "Vue d'ensemble": 'نظرة عامة',
-  'Traçage 3D': 'التتبّع',
+  'Traçage ': 'التتبّع',
   'Équipement': 'الجهاز',
   'Immobilisation': 'الأصل',
   'Article': 'الصنف',
@@ -2676,6 +2676,16 @@ const ar = {
   "{phase} · retard {d}": "{phase} · تأخير {d}",
   "{phase} · {d} restantes": "{phase} · متبقٍّ {d}",
   "Échéance {phase} : {date} (délai {n} h selon la priorité {p})": "موعد {phase} : {date} (المهلة {n} س حسب الأولوية {p})",
+  "Modifier le diagnostic": "تعديل التشخيص",
+  "Modifier l'intervenant": "تعديل المتدخّل",
+  "Modifier le contrôle": "تعديل المراقبة",
+  "Modifier la décision": "تعديل القرار",
+  "Échec de la modification du diagnostic.": "تعذّر تعديل التشخيص.",
+  "Échec de la modification de l'intervenant.": "تعذّر تعديل المتدخّل.",
+  "Échec de la modification du contrôle.": "تعذّر تعديل المراقبة.",
+  "Échec de la modification de la décision.": "تعذّر تعديل القرار.",
+  "Modifier le commentaire": "تعديل التعليق",
+  "Échec de la modification du commentaire.": "تعذّر تعديل التعليق.",
 };
 
 export default ar;
