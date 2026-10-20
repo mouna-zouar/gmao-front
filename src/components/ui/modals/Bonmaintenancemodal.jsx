@@ -52,6 +52,13 @@ function toInputDateTime(iso) {
   return iso.slice(0, 16);
 }
 
+/** Maintenant, au format du champ datetime-local (heure locale). */
+function maintenantInput() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
 // ─── Sections de navigation ───
 const NAV_SECTIONS = [
   { id: 'general',       label: 'Général',       Icon: FileText },
@@ -349,6 +356,7 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
       const ctx = authService.getContexteMetier();
       setFormData({
         ...emptyForm,
+        date: maintenantInput(), // date du bon pré-remplie : modifiable, mais jamais vide par oubli
         prestataireId: ctx.prestataireId ?? '',
         personnelDemandantId: ctx.userId ?? '',
         ...(initialValues || {}),

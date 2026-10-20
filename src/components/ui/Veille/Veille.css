@@ -1,0 +1,450 @@
+/* =========================================================
+   VEILLE — Anomalies, Blocages, Équipements, Intelligence
+   Un seul style pour les écrans de surveillance.
+   ========================================================= */
+
+/* ---------- Tons (une seule échelle pour les 4 écrans) ---------- */
+[data-ton] { --ton: var(--g-slate-400); --ton-fond: var(--g-slate-100); --ton-texte: var(--g-slate-600); }
+[data-ton="danger"]    { --ton: var(--g-red-600);     --ton-fond: var(--g-red-50);     --ton-texte: var(--g-red-700); }
+[data-ton="orange"]    { --ton: var(--g-orange-500);  --ton-fond: var(--g-orange-50);  --ton-texte: var(--g-orange-700); }
+[data-ton="attention"] { --ton: var(--g-amber-500);   --ton-fond: var(--g-amber-50);   --ton-texte: var(--g-amber-700); }
+[data-ton="succes"]    { --ton: var(--g-emerald-600); --ton-fond: var(--g-emerald-50); --ton-texte: var(--g-emerald-700); }
+[data-ton="info"]      { --ton: var(--g-blue-600);    --ton-fond: var(--g-blue-50);    --ton-texte: var(--g-blue-700); }
+[data-ton="marque"]    { --ton: var(--g-marque);      --ton-fond: var(--g-marque-clair); --ton-texte: var(--g-marque-tres-fonce); }
+
+/* ---------- Page ---------- */
+.vl-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px 28px 32px;
+  background: var(--g-fond);
+  color: var(--g-texte);
+  font-family: var(--g-police);
+  min-height: 100%;
+}
+.vl-page--fenetre { padding: 20px 24px 28px; }
+
+.vl-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.vl-entete__texte { display: flex; gap: 14px; align-items: flex-start; }
+.vl-entete__icone {
+  display: grid; place-items: center;
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: var(--g-marque-clair);
+  color: var(--g-marque-fonce);
+  flex-shrink: 0;
+}
+.vl-entete h1 {
+  margin: 0;
+  font-family: var(--g-police-titre);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.vl-entete p { margin: 4px 0 0; color: var(--g-texte-secondaire); font-size: 0.875rem; max-width: 70ch; }
+.vl-entete__actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- Barre d'outils ---------- */
+.vl-barre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.vl-barre__gauche,
+.vl-barre__droite { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.vl-barre__note { font-size: 0.78rem; color: var(--g-texte-secondaire); }
+
+/* ---------- Boutons ---------- */
+.vl-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 14px;
+  border-radius: 9px;
+  border: 1px solid var(--g-bordure);
+  background: var(--g-surface);
+  color: var(--g-texte-2);
+  font: 600 0.82rem/1 var(--g-police);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.vl-btn:hover:not(:disabled) { border-color: var(--g-bordure-forte); color: var(--g-texte); background: var(--g-slate-50); }
+.vl-btn:focus-visible { outline: 2px solid var(--g-marque); outline-offset: 2px; }
+.vl-btn:disabled { opacity: 0.55; cursor: default; }
+.vl-btn--primaire { background: var(--g-marque); border-color: var(--g-marque); color: var(--g-blanc); }
+.vl-btn--primaire:hover:not(:disabled) { background: var(--g-marque-fonce); border-color: var(--g-marque-fonce); color: var(--g-blanc); }
+.vl-btn--discret { border-color: transparent; background: transparent; }
+.vl-btn--petit { height: 30px; padding: 0 10px; font-size: 0.78rem; border-radius: 8px; }
+.vl-btn--icone { width: 30px; padding: 0; justify-content: center; }
+.vl-tourne { animation: vl-tourne 0.9s linear infinite; }
+@keyframes vl-tourne { to { transform: rotate(360deg); } }
+
+/* ---------- Recherche ---------- */
+.vl-recherche { position: relative; min-width: 240px; flex: 1 1 260px; max-width: 420px; }
+.vl-recherche svg { position: absolute; inset-inline-start: 11px; top: 50%; transform: translateY(-50%); color: var(--g-texte-discret); pointer-events: none; }
+.vl-recherche input {
+  width: 100%; height: 36px;
+  padding-inline: 34px 12px;
+  border: 1px solid var(--g-bordure);
+  border-radius: 9px;
+  background: var(--g-surface);
+  font: 400 0.85rem var(--g-police);
+  color: var(--g-texte);
+}
+.vl-recherche input:focus { outline: none; border-color: var(--g-marque); box-shadow: 0 0 0 3px var(--g-marque-clair); }
+
+/* ---------- Indicateurs ---------- */
+.vl-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  background: var(--g-surface);
+  border: 1px solid var(--g-bordure);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.vl-kpi {
+  position: relative;
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 14px 18px;
+  border: 0;
+  border-inline-start: 1px solid var(--g-bordure);
+  background: transparent;
+  text-align: start;
+  font-family: var(--g-police);
+  color: var(--g-texte);
+}
+.vl-kpi:first-child { border-inline-start: 0; }
+button.vl-kpi { cursor: pointer; transition: background 0.15s; }
+button.vl-kpi:hover { background: var(--g-slate-50); }
+button.vl-kpi:focus-visible { outline: 2px solid var(--g-marque); outline-offset: -2px; }
+.vl-kpi.is-actif { background: var(--ton-fond); }
+.vl-kpi.is-actif::after {
+  content: ''; position: absolute; inset-inline: 0; bottom: 0; height: 3px; background: var(--ton);
+}
+.vl-kpi__label { display: flex; align-items: center; gap: 7px; font-size: 0.76rem; font-weight: 600; color: var(--g-texte-secondaire); }
+.vl-kpi__point { width: 8px; height: 8px; border-radius: 50%; background: var(--ton); flex-shrink: 0; }
+.vl-kpi__valeur { font-family: var(--g-police-titre); font-size: 1.65rem; font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.vl-kpi[data-ton]:not([data-ton="neutre"]):not([data-ton="marque"]) .vl-kpi__valeur { color: var(--ton-texte); }
+.vl-kpi__aide { font-size: 0.72rem; color: var(--g-texte-discret); }
+
+/* ---------- Segments ---------- */
+.vl-segments {
+  display: inline-flex; flex-wrap: wrap; gap: 2px;
+  padding: 3px;
+  background: var(--g-slate-100);
+  border-radius: 10px;
+}
+.vl-segment {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 12px;
+  border: 0; border-radius: 8px;
+  background: transparent;
+  color: var(--g-texte-2);
+  font: 600 0.8rem/1 var(--g-police);
+  cursor: pointer;
+}
+.vl-segment:hover { color: var(--g-texte); }
+.vl-segment:focus-visible { outline: 2px solid var(--g-marque); outline-offset: 1px; }
+.vl-segment.is-actif { background: var(--g-surface); color: var(--g-texte); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08), 0 0 0 1px var(--g-bordure); }
+.vl-segment__n {
+  min-width: 20px; padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--g-slate-200);
+  color: var(--g-texte-2);
+  font-size: 0.7rem; text-align: center;
+}
+.vl-segment.is-actif .vl-segment__n { background: var(--g-marque-clair); color: var(--g-marque-tres-fonce); }
+
+/* ---------- Pastille ---------- */
+.vl-pastille {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--ton-fond);
+  color: var(--ton-texte);
+  font-size: 0.72rem; font-weight: 700;
+  white-space: nowrap;
+}
+.vl-pastille__point { width: 6px; height: 6px; border-radius: 50%; background: var(--ton); }
+
+/* ---------- Jauge ---------- */
+.vl-jauge { display: block; height: 5px; border-radius: 999px; background: var(--g-slate-100); overflow: hidden; }
+.vl-jauge__rempli { display: block; height: 100%; border-radius: inherit; background: var(--ton); }
+
+/* ---------- Liste en lignes ---------- */
+.vl-liste {
+  background: var(--g-surface);
+  border: 1px solid var(--g-bordure);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 0; padding: 0; list-style: none;
+}
+.vl-ligne {
+  display: grid;
+  grid-template-columns: var(--vl-colonnes, 40px minmax(0, 1fr) auto);
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--g-bordure);
+  box-shadow: inset 3px 0 0 var(--ton, transparent);
+  transition: background 0.12s;
+}
+[dir="rtl"] .vl-ligne { box-shadow: inset -3px 0 0 var(--ton, transparent); }
+.vl-liste > .vl-ligne:first-child,
+.vl-liste > li:first-child > .vl-ligne { border-top: 0; }
+.vl-ligne:hover { background: var(--g-slate-50); }
+.vl-ligne--tete {
+  padding-block: 9px;
+  background: var(--g-slate-50);
+  box-shadow: none;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--g-texte-secondaire);
+}
+.vl-ligne--tete:hover { background: var(--g-slate-50); }
+.vl-ligne.is-calme { opacity: 0.72; }
+.vl-ligne.is-calme:hover { opacity: 1; }
+
+.vl-ligne__icone {
+  display: grid; place-items: center;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--ton-fond, var(--g-slate-100));
+  color: var(--ton-texte, var(--g-slate-600));
+}
+.vl-ligne__principal { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.vl-ligne__titre-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.vl-ligne__titre {
+  margin: 0;
+  font-size: 0.9rem; font-weight: 650; color: var(--g-texte);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 100%;
+}
+button.vl-ligne__titre { border: 0; background: none; padding: 0; text-align: start; cursor: pointer; font-family: inherit; }
+button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: underline; text-underline-offset: 3px; }
+.vl-ligne__sous {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
+  font-size: 0.77rem; color: var(--g-texte-secondaire);
+}
+.vl-ligne__sous > span { display: inline-flex; align-items: center; gap: 5px; }
+.vl-ligne__sous strong { color: var(--g-texte-2); font-weight: 600; }
+
+.vl-mesure { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.vl-mesure__haut { display: flex; align-items: baseline; gap: 6px; }
+.vl-mesure__valeur { font-family: var(--g-police-titre); font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--g-texte); }
+.vl-mesure__unite { font-size: 0.74rem; color: var(--g-texte-secondaire); }
+.vl-mesure__note { font-size: 0.72rem; color: var(--g-texte-secondaire); }
+.vl-mesure[data-ton] .vl-mesure__valeur { color: var(--ton-texte); }
+
+.vl-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+
+/* ---------- Score rond (risque) ---------- */
+.vl-score {
+  display: grid; place-items: center;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: conic-gradient(var(--ton) calc(var(--score, 0) * 1%), var(--g-slate-100) 0);
+  flex-shrink: 0;
+}
+.vl-score > span {
+  display: grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--g-surface);
+  font: 700 0.8rem var(--g-police);
+  color: var(--ton-texte);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Panneaux ---------- */
+.vl-panneau {
+  background: var(--g-surface);
+  border: 1px solid var(--g-bordure);
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+.vl-panneau[data-ton]:not([data-ton="neutre"]) { border-color: color-mix(in srgb, var(--ton) 35%, var(--g-bordure)); }
+.vl-panneau__tete {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 18px 0;
+}
+.vl-panneau__titre { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.vl-panneau__titre h2 { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--g-texte); }
+.vl-panneau__icone {
+  display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px;
+  background: var(--ton-fond, var(--g-slate-100)); color: var(--ton-texte, var(--g-slate-600));
+}
+.vl-panneau__n {
+  padding: 2px 8px; border-radius: 999px;
+  background: var(--g-slate-100); color: var(--g-texte-2);
+  font-size: 0.72rem; font-weight: 700;
+}
+.vl-panneau__aide { margin: 6px 18px 0; font-size: 0.78rem; color: var(--g-texte-secondaire); }
+.vl-panneau__corps { padding: 12px 18px 16px; display: flex; flex-direction: column; gap: 8px; }
+.vl-panneau__corps > .vl-liste { margin: 0 -18px -16px; border: 0; border-top: 1px solid var(--g-bordure); border-radius: 0; }
+
+.vl-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+
+/* Ligne courte (panneaux de l'écran Intelligence) */
+.vl-mini {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--g-slate-50);
+  border: 1px solid transparent;
+  box-shadow: inset 3px 0 0 var(--ton, transparent);
+}
+[dir="rtl"] .vl-mini { box-shadow: inset -3px 0 0 var(--ton, transparent); }
+.vl-mini__corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.vl-mini__titre { font-size: 0.84rem; font-weight: 650; color: var(--g-texte); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vl-mini__sous { font-size: 0.74rem; color: var(--g-texte-secondaire); }
+.vl-mini__fin { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+
+/* ---------- États vides, messages ---------- */
+.vl-vide {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 36px 16px;
+  color: var(--g-texte-secondaire);
+  font-size: 0.85rem; text-align: center;
+}
+.vl-vide svg { color: var(--g-texte-discret); }
+.vl-liste .vl-vide, .vl-panneau .vl-vide { padding-block: 28px; }
+
+.vl-message {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--ton-fond);
+  color: var(--ton-texte);
+  font-size: 0.84rem; font-weight: 500;
+  border: 1px solid color-mix(in srgb, var(--ton) 25%, transparent);
+}
+.vl-message > span { flex: 1; }
+.vl-message__fermer { border: 0; background: transparent; color: inherit; cursor: pointer; padding: 4px; border-radius: 6px; display: grid; }
+.vl-message__fermer:hover { background: color-mix(in srgb, var(--ton) 12%, transparent); }
+
+.vl-chargement { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 32px; color: var(--g-texte-secondaire); font-size: 0.85rem; }
+
+/* ---------- Petit écran : les lignes s'empilent ---------- */
+@media (max-width: 760px) {
+  .vl-page, .vl-page--fenetre { padding: 16px; }
+  .vl-kpis { grid-template-columns: repeat(2, 1fr); }
+  .vl-kpi:nth-child(odd) { border-inline-start: 0; }
+  .vl-kpi:nth-child(n + 3) { border-top: 1px solid var(--g-bordure); }
+  .vl-ligne { grid-template-columns: 38px minmax(0, 1fr); gap: 10px 12px; padding: 12px 14px; }
+  .vl-ligne > .vl-ligne__icone { grid-row: span 2; align-self: start; }
+  .vl-ligne > :nth-child(n + 3) { grid-column: 2; }
+  .vl-ligne--tete { display: none; }
+  .vl-actions { justify-content: flex-start; }
+  .vl-ligne > .vl-pastille { justify-self: start; }
+  .vl-ligne__titre { white-space: normal; }
+  .vl-recherche { max-width: none; min-width: 0; }
+  .vl-grille { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   ÉQUIPEMENTS — lignes dépliables
+   ========================================================= */
+.vl-eq { --vl-colonnes: 22px minmax(0, 1fr) 140px 120px 170px 116px; }
+.vl-eq > li { list-style: none; }
+.vl-eq__item + .vl-eq__item > .vl-ligne,
+.vl-ligne--tete + .vl-eq__item > .vl-ligne { border-top: 1px solid var(--g-bordure); }
+.vl-eq__item.is-ouvert > .vl-ligne { background: var(--g-slate-50); }
+.vl-eq__case { display: grid; place-items: center; cursor: pointer; }
+.vl-eq__case input { width: 16px; height: 16px; accent-color: var(--g-marque); cursor: pointer; }
+.vl-eq__risque { display: inline-flex; align-items: center; gap: 8px; }
+.vl-eq__criticite { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.vl-eq__point { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.vl-eq__criticite select {
+  min-width: 0; width: 100%;
+  height: 32px; padding: 0 28px 0 10px;
+  border: 1px solid var(--g-bordure);
+  border-radius: 8px;
+  background-color: var(--g-surface);
+  font: 500 0.8rem var(--g-police);
+  color: var(--g-texte);
+  cursor: pointer;
+}
+.vl-eq__criticite select:focus { outline: none; border-color: var(--g-marque); box-shadow: 0 0 0 3px var(--g-marque-clair); }
+.vl-eq__chevron svg { transition: transform 0.2s; }
+.vl-eq__chevron.is-ouvert svg { transform: rotate(180deg); }
+.vl-ligne__sous .vl-pastille svg { width: 12px; height: 12px; }
+
+.vl-eq__detail {
+  display: flex; flex-direction: column; gap: 14px;
+  padding: 16px 18px 20px;
+  padding-inline-start: 56px;
+  background: var(--g-slate-50);
+  border-top: 1px dashed var(--g-bordure);
+}
+.vl-eq__blocs { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.vl-eq__chiffres { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.vl-eq__chiffres > div { display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border-radius: 10px; background: var(--g-slate-50); }
+.vl-eq__chiffres span { font-size: 0.72rem; font-weight: 600; color: var(--g-texte-secondaire); }
+.vl-eq__chiffres strong { font-family: var(--g-police-titre); font-size: 1.05rem; font-weight: 700; color: var(--g-texte); font-variant-numeric: tabular-nums; }
+.vl-eq__chiffres strong[data-ton] { color: var(--ton-texte); }
+.vl-eq__chiffres small { font-size: 0.7rem; color: var(--g-texte-secondaire); font-weight: 500; }
+.vl-eq__preventif {
+  background: var(--g-surface);
+  border: 1px solid var(--g-bordure);
+  border-radius: 14px;
+  padding: 14px 18px;
+}
+
+/* Frise de l'historique */
+.vl-eq__frise { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.vl-eq__frise > li {
+  position: relative;
+  display: flex; gap: 12px;
+  padding: 0 0 14px;
+}
+.vl-eq__frise > li:last-child { padding-bottom: 0; }
+.vl-eq__frise > li::before {
+  content: ''; position: absolute; inset-inline-start: 5px; top: 14px; bottom: 0;
+  width: 2px; background: var(--g-bordure);
+}
+.vl-eq__frise > li:last-child::before { display: none; }
+.vl-eq__frise-point { width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; background: var(--ton); box-shadow: 0 0 0 3px var(--ton-fond); flex-shrink: 0; }
+.vl-eq__frise > li > div { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.vl-eq__frise-titre { font-size: 0.85rem; color: var(--g-texte-2); }
+.vl-eq__frise-titre strong { color: var(--g-texte); }
+
+@media (max-width: 760px) {
+  .vl-eq .vl-ligne { grid-template-columns: 22px minmax(0, 1fr); }
+  .vl-eq .vl-ligne > :nth-child(n + 3) { grid-column: 2; }
+  .vl-eq__detail { padding-inline-start: 16px; }
+  .vl-eq__chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Adresse IP d'un équipement (ligne de la liste) */
+.vl-eq__ip strong { font-family: var(--g-police-mono); font-weight: 600; font-size: 0.74rem; }
+.vl-eq__ip-point { width: 7px; height: 7px; border-radius: 50%; background: var(--g-slate-300); }
+.vl-eq__ip--en_ligne .vl-eq__ip-point { background: var(--g-emerald-500); }
+.vl-eq__ip--hors_ligne .vl-eq__ip-point { background: var(--g-red-500); }
+
+/* Alertes machines : réclamation déjà créée depuis l'alerte */
+.vl-alerte-recl { border-color: var(--g-emerald-200, #a7f3d0); background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-700, #047857); }
+.vl-alerte-recl:hover:not(:disabled) { border-color: var(--g-emerald-500); background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-700, #047857); }
+
+/* Alertes machines : message reçu brut */
+.vl-alerte-brut {
+  margin: 4px 0 0;
+  padding: 8px 10px;
+  max-height: 140px;
+  overflow: auto;
+  border-radius: 8px;
+  background: var(--g-slate-50);
+  border: 1px solid var(--g-bordure);
+  font: 0.72rem/1.45 var(--g-police-mono);
+  color: var(--g-texte-2);
+  white-space: pre-wrap;
+  word-break: break-all;
+}

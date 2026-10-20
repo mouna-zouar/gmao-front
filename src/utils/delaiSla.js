@@ -22,6 +22,24 @@ function duree(ms) {
 export function delaiSla(sla, maintenant = Date.now()) {
   if (!sla || sla.statutResolution === 'NON_APPLICABLE') return null;
 
+  if (sla.delaiResolutionReelHeures != null) {
+    const reelMs = sla.delaiResolutionReelHeures * HEURE;
+    const cibleMs = (sla.delaiResolutionCibleHeures ?? 0) * HEURE;
+    const enRetard = sla.statutResolution === 'DEPASSE';
+    return {
+      phase: 'termine',
+      ton: enRetard ? 'retard' : 'ok',
+      echeance: Number.MAX_SAFE_INTEGER - 1,
+      texte: enRetard
+        ? t('Effectué en {d} · retard {r}', { d: duree(reelMs), r: duree(reelMs - cibleMs) })
+        : t('Effectué en {d} · dans les délais', { d: duree(reelMs) }),
+      titre: t('Délai de résolution : {n} h selon la priorité {p}', {
+        n: sla.delaiResolutionCibleHeures ?? '—',
+        p: sla.priorite ?? '—',
+      }),
+    };
+  }
+
   const reponseFaite = sla.delaiReponseReelHeures != null;
   const phase = reponseFaite ? 'resolution' : 'reponse';
   const echeanceIso = reponseFaite ? sla.echeanceResolution : sla.echeanceReponse;

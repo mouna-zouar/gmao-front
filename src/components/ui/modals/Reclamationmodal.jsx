@@ -399,6 +399,10 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
         ...(valeursInitiales?.lotArticleImmobilistationId != null
           ? { lotArticleImmobilistationId: String(valeursInitiales.lotArticleImmobilistationId) }
           : {}),
+        // Autres champs proposés par l'appelant (ex. réclamation créée depuis une alerte machine)
+        ...Object.fromEntries(['description', 'criticite', 'urgence', 'type', 'sourceInformation']
+          .filter((k) => valeursInitiales?.[k] != null && valeursInitiales[k] !== '')
+          .map((k) => [k, String(valeursInitiales[k])])),
       });
     }
     setError(null);

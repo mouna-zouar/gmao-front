@@ -34,7 +34,8 @@
 .pmodal--full { max-width: 1400px; }
 
 /* ============================================================
-   HEADER
+   HEADER — même en-tête que les modales (BonMaintenanceModal, VehiculeModal…) :
+   fond turquoise unique, texte blanc, icône translucide, petit libellé au-dessus du titre.
    ============================================================ */
 .pmodal__header {
   position: relative;
@@ -42,21 +43,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 24px;
-  border-bottom: 1px solid var(--g-slate-200);
-  background: var(--g-blanc);
+  padding: 18px 24px;
+  background: var(--g-brand-600);
+  color: var(--g-blanc);
   flex-shrink: 0;
-}
-
-.pmodal__header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--modal-accent, var(--g-brand-500));
-  opacity: 0.9;
 }
 
 .pmodal__title-wrap {
@@ -70,31 +60,41 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--modal-accent, var(--g-brand-500)) 10%, white);
-  color: var(--modal-accent, var(--g-brand-500));
-  border: 1px solid color-mix(in srgb, var(--modal-accent, var(--g-brand-500)) 25%, white);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--g-blanc);
   flex-shrink: 0;
 }
 
 .pmodal__title-text { min-width: 0; }
 
+.pmodal__eyebrow {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 .pmodal__title {
   margin: 0;
-  font-size: 1.45rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  color: var(--g-slate-900);
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  color: var(--g-blanc);
+  letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
 .pmodal__subtitle {
-  margin: 3px 0 0;
-  font-size: 0.85rem;
+  margin: 2px 0 0;
+  font-size: 0.8rem;
   font-weight: 500;
-  color: var(--g-slate-500);
+  color: rgba(255, 255, 255, 0.82);
   line-height: 1.4;
 }
 
@@ -102,28 +102,32 @@
    BOUTON FERMER
    ============================================================ */
 .pmodal__close {
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 8px;
-  background: var(--g-slate-100);
-  color: var(--g-slate-500);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--g-blanc);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background 0.2s ease, transform 0.2s ease;
   flex-shrink: 0;
 }
 
 .pmodal__close:hover {
-  background: var(--g-red-50);
-  color: var(--g-red-600);
+  background: rgba(255, 255, 255, 0.3);
   transform: rotate(90deg);
 }
 
 .pmodal__close:active {
   transform: rotate(90deg) scale(0.94);
+}
+
+.pmodal__close:focus-visible {
+  outline: 2px solid var(--g-blanc);
+  outline-offset: 2px;
 }
 
 /* ============================================================
@@ -187,7 +191,7 @@
   }
 
   .pmodal__title {
-    font-size: 1.15rem;
+    font-size: 1.02rem;
   }
 
   .pmodal__subtitle {

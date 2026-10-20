@@ -1,9 +1,12 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Car, CheckCircle2, Coins, Loader2, Receipt, Search, UserCheck, UserX, X } from 'lucide-react';
+import { AlertCircle, Calendar, Car, Check, CheckCircle2, ChevronRight, Coins, FileText, Loader2, MapPin, Receipt, Save, Search, User, UserCheck, UserX, X } from 'lucide-react';
+import Button from '../Button';
 import vehiculeAmendeService from '../../../services/vehiculeAmendeService';
 import authService from '../../../services/Authservice';
 import { t, locale } from '../../../i18n';
 import { TYPES_INFRACTION, IMPUTATIONS, ORIGINE, ltr } from '../../../constants/Amendelibelles';
+import './Modal.css';
+import './VehiculeIncidentModal.css';
 import './VehiculeAmendeModal.css';
 
 const vide = {
@@ -21,6 +24,39 @@ const maintenantLocal = () => {
   return d.toISOString().slice(0, 16);
 };
 
+// Fenêtres ouvertes les unes sur les autres : Échap ne ferme que celle du dessus
+const pileFenetres = [];
+
+// Sections de la fenêtre de saisie (même navigation que les autres fenêtres du Parc)
+const SECTIONS_AMENDE = [
+  { id: 'infraction', label: 'Infraction', Icone: Receipt },
+  { id: 'conducteur', label: 'Conducteur', Icone: User },
+  { id: 'paiement', label: 'PV & paiement', Icone: Coins },
+];
+const SECTION_DU_CHAMP = {
+  vehiculeId: 'infraction', dateInfraction: 'infraction', type: 'infraction',
+  montant: 'paiement', dateLimitePaiement: 'paiement',
+};
+
+/** Échap ferme seulement la fenêtre du dessus (fenêtres ouvertes les unes sur les autres). */
+function useEchap(onClose) {
+  const fermer = useRef(onClose);
+  useEffect(() => { fermer.current = onClose; });
+  useEffect(() => {
+    const jeton = {};
+    pileFenetres.push(jeton);
+    const echap = (e) => {
+      if (e.key === 'Escape' && pileFenetres.at(-1) === jeton) { e.stopPropagation(); fermer.current(); }
+    };
+    // Phase de capture : passe avant les fenêtres plein écran (PageModal) qui écoutent aussi Échap
+    document.addEventListener('keydown', echap, true);
+    return () => {
+      pileFenetres.splice(pileFenetres.indexOf(jeton), 1);
+      document.removeEventListener('keydown', echap, true);
+    };
+  }, []);
+}
+
 function nomPersonnel(p) {
   return p ? `${p.nom || ''} ${p.prenom || ''}`.trim() || t('Personnel #{id}', { id: p.id }) : '';
 }
@@ -34,30 +70,13 @@ function dateHeure(v) {
 /* ───────────────────────── Fenêtre commune ─────────────────────────
    Réutilisée par les fenêtres du Parc (amendes, frais et coûts des véhicules). */
 
-// Fenêtres ouvertes les unes sur les autres : Échap ne ferme que celle du dessus
-const pileFenetres = [];
 
 export function Fenetre({ titre, sousTitre, Icone, onClose, children, pied, largeur = 760 }) {
   const idTitre = useId();
   const boite = useRef(null);
-  const fermer = useRef(onClose);
-  useEffect(() => { fermer.current = onClose; });
-
-  useEffect(() => {
-    const jeton = {};
-    pileFenetres.push(jeton);
-    const echap = (e) => {
-      if (e.key === 'Escape' && pileFenetres.at(-1) === jeton) { e.stopPropagation(); fermer.current(); }
-    };
-    // Phase de capture : passe avant les fenêtres plein écran (PageModal) qui écoutent aussi Échap
-    document.addEventListener('keydown', echap, true);
-    // Focus au premier champ une seule fois, à l'ouverture
-    boite.current?.querySelector('input, select, textarea, button')?.focus();
-    return () => {
-      pileFenetres.splice(pileFenetres.indexOf(jeton), 1);
-      document.removeEventListener('keydown', echap, true);
-    };
-  }, []);
+  useEchap(onClose);
+  // Focus au premier champ une seule fois, à l'ouverture
+  useEffect(() => { boite.current?.querySelector('input, select, textarea, button')?.focus(); }, []);
 
   return (
     <div className="vam-fond" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -115,6 +134,9 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
   const [erreurs, setErreurs] = useState({});
   const [erreurServeur, setErreurServeur] = useState('');
   const [enregistrement, setEnregistrement] = useState(false);
+  const [section, setSection] = useState('infraction');
+  const [rechercheVehicule, setRechercheVehicule] = useState('');
+  useEchap(onClose);
 
   // Recherche du conducteur : { etat: 'attente' | 'recherche' | 'fait' | 'erreur', resultat }
   const [identification, setIdentification] = useState(() => (amende ? {
@@ -200,12 +222,13 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
   };
 
   const enregistrer = async (ev) => {
-    ev.preventDefault();
+    ev?.preventDefault?.();
     const e = valider();
     setErreurs(e);
     const premier = Object.keys(e)[0];
     if (premier) {
-      document.getElementById(`vam-${premier}`)?.focus();
+      setSection(SECTION_DU_CHAMP[premier] || 'infraction');
+      setTimeout(() => document.getElementById(`vam-${premier}`)?.focus(), 0);
       return;
     }
     const ctx = authService.getContexteMetier();
@@ -246,54 +269,97 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
   const r = identification.resultat;
   const proposeNom = r?.conducteurNom || nomPersonnel(personnelParId[String(r?.conducteurId)]);
   const conducteurChoisi = personnelParId[form.conducteurId];
+  const vehiculeChoisi = vehicules.find((v) => String(v.id) === String(form.vehiculeId));
 
-  return (
-    <Fenetre
-      titre={enModification ? t('Modifier l’amende {num}', { num: ltr(amende.num || '') }) : t('Nouvelle amende')}
-      sousTitre={t('Le conducteur responsable est retrouvé à partir de la date de l’infraction.')}
-      Icone={Receipt}
-      onClose={onClose}
-      pied={(
-        <>
-          <button type="button" className="vam-bouton vam-bouton--clair" onClick={onClose} disabled={enregistrement}>{t('Annuler')}</button>
-          <button type="submit" form="vam-formulaire" className="vam-bouton" disabled={enregistrement}>
-            {enregistrement ? <Loader2 size={16} className="vam-tourne" /> : <CheckCircle2 size={16} />}
-            {enModification ? t('Enregistrer') : t("Enregistrer l'amende")}
-          </button>
-        </>
-      )}
-    >
-      <form id="vam-formulaire" className="vam-corps" onSubmit={enregistrer} noValidate>
-        {erreurServeur && <p className="vam-alerte" role="alert">{erreurServeur}</p>}
+  // Liste de véhicules à cartes, comme les autres fenêtres du Parc (le véhicule choisi reste visible)
+  const vehiculesAffiches = useMemo(() => {
+    const q = rechercheVehicule.trim().toLowerCase();
+    const liste = vehiculesTries.filter((v) => !q || `${v.matricule || ''} ${v.marque || ''} ${v.modele || ''}`.toLowerCase().includes(q)).slice(0, 6);
+    if (vehiculeChoisi && !liste.some((v) => v.id === vehiculeChoisi.id)) liste.unshift(vehiculeChoisi);
+    return liste;
+  }, [vehiculesTries, rechercheVehicule, vehiculeChoisi]);
 
-        <fieldset className="vam-groupe">
-          <legend>{t('Infraction')}</legend>
-          <div className="vam-grille">
-            <Champ id="vam-vehiculeId" label={t('Véhicule')} requis erreur={erreurs.vehiculeId}>
-              <select id="vam-vehiculeId" value={form.vehiculeId} onChange={(e) => maj('vehiculeId', e.target.value)} aria-invalid={!!erreurs.vehiculeId} aria-describedby={erreurs.vehiculeId ? 'vam-vehiculeId-erreur' : undefined}>
-                <option value="">{t('— Choisir —')}</option>
-                {vehiculesTries.map((v) => (
-                  <option key={v.id} value={v.id}>{[ltr(v.matricule), v.marque].filter(Boolean).join(' · ') || t('Véhicule #{id}', { id: v.id })}</option>
-                ))}
-              </select>
-            </Champ>
-            <Champ id="vam-dateInfraction" label={t("Date et heure de l'infraction")} requis erreur={erreurs.dateInfraction}>
-              <input id="vam-dateInfraction" type="datetime-local" max={maintenantLocal()} value={form.dateInfraction} onChange={(e) => maj('dateInfraction', e.target.value)} aria-invalid={!!erreurs.dateInfraction} aria-describedby={erreurs.dateInfraction ? 'vam-dateInfraction-erreur' : undefined} />
-            </Champ>
-            <Champ id="vam-type" label={t("Type d'infraction")} requis erreur={erreurs.type}>
-              <select id="vam-type" value={form.type} onChange={(e) => maj('type', e.target.value)} aria-invalid={!!erreurs.type} aria-describedby={erreurs.type ? 'vam-type-erreur' : undefined}>
+  const typeLibelle = form.type ? t(TYPES_INFRACTION[form.type]) : t('À choisir');
+  const imputationLibelle = t(IMPUTATIONS[form.imputation] || '—');
+  const montantLibelle = form.montant !== '' && !Number.isNaN(Number(form.montant))
+    ? `${Number(form.montant).toLocaleString(locale(), { minimumFractionDigits: 3, maximumFractionDigits: 3 })} DT`
+    : '—';
+
+  const compteSection = {
+    infraction: [form.vehiculeId, form.dateInfraction, form.type, form.lieu].filter(Boolean).length,
+    conducteur: [form.conducteurId].filter(Boolean).length,
+    paiement: [form.referencePv, form.montant !== '' ? 'x' : '', form.dateReception, form.dateLimitePaiement, form.commentaire].filter(Boolean).length,
+  };
+  const erreurSection = (id) => Object.keys(erreurs).some((k) => erreurs[k] && SECTION_DU_CHAMP[k] === id);
+  const indexSection = SECTIONS_AMENDE.findIndex((s) => s.id === section);
+
+  const champ = (id, label, { requis, erreur, aide, Icone, large } = {}, controle) => (
+    <div className={`vim-field ${large ? 'vim-field--full' : ''} ${erreur ? 'vam-champ-erreur' : ''}`}>
+      <label htmlFor={`vam-${id}`}>{label}{requis && <span className="vim-required">*</span>}</label>
+      {Icone ? <div className="vim-input-icon"><Icone size={15} strokeWidth={2.4} />{controle}</div> : controle}
+      {erreur ? <p className="vam-erreur-champ" id={`vam-${id}-erreur`}>{erreur}</p> : aide && <p className="vim-hint">{aide}</p>}
+    </div>
+  );
+  const aria = (id) => ({ 'aria-invalid': !!erreurs[id], 'aria-describedby': erreurs[id] ? `vam-${id}-erreur` : undefined });
+
+  const contenu = () => {
+    if (section === 'infraction') {
+      return (
+        <div className="vim-content-pane">
+          <div className="vim-pane-header">
+            <h3>{t('Infraction')}</h3>
+            <p>{t('Le véhicule, la date et la nature de l’infraction')}</p>
+          </div>
+
+          <div className="vim-field vim-field--full">
+            <label>{t('Véhicule')}<span className="vim-required">*</span></label>
+            <div className="vim-search">
+              <Search size={16} strokeWidth={2.3} className="vim-search-icon" />
+              <input type="text" placeholder={t('Rechercher par matricule, marque...')} value={rechercheVehicule} onChange={(e) => setRechercheVehicule(e.target.value)} aria-label={t('Rechercher un véhicule')} />
+            </div>
+            {vehiculesAffiches.length === 0 ? (
+              <div className="vim-vehicules-empty"><Car size={24} strokeWidth={1.6} /><span>{t('Aucun véhicule trouvé')}</span></div>
+            ) : (
+              <div className="vim-vehicules-grid" id="vam-vehiculeId" tabIndex={-1} role="radiogroup" aria-label={t('Véhicule')} {...aria('vehiculeId')}>
+                {vehiculesAffiches.map((v) => {
+                  const choisi = String(form.vehiculeId) === String(v.id);
+                  return (
+                    <button key={v.id} type="button" role="radio" aria-checked={choisi} className={`vim-vehicule-card ${choisi ? 'selected' : ''}`} onClick={() => maj('vehiculeId', String(v.id))}>
+                      <div className="vim-vehicule-icon"><Car size={18} strokeWidth={2.2} /></div>
+                      <div className="vim-vehicule-text">
+                        <span className="vim-vehicule-matricule">{ltr(v.matricule) || t('Véhicule #{id}', { id: v.id })}</span>
+                        <span className="vim-vehicule-marque">{v.marque || '—'}{v.modele ? ` · ${v.modele}` : ''}</span>
+                      </div>
+                      {choisi && <div className="vim-vehicule-check"><Check size={14} strokeWidth={3} /></div>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {erreurs.vehiculeId && <p className="vam-erreur-champ" id="vam-vehiculeId-erreur">{erreurs.vehiculeId}</p>}
+          </div>
+
+          <div className="vim-grid" style={{ marginTop: 18 }}>
+            {champ('dateInfraction', t("Date et heure de l'infraction"), { requis: true, erreur: erreurs.dateInfraction, Icone: Calendar },
+              <input id="vam-dateInfraction" type="datetime-local" max={maintenantLocal()} value={form.dateInfraction} onChange={(e) => maj('dateInfraction', e.target.value)} {...aria('dateInfraction')} />)}
+            {champ('type', t("Type d'infraction"), { requis: true, erreur: erreurs.type, Icone: Receipt },
+              <select id="vam-type" value={form.type} onChange={(e) => maj('type', e.target.value)} {...aria('type')}>
                 <option value="">{t('— Choisir —')}</option>
                 {Object.entries(TYPES_INFRACTION).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
-              </select>
-            </Champ>
-            <Champ id="vam-lieu" label={t('Lieu')}>
-              <input id="vam-lieu" type="text" value={form.lieu} onChange={(e) => maj('lieu', e.target.value)} placeholder={t('Ville, route, adresse…')} />
-            </Champ>
+              </select>)}
+            {champ('lieu', t('Lieu'), { large: true, Icone: MapPin },
+              <input id="vam-lieu" type="text" value={form.lieu} onChange={(e) => maj('lieu', e.target.value)} placeholder={t('Ville, route, adresse…')} />)}
           </div>
-        </fieldset>
-
-        <fieldset className="vam-groupe">
-          <legend>{t('Conducteur responsable')}</legend>
+        </div>
+      );
+    }
+    if (section === 'conducteur') {
+      return (
+        <div className="vim-content-pane">
+          <div className="vim-pane-header">
+            <h3>{t('Conducteur responsable')}</h3>
+            <p>{t('Le conducteur responsable est retrouvé à partir de la date de l’infraction.')}</p>
+          </div>
           <div className={`vam-identification vam-identification--${identification.etat === 'fait' ? (r?.conducteurId ? 'trouve' : 'aucun') : identification.etat}`} aria-live="polite">
             {identification.etat === 'attente' && (
               <><Search size={18} aria-hidden="true" /><span>{t('Choisissez le véhicule et la date : le conducteur sera retrouvé automatiquement.')}</span></>
@@ -317,7 +383,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
                         debut: dateHeure(r.missionDebut),
                         fin: r.missionFin ? dateHeure(r.missionFin) : t('en cours'),
                       })
-                      // Amende enregistrée : seule la mission est connue, pas ses horaires
                       : r.missionNum ? t('en mission {num}.', { num: ltr(r.missionNum) }) : t('en mission à cette date.'))
                     : r.origine === ORIGINE.AFFECTATION
                       ? t('dernier conducteur affecté au véhicule (aucune mission à cette date).')
@@ -329,46 +394,132 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
               <><UserX size={18} aria-hidden="true" /><span>{t('Aucune mission ni affectation à cette date : choisissez le conducteur dans la liste.')}</span></>
             )}
           </div>
-          <div className="vam-grille">
-            <Champ id="vam-conducteurId" label={t('Conducteur')} aide={manuel && form.conducteurId ? t('Choisi à la main.') : undefined}>
+          <div className="vim-grid" style={{ marginTop: 18 }}>
+            {champ('conducteurId', t('Conducteur'), { aide: manuel && form.conducteurId ? t('Choisi à la main.') : undefined, Icone: User },
               <select id="vam-conducteurId" value={form.conducteurId} onChange={(e) => choisirConducteur(e.target.value)}>
                 <option value="">{t('— Non identifié —')}</option>
                 {form.conducteurId && !conducteurChoisi && (
                   <option value={form.conducteurId}>{proposeNom || t('Personnel #{id}', { id: form.conducteurId })}</option>
                 )}
                 {personnelsTries.map((p) => <option key={p.id} value={p.id}>{nomPersonnel(p)}</option>)}
-              </select>
-            </Champ>
-            <Champ id="vam-imputation" label={t('Qui paie ?')}>
+              </select>)}
+            {champ('imputation', t('Qui paie ?'), { Icone: Coins },
               <select id="vam-imputation" value={form.imputation} onChange={(e) => maj('imputation', e.target.value)}>
                 {Object.entries(IMPUTATIONS).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
-              </select>
-            </Champ>
+              </select>)}
           </div>
-        </fieldset>
+        </div>
+      );
+    }
+    return (
+      <div className="vim-content-pane">
+        <div className="vim-pane-header">
+          <h3>{t('Procès-verbal et paiement')}</h3>
+          <p>{t('Référence du PV, montant et échéance de paiement')}</p>
+        </div>
+        <div className="vim-grid">
+          {champ('referencePv', t('N° du procès-verbal'), { Icone: FileText },
+            <input id="vam-referencePv" type="text" value={form.referencePv} onChange={(e) => maj('referencePv', e.target.value)} />)}
+          {champ('montant', t('Montant (DT)'), { requis: true, erreur: erreurs.montant, Icone: Coins },
+            <input id="vam-montant" type="number" min="0" step="0.001" inputMode="decimal" value={form.montant} onChange={(e) => maj('montant', e.target.value)} {...aria('montant')} />)}
+          {champ('dateReception', t('Reçue le'), { Icone: Calendar },
+            <input id="vam-dateReception" type="date" value={form.dateReception} onChange={(e) => maj('dateReception', e.target.value)} />)}
+          {champ('dateLimitePaiement', t('À payer avant le'), { erreur: erreurs.dateLimitePaiement, Icone: Calendar },
+            <input id="vam-dateLimitePaiement" type="date" value={form.dateLimitePaiement} onChange={(e) => maj('dateLimitePaiement', e.target.value)} {...aria('dateLimitePaiement')} />)}
+          {champ('commentaire', t('Commentaire'), { large: true },
+            <textarea id="vam-commentaire" rows={3} value={form.commentaire} onChange={(e) => maj('commentaire', e.target.value)} placeholder={t('Notes internes, suivi...')} />)}
+        </div>
+      </div>
+    );
+  };
 
-        <fieldset className="vam-groupe">
-          <legend>{t('Procès-verbal et paiement')}</legend>
-          <div className="vam-grille">
-            <Champ id="vam-referencePv" label={t('N° du procès-verbal')}>
-              <input id="vam-referencePv" type="text" value={form.referencePv} onChange={(e) => maj('referencePv', e.target.value)} />
-            </Champ>
-            <Champ id="vam-montant" label={t('Montant (DT)')} requis erreur={erreurs.montant}>
-              <input id="vam-montant" type="number" min="0" step="0.001" inputMode="decimal" value={form.montant} onChange={(e) => maj('montant', e.target.value)} aria-invalid={!!erreurs.montant} aria-describedby={erreurs.montant ? 'vam-montant-erreur' : undefined} />
-            </Champ>
-            <Champ id="vam-dateReception" label={t('Reçue le')}>
-              <input id="vam-dateReception" type="date" value={form.dateReception} onChange={(e) => maj('dateReception', e.target.value)} />
-            </Champ>
-            <Champ id="vam-dateLimitePaiement" label={t('À payer avant le')} erreur={erreurs.dateLimitePaiement}>
-              <input id="vam-dateLimitePaiement" type="date" value={form.dateLimitePaiement} onChange={(e) => maj('dateLimitePaiement', e.target.value)} aria-invalid={!!erreurs.dateLimitePaiement} aria-describedby={erreurs.dateLimitePaiement ? 'vam-dateLimitePaiement-erreur' : undefined} />
-            </Champ>
-            <Champ id="vam-commentaire" label={t('Commentaire')} large>
-              <textarea id="vam-commentaire" rows={2} value={form.commentaire} onChange={(e) => maj('commentaire', e.target.value)} />
-            </Champ>
+  return (
+    <div className="modal-overlay vam-superpose" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="vim-modal vam-modal" role="dialog" aria-modal="true" aria-labelledby="vam-titre">
+
+        {/* ═══ EN-TÊTE (même style que les autres fenêtres du Parc) ═══ */}
+        <div className="vim-header">
+          <div className="vim-header-left">
+            <div className="vim-header-icon"><Receipt size={22} strokeWidth={2.2} /></div>
+            <div className="vim-header-titles">
+              <span className="vim-eyebrow">{enModification ? t('Modification') : t('Nouvelle amende')}</span>
+              <h2 id="vam-titre">
+                {enModification
+                  ? t('Modifier l’amende {num}', { num: ltr(amende.num || '') })
+                  : (vehiculeChoisi ? ltr(vehiculeChoisi.matricule) : t('Enregistrer une amende'))}
+              </h2>
+              <p className="vim-header-subtitle">{t('Le conducteur responsable est retrouvé à partir de la date de l’infraction.')}</p>
+            </div>
           </div>
-        </fieldset>
-      </form>
-    </Fenetre>
+          <div className="vim-header-right">
+            <div className="vim-header-stats">
+              <div className="vim-header-stat">
+                <span className="vim-header-stat-label">{t('Type')}</span>
+                <span className={`vim-header-stat-value tag-${form.type ? 'red' : 'slate'}`}><Receipt size={12} strokeWidth={2.5} />{typeLibelle}</span>
+              </div>
+              <div className="vim-header-stat">
+                <span className="vim-header-stat-label">{t('Montant')}</span>
+                <span className="vim-header-stat-value tag-amber"><Coins size={12} strokeWidth={2.5} />{montantLibelle}</span>
+              </div>
+              <div className="vim-header-stat">
+                <span className="vim-header-stat-label">{t('Qui paie ?')}</span>
+                <span className="vim-header-stat-value tag-blue"><User size={12} strokeWidth={2.5} />{imputationLibelle}</span>
+              </div>
+            </div>
+            <button type="button" className="vim-close" onClick={onClose} aria-label={t('Fermer')}><X size={18} strokeWidth={2.5} /></button>
+          </div>
+        </div>
+
+        {/* ═══ SECTIONS + CONTENU ═══ */}
+        <form id="vam-formulaire" className="vim-layout" onSubmit={enregistrer} noValidate>
+          <aside className="vim-nav">
+            <div className="vim-nav-title">{t('Sections')}</div>
+            <nav className="vim-nav-list">
+              {SECTIONS_AMENDE.map((s) => {
+                const Icone = s.Icone;
+                const n = compteSection[s.id];
+                return (
+                  <button key={s.id} type="button" className={`vim-nav-item ${section === s.id ? 'active' : ''} ${erreurSection(s.id) ? 'vam-nav-erreur' : ''}`} onClick={() => setSection(s.id)} aria-current={section === s.id ? 'step' : undefined}>
+                    <span className="vim-nav-item-icon"><Icone size={15} strokeWidth={2.3} /></span>
+                    <span className="vim-nav-item-label">{t(s.label)}</span>
+                    {erreurSection(s.id)
+                      ? <span className="vim-nav-item-count vam-nav-erreur__n" aria-label={t('Champ à corriger')}>!</span>
+                      : n > 0 && <span className="vim-nav-item-count">{n}</span>}
+                  </button>
+                );
+              })}
+            </nav>
+          </aside>
+
+          <div className="vim-content">
+            {contenu()}
+            {erreurServeur && (
+              <div className="vim-error-inline" role="alert"><AlertCircle size={16} strokeWidth={2.5} /><span>{erreurServeur}</span></div>
+            )}
+          </div>
+        </form>
+
+        {/* ═══ PIED ═══ */}
+        <div className="vim-footer">
+          <div className="vim-footer-left">
+            <span className="vim-footer-step">{indexSection + 1} / {SECTIONS_AMENDE.length}</span>
+          </div>
+          <div className="vim-footer-right">
+            <Button type="button" variant="ghost" onClick={onClose} disabled={enregistrement}>{t('Annuler')}</Button>
+            {indexSection < SECTIONS_AMENDE.length - 1 && (
+              <Button type="button" variant="secondary" onClick={() => setSection(SECTIONS_AMENDE[indexSection + 1].id)} disabled={enregistrement}>
+                {t('Suivant')} <ChevronRight size={16} strokeWidth={2.5} className="rtl-miroir" style={{ marginInlineStart: 4 }} />
+              </Button>
+            )}
+            <Button type="button" variant="primary" onClick={enregistrer} disabled={enregistrement}>
+              {enregistrement
+                ? <><Loader2 size={16} strokeWidth={2.5} className="vam-tourne" style={{ marginInlineEnd: 6 }} />{t('Enregistrement...')}</>
+                : <><Save size={16} strokeWidth={2.5} style={{ marginInlineEnd: 6 }} />{enModification ? t('Mettre à jour') : t("Enregistrer l'amende")}</>}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

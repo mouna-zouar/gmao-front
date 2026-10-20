@@ -21,7 +21,9 @@ import {
   ArrowDown,
   ArrowUpDown,
   Building2,
-  Calendar
+  Calendar,
+  RefreshCw,
+  Info
 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import reclamationService from '../../../services/reclamationService';
@@ -35,7 +37,7 @@ import bonMaintenanceFullService from '../../../services/bonMaintenanceFullServi
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
-import { t, locale } from '../../../i18n';
+import { t, tp, locale } from '../../../i18n';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import { STATUTS, TONS, optionsStatut } from '../../../constants/statuts';
 import { imprimerListe } from '../../../utils/imprimerListe';
@@ -306,7 +308,13 @@ export default function Reclamations() {
     criticite: { cell: (r) => <td key="criticite">{r.criticite ? <BadgeStatut type="niveau" valeur={r.criticite} taille="petit" /> : '—'}</td> },
     urgence: { cell: (r) => <td key="urgence">{r.urgence ? <BadgeStatut type="niveau" valeur={r.urgence} taille="petit" /> : '—'}</td> },
     personnel: { cell: (r) => <td key="personnel">{personnelLabel(r) || '—'}</td> },
-    date: { cell: (r) => <td key="date">{formatDate(r.date)}</td> },
+    date: {
+      cell: (r) => (
+        <td key="date">
+          <span className="reclamations-date-cell"><Calendar size={14} />{formatDate(r.date)}</span>
+        </td>
+      ),
+    },
     etat: {
       cell: (r) => (
         <td key="etat">
@@ -786,6 +794,13 @@ export default function Reclamations() {
           <Trash2 size={18} />
           <span>{t("Supprimer")}</span>
         </button>
+
+        {!selectedReclamation && (
+          <span className="reclamations-no-selection-message">
+            <Info size={16} />
+            {t("Sélectionnez une réclamation pour voir les actions disponibles")}
+          </span>
+        )}
       </div>
 
       <VuesListe
@@ -828,8 +843,15 @@ export default function Reclamations() {
         </div>
 
         <button className="reclamations-filter-reset" onClick={handleResetFilters}>
+          <RefreshCw size={16} />
           {t("Réinitialiser")}
         </button>
+
+        <div className="reclamations-filter-info">
+          <span className="reclamations-filter-result">
+            {tp('résultat', filteredReclamations.length)}
+          </span>
+        </div>
 
         <div className="reclamations-export-stack">
           <button className="reclamations-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>

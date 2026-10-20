@@ -35,6 +35,7 @@ import Cout from '../components/pages/Cout/Cout';
 import ParcPlanning from '../components/pages/parc/Planning/ParcPlanning';
 import Risque from '../components/pages/Risque/Risque';
 import Intelligence from '../components/pages/Intelligence/Intelligence';
+import AlertesMachines from '../components/pages/AlertesMachines/AlertesMachines';
 import ParametresSysteme from '../components/pages/ParametresSysteme/ParametresSysteme';
 import EspacePersonnel from '../components/pages/EspacePersonnel/EspacePersonnel';
 import EtatEquipement from '../components/pages/EtatEquipement/EtatEquipement';
@@ -88,6 +89,7 @@ const AppRoutes = () => {
             <Route path="/cout" element={<Cout />} />
             <Route path="/parc-planning" element={<ParcPlanning />} />
             <Route path="/intelligence" element={<Intelligence />} />
+            <Route path="/alertes-machines" element={<AlertesMachines />} />
             <Route path="/vehicules" element={<VehiculesPage />} />
             <Route path="/vehicule-conducteurs" element={<VehiculeConducteurs />} />
             <Route path="/permis-conduite" element={<PermisConduite />} />

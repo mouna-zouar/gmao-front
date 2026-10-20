@@ -47,6 +47,36 @@ const equipementService = {
     await api.delete(`/equipements/documents/${documentId}`);
   },
 
+  // ─── Connexion réseau (adresse IP de l'équipement) ───
+
+  /** { adresseIp, port, protocole, surveillee, commentaire, dernierResultat, … } ou null. */
+  async getConnexion(id) {
+    const reponse = await api.get(`/equipements/${id}/connexion`);
+    return reponse.status === 204 ? null : reponse.data;
+  },
+
+  async enregistrerConnexion(id, connexion) {
+    const { data } = await api.put(`/equipements/${id}/connexion`, connexion, { headers: enTetesAuteur() });
+    return data;
+  },
+
+  async supprimerConnexion(id) {
+    await api.delete(`/equipements/${id}/connexion`);
+  },
+
+  /** Teste l'adresse saisie (sans l'enregistrer), ou l'adresse enregistrée si saisie est vide. */
+  async testerConnexion(id, saisie = null) {
+    // Toujours un corps JSON (même vide) : sans lui, le serveur refuse la requête (415)
+    const { data } = await api.post(`/equipements/${id}/connexion/tester`, saisie || {});
+    return data; // { joignable, tempsMs, methode, message, date }
+  },
+
+  /** Toutes les connexions enregistrées. */
+  async listeConnexions() {
+    const { data } = await api.get('/equipements/connexions');
+    return data;
+  },
+
   /** Adresse du fichier, à ouvrir dans un nouvel onglet. */
   urlDocument(documentId) {
     return `${api.defaults.baseURL.replace(/\/$/, '')}/equipements/documents/${documentId}/fichier`;

@@ -66,7 +66,7 @@ const ALL_ITEMS = [
         ],
     },
 
-    /* ── Pilotage ── */
+   /* 
     {
         id: 'taches',
         label: 'Analyse',
@@ -79,7 +79,7 @@ const ALL_ITEMS = [
             { label: 'Disponibilité', path: '/disponibilite', icon: petit(M.disponibilite), motsCles: 'mtbf mttr' },
             { label: 'Risque', path: '/risque', icon: petit(M.risque), motsCles: 'criticité' },
         ],
-    },
+    },*/
 
     /* ── Administration ── */
     {

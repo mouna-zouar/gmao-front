@@ -11,6 +11,7 @@ import authService from '../../../services/Authservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
 import { imprimerEtiquettes, qrSvg } from './qrEtiquettes';
+import EquipementConnexion from './EquipementConnexion';
 import {
   CATEGORIES_DOCUMENT, CRITICITES, ETATS_BON, ETATS_EQUIPEMENT, ETATS_RECLAMATION,
   dateCourte, duree, garantieEnClair, montant, taille,
@@ -484,6 +485,9 @@ export default function EquipementFiche() {
               </ul>
             )}
           </Bloc>
+
+          {/* ---- Connexion réseau (adresse IP) : réservée aux utilisateurs connectés ---- */}
+          {connecte && <EquipementConnexion equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />}
 
           <Documents equipementId={identite.id} documents={documents} onChange={charger} />
         </aside>

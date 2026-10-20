@@ -5,7 +5,7 @@ import {
   Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw,
   Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, BarChart3, Search,
   Filter, RefreshCw, AlertCircle, Clock, Calendar, Users, Building2, ChevronLeft, ChevronRight, Loader2, Info,
-  AlertTriangle, Ban, Gauge, Sparkles, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, X, TriangleAlert } from 'lucide-react';
+  AlertTriangle, Ban, Gauge, Sparkles, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, X, TriangleAlert, RadioTower } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
@@ -25,6 +25,8 @@ import Anomalies from '../Anomalies/Anomalies';
 import BlocagesImmobilisation from '../BlocagesImmobilisation/BlocagesImmobilisation';
 import EquipementsEtEtat from '../Equipements/EquipementsEtEtat';
 import Intelligence from '../Intelligence/Intelligence';
+import AlertesMachines from '../AlertesMachines/AlertesMachines';
+import alerteMachineService from '../../../services/alerteMachineService';
 import SlaRetards from './SlaRetards';
 import slaService from '../../../services/slaService';
 import { delaiSla } from '../../../utils/delaiSla';
@@ -446,6 +448,15 @@ export default function BonsMaintenance() {
   const [anomaliesOpen, setAnomaliesOpen] = useState(false);
   const [blocagesOpen, setBlocagesOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
+  // Alertes envoyées par les machines (SNMP / Syslog) : badge = alertes à traiter
+  const [alertesMachinesOpen, setAlertesMachinesOpen] = useState(false);
+  const [nbAlertesMachines, setNbAlertesMachines] = useState(0);
+  useEffect(() => {
+    const compter = () => alerteMachineService.compterNouvelles().then(setNbAlertesMachines).catch(() => {});
+    compter();
+    const minuterie = setInterval(compter, 60 * 1000);
+    return () => clearInterval(minuterie);
+  }, [alertesMachinesOpen]);
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
@@ -502,15 +513,19 @@ export default function BonsMaintenance() {
   }, [recupererSlaRetards]);
   const nbSlaRetards = slaRetards?.length ?? 0;
 
-  /* ── Délai SLA de chaque bon ouvert (colonne « Délai ») : suit la priorité calculée automatiquement ── */
+  /* ── Délai SLA de chaque bon (colonne « Délai ») : temps restant, ou résultat pour un bon effectué ── */
   const [slaParBon, setSlaParBon] = useState({});
-  const recupererSlaOuverts = useCallback(() => slaService.getOuverts()
+  const idsSla = useMemo(
+    () => bons.filter((b) => Number(b.etat) !== ETAT.ANNULE).map((b) => b.id).filter((id) => id != null),
+    [bons],
+  );
+  const recupererSlaOuverts = useCallback(() => slaService.getPourBons(idsSla)
     .then((liste) => {
       const parBon = {};
       (Array.isArray(liste) ? liste : []).forEach((s) => { parBon[s.bonMaintenanceId] = s; });
       setSlaParBon(parBon);
     })
-    .catch((err) => console.error('Erreur chargement des délais SLA :', err)), []);
+    .catch((err) => console.error('Erreur chargement des délais SLA :', err)), [idsSla]);
   useEffect(() => { recupererSlaOuverts(); }, [bons, recupererSlaOuverts]);
   useEffect(() => {
     const minuterie = setInterval(recupererSlaOuverts, 60 * 1000); // le temps restant avance
@@ -1152,6 +1167,12 @@ export default function BonsMaintenance() {
           <button className="bons-toggle-stats" title={t("Équipements et leur état : fiche, historique, documents et QR code")} onClick={() => ouvrirEquipements('etat')}>
             <Gauge size={20} />
             <span>{t("Équipements")}</span>
+          </button>
+
+          <button className="bons-toggle-stats" title={t("Alertes envoyées par les machines (SNMP, Syslog) et coupures réseau")} onClick={() => setAlertesMachinesOpen(true)}>
+            <RadioTower size={20} />
+            <span>{t("Alertes machines")}</span>
+            {nbAlertesMachines > 0 && <span className="bons-toggle-badge" aria-label={t('{n} alertes à traiter', { n: nbAlertesMachines })}>{nbAlertesMachines > 99 ? '99+' : nbAlertesMachines}</span>}
           </button>
 
           <button className="bons-toggle-stats" title={t("Intelligence")} onClick={() => setIntelligenceOpen(true)}>
@@ -2009,7 +2030,7 @@ export default function BonsMaintenance() {
         title={t('Bons en retard SLA')}
         subtitle={t('Bons ouverts dont le délai de réponse ou de résolution est dépassé — cliquez sur un bon pour l\'ouvrir')}
         icon={AlarmClock}
-        accent="#d9434b"
+        eyebrow={t('Bons de maintenance')}
         size="full"
       >
         <SlaRetards
@@ -2027,7 +2048,7 @@ export default function BonsMaintenance() {
         title={t("Détection d'anomalies")}
         subtitle={t("Pics anormaux de réclamations par équipement ou par service")}
         icon={AlertTriangle}
-        accent="#dc2626"
+        eyebrow={t('Bons de maintenance')}
         size="full"
       >
         <Anomalies isModal />
@@ -2039,7 +2060,7 @@ export default function BonsMaintenance() {
         title={t("Blocages d'équipement")}
         subtitle={t("Équipements sans suite après arrêt obligatoire")}
         icon={Ban}
-        accent="#dc2626"
+        eyebrow={t('Bons de maintenance')}
         size="full"
       >
         <BlocagesImmobilisation isModal />
@@ -2051,7 +2072,7 @@ export default function BonsMaintenance() {
         title={t("Équipements")}
         subtitle={t("État, fiche, historique des pannes, documents et étiquettes QR")}
         icon={Gauge}
-        accent="#0794a4"
+        eyebrow={t('Bons de maintenance')}
         size="full"
       >
         <EquipementsEtEtat onglet={ongletEquipements} onChangerOnglet={ouvrirEquipements} />
@@ -2063,10 +2084,22 @@ export default function BonsMaintenance() {
         title={t("Intelligence")}
         subtitle={t("Vue consolidée : Risques, Anomalies et RCA/CAPA croisés")}
         icon={Sparkles}
-        accent="#7c3aed"
+        eyebrow={t('Bons de maintenance')}
         size="full"
       >
         <Intelligence isModal />
+      </PageModal>
+
+      <PageModal
+        isOpen={alertesMachinesOpen}
+        onClose={() => setAlertesMachinesOpen(false)}
+        title={t("Alertes machines")}
+        subtitle={t("Warnings envoyés par les machines (SNMP, Syslog) et coupures détectées par la surveillance réseau")}
+        icon={RadioTower}
+        eyebrow={t('Bons de maintenance')}
+        size="full"
+      >
+        <AlertesMachines isModal />
       </PageModal>
     </div>
   );

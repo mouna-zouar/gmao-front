@@ -581,7 +581,7 @@
    ============================================================ */
 .bons-export-stack {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 6px;
   margin-left: auto;
   justify-content: center;
@@ -1385,4 +1385,17 @@
   .bons-excel-footer-actions {
     justify-content: flex-end;
   }
+}
+
+/* Liste vide : la cellule doit couvrir toute la largeur (display:flex cassait le colSpan) */
+td.bons-table-empty { display: table-cell; text-align: center; }
+td.bons-table-empty > svg { display: block; margin: 0 auto 12px; }
+
+/* Badge « à traiter » sur un bouton de l'en-tête (Alertes machines) */
+.bons-toggle-stats { position: relative; }
+.bons-toggle-badge {
+  min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px;
+  background: var(--g-red-600); color: var(--g-blanc);
+  font-size: 0.68rem; font-weight: 800; line-height: 18px; text-align: center;
 }

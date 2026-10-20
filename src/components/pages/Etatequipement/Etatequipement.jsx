@@ -11,13 +11,11 @@ import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../cons
 import EquipementMaintenancePanel from './Equipementmaintenancepanel';
 import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
 import { t, tp, locale, tPdf, localePdf } from '../../../i18n';
-import { ArrowRight, ChevronDown, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, Inbox, Info, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
-import './EtatEquipement.css';
-import '../Equipements/Equipements.css';
+import { ArrowRight, ChevronDown, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
+import { VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
 
 /* ---------- Risque ---------- */
 const RISQUE_NIVEAU_LABELS = { CRITIQUE: 'Critique', ELEVE: 'Élevé', MODERE: 'Modéré', FAIBLE: 'Faible' };
-const RISQUE_NIVEAU_CLASS = { CRITIQUE: 'critique', ELEVE: 'eleve', MODERE: 'modere', FAIBLE: 'faible' };
 const RISQUE_TENDANCE_LABELS = { HAUSSE: 'En hausse', BAISSE: 'En baisse', STABLE: 'Stable' };
 
 /* ---------- Disponibilité ---------- */
@@ -47,25 +45,13 @@ const ETAT_LABELS = {
   EN_REPARATION: 'En réparation',
   HORS_SERVICE: 'Hors service',
 };
-const ETAT_CLASS = {
-  EN_SERVICE: 'ee-badge--service',
-  EN_PANNE: 'ee-badge--panne',
-  EN_REPARATION: 'ee-badge--reparation',
-  HORS_SERVICE: 'ee-badge--horsservice',
-};
 const ETATS = ['EN_SERVICE', 'EN_PANNE', 'EN_REPARATION', 'HORS_SERVICE'];
-const FILTRES = [
-  { key: 'TOUS', label: 'Tous' },
-  ...ETATS.map((e) => ({ key: e, label: ETAT_LABELS[e] })),
-];
+// Même échelle de couleurs que les autres écrans de veille
+const ETAT_TON = { EN_SERVICE: 'succes', EN_PANNE: 'danger', EN_REPARATION: 'info', HORS_SERVICE: 'orange' };
+const RISQUE_TON = { CRITIQUE: 'danger', ELEVE: 'orange', MODERE: 'attention', FAIBLE: 'succes' };
+const DISPO_TON = { bon: 'succes', moyen: 'attention', critique: 'danger', inconnu: 'neutre' };
 
 /* ---------- Utils ---------- */
-function formatDate(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' });
-}
 function formatDateTime(iso, loc = locale()) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -91,15 +77,6 @@ const IconSearch = () => (
   <Search size={15} aria-hidden="true" />
 );
 const IconChevron = () => (<ChevronDown size={14} aria-hidden="true" />);
-const IconInfo = () => (
-  <Info size={16} aria-hidden="true" />
-);
-const IconInbox = () => (
-  <Inbox size={36} strokeWidth={1.5} aria-hidden="true" />
-);
-const IconAlert = () => (
-  <TriangleAlert size={36} strokeWidth={1.5} aria-hidden="true" />
-);
 const IconCheckCircle = () => (
   <CircleCheck size={15} aria-hidden="true" />
 );
@@ -123,9 +100,6 @@ const IconClock = () => (
 );
 const IconHistory = () => (
   <History size={13} aria-hidden="true" />
-);
-const IconGauge = () => (
-  <Gauge size={13} aria-hidden="true" />
 );
 const IconSettings = () => (
   <Settings size={15} aria-hidden="true" />
@@ -232,6 +206,9 @@ export default function EtatEquipement({ isModal = false }) {
   const [message, setMessage] = useState(null);
   const [filtreEtat, setFiltreEtat] = useState('TOUS');
   const [recherche, setRecherche] = useState('');
+  // Adresse IP des équipements (fiche équipement → « Connexion réseau ») : filtre Avec / Sans IP
+  const [connexions, setConnexions] = useState({});
+  const [filtreIp, setFiltreIp] = useState('TOUS');
   const [equipementOuvert, setEquipementOuvert] = useState(null);
   const [historique, setHistorique] = useState([]);
   const [loadingHistorique, setLoadingHistorique] = useState(false);
@@ -292,13 +269,26 @@ export default function EtatEquipement({ isModal = false }) {
 
   useEffect(() => { chargerRisques(); }, [chargerRisques]);
 
+  const chargerConnexions = useCallback(async () => {
+    try {
+      const data = await equipementService.listeConnexions();
+      const parId = {};
+      (data ?? []).forEach((c) => { parId[c.lotArticleImmobilistationId] = c; });
+      setConnexions(parId);
+    } catch (err) {
+      console.error('Erreur chargement des adresses IP :', err);
+    }
+  }, []);
+
+  useEffect(() => { chargerConnexions(); }, [chargerConnexions]);
+
   const recalculerTout = async () => {
     setRecalculant(true);
     setMessage(null);
     try {
       await etatEquipementService.recalculerTout();
       setMessage("États recalculés à partir de l'historique des bons de maintenance.");
-      await Promise.all([charger(), chargerDisponibilites(), chargerRisques()]);
+      await Promise.all([charger(), chargerDisponibilites(), chargerRisques(), chargerConnexions()]);
     } catch (err) {
       console.error('Erreur recalcul états :', err);
       setMessage("Échec du recalcul. Réessaie plus tard.");
@@ -380,7 +370,7 @@ export default function EtatEquipement({ isModal = false }) {
   const motsRecherche = sansAccents(recherche).split(/\s+/).filter(Boolean);
   const correspond = (e) => {
     if (motsRecherche.length === 0) return true;
-    const texte = sansAccents([e.cibleNom, e.lotArticleImmobilistationId, e.bonMaintenanceReferenceNum].filter((x) => x != null).join(' '));
+    const texte = sansAccents([e.cibleNom, e.lotArticleImmobilistationId, e.bonMaintenanceReferenceNum, connexions[e.lotArticleImmobilistationId]?.adresseIp].filter((x) => x != null).join(' '));
     return motsRecherche.every((m) => texte.includes(m.replace(/^#/, '')));
   };
 
@@ -395,8 +385,18 @@ export default function EtatEquipement({ isModal = false }) {
     return [...parId.values()];
   }, [etats]);
 
+  const aUneIp = (e) => !!connexions[e.lotArticleImmobilistationId];
+  // Hors ligne : déclaré par la surveillance automatique (plusieurs tests ratés d'affilée)
+  const estHorsLigne = (e) => !!connexions[e.lotArticleImmobilistationId]?.horsLigneDepuis;
+  const nbAvecIp = etatsUniques.filter(aUneIp).length;
+  const nbHorsLigne = etatsUniques.filter(estHorsLigne).length;
+
   const etatsAffiches = etatsUniques
     .filter((e) => filtreEtat === 'TOUS' || e.etatActuel === filtreEtat)
+    .filter((e) => filtreIp === 'TOUS'
+      || (filtreIp === 'AVEC' && aUneIp(e))
+      || (filtreIp === 'SANS' && !aUneIp(e))
+      || (filtreIp === 'HORS_LIGNE' && estHorsLigne(e)))
     .filter(correspond);
 
   const compteurs = useMemo(() => {
@@ -408,405 +408,320 @@ export default function EtatEquipement({ isModal = false }) {
 
   const total = etatsUniques.length;
 
+  // Sélection de toutes les lignes visibles (impression des étiquettes)
+  const tousCoches = etatsAffiches.length > 0 && etatsAffiches.every((e) => selection.has(e.lotArticleImmobilistationId));
+  const basculerTout = () => setSelection((s) => {
+    const n = new Map(s);
+    if (tousCoches) etatsAffiches.forEach((e) => n.delete(e.lotArticleImmobilistationId));
+    else etatsAffiches.forEach((e) => n.set(e.lotArticleImmobilistationId, e.cibleNom));
+    return n;
+  });
+
+  const boutonRecalcul = (
+    <button type="button" className="vl-btn vl-btn--primaire" onClick={recalculerTout} disabled={recalculant}>
+      {recalculant ? <IconSpinner /> : <IconRefresh />}
+      <span>{recalculant ? t("Recalcul en cours") : t("Recalculer tout")}</span>
+    </button>
+  );
+
   return (
-    <div className={`ee-page ${isModal ? 'ee-page--modal' : ''}`}>
-      {!isModal && (
-        <header className="ee-header">
-          <div className="ee-header__text">
-            <h1>{t("Équipements")}</h1>
-            <p>{t("État, fiche, historique des pannes, documents et étiquettes QR")}</p>
-          </div>
-
-          <div className="ee-header__actions">
-            <button
-              className="ee-btn ee-btn--secondaire"
-              onClick={() => setSettingsOpen((v) => !v)}
-            >
-              <IconSettings />
-              <span>{settingsOpen ? t("Fermer les paramètres") : t("Paramètres préventifs")}</span>
-            </button>
-            <button
-              className="ee-btn ee-btn--primaire"
-              onClick={recalculerTout}
-              disabled={recalculant}
-            >
-              {recalculant ? <IconSpinner /> : <IconRefresh />}
-              <span>{recalculant ? t("Recalcul en cours") : t("Recalculer tout")}</span>
-            </button>
-          </div>
-        </header>
+    <VeillePage
+      isModal={isModal}
+      icone={Gauge}
+      titre={t("Équipements")}
+      description={t("État, fiche, historique des pannes, documents et étiquettes QR")}
+      actions={(
+        <>
+          <button type="button" className="vl-btn" onClick={() => setSettingsOpen((v) => !v)}>
+            <IconSettings />
+            <span>{settingsOpen ? t("Fermer les paramètres") : t("Paramètres préventifs")}</span>
+          </button>
+          {boutonRecalcul}
+        </>
       )}
-
+    >
       {!isModal && settingsOpen && (
-        <section style={{ marginBottom: 24 }}>
+        <section>
           <EquipementMaintenanceTypesSettings />
         </section>
       )}
 
-      {isModal && (
-        <div className="ee-action-bar">
-          <div className="ee-action-bar__group">
-            <span className="ee-action-bar__pill">{t("États calculés")}</span>
-          </div>
-          <div className="ee-action-bar__group">
-            <button
-              className="ee-btn ee-btn--primaire"
-              onClick={recalculerTout}
-              disabled={recalculant}
-            >
-              {recalculant ? <IconSpinner /> : <IconRefresh />}
-              <span>{recalculant ? t("Recalcul en cours") : t("Recalculer tout")}</span>
-            </button>
-          </div>
-        </div>
+      {!loading && total > 0 && (
+        <VeilleKpis
+          label={t("Équipements par état")}
+          items={[
+            { cle: 'TOUS', label: t("Tous"), valeur: total, ton: 'marque', actif: filtreEtat === 'TOUS', onClick: () => setFiltreEtat('TOUS') },
+            ...ETATS.map((et) => ({
+              cle: et,
+              label: t(ETAT_LABELS[et]),
+              valeur: compteurs[et] || 0,
+              ton: ETAT_TON[et],
+              actif: filtreEtat === et,
+              onClick: () => setFiltreEtat((v) => (v === et ? 'TOUS' : et)),
+            })),
+          ]}
+        />
       )}
 
-      <div className="ee-action-bar">
-        <div className="ee-action-bar__group">
-          {selection.size > 0 ? (
-            <span className="ee-action-bar__pill">
-              {tp('étiquette sélectionnée', selection.size)}
-            </span>
-          ) : (
-            <span className="ee-action-bar__hint">
-              {t('Sélectionnez des équipements pour imprimer leurs étiquettes.')}
-            </span>
-          )}
+      <div className="vl-barre">
+        <div className="vl-barre__gauche" style={{ flex: '1 1 320px' }}>
+          <label className="vl-recherche">
+            <IconSearch />
+            <input
+              type="search"
+              placeholder={t("Rechercher un équipement...")}
+              value={recherche}
+              onChange={(e) => setRecherche(e.target.value)}
+              aria-label={t("Rechercher un équipement...")}
+            />
+          </label>
+          <VeilleSegments
+            label={t("Filtrer par adresse IP")}
+            valeur={filtreIp}
+            onChange={setFiltreIp}
+            options={[
+              { cle: 'TOUS', label: t('Tous'), n: etatsUniques.length },
+              { cle: 'AVEC', label: t('Avec adresse IP'), n: nbAvecIp },
+              { cle: 'SANS', label: t('Sans adresse IP'), n: etatsUniques.length - nbAvecIp },
+              ...(nbHorsLigne > 0 || filtreIp === 'HORS_LIGNE' ? [{ cle: 'HORS_LIGNE', label: t('Hors ligne'), n: nbHorsLigne }] : []),
+            ]}
+          />
         </div>
-
-        <div className="ee-action-bar__group">
+        <div className="vl-barre__droite">
           {selection.size > 0 && (
-            <button
-              type="button"
-              className="ee-btn ee-btn--ghost ee-btn--sm"
-              onClick={() => setSelection(new Map())}
-            >
-              <IconClose /> {t('Vider')}
-            </button>
+            <>
+              <Pastille ton="marque">{tp('étiquette sélectionnée', selection.size)}</Pastille>
+              <button type="button" className="vl-btn vl-btn--petit vl-btn--discret" onClick={() => setSelection(new Map())}>
+                <IconClose /> {t('Vider')}
+              </button>
+              <button type="button" className="vl-btn" onClick={imprimerSelection} disabled={impression}>
+                {impression ? <IconSpinner /> : <IconPrint />}
+                <span>{impression ? t('Impression...') : tp('Imprimer les étiquettes', selection.size)}</span>
+              </button>
+            </>
           )}
-
-          {selection.size > 0 && (
-            <button
-              type="button"
-              className="ee-btn ee-btn--primaire"
-              onClick={imprimerSelection}
-              disabled={impression}
-            >
-              {impression ? <IconSpinner /> : <IconPrint />}
-              <span>
-                {impression ? t('Impression...') : tp('Imprimer les étiquettes', selection.size)}
-              </span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            className="ee-btn ee-btn--secondaire"
-            onClick={() => setScanner(true)}
-          >
+          <button type="button" className="vl-btn" onClick={() => setScanner(true)}>
             <IconQr />
             <span>{t('Scanner un QR code')}</span>
           </button>
+          {isModal && boutonRecalcul}
         </div>
       </div>
 
-      {message && (
-        <div className="ee-message">
-          <IconInfo />
-          <span>{message}</span>
-        </div>
-      )}
-
-      {!loading && total > 0 && (
-        <section className="ee-summary">
-          {ETATS.map((et) => {
-            const Icon = ETAT_ICONS[et];
-            return (
-              <div
-                key={et}
-                className={`ee-summary__item ee-summary__item--${et.toLowerCase()}`}
-              >
-                <div className="ee-summary__head">
-                  <span className="ee-summary__label">{t(ETAT_LABELS[et])}</span>
-                  <span className="ee-summary__icon"><Icon /></span>
-                </div>
-                <span className="ee-summary__nombre">{compteurs[et] || 0}</span>
-              </div>
-            );
-          })}
-        </section>
-      )}
-
-      <div className="ee-filtres">
-        <div className="ee-recherche-wrap">
-          <span className="ee-recherche-icon"><IconSearch /></span>
-          <input
-            type="text"
-            placeholder={t("Rechercher un équipement...")}
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            className="ee-recherche"
-          />
-        </div>
-
-        <div className="ee-filtres-niveau">
-          {FILTRES.map(({ key, label }) => (
-            <button
-              key={key}
-              data-etat={key}
-              className={`ee-filtre-btn ${filtreEtat === key ? 'ee-filtre-btn--active' : ''}`}
-              onClick={() => setFiltreEtat(key)}
-            >
-              <span className="ee-filtre-btn__dot" />
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+      {message && <VeilleMessage onFermer={() => setMessage(null)}>{t(message)}</VeilleMessage>}
 
       {loading ? (
-        <p className="ee-empty">{t("Chargement...")}</p>
+        <div className="vl-chargement"><IconSpinner /> {t("Chargement...")}</div>
       ) : error ? (
-        <p className="ee-error">
-          <IconAlert />
-          <span>{error}</span>
-        </p>
+        <VeilleMessage ton="danger">{error}</VeilleMessage>
       ) : etatsAffiches.length === 0 ? (
-        <p className="ee-empty">
-          <IconInbox />
-          <span>
+        <div className="vl-liste">
+          <VeilleVide>
             {etats.length === 0
               ? t("Aucun état calculé pour le moment — clique sur \"Recalculer tout\" pour initialiser.")
               : t("Aucun équipement ne correspond à ce filtre.")}
-          </span>
-        </p>
+          </VeilleVide>
+        </div>
       ) : (
-        <ul className="ee-list">
+        <ul className="vl-liste vl-eq">
+          <li className="vl-ligne vl-ligne--tete" aria-hidden="false">
+            <label className="vl-eq__case" title={t('Tout sélectionner pour les étiquettes')}>
+              <input type="checkbox" checked={tousCoches} onChange={basculerTout} aria-label={t('Tout sélectionner pour les étiquettes')} />
+            </label>
+            <span>{t("Équipement")}</span>
+            <span>{t("Disponibilité")}</span>
+            <span>{t("Risque")}</span>
+            <span>{t("Criticité")}</span>
+            <span />
+          </li>
           {etatsAffiches.map((e) => {
-            const etatKey = e.etatActuel?.toLowerCase();
-            const isOpen = equipementOuvert === e.lotArticleImmobilistationId;
+            const id = e.lotArticleImmobilistationId;
+            const isOpen = equipementOuvert === id;
             const jours = e.depuisLe ? joursDepuis(e.depuisLe) : null;
-            const dispo = disponibilites[e.lotArticleImmobilistationId];
+            const dispo = disponibilites[id];
             const niveauDispo = dispo ? dispoNiveau(dispo.tauxDisponibilitePct) : 'inconnu';
-            const risque = risques[e.lotArticleImmobilistationId];
-            const niveauRisque = risque ? RISQUE_NIVEAU_CLASS[risque.niveauRisque] : null;
+            const risque = risques[id];
+            const tonRisque = risque ? RISQUE_TON[risque.niveauRisque] : 'neutre';
+            const ton = ETAT_TON[e.etatActuel] || 'neutre';
+            const EtatIcone = ETAT_ICONS[e.etatActuel];
             return (
-              <li
-                key={e.lotArticleImmobilistationId}
-                className={`ee-card ee-card--${etatKey} ${isOpen ? 'is-open' : ''}`}
-              >
-                <button
-                  className="ee-card__header"
-                  onClick={() => ouvrirHistorique(e.lotArticleImmobilistationId)}
-                >
-                  <div className="ee-card__titre-wrap">
-                    <span className={`ee-badge ${ETAT_CLASS[e.etatActuel] || ''}`}>
-                      <span className="ee-badge__dot" />
-                      {t(ETAT_LABELS[e.etatActuel] || e.etatActuel)}
-                    </span>
-                    <span className="ee-card__titre">{e.cibleNom}</span>
-                    {dispo && (
-                      <span
-                        className={`ee-dispo-pill ee-dispo-pill--${niveauDispo}`}
-                        title={t("Taux de disponibilité sur les 12 derniers mois")}
-                      >
-                        {formatTaux(dispo.tauxDisponibilitePct)} {t("dispo")}
-                      </span>
-                    )}
-                    {risque && (
-                      <span
-                        className={`ee-risque-pill ee-risque-pill--${niveauRisque}`}
-                        title={t("Score de risque de panne (0-100)")}
-                      >
-                        {t("Risque")} {risque.scoreRisque}
-                      </span>
-                    )}
-                  </div>
-
-                  <span className="ee-card__depuis">
-                    {jours !== null && (
-                      <>
-                        <IconClock />
-                        <span>{tp('depuis jours', jours)}</span>
-                      </>
-                    )}
-                    <span className="ee-card__chevron">
-                      <IconChevron />
-                    </span>
-                  </span>
-                </button>
-
-                {e.bonMaintenanceReferenceNum && (
-                  <p className="ee-card__bon">
-                    <IconFile />
-                    <span>{t("Bon de référence :")} <strong>{e.bonMaintenanceReferenceNum}</strong></span>
-                  </p>
-                )}
-
-                <div className="ee-card__criticite" onClick={(ev) => ev.stopPropagation()}>
-                  <label className="ee-case" title={t('Ajouter à l’impression des étiquettes')}>
+              <li key={id} className={`vl-eq__item ${isOpen ? 'is-ouvert' : ''}`}>
+                <div className="vl-ligne" data-ton={ton}>
+                  <label className="vl-eq__case" title={t('Ajouter à l’impression des étiquettes')}>
                     <input
                       type="checkbox"
-                      checked={selection.has(e.lotArticleImmobilistationId)}
-                      onChange={() => basculerSelection(e.lotArticleImmobilistationId, e.cibleNom)}
-                      aria-label={t('Sélectionner {nom}', { nom: e.cibleNom || `#${e.lotArticleImmobilistationId}` })}
+                      checked={selection.has(id)}
+                      onChange={() => basculerSelection(id, e.cibleNom)}
+                      aria-label={t('Sélectionner {nom}', { nom: e.cibleNom || `#${id}` })}
                     />
                   </label>
-                  <span
-                    className="ee-criticite-dot"
-                    style={{ backgroundColor: criticiteHex(e.criticite) }}
-                  />
-                  <label htmlFor={`criticite-${e.lotArticleImmobilistationId}`}>{t("Criticité")}</label>
-                  <select
-                    id={`criticite-${e.lotArticleImmobilistationId}`}
-                    className="ee-criticite-select"
-                    value={e.criticite || CRITICITE_DEFAUT}
-                    disabled={savingCriticite === e.lotArticleImmobilistationId}
-                    onChange={(ev) =>
-                      changerCriticite(e.lotArticleImmobilistationId, ev.target.value)
-                    }
-                  >
-                    {CRITICITE_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{t(o.label)}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="ee-card__fiche"
-                    onClick={() => navigate(`/equipement/${e.lotArticleImmobilistationId}`)}
-                  >
-                    <span>{t("Voir la fiche")}</span>
-                    <IconArrowRight />
-                  </button>
+
+                  <div className="vl-ligne__principal">
+                    <div className="vl-ligne__titre-ligne">
+                      <button
+                        type="button"
+                        className="vl-ligne__titre"
+                        onClick={() => ouvrirHistorique(id)}
+                        aria-expanded={isOpen}
+                        title={e.cibleNom}
+                      >
+                        {e.cibleNom}
+                      </button>
+                    </div>
+                    <div className="vl-ligne__sous">
+                      <Pastille ton={ton}>
+                        {EtatIcone && <EtatIcone />}
+                        {t(ETAT_LABELS[e.etatActuel] || e.etatActuel)}
+                      </Pastille>
+                      {jours !== null && <span><IconClock /> {tp('depuis jours', jours)}</span>}
+                      {e.bonMaintenanceReferenceNum && (
+                        <span><IconFile /> {t("Bon")} <strong>{e.bonMaintenanceReferenceNum}</strong></span>
+                      )}
+                      {connexions[id] && (() => {
+                        const c = connexions[id];
+                        const etatCnx = c.horsLigneDepuis ? t('Hors ligne depuis le {date}', { date: new Date(c.horsLigneDepuis).toLocaleString(locale()) })
+                          : c.dernierResultat === 'EN_LIGNE' ? t('En ligne') : c.dernierResultat === 'HORS_LIGNE' ? t('Hors ligne') : t('Jamais testé');
+                        const classe = c.horsLigneDepuis ? 'hors_ligne' : (c.dernierResultat || 'inconnu').toLowerCase();
+                        return (
+                          <span className={`vl-eq__ip vl-eq__ip--${classe}`} title={`${t('Adresse IP')} · ${etatCnx}`}>
+                            <Network size={12} aria-hidden="true" />
+                            <strong>{c.adresseIp}{c.port ? `:${c.port}` : ''}</strong>
+                            <span className="vl-eq__ip-point" aria-label={etatCnx} />
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  <div className="vl-mesure" data-ton={DISPO_TON[niveauDispo]} title={t("Taux de disponibilité sur les 12 derniers mois")}>
+                    {dispo ? (
+                      <>
+                        <span className="vl-mesure__valeur">{formatTaux(dispo.tauxDisponibilitePct)}</span>
+                        <Jauge valeur={dispo.tauxDisponibilitePct} ton={DISPO_TON[niveauDispo]} label={t("Disponibilité")} />
+                      </>
+                    ) : <span className="vl-mesure__note">—</span>}
+                  </div>
+
+                  <div title={t("Score de risque de panne (0-100)")}>
+                    {risque ? (
+                      <span className="vl-eq__risque" data-ton={tonRisque}>
+                        <span className="vl-score" data-ton={tonRisque} style={{ '--score': risque.scoreRisque }}>
+                          <span>{risque.scoreRisque}</span>
+                        </span>
+                        <span className="vl-mesure__note">{t(RISQUE_NIVEAU_LABELS[risque.niveauRisque] || risque.niveauRisque)}</span>
+                      </span>
+                    ) : <span className="vl-mesure__note">—</span>}
+                  </div>
+
+                  <div className="vl-eq__criticite">
+                    <span className="vl-eq__point" style={{ backgroundColor: criticiteHex(e.criticite) }} aria-hidden="true" />
+                    <select
+                      id={`criticite-${id}`}
+                      value={e.criticite || CRITICITE_DEFAUT}
+                      disabled={savingCriticite === id}
+                      onChange={(ev) => changerCriticite(id, ev.target.value)}
+                      aria-label={t('Criticité de {nom}', { nom: e.cibleNom || `#${id}` })}
+                    >
+                      {CRITICITE_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{t(o.label)}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="vl-actions">
+                    <button type="button" className="vl-btn vl-btn--petit" onClick={() => navigate(`/equipement/${id}`)}>
+                      {t("Fiche")} <IconArrowRight />
+                    </button>
+                    <button
+                      type="button"
+                      className={`vl-btn vl-btn--petit vl-btn--icone vl-eq__chevron ${isOpen ? 'is-ouvert' : ''}`}
+                      onClick={() => ouvrirHistorique(id)}
+                      aria-expanded={isOpen}
+                      aria-label={isOpen ? t("Masquer le détail") : t("Afficher le détail")}
+                    >
+                      <IconChevron />
+                    </button>
+                  </div>
                 </div>
 
                 {isOpen && (
-                  <div className="ee-historique">
-                    <div className="ee-dispo-bloc">
-                      <span className="ee-dispo-bloc__title">
-                        <IconGauge />
-                        {t("Disponibilité (12 derniers mois)")}
-                      </span>
-                      {loadingDispo && !dispo ? (
-                        <p className="ee-dispo-bloc__loading">{t("Calcul en cours...")}</p>
-                      ) : dispo ? (
-                        <div className="ee-dispo-bloc__grid">
-                          <div className="ee-dispo-bloc__item">
-                            <span className="ee-dispo-bloc__label">{t("Taux")}</span>
-                            <span className={`ee-dispo-bloc__valeur ee-dispo-bloc__valeur--${niveauDispo}`}>
-                              {formatTaux(dispo.tauxDisponibilitePct)}
-                            </span>
+                  <div className="vl-eq__detail">
+                    <div className="vl-eq__blocs">
+                      <Panneau icone={Gauge} titre={t("Disponibilité (12 derniers mois)")} ton={DISPO_TON[niveauDispo]}>
+                        {loadingDispo && !dispo ? (
+                          <p className="vl-mesure__note">{t("Calcul en cours...")}</p>
+                        ) : dispo ? (
+                          <div className="vl-eq__chiffres">
+                            <div><span>{t("Taux")}</span><strong data-ton={DISPO_TON[niveauDispo]}>{formatTaux(dispo.tauxDisponibilitePct)}</strong></div>
+                            <div><span>{t("Pannes")}</span><strong>{dispo.nbPannes}</strong></div>
+                            <div><span>{t("MTBF")}</span><strong>{formatDureeHeures(dispo.mtbfHeures)}</strong></div>
+                            <div><span>{t("MTTR")}</span><strong>{formatDureeHeures(dispo.mttrHeures)}</strong></div>
                           </div>
-                          <div className="ee-dispo-bloc__item">
-                            <span className="ee-dispo-bloc__label">{t("Pannes")}</span>
-                            <span className="ee-dispo-bloc__valeur">{dispo.nbPannes}</span>
+                        ) : (
+                          <p className="vl-mesure__note">{t("Disponibilité indisponible pour cet équipement.")}</p>
+                        )}
+                      </Panneau>
+
+                      <Panneau icone={TriangleAlert} titre={t("Risque de panne (score prédictif)")} ton={tonRisque}>
+                        {loadingRisque && !risque ? (
+                          <p className="vl-mesure__note">{t("Calcul en cours...")}</p>
+                        ) : risque ? (
+                          <div className="vl-eq__chiffres">
+                            <div><span>{t("Score")}</span><strong data-ton={tonRisque}>{risque.scoreRisque}<small>/100</small></strong></div>
+                            <div><span>{t("Pannes / 12 mois")}</span><strong>{risque.nbPannes12Mois}</strong></div>
+                            <div><span>{t("Tendance")}</span><strong>{t(RISQUE_TENDANCE_LABELS[risque.tendance] || risque.tendance)}</strong></div>
+                            <div><span>{t("Garantie")}</span><strong>{risque.garantieExpiree === true ? t("Expirée") : risque.garantieExpiree === false ? t("Active") : '—'}</strong></div>
                           </div>
-                          <div className="ee-dispo-bloc__item">
-                            <span className="ee-dispo-bloc__label">{t("MTBF")}</span>
-                            <span className="ee-dispo-bloc__valeur">{formatDureeHeures(dispo.mtbfHeures)}</span>
-                          </div>
-                          <div className="ee-dispo-bloc__item">
-                            <span className="ee-dispo-bloc__label">{t("MTTR")}</span>
-                            <span className="ee-dispo-bloc__valeur">{formatDureeHeures(dispo.mttrHeures)}</span>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="ee-dispo-bloc__loading">{t("Disponibilité indisponible pour cet équipement.")}</p>
-                      )}
+                        ) : (
+                          <p className="vl-mesure__note">{t("Score de risque indisponible pour cet équipement.")}</p>
+                        )}
+                      </Panneau>
                     </div>
 
-                    <div className="ee-risque-bloc">
-                      <span className="ee-dispo-bloc__title">
-                        <IconGauge />
-                        {t("Risque de panne (score prédictif)")}
-                      </span>
-                      {loadingRisque && !risque ? (
-                        <p className="ee-dispo-bloc__loading">{t("Calcul en cours...")}</p>
-                      ) : risque ? (
-                        <div className="ee-risque-bloc__content">
-                          <span className={`ee-risque-score ee-risque-score--${niveauRisque}`}>
-                            {risque.scoreRisque}
-                            <small>/100</small>
-                          </span>
-                          <div className="ee-risque-bloc__grid">
-                            <div className="ee-dispo-bloc__item">
-                              <span className="ee-dispo-bloc__label">{t("Niveau")}</span>
-                              <span className={`ee-dispo-bloc__valeur ee-dispo-bloc__valeur--${niveauRisque}`}>
-                                {t(RISQUE_NIVEAU_LABELS[risque.niveauRisque] || risque.niveauRisque)}
-                              </span>
-                            </div>
-                            <div className="ee-dispo-bloc__item">
-                              <span className="ee-dispo-bloc__label">{t("Pannes / 12 mois")}</span>
-                              <span className="ee-dispo-bloc__valeur">{risque.nbPannes12Mois}</span>
-                            </div>
-                            <div className="ee-dispo-bloc__item">
-                              <span className="ee-dispo-bloc__label">{t("Tendance")}</span>
-                              <span className="ee-dispo-bloc__valeur">{t(RISQUE_TENDANCE_LABELS[risque.tendance] || risque.tendance)}</span>
-                            </div>
-                            <div className="ee-dispo-bloc__item">
-                              <span className="ee-dispo-bloc__label">{t("Garantie")}</span>
-                              <span className="ee-dispo-bloc__valeur">
-                                {risque.garantieExpiree === true ? t("Expirée") : risque.garantieExpiree === false ? t("Active") : '—'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="ee-dispo-bloc__loading">{t("Score de risque indisponible pour cet équipement.")}</p>
-                      )}
-                    </div>
-
-                    <div className="etat-maintenance-preventive-bloc" onClick={(ev) => ev.stopPropagation()}>
+                    <div className="vl-eq__preventif" onClick={(ev) => ev.stopPropagation()}>
                       <EquipementMaintenancePanel
-                        immobilisation={{ id: e.lotArticleImmobilistationId, designation: e.cibleNom }}
+                        immobilisation={{ id, designation: e.cibleNom }}
                         onOpenBon={(bonId) => { window.location.href = `/bons-maintenance?id=${bonId}`; }}
                       />
                     </div>
 
-                    <div className="ee-historique__toolbar">
-                      <span className="ee-historique__title">
-                        <IconHistory />
-                        {t("Historique des transitions")}
-                      </span>
-                      <button
-                        className="ee-export-btn"
-                        onClick={() => exporterHistoriquePDF(e, historique)}
-                        disabled={loadingHistorique}
-                      >
-                        <IconDownload />
-                        {t("Exporter en PDF")}
-                      </button>
-                    </div>
-
-                    {loadingHistorique ? (
-                      <p className="ee-empty">{t("Chargement de l'historique...")}</p>
-                    ) : historique.length === 0 ? (
-                      <p className="ee-empty">{t("Aucune transition enregistrée.")}</p>
-                    ) : (
-                      <ul className="ee-historique__list">
-                        {historique.map((tache) => (
-                          <li key={tache.id} className="ee-historique__item">
-                            <span className="ee-historique__transition">
-                              {tache.etatPrecedent
-                                ? <>{t(ETAT_LABELS[tache.etatPrecedent] || tache.etatPrecedent)} <span className="rtl-miroir">→</span> </>
-                                : t("Première détection : ")}
-                              <strong>{t(ETAT_LABELS[tache.etatNouveau] || tache.etatNouveau)}</strong>
-                            </span>
-                            <span className="ee-historique__date">
-                              {formatDateTime(tache.dateTransition)}
-                            </span>
-                            {tache.bonMaintenanceNum && (
-                              <span className="ee-historique__bon">
-                                {t("Bon")} {tache.bonMaintenanceNum}
-                              </span>
-                            )}
-                            {tache.motif && (
-                              <span className="ee-historique__motif">« {tache.motif} »</span>
-                            )}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <Panneau
+                      icone={History}
+                      titre={t("Historique des transitions")}
+                      n={loadingHistorique ? null : historique.length}
+                      actions={(
+                        <button type="button" className="vl-btn vl-btn--petit" onClick={() => exporterHistoriquePDF(e, historique)} disabled={loadingHistorique}>
+                          <IconDownload /> {t("Exporter en PDF")}
+                        </button>
+                      )}
+                    >
+                      {loadingHistorique ? (
+                        <div className="vl-chargement"><IconSpinner /> {t("Chargement de l'historique...")}</div>
+                      ) : historique.length === 0 ? (
+                        <p className="vl-mesure__note">{t("Aucune transition enregistrée.")}</p>
+                      ) : (
+                        <ol className="vl-eq__frise">
+                          {historique.map((tache) => (
+                            <li key={tache.id} data-ton={ETAT_TON[tache.etatNouveau] || 'neutre'}>
+                              <span className="vl-eq__frise-point" aria-hidden="true" />
+                              <div>
+                                <span className="vl-eq__frise-titre">
+                                  {tache.etatPrecedent
+                                    ? <>{t(ETAT_LABELS[tache.etatPrecedent] || tache.etatPrecedent)} <span className="rtl-miroir">→</span> </>
+                                    : t("Première détection : ")}
+                                  <strong>{t(ETAT_LABELS[tache.etatNouveau] || tache.etatNouveau)}</strong>
+                                </span>
+                                <span className="vl-ligne__sous">
+                                  <span>{formatDateTime(tache.dateTransition)}</span>
+                                  {tache.bonMaintenanceNum && <span>{t("Bon")} <strong>{tache.bonMaintenanceNum}</strong></span>}
+                                  {tache.motif && <span>« {tache.motif} »</span>}
+                                </span>
+                              </div>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+                    </Panneau>
                   </div>
                 )}
               </li>
@@ -816,6 +731,6 @@ export default function EtatEquipement({ isModal = false }) {
       )}
 
       {scanner && <ScannerQR onClose={fermerScanner} />}
-    </div>
+    </VeillePage>
   );
 }

@@ -27,23 +27,25 @@
 .vam-entete {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  border-bottom: 1px solid #d3e5e8;
+  gap: 14px;
+  padding: 18px 24px;
+  background: var(--g-brand-600);
+  color: var(--g-blanc);
 }
 .vam-entete-icone {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: #dcf0f2;
-  color: var(--g-brand-800);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--g-blanc);
 }
-.vam-entete h2 { margin: 0; font-size: 17px; font-weight: 700; color: #102a30; }
-.vam-entete p { margin: 2px 0 0; font-size: 13px; color: var(--g-ink-650); }
+.vam-entete h2 { margin: 0; font-size: 1.1rem; font-weight: 800; color: var(--g-blanc); letter-spacing: -0.01em; }
+.vam-entete p { margin: 2px 0 0; font-size: 0.8rem; color: rgba(255, 255, 255, 0.82); }
 .vam-fermer {
   display: inline-flex;
   align-items: center;
@@ -52,12 +54,13 @@
   height: 34px;
   margin-inline-start: auto;
   border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--g-ink-650);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--g-blanc);
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
 }
-.vam-fermer:hover { background: #dcf0f2; color: var(--g-brand-800); }
+.vam-fermer:hover { background: rgba(255, 255, 255, 0.3); transform: rotate(90deg); }
 
 .vam-corps { flex: 1; overflow-y: auto; padding: 16px 20px 8px; }
 
@@ -170,3 +173,14 @@
   .vam-pied { flex-direction: column-reverse; }
   .vam-pied .vam-bouton { justify-content: center; }
 }
+/* ═══════════ Saisie d'une amende : même fenêtre que les autres du Parc (classes vim-*) ═══════════ */
+.vam-superpose { z-index: 1200; }
+.vam-modal { width: 960px; }
+.vam-modal .vam-identification { margin: 0; }
+.vam-champ-erreur .vim-input-icon { border-color: var(--g-red-400); }
+.vam-champ-erreur .vim-input-icon:focus-within { box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12); }
+.vam-modal .vam-erreur-champ { margin-top: 2px; font-size: 0.75rem; }
+.vam-modal .vim-vehicules-grid:focus { outline: none; }
+.vam-modal .vim-vehicules-grid[aria-invalid="true"] .vim-vehicule-card:not(.selected) { border-color: var(--g-red-200); }
+.vim-nav-item.vam-nav-erreur:not(.active) .vim-nav-item-label { color: var(--g-red-700); }
+.vam-nav-erreur__n { background: var(--g-red-100) !important; color: var(--g-red-700) !important; }

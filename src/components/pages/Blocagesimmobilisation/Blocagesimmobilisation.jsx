@@ -1,99 +1,36 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Ban, CircleCheck, Eye, FileText, LoaderCircle, Search, Timer } from 'lucide-react';
 import blocageImmobilisationService from '../../../services/Blocageimmobilisationservice';
-import { t, tp, locale } from '../../../i18n';
-import { Activity, Ban, Check, Clock, Eye, Flame, Inbox, Info, Layers, LoaderCircle, ShieldCheck, TriangleAlert } from 'lucide-react';
-import './BlocagesImmobilisation.css';
+import { t, tp } from '../../../i18n';
+import {
+  VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, Pastille, Jauge,
+  dateCourte, ilYa,
+} from '../../ui/Veille/Veille';
 
-/* ---------- Config ---------- */
-const STATUT_LABELS = {
-  NOUVELLE: 'Nouveau',
-  VUE: 'Vu',
-  RESOLU: 'Résolu',
-  IGNOREE: 'Ignoré',
+/* ---------- Libellés et couleurs ---------- */
+const STATUT = {
+  NOUVELLE: { label: 'Nouveau', ton: 'info' },
+  VUE: { label: 'Vu', ton: 'neutre' },
+  RESOLU: { label: 'Résolu', ton: 'succes' },
+  IGNOREE: { label: 'Ignoré', ton: 'neutre' },
+};
+const SEUIL_LONG = 30; // au-delà, le blocage est considéré comme long
+const JOURS_JAUGE = 60; // la jauge est pleine à 60 jours
+
+const estActif = (b) => b.statut === 'NOUVELLE' || b.statut === 'VUE';
+const tonJours = (b) => {
+  if (!estActif(b)) return b.statut === 'RESOLU' ? 'succes' : 'neutre';
+  return (b.joursBlocage ?? 0) >= SEUIL_LONG ? 'danger' : 'attention';
 };
 
-const FILTRES = [
-  { key: 'ACTIFS', label: 'Actifs' },
-  { key: 'TOUS', label: 'Tous' },
-  { key: 'NOUVELLE', label: STATUT_LABELS.NOUVELLE },
-  { key: 'VUE', label: STATUT_LABELS.VUE },
-  { key: 'RESOLU', label: STATUT_LABELS.RESOLU },
-  { key: 'IGNOREE', label: STATUT_LABELS.IGNOREE },
-];
-
-/* ---------- Utils ---------- */
-function formatDate(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString(locale(), { day: '2-digit', month: 'short', year: 'numeric' });
-}
-
-/* ---------- Icônes ---------- */
-const IconSearch = (props) => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-    <circle cx="11" cy="11" r="7" />
-    <path d="m20 20-3.5-3.5" />
-  </svg>
-);
-
-const IconSpinner = () => (
-  <LoaderCircle size={15} strokeWidth={2.5} className="blocages-immob-spinner" aria-hidden="true" />
-);
-
-const IconClock = () => (
-  <Clock size={12} strokeWidth={2} aria-hidden="true" />
-);
-
-const IconCheck = () => (
-  <Check size={14} strokeWidth={2.5} aria-hidden="true" />
-);
-
-const IconEye = () => (
-  <Eye size={14} strokeWidth={2} aria-hidden="true" />
-);
-
-const IconBan = () => (
-  <Ban size={14} strokeWidth={2} aria-hidden="true" />
-);
-
-const IconInfo = () => (
-  <Info size={16} strokeWidth={2} aria-hidden="true" />
-);
-
-const IconInbox = () => (
-  <Inbox size={36} strokeWidth={1.5} aria-hidden="true" />
-);
-
-const IconAlert = () => (
-  <TriangleAlert size={36} strokeWidth={1.5} aria-hidden="true" />
-);
-
-const IconLayers = () => (
-  <Layers size={15} strokeWidth={2} aria-hidden="true" />
-);
-
-const IconFlame = () => (
-  <Flame size={15} strokeWidth={2} aria-hidden="true" />
-);
-
-const IconPulse = () => (
-  <Activity size={15} strokeWidth={2} aria-hidden="true" />
-);
-
-const IconShieldCheck = () => (
-  <ShieldCheck size={15} strokeWidth={2} aria-hidden="true" />
-);
-
-/* ---------- Composant ---------- */
 export default function BlocagesImmobilisation({ isModal = false }) {
   const [blocages, setBlocages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [analysing, setAnalysing] = useState(false);
   const [analyseMessage, setAnalyseMessage] = useState(null);
-  const [filtreStatut, setFiltreStatut] = useState('ACTIFS');
+  const [filtre, setFiltre] = useState('ACTIFS');
+  const [enCours, setEnCours] = useState(null);
 
   const charger = useCallback(async () => {
     setLoading(true);
@@ -118,208 +55,168 @@ export default function BlocagesImmobilisation({ isModal = false }) {
       const nouveaux = await blocageImmobilisationService.analyserMaintenant();
       setAnalyseMessage(
         nouveaux.length === 0
-          ? "Analyse terminée : aucun nouveau blocage détecté."
+          ? t("Analyse terminée : aucun nouveau blocage détecté.")
           : t('Analyse terminée : {resultat}.', { resultat: tp('nouveau blocage', nouveaux.length) })
       );
       await charger();
     } catch (err) {
       console.error('Erreur analyse blocages :', err);
-      setAnalyseMessage("Échec de l'analyse. Réessaie plus tard.");
+      setAnalyseMessage(t("Échec de l'analyse. Réessaie plus tard."));
     } finally {
       setAnalysing(false);
     }
   };
 
   const changerStatut = async (id, statut) => {
+    setEnCours(id);
     try {
       const updated = await blocageImmobilisationService.changerStatut(id, statut);
       setBlocages((prev) => prev.map((b) => (b.id === id ? updated : b)));
     } catch (err) {
       console.error('Erreur changement statut blocage :', err);
+    } finally {
+      setEnCours(null);
     }
   };
 
-  const stats = useMemo(() => {
-    const actifs = blocages.filter((b) => b.statut === 'NOUVELLE' || b.statut === 'VUE').length;
-    const nouveaux = blocages.filter((b) => b.statut === 'NOUVELLE').length;
-    const resolus = blocages.filter((b) => b.statut === 'RESOLU').length;
-    return { total: blocages.length, actifs, nouveaux, resolus };
+  const compte = useMemo(() => {
+    const c = { total: blocages.length, actifs: 0, longs: 0, NOUVELLE: 0, VUE: 0, RESOLU: 0, IGNOREE: 0 };
+    blocages.forEach((b) => {
+      c[b.statut] = (c[b.statut] || 0) + 1;
+      if (estActif(b)) {
+        c.actifs += 1;
+        if ((b.joursBlocage ?? 0) >= SEUIL_LONG) c.longs += 1;
+      }
+    });
+    return c;
   }, [blocages]);
 
-  const blocagesAffiches = blocages.filter((b) => {
-    if (filtreStatut === 'TOUS') return true;
-    if (filtreStatut === 'ACTIFS') return b.statut === 'NOUVELLE' || b.statut === 'VUE';
-    return b.statut === filtreStatut;
-  });
+  // Les blocages actifs les plus anciens d'abord
+  const affiches = useMemo(() => blocages
+    .filter((b) => {
+      if (filtre === 'TOUS') return true;
+      if (filtre === 'ACTIFS') return estActif(b);
+      if (filtre === 'LONGS') return estActif(b) && (b.joursBlocage ?? 0) >= SEUIL_LONG;
+      return b.statut === filtre;
+    })
+    .sort((x, y) => (Number(estActif(y)) - Number(estActif(x))) || ((y.joursBlocage ?? 0) - (x.joursBlocage ?? 0))),
+  [blocages, filtre]);
+
+  const basculer = (cle) => setFiltre((v) => (v === cle ? 'ACTIFS' : cle));
+
+  const boutonAnalyse = (
+    <button type="button" className="vl-btn vl-btn--primaire" onClick={lancerAnalyse} disabled={analysing}>
+      {analysing ? <LoaderCircle size={15} className="vl-tourne" aria-hidden="true" /> : <Search size={15} aria-hidden="true" />}
+      {analysing ? t("Analyse en cours") : t("Lancer l'analyse")}
+    </button>
+  );
 
   return (
-    <div className={`blocages-immob-page ${isModal ? 'blocages-immob-page--modal' : ''}`}>
-      {/* ---------- Header (masqué en mode modale) ---------- */}
-      {!isModal && (
-        <header className="blocages-immob-header">
-          <div className="blocages-immob-header__text">
-            <span className="blocages-immob-eyebrow">{t("Maintenance · Surveillance")}</span>
-            <h1>{t("Blocages d'équipement")}</h1>
-            <p>
-              {t("Équipements dont le dernier arrêt obligatoire est resté sans suite — pas de bon rouvert, pas de remise en service conforme — depuis au moins 15 jours.")}
-            </p>
-          </div>
-
-          <button className="blocages-immob-analyser-btn" onClick={lancerAnalyse} disabled={analysing}>
-            {analysing ? <IconSpinner /> : <IconSearch />}
-            <span>{analysing ? t("Analyse en cours") : t("Lancer l'analyse")}</span>
-          </button>
-        </header>
-      )}
-
-      {/* ---------- Bouton analyse en mode modale ---------- */}
-      {isModal && (
-        <div className="blocages-immob-modal-toolbar">
-          <button className="blocages-immob-analyser-btn" onClick={lancerAnalyse} disabled={analysing}>
-            {analysing ? <IconSpinner /> : <IconSearch />}
-            <span>{analysing ? t("Analyse en cours") : t("Lancer l'analyse")}</span>
-          </button>
-        </div>
-      )}
-
-      {/* ---------- Stats ---------- */}
+    <VeillePage
+      isModal={isModal}
+      icone={Ban}
+      titre={t("Blocages d'équipement")}
+      description={t("Équipements dont le dernier arrêt obligatoire est resté sans suite — pas de bon rouvert, pas de remise en service conforme — depuis au moins 15 jours.")}
+      actions={boutonAnalyse}
+    >
       {!error && (
-        <section className="blocages-immob-stats">
-          <div className="blocages-immob-stat blocages-immob-stat--total">
-            <div className="blocages-immob-stat__head">
-              <span className="blocages-immob-stat__label">{t("Total")}</span>
-              <span className="blocages-immob-stat__icon"><IconLayers /></span>
-            </div>
-            <span className="blocages-immob-stat__value">{stats.total}</span>
-          </div>
-
-          <div className="blocages-immob-stat blocages-immob-stat--nouveau">
-            <div className="blocages-immob-stat__head">
-              <span className="blocages-immob-stat__label">{t("Nouveaux")}</span>
-              <span className="blocages-immob-stat__icon"><IconFlame /></span>
-            </div>
-            <span className="blocages-immob-stat__value">{stats.nouveaux}</span>
-          </div>
-
-          <div className="blocages-immob-stat blocages-immob-stat--actif">
-            <div className="blocages-immob-stat__head">
-              <span className="blocages-immob-stat__label">{t("Actifs")}</span>
-              <span className="blocages-immob-stat__icon"><IconPulse /></span>
-            </div>
-            <span className="blocages-immob-stat__value">{stats.actifs}</span>
-          </div>
-
-          <div className="blocages-immob-stat blocages-immob-stat--resolu">
-            <div className="blocages-immob-stat__head">
-              <span className="blocages-immob-stat__label">{t("Résolus")}</span>
-              <span className="blocages-immob-stat__icon"><IconShieldCheck /></span>
-            </div>
-            <span className="blocages-immob-stat__value">{stats.resolus}</span>
-          </div>
-        </section>
+        <VeilleKpis
+          label={t("Résumé des blocages")}
+          items={[
+            { cle: 'actifs', label: t("Actifs"), valeur: compte.actifs, ton: 'attention', actif: filtre === 'ACTIFS', onClick: () => setFiltre('ACTIFS') },
+            { cle: 'longs', label: t('Plus de {n} jours', { n: SEUIL_LONG }), valeur: compte.longs, ton: 'danger', actif: filtre === 'LONGS', onClick: () => basculer('LONGS') },
+            { cle: 'nouveaux', label: t("Nouveaux"), valeur: compte.NOUVELLE, ton: 'info', actif: filtre === 'NOUVELLE', onClick: () => basculer('NOUVELLE') },
+            { cle: 'resolus', label: t("Résolus"), valeur: compte.RESOLU, ton: 'succes', actif: filtre === 'RESOLU', onClick: () => basculer('RESOLU') },
+          ]}
+        />
       )}
 
-      {/* ---------- Message d'analyse ---------- */}
-      {analyseMessage && (
-        <div className="blocages-immob-message">
-          <IconInfo />
-          <span>{analyseMessage}</span>
+      <div className="vl-barre">
+        <VeilleSegments
+          label={t("Filtrer par statut")}
+          valeur={filtre}
+          onChange={setFiltre}
+          options={[
+            { cle: 'ACTIFS', label: t("Actifs"), n: compte.actifs },
+            { cle: 'NOUVELLE', label: t("Nouveaux"), n: compte.NOUVELLE },
+            { cle: 'VUE', label: t("Vus"), n: compte.VUE },
+            { cle: 'RESOLU', label: t("Résolus"), n: compte.RESOLU },
+            { cle: 'IGNOREE', label: t("Ignorés"), n: compte.IGNOREE },
+            { cle: 'TOUS', label: t("Tous"), n: compte.total },
+          ]}
+        />
+        <div className="vl-barre__droite">
+          <span className="vl-barre__note">{t("Résolus automatiquement dès qu'un bon est rouvert ou qu'une remise en service est enregistrée")}</span>
+          {isModal && boutonAnalyse}
         </div>
-      )}
-
-      {/* ---------- Filtres ---------- */}
-      <div className="blocages-immob-filtres">
-        {FILTRES.map(({ key, label }) => (
-          <button
-            key={key}
-            className={`blocages-immob-filtre-btn ${filtreStatut === key ? 'blocages-immob-filtre-btn--active' : ''}`}
-            onClick={() => setFiltreStatut(key)}
-          >
-            {t(label)}
-          </button>
-        ))}
       </div>
 
-      {/* ---------- Liste ---------- */}
+      {analyseMessage && <VeilleMessage onFermer={() => setAnalyseMessage(null)}>{analyseMessage}</VeilleMessage>}
+
       {loading ? (
-        <p className="blocages-immob-empty">{t("Chargement...")}</p>
+        <div className="vl-chargement"><LoaderCircle size={18} className="vl-tourne" aria-hidden="true" /> {t("Chargement...")}</div>
       ) : error ? (
-        <p className="blocages-immob-error">
-          <IconAlert />
-          <span>{error}</span>
-        </p>
-      ) : blocagesAffiches.length === 0 ? (
-        <p className="blocages-immob-empty">
-          <IconInbox />
-          <span>{t("Aucun blocage pour ce filtre.")}</span>
-        </p>
+        <VeilleMessage ton="danger">{error}</VeilleMessage>
+      ) : affiches.length === 0 ? (
+        <div className="vl-liste">
+          <VeilleVide icone={filtre === 'ACTIFS' ? CircleCheck : undefined}>
+            {filtre === 'ACTIFS' ? t("Aucun équipement bloqué : tous les arrêts ont eu une suite.") : t("Aucun blocage pour ce filtre.")}
+          </VeilleVide>
+        </div>
       ) : (
-        <ul className="blocages-immob-list">
-          {blocagesAffiches.map((b) => {
-            const statutKey = b.statut?.toLowerCase();
+        <ul className="vl-liste" style={{ '--vl-colonnes': '40px minmax(0, 1fr) 180px 90px 180px' }}>
+          {affiches.map((b) => {
+            const statut = STATUT[b.statut] || { label: b.statut, ton: 'neutre' };
+            const ton = tonJours(b);
+            const auto = b.statut === 'RESOLU' && b.personnelTraitantNom === 'Résolution automatique';
             return (
-              <li key={b.id} className={`blocages-immob-card blocages-immob-card--${statutKey}`}>
-                <div className="blocages-immob-card__head">
-                  <div className="blocages-immob-card__head-left">
-                    <h3 className="blocages-immob-card__titre">{b.cibleNom}</h3>
-                    <span className={`blocages-immob-statut blocages-immob-statut--${statutKey}`}>
-                      <span className="blocages-immob-statut__dot" />
-                      {t(STATUT_LABELS[b.statut] || b.statut)}
-                    </span>
-                  </div>
-                  <span className="blocages-immob-jours">
-                    <IconClock />
-                    {tp('jours sans suite', b.joursBlocage ?? 0)}
-                  </span>
-                </div>
+              <li key={b.id} className={`vl-ligne ${!estActif(b) ? 'is-calme' : ''}`} data-ton={ton}>
+                <span className="vl-ligne__icone">
+                  {b.statut === 'RESOLU' ? <CircleCheck size={18} aria-hidden="true" /> : <Ban size={18} aria-hidden="true" />}
+                </span>
 
-                <div className="blocages-immob-card__meta">
-                  <div className="blocages-immob-card__meta-item">
-                    <span className="blocages-immob-card__meta-label">{t("Arrêté depuis")}</span>
-                    <span className="blocages-immob-card__meta-value">{formatDate(b.dateArret)}</span>
+                <div className="vl-ligne__principal">
+                  <div className="vl-ligne__titre-ligne">
+                    <h3 className="vl-ligne__titre" title={b.cibleNom}>{b.cibleNom}</h3>
                   </div>
-                  <div className="blocages-immob-card__meta-item">
-                    <span className="blocages-immob-card__meta-label">{t("Bon d'arrêt")}</span>
-                    <span className="blocages-immob-card__meta-value">{b.bonMaintenanceArretNum}</span>
-                  </div>
-                  <div className="blocages-immob-card__meta-item">
-                    <span className="blocages-immob-card__meta-label">{t("Détecté le")}</span>
-                    <span className="blocages-immob-card__meta-value">{formatDate(b.dateDetection)}</span>
-                  </div>
-                </div>
-
-                {b.statut === 'RESOLU' && b.personnelTraitantNom === 'Résolution automatique' && (
-                  <p className="blocages-immob-card__auto">
-                    <IconCheck />
-                    {t("Résolu automatiquement — bon rouvert ou remise en service enregistrée.")}
-                  </p>
-                )}
-
-                {(b.statut === 'NOUVELLE' || b.statut === 'VUE') && (
-                  <div className="blocages-immob-card__actions">
-                    {b.statut === 'NOUVELLE' && (
-                      <button
-                        className="blocages-immob-action-btn"
-                        onClick={() => changerStatut(b.id, 'VUE')}
-                      >
-                        <IconEye />
-                        {t("Marquer comme vu")}
-                      </button>
+                  <div className="vl-ligne__sous">
+                    <span>{t("Arrêté le")} <strong>{dateCourte(b.dateArret)}</strong></span>
+                    {b.bonMaintenanceArretNum && (
+                      <span><FileText size={12} aria-hidden="true" /> {t("Bon d'arrêt")} <strong>{b.bonMaintenanceArretNum}</strong></span>
                     )}
-                    <button
-                      className="blocages-immob-action-btn blocages-immob-action-btn--ghost"
-                      onClick={() => changerStatut(b.id, 'IGNOREE')}
-                    >
-                      <IconBan />
-                      {t("Ignorer")}
-                    </button>
+                    <span>{t("Détecté")} {ilYa(b.dateDetection) || dateCourte(b.dateDetection)}</span>
+                    {auto && <span>{t("Résolu automatiquement — bon rouvert ou remise en service enregistrée.")}</span>}
                   </div>
-                )}
+                </div>
+
+                <div className="vl-mesure" data-ton={ton}>
+                  <div className="vl-mesure__haut">
+                    <Timer size={14} aria-hidden="true" style={{ color: 'var(--ton)', alignSelf: 'center' }} />
+                    <span className="vl-mesure__valeur">{b.joursBlocage ?? 0}</span>
+                    <span className="vl-mesure__unite">{t("jours sans suite")}</span>
+                  </div>
+                  <Jauge valeur={((b.joursBlocage ?? 0) / JOURS_JAUGE) * 100} ton={ton} label={tp('jours sans suite', b.joursBlocage ?? 0)} />
+                </div>
+
+                <Pastille ton={statut.ton}>{t(statut.label)}</Pastille>
+
+                <div className="vl-actions">
+                  {b.statut === 'NOUVELLE' && (
+                    <button type="button" className="vl-btn vl-btn--petit" onClick={() => changerStatut(b.id, 'VUE')} disabled={enCours === b.id}>
+                      <Eye size={14} aria-hidden="true" /> {t("Vu")}
+                    </button>
+                  )}
+                  {estActif(b) && (
+                    <button type="button" className="vl-btn vl-btn--petit vl-btn--discret" onClick={() => changerStatut(b.id, 'IGNOREE')} disabled={enCours === b.id}>
+                      <Ban size={14} aria-hidden="true" /> {t("Ignorer")}
+                    </button>
+                  )}
+                </div>
               </li>
             );
           })}
         </ul>
       )}
-    </div>
+    </VeillePage>
   );
 }

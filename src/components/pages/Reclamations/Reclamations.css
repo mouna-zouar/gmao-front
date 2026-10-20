@@ -770,3 +770,106 @@
   outline: 2px solid var(--teal-600);
   outline-offset: 2px;
 }
+
+/* ============================================================
+   HARMONISATION — barre d'actions, filtres et tableau
+   identiques aux autres listes (Bons de maintenance, Parc)
+   ============================================================ */
+.reclamations-actions-bar {
+  gap: 8px;
+  padding: 12px 18px;
+}
+
+.reclamations-action-btn {
+  background: transparent;
+  border: 1.5px solid transparent;
+  padding: 9px 14px;
+  font-size: 0.86rem;
+  border-radius: 10px;
+  transition: all 0.18s ease;
+  color: var(--g-slate-600);
+}
+.reclamations-action-btn:hover:not(:disabled) { transform: translateY(-1px); }
+.reclamations-action-btn:disabled,
+.reclamations-action-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
+
+/* Ajouter — teal plein (bouton principal) */
+.reclamations-action-btn.ajouter {
+  background: var(--g-brand-500);
+  color: var(--g-blanc);
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
+}
+.reclamations-action-btn.ajouter:hover:not(:disabled) {
+  background: var(--g-brand-600);
+  box-shadow: 0 10px 22px -6px rgba(7, 148, 164, 0.6);
+}
+
+.reclamations-action-btn.modifier { color: var(--g-orange-600); }
+.reclamations-action-btn.modifier:hover:not(:disabled) { background: var(--g-orange-50); border-color: var(--g-orange-200); }
+
+.reclamations-action-btn.details { color: var(--g-brand-500); }
+.reclamations-action-btn.details:hover:not(:disabled) { background: var(--g-brand-50); border-color: var(--g-brand-100); }
+
+.reclamations-action-btn.associer { color: var(--g-sky-600); }
+.reclamations-action-btn.associer:hover:not(:disabled) { background: var(--g-sky-50); border-color: var(--g-sky-200); }
+
+.reclamations-action-btn.creer-bon { color: var(--g-brand-600); }
+.reclamations-action-btn.creer-bon:hover:not(:disabled) { background: var(--g-brand-50); border-color: var(--g-brand-100); }
+
+.reclamations-action-btn.valider { color: var(--g-green-600); }
+.reclamations-action-btn.valider:hover:not(:disabled) { background: var(--g-emerald-50); border-color: var(--g-emerald-200); }
+
+.reclamations-action-btn.rejeter,
+.reclamations-action-btn.supprimer { color: var(--g-rose-600); }
+.reclamations-action-btn.rejeter:hover:not(:disabled),
+.reclamations-action-btn.supprimer:hover:not(:disabled) { background: var(--g-rose-50); border-color: var(--g-rose-200); }
+
+.reclamations-actions-divider { min-height: 26px; margin: 2px 4px; }
+
+.reclamations-no-selection-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--slate-400);
+  font-size: 0.82rem;
+  font-style: italic;
+  padding: 8px 4px;
+}
+
+/* Filtres */
+.reclamations-filter-panel { gap: 12px; }
+.reclamations-filter-group { min-width: 220px; }
+.reclamations-filter-reset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.reclamations-filter-info { display: flex; align-items: center; }
+.reclamations-filter-result {
+  font-size: 0.78rem;
+  color: var(--teal-700);
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 5px 12px;
+  background: var(--teal-50);
+  border-radius: 999px;
+  border: 1px solid var(--teal-100);
+}
+.reclamations-export-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: none; }
+
+/* Tableau */
+.reclamations-table-wrap:hover { box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02); }
+.reclamations-table th { user-select: none; }
+.reclamations-table td { position: relative; }
+.reclamations-table-empty { background: var(--g-fond-25); }
+
+@media (max-width: 768px) {
+  .reclamations-filter-group { min-width: auto; flex-direction: column; align-items: stretch; gap: 6px; }
+  .reclamations-filter-info { width: 100%; justify-content: center; }
+}
+@media print {
+  .reclamations-no-selection-message { display: none !important; }
+}
+
+.reclamations-date-cell { display: inline-flex; align-items: center; gap: 6px; color: var(--slate-500); }
+.reclamations-date-cell svg { color: var(--slate-400); }

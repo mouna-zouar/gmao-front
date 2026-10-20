@@ -4,13 +4,7 @@ import vehiculeService from '../../../services/vehiculeService';
 import personnelService from '../../../services/personnelService';
 import authService from '../../../services/Authservice';
 import {
-  AlertTriangle, X, Car, User, Calendar, Gauge, Coins,
-  Loader2, Save, Check, MapPin, Link2, Search,
-  ShieldAlert, ShieldCheck, Shield, Zap,
-  Ban, Package, ChevronRight, Sparkles,
-  Activity, XCircle, Hourglass, AlertCircle,
-  TrendingUp, Clock, FileText, Hammer,
-  ChevronDown,
+  AlertTriangle, X, Car, User, Calendar, Gauge, Coins, Loader2, Save, Check, MapPin, Link2, Search, ShieldAlert, ShieldCheck, Shield, Zap, Ban, Package, Activity, XCircle, Hourglass, AlertCircle, FileText, Hammer, ChevronDown,
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeIncidentModal.css';
@@ -71,26 +65,6 @@ function toInputDateTime(iso) {
   if (isNaN(d.getTime())) return '';
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function formatDateFr(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString('fr-FR', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
-
-function formatMontant(v) {
-  if (v == null || v === '') return '—';
-  return `${Number(v).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} DT`;
-}
-
-function formatKm(v) {
-  if (v == null || v === '') return '—';
-  return `${Number(v).toLocaleString('fr-FR')} km`;
 }
 
 // ─── Select avec recherche intégrée (combobox) ───
@@ -851,8 +825,8 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
           </div>
         </div>
 
-        {/* ═══ LAYOUT : NAV + CONTENU + APERÇU ═══ */}
-        <form className="vim-layout vim-layout--with-preview" onSubmit={handleSubmit}>
+        {/* ═══ LAYOUT : NAV + CONTENU ═══ */}
+        <form className="vim-layout" onSubmit={handleSubmit}>
 
           {/* NAVIGATION LATÉRALE */}
           <aside className="vim-nav">
@@ -897,126 +871,6 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
             )}
           </div>
 
-          {/* APERÇU */}
-          <aside className="vim-preview-wrap">
-            <div className="vim-preview">
-              <div className="vim-preview-head">
-                <div className="vim-preview-head-icon">
-                  <Sparkles size={14} strokeWidth={2.4} />
-                </div>
-                <div>
-                  <span className="vim-preview-head-title">Aperçu live</span>
-                  <span className="vim-preview-head-sub">Se met à jour en temps réel</span>
-                </div>
-              </div>
-
-              <div className="vim-preview-card">
-                <div className="vim-preview-label">Véhicule</div>
-                <div className="vim-preview-vehicule">
-                  <div className="vim-preview-vehicule-icon">
-                    <Car size={18} strokeWidth={2.2} />
-                  </div>
-                  <div>
-                    <div className="vim-preview-vehicule-matricule">
-                      {vehiculeLabel?.matricule || 'Non sélectionné'}
-                    </div>
-                    {vehiculeLabel && (
-                      <div className="vim-preview-vehicule-marque">
-                        {vehiculeLabel.marque}
-                        {vehiculeLabel.modele ? ` · ${vehiculeLabel.modele}` : ''}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="vim-preview-card">
-                <div className="vim-preview-label">Classification</div>
-                <div className="vim-preview-tags">
-                  <span className={`vim-preview-tag tag-${typeMeta.color}`}>
-                    <TypeIcon size={12} strokeWidth={2.5} />
-                    {typeMeta.label}
-                  </span>
-                  <span className={`vim-preview-tag tag-${graviteMeta.color}`}>
-                    <GraviteIcon size={12} strokeWidth={2.5} />
-                    {graviteMeta.label}
-                  </span>
-                </div>
-              </div>
-
-              <div className="vim-preview-card">
-                <div className="vim-preview-label">Progression du traitement</div>
-                <div className="vim-preview-workflow">
-                  {ETAT_OPTIONS.map((o, idx) => {
-                    const Icon = o.Icon;
-                    const isActive = Number(formData.etat) === o.value;
-                    const isDone = Number(formData.etat) > o.value;
-                    return (
-                      <div
-                        key={o.value}
-                        className={`vim-preview-step ${isActive ? 'active' : ''} ${isDone ? 'done' : ''}`}
-                      >
-                        <div className="vim-preview-step-line">
-                          {idx > 0 && (
-                            <span className={`vim-preview-step-connector ${isDone || isActive ? 'filled' : ''}`} />
-                          )}
-                          <div className="vim-preview-step-dot">
-                            {isDone ? <Check size={11} strokeWidth={3} /> : <Icon size={11} strokeWidth={2.5} />}
-                            {isActive && <span className="vim-preview-step-pulse" />}
-                          </div>
-                        </div>
-                        <span className="vim-preview-step-label">{o.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="vim-preview-card">
-                <div className="vim-preview-label">Date de l'incident</div>
-                <div className="vim-preview-date">
-                  <Clock size={14} strokeWidth={2.3} />
-                  {formatDateFr(formData.dateIncident)}
-                </div>
-              </div>
-
-              {conducteurLabel && (
-                <div className="vim-preview-card">
-                  <div className="vim-preview-label">Conducteur</div>
-                  <div className="vim-preview-person">
-                    <User size={14} strokeWidth={2.3} />
-                    <div>
-                      <div className="vim-preview-person-name">
-                        {conducteurLabel.nom} {conducteurLabel.prenom}
-                      </div>
-                      {conducteurLabel.matricule && (
-                        <div className="vim-preview-person-sub">{conducteurLabel.matricule}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="vim-preview-summary">
-                <div className="vim-preview-summary-head">
-                  <TrendingUp size={13} strokeWidth={2.5} />
-                  <span>Impact financier</span>
-                </div>
-                <div className="vim-preview-summary-row">
-                  <span>Kilométrage</span>
-                  <span>{formatKm(formData.kilometrage)}</span>
-                </div>
-                <div className="vim-preview-summary-row">
-                  <span>Coût estimé</span>
-                  <span className="vim-preview-cost">{formatMontant(formData.cout)}</span>
-                </div>
-                <div className="vim-preview-summary-row">
-                  <span>GMAO lié</span>
-                  <span>{formData.gmaoId || '—'}</span>
-                </div>
-              </div>
-            </div>
-          </aside>
         </form>
 
         {/* FOOTER */}

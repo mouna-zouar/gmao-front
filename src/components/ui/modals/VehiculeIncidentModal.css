@@ -1,6 +1,6 @@
 
 .vim-modal {
-  width: 1180px;
+  width: 960px; /* sans le panneau « Aperçu live » */
   max-width: 96vw;
   max-height: 94vh;
   display: flex;

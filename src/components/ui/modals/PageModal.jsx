@@ -8,7 +8,8 @@ export default function PageModal({
   title,
   subtitle,
   icon,
-  accent = '#0794a4',
+  eyebrow, // petit libellé au-dessus du titre, comme dans les modales
+  // L'ancien paramètre « accent » est ignoré : toutes les fenêtres ont la couleur des modales.
   size = 'xl',
   children,
 }) {
@@ -39,7 +40,6 @@ export default function PageModal({
       <div
         className={`pmodal pmodal--${size}`}
         onClick={(e) => e.stopPropagation()}
-        style={{ '--modal-accent': accent }}
       >
         <header className="pmodal__header">
           <div className="pmodal__title-wrap">
@@ -49,6 +49,7 @@ export default function PageModal({
               </span>
             )}
             <div className="pmodal__title-text">
+              {eyebrow && <span className="pmodal__eyebrow">{eyebrow}</span>}
               <h2 className="pmodal__title">{title}</h2>
               {subtitle && <p className="pmodal__subtitle">{subtitle}</p>}
             </div>
