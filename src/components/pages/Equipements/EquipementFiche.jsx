@@ -2,10 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   AlertTriangle, ArrowLeft, CalendarClock, CheckCircle2, ChevronRight, FileText, Image as IconeImage,
-  Loader2, LogIn, Paperclip, Printer, QrCode, ShieldCheck, Trash2, Upload, Wrench, X,
+  Loader2, LogIn, Paperclip, Printer, QrCode, ShieldCheck, Sparkles, Trash2, Upload, Wrench, X,
 } from 'lucide-react';
 import equipementService from '../../../services/equipementService';
 import reclamationService from '../../../services/Reclamationservice';
+import bonMaintenanceRapportService from '../../../services/bonMaintenanceRapportService';
 import authService from '../../../services/Authservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
@@ -230,6 +231,18 @@ export default function EquipementFiche() {
 
   useEffect(() => { charger(); }, [charger]);
 
+  // Rapports d'intervention validés (IA) : leur résumé s'affiche sous chaque panne
+  const [rapports, setRapports] = useState({});
+  const idEquipementRapports = fiche?.identite?.id;
+  useEffect(() => {
+    if (idEquipementRapports == null || !connecte) return;
+    let annule = false;
+    bonMaintenanceRapportService.historiqueEquipement(idEquipementRapports)
+      .then((liste) => { if (!annule) setRapports(Object.fromEntries(liste.map((r) => [r.bonMaintenanceId, r]))); })
+      .catch(() => { if (!annule) setRapports({}); });
+    return () => { annule = true; };
+  }, [idEquipementRapports, connecte]);
+
   const fermerEtiquette = useCallback(() => setEtiquette(false), []);
 
   // Stable d'un rendu à l'autre : le formulaire de réclamation ne doit pas se réinitialiser pendant la saisie
@@ -381,6 +394,11 @@ export default function EquipementFiche() {
                             {p.dureeHeures != null && <span>{t('Résolu en {d}', { d: duree(p.dureeHeures) })}</span>}
                             {p.coutTotal ? <span>{montant(p.coutTotal)}</span> : null}
                           </span>
+                          {rapports[p.id]?.contenu?.resume && (
+                            <span className="eq-panne-rapport">
+                              <Sparkles size={13} aria-hidden="true" /> {rapports[p.id].contenu.resume}
+                            </span>
+                          )}
                         </span>
                         <ChevronRight size={17} className="rtl-miroir eq-panne-fleche" aria-hidden="true" />
                       </button>

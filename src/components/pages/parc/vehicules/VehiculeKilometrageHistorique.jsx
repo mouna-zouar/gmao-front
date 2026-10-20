@@ -12,6 +12,7 @@ const SOURCE_LABELS = {
   MISSION: 'Mission',
   BON_CARBURANT: 'Bon carburant',
   SAISIE_ADMINISTRATEUR: 'Saisie manuelle',
+  CORRECTION_VEHICULE: 'Correction (fiche véhicule)',
   MAINTENANCE: 'Maintenance',
   INCIDENT: 'Incident',
 };
@@ -20,6 +21,7 @@ const SOURCE_ICONS = {
   MISSION: Milestone,
   BON_CARBURANT: FileText,
   SAISIE_ADMINISTRATEUR: Activity,
+  CORRECTION_VEHICULE: Activity,
   MAINTENANCE: RefreshCw,
   INCIDENT: Activity,
 };

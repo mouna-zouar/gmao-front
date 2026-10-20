@@ -23,6 +23,7 @@ import {
   ChevronDown,
   Check,
 } from 'lucide-react';
+import { t, locale } from '../../../i18n';
 import './Modal.css';
 import './VehiculeModal.css';
 
@@ -565,6 +566,25 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
                   />
                   <span className="bmm-km-unit">km</span>
                 </div>
+                {(() => {
+                  // Seule la fiche du véhicule peut corriger le compteur (même à la baisse) ;
+                  // missions et bons de carburant ne peuvent que l'augmenter.
+                  const ancien = isEditing ? Number(vehicule?.kilometrage) : NaN;
+                  const nouveau = formData.kilometrage === '' ? NaN : Number(formData.kilometrage);
+                  const fmt = (v) => v.toLocaleString(locale());
+                  if (!isNaN(ancien) && !isNaN(nouveau) && nouveau < ancien) {
+                    return (
+                      <p className="bmm-hint" style={{ color: '#b45309' }}>
+                        {t('Le compteur sera corrigé à la baisse : {ancien} km → {nouveau} km. La correction est enregistrée dans l’historique du kilométrage.', { ancien: fmt(ancien), nouveau: fmt(nouveau) })}
+                      </p>
+                    );
+                  }
+                  return (
+                    <p className="bmm-hint">
+                      {t('Le compteur se corrige uniquement ici. Les missions et les bons de carburant peuvent seulement l’augmenter.')}
+                    </p>
+                  );
+                })()}
               </div>
 
               <div className="bmm-field">

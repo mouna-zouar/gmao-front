@@ -415,7 +415,7 @@ export default function VehiculesPage() {
   // Impression de la fiche du véhicule (A4 portrait) : infos, maintenance préventive, derniers relevés
   const STATUT_MAINTENANCE = { OK: 'À jour', A_VENIR: 'À venir', ATTEINT: 'Atteint', EN_RETARD: 'En retard', EN_COURS: 'En cours' };
   const SOURCE_RELEVE = {
-    MISSION: 'Mission', BON_CARBURANT: 'Bon carburant', SAISIE_ADMINISTRATEUR: 'Saisie manuelle',
+    MISSION: 'Mission', BON_CARBURANT: 'Bon carburant', SAISIE_ADMINISTRATEUR: 'Saisie manuelle', CORRECTION_VEHICULE: 'Correction (fiche véhicule)',
     MAINTENANCE: 'Maintenance', INCIDENT: 'Incident',
   };
   const kmTexte = (v) => (v == null ? '' : t('{n} km', { n: Number(v).toLocaleString(locale()) }));

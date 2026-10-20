@@ -25,12 +25,14 @@ import {
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
+  Eye,
 } from 'lucide-react';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
 import emplacementService from '../../../../services/emplacementService';
 import VehiculeMissionModal from '../../../ui/modals/VehiculeMissionModal';
+import VehiculeMissionDetails from './VehiculeMissionDetails';
 import PageModal from '../../../ui/modals/PageModal';
 import VehiculeTracage from './VehiculeTracage';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
@@ -114,6 +116,9 @@ export default function VehiculeMissions() {
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [tracageOpen, setTracageOpen] = useState(false);
+  // Page de détails (comme la réclamation) : id de la mission ouverte, et compteur pour recharger carburant / amendes
+  const [detailsId, setDetailsId] = useState(null);
+  const [detailsVersion, setDetailsVersion] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [terminerOpen, setTerminerOpen] = useState(false);
 
@@ -398,6 +403,7 @@ export default function VehiculeMissions() {
       : await vehiculeMissionService.create(payload);
     setSelected(null);
     await load();
+    setDetailsVersion((v) => v + 1);
     return enregistree;
   };
 
@@ -428,10 +434,11 @@ export default function VehiculeMissions() {
     });
   };
 
-  const handleDemarrer = async () => {
-    if (!selected) return;
+  const handleDemarrer = async (m) => {
+    const cible = m?.id != null ? m : selected;
+    if (!cible) return;
     try {
-      await vehiculeMissionService.demarrer(selected.id);
+      await vehiculeMissionService.demarrer(cible.id);
       await load();
     } catch (err) {
       console.error(err);
@@ -453,6 +460,7 @@ export default function VehiculeMissions() {
   const confirmTerminer = async (kmRetour, motif) => {
     await vehiculeMissionService.terminer(selected.id, kmRetour, motif);
     await load();
+    setDetailsVersion((v) => v + 1);
   };
 
   // Données du tableau filtré, partagées par l'export CSV et l'impression
@@ -511,7 +519,30 @@ export default function VehiculeMissions() {
 
   const handleStats = () => alert(t("Ouvre le dashboard des missions pour les statistiques détaillées."));
 
+  const missionDetails = detailsId != null ? (missions.find((m) => m.id === detailsId) ?? null) : null;
+  const ouvrirDepuisDetails = (action) => () => {
+    if (!missionDetails) return;
+    setSelected(missionDetails);
+    action(missionDetails);
+  };
+
   return (
+    <>
+    {detailsId != null ? (
+      <VehiculeMissionDetails
+        mission={missionDetails}
+        vehicule={missionDetails ? vehiculesMap[missionDetails.vehiculeId] : null}
+        conducteur={missionDetails ? personnelsMap[missionDetails.conducteurId] : null}
+        source={missionDetails ? emplacementsMap[missionDetails.sourceId] : null}
+        destination={missionDetails ? emplacementsMap[missionDetails.destinationId] : null}
+        version={detailsVersion}
+        onBack={() => setDetailsId(null)}
+        onModifier={ouvrirDepuisDetails(() => setModalOpen(true))}
+        onDemarrer={ouvrirDepuisDetails((m) => handleDemarrer(m))}
+        onTerminer={ouvrirDepuisDetails(() => setTerminerOpen(true))}
+        onTracage={ouvrirDepuisDetails(() => setTracageOpen(true))}
+      />
+    ) : (
     <div className="vms-container">
 
       {/* ── HEADER ── */}
@@ -569,6 +600,16 @@ export default function VehiculeMissions() {
         >
           <Pencil size={18} strokeWidth={2.2} />
           <span>{t("Modifier")}</span>
+        </button>
+
+        <button
+          className={`vms-action-btn details ${!selected ? 'disabled' : ''}`}
+          disabled={!selected}
+          onClick={() => setDetailsId(selected.id)}
+          title={t("Voir tous les détails de la mission, avec ses bons de carburant et ses amendes")}
+        >
+          <Eye size={18} strokeWidth={2.2} />
+          <span>{t("Détails")}</span>
         </button>
 
         <button
@@ -719,6 +760,8 @@ export default function VehiculeMissions() {
                   key={m.id}
                   className={`vms-row ${selected?.id === m.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(m)}
+                  onDoubleClick={() => { setSelected(m); setDetailsId(m.id); }}
+                  title={t('Double-clic pour voir les détails')}
                 >
                   {visibleColumns.map((c) => renderCell(c.key, m))}
                 </tr>
@@ -728,10 +771,13 @@ export default function VehiculeMissions() {
         </table>
       </div>
 
+    </div>
+    )}
+
       {/* ── MODALE ÉDITION / CRÉATION ── */}
       <VehiculeMissionModal
         isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => { setModalOpen(false); setDetailsVersion((v) => v + 1); }}
         onSave={handleSave}
         vehiculeMission={selected}
         isEditing={!!selected}
@@ -784,6 +830,6 @@ export default function VehiculeMissions() {
         message={confirmModal.message}
         confirmText={confirmModal.confirmText}
       />
-    </div>
+    </>
   );
 }

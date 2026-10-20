@@ -9,6 +9,9 @@ import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantS
 import { CARBURANT_TYPE_OPTIONS, carburantTypeLabel } from '../../../constants/carburantType';
 import { etatVehiculeLabel, isVehiculeDisponiblePourMission } from '../../../constants/Vehiculeetat';
 import { t, locale } from '../../../i18n';
+import vehiculeAmendeService from '../../../services/vehiculeAmendeService';
+import authService from '../../../services/Authservice';
+import { TYPES_INFRACTION, STATUTS as STATUTS_AMENDE, ltr } from '../../../constants/Amendelibelles';
 import {
   MapContainer,
   TileLayer,
@@ -43,6 +46,7 @@ import {
   Fuel,
   Plus,
   Trash2,
+  Receipt,
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeMissionModal.css';
@@ -96,6 +100,7 @@ const NAV_SECTIONS = [
   { id: 'trajet', label: 'Trajet', Icon: MapIcon },
   { id: 'kilometrage', label: 'Kilométrage', Icon: Gauge },
   { id: 'carburant', label: 'Carburant', Icon: Fuel },
+  { id: 'amendes', label: 'Amendes', Icon: Receipt },
   { id: 'notes', label: 'Notes', Icon: FileText },
 ];
 
@@ -378,6 +383,84 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     setSaisieBonOuverte(false);
     if (isEditing) chargerBonsMission(); else setBonsMission([]);
   }, [isOpen, isEditing, chargerBonsMission]);
+
+  // Amendes reçues pendant la mission : déjà enregistrées (modification) ou à créer avec la mission
+  const [amendesMission, setAmendesMission] = useState([]);
+  const [amendesAAjouter, setAmendesAAjouter] = useState([]);
+  const AMENDE_VIDE = { dateInfraction: '', type: '', montant: '', lieu: '', referencePv: '', dateLimitePaiement: '' };
+  const [formAmende, setFormAmende] = useState(AMENDE_VIDE);
+  const [saisieAmendeOuverte, setSaisieAmendeOuverte] = useState(false);
+  const [erreurAmende, setErreurAmende] = useState(null);
+  const [enregistrementAmende, setEnregistrementAmende] = useState(false);
+
+  const ouvrirSaisieAmende = () => {
+    setFormAmende({ ...AMENDE_VIDE, dateInfraction: maintenantLocal() });
+    setErreurAmende(null);
+    setSaisieAmendeOuverte(true);
+  };
+
+  const changerAmende = (e) => {
+    const { name, value } = e.target;
+    setFormAmende((f) => ({ ...f, [name]: value }));
+    setErreurAmende(null);
+  };
+
+  const chargerAmendesMission = useCallback(async () => {
+    if (!vehiculeMission?.id) { setAmendesMission([]); return; }
+    try {
+      setAmendesMission(await vehiculeAmendeService.getByMission(vehiculeMission.id));
+    } catch (err) {
+      console.error('Erreur chargement des amendes :', err);
+      setAmendesMission([]);
+    }
+  }, [vehiculeMission?.id]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setAmendesAAjouter([]);
+    setSaisieAmendeOuverte(false);
+    if (isEditing) chargerAmendesMission(); else setAmendesMission([]);
+  }, [isOpen, isEditing, chargerAmendesMission]);
+
+  const ajouterAmende = async () => {
+    if (!formAmende.dateInfraction) { setErreurAmende(t("La date de l'infraction est obligatoire.")); return; }
+    if (new Date(formAmende.dateInfraction) > new Date()) { setErreurAmende(t("La date de l'infraction ne peut pas être dans le futur.")); return; }
+    if (!formAmende.type) { setErreurAmende(t("Le type d'infraction est obligatoire.")); return; }
+    if (formAmende.montant === '' || Number(formAmende.montant) < 0) { setErreurAmende(t('Le montant est obligatoire.')); return; }
+    if (formAmende.dateLimitePaiement && formAmende.dateLimitePaiement < formAmende.dateInfraction.slice(0, 10)) {
+      setErreurAmende(t("La date limite de paiement est antérieure à l'infraction.")); return;
+    }
+    const amende = {
+      vehiculeId: Number(formData.vehiculeId),
+      conducteurId: formData.conducteurId ? Number(formData.conducteurId) : null,
+      origineConducteur: formData.conducteurId ? 1 : null,
+      dateInfraction: formAmende.dateInfraction,
+      type: Number(formAmende.type),
+      montant: Number(formAmende.montant),
+      lieu: formAmende.lieu.trim() || null,
+      referencePv: formAmende.referencePv.trim() || null,
+      dateLimitePaiement: formAmende.dateLimitePaiement || null,
+      statut: 0,
+    };
+    setEnregistrementAmende(true);
+    try {
+      if (isEditing && vehiculeMission?.id) {
+        const ctx = authService.getContexteMetier?.() ?? {};
+        await vehiculeAmendeService.create({ ...amende, missionId: vehiculeMission.id, personnelCreationId: ctx.userId ?? null });
+        await chargerAmendesMission();
+      } else {
+        // Mission pas encore créée : l'amende sera enregistrée avec elle
+        setAmendesAAjouter((l) => [...l, amende]);
+      }
+      setSaisieAmendeOuverte(false);
+      setFormAmende(AMENDE_VIDE);
+    } catch (err) {
+      console.error('Erreur ajout amende :', err);
+      setErreurAmende(err?.response?.data?.message || t("L'amende n'a pas pu être enregistrée."));
+    } finally {
+      setEnregistrementAmende(false);
+    }
+  };
 
   const [vehicules, setVehicules] = useState([]);
   const [loadingVehicules, setLoadingVehicules] = useState(false);
@@ -733,6 +816,28 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
           return;
         }
       }
+      // Amendes ajoutées pendant la création : liées à la mission maintenant qu'elle existe
+      if (amendesAAjouter.length > 0) {
+        if (missionId == null) {
+          setError(t("La mission est enregistrée, mais ses amendes n'ont pas pu y être liées. Ajoutez-les depuis la mission."));
+          return;
+        }
+        const ctxA = authService.getContexteMetier?.() ?? {};
+        const echecsA = [];
+        for (const amende of amendesAAjouter) {
+          try {
+            await vehiculeAmendeService.create({ ...amende, missionId, personnelCreationId: ctxA.userId ?? null });
+          } catch (err) {
+            console.error('Erreur création amende :', err);
+            echecsA.push(amende);
+          }
+        }
+        if (echecsA.length > 0) {
+          setAmendesAAjouter(echecsA);
+          setError(t("La mission est enregistrée, mais {n} amende(s) n'ont pas pu être créées.", { n: echecsA.length }));
+          return;
+        }
+      }
       onClose();
     } catch (err) {
       console.error('Erreur enregistrement mission :', err);
@@ -763,6 +868,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     trajet: [formData.dateDepart, formData.sourceId, formData.destinationId].filter(Boolean).length,
     kilometrage: [formData.kilometrageDepart, formData.kilometrageRetour].filter(Boolean).length,
     carburant: bonsMission.length + bonsAAjouter.length,
+    amendes: amendesMission.length + amendesAAjouter.length,
     notes: formData.observations?.trim() ? 1 : 0,
   };
 
@@ -1314,6 +1420,127 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               </button>
             )}
             {!formData.vehiculeId && <p className="bmm-hint">{t('Choisissez d’abord le véhicule de la mission (onglet Véhicule).')}</p>}
+          </div>
+        );
+      }
+
+      case 'amendes': {
+        const toutes = [...amendesMission.map((a) => ({ ...a, enAttente: false })), ...amendesAAjouter.map((a, i) => ({ ...a, enAttente: true, index: i }))];
+        const totalAmendes = toutes.reduce((s, a) => s + (Number(a.montant) || 0), 0);
+        const aPayer = toutes.filter((a) => a.statut === 0 || a.statut === 1).length;
+        const formatDateA = (v) => (v ? new Date(v).toLocaleString(locale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
+        return (
+          <div className="bmm-content-pane">
+            <div className="bmm-pane-header">
+              <h3>{t('Amendes')}</h3>
+              <p>{t('Contraventions reçues pendant cette mission')}</p>
+            </div>
+
+            <div className="vmb-resume">
+              <div className="vmb-stat">
+                <span className="vmb-stat-label">{t('Amendes')}</span>
+                <strong>{toutes.length}</strong>
+              </div>
+              <div className="vmb-stat">
+                <span className="vmb-stat-label">{t('À régler')}</span>
+                <strong>{aPayer}</strong>
+              </div>
+              <div className="vmb-stat vmb-stat--montant">
+                <span className="vmb-stat-label">{t('Total')}</span>
+                <strong>{totalAmendes.toFixed(2)} <small>{t('DT')}</small></strong>
+              </div>
+            </div>
+
+            {toutes.length === 0 && !saisieAmendeOuverte ? (
+              <div className="vmb-vide">
+                <span className="vmb-vide-icone"><Receipt size={22} /></span>
+                <p>{t('Aucune amende pour cette mission.')}</p>
+              </div>
+            ) : (
+              <ul className="vmb-liste">
+                {toutes.map((a) => (
+                  <li key={a.enAttente ? 'a-' + a.index : 'e-' + a.id} className={'vmb-ligne' + (a.enAttente ? ' vmb-ligne--attente' : '')}>
+                    <span className="vmb-icone"><Receipt size={16} /></span>
+                    <div className="vmb-texte">
+                      <strong>{a.num ? ltr(a.num) + ' · ' : ''}{formatDateA(a.dateInfraction)}{a.lieu ? ' · ' + a.lieu : ''}</strong>
+                      <span className="vmb-puces">
+                        {a.type != null && <span className="vmb-puce">{t(TYPES_INFRACTION[a.type] ?? '—')}</span>}
+                        {a.referencePv && <span className="vmb-puce">{t('PV')} {ltr(a.referencePv)}</span>}
+                        {!a.enAttente && a.statut != null && <span className="vmb-puce">{t(STATUTS_AMENDE[a.statut] ?? '—')}</span>}
+                        {a.enRetard && <span className="vmb-puce vmb-puce--attente">{t('En retard')}</span>}
+                        {a.enAttente && <span className="vmb-puce vmb-puce--attente">{t('Enregistrée avec la mission')}</span>}
+                      </span>
+                    </div>
+                    <span className="vmb-montant">{a.montant != null ? Number(a.montant).toFixed(2) + ' ' + t('DT') : '—'}</span>
+                    {a.enAttente && (
+                      <button
+                        type="button"
+                        className="vmb-retirer"
+                        onClick={() => setAmendesAAjouter((l) => l.filter((_, i) => i !== a.index))}
+                        aria-label={t('Retirer cette amende')}
+                        title={t('Retirer cette amende')}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {saisieAmendeOuverte ? (
+              <div className="vmb-saisie">
+                <div className="vmb-saisie-entete">
+                  <Receipt size={16} />
+                  <strong>{t('Nouvelle amende')}</strong>
+                </div>
+                <div className="vmb-saisie-grille">
+                  <label className="vmb-champ vmb-champ--large">
+                    <span>{t("Date de l'infraction")} <em>*</em></span>
+                    <input type="datetime-local" name="dateInfraction" value={formAmende.dateInfraction} onChange={changerAmende} max={maintenantLocal()} />
+                  </label>
+                  <label className="vmb-champ">
+                    <span>{t("Type d'infraction")} <em>*</em></span>
+                    <select name="type" value={formAmende.type} onChange={changerAmende}>
+                      <option value="">—</option>
+                      {Object.entries(TYPES_INFRACTION).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
+                    </select>
+                  </label>
+                  <label className="vmb-champ">
+                    <span>{t('Montant (DT)')} <em>*</em></span>
+                    <input type="number" name="montant" min="0" step="0.001" value={formAmende.montant} onChange={changerAmende} placeholder="0.000" />
+                  </label>
+                  <label className="vmb-champ">
+                    <span>{t('Lieu')}</span>
+                    <input type="text" name="lieu" value={formAmende.lieu} onChange={changerAmende} />
+                  </label>
+                  <label className="vmb-champ">
+                    <span>{t('Référence PV')}</span>
+                    <input type="text" name="referencePv" value={formAmende.referencePv} onChange={changerAmende} />
+                  </label>
+                  <label className="vmb-champ vmb-champ--large">
+                    <span>{t('Date limite de paiement')}</span>
+                    <input type="date" name="dateLimitePaiement" value={formAmende.dateLimitePaiement} onChange={changerAmende} />
+                  </label>
+                </div>
+                {erreurAmende && <p className="vmb-erreur"><AlertTriangle size={14} /> {erreurAmende}</p>}
+                <div className="vmb-saisie-actions">
+                  <button type="button" className="vmb-btn vmb-btn--clair" onClick={() => setSaisieAmendeOuverte(false)} disabled={enregistrementAmende}>
+                    {t('Annuler')}
+                  </button>
+                  <button type="button" className="vmb-btn vmb-btn--plein" onClick={ajouterAmende} disabled={enregistrementAmende}>
+                    {enregistrementAmende ? <Loader2 size={15} className="vmb-tourne" /> : <Check size={15} />}
+                    {isEditing ? t("Enregistrer l'amende") : t("Ajouter l'amende")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" className="vmb-ajouter" onClick={ouvrirSaisieAmende} disabled={!formData.vehiculeId}>
+                <Plus size={16} /> {t('Ajouter une amende')}
+              </button>
+            )}
+            {!formData.vehiculeId && <p className="bmm-hint">{t('Choisissez d’abord le véhicule de la mission (onglet Véhicule).')}</p>}
+            {formData.vehiculeId && !formData.conducteurId && <p className="bmm-hint">{t('Sans conducteur sur la mission, le responsable sera retrouvé d’après la date de l’infraction.')}</p>}
           </div>
         );
       }

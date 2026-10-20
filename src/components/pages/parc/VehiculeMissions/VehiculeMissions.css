@@ -204,6 +204,12 @@
 }
 
 /* Traçage */
+.vms-action-btn.details { color: #0f766e; }
+.vms-action-btn.details:hover:not(.disabled) {
+  background: #f0fdfa;
+  border-color: #99f6e4;
+}
+
 .vms-action-btn.tracage { color: #0794a4; }
 .vms-action-btn.tracage:hover:not(.disabled) {
   background: #e9f8fa;

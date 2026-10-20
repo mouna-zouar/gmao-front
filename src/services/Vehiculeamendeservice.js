@@ -22,6 +22,12 @@ const vehiculeAmendeService = {
     return data;
   },
 
+  /** Amendes reçues pendant une mission. */
+  async getByMission(missionId) {
+    const { data } = await api.get(`/vehicule-amendes/mission/${missionId}`);
+    return Array.isArray(data) ? data : [];
+  },
+
   async remove(id) {
     await api.delete(`/vehicule-amendes/${id}`);
   },

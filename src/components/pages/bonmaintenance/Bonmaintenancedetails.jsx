@@ -91,6 +91,7 @@ import pieceService from '../../../services/Pieceservice';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import Tracage3DTab from './Tracage3DTab';
+import BmdRapport from './BmdRapport';
 import { libelleTypeEntretien, libelleSourceInformation } from '../../../constants/FicheIntervention';
 import { useCelebration } from './BmdCelebration';
 import { t, tp, locale } from '../../../i18n';
@@ -517,6 +518,8 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [impressionEnCours, setImpressionEnCours] = useState(false);
   const [nonLusChat, setNonLusChat] = useState(0);
   const [qrOuvert, setQrOuvert] = useState(false);
+  // Rapport d'intervention (IA) : repris dans la fiche imprimée
+  const [rapportIa, setRapportIa] = useState(null);
   const fermerQr = useCallback(() => setQrOuvert(false), []);
   const etatBonRef = useRef(bonMaintenance?.etat);
   useEffect(() => { etatBonRef.current = bon?.etat; }, [bon?.etat]);
@@ -895,6 +898,20 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
             ],
           },
           { titre: t('Description'), texte: bon.description },
+          rapportIa?.contenu && {
+            titre: rapportIa.statut === 1 ? t("Rapport d'intervention") : t("Rapport d'intervention (brouillon)"),
+            texte: [
+              rapportIa.contenu.resume,
+              rapportIa.contenu.panneConstatee && `${t('Panne constatée')} : ${rapportIa.contenu.panneConstatee}`,
+              rapportIa.contenu.causeIdentifiee && `${t('Cause identifiée')} : ${rapportIa.contenu.causeIdentifiee}`,
+              rapportIa.contenu.remede && `${t('Remède')} : ${rapportIa.contenu.remede}`,
+              rapportIa.contenu.travauxRealises?.length > 0 && `${t('Travaux réalisés')} :\n${rapportIa.contenu.travauxRealises.map((x) => `• ${x}`).join('\n')}`,
+              rapportIa.contenu.piecesRemplacees?.length > 0 && `${t('Pièces remplacées')} :\n${rapportIa.contenu.piecesRemplacees.map((x) => `• ${x}`).join('\n')}`,
+              rapportIa.contenu.controlesEtRemiseEnService && `${t('Contrôles et remise en service')} : ${rapportIa.contenu.controlesEtRemiseEnService}`,
+              rapportIa.contenu.recommandations?.length > 0 && `${t('Recommandations')} :\n${rapportIa.contenu.recommandations.map((x) => `• ${x}`).join('\n')}`,
+              rapportIa.statut === 1 && t('Validé par {nom} le {date}.', { nom: rapportIa.valideParNom || '—', date: rapportIa.valideLe ? new Date(rapportIa.valideLe).toLocaleDateString(locale()) : '—' }),
+            ].filter(Boolean).join('\n\n'),
+          },
           {
             titre: t('Diagnostics'),
             colonnes: [t('Date'), t('Technicien'), t('Gravité'), t('Pièce'), t('Cause probable'), { label: t('Durée est.'), align: 'end' }],
@@ -1400,6 +1417,14 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
           </ul>
         </section>
       </div>
+
+      {/* ===== Rapport d'intervention (IA), après la clôture ===== */}
+      <BmdRapport
+        bon={bon}
+        equipementNom={nomEquipement === 'Équipement non renseigné' ? t(nomEquipement) : nomEquipement}
+        onChange={setRapportIa}
+        onBonModifie={rafraichirBon}
+      />
 
       {/* ===== Tout le dossier ===== */}
       <section className="bmx-dossier" aria-label={t("Tout le dossier")}>

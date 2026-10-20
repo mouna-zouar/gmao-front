@@ -1,0 +1,46 @@
+/* Détails d'une mission : même mise en page que la réclamation (Reclamationdetails.css),
+   avec quelques compléments pour le trajet et les tableaux carburant / amendes. */
+.vmd-page .rcx-titre { overflow-wrap: anywhere; }
+.vmd-trajet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+.vmd-trajet > svg:first-child { color: var(--brand); }
+.vmd-trajet strong { color: var(--ink); }
+.vmd-fleche { color: var(--ink-faint); flex: none; }
+[dir='rtl'] .vmd-fleche, [dir='rtl'] .vmd-retour { transform: scaleX(-1); }
+.vmd-periode { display: inline-flex; align-items: center; gap: 6px; margin-inline-start: 10px; padding: 3px 12px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; color: var(--ink-soft); }
+.vmd-sous { color: var(--ink-faint); font-weight: 500; }
+.vmd-bloc { display: block; font-size: 12px; }
+
+.vmd-icone-titre { vertical-align: -3px; color: var(--brand); margin-inline-end: 4px; }
+.vmd-compte { display: inline-block; margin-inline-start: 6px; padding: 1px 9px; border-radius: 999px; background: var(--brand-wash); color: var(--brand-deep); font-size: 13px; font-family: var(--font-texte); vertical-align: 2px; }
+.vmd-erreur { display: flex; align-items: center; gap: 8px; margin: 0 0 20px; padding: 12px 14px; border-radius: 14px; background: var(--alert-wash); color: var(--alert); font-weight: 600; }
+.rcx-vide p { display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+.vmd-table-wrap { overflow-x: auto; margin: 4px -4px 0; }
+.vmd-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; }
+.vmd-table th { text-align: start; padding: 9px 12px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); border-bottom: 1.5px solid var(--line); white-space: nowrap; }
+.vmd-table td { padding: 11px 12px; border-bottom: 1px solid #e8eff0; vertical-align: top; }
+.vmd-table tbody tr:hover td { background: var(--paper); }
+.vmd-table tfoot td { border-bottom: none; font-weight: 800; color: var(--ink); background: var(--brand-wash); }
+.vmd-table tfoot td:first-child { border-start-start-radius: 12px; border-end-start-radius: 12px; }
+.vmd-table tfoot td:last-child { border-start-end-radius: 12px; border-end-end-radius: 12px; }
+.vmd-num { text-align: end !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vmd-pastille { margin-inline-start: 4px; }
+
+.vmd-carte h2 { margin-bottom: 10px; }
+.vmd-champs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; margin: 0; }
+.vmd-champs > div { min-width: 0; }
+.vmd-champs dt { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; }
+.vmd-champs dd { margin: 2px 0 0; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.vmd-large { grid-column: 1 / -1; }
+
+@media (max-width: 760px) {
+  .vmd-periode { margin-inline-start: 0; }
+  .vmd-champs { grid-template-columns: 1fr; }
+}
+
+/* Titres des cartes : icône, texte et compteur sur une seule ligne */
+.vmd-page .rcx-bons-entete h2 { display: flex; align-items: center; gap: 8px; margin: 0; }
+.vmd-page .rcx-bons-entete h2 .vmd-icone-titre { margin: 0; flex: none; }
+.vmd-page .rcx-bons-entete h2 .vmd-compte { margin: 0; vertical-align: 0; }
+/* Numéros (AM-2026-0005), dates : jamais coupés */
+.vmd-table td:first-child { white-space: nowrap; }

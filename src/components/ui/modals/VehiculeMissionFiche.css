@@ -1,0 +1,77 @@
+/* ─── Fiche détaillée d'une mission (avec carburant et amendes) ─── */
+.vmf { display: flex; flex-direction: column; gap: 18px; padding: 18px 22px 22px; color: #0f172a; }
+
+.vmf-bandeau {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px;
+  padding: 14px 16px; border: 1px solid #d7e3e5; border-radius: 14px; background: #f6fbfb;
+}
+.vmf-etat {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px;
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.vmf-etat--planifiee { background: #eff6ff; color: #1d4ed8; }
+.vmf-etat--encours   { background: #fef3c7; color: #92400e; }
+.vmf-etat--terminee  { background: #dcfce7; color: #166534; }
+.vmf-etat--annulee   { background: #fee2e2; color: #991b1b; }
+.vmf-trajet { display: inline-flex; align-items: center; gap: 8px; color: #0794a4; font-size: 0.95rem; }
+.vmf-trajet strong { color: #0f172a; }
+.vmf-fleche { color: #94a3b8; }
+[dir='rtl'] .vmf-fleche { transform: scaleX(-1); }
+.vmf-periode { display: inline-flex; align-items: center; gap: 7px; color: #475569; font-size: 0.86rem; margin-inline-start: auto; }
+.vmf-periode { flex-wrap: wrap; }
+.vmf-periode em { white-space: nowrap; font-style: normal; font-weight: 700; color: #0794a4; background: #e0f4f6; padding: 2px 8px; border-radius: 999px; font-size: 0.76rem; }
+
+.vmf-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.vmf-kpi { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border: 1px solid #d7e3e5; border-radius: 14px; background: #fff; }
+.vmf-kpi > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vmf-kpi span:not(.vmf-kpi-icone) { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; }
+.vmf-kpi strong { font-size: 1.35rem; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; }
+.vmf-kpi strong small { font-size: 0.72rem; font-weight: 700; color: #64748b; }
+.vmf-kpi em { font-style: normal; font-size: 0.78rem; color: #64748b; }
+.vmf-kpi-icone { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: #e0f4f6; color: #0794a4; }
+.vmf-kpi-icone--carburant { background: #fff7ed; color: #ea580c; }
+.vmf-kpi-icone--conso { background: #f5f3ff; color: #7c3aed; }
+.vmf-kpi-icone--amende { background: #fef2f2; color: #dc2626; }
+
+.vmf-erreur { display: flex; align-items: center; gap: 8px; margin: 0; padding: 10px 12px; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 0.86rem; }
+
+.vmf-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.vmf-carte, .vmf-section { border: 1px solid #d7e3e5; border-radius: 14px; background: #fff; padding: 14px 16px; }
+.vmf-carte h4, .vmf-section h4 {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 0.9rem; font-weight: 800; color: #0f172a;
+}
+.vmf-carte h4 svg, .vmf-section h4 svg { color: #0794a4; }
+.vmf-champs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; }
+.vmf-champ { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.vmf-champ--large { grid-column: 1 / -1; }
+.vmf-champ-label { font-size: 0.72rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.03em; }
+.vmf-champ-valeur { font-size: 0.9rem; font-weight: 600; color: #0f172a; overflow-wrap: anywhere; white-space: pre-line; }
+
+.vmf-compte { margin-inline-start: 2px; padding: 1px 8px; border-radius: 999px; background: #e0f4f6; color: #0794a4; font-size: 0.74rem; }
+.vmf-vide { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 18px; border: 1px dashed #cbd5e1; border-radius: 12px; color: #64748b; font-size: 0.88rem; }
+.vmf-tourne { animation: vmf-tourne 1s linear infinite; }
+@keyframes vmf-tourne { to { transform: rotate(360deg); } }
+
+.vmf-table-wrap { overflow-x: auto; }
+.vmf-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.vmf-table th { text-align: start; padding: 8px 10px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; color: #64748b; background: #f6fbfb; border-bottom: 1px solid #d7e3e5; white-space: nowrap; }
+.vmf-table td { padding: 9px 10px; border-bottom: 1px solid #eef2f4; vertical-align: top; }
+.vmf-table tfoot td { border-bottom: none; border-top: 2px solid #d7e3e5; font-weight: 700; background: #f8fafc; }
+.vmf-num { text-align: end !important; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vmf-sous { display: block; color: #64748b; font-size: 0.75rem; }
+.vmf-statut { display: inline-block; margin: 0 4px 2px 0; padding: 2px 8px; border-radius: 999px; font-size: 0.74rem; font-weight: 700; }
+.vmf-statut--apayer { background: #fef3c7; color: #92400e; }
+.vmf-statut--contestee { background: #eff6ff; color: #1d4ed8; }
+.vmf-statut--payee { background: #dcfce7; color: #166534; }
+.vmf-statut--annulee { background: #f1f5f9; color: #475569; }
+.vmf-statut--retard { background: #fee2e2; color: #b91c1c; }
+
+@media (max-width: 900px) {
+  .vmf-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vmf-grille { grid-template-columns: 1fr; }
+  .vmf-periode { margin-inline-start: 0; }
+}
+@media (max-width: 520px) {
+  .vmf { padding: 14px; }
+  .vmf-kpis, .vmf-champs { grid-template-columns: 1fr; }
+}

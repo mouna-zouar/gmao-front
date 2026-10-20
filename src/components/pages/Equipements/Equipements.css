@@ -829,6 +829,13 @@
 .eq-panne-corps { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .eq-panne-titre { font-size: 14.5px; line-height: 1.4; unicode-bidi: plaintext; }
 .eq-panne-titre strong { margin-inline-end: 6px; font-variant-numeric: tabular-nums; }
+/* Résumé du rapport d'intervention validé, sous la panne */
+.eq-panne-rapport {
+  display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; font-size: 13px; line-height: 1.45;
+  color: #4b6670; text-align: start; unicode-bidi: plaintext;
+}
+.eq-panne-rapport svg { flex: none; margin-top: 2px; color: #7c5ce0; }
+
 .eq-panne-meta {
   display: flex;
   flex-wrap: wrap;
