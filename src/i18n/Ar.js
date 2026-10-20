@@ -371,6 +371,7 @@ const ar = {
   "En un coup d'œil": 'لمحة سريعة',
   'Recalculer la priorité': 'إعادة حساب الأولوية',
   "Recalculer la priorité (criticité + urgence + disponibilité d'alternative)": 'إعادة حساب الأولوية (الخطورة + الاستعجال + توفّر بديل)',
+  "Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)": 'أولوية محسوبة آليًا (الخطورة + الاستعجال + توفّر بديل)',
   'Tout le dossier': 'كامل الملف',
   'Comprendre': 'الفهم',
   'Voir où en est le dossier': 'معرفة أين وصل الملف',
@@ -2672,6 +2673,9 @@ const ar = {
   'Aucune tâche ne correspond à ces filtres.': 'لا توجد مهمة تطابق هذه المرشحات.',
   'Scanner l’équipement concerné': 'مسح المعدّة المعنية',
   'Placez le QR code ou le code-barre de l’étiquette dans le cadre : l’équipement est choisi tout seul.': 'ضع رمز QR أو الرمز الشريطي للملصق داخل الإطار: يتم اختيار المعدّة تلقائيًا.',
+  "{phase} · retard {d}": "{phase} · تأخير {d}",
+  "{phase} · {d} restantes": "{phase} · متبقٍّ {d}",
+  "Échéance {phase} : {date} (délai {n} h selon la priorité {p})": "موعد {phase} : {date} (المهلة {n} س حسب الأولوية {p})",
 };
 
 export default ar;

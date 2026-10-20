@@ -19,9 +19,9 @@
   flex-direction: column;
   width: 100%;
   max-height: 92vh;
-  background: #ffffff;
+  background: var(--g-blanc);
   border-radius: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--g-slate-200);
   box-shadow:
     0 4px 8px rgba(15, 23, 42, 0.05),
     0 24px 48px -20px rgba(15, 23, 42, 0.2);
@@ -43,8 +43,8 @@
   justify-content: space-between;
   gap: 16px;
   padding: 16px 24px;
-  border-bottom: 1px solid #e2e8f0;
-  background: #ffffff;
+  border-bottom: 1px solid var(--g-slate-200);
+  background: var(--g-blanc);
   flex-shrink: 0;
 }
 
@@ -55,7 +55,7 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--modal-accent, #0794a4);
+  background: var(--modal-accent, var(--g-brand-500));
   opacity: 0.9;
 }
 
@@ -73,9 +73,9 @@
   width: 46px;
   height: 46px;
   border-radius: 10px;
-  background: color-mix(in srgb, var(--modal-accent, #0794a4) 10%, white);
-  color: var(--modal-accent, #0794a4);
-  border: 1px solid color-mix(in srgb, var(--modal-accent, #0794a4) 25%, white);
+  background: color-mix(in srgb, var(--modal-accent, var(--g-brand-500)) 10%, white);
+  color: var(--modal-accent, var(--g-brand-500));
+  border: 1px solid color-mix(in srgb, var(--modal-accent, var(--g-brand-500)) 25%, white);
   flex-shrink: 0;
 }
 
@@ -85,7 +85,7 @@
   margin: 0;
   font-size: 1.45rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--g-slate-900);
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
@@ -94,7 +94,7 @@
   margin: 3px 0 0;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #64748b;
+  color: var(--g-slate-500);
   line-height: 1.4;
 }
 
@@ -109,16 +109,16 @@
   justify-content: center;
   border: none;
   border-radius: 8px;
-  background: #f1f5f9;
-  color: #64748b;
+  background: var(--g-slate-100);
+  color: var(--g-slate-500);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .pmodal__close:hover {
-  background: #fef2f2;
-  color: #dc2626;
+  background: var(--g-red-50);
+  color: var(--g-red-600);
   transform: rotate(90deg);
 }
 
@@ -132,7 +132,7 @@
 .pmodal__body {
   flex: 1;
   overflow-y: auto;
-  background: #f8fafc;
+  background: var(--g-slate-50);
   padding: 0;
 }
 
@@ -143,11 +143,11 @@
   background: transparent;
 }
 .pmodal__body::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--g-slate-300);
   border-radius: 10px;
 }
 .pmodal__body::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--g-slate-400);
 }
 
 /* ============================================================

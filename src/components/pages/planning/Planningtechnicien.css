@@ -4,26 +4,26 @@
 
 .pt-container {
   /* --- Palette --- */
-  --pt-surface: #ffffff;
-  --pt-bg-soft: #f8fafc;
-  --pt-bg-softer: #f1f5f9;
+  --pt-surface: var(--g-blanc);
+  --pt-bg-soft: var(--g-slate-50);
+  --pt-bg-softer: var(--g-slate-100);
   --pt-border: #e8eef5;
   --pt-border-strong: #dbe4ee;
-  --pt-text: #0f172a;
-  --pt-muted: #64748b;
-  --pt-faint: #94a3b8;
+  --pt-text: var(--g-slate-900);
+  --pt-muted: var(--g-slate-500);
+  --pt-faint: var(--g-slate-400);
 
-  --pt-teal: #0d9488;
-  --pt-teal-dark: #0f766e;
-  --pt-teal-soft: #f0fdfa;
+  --pt-teal: var(--g-teal-600);
+  --pt-teal-dark: var(--g-teal-700);
+  --pt-teal-soft: var(--g-teal-50);
 
-  --pt-green: #16a34a;
-  --pt-green-soft: #f0fdf4;
-  --pt-amber: #d97706;
-  --pt-amber-soft: #fffbeb;
-  --pt-red: #dc2626;
-  --pt-red-soft: #fef2f2;
-  --pt-blue-soft: #eff6ff;
+  --pt-green: var(--g-green-600);
+  --pt-green-soft: var(--g-green-50);
+  --pt-amber: var(--g-amber-600);
+  --pt-amber-soft: var(--g-amber-50);
+  --pt-red: var(--g-red-600);
+  --pt-red-soft: var(--g-red-50);
+  --pt-blue-soft: var(--g-blue-50);
 
   /* --- Effets --- */
   --pt-radius-lg: 18px;
@@ -68,7 +68,7 @@
   position: absolute;
   inset: 0 auto 0 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--pt-teal) 0%, #22d3ee 100%);
+  background: linear-gradient(180deg, var(--pt-teal) 0%, var(--g-cyan-400) 100%);
 }
 
 .pt-header-title {
@@ -85,7 +85,7 @@
   height: 42px;
   padding: 9px;
   border-radius: 12px;
-  background: linear-gradient(140deg, #ccfbf1 0%, #e0f2fe 100%);
+  background: linear-gradient(140deg, var(--g-teal-100) 0%, var(--g-sky-100) 100%);
   box-shadow: inset 0 0 0 1px rgba(13, 148, 136, 0.12);
 }
 
@@ -214,7 +214,7 @@
 }
 
 .pt-search-clear:hover {
-  background: #e2e8f0;
+  background: var(--g-slate-200);
   color: var(--pt-text);
 }
 
@@ -361,13 +361,13 @@
 
 .pt-status-label.dispo {
   background: var(--pt-green-soft);
-  color: #15803d;
+  color: var(--g-green-700);
   box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.16);
 }
 
 .pt-status-label.occupe {
   background: var(--pt-amber-soft);
-  color: #b45309;
+  color: var(--g-amber-700);
   box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.18);
 }
 
@@ -389,7 +389,7 @@
   border-radius: var(--pt-radius-sm);
   background: var(--pt-bg-soft);
   border: 1px solid #eef2f7;
-  border-left: 3px solid #cbd5e1;
+  border-left: 3px solid var(--g-slate-300);
   transition:
     background 0.18s var(--pt-ease),
     border-color 0.18s var(--pt-ease),
@@ -398,14 +398,14 @@
 }
 
 .pt-creneau:hover {
-  background: #fff;
+  background: var(--g-blanc);
   border-color: var(--pt-border);
   border-left-color: var(--pt-teal);
   transform: translateX(2px);
   box-shadow: var(--pt-shadow-xs);
 }
 
-.pt-creneau:has(.pt-creneau-etat--0)  { border-left-color: #2563eb; }
+.pt-creneau:has(.pt-creneau-etat--0)  { border-left-color: var(--g-blue-600); }
 .pt-creneau:has(.pt-creneau-etat--1)  { border-left-color: var(--pt-amber); }
 .pt-creneau:has(.pt-creneau-etat--2)  { border-left-color: var(--pt-green); }
 .pt-creneau:has(.pt-creneau-etat--10) { border-left-color: var(--pt-red); }
@@ -421,13 +421,13 @@
 
 .pt-creneau-sep {
   font-size: 0.65rem;
-  color: #cbd5e1;
+  color: var(--g-slate-300);
   opacity: 0.85;
 }
 
 .pt-creneau-bon {
   font-weight: 600;
-  color: #1e293b;
+  color: var(--g-slate-800);
 }
 
 .pt-creneau-equipement {
@@ -444,25 +444,25 @@
   padding: 3px 8px;
   border-radius: 999px;
   background: var(--pt-bg-softer);
-  color: #475569;
+  color: var(--g-slate-600);
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 .pt-creneau-etat--0 {
   background: var(--pt-blue-soft);
-  color: #1d4ed8;
+  color: var(--g-blue-700);
   box-shadow: inset 0 0 0 1px rgba(29, 78, 216, 0.14);
 }
 
 .pt-creneau-etat--1 {
   background: var(--pt-amber-soft);
-  color: #b45309;
+  color: var(--g-amber-700);
   box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.16);
 }
 
 .pt-creneau-etat--2 {
   background: var(--pt-green-soft);
-  color: #15803d;
+  color: var(--g-green-700);
   box-shadow: inset 0 0 0 1px rgba(22, 163, 74, 0.16);
 }
 

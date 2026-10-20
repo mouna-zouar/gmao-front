@@ -4,10 +4,10 @@
    ============================================================ */
 
 .planning-bm-container {
-  --primary: #14b8a6;
-  --primary-dark: #0d9488;
-  --primary-darker: #0f766e;
-  --primary-light: #99f6e4;
+  --primary: var(--g-teal-500);
+  --primary-dark: var(--g-teal-600);
+  --primary-darker: var(--g-teal-700);
+  --primary-light: var(--g-teal-200);
   --primary-soft: #e6faf6;
   --primary-glow: rgba(20, 184, 166, 0.2);
 
@@ -22,19 +22,19 @@
   --ink-100: #e2efec;
 
   --bg-app: #eef4f3;
-  --surface: #ffffff;
+  --surface: var(--g-blanc);
   --surface-soft: #f8fbfa;
 
   --line: rgba(15, 92, 86, 0.08);
   --line-soft: rgba(15, 92, 86, 0.05);
 
-  --info-text: #1d4ed8;
+  --info-text: var(--g-blue-700);
   --info-soft: #e0eaff;
-  --warning-text: #b45309;
+  --warning-text: var(--g-amber-700);
   --warning-soft: #fff3d6;
-  --success-text: #047857;
+  --success-text: var(--g-emerald-700);
   --success-soft: #d9f7e6;
-  --slate-text: #334155;
+  --slate-text: var(--g-slate-700);
   --slate-soft: #e7ebf0;
 
   --radius-xs: 10px;
@@ -132,13 +132,13 @@
 
 .planning-bm-select:hover,
 .planning-bm-date-input:hover {
-  background: #fff;
+  background: var(--g-blanc);
   border-color: var(--primary-light);
 }
 
 .planning-bm-select:focus,
 .planning-bm-date-input:focus {
-  background: #fff;
+  background: var(--g-blanc);
   border-color: var(--primary);
   box-shadow: 0 0 0 4px var(--primary-glow);
 }
@@ -151,7 +151,7 @@
   border-radius: 999px;
   border: none;
   background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
-  color: #fff;
+  color: var(--g-blanc);
   font-family: inherit;
   font-size: 0.82rem;
   font-weight: 700;
@@ -304,7 +304,7 @@
 
 .planning-bm-view-tabs .planning-bm-tab.active {
   background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-darker) 100%);
-  color: #fff;
+  color: var(--g-blanc);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
     0 4px 10px -3px rgba(15, 118, 110, 0.4);
@@ -419,7 +419,7 @@
 
 /* Aujourd'hui — carte mise en avant */
 .planning-bm-day-cell.is-today {
-  background: linear-gradient(160deg, #ffffff 0%, #f0fdfa 100%);
+  background: linear-gradient(160deg, var(--g-blanc) 0%, var(--g-teal-50) 100%);
   box-shadow:
     0 0 0 2px var(--primary),
     0 1px 2px rgba(15, 92, 86, 0.06),
@@ -503,7 +503,7 @@
 
 .planning-bm-day-cell.is-today .planning-bm-day-count {
   background: var(--primary-dark);
-  color: #fff;
+  color: var(--g-blanc);
   border-color: var(--primary-dark);
 }
 
@@ -864,7 +864,7 @@
    PRINT
    ============================================================ */
 @media print {
-  .planning-bm-container { padding: 0; background: #fff; }
+  .planning-bm-container { padding: 0; background: var(--g-blanc); }
 
   .planning-bm-filters-bar,
   .planning-bm-today-btn,
@@ -872,8 +872,8 @@
   .planning-bm-view-tabs,
   .planning-bm-today-badge { display: none !important; }
 
-  .planning-bm-calendar-card { box-shadow: none; border: 1px solid #cbd5e1; }
+  .planning-bm-calendar-card { box-shadow: none; border: 1px solid var(--g-slate-300); }
 
-  .planning-bm-day-cell { box-shadow: none; border: 1px solid #e2e8f0; }
+  .planning-bm-day-cell { box-shadow: none; border: 1px solid var(--g-slate-200); }
   .planning-bm-day-cell.is-today { box-shadow: 0 0 0 2px var(--primary); }
 }

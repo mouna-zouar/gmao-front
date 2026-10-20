@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import bonMaintenancePieceService from '../../../services/bonMaintenancePieceService';
 import pieceLigneService from '../../../services/pieceLigneService';
 import { t } from '../../../i18n';
+import { Check, LoaderCircle, Package, RefreshCw, TriangleAlert, X } from 'lucide-react';
 import './DemandesPieces.css';
 
 /* ---------- Config ---------- */
@@ -22,47 +23,28 @@ const ETAT_CLASS = {
 };
 
 /* ---------- Icônes SVG ---------- */
-const Svg = (props) => (
-  <svg width={props.size || 14} height={props.size || 14} viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2"
-       strokeLinecap="round" strokeLinejoin="round" {...props} />
-);
-
 const IconRefresh = () => (
-  <Svg size={13}>
-    <path d="M21 12a9 9 0 0 1-15.5 6.3M3 12a9 9 0 0 1 15.5-6.3" />
-    <path d="M21 4v5h-5M3 20v-5h5" />
-  </Svg>
+  <RefreshCw size={13} aria-hidden="true" />
 );
 
 const IconCheck = () => (
-  <Svg size={13}><path d="M20 6 9 17l-5-5" /></Svg>
+  <Check size={13} aria-hidden="true" />
 );
 
 const IconX = () => (
-  <Svg size={13}><path d="M18 6 6 18M6 6l12 12" /></Svg>
+  <X size={13} aria-hidden="true" />
 );
 
 const IconAlert = () => (
-  <Svg size={15}>
-    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    <path d="M12 9v4M12 17h.01" />
-  </Svg>
+  <TriangleAlert size={15} aria-hidden="true" />
 );
 
 const IconPackage = () => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16.5 9.4 7.55 4.24M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-    <path d="M3.3 7 12 12l8.7-5M12 22V12" />
-  </svg>
+  <Package size={26} strokeWidth={1.6} aria-hidden="true" />
 );
 
 const IconSpinner = () => (
-  <svg className="btn-spinner" width="13" height="13" viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 3a9 9 0 1 0 9 9" />
-  </svg>
+  <LoaderCircle size={13} strokeWidth={2.5} className="btn-spinner" aria-hidden="true" />
 );
 
 /* ---------- Composant ---------- */

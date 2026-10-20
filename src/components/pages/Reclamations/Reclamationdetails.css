@@ -4,21 +4,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap');
 
 .rcx-page {
-  --ink: #12303a;
-  --ink-soft: #4b6670;
-  --ink-faint: #7f969d;
-  --paper: #f2f6f6;
-  --surface: #ffffff;
-  --line: #d7e3e5;
-  --brand: #0794a4;
-  --brand-deep: #05606b;
-  --brand-wash: #e3f3f5;
-  --done: #1f9d74;
-  --done-wash: #e2f5ee;
-  --now: #e8962e;
-  --now-wash: #fdf1e1;
-  --alert: #d9434b;
-  --alert-wash: #fde8e9;
+  --ink: var(--g-ink-900);
+  --ink-soft: var(--g-ink-600);
+  --ink-faint: var(--g-ink-400);
+  --paper: var(--g-ink-25);
+  --surface: var(--g-blanc);
+  --line: var(--g-ink-100);
+  --brand: var(--g-brand-500);
+  --brand-deep: var(--g-brand-750);
+  --brand-wash: var(--g-brand-75);
+  --done: var(--g-succes-500);
+  --done-wash: var(--g-succes-50);
+  --now: var(--g-attention-500);
+  --now-wash: var(--g-attention-50);
+  --alert: var(--g-alerte-500);
+  --alert-wash: var(--g-alerte-50);
   --font-titre: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
   --font-texte: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
@@ -58,11 +58,11 @@
 
 /* ---------- Tons ---------- */
 .rcx-ton--ok        { --ton: var(--done);  --ton-wash: var(--done-wash); }
-.rcx-ton--attention { --ton: #b8701a;      --ton-wash: var(--now-wash); }
+.rcx-ton--attention { --ton: var(--g-attention-700);      --ton-wash: var(--now-wash); }
 .rcx-ton--action    { --ton: var(--brand-deep); --ton-wash: var(--brand-wash); }
-.rcx-ton--info      { --ton: #2c5fb8;      --ton-wash: #e6eefb; }
+.rcx-ton--info      { --ton: var(--g-info-600);      --ton-wash: var(--g-info-50); }
 .rcx-ton--alerte    { --ton: var(--alert); --ton-wash: var(--alert-wash); }
-.rcx-ton--neutre    { --ton: var(--ink-soft); --ton-wash: #e8eef0; }
+.rcx-ton--neutre    { --ton: var(--ink-soft); --ton-wash: var(--g-ink-50); }
 
 .rcx-pastille {
   display: inline-block;
@@ -100,7 +100,7 @@
 .rcx-btn--fantome { background: transparent; color: var(--brand-deep); }
 .rcx-btn--fantome:hover { background: var(--brand-wash); }
 
-.rcx-btn--plein { background: var(--brand); color: #ffffff; }
+.rcx-btn--plein { background: var(--brand); color: var(--g-blanc); }
 .rcx-btn--plein:hover { background: var(--brand-deep); }
 
 .rcx-btn--principal {
@@ -116,9 +116,9 @@
 .rcx-btn--sur-fonce {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
-.rcx-btn--sur-fonce:hover:not(:disabled) { border-color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+.rcx-btn--sur-fonce:hover:not(:disabled) { border-color: var(--g-blanc); background: rgba(255, 255, 255, 0.08); }
 
 /* ---------- Barre ---------- */
 .rcx-barre {
@@ -154,7 +154,7 @@
   align-items: center;
   padding: 6px 14px 6px 16px;
   background: var(--ton);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-weight: 700;
 }
 
@@ -315,7 +315,7 @@
 .rcx-station-nom { font-weight: 700; font-size: 15px; color: var(--ink-faint); }
 .rcx-station-aide { font-size: 13px; color: var(--ink-faint); max-width: 20ch; }
 
-.rcx-station.is-fait .rcx-station-point { background: var(--brand); border-color: var(--brand); color: #ffffff; }
+.rcx-station.is-fait .rcx-station-point { background: var(--brand); border-color: var(--brand); color: var(--g-blanc); }
 .rcx-station.is-fait .rcx-station-nom { color: var(--ink); }
 
 .rcx-station.is-actuel .rcx-station-point,
@@ -323,8 +323,8 @@
   width: calc(var(--point) + 8px);
   height: calc(var(--point) + 8px);
   margin-top: -4px;
-  border-color: #ffffff;
-  color: #ffffff;
+  border-color: var(--g-blanc);
+  color: var(--g-blanc);
 }
 
 .rcx-station.is-actuel .rcx-station-point {
@@ -365,7 +365,7 @@
   padding: 28px 30px 30px;
   border-radius: 28px;
   background: var(--ink);
-  color: #ffffff;
+  color: var(--g-blanc);
   overflow: hidden;
 }
 
@@ -407,7 +407,7 @@
   font-size: clamp(24px, 3vw, 32px);
   font-weight: 800;
   line-height: 1.12;
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .rcx-maintenant-texte { margin: 0 0 22px; font-size: 16px; color: rgba(255, 255, 255, 0.82); max-width: 52ch; }

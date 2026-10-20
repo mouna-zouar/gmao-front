@@ -1,7 +1,7 @@
 /* Choix de l'équipement : recherche serveur + scanner (QR / code-barre) */
 .cheq {
-  --cheq-accent: #0794a4;
-  --cheq-accent-deep: #045a64;
+  --cheq-accent: var(--g-brand-500);
+  --cheq-accent-deep: var(--g-brand-800);
   --cheq-wash: #e3f4f6;
   position: relative;
   width: 100%;
@@ -21,20 +21,20 @@
   gap: 8px;
   height: 42px;
   padding: 0 10px 0 12px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--g-slate-200);
   border-radius: 9px;
-  background: #ffffff;
+  background: var(--g-blanc);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.cheq-champ:hover { border-color: #a8e0e6; }
+.cheq-champ:hover { border-color: var(--g-brand-200); }
 .cheq-champ.is-open,
 .cheq-champ:focus-within {
   border-color: var(--cheq-accent);
   box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
-.cheq-champ.is-invalid { border-color: #dc2626; }
+.cheq-champ.is-invalid { border-color: var(--g-red-600); }
 
-.cheq-icone { flex-shrink: 0; color: #94a3b8; }
+.cheq-icone { flex-shrink: 0; color: var(--g-slate-400); }
 .cheq-champ.is-open .cheq-icone { color: var(--cheq-accent); }
 
 /* les styles des formulaires (input { … }) ne doivent pas déborder ici */
@@ -50,10 +50,10 @@
   font-family: inherit;
   font-size: 0.88rem;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--g-slate-900);
 }
-.cheq .cheq-input::placeholder { color: #94a3b8; font-weight: 500; }
-.cheq .cheq-input:disabled { cursor: not-allowed; color: #94a3b8; }
+.cheq .cheq-input::placeholder { color: var(--g-slate-400); font-weight: 500; }
+.cheq .cheq-input:disabled { cursor: not-allowed; color: var(--g-slate-400); }
 
 .cheq-tourne { flex-shrink: 0; color: var(--cheq-accent); animation: cheq-tourne 0.9s linear infinite; }
 @keyframes cheq-tourne { to { transform: rotate(360deg); } }
@@ -68,11 +68,11 @@
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--g-slate-200);
+  color: var(--g-slate-600);
   cursor: pointer;
 }
-.cheq-vider:hover { background: #cbd5e1; color: var(--cheq-accent-deep); }
+.cheq-vider:hover { background: var(--g-slate-300); color: var(--cheq-accent-deep); }
 
 .cheq-scanner {
   flex-shrink: 0;
@@ -91,7 +91,7 @@
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease;
 }
-.cheq-scanner:hover:not(:disabled) { background: var(--cheq-accent); color: #ffffff; }
+.cheq-scanner:hover:not(:disabled) { background: var(--cheq-accent); color: var(--g-blanc); }
 .cheq-scanner:disabled { opacity: 0.5; cursor: not-allowed; }
 .cheq-scanner:focus-visible { outline: 3px solid var(--cheq-accent); outline-offset: 2px; }
 
@@ -102,9 +102,9 @@
   right: 0;
   z-index: 60;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--g-slate-200);
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--g-blanc);
   box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
 }
 
@@ -127,21 +127,21 @@
 }
 .cheq-option.is-active { background: #f1f8f9; }
 .cheq-option.is-selected { background: var(--cheq-wash); }
-.cheq-option--vide { color: #64748b; font-size: 0.85rem; font-style: italic; }
+.cheq-option--vide { color: var(--g-slate-500); font-size: 0.85rem; font-style: italic; }
 
 .cheq-option-texte { display: flex; flex-direction: column; min-width: 0; }
 .cheq-option-nom {
   overflow: hidden;
   font-size: 0.88rem;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--g-slate-900);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .cheq-option-details {
   overflow: hidden;
   font-size: 0.76rem;
-  color: #64748b;
+  color: var(--g-slate-500);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -152,15 +152,15 @@
   margin: 0;
   padding: 10px 12px;
   font-size: 0.82rem;
-  color: #64748b;
+  color: var(--g-slate-500);
 }
-.cheq-note { border-top: 1px solid #f1f5f9; background: #fffbeb; color: #92400e; }
+.cheq-note { border-top: 1px solid var(--g-slate-100); background: var(--g-amber-50); color: var(--g-amber-800); }
 
 .cheq-message {
   margin: 6px 0 0;
   font-size: 0.8rem;
   font-weight: 600;
-  color: #b91c1c;
+  color: var(--g-red-700);
 }
 
 @media (max-width: 520px) {

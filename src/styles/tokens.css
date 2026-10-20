@@ -1,0 +1,275 @@
+/*
+ * Couleurs et polices de l'application — SOURCE UNIQUE.
+ *
+ * Couche 1 (palette) : toutes les couleurs utilisées, nommées --g-<famille>-<niveau>.
+ *   Les valeurs sont EXACTEMENT celles qui étaient écrites en dur dans les CSS : les remplacer
+ *   par ces variables n'a rien changé à l'affichage.
+ * Couche 2 (rôles) : --g-marque, --g-texte, --g-bordure, --g-succes… à utiliser dans le code neuf.
+ *   Pour changer le thème plus tard (mode sombre, autre client), on change surtout cette couche.
+ *
+ * Règle : plus de couleur en dur (#xxxxxx) dans un CSS — utiliser une variable d'ici.
+ */
+
+:root {
+  /* ── Base ── */
+  --g-blanc: #ffffff;
+  --g-noir: #000000;
+
+  /* ── Marque (turquoise GMAO) ── */
+  --g-brand-25: #f3fcfd;
+  --g-brand-50: #e9f8fa;
+  --g-brand-75: #e3f3f5;
+  --g-brand-100: #d5f0f3;
+  --g-brand-200: #a8e0e6;
+  --g-brand-400: #3dbcc9;
+  --g-brand-450: #0aa8ba;
+  --g-brand-500: #0794a4;
+  --g-brand-600: #067a87;
+  --g-brand-700: #066470;
+  --g-brand-750: #05606b;
+  --g-brand-800: #045a64;
+  --g-brand-900: #054e57;
+
+  /* ── Encre (pages détail : réclamation, bon, mission) ── */
+  --g-ink-25: #f2f6f6;
+  --g-ink-50: #e8eef0;
+  --g-ink-100: #d7e3e5;
+  --g-ink-400: #7f969d;
+  --g-ink-600: #4b6670;
+  --g-ink-650: #45636a;
+  --g-ink-900: #12303a;
+
+  /* ── Bleu Parc auto ── */
+  --g-parc-400: #5ba8c9;
+  --g-parc-500: #287da8;
+  --g-parc-600: #1b648f;
+
+  /* ── Bleu nuit (tableaux de bord) ── */
+  --g-navy-700: #2e3f5a;
+  --g-navy-750: #2a3a52;
+  --g-navy-800: #263450;
+  --g-navy-850: #223047;
+  --g-navy-900: #1e2a3d;
+
+  /* ── États (pages détail) ── */
+  --g-alerte-50: #fde8e9;
+  --g-alerte-500: #d9434b;
+  --g-alerte-700: #b8323a;
+  --g-succes-50: #e2f5ee;
+  --g-succes-500: #1f9d74;
+  --g-attention-50: #fdf1e1;
+  --g-attention-500: #e8962e;
+  --g-attention-700: #b8701a;
+  --g-info-50: #e6eefb;
+  --g-info-600: #2c5fb8;
+
+  /* ── Fonds très clairs ── */
+  --g-fond-25: #fafbfc;
+  --g-fond-30: #fafbfd;
+
+  /* ── Palette standard (mêmes valeurs que Tailwind CSS v3) ── */
+  --g-slate-50: #f8fafc;
+  --g-slate-100: #f1f5f9;
+  --g-slate-200: #e2e8f0;
+  --g-slate-300: #cbd5e1;
+  --g-slate-400: #94a3b8;
+  --g-slate-500: #64748b;
+  --g-slate-600: #475569;
+  --g-slate-700: #334155;
+  --g-slate-800: #1e293b;
+  --g-slate-900: #0f172a;
+  --g-gray-50: #f9fafb;
+  --g-gray-100: #f3f4f6;
+  --g-gray-200: #e5e7eb;
+  --g-gray-300: #d1d5db;
+  --g-gray-400: #9ca3af;
+  --g-gray-500: #6b7280;
+  --g-gray-600: #4b5563;
+  --g-gray-700: #374151;
+  --g-gray-800: #1f2937;
+  --g-gray-900: #111827;
+  --g-red-50: #fef2f2;
+  --g-red-100: #fee2e2;
+  --g-red-200: #fecaca;
+  --g-red-300: #fca5a5;
+  --g-red-400: #f87171;
+  --g-red-500: #ef4444;
+  --g-red-600: #dc2626;
+  --g-red-700: #b91c1c;
+  --g-red-800: #991b1b;
+  --g-red-900: #7f1d1d;
+  --g-orange-50: #fff7ed;
+  --g-orange-100: #ffedd5;
+  --g-orange-200: #fed7aa;
+  --g-orange-300: #fdba74;
+  --g-orange-400: #fb923c;
+  --g-orange-500: #f97316;
+  --g-orange-600: #ea580c;
+  --g-orange-700: #c2410c;
+  --g-orange-800: #9a3412;
+  --g-orange-900: #7c2d12;
+  --g-amber-50: #fffbeb;
+  --g-amber-100: #fef3c7;
+  --g-amber-200: #fde68a;
+  --g-amber-300: #fcd34d;
+  --g-amber-400: #fbbf24;
+  --g-amber-500: #f59e0b;
+  --g-amber-600: #d97706;
+  --g-amber-700: #b45309;
+  --g-amber-800: #92400e;
+  --g-amber-900: #78350f;
+  --g-yellow-50: #fefce8;
+  --g-yellow-100: #fef9c3;
+  --g-yellow-200: #fef08a;
+  --g-yellow-300: #fde047;
+  --g-yellow-400: #facc15;
+  --g-yellow-500: #eab308;
+  --g-yellow-600: #ca8a04;
+  --g-yellow-700: #a16207;
+  --g-yellow-800: #854d0e;
+  --g-yellow-900: #713f12;
+  --g-green-50: #f0fdf4;
+  --g-green-100: #dcfce7;
+  --g-green-200: #bbf7d0;
+  --g-green-300: #86efac;
+  --g-green-400: #4ade80;
+  --g-green-500: #22c55e;
+  --g-green-600: #16a34a;
+  --g-green-700: #15803d;
+  --g-green-800: #166534;
+  --g-green-900: #14532d;
+  --g-emerald-50: #ecfdf5;
+  --g-emerald-100: #d1fae5;
+  --g-emerald-200: #a7f3d0;
+  --g-emerald-300: #6ee7b7;
+  --g-emerald-400: #34d399;
+  --g-emerald-500: #10b981;
+  --g-emerald-600: #059669;
+  --g-emerald-700: #047857;
+  --g-emerald-800: #065f46;
+  --g-emerald-900: #064e3b;
+  --g-teal-50: #f0fdfa;
+  --g-teal-100: #ccfbf1;
+  --g-teal-200: #99f6e4;
+  --g-teal-300: #5eead4;
+  --g-teal-400: #2dd4bf;
+  --g-teal-500: #14b8a6;
+  --g-teal-600: #0d9488;
+  --g-teal-700: #0f766e;
+  --g-teal-800: #115e59;
+  --g-teal-900: #134e4a;
+  --g-cyan-50: #ecfeff;
+  --g-cyan-100: #cffafe;
+  --g-cyan-200: #a5f3fc;
+  --g-cyan-300: #67e8f9;
+  --g-cyan-400: #22d3ee;
+  --g-cyan-500: #06b6d4;
+  --g-cyan-600: #0891b2;
+  --g-cyan-700: #0e7490;
+  --g-cyan-800: #155e75;
+  --g-cyan-900: #164e63;
+  --g-sky-50: #f0f9ff;
+  --g-sky-100: #e0f2fe;
+  --g-sky-200: #bae6fd;
+  --g-sky-300: #7dd3fc;
+  --g-sky-400: #38bdf8;
+  --g-sky-500: #0ea5e9;
+  --g-sky-600: #0284c7;
+  --g-sky-700: #0369a1;
+  --g-sky-800: #075985;
+  --g-sky-900: #0c4a6e;
+  --g-blue-50: #eff6ff;
+  --g-blue-100: #dbeafe;
+  --g-blue-200: #bfdbfe;
+  --g-blue-300: #93c5fd;
+  --g-blue-400: #60a5fa;
+  --g-blue-500: #3b82f6;
+  --g-blue-600: #2563eb;
+  --g-blue-700: #1d4ed8;
+  --g-blue-800: #1e40af;
+  --g-blue-900: #1e3a8a;
+  --g-indigo-50: #eef2ff;
+  --g-indigo-100: #e0e7ff;
+  --g-indigo-200: #c7d2fe;
+  --g-indigo-300: #a5b4fc;
+  --g-indigo-400: #818cf8;
+  --g-indigo-500: #6366f1;
+  --g-indigo-600: #4f46e5;
+  --g-indigo-700: #4338ca;
+  --g-indigo-800: #3730a3;
+  --g-indigo-900: #312e81;
+  --g-violet-50: #f5f3ff;
+  --g-violet-100: #ede9fe;
+  --g-violet-200: #ddd6fe;
+  --g-violet-300: #c4b5fd;
+  --g-violet-400: #a78bfa;
+  --g-violet-500: #8b5cf6;
+  --g-violet-600: #7c3aed;
+  --g-violet-700: #6d28d9;
+  --g-violet-800: #5b21b6;
+  --g-violet-900: #4c1d95;
+  --g-purple-50: #faf5ff;
+  --g-purple-100: #f3e8ff;
+  --g-purple-200: #e9d5ff;
+  --g-purple-300: #d8b4fe;
+  --g-purple-400: #c084fc;
+  --g-purple-500: #a855f7;
+  --g-purple-600: #9333ea;
+  --g-purple-700: #7e22ce;
+  --g-purple-800: #6b21a8;
+  --g-purple-900: #581c87;
+  --g-pink-50: #fdf2f8;
+  --g-pink-100: #fce7f3;
+  --g-pink-200: #fbcfe8;
+  --g-pink-300: #f9a8d4;
+  --g-pink-400: #f472b6;
+  --g-pink-500: #ec4899;
+  --g-pink-600: #db2777;
+  --g-pink-700: #be185d;
+  --g-pink-800: #9d174d;
+  --g-pink-900: #831843;
+  --g-rose-50: #fff1f2;
+  --g-rose-100: #ffe4e6;
+  --g-rose-200: #fecdd3;
+  --g-rose-300: #fda4af;
+  --g-rose-400: #fb7185;
+  --g-rose-500: #f43f5e;
+  --g-rose-600: #e11d48;
+  --g-rose-700: #be123c;
+  --g-rose-800: #9f1239;
+  --g-rose-900: #881337;
+
+  /* ── Rôles (à utiliser dans le code neuf) ── */
+  --g-marque: var(--g-brand-500);
+  --g-marque-fonce: var(--g-brand-600);
+  --g-marque-tres-fonce: var(--g-brand-750);
+  --g-marque-clair: var(--g-brand-50);
+  --g-marque-bordure: var(--g-brand-200);
+  --g-fond: var(--g-slate-50);
+  --g-surface: var(--g-blanc);
+  --g-surface-2: var(--g-slate-100);
+  --g-bordure: var(--g-slate-200);
+  --g-bordure-forte: var(--g-slate-300);
+  --g-texte: var(--g-slate-900);
+  --g-texte-2: var(--g-slate-700);
+  --g-texte-secondaire: var(--g-slate-500);
+  --g-texte-discret: var(--g-slate-400);
+  --g-succes: var(--g-emerald-500);
+  --g-succes-fond: var(--g-emerald-50);
+  --g-succes-texte: var(--g-emerald-700);
+  --g-attention: var(--g-amber-500);
+  --g-attention-fond: var(--g-amber-50);
+  --g-attention-texte: var(--g-amber-700);
+  --g-danger: var(--g-red-600);
+  --g-danger-fond: var(--g-red-50);
+  --g-danger-texte: var(--g-red-700);
+  --g-info: var(--g-blue-600);
+  --g-info-fond: var(--g-blue-50);
+  --g-info-texte: var(--g-blue-700);
+
+  /* ── Polices ── */
+  --g-police: 'Inter', system-ui, -apple-system, sans-serif;
+  --g-police-arabe: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --g-police-titre: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+  --g-police-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+}

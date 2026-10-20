@@ -3,6 +3,8 @@ import reclamationService from '../../../services/reclamationService';
 import { t, tp, locale } from '../../../i18n';
 import './ReclamationDashboard.css';
 import IndicateursReclamations from './IndicateursReclamations';
+import { CircleAlert, CircleCheck, Clock, FileText, GripVertical, RefreshCw, TriangleAlert, X } from 'lucide-react';
+import { ICONES_MODULES } from '../../../constants/modules';
 
 const ETAT_LABELS = { 0: 'Ouverte', 1: 'En cours', 2: 'Clôturée'};
 const NIVEAU_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
@@ -32,15 +34,15 @@ function formatDate(iso) {
 
 /* ─── Icônes SVG réutilisables ─── */
 const ICONS = {
-  total: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
-  ouverte: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>,
-  encours: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  cloturee: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  attente: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  rejetee: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" /></svg>,
-  alerte: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>,
-  delai: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  grip: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="18" r="1" /></svg>,
+  total: <FileText size={22} strokeWidth={2} aria-hidden="true" />,
+  ouverte: <CircleAlert size={22} strokeWidth={2} aria-hidden="true" />,
+  encours: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
+  cloturee: <CircleCheck size={22} strokeWidth={2} aria-hidden="true" />,
+  attente: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
+  rejetee: <X size={22} strokeWidth={2} aria-hidden="true" />,
+  alerte: <TriangleAlert size={22} strokeWidth={2} aria-hidden="true" />,
+  delai: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
+  grip: <GripVertical size={14} strokeWidth={2} aria-hidden="true" />,
 };
 
 /* ─── Définition des cartes de stats (ordre par défaut) ─── */
@@ -339,9 +341,7 @@ export default function ReclamationDashboard() {
       {/* Header */}
       <div className="reclamation-dashboard-header">
         <div className="reclamation-dashboard-header-icon-wrap">
-          <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-          </svg>
+          <ICONES_MODULES.tableauDeBord size={22} strokeWidth={2} aria-hidden="true" />
         </div>
         <div className="reclamation-dashboard-header-text">
           <h1>{t("Tableau de Bord des Réclamations")}</h1>
@@ -353,9 +353,7 @@ export default function ReclamationDashboard() {
           onClick={resetOrder}
           title={t("Rétablir l'ordre par défaut")}
         >
-          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />
           {t("Réinitialiser l'ordre")}
         </button>
       </div>

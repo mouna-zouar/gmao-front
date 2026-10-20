@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import risqueService from '../../../services/Risqueservice';
 import { t, tp, locale } from '../../../i18n';
+import { Inbox, LoaderCircle, Minus, RefreshCw, Search, ShieldAlert, TrendingDown, TrendingUp, TriangleAlert } from 'lucide-react';
 import './Risque.css';
 
 /* ---------- Config ---------- */
@@ -50,50 +51,39 @@ const Svg = (props) => (
 );
 
 const IconRefresh = () => (
-  <Svg><path d="M21 12a9 9 0 0 1-15.5 6.3M3 12a9 9 0 0 1 15.5-6.3" /><path d="M21 4v5h-5M3 20v-5h5" /></Svg>
+  <RefreshCw size={15} aria-hidden="true" />
 );
 
 const IconSpinner = () => (
-  <svg className="risque-spinner" width="15" height="15" viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 3a9 9 0 1 0 9 9" />
-  </svg>
+  <LoaderCircle size={15} strokeWidth={2.5} className="risque-spinner" aria-hidden="true" />
 );
 
 const IconSearch = () => (
-  <Svg size={15}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Svg>
+  <Search size={15} aria-hidden="true" />
 );
 
 const IconAlert = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    <path d="M12 9v4M12 17h.01" />
-  </svg>
+  <TriangleAlert size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconInbox = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-    <path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1Z" />
-  </svg>
+  <Inbox size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconShieldAlert = () => (
-  <Svg size={16}><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z" /><path d="M12 8v4M12 16h.01" /></Svg>
+  <ShieldAlert size={16} aria-hidden="true" />
 );
 
 const IconTrendUp = () => (
-  <Svg size={13}><path d="M22 7 13.5 15.5 8.5 10.5 2 17" /><path d="M16 7h6v6" /></Svg>
+  <TrendingUp size={13} aria-hidden="true" />
 );
 
 const IconTrendDown = () => (
-  <Svg size={13}><path d="M22 17 13.5 8.5 8.5 13.5 2 7" /><path d="M16 17h6v-6" /></Svg>
+  <TrendingDown size={13} aria-hidden="true" />
 );
 
 const IconTrendFlat = () => (
-  <Svg size={13}><path d="M2 12h20" /></Svg>
+  <Minus size={13} aria-hidden="true" />
 );
 
 const IconChevron = ({ direction = 'right' }) => (

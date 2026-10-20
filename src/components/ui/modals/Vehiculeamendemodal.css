@@ -1,4 +1,4 @@
-/* Amende véhicule : saisie et paiement (thème #0794a4) */
+/* Amende véhicule : saisie et paiement (thème var(--g-brand-500)) */
 .vam-fond {
   position: fixed;
   inset: 0;
@@ -17,7 +17,7 @@
   max-height: calc(100dvh - 32px);
   overflow: hidden;
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--g-blanc);
   box-shadow: 0 24px 64px rgba(16, 42, 48, 0.28);
   color: #102a30;
   font-size: 14px;
@@ -40,10 +40,10 @@
   height: 40px;
   border-radius: 10px;
   background: #dcf0f2;
-  color: #045a64;
+  color: var(--g-brand-800);
 }
 .vam-entete h2 { margin: 0; font-size: 17px; font-weight: 700; color: #102a30; }
-.vam-entete p { margin: 2px 0 0; font-size: 13px; color: #45636a; }
+.vam-entete p { margin: 2px 0 0; font-size: 13px; color: var(--g-ink-650); }
 .vam-fermer {
   display: inline-flex;
   align-items: center;
@@ -54,10 +54,10 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #45636a;
+  color: var(--g-ink-650);
   cursor: pointer;
 }
-.vam-fermer:hover { background: #dcf0f2; color: #045a64; }
+.vam-fermer:hover { background: #dcf0f2; color: var(--g-brand-800); }
 
 .vam-corps { flex: 1; overflow-y: auto; padding: 16px 20px 8px; }
 
@@ -69,14 +69,14 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #045a64;
+  color: var(--g-brand-800);
 }
 
 .vam-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
 .vam-grille--une { grid-template-columns: 1fr; }
 .vam-champ { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 .vam-champ--large { grid-column: 1 / -1; }
-.vam-champ label { font-size: 13px; font-weight: 600; color: #45636a; }
+.vam-champ label { font-size: 13px; font-weight: 600; color: var(--g-ink-650); }
 .vam-requis { color: #d6454d; }
 
 .vam-champ input,
@@ -87,7 +87,7 @@
   padding: 8px 10px;
   border: 1.5px solid #d3e5e8;
   border-radius: 9px;
-  background: #ffffff;
+  background: var(--g-blanc);
   color: #102a30;
   font: inherit;
 }
@@ -96,7 +96,7 @@
 .vam-champ select:focus,
 .vam-champ textarea:focus {
   outline: none;
-  border-color: #0794a4;
+  border-color: var(--g-brand-500);
   box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.16);
 }
 .vam-champ.is-erreur input,
@@ -124,7 +124,7 @@
   border: 1px solid #d3e5e8;
   border-radius: 10px;
   background: #f4fafb;
-  color: #45636a;
+  color: var(--g-ink-650);
   line-height: 1.45;
 }
 .vam-identification svg { flex-shrink: 0; margin-top: 1px; }
@@ -147,20 +147,20 @@
   gap: 8px;
   min-height: 40px;
   padding: 8px 16px;
-  border: 1.5px solid #0794a4;
+  border: 1.5px solid var(--g-brand-500);
   border-radius: 10px;
-  background: #0794a4;
-  color: #ffffff;
+  background: var(--g-brand-500);
+  color: var(--g-blanc);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
-.vam-bouton:hover:not(:disabled) { background: #045a64; border-color: #045a64; }
+.vam-bouton:hover:not(:disabled) { background: var(--g-brand-800); border-color: var(--g-brand-800); }
 .vam-bouton:disabled { opacity: 0.6; cursor: default; }
-.vam-bouton--clair { background: #ffffff; color: #045a64; border-color: #d3e5e8; }
-.vam-bouton--clair:hover:not(:disabled) { background: #dcf0f2; border-color: #0794a4; color: #045a64; }
+.vam-bouton--clair { background: var(--g-blanc); color: var(--g-brand-800); border-color: #d3e5e8; }
+.vam-bouton--clair:hover:not(:disabled) { background: #dcf0f2; border-color: var(--g-brand-500); color: var(--g-brand-800); }
 .vam-bouton:focus-visible,
-.vam-fermer:focus-visible { outline: 3px solid #0794a4; outline-offset: 2px; }
+.vam-fermer:focus-visible { outline: 3px solid var(--g-brand-500); outline-offset: 2px; }
 
 .vam-tourne { animation: vam-tourne 0.9s linear infinite; }
 @keyframes vam-tourne { to { transform: rotate(360deg); } }

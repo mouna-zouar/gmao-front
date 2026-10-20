@@ -5,20 +5,20 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap');
 
 .asb-fond {
-  --ink: #12303a;
-  --ink-soft: #4b6670;
-  --ink-faint: #7f969d;
-  --paper: #f2f6f6;
-  --line: #d7e3e5;
-  --brand: #0794a4;
-  --brand-deep: #05606b;
-  --brand-wash: #e3f3f5;
-  --done: #1f9d74;
-  --done-wash: #e2f5ee;
-  --now: #e8962e;
-  --now-wash: #fdf1e1;
-  --alert: #d9434b;
-  --alert-wash: #fde8e9;
+  --ink: var(--g-ink-900);
+  --ink-soft: var(--g-ink-600);
+  --ink-faint: var(--g-ink-400);
+  --paper: var(--g-ink-25);
+  --line: var(--g-ink-100);
+  --brand: var(--g-brand-500);
+  --brand-deep: var(--g-brand-750);
+  --brand-wash: var(--g-brand-75);
+  --done: var(--g-succes-500);
+  --done-wash: var(--g-succes-50);
+  --now: var(--g-attention-500);
+  --now-wash: var(--g-attention-50);
+  --alert: var(--g-alerte-500);
+  --alert-wash: var(--g-alerte-50);
   --font-titre: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
   --font-texte: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
@@ -61,7 +61,7 @@
   align-items: center;
   gap: 14px;
   padding: 20px 24px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border-bottom: 1.5px solid var(--line);
   border-radius: 28px 0 0 0;
 }
@@ -74,7 +74,7 @@
   height: 44px;
   border-radius: 14px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--g-blanc);
   flex-shrink: 0;
 }
 
@@ -99,7 +99,7 @@
   height: 44px;
   border-radius: 50%;
   border: 1.5px solid var(--line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--ink);
   cursor: pointer;
   flex-shrink: 0;
@@ -135,7 +135,7 @@
   padding: 1px 9px;
   border-radius: 999px;
   background: var(--ink);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-family: var(--font-texte);
   font-size: 13px;
   text-align: center;
@@ -156,7 +156,7 @@
   padding: 16px 18px;
   border-radius: 16px;
   border: 1.5px dashed var(--line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--ink-soft);
 }
 
@@ -191,7 +191,7 @@
   padding: 0 14px 0 16px;
   border-radius: 16px;
   border: 1.5px solid var(--line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--ink-faint);
   cursor: text;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -244,7 +244,7 @@
   padding: 6px 14px;
   border-radius: 999px;
   border: 1.5px solid var(--line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--ink-soft);
   font-size: 14px;
   font-weight: 600;
@@ -261,7 +261,7 @@
 
 .asb-filtre:hover { border-color: var(--brand); color: var(--brand-deep); }
 
-.asb-filtre.is-actif { background: var(--ink); border-color: var(--ink); color: #ffffff; }
+.asb-filtre.is-actif { background: var(--ink); border-color: var(--ink); color: var(--g-blanc); }
 .asb-filtre.is-actif span { background: rgba(255, 255, 255, 0.18); }
 
 /* ---------- Cartes ---------- */
@@ -283,7 +283,7 @@
   padding: 12px 14px;
   border-radius: 18px;
   border: 1.5px solid var(--line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: inherit;
   text-align: left;
   flex-wrap: wrap;
@@ -315,8 +315,8 @@
   height: 22px;
   border-radius: 50%;
   border: 2px solid #b9ccd0;
-  background: #ffffff;
-  color: #ffffff;
+  background: var(--g-blanc);
+  color: var(--g-blanc);
   flex-shrink: 0;
 }
 
@@ -371,10 +371,10 @@
 
 /* ---------- Pastilles d'état ---------- */
 .asb-ton--ok        { --ton: var(--done);  --ton-wash: var(--done-wash); }
-.asb-ton--attention { --ton: #b8701a;      --ton-wash: var(--now-wash); }
+.asb-ton--attention { --ton: var(--g-attention-700);      --ton-wash: var(--now-wash); }
 .asb-ton--action    { --ton: var(--brand-deep); --ton-wash: var(--brand-wash); }
-.asb-ton--info      { --ton: #2c5fb8;      --ton-wash: #e6eefb; }
-.asb-ton--neutre    { --ton: var(--ink-soft); --ton-wash: #e8eef0; }
+.asb-ton--info      { --ton: var(--g-info-600);      --ton-wash: var(--g-info-50); }
+.asb-ton--neutre    { --ton: var(--ink-soft); --ton-wash: var(--g-ink-50); }
 
 .asb-pastille {
   padding: 3px 11px;
@@ -424,14 +424,14 @@
   padding: 4px 12px;
   border-radius: 999px;
   border: 1.5px solid #f5c2c5;
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--ink);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.asb-mini--danger { background: var(--alert); border-color: var(--alert); color: #ffffff; }
+.asb-mini--danger { background: var(--alert); border-color: var(--alert); color: var(--g-blanc); }
 .asb-mini:disabled { opacity: 0.7; cursor: wait; }
 
 /* ---------- Pied ---------- */
@@ -442,7 +442,7 @@
   gap: 12px;
   flex-wrap: wrap;
   padding: 16px 24px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border-top: 1.5px solid var(--line);
 }
 
@@ -468,10 +468,10 @@
 
 .asb-btn:active:not(:disabled) { transform: scale(0.98); }
 
-.asb-btn--clair { background: #ffffff; border-color: var(--line); color: var(--ink-soft); }
+.asb-btn--clair { background: var(--g-blanc); border-color: var(--line); color: var(--ink-soft); }
 .asb-btn--clair:hover { border-color: var(--ink-soft); color: var(--ink); }
 
-.asb-btn--principal { background: var(--brand); color: #ffffff; min-width: 190px; }
+.asb-btn--principal { background: var(--brand); color: var(--g-blanc); min-width: 190px; }
 .asb-btn--principal:hover:not(:disabled) { background: var(--brand-deep); }
 .asb-btn--principal:disabled { opacity: 0.5; cursor: not-allowed; }
 

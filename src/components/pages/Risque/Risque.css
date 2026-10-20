@@ -1,53 +1,53 @@
 
 
 .risque-page {
-  --teal-900: #054e57;
-  --teal-800: #066470;
-  --teal-700: #067a87;
-  --teal-600: #0794a4;
-  --teal-500: #0aa8ba;
-  --teal-400: #3dbcc9;
-  --teal-200: #a8e0e6;
-  --teal-100: #d5f0f3;
-  --teal-50: #e9f8fa;
-  --teal-25: #f3fcfd;
+  --teal-900: var(--g-brand-900);
+  --teal-800: var(--g-brand-700);
+  --teal-700: var(--g-brand-600);
+  --teal-600: var(--g-brand-500);
+  --teal-500: var(--g-brand-450);
+  --teal-400: var(--g-brand-400);
+  --teal-200: var(--g-brand-200);
+  --teal-100: var(--g-brand-100);
+  --teal-50: var(--g-brand-50);
+  --teal-25: var(--g-brand-25);
 
-  --cyan-600: #0891b2;
-  --cyan-100: #cffafe;
+  --cyan-600: var(--g-cyan-600);
+  --cyan-100: var(--g-cyan-100);
 
-  --blue-600: #2563eb;
-  --blue-100: #dbeafe;
+  --blue-600: var(--g-blue-600);
+  --blue-100: var(--g-blue-100);
 
-  --indigo-600: #6366f1;
-  --indigo-100: #e0e7ff;
+  --indigo-600: var(--g-indigo-500);
+  --indigo-100: var(--g-indigo-100);
 
-  --violet-600: #8b5cf6;
-  --violet-100: #ede9fe;
+  --violet-600: var(--g-violet-500);
+  --violet-100: var(--g-violet-100);
 
-  --green-600: #10b981;
-  --green-100: #d1fae5;
+  --green-600: var(--g-emerald-500);
+  --green-100: var(--g-emerald-100);
 
-  --red-600: #dc2626;
-  --red-100: #fee2e2;
+  --red-600: var(--g-red-600);
+  --red-100: var(--g-red-100);
 
-  --amber-500: #f59e0b;
-  --amber-700: #b45309;
-  --amber-50: #fffbeb;
-  --amber-200: #fde68a;
+  --amber-500: var(--g-amber-500);
+  --amber-700: var(--g-amber-700);
+  --amber-50: var(--g-amber-50);
+  --amber-200: var(--g-amber-200);
 
-  --orange-500: #f97316;
-  --orange-700: #c2410c;
-  --orange-50: #fff7ed;
-  --orange-200: #fdba74;
+  --orange-500: var(--g-orange-500);
+  --orange-700: var(--g-orange-700);
+  --orange-50: var(--g-orange-50);
+  --orange-200: var(--g-orange-300);
 
-  --slate-900: #0f172a;
-  --slate-700: #334155;
-  --slate-500: #64748b;
-  --slate-400: #94a3b8;
-  --slate-300: #cbd5e1;
-  --slate-200: #e2e8f0;
-  --slate-100: #f1f5f9;
-  --slate-50: #f8fafc;
+  --slate-900: var(--g-slate-900);
+  --slate-700: var(--g-slate-700);
+  --slate-500: var(--g-slate-500);
+  --slate-400: var(--g-slate-400);
+  --slate-300: var(--g-slate-300);
+  --slate-200: var(--g-slate-200);
+  --slate-100: var(--g-slate-100);
+  --slate-50: var(--g-slate-50);
 
   /* Alias internes */
   --ink-950: var(--slate-900);
@@ -58,14 +58,14 @@
 
   --line: var(--slate-200);
   --line-soft: var(--slate-100);
-  --surface: #ffffff;
+  --surface: var(--g-blanc);
   --canvas: var(--slate-50);
 
-  --green-500: #22c55e;
-  --green-700: #047857;
+  --green-500: var(--g-green-500);
+  --green-700: var(--g-emerald-700);
 
-  --red-500: #ef4444;
-  --red-700: #b91c1c;
+  --red-500: var(--g-red-500);
+  --red-700: var(--g-red-700);
 
   --orange-600: var(--orange-500);
 
@@ -108,7 +108,7 @@
   gap: 24px;
   flex-wrap: wrap;
   margin-bottom: 20px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 16px;
   padding: 16px 24px;
@@ -196,12 +196,12 @@
 
 .risque-limite-btn--active {
   background: var(--teal-600);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .risque-limite-btn--active:hover {
   background: var(--teal-700);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 /* Bouton refresh */
@@ -212,7 +212,7 @@
   padding: 9px 16px;
   border-radius: 8px;
   border: 1px solid var(--slate-200);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--teal-700);
   font-size: 0.85rem;
   font-weight: 700;
@@ -251,7 +251,7 @@
   align-items: center;
   gap: 12px;
   padding: 18px 20px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-left: 3px solid var(--kpi-accent, var(--slate-700));
   border-radius: 14px;
@@ -287,10 +287,10 @@
 .risque-kpi--bon { --kpi-accent: var(--green-600); }
 .risque-kpi--bon .risque-kpi__icon {
   background: var(--green-100);
-  color: #047857;
-  border-color: #6ee7b7;
+  color: var(--g-emerald-700);
+  border-color: var(--g-emerald-300);
 }
-.risque-kpi--bon .risque-kpi__valeur { color: #047857; }
+.risque-kpi--bon .risque-kpi__valeur { color: var(--g-emerald-700); }
 
 /* KPI Élevé (orange) */
 .risque-kpi--eleve { --kpi-accent: var(--orange-500); }
@@ -305,17 +305,17 @@
 .risque-kpi--critique { --kpi-accent: var(--red-600); }
 .risque-kpi--critique .risque-kpi__icon {
   background: var(--red-100);
-  color: #b91c1c;
-  border-color: #fca5a5;
+  color: var(--g-red-700);
+  border-color: var(--g-red-300);
 }
-.risque-kpi--critique .risque-kpi__valeur { color: #b91c1c; }
+.risque-kpi--critique .risque-kpi__valeur { color: var(--g-red-700); }
 
 /* KPI Neutre (bleu) */
 .risque-kpi--neutre { --kpi-accent: var(--blue-600); }
 .risque-kpi--neutre .risque-kpi__icon {
   background: var(--blue-100);
   color: var(--blue-600);
-  border-color: #93c5fd;
+  border-color: var(--g-blue-300);
 }
 
 .risque-kpi__body {
@@ -349,7 +349,7 @@
   display: flex;
   margin-bottom: 20px;
   padding: 12px 20px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 14px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
@@ -376,7 +376,7 @@
   padding: 10px 14px 10px 38px;
   border-radius: 10px;
   border: 1px solid var(--slate-200);
-  background: #ffffff;
+  background: var(--g-blanc);
   font-size: 0.85rem;
   font-weight: 500;
   font-family: inherit;
@@ -405,16 +405,16 @@
   text-align: center;
   font-size: 0.9rem;
   font-weight: 500;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px dashed var(--slate-300);
   border-radius: 14px;
   margin: 0;
 }
 
 .risque-error {
-  color: #991b1b;
+  color: var(--g-red-800);
   background: var(--red-100);
-  border-color: #fca5a5;
+  border-color: var(--g-red-300);
   border-style: solid;
   font-weight: 600;
 }
@@ -433,7 +433,7 @@
   display: flex;
   align-items: center;
   gap: 18px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-left: 4px solid var(--slate-300);
   border-radius: 14px;
@@ -450,10 +450,10 @@
   box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
-.risque-card--critique { border-left-color: #dc2626; }
-.risque-card--eleve    { border-left-color: #f97316; }
-.risque-card--modere   { border-left-color: #f59e0b; }
-.risque-card--faible   { border-left-color: #10b981; }
+.risque-card--critique { border-left-color: var(--g-red-600); }
+.risque-card--eleve    { border-left-color: var(--g-orange-500); }
+.risque-card--modere   { border-left-color: var(--g-amber-500); }
+.risque-card--faible   { border-left-color: var(--g-emerald-500); }
 
 /* ═══════════════════ Score cercle ═══════════════════ */
 .risque-card__score {
@@ -480,8 +480,8 @@
 
 .risque-score-cercle--critique {
   background: var(--red-100);
-  color: #b91c1c;
-  border-color: #fca5a5;
+  color: var(--g-red-700);
+  border-color: var(--g-red-300);
 }
 .risque-score-cercle--eleve {
   background: var(--orange-50);
@@ -495,8 +495,8 @@
 }
 .risque-score-cercle--faible {
   background: var(--green-100);
-  color: #047857;
-  border-color: #6ee7b7;
+  color: var(--g-emerald-700);
+  border-color: var(--g-emerald-300);
 }
 
 .risque-niveau-label {
@@ -507,10 +507,10 @@
   white-space: nowrap;
 }
 
-.risque-niveau-label--critique { color: #b91c1c; }
+.risque-niveau-label--critique { color: var(--g-red-700); }
 .risque-niveau-label--eleve    { color: var(--orange-700); }
 .risque-niveau-label--modere   { color: var(--amber-700); }
-.risque-niveau-label--faible   { color: #047857; }
+.risque-niveau-label--faible   { color: var(--g-emerald-700); }
 
 /* ═══════════════════ Corps de carte ═══════════════════ */
 .risque-card__body {
@@ -564,7 +564,7 @@
 .risque-meta-item--muted { color: var(--slate-400); }
 
 .risque-tendance--hausse { color: var(--red-600); font-weight: 700; }
-.risque-tendance--baisse { color: #047857; font-weight: 700; }
+.risque-tendance--baisse { color: var(--g-emerald-700); font-weight: 700; }
 .risque-tendance--stable { color: var(--slate-400); }
 
 .risque-garantie-expiree {
@@ -580,9 +580,9 @@
 
 .risque-garantie-active {
   font-weight: 700;
-  color: #047857;
+  color: var(--g-emerald-700);
   background: var(--green-100);
-  border: 1px solid #6ee7b7;
+  border: 1px solid var(--g-emerald-300);
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 0.72rem;
@@ -626,26 +626,26 @@
 @media (prefers-color-scheme: dark) {
   .risque-page {
     background: #1a2433;
-    color: #e2e8f0;
+    color: var(--g-slate-200);
 
-    --slate-900: #f1f5f9;
-    --slate-700: #cbd5e1;
-    --slate-500: #94a3b8;
-    --slate-400: #64748b;
-    --slate-300: #475569;
-    --slate-200: #2e3f5a;
-    --slate-100: #263450;
-    --slate-50: #1e2a3d;
+    --slate-900: var(--g-slate-100);
+    --slate-700: var(--g-slate-300);
+    --slate-500: var(--g-slate-400);
+    --slate-400: var(--g-slate-500);
+    --slate-300: var(--g-slate-600);
+    --slate-200: var(--g-navy-700);
+    --slate-100: var(--g-navy-800);
+    --slate-50: var(--g-navy-900);
 
-    --ink-950: #f1f5f9;
-    --ink-900: #f1f5f9;
-    --ink-500: #94a3b8;
-    --ink-400: #64748b;
-    --ink-300: #475569;
+    --ink-950: var(--g-slate-100);
+    --ink-900: var(--g-slate-100);
+    --ink-500: var(--g-slate-400);
+    --ink-400: var(--g-slate-500);
+    --ink-300: var(--g-slate-600);
 
-    --line: #2e3f5a;
-    --line-soft: #263450;
-    --surface: #223047;
+    --line: var(--g-navy-700);
+    --line-soft: var(--g-navy-800);
+    --surface: var(--g-navy-850);
     --canvas: #1a2433;
   }
 
@@ -690,12 +690,12 @@
   }
 
   .risque-kpi__icon {
-    background: #2a3a52;
+    background: var(--g-navy-750);
   }
 
   .risque-empty {
-    background: #1e2a3d;
-    border-color: #2e3f5a;
+    background: var(--g-navy-900);
+    border-color: var(--g-navy-700);
   }
 }/* ═══════════════════ FILTRES — compteur ═══════════════════ */
 .risque-filtres {
@@ -726,7 +726,7 @@
   flex-wrap: wrap;
   padding: 14px 20px;
   margin-top: 4px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 14px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
@@ -771,7 +771,7 @@
   height: 32px;
   padding: 0 10px;
   border: 1px solid var(--slate-200);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--slate-500);
   font: inherit;
   font-size: 0.82rem;
@@ -796,7 +796,7 @@
 .risque-pagination__btn.is-active {
   background: var(--teal-600);
   border-color: var(--teal-600);
-  color: #ffffff;
+  color: var(--g-blanc);
   box-shadow: 0 1px 3px rgba(7, 148, 164, 0.25);
   cursor: default;
 }
@@ -843,7 +843,7 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--slate-900);
-  background-color: #ffffff;
+  background-color: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 6px;
   cursor: pointer;
@@ -913,13 +913,13 @@
     color: var(--slate-700);
   }
   .risque-pagination__btn:hover:not(:disabled):not(.is-active) {
-    background: #2a3a52;
+    background: var(--g-navy-750);
     color: var(--slate-900);
   }
   .risque-pagination__btn.is-active {
     background: var(--teal-600);
     border-color: var(--teal-600);
-    color: #ffffff;
+    color: var(--g-blanc);
   }
   .risque-pagination__select {
     background-color: var(--surface);

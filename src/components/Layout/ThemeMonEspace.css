@@ -11,11 +11,11 @@ html body .ep-page {
 
 /* Statuts : exactement les couleurs des listes Bons et Réclamations
    (« En cours » reste turquoise même si la page est rose) */
-html body .ep-page .ep-ton--info      { --ep-ton: #2c5fb8; --ep-ton-wash: #e6eefb; }
-html body .ep-page .ep-ton--action    { --ep-ton: #05606b; --ep-ton-wash: #e3f3f5; }
-html body .ep-page .ep-ton--attention { --ep-ton: #97570e; --ep-ton-wash: #fdf1e1; }
-html body .ep-page .ep-ton--ok        { --ep-ton: #157553; --ep-ton-wash: #e2f5ee; }
-html body .ep-page .ep-ton--alerte    { --ep-ton: #b8323a; --ep-ton-wash: #fde8e9; }
-html body .ep-page .ep-ton--neutre    { --ep-ton: #4b6670; --ep-ton-wash: #e8eef0; }
+html body .ep-page .ep-ton--info      { --ep-ton: var(--g-info-600); --ep-ton-wash: var(--g-info-50); }
+html body .ep-page .ep-ton--action    { --ep-ton: var(--g-brand-750); --ep-ton-wash: var(--g-brand-75); }
+html body .ep-page .ep-ton--attention { --ep-ton: #97570e; --ep-ton-wash: var(--g-attention-50); }
+html body .ep-page .ep-ton--ok        { --ep-ton: #157553; --ep-ton-wash: var(--g-succes-50); }
+html body .ep-page .ep-ton--alerte    { --ep-ton: var(--g-alerte-700); --ep-ton-wash: var(--g-alerte-50); }
+html body .ep-page .ep-ton--neutre    { --ep-ton: var(--g-ink-600); --ep-ton-wash: var(--g-ink-50); }
 html body .ep-page .ep-pill { border: 1px solid color-mix(in srgb, var(--ep-ton) 28%, transparent); }
 

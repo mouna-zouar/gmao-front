@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../Button';
+import { X } from 'lucide-react';
 import './Modal.css';
 
 const MaintenanceTacheModal = ({ isOpen, onClose, onSave, maintenanceTache, isEditing }) => {
@@ -43,9 +44,7 @@ const MaintenanceTacheModal = ({ isOpen, onClose, onSave, maintenanceTache, isEd
         <div className="modal-header">
           <h2>{isEditing ? 'Modifier la tâche' : 'Nouvelle tâche de maintenance'}</h2>
           <button type="button" className="close-btn" onClick={onClose}>
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X size={24} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
 

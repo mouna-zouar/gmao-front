@@ -13,9 +13,9 @@
 .vin-spin { animation: vinSpin 1s linear infinite; }
 
 .vin-header-card {
-  background: #ffffff;
-  color: #334155;
-  border: 1px solid #e2e8f0;
+  background: var(--g-blanc);
+  color: var(--g-slate-700);
+  border: 1px solid var(--g-slate-200);
   border-radius: 16px;
   padding: 16px 24px;
   margin-bottom: 20px;
@@ -46,9 +46,9 @@
   width: 46px;
   height: 46px;
   border-radius: 10px;
-  background: #e9f8fa;
-  border: 1px solid #d5f0f3;
-  color: #0794a4;
+  background: var(--g-brand-50);
+  border: 1px solid var(--g-brand-100);
+  color: var(--g-brand-500);
   backdrop-filter: none;
   flex-shrink: 0;
 }
@@ -57,14 +57,14 @@
   margin: 0;
   font-size: 1.45rem;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--g-slate-900);
   letter-spacing: -0.02em;
 }
 
 .vin-header-subtitle {
   margin: 3px 0 0;
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--g-slate-500);
   font-weight: 500;
 }
 
@@ -85,15 +85,15 @@
   min-width: 0;
   padding: 8px 14px;
   border-radius: 10px;
-  background: #e9f8fa;
-  border: 1.5px solid #d5f0f3;
+  background: var(--g-brand-50);
+  border: 1.5px solid var(--g-brand-100);
   backdrop-filter: none;
 }
 
 .vin-stat-value {
   font-size: 0.95rem;
   font-weight: 800;
-  color: #067a87;
+  color: var(--g-brand-600);
   line-height: 1;
 }
 
@@ -102,25 +102,25 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #067a87;
+  color: var(--g-brand-600);
   text-align: center;
 }
 
-.vin-stat.stat-declared { background: #fffbeb; border-color: #fde68a; }
+.vin-stat.stat-declared { background: var(--g-amber-50); border-color: var(--g-amber-200); }
 .vin-stat.stat-declared .vin-stat-value,
-.vin-stat.stat-declared .vin-stat-label { color: #b45309; }
+.vin-stat.stat-declared .vin-stat-label { color: var(--g-amber-700); }
 
-.vin-stat.stat-progress { background: #dbeafe; border-color: #93c5fd; }
+.vin-stat.stat-progress { background: var(--g-blue-100); border-color: var(--g-blue-300); }
 .vin-stat.stat-progress .vin-stat-value,
-.vin-stat.stat-progress .vin-stat-label { color: #1d4ed8; }
+.vin-stat.stat-progress .vin-stat-label { color: var(--g-blue-700); }
 
-.vin-stat.stat-resolved { background: #d1fae5; border-color: #6ee7b7; }
+.vin-stat.stat-resolved { background: var(--g-emerald-100); border-color: var(--g-emerald-300); }
 .vin-stat.stat-resolved .vin-stat-value,
-.vin-stat.stat-resolved .vin-stat-label { color: #047857; }
+.vin-stat.stat-resolved .vin-stat-label { color: var(--g-emerald-700); }
 
-.vin-stat.stat-cost { background: #ede9fe; border-color: #c4b5fd; }
+.vin-stat.stat-cost { background: var(--g-violet-100); border-color: var(--g-violet-300); }
 .vin-stat.stat-cost .vin-stat-value,
-.vin-stat.stat-cost .vin-stat-label { color: #6d28d9; }
+.vin-stat.stat-cost .vin-stat-label { color: var(--g-violet-700); }
 
 /* Icône d'en-tête = bouton « paramètres des colonnes » */
 .vin-header-icon-btn {
@@ -131,8 +131,8 @@
 }
 
 .vin-header-icon-btn:hover {
-  background: #d5f0f3;
-  border-color: #a8e0e6;
+  background: var(--g-brand-100);
+  border-color: var(--g-brand-200);
   transform: translateY(-1px);
   box-shadow: 0 6px 14px -6px rgba(7, 148, 164, 0.45);
 }
@@ -140,7 +140,7 @@
 .vin-header-icon-btn:active { transform: translateY(0); }
 
 .vin-header-icon-btn:focus-visible {
-  outline: 2px solid #0794a4;
+  outline: 2px solid var(--g-brand-500);
   outline-offset: 2px;
 }
 
@@ -148,8 +148,8 @@
    ACTIONS
    ═══════════════════════════════════════════════════════════ */
 .vin-actions-bar {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--g-blanc);
+  border: 1px solid var(--g-slate-200);
   border-radius: 16px;
   padding: 12px 18px;
   margin-bottom: 20px;
@@ -172,7 +172,7 @@
   cursor: pointer;
   border-radius: 10px;
   transition: all 0.18s ease;
-  color: #475569;
+  color: var(--g-slate-600);
   font-family: inherit;
 }
 
@@ -181,27 +181,27 @@
 
 /* Bouton principal → teal uni */
 .vin-action-btn.ajouter {
-  background: #0794a4;
-  color: #ffffff;
+  background: var(--g-brand-500);
+  color: var(--g-blanc);
   box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
 }
 
 .vin-action-btn.ajouter:hover:not(.disabled) {
-  background: #067a87;
+  background: var(--g-brand-600);
 }
 
-.vin-action-btn.modifier { color: #ea580c; }
-.vin-action-btn.modifier:hover:not(.disabled) { background: #fff7ed; border-color: #fed7aa; }
+.vin-action-btn.modifier { color: var(--g-orange-600); }
+.vin-action-btn.modifier:hover:not(.disabled) { background: var(--g-orange-50); border-color: var(--g-orange-200); }
 
-.vin-action-btn.supprimer { color: #e11d48; }
-.vin-action-btn.supprimer:hover:not(.disabled) { background: #fff1f2; border-color: #fecdd3; }
+.vin-action-btn.supprimer { color: var(--g-rose-600); }
+.vin-action-btn.supprimer:hover:not(.disabled) { background: var(--g-rose-50); border-color: var(--g-rose-200); }
 
 /* Séparateur vertical */
 .vin-actions-sep {
   width: 1px;
   align-self: stretch;
   min-height: 26px;
-  background: #e2e8f0;
+  background: var(--g-slate-200);
   margin: 2px 6px;
 }
 
@@ -213,38 +213,38 @@
 
 /* Ambre — Ouvert */
 .vin-action-btn.etat-quick.color-amber {
-  color: #92400e;
+  color: var(--g-amber-800);
   background: rgba(245, 158, 11, 0.06);
   border-color: rgba(245, 158, 11, 0.22);
 }
 .vin-action-btn.etat-quick.color-amber:hover:not(.disabled) {
-  background: #fef3c7;
-  border-color: #fcd34d;
-  color: #92400e;
+  background: var(--g-amber-100);
+  border-color: var(--g-amber-300);
+  color: var(--g-amber-800);
 }
 
 /* Bleu — En cours */
 .vin-action-btn.etat-quick.color-blue {
-  color: #1d4ed8;
+  color: var(--g-blue-700);
   background: rgba(29, 78, 216, 0.06);
   border-color: rgba(29, 78, 216, 0.22);
 }
 .vin-action-btn.etat-quick.color-blue:hover:not(.disabled) {
-  background: #dbeafe;
-  border-color: #93c5fd;
-  color: #1e40af;
+  background: var(--g-blue-100);
+  border-color: var(--g-blue-300);
+  color: var(--g-blue-800);
 }
 
 /* Slate — Clôturé */
 .vin-action-btn.etat-quick.color-slate {
-  color: #475569;
+  color: var(--g-slate-600);
   background: rgba(71, 85, 105, 0.06);
   border-color: rgba(71, 85, 105, 0.22);
 }
 .vin-action-btn.etat-quick.color-slate:hover:not(.disabled) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #334155;
+  background: var(--g-slate-100);
+  border-color: var(--g-slate-300);
+  color: var(--g-slate-700);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -252,8 +252,8 @@
    ═══════════════════════════════════════════════════════════ */
 .vin-filter-panel {
   display: flex;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--g-slate-50);
+  border: 1px solid var(--g-slate-200);
   border-radius: 16px;
   padding: 14px 16px;
   margin-bottom: 20px;
@@ -276,19 +276,19 @@
   gap: 5px;
   font-size: 0.78rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--g-slate-700);
   white-space: nowrap;
 }
 
 /* Libellés de filtres → teal */
-.vin-filter-label svg { color: #0794a4; }
+.vin-filter-label svg { color: var(--g-brand-500); }
 
 .vin-filter-input-wrap {
   display: flex;
   align-items: center;
   flex: 1;
-  background: #ffffff;
-  border: 1.5px solid #cbd5e1;
+  background: var(--g-blanc);
+  border: 1.5px solid var(--g-slate-300);
   border-radius: 10px;
   overflow: hidden;
   height: 40px;
@@ -299,11 +299,11 @@
 
 /* Focus → teal */
 .vin-filter-input-wrap:focus-within {
-  border-color: #0794a4;
+  border-color: var(--g-brand-500);
   box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
 }
 
-.vin-filter-icon { color: #94a3b8; }
+.vin-filter-icon { color: var(--g-slate-400); }
 
 .vin-filter-input-wrap input,
 .vin-filter-input-wrap select {
@@ -311,7 +311,7 @@
   border: none;
   outline: none;
   font-size: 0.86rem;
-  color: #1e293b;
+  color: var(--g-slate-800);
   height: 100%;
   background: transparent;
   font-family: inherit;
@@ -324,7 +324,7 @@
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #64748b;
+  color: var(--g-slate-500);
   padding: 9px 14px;
   border-radius: 10px;
   border: 1.5px solid transparent;
@@ -334,9 +334,9 @@
 }
 
 .vin-filter-reset:hover {
-  background: #fff1f2;
-  border-color: #fecdd3;
-  color: #e11d48;
+  background: var(--g-rose-50);
+  border-color: var(--g-rose-200);
+  color: var(--g-rose-600);
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -356,7 +356,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--g-blanc);
   cursor: pointer;
   transition: all 0.18s ease;
   box-shadow: 0 4px 10px -4px rgba(15, 23, 42, 0.2);
@@ -364,14 +364,14 @@
 
 .vin-export-btn:hover { transform: translateY(-2px); }
 
-.vin-export-btn.excel { background: #10b981; }
-.vin-export-btn.excel:hover { background: #059669; }
+.vin-export-btn.excel { background: var(--g-emerald-500); }
+.vin-export-btn.excel:hover { background: var(--g-emerald-600); }
 
-.vin-export-btn.print { background: #0794a4; }
-.vin-export-btn.print:hover { background: #067a87; }
+.vin-export-btn.print { background: var(--g-brand-500); }
+.vin-export-btn.print:hover { background: var(--g-brand-600); }
 
-.vin-export-btn.stats { background: #f59e0b; }
-.vin-export-btn.stats:hover { background: #d97706; }
+.vin-export-btn.stats { background: var(--g-amber-500); }
+.vin-export-btn.stats:hover { background: var(--g-amber-600); }
 
 /* ═══════════════════════════════════════════════════════════
    ERREUR
@@ -380,9 +380,9 @@
   margin-bottom: 16px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: #fef2f2;
-  border: 1.5px solid #fecaca;
-  color: #b91c1c;
+  background: var(--g-red-50);
+  border: 1.5px solid var(--g-red-200);
+  color: var(--g-red-700);
   font-size: 0.86rem;
   font-weight: 600;
   display: flex;
@@ -394,8 +394,8 @@
    TABLEAU
    ═══════════════════════════════════════════════════════════ */
 .vin-table-wrap {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--g-blanc);
+  border: 1px solid var(--g-slate-200);
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 2px 10px -4px rgba(15, 23, 42, 0.06);
@@ -409,7 +409,7 @@
 
 /* En-tête du tableau → teal clair uni */
 .vin-table thead {
-  background: #e9f8fa;
+  background: var(--g-brand-50);
 }
 
 .vin-table th {
@@ -419,25 +419,25 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #067a87;
-  border-bottom: 1.5px solid #d5f0f3;
+  color: var(--g-brand-600);
+  border-bottom: 1.5px solid var(--g-brand-100);
   white-space: nowrap;
 }
 
 .vin-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
+  border-bottom: 1px solid var(--g-slate-100);
+  color: var(--g-slate-800);
   vertical-align: middle;
 }
 
 .vin-table tbody tr:last-child td { border-bottom: none; }
 .vin-table tbody tr { transition: background 0.15s ease; }
-.vin-table tbody tr:hover { background: #fafbfd; }
+.vin-table tbody tr:hover { background: var(--g-fond-30); }
 
 .vin-row { cursor: pointer; }
-.vin-row.selected td { background: #e9f8fa; }
-.vin-row.selected { box-shadow: inset 4px 0 0 #0794a4; }
+.vin-row.selected td { background: var(--g-brand-50); }
+.vin-row.selected { box-shadow: inset 4px 0 0 var(--g-brand-500); }
 
 /* ═══════════════════════════════════════════════════════════
    TRI DES COLONNES
@@ -448,8 +448,8 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.vin-th-sortable:hover { background: #d5f0f3; color: #066470; }
-.vin-th-sortable.is-sorted { background: #d5f0f3; color: #066470; }
+.vin-th-sortable:hover { background: var(--g-brand-100); color: var(--g-brand-700); }
+.vin-th-sortable.is-sorted { background: var(--g-brand-100); color: var(--g-brand-700); }
 
 .vin-th-inner {
   display: inline-flex;
@@ -458,13 +458,13 @@
 }
 
 .vin-sort-icon {
-  color: #94a3b8;
+  color: var(--g-slate-400);
   flex-shrink: 0;
   transition: color 0.15s;
 }
 
 .vin-th-sortable:hover .vin-sort-icon,
-.vin-sort-icon.active { color: #0794a4; }
+.vin-sort-icon.active { color: var(--g-brand-500); }
 
 /* ═══════════════════════════════════════════════════════════
    CELLULES
@@ -479,15 +479,15 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: #e9f8fa;
-  color: #0794a4;
+  background: var(--g-brand-50);
+  color: var(--g-brand-500);
   flex-shrink: 0;
 }
 
 .vin-cell-vehicle-text { display: flex; flex-direction: column; gap: 1px; }
 
-.vin-cell-main { font-weight: 700; color: #0f172a; font-size: 13.5px; }
-.vin-cell-sub { font-size: 11.5px; color: #94a3b8; font-weight: 600; }
+.vin-cell-main { font-weight: 700; color: var(--g-slate-900); font-size: 13.5px; }
+.vin-cell-sub { font-size: 11.5px; color: var(--g-slate-400); font-weight: 600; }
 
 .vin-cell-driver { display: flex; align-items: center; gap: 10px; }
 
@@ -499,12 +499,12 @@
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: #0794a4;
-  color: #ffffff;
+  background: var(--g-brand-500);
+  color: var(--g-blanc);
   flex-shrink: 0;
 }
 
-.vin-cell-empty { color: #cbd5e1; font-style: italic; }
+.vin-cell-empty { color: var(--g-slate-300); font-style: italic; }
 
 .vin-tag {
   display: inline-block;
@@ -512,9 +512,9 @@
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background: var(--g-slate-100);
+  color: var(--g-slate-600);
+  border: 1px solid var(--g-slate-200);
 }
 
 .vin-cell-date {
@@ -522,24 +522,24 @@
   align-items: center;
   gap: 5px;
   font-size: 12.5px;
-  color: #475569;
+  color: var(--g-slate-600);
   font-weight: 600;
   white-space: nowrap;
 }
 
-.vin-cell-date svg { color: #94a3b8; }
+.vin-cell-date svg { color: var(--g-slate-400); }
 
 .vin-cell-amount {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-weight: 800;
-  color: #6d28d9;
+  color: var(--g-violet-700);
   font-size: 13px;
   white-space: nowrap;
 }
 
-.vin-cell-amount svg { color: #6d28d9; }
+.vin-cell-amount svg { color: var(--g-violet-700); }
 
 /* ═══════════════════════════════════════════════════════════
    GRAVITÉ
@@ -554,10 +554,10 @@
   letter-spacing: 0.04em;
 }
 
-.vin-gravite.gravite-0 { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-.vin-gravite.gravite-1 { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
-.vin-gravite.gravite-2 { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
-.vin-gravite.gravite-3 { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.vin-gravite.gravite-0 { background: var(--g-slate-100); color: var(--g-slate-500); border: 1px solid var(--g-slate-200); }
+.vin-gravite.gravite-1 { background: var(--g-sky-100); color: var(--g-sky-800); border: 1px solid var(--g-sky-300); }
+.vin-gravite.gravite-2 { background: var(--g-amber-100); color: var(--g-amber-800); border: 1px solid var(--g-amber-300); }
+.vin-gravite.gravite-3 { background: var(--g-red-100); color: var(--g-red-800); border: 1px solid var(--g-red-300); }
 
 /* ═══════════════════════════════════════════════════════════
    PASTILLES ÉTAT
@@ -576,10 +576,10 @@
   white-space: nowrap;
 }
 
-.vin-pill.declared   { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
-.vin-pill.inprogress { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
-.vin-pill.resolved   { background: #dcfce7; color: #166534; border-color: #86efac; }
-.vin-pill.closed     { background: #f1f5f9; color: #64748b; border-color: #e2e8f0; }
+.vin-pill.declared   { background: var(--g-amber-100); color: var(--g-amber-800); border-color: var(--g-amber-300); }
+.vin-pill.inprogress { background: var(--g-blue-100); color: var(--g-blue-800); border-color: var(--g-blue-300); }
+.vin-pill.resolved   { background: var(--g-green-100); color: var(--g-green-800); border-color: var(--g-green-300); }
+.vin-pill.closed     { background: var(--g-slate-100); color: var(--g-slate-500); border-color: var(--g-slate-200); }
 
 /* ═══════════════════════════════════════════════════════════
    EMPTY
@@ -587,7 +587,7 @@
 .vin-table-empty {
   text-align: center;
   padding: 50px 16px;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   font-size: 0.9rem;
 }
 
@@ -596,10 +596,10 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  color: #94a3b8;
+  color: var(--g-slate-400);
 }
 
-.vin-empty-state svg { color: #cbd5e1; }
+.vin-empty-state svg { color: var(--g-slate-300); }
 
 /* ═══════════════════════════════════════════════════════════
    RESPONSIVE

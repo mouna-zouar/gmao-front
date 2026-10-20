@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import slaService from '../../../services/slaService';
 import { prioriteLabel, prioriteRang } from '../../../constants/Priorite';
 import { t, tp, locale } from '../../../i18n';
+import { ClipboardCheck, FileSpreadsheet, Inbox, LoaderCircle, RefreshCw, Search, ShieldCheck, Target, Timer, TriangleAlert } from 'lucide-react';
 import './Sla.css';
 
 /* ---------- Config ---------- */
@@ -75,50 +76,39 @@ const Svg = (props) => (
 );
 
 const IconRefresh = () => (
-  <Svg><path d="M21 12a9 9 0 0 1-15.5 6.3M3 12a9 9 0 0 1 15.5-6.3" /><path d="M21 4v5h-5M3 20v-5h5" /></Svg>
+  <RefreshCw size={15} aria-hidden="true" />
 );
 
 const IconSpinner = () => (
-  <svg className="sla-spinner" width="15" height="15" viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 3a9 9 0 1 0 9 9" />
-  </svg>
+  <LoaderCircle size={15} strokeWidth={2.5} className="sla-spinner" aria-hidden="true" />
 );
 
 const IconSearch = () => (
-  <Svg size={15}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Svg>
+  <Search size={15} aria-hidden="true" />
 );
 
 const IconAlert = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    <path d="M12 9v4M12 17h.01" />
-  </svg>
+  <TriangleAlert size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconInbox = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-    <path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1Z" />
-  </svg>
+  <Inbox size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconTarget = () => (
-  <Svg size={16}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></Svg>
+  <Target size={16} aria-hidden="true" />
 );
 
 const IconCheckShield = () => (
-  <Svg size={16}><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z" /><path d="m9 12 2 2 4-4" /></Svg>
+  <ShieldCheck size={16} aria-hidden="true" />
 );
 
 const IconAlertTriangle = () => (
-  <Svg size={16}><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4M12 17h.01" /></Svg>
+  <TriangleAlert size={16} aria-hidden="true" />
 );
 
 const IconStopwatch = () => (
-  <Svg size={16}><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 1.5M9 3h6M12 3v2" /></Svg>
+  <Timer size={16} aria-hidden="true" />
 );
 
 const IconChevron = ({ direction = 'right' }) => (
@@ -130,22 +120,12 @@ const IconChevron = ({ direction = 'right' }) => (
 );
 
 const IconClipboardCheck = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
-    <rect x="9" y="3" width="6" height="4" rx="1" />
-    <path d="m9 14 2 2 4-4" />
-  </svg>
+  <ClipboardCheck size={24} strokeWidth={2} aria-hidden="true" />
 );
 
 /* Icône tableur Excel */
 const IconExcel = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" />
-    <path d="M14 3v6h6" />
-    <path d="M9 12l6 6M15 12l-6 6" />
-  </svg>
+  <FileSpreadsheet size={15} strokeWidth={2} aria-hidden="true" />
 );
 
 /* ---------- Export Excel ---------- */

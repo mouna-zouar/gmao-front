@@ -3,8 +3,8 @@ import {
   CheckCircle2, Bookmark, Navigation, Wrench, Ban, XCircle, Tag, Loader2,
   AlertTriangle, Settings, Truck, ShieldCheck, HardHat, AlertOctagon,
   ChevronLeft, ChevronRight, ArrowLeft, Printer, FileText, Gauge,
-  Info, Activity, History as HistoryIcon, Wallet,
-} from 'lucide-react';
+  Info, Activity, History as HistoryIcon, Wallet, ChartColumn, Download, Search, SquarePen, Trash2 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeService from '../../../../services/vehiculeService';
 import vehiculeMaintenanceService from '../../../../services/vehiculeMaintenanceService';
 import VehiculeMaintenancePanel from './VehiculeMaintenancePanel';
@@ -862,12 +862,7 @@ export default function VehiculesPage() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/>
-              <circle cx="7" cy="17" r="2"/>
-              <path d="M9 17h6"/>
-              <circle cx="17" cy="17" r="2"/>
-            </svg>
+            <ICONES_MODULES.vehicules size={24} strokeWidth={2} aria-hidden="true" />
           </button>
           <div>
             <h2>{t("Véhicules")}</h2>
@@ -945,9 +940,7 @@ export default function VehiculesPage() {
           disabled={!selectedVehicule}
           onClick={openEdit}
         >
-          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
+          <SquarePen size={18} strokeWidth={2} aria-hidden="true" />
           <span>{t("Modifier")}</span>
         </button>
 
@@ -956,9 +949,7 @@ export default function VehiculesPage() {
           disabled={!selectedVehicule || isDeleting}
           onClick={handleDelete}
         >
-          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          <Trash2 size={18} strokeWidth={2} aria-hidden="true" />
           <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
 
@@ -999,9 +990,7 @@ export default function VehiculesPage() {
         <div className="vehicules-filter-group">
           <span className="vehicules-filter-label">{t("Recherche")}</span>
           <div className="vehicules-filter-input-wrap">
-            <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z" />
-            </svg>
+            <Search strokeWidth={2} aria-hidden="true" />
             <input
               type="text"
               placeholder={t("Rechercher par matricule, marque, châssis...")}
@@ -1032,9 +1021,7 @@ export default function VehiculesPage() {
           onClick={handleSearch}
           title={t("Appliquer les filtres")}
         >
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <Search size={16} strokeWidth={2.5} aria-hidden="true" />
           {t("Chercher")}
         </button>
 
@@ -1054,19 +1041,13 @@ export default function VehiculesPage() {
 
         <div className="vehicules-export-stack">
           <button className="vehicules-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
+            <Download size={18} strokeWidth={2.5} aria-hidden="true" />
           </button>
           <button className="vehicules-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zM9 9V5a2 2 0 012-2h2a2 2 0 012 2v4M7 13h10" />
-            </svg>
+            <Printer size={18} strokeWidth={2.5} aria-hidden="true" />
           </button>
           <button className="vehicules-export-btn stats" title={t("Statistiques")} onClick={handleStats}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-            </svg>
+            <ChartColumn size={18} strokeWidth={2.5} aria-hidden="true" />
           </button>
         </div>
       </div>

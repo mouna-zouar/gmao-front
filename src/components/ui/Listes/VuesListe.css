@@ -24,7 +24,7 @@
   padding: 5px 12px;
   border: 1px solid #d0dcdf;
   border-radius: 999px;
-  background: #fff;
+  background: var(--g-blanc);
   color: #33484f;
   font: inherit;
   font-size: 13px;
@@ -37,19 +37,19 @@
 .vue-puce:hover { border-color: #9fb3b9; background: #f5f8f9; }
 .vue-puce:focus-visible,
 .vue-puce__corps:focus-visible,
-.vue-puce__suppr:focus-visible { outline: 2px solid #0794a4; outline-offset: 2px; }
+.vue-puce__suppr:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 2px; }
 
 .vue-puce__icone { width: 15px; height: 15px; flex-shrink: 0; }
-.vue-puce--alerte .vue-puce__icone { color: #b8323a; }
+.vue-puce--alerte .vue-puce__icone { color: var(--g-alerte-700); }
 .vue-puce--attention .vue-puce__icone { color: #97570e; }
 .vue-puce--ok .vue-puce__icone { color: #157553; }
-.vue-puce--info .vue-puce__icone { color: #2c5fb8; }
+.vue-puce--info .vue-puce__icone { color: var(--g-info-600); }
 
 .vue-puce__compte {
   min-width: 20px;
   padding: 1px 7px;
   border-radius: 999px;
-  background: #e8eef0;
+  background: var(--g-ink-50);
   color: #33484f;
   font-size: 11.5px;
   font-weight: 700;
@@ -58,12 +58,12 @@
 
 .vue-puce--active,
 .vue-puce--active:hover {
-  border-color: #05606b;
-  background: #05606b;
-  color: #fff;
+  border-color: var(--g-brand-750);
+  background: var(--g-brand-750);
+  color: var(--g-blanc);
 }
-.vue-puce--active .vue-puce__icone { color: #fff; }
-.vue-puce--active .vue-puce__compte { background: rgba(255, 255, 255, .22); color: #fff; }
+.vue-puce--active .vue-puce__icone { color: var(--g-blanc); }
+.vue-puce--active .vue-puce__compte { background: rgba(255, 255, 255, .22); color: var(--g-blanc); }
 
 /* Vue enregistrée : corps + bouton de suppression */
 .vue-puce--perso { padding: 0; gap: 0; overflow: hidden; }
@@ -84,7 +84,7 @@
 
 .vue-puce--ajout {
   border-style: dashed;
-  color: #05606b;
+  color: var(--g-brand-750);
   background: transparent;
 }
 
@@ -94,9 +94,9 @@
   gap: 4px;
   padding: 3px 4px 3px 12px;
   padding-inline: 12px 4px;
-  border: 1px solid #0794a4;
+  border: 1px solid var(--g-brand-500);
   border-radius: 999px;
-  background: #fff;
+  background: var(--g-blanc);
   box-shadow: 0 0 0 3px rgba(7, 148, 164, .15);
 }
 .vue-saisie input {
@@ -118,9 +118,9 @@
   cursor: pointer;
 }
 .vue-saisie button svg { width: 15px; height: 15px; }
-.vue-saisie__ok { background: #05606b; color: #fff; }
+.vue-saisie__ok { background: var(--g-brand-750); color: var(--g-blanc); }
 .vue-saisie__ok:disabled { background: #b4c4c8; cursor: not-allowed; }
-.vue-saisie__annuler { background: transparent; color: #4b6670; }
+.vue-saisie__annuler { background: transparent; color: var(--g-ink-600); }
 
 /* ── Cartes (téléphone) ── */
 .cartes-liste { display: none; }
@@ -132,13 +132,13 @@
   padding: 14px;
   border: 1px solid #dbe5e8;
   border-radius: 14px;
-  background: #fff;
+  background: var(--g-blanc);
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
   cursor: pointer;
   text-align: start;
 }
 .carte-ligne--selection {
-  border-color: #0794a4;
+  border-color: var(--g-brand-500);
   box-shadow: 0 0 0 2px rgba(7, 148, 164, .25);
 }
 .carte-ligne__haut {
@@ -150,7 +150,7 @@
 .carte-ligne__num {
   font-size: 12.5px;
   font-weight: 700;
-  color: #4b6670;
+  color: var(--g-ink-600);
   font-variant-numeric: tabular-nums;
 }
 .carte-ligne__titre {
@@ -167,11 +167,11 @@
   align-items: center;
   gap: 6px 12px;
   font-size: 12.5px;
-  color: #4b6670;
+  color: var(--g-ink-600);
 }
 .carte-ligne__meta-item { display: inline-flex; align-items: center; gap: 4px; }
 .carte-ligne__meta-item svg { width: 13px; height: 13px; }
-.carte-ligne__retard { color: #b8323a; font-weight: 700; }
+.carte-ligne__retard { color: var(--g-alerte-700); font-weight: 700; }
 .carte-ligne__bas {
   display: flex;
   justify-content: flex-end;
@@ -184,8 +184,8 @@
   padding: 6px 14px;
   border: 1px solid #b4e0e5;
   border-radius: 10px;
-  background: #e3f3f5;
-  color: #05606b;
+  background: var(--g-brand-75);
+  color: var(--g-brand-750);
   font: inherit;
   font-size: 13px;
   font-weight: 700;
@@ -196,7 +196,7 @@
   padding: 28px 16px;
   border: 1px dashed #d0dcdf;
   border-radius: 14px;
-  color: #4b6670;
+  color: var(--g-ink-600);
   text-align: center;
 }
 

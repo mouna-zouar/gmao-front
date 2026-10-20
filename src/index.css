@@ -1,1 +1,3 @@
 @import "tailwindcss";
+/* Couleurs et polices de l'application : source unique */
+@import "./styles/tokens.css";

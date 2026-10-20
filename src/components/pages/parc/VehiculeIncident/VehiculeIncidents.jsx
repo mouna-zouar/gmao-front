@@ -6,6 +6,7 @@ import {
   ShieldAlert, Activity, XCircle, Clock,
   ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeIncidentService from '../../../../services/vehiculeIncidentService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
@@ -487,7 +488,7 @@ export default function VehiculeIncidents() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <AlertTriangle size={24} strokeWidth={2} />
+            <ICONES_MODULES.incidents size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t("Incidents véhicule")}</h2>

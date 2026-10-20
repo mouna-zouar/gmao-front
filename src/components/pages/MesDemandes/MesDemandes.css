@@ -4,23 +4,23 @@
    détail (frise + infos) dépliable sous chaque ligne.
    ============================================================ */
 .md-page {
-  --md-brand: #0794a4;
-  --md-brand-deep: #045a64;
+  --md-brand: var(--g-brand-500);
+  --md-brand-deep: var(--g-brand-800);
   --md-brand-wash: #dcf0f2;
   --md-ink: #102a30;
-  --md-ink-soft: #45636a;
+  --md-ink-soft: var(--g-ink-650);
   --md-ink-faint: #7a9399;
   --md-line: #d3e5e8;
-  --md-surface: #ffffff;
+  --md-surface: var(--g-blanc);
   --md-paper: #eef6f7;
 
-  --md-bleu: #2563eb;    --md-bleu-wash: #e3ecfd;
+  --md-bleu: var(--g-blue-600);    --md-bleu-wash: #e3ecfd;
   --md-indigo: #5b5fd6;  --md-indigo-wash: #e8e8fb;
   --md-ambre: #c47a12;   --md-ambre-wash: #fcf0de;
-  --md-orange: #c2410c;  --md-orange-wash: #fdebdf;
-  --md-vert: #1f9d74;    --md-vert-wash: #e0f4ec;
+  --md-orange: var(--g-orange-700);  --md-orange-wash: #fdebdf;
+  --md-vert: var(--g-succes-500);    --md-vert-wash: #e0f4ec;
   --md-rouge: #d6454d;   --md-rouge-wash: #fce8e9;
-  --md-gris: #64748b;    --md-gris-wash: #eef2f5;
+  --md-gris: var(--g-slate-500);    --md-gris-wash: #eef2f5;
 
   padding: 24px;
   max-width: 1100px;
@@ -79,7 +79,7 @@
 .md-bouton:focus-visible,
 .md-bouton-ico:focus-visible,
 .md-filtre:focus-visible { outline: 2px solid var(--md-brand); outline-offset: 2px; }
-.md-bouton--principal { background: var(--md-brand); color: #fff; }
+.md-bouton--principal { background: var(--md-brand); color: var(--g-blanc); }
 .md-bouton--principal:hover:not(:disabled) { background: var(--md-brand-deep); }
 .md-bouton--secondaire { background: var(--md-surface); color: var(--md-ink-soft); border-color: var(--md-line); }
 .md-bouton--secondaire:hover:not(:disabled) { border-color: var(--md-brand); color: var(--md-brand-deep); }
@@ -122,7 +122,7 @@
   cursor: pointer;
 }
 .md-filtre:hover { border-color: var(--md-brand); }
-.md-filtre--actif { background: var(--md-brand); border-color: var(--md-brand); color: #fff; }
+.md-filtre--actif { background: var(--md-brand); border-color: var(--md-brand); color: var(--g-blanc); }
 .md-filtre__compte {
   min-width: 20px;
   padding: 0 6px;
@@ -133,7 +133,7 @@
   line-height: 20px;
   text-align: center;
 }
-.md-filtre--actif .md-filtre__compte { background: rgba(255, 255, 255, 0.25); color: #fff; }
+.md-filtre--actif .md-filtre__compte { background: rgba(255, 255, 255, 0.25); color: var(--g-blanc); }
 
 /* ── Messages ── */
 .md-erreur {
@@ -346,7 +346,7 @@
   background: var(--md-surface);
   color: var(--md-ink-faint);
 }
-.md-frise__etape--fait .md-frise__pastille { background: var(--ton); border-color: var(--ton); color: #fff; }
+.md-frise__etape--fait .md-frise__pastille { background: var(--ton); border-color: var(--ton); color: var(--g-blanc); }
 .md-frise__etape--courant .md-frise__pastille,
 .md-frise__etape--pause .md-frise__pastille {
   border-color: var(--ton);

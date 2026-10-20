@@ -11,7 +11,7 @@
 }
 
 .cem-box {
-    background: #fff;
+    background: var(--g-blanc);
     border-radius: 18px;
     width: 560px;
     max-width: 100%;
@@ -28,14 +28,14 @@
     justify-content: space-between;
     padding: 20px 24px;
     border-bottom: 1px solid #e8f3f1;
-    background: linear-gradient(180deg, #f4fbfa 0%, #ffffff 100%);
+    background: linear-gradient(180deg, #f4fbfa 0%, var(--g-blanc) 100%);
 }
 
 .cem-header h3 {
     margin: 0;
     font-size: 1.05rem;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--g-slate-900);
 }
 
 .cem-close-btn {
@@ -47,14 +47,14 @@
     border: none;
     border-radius: 8px;
     background: transparent;
-    color: #64748b;
+    color: var(--g-slate-500);
     cursor: pointer;
     transition: background 0.15s ease, color 0.15s ease;
 }
 
 .cem-close-btn:hover {
-    background: #f1f5f9;
-    color: #0f172a;
+    background: var(--g-slate-100);
+    color: var(--g-slate-900);
 }
 
 .cem-body {
@@ -81,7 +81,7 @@
 .cem-field label {
     font-size: 0.8rem;
     font-weight: 600;
-    color: #334155;
+    color: var(--g-slate-700);
 }
 
 .cem-field input,
@@ -89,11 +89,11 @@
 .cem-field textarea {
     font-family: inherit;
     font-size: 0.88rem;
-    color: #0f172a;
+    color: var(--g-slate-900);
     padding: 9px 12px;
     border: 1px solid #dbe4e2;
     border-radius: 8px;
-    background: #fff;
+    background: var(--g-blanc);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
     box-sizing: border-box;
     width: 100%;
@@ -107,7 +107,7 @@
 .cem-field select:focus,
 .cem-field textarea:focus {
     outline: none;
-    border-color: #0f766e;
+    border-color: var(--g-teal-700);
     box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
 }
 
@@ -116,13 +116,13 @@
     justify-content: flex-end;
     gap: 10px;
     padding: 16px 24px;
-    border-top: 1px solid #f1f5f9;
+    border-top: 1px solid var(--g-slate-100);
 }
 
 .cem-btn-cancel {
-    background: #fff;
-    border: 1px solid #cbd5e1;
-    color: #64748b;
+    background: var(--g-blanc);
+    border: 1px solid var(--g-slate-300);
+    color: var(--g-slate-500);
     padding: 9px 16px;
     border-radius: 8px;
     font-weight: 600;
@@ -131,13 +131,13 @@
 }
 
 .cem-btn-cancel:hover {
-    background: #f1f5f9;
+    background: var(--g-slate-100);
 }
 
 .cem-btn-save {
-    background: #0f766e;
+    background: var(--g-teal-700);
     border: none;
-    color: #fff;
+    color: var(--g-blanc);
     padding: 9px 18px;
     border-radius: 8px;
     font-weight: 600;
@@ -158,16 +158,16 @@
 .cem-hint {
     margin: 4px 0 0;
     font-size: 0.75rem;
-    color: #64748b;
+    color: var(--g-slate-500);
 }
 
 .cem-warning {
     margin: 4px 0 0;
     font-size: 0.75rem;
     font-weight: 600;
-    color: #b45309;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
+    color: var(--g-amber-700);
+    background: var(--g-amber-50);
+    border: 1px solid var(--g-amber-200);
     border-radius: 6px;
     padding: 4px 8px;
 }
@@ -178,7 +178,7 @@
     justify-content: space-between;
     gap: 16px;
     padding: 9px 0;
-    border-bottom: 1px solid #f1f5f9;
+    border-bottom: 1px solid var(--g-slate-100);
 }
 
 .cem-view-row:last-child {
@@ -187,14 +187,14 @@
 
 .cem-view-label {
     font-size: 0.82rem;
-    color: #64748b;
+    color: var(--g-slate-500);
     flex-shrink: 0;
 }
 
 .cem-view-value {
     font-size: 0.86rem;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--g-slate-900);
     text-align: right;
     word-break: break-word;
 }

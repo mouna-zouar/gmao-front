@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  AlertCircle,
+  
   Plus,
   Edit,
   Trash2,
@@ -23,6 +23,7 @@ import {
   Building2,
   Calendar
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../constants/modules';
 import reclamationService from '../../../services/reclamationService';
 import ReclamationModal from '../../ui/modals/ReclamationModal';
 import ReclamationDetails from './ReclamationDetails';
@@ -676,7 +677,7 @@ export default function Reclamations() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <AlertCircle size={24} />
+            <ICONES_MODULES.reclamations size={24} />
           </button>
           <div>
             <h2>{t("Réclamations")}</h2>

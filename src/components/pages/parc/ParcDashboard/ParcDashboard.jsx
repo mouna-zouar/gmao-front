@@ -3,6 +3,7 @@ import parcDashboardService from '../../../../services/parcDashboardService';
 import { t, tp, locale } from '../../../../i18n';
 import './ParcDashboard.css';
 import IndicateursParc from './IndicateursParc';
+import { CalendarCheck, Car, CircleCheck, Fuel, Gauge, RefreshCw, Route, TriangleAlert } from 'lucide-react';
 
 const ETAT_LABELS = {
   0: 'Disponible',
@@ -47,15 +48,15 @@ function fmtDate(iso) {
 }
 
 const ICONS = {
-  total: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2" /><circle cx="7" cy="17" r="2" /><path d="M9 17h6" /><circle cx="17" cy="17" r="2" /></svg>,
-  dispo: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  alerte: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>,
-  incident: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 16.11A2 2 0 0 0 5.16 21h13.68a2 2 0 0 0 3.36-1.75l-8.37-15a2 2 0 0 0-3.49-.75z" /><path d="M12 9v4M12 17h.01" /></svg>,
-  mission: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3" /><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15" /><circle cx="18" cy="5" r="3" /></svg>,
-  reservation: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 10h18" /></svg>,
-  carburant: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 2.69l.95.95a7.5 7.5 0 0 1 2.12 5.32c0 2.21-.9 4.2-2.34 5.64-1.44 1.44-3.43 2.34-5.64 2.34s-4.2-.9-5.64-2.34C3.9 13.16 3 11.17 3 8.96c0-1.99.78-3.89 2.17-5.28L12 2.69z" /><path d="M12 22a9 9 0 0 1-9-9" /></svg>,
-  km: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 12l4-2" /></svg>,
-  refresh: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 2v6h-6M3 22v-6h6M3.5 9a9 9 0 0114.6-4.7L21 8M20.5 15a9 9 0 01-14.6 4.7L3 16" /></svg>,
+  total: <Car size={22} strokeWidth={2} aria-hidden="true" />,
+  dispo: <CircleCheck size={22} strokeWidth={2} aria-hidden="true" />,
+  alerte: <TriangleAlert size={22} strokeWidth={2} aria-hidden="true" />,
+  incident: <TriangleAlert size={22} strokeWidth={2} aria-hidden="true" />,
+  mission: <Route size={22} strokeWidth={2} aria-hidden="true" />,
+  reservation: <CalendarCheck size={22} strokeWidth={2} aria-hidden="true" />,
+  carburant: <Fuel size={22} strokeWidth={2} aria-hidden="true" />,
+  km: <Gauge size={22} strokeWidth={2} aria-hidden="true" />,
+  refresh: <RefreshCw size={16} strokeWidth={2} aria-hidden="true" />,
 };
 
 export default function ParcDashboard() {

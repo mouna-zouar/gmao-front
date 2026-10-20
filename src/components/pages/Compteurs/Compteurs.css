@@ -10,8 +10,8 @@
 
 /* Header */
 .compteurs-header-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--g-blanc);
+  border: 1px solid var(--g-slate-200);
   border-radius: 16px;
   padding: 16px 24px;
   margin-bottom: 20px;
@@ -30,26 +30,26 @@
 .compteurs-header-icon {
   width: 24px;
   height: 24px;
-  color: #0f766e;
+  color: var(--g-teal-700);
 }
 
 .compteurs-header-title-box h2 {
   font-size: 1.3rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--g-slate-800);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .compteurs-header-subtitle {
   font-size: 0.85rem;
-  color: #64748b;
+  color: var(--g-slate-500);
   margin: 2px 0 0;
 }
 
 .compteurs-badge-total {
   background: #eefaf8;
-  color: #0f766e;
+  color: var(--g-teal-700);
   border: 1.5px solid #a8ddd6;
   padding: 8px 16px;
   border-radius: 10px;
@@ -61,8 +61,8 @@
 
 /* Actions bar */
 .compteurs-actions-bar {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--g-blanc);
+  border: 1px solid var(--g-slate-200);
   border-radius: 16px;
   padding: 12px 20px;
   margin-bottom: 20px;
@@ -96,14 +96,14 @@
   cursor: not-allowed;
 }
 
-.compteurs-action-btn.ajouter { color: #10b981; }
-.compteurs-action-btn.ajouter:hover { background: #f0fdf4; }
+.compteurs-action-btn.ajouter { color: var(--g-emerald-500); }
+.compteurs-action-btn.ajouter:hover { background: var(--g-green-50); }
 
-.compteurs-action-btn.modifier { color: #ea580c; }
-.compteurs-action-btn.modifier:hover:not(.disabled) { background: #fff7ed; }
+.compteurs-action-btn.modifier { color: var(--g-orange-600); }
+.compteurs-action-btn.modifier:hover:not(.disabled) { background: var(--g-orange-50); }
 
-.compteurs-action-btn.supprimer { color: #e11d48; }
-.compteurs-action-btn.supprimer:hover:not(.disabled) { background: #fff1f2; }
+.compteurs-action-btn.supprimer { color: var(--g-rose-600); }
+.compteurs-action-btn.supprimer:hover:not(.disabled) { background: var(--g-rose-50); }
 
 /* Rows selectable */
 .compteurs-row {
@@ -112,7 +112,7 @@
 }
 
 .compteurs-row:hover td {
-  background: #f8fafc;
+  background: var(--g-slate-50);
 }
 
 .compteurs-row.selected td {
@@ -120,14 +120,14 @@
 }
 
 .compteurs-row.selected {
-  box-shadow: inset 4px 0 0 #0f766e;
+  box-shadow: inset 4px 0 0 var(--g-teal-700);
 }
 
 /* Filter panel */
 .compteurs-filter-panel {
   display: flex;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--g-slate-50);
+  border: 1px solid var(--g-slate-200);
   border-radius: 14px;
   padding: 16px;
   margin-bottom: 20px;
@@ -147,7 +147,7 @@
 .compteurs-filter-label {
   font-size: 0.8rem;
   font-weight: 700;
-  color: #334155;
+  color: var(--g-slate-700);
   white-space: nowrap;
 }
 
@@ -155,8 +155,8 @@
   display: flex;
   align-items: center;
   flex: 1;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--g-blanc);
+  border: 1px solid var(--g-slate-300);
   border-radius: 8px;
   overflow: hidden;
   height: 38px;
@@ -167,7 +167,7 @@
 .compteurs-filter-input-wrap svg {
   width: 15px;
   height: 15px;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   flex-shrink: 0;
 }
 
@@ -177,7 +177,7 @@
   border: none;
   outline: none;
   font-size: 0.85rem;
-  color: #1e293b;
+  color: var(--g-slate-800);
   height: 100%;
   background: transparent;
 }
@@ -185,7 +185,7 @@
 .compteurs-filter-reset {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--g-slate-500);
   padding: 8px 14px;
   border-radius: 8px;
   transition: background 0.2s ease, color 0.2s ease;
@@ -193,14 +193,14 @@
 }
 
 .compteurs-filter-reset:hover {
-  background: #fff1f2;
-  color: #e11d48;
+  background: var(--g-rose-50);
+  color: var(--g-rose-600);
 }
 
 /* Table */
 .compteurs-table-wrap {
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--g-blanc);
+  border: 1px solid var(--g-slate-200);
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -213,7 +213,7 @@
 }
 
 .compteurs-table thead {
-  background: #f8fafc;
+  background: var(--g-slate-50);
 }
 
 .compteurs-table th {
@@ -223,14 +223,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #64748b;
-  border-bottom: 1.5px solid #e2e8f0;
+  color: var(--g-slate-500);
+  border-bottom: 1.5px solid var(--g-slate-200);
 }
 
 .compteurs-table td {
   padding: 12px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  color: #1e293b;
+  border-bottom: 1px solid var(--g-slate-100);
+  color: var(--g-slate-800);
 }
 
 .compteurs-table tbody tr:last-child td {
@@ -238,13 +238,13 @@
 }
 
 .compteurs-table tbody tr:hover {
-  background: #fafbfd;
+  background: var(--g-fond-30);
 }
 
 .compteurs-table-empty {
   text-align: center;
   padding: 40px 16px;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   font-size: 0.9rem;
 }
 
@@ -252,9 +252,9 @@
   margin-bottom: 16px;
   padding: 12px 16px;
   border-radius: 10px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background: var(--g-red-50);
+  border: 1px solid var(--g-red-200);
+  color: var(--g-red-700);
   font-size: 0.85rem;
 }
 /* ── Pile Export / Imprimer / Stats ── */
@@ -274,7 +274,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--g-blanc);
   cursor: pointer;
   transition: opacity 0.2s;
 }
@@ -284,13 +284,13 @@
 }
 
 .compteurs-export-btn.excel {
-  background: #10b981;
+  background: var(--g-emerald-500);
 }
 
 .compteurs-export-btn.print {
-  background: #0d9488;
+  background: var(--g-teal-600);
 }
 
 .compteurs-export-btn.stats {
-  background: #f59e0b;
+  background: var(--g-amber-500);
 }

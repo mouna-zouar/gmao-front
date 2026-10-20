@@ -1,21 +1,21 @@
 /* ============================================================
-   ESPACE PERSONNEL — thème #0794a4
+   ESPACE PERSONNEL — thème var(--g-brand-500)
    Un bandeau sarcelle dont les onglets, comme des intercalaires,
    s'ouvrent sur le contenu. Tout le reste reste sobre.
    Chargé en dernier : il redéfinit les couleurs des autres feuilles.
    ============================================================ */
 
 .ep-page.ep-theme {
-  --ep-brand: #0794a4;
-  --ep-brand-deep: #045a64;
+  --ep-brand: var(--g-brand-500);
+  --ep-brand-deep: var(--g-brand-800);
   --ep-brand-wash: #dcf0f2;
   --ep-ink: #102a30;
-  --ep-ink-soft: #45636a;
+  --ep-ink-soft: var(--g-ink-650);
   --ep-ink-faint: #7a9399;
   --ep-paper: #eef6f7;
-  --ep-surface: #ffffff;
+  --ep-surface: var(--g-blanc);
   --ep-line: #d3e5e8;
-  --ep-done: #1f9d74;
+  --ep-done: var(--g-succes-500);
   --ep-done-wash: #e0f4ec;
   --ep-now: #e0912c;
   --ep-now-wash: #fcf0de;
@@ -32,7 +32,7 @@
 .ep-bandeau {
   padding: 26px 32px 0;
   background: var(--ep-brand);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .ep-bandeau-haut {
@@ -63,7 +63,7 @@
   margin: 0;
   font-size: 13.5px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .ep-bandeau-date::first-letter { text-transform: uppercase; }
@@ -73,7 +73,7 @@
   font-size: 30px;
   font-weight: 800;
   line-height: 1.15;
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .ep-synthese {
@@ -81,7 +81,7 @@
   font-size: 17px;
   font-weight: 500;
   line-height: 1.6;
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 /* Chaque élément de la phrase ouvre l'onglet correspondant */
@@ -89,7 +89,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: #ffffff;
+  color: var(--g-blanc);
   font: inherit;
   font-weight: 700;
   text-decoration: underline;
@@ -98,12 +98,12 @@
   cursor: pointer;
 }
 
-.ep-synthese-lien:hover { text-decoration-color: #ffffff; }
+.ep-synthese-lien:hover { text-decoration-color: var(--g-blanc); }
 
 .ep-synthese-lien.is-alerte {
   padding: 1px 9px;
   border-radius: 999px;
-  background: #ffffff;
+  background: var(--g-blanc);
   color: #b3262e;
   text-decoration: none;
 }
@@ -117,15 +117,15 @@
   border: 1.5px solid rgba(255, 255, 255, 0.6);
   border-radius: 12px;
   background: transparent;
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.ep-actualiser:hover:not(:disabled) { background: rgba(255, 255, 255, 0.14); border-color: #ffffff; }
+.ep-actualiser:hover:not(:disabled) { background: rgba(255, 255, 255, 0.14); border-color: var(--g-blanc); }
 .ep-actualiser:disabled { opacity: 0.7; cursor: progress; }
-.ep-theme .ep-bandeau :focus-visible { outline-color: #ffffff; }
+.ep-theme .ep-bandeau :focus-visible { outline-color: var(--g-blanc); }
 
 /* ---------- Onglets intercalaires ---------- */
 .ep-onglets {
@@ -149,7 +149,7 @@
   border: 0;
   border-radius: var(--ep-onglet-r) var(--ep-onglet-r) 0 0;
   background: rgba(4, 70, 79, 0.42);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -197,7 +197,7 @@
   padding: 1px 7px;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.24);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 12px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -206,7 +206,7 @@
 
 .ep-onglet.is-actif .ep-onglet-nb { background: var(--ep-brand-wash); color: var(--ep-brand-deep); }
 .ep-onglet-nb.is-alerte,
-.ep-onglet.is-actif .ep-onglet-nb.is-alerte { background: var(--ep-alert); color: #ffffff; }
+.ep-onglet.is-actif .ep-onglet-nb.is-alerte { background: var(--ep-alert); color: var(--g-blanc); }
 
 /* ---------- Contenu ---------- */
 .ep-theme .ep-error { margin: 20px 32px 0; }
@@ -231,7 +231,7 @@
 .ep-theme .ep-filtre-role.is-actif {
   background: var(--ep-brand);
   border-color: var(--ep-brand);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .ep-theme .ep-empty {
@@ -376,7 +376,7 @@
   border-radius: 999px;
   border: 2px solid var(--ep-surface);
   background: var(--ep-alert);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 10.5px;
   font-weight: 800;
   line-height: 14px;
@@ -392,7 +392,7 @@
   border: 1.5px solid var(--ep-brand);
   border-radius: 11px;
   background: var(--ep-brand);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;

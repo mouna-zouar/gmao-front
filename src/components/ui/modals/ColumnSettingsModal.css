@@ -35,19 +35,19 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    color: #0794a4;
+    color: var(--g-brand-500);
 }
 
 .header-title h2 {
     font-size: 1.25rem;
     font-weight: 800;
     margin: 0;
-    color: #1e293b;
+    color: var(--g-slate-800);
 }
 
 .close-btn {
     font-size: 24px;
-    color: #64748b;
+    color: var(--g-slate-500);
     cursor: pointer;
     transition: color 0.2s;
     background: none;
@@ -55,7 +55,7 @@
 }
 
 .close-btn:hover {
-    color: #ef4444;
+    color: var(--g-red-500);
 }
 
 .settings-modal-body {
@@ -71,7 +71,7 @@
     background: rgba(0, 0, 0, 0.03);
     font-size: 0.75rem;
     font-weight: 700;
-    color: #64748b;
+    color: var(--g-slate-500);
     text-transform: uppercase;
     letter-spacing: 0.05em;
 }
@@ -96,7 +96,7 @@
 .col-name {
     font-size: 0.95rem;
     font-weight: 600;
-    color: #334155;
+    color: var(--g-slate-700);
 }
 
 .center {
@@ -116,7 +116,7 @@
 
 .done-btn {
     padding: 10px 24px;
-    background: #0794a4;
+    background: var(--g-brand-500);
     color: white;
     border-radius: 12px;
     font-weight: 700;

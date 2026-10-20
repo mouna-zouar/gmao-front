@@ -5,21 +5,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap');
 
 .bmx-page {
-  --ink: #12303a;
-  --ink-soft: #4b6670;
-  --ink-faint: #7f969d;
-  --paper: #f2f6f6;
-  --surface: #ffffff;
-  --line: #d7e3e5;
-  --brand: #0794a4;
-  --brand-deep: #05606b;
-  --brand-wash: #e3f3f5;
-  --done: #1f9d74;
-  --done-wash: #e2f5ee;
-  --now: #e8962e;
-  --now-wash: #fdf1e1;
-  --alert: #d9434b;
-  --alert-wash: #fde8e9;
+  --ink: var(--g-ink-900);
+  --ink-soft: var(--g-ink-600);
+  --ink-faint: var(--g-ink-400);
+  --paper: var(--g-ink-25);
+  --surface: var(--g-blanc);
+  --line: var(--g-ink-100);
+  --brand: var(--g-brand-500);
+  --brand-deep: var(--g-brand-750);
+  --brand-wash: var(--g-brand-75);
+  --done: var(--g-succes-500);
+  --done-wash: var(--g-succes-50);
+  --now: var(--g-attention-500);
+  --now-wash: var(--g-attention-50);
+  --alert: var(--g-alerte-500);
+  --alert-wash: var(--g-alerte-50);
   --radius-xl: 28px;
   --radius-l: 18px;
   --radius-m: 12px;
@@ -96,21 +96,21 @@
 .bmx-btn--sur-fonce {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.35);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
-.bmx-btn--sur-fonce:hover { border-color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+.bmx-btn--sur-fonce:hover { border-color: var(--g-blanc); background: rgba(255, 255, 255, 0.08); }
 
 /* ---------- Tons communs ---------- */
 .bmx-ton--ok        { --ton: var(--done);  --ton-wash: var(--done-wash); }
-.bmx-ton--attention { --ton: #b8701a;      --ton-wash: var(--now-wash); }
+.bmx-ton--attention { --ton: var(--g-attention-700);      --ton-wash: var(--now-wash); }
 .bmx-ton--action    { --ton: var(--brand-deep); --ton-wash: var(--brand-wash); }
-.bmx-ton--info      { --ton: #2c5fb8;      --ton-wash: #e6eefb; }
+.bmx-ton--info      { --ton: var(--g-info-600);      --ton-wash: var(--g-info-50); }
 .bmx-ton--alerte    { --ton: var(--alert); --ton-wash: var(--alert-wash); }
-.bmx-ton--neutre    { --ton: var(--ink-soft); --ton-wash: #e8eef0; }
+.bmx-ton--neutre    { --ton: var(--ink-soft); --ton-wash: var(--g-ink-50); }
 .bmx-ton--prio-red   { --ton: var(--alert); --ton-wash: var(--alert-wash); }
-.bmx-ton--prio-amber { --ton: #b8701a;      --ton-wash: var(--now-wash); }
-.bmx-ton--prio-blue  { --ton: #2c5fb8;      --ton-wash: #e6eefb; }
-.bmx-ton--prio-slate { --ton: var(--ink-soft); --ton-wash: #e8eef0; }
+.bmx-ton--prio-amber { --ton: var(--g-attention-700);      --ton-wash: var(--now-wash); }
+.bmx-ton--prio-blue  { --ton: var(--g-info-600);      --ton-wash: var(--g-info-50); }
+.bmx-ton--prio-slate { --ton: var(--ink-soft); --ton-wash: var(--g-ink-50); }
 
 .bmx-pastille {
   display: inline-block;
@@ -156,7 +156,7 @@
   align-items: center;
   padding: 6px 14px 6px 16px;
   background: var(--ton);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-weight: 700;
 }
 
@@ -350,7 +350,7 @@
 .bmx-station.is-fait .bmx-station-point {
   background: var(--brand);
   border-color: var(--brand);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 .bmx-station.is-fait .bmx-station-nom { color: var(--ink); }
 
@@ -360,19 +360,19 @@
   width: calc(var(--point) + 8px);
   height: calc(var(--point) + 8px);
   margin-top: -4px;
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .bmx-station.is-actuel .bmx-station-point {
   background: var(--now);
-  border-color: #ffffff;
+  border-color: var(--g-blanc);
   box-shadow: 0 0 0 3px var(--now);
   animation: bmx-pouls 2.2s ease-out infinite;
 }
 
 .bmx-station.is-probleme .bmx-station-point {
   background: var(--alert);
-  border-color: #ffffff;
+  border-color: var(--g-blanc);
   box-shadow: 0 0 0 3px var(--alert);
 }
 
@@ -402,7 +402,7 @@
   padding: 28px 30px 30px;
   border-radius: var(--radius-xl);
   background: var(--ink);
-  color: #ffffff;
+  color: var(--g-blanc);
   overflow: hidden;
 }
 
@@ -451,7 +451,7 @@
   font-size: clamp(24px, 3vw, 32px);
   font-weight: 800;
   line-height: 1.12;
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .bmx-maintenant-texte {
@@ -665,7 +665,7 @@ button.bmx-vital:hover { background: var(--paper); }
   height: 44px;
   border-radius: 14px;
   background: var(--brand);
-  color: #ffffff;
+  color: var(--g-blanc);
   flex-shrink: 0;
 }
 
@@ -908,7 +908,7 @@ button.bmx-vital:hover { background: var(--paper); }
 /* ---------- Chat en direct : badges des messages non lus ---------- */
 .bmx-rubrique-nb--alerte {
   background: var(--alert);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .bmx-btn-chat { position: relative; }
@@ -919,7 +919,7 @@ button.bmx-vital:hover { background: var(--paper); }
   padding: 0 6px;
   border-radius: 999px;
   background: var(--alert);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 12px;
   font-weight: 700;
   line-height: 20px;

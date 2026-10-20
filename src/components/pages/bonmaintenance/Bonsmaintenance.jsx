@@ -4,10 +4,9 @@ import * as XLSX from 'xlsx';
 import {
   Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw,
   Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, BarChart3, Search,
-  Filter, RefreshCw, AlertCircle, Clock, Calendar, Users, Building2,
-  Activity, ChevronLeft, ChevronRight, Loader2, Info,
-  AlertTriangle, Ban, Gauge, Sparkles, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, X
-} from 'lucide-react';
+  Filter, RefreshCw, AlertCircle, Clock, Calendar, Users, Building2, ChevronLeft, ChevronRight, Loader2, Info,
+  AlertTriangle, Ban, Gauge, Sparkles, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, X, TriangleAlert } from 'lucide-react';
+import { ICONES_MODULES } from '../../../constants/modules';
 
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
 import bonMaintenanceFullService from '../../../services/bonMaintenanceFullService';
@@ -28,6 +27,7 @@ import EquipementsEtEtat from '../Equipements/EquipementsEtEtat';
 import Intelligence from '../Intelligence/Intelligence';
 import SlaRetards from './SlaRetards';
 import slaService from '../../../services/slaService';
+import { delaiSla } from '../../../utils/delaiSla';
 
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
 import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenancedocumentachatservice';
@@ -211,6 +211,7 @@ const SORTABLE_COLUMNS = {
   service: (b) => b.serviceNom || '',
   urgence: (b) => b.urgence ?? -1,
   priorite: (b) => prioriteRang(b.priorite),
+  delai: (b) => delaiSla(b.sla)?.echeance ?? Number.MAX_SAFE_INTEGER,
   date: (b) => (b.date ? new Date(b.date).getTime() : 0),
   etat: (b) => b.etat ?? -1,
 };
@@ -227,6 +228,7 @@ const BON_COLUMNS_DEFAULT = [
   { key: 'service',     label: 'Service',     visible: true, searchable: false },
   { key: 'urgence',     label: 'Urgence',     visible: true, searchable: false },
   { key: 'priorite',    label: 'Priorité',    visible: true, searchable: false },
+  { key: 'delai',       label: 'Délai',       visible: true, searchable: false },
   { key: 'date',        label: 'Date',        visible: true, searchable: false },
   { key: 'etat',        label: 'État',        visible: true, searchable: false },
 ];
@@ -340,6 +342,7 @@ function getColumnSearchValue(b, key) {
     case 'service':     return b.serviceNom || b.service?.description || '';
     case 'urgence':     return niveauLabel(b.urgence);
     case 'priorite':    return `${b.priorite || ''} ${prioriteLabel(b.priorite)}`;
+    case 'delai':       return delaiSla(b.sla)?.texte || '';
     case 'date':        return formatDate(b.date);
     case 'etat':        return etatLabel(b.etat);
     default:            return '';
@@ -499,6 +502,25 @@ export default function BonsMaintenance() {
   }, [recupererSlaRetards]);
   const nbSlaRetards = slaRetards?.length ?? 0;
 
+  /* ── Délai SLA de chaque bon ouvert (colonne « Délai ») : suit la priorité calculée automatiquement ── */
+  const [slaParBon, setSlaParBon] = useState({});
+  const recupererSlaOuverts = useCallback(() => slaService.getOuverts()
+    .then((liste) => {
+      const parBon = {};
+      (Array.isArray(liste) ? liste : []).forEach((s) => { parBon[s.bonMaintenanceId] = s; });
+      setSlaParBon(parBon);
+    })
+    .catch((err) => console.error('Erreur chargement des délais SLA :', err)), []);
+  useEffect(() => { recupererSlaOuverts(); }, [bons, recupererSlaOuverts]);
+  useEffect(() => {
+    const minuterie = setInterval(recupererSlaOuverts, 60 * 1000); // le temps restant avance
+    return () => clearInterval(minuterie);
+  }, [recupererSlaOuverts]);
+  const bonsAvecSla = useMemo(
+    () => bons.map((b) => (slaParBon[b.id] ? { ...b, sla: slaParBon[b.id] } : b)),
+    [bons, slaParBon],
+  );
+
   const loadDemandes = async () => {
     if (!selectedBon?.id) return;
     try {
@@ -582,14 +604,14 @@ export default function BonsMaintenance() {
   const filteredBons = useMemo(() => {
     const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
     const term = searchTerm.trim().toLowerCase();
-    return bons.filter((b) => {
+    return bonsAvecSla.filter((b) => {
       const matchesSearch = !term
         || searchableCols.some((key) => getColumnSearchValue(b, key).toLowerCase().includes(term));
       const matchesEtat = etatFilter === 'all' || String(b.etat) === etatFilter;
       const matchesVue = !vueCourante.filtre || vueCourante.filtre(b);
       return matchesSearch && matchesEtat && matchesVue;
     });
-  }, [bons, searchTerm, etatFilter, columnSettings, vueCourante]);
+  }, [bonsAvecSla, searchTerm, etatFilter, columnSettings, vueCourante]);
 
   const sortedBons = useMemo(() => {
     const extractor = SORTABLE_COLUMNS[sortColumn];
@@ -690,6 +712,20 @@ export default function BonsMaintenance() {
           </span>
         </td>
       ),
+    },
+    delai: {
+      cell: (b) => {
+        const d = delaiSla(b.sla);
+        return (
+          <td key="delai">
+            {d ? (
+              <span className={`bons-delai-badge bons-delai-badge--${d.ton}`} title={d.titre}>
+                {d.texte}
+              </span>
+            ) : '—'}
+          </td>
+        );
+      },
     },
     date: {
       cell: (b) => (
@@ -1091,7 +1127,7 @@ export default function BonsMaintenance() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <Activity size={28} className="bons-header-icon" />
+            <ICONES_MODULES.bonsMaintenance size={28} className="bons-header-icon" />
           </button>
           <div>
             <h2>{t("Bons de maintenance")}</h2>
@@ -1761,9 +1797,7 @@ export default function BonsMaintenance() {
 
             {motifModal.error && (
               <div className="confirm-modal-error">
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192-3 1.732-3z" />
-                </svg>
+                <TriangleAlert size={16} strokeWidth={2} aria-hidden="true" />
                 <span>{motifModal.error}</span>
               </div>
             )}
@@ -1825,9 +1859,7 @@ export default function BonsMaintenance() {
 
             {etatModal.error && (
               <div className="confirm-modal-error">
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77-1.333.192-3 1.732-3z" />
-                </svg>
+                <TriangleAlert size={16} strokeWidth={2} aria-hidden="true" />
                 <span>{etatModal.error}</span>
               </div>
             )}

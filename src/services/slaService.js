@@ -21,6 +21,12 @@ const slaService = {
     return data; // List<SlaBonDTO>
   },
 
+  /** SLA de tous les bons encore ouverts (colonne « Délai » de la liste). */
+  async getOuverts() {
+    const { data } = await api.get('/sla/ouverts');
+    return data; // List<SlaBonDTO>
+  },
+
   /** Bons actuellement en dépassement SLA (réponse ou résolution), tous encore ouverts. */
   async getDepassements() {
     const { data } = await api.get('/sla/depassements');

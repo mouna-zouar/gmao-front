@@ -369,6 +369,7 @@ const en = {
   "En un coup d'œil": 'At a glance',
   'Recalculer la priorité': 'Recalculate priority',
   "Recalculer la priorité (criticité + urgence + disponibilité d'alternative)": 'Recalculate priority (criticality + urgency + availability of an alternative)',
+  "Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)": 'Priority calculated automatically (criticality + urgency + availability of an alternative)',
   'Tout le dossier': 'The whole file',
   'Comprendre': 'Understand',
   'Voir où en est le dossier': 'See where the file stands',
@@ -2671,6 +2672,9 @@ const en = {
   'Kanban': 'Kanban',
   'Aucune tâche ne correspond à ces filtres.': 'No task matches these filters.',
   'Placez le QR code ou le code-barre de l’étiquette dans le cadre : l’équipement est choisi tout seul.': 'Place the label QR code or barcode inside the frame: the equipment is selected automatically.',
+  "{phase} · retard {d}": "{phase} · {d} late",
+  "{phase} · {d} restantes": "{phase} · {d} left",
+  "Échéance {phase} : {date} (délai {n} h selon la priorité {p})": "{phase} deadline: {date} ({n} h allowed for priority {p})",
 };
 
 export default en;

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { X } from 'lucide-react';
 import './PageModal.css';
 
 export default function PageModal({
@@ -60,18 +61,7 @@ export default function PageModal({
             aria-label="Fermer"
             title="Fermer (Échap)"
           >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
+            <X size={20} strokeWidth={2.5} aria-hidden="true" />
           </button>
         </header>
 

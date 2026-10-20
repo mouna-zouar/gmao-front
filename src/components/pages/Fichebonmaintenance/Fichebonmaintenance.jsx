@@ -9,6 +9,7 @@ import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import { t, locale } from '../../../i18n';
 import { optionsTypeEntretien } from '../../../constants/FicheIntervention';
+import { ArrowLeft, Ban, Check, ChevronDown, CircleCheck, CirclePause, FileText, Play, SquarePen, Wrench, X } from 'lucide-react';
 import './FicheBonMaintenance.css';
 
 const ETAT_OPTIONS = [
@@ -353,9 +354,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       <div className="planning-header-card">
         <div className="header-left">
           <div className="header-title-box">
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="header-icon">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
-            </svg>
+            <Wrench size={24} strokeWidth={2.5} className="header-icon" aria-hidden="true" />
             <h2>{bon?.titre || bon?.num || (isNew ? t("Nouveau bon de maintenance") : t("Bon de maintenance"))}</h2>
           </div>
         </div>
@@ -367,19 +366,19 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       <div className="actions-bar-card">
         {onBack && (
           <button type="button" className="action-bar-btn retour-liste" onClick={onBack}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            <ArrowLeft size={20} strokeWidth={2} aria-hidden="true" />
             <span className="btn-label">{t("Retour à la liste")}</span>
           </button>
         )}
         {!isEditMode && !isNew && (
           <button type="button" className="action-bar-btn modifier" onClick={() => setIsEditMode(true)}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            <SquarePen size={20} strokeWidth={2} aria-hidden="true" />
             <span className="btn-label">{t("Modifier")}</span>
           </button>
         )}
         {isEditMode && !isNew && (
           <button type="button" className="action-bar-btn annuler" onClick={() => { setIsEditMode(false); loadBon(); }}>
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <X size={20} strokeWidth={2} aria-hidden="true" />
             <span className="btn-label">{t("Annuler")}</span>
           </button>
         )}
@@ -388,25 +387,25 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
           <>
             {bon.etat === 1 && (
               <button type="button" className="action-bar-btn fbm-wf-encours" onClick={handlePasserEnCours}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <Play size={20} strokeWidth={2} aria-hidden="true" />
                 <span className="btn-label">{t("Passer en cours")}</span>
               </button>
             )}
             {(bon.etat === 1 || bon.etat === 3) && (
               <button type="button" className="action-bar-btn fbm-wf-suspendre" onClick={handleSuspendre}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <CirclePause size={20} strokeWidth={2} aria-hidden="true" />
                 <span className="btn-label">{t("Suspendre")}</span>
               </button>
             )}
             {bon.etat === 3 && (
               <button type="button" className="action-bar-btn fbm-wf-effectuer" onClick={handleMarquerEffectue}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <CircleCheck size={20} strokeWidth={2} aria-hidden="true" />
                 <span className="btn-label">{t("Marquer effectué")}</span>
               </button>
             )}
             {bon.etat !== 10 && bon.etat !== 4 && (
               <button type="button" className="action-bar-btn fbm-wf-annuler" onClick={handleAnnuler}>
-                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                <Ban size={20} strokeWidth={2} aria-hidden="true" />
                 <span className="btn-label">{t("Annuler le bon")}</span>
               </button>
             )}
@@ -431,7 +430,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
             </>
           ) : (
             <>
-              <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+              <Check size={26} strokeWidth={2.5} aria-hidden="true" />
               <span className="save-btn-text">{isNew ? t("Créer le bon") : t("Enregistrer les modifications")}</span>
             </>
           )}
@@ -442,10 +441,10 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
         <section className={`form-section full-width rh-identite ${expandedSections.infos ? 'expanded' : 'collapsed'}`}>
           <div className="section-header" onClick={() => toggleSection('infos')}>
             <div className="section-icon">
-              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              <FileText size={20} strokeWidth={2} aria-hidden="true" />
             </div>
             <h3>{t("Informations générales")}</h3>
-            <div className="section-toggle"><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" className="chevron-icon"><path d="M19 9l-7 7-7-7" /></svg></div>
+            <div className="section-toggle"><ChevronDown size={20} strokeWidth={2.5} className="chevron-icon" aria-hidden="true" /></div>
           </div>
           <div className="section-content"><div className="section-content-inner">
             <div className="form-group-row">

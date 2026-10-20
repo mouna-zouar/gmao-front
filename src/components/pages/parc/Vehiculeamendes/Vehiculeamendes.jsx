@@ -4,6 +4,7 @@ import {
   Car, User, Calendar, Coins, AlertTriangle, CheckCircle2, Scale, Ban, Undo2, Clock,
   ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeAmendeService from '../../../../services/Vehiculeamendeservice';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
@@ -398,7 +399,7 @@ export default function VehiculeAmendes() {
         <div className="vin-header-left">
           <button type="button" className="vin-header-icon-wrap vin-header-icon-btn" onClick={() => setReglagesColonnes(true)}
             title={t('Paramètres des colonnes')} aria-label={t('Paramètres des colonnes')}>
-            <Receipt size={24} strokeWidth={2} />
+            <ICONES_MODULES.amendes size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t('Amendes véhicules')}</h2>

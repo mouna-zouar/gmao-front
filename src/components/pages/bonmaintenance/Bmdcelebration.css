@@ -2,7 +2,7 @@
    ANIMATIONS DE FIN D'ÉTAPE
    ============================================================ */
 .bmdc-overlay {
-  --bmdc-c: #0794a4;
+  --bmdc-c: var(--g-brand-500);
   --bmdc-soft: rgba(7, 148, 164, 0.12);
   position: fixed;
   inset: 0;
@@ -19,10 +19,10 @@
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
-.bmdc--teal  { --bmdc-c: #0794a4; --bmdc-soft: rgba(7, 148, 164, 0.12); }
-.bmdc--green { --bmdc-c: #10b981; --bmdc-soft: rgba(16, 185, 129, 0.14); }
-.bmdc--red   { --bmdc-c: #ef4444; --bmdc-soft: rgba(239, 68, 68, 0.12); }
-.bmdc--ink   { --bmdc-c: #0f172a; --bmdc-soft: rgba(15, 23, 42, 0.08); }
+.bmdc--teal  { --bmdc-c: var(--g-brand-500); --bmdc-soft: rgba(7, 148, 164, 0.12); }
+.bmdc--green { --bmdc-c: var(--g-emerald-500); --bmdc-soft: rgba(16, 185, 129, 0.14); }
+.bmdc--red   { --bmdc-c: var(--g-red-500); --bmdc-soft: rgba(239, 68, 68, 0.12); }
+.bmdc--ink   { --bmdc-c: var(--g-slate-900); --bmdc-soft: rgba(15, 23, 42, 0.08); }
 
 @keyframes bmdc-fond { from { opacity: 0; } to { opacity: 1; } }
 
@@ -30,9 +30,9 @@
   position: relative;
   width: min(340px, 100%);
   padding: 22px 24px 18px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border-radius: 22px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--g-slate-200);
   box-shadow: 0 30px 70px -20px rgba(15, 23, 42, 0.35);
   text-align: center;
   overflow: hidden;
@@ -209,9 +209,9 @@
   align-items: center;
   gap: 2px;
   padding: 10px 22px 8px;
-  border: 4px double #b91c1c;
+  border: 4px double var(--g-red-700);
   border-radius: 10px;
-  color: #b91c1c;
+  color: var(--g-red-700);
   opacity: 0;
   transform: scale(2.6) rotate(6deg);
   animation: bmdc-tampon 0.45s cubic-bezier(0.5, 0, 0.75, 0) 0.45s forwards;
@@ -259,7 +259,7 @@
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.01em;
-  color: #0f172a;
+  color: var(--g-slate-900);
   opacity: 0;
   animation: bmdc-texte 0.4s ease-out 0.9s forwards;
 }
@@ -268,7 +268,7 @@
   margin: 4px 0 0;
   font-size: 13px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--g-slate-500);
   opacity: 0;
   animation: bmdc-texte 0.4s ease-out 1.05s forwards;
 }
@@ -282,7 +282,7 @@
 .bmdc-progress {
   height: 3px;
   margin: 16px -24px -18px;
-  background: #f1f5f9;
+  background: var(--g-slate-100);
 }
 
 .bmdc-progress span {

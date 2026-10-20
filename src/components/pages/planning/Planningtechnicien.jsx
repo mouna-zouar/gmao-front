@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import planningService from '../../../services/planningService';
 import './PlanningTechnicien.css';
 import { t, tp, locale } from '../../../i18n';
+import { Search } from 'lucide-react';
+import { ICONES_MODULES } from '../../../constants/modules';
 
 const ETAT_LABELS = { 0: 'Nouveau', 1: 'En cours', 2: 'Terminé', 10: 'Annulé' };
 const PAGE_SIZE_OPTIONS = [6, 12, 24, 48];
@@ -103,9 +105,7 @@ export default function PlanningTechnicien() {
     <div className="pt-container">
       <div className="pt-header">
         <div className="pt-header-title">
-          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-          </svg>
+          <ICONES_MODULES.planningTechnicien size={24} strokeWidth={2} aria-hidden="true" />
           <div>
             <h2>{t('Planning technicien')}</h2>
             <p>{t('Interventions planifiées, par technicien')}</p>
@@ -123,9 +123,7 @@ export default function PlanningTechnicien() {
       {/* Barre de recherche */}
       <div className="pt-toolbar">
         <div className="pt-search">
-          <svg className="pt-search-icon" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M11 19a8 8 0 100-16 8 8 0 000 16z" />
-          </svg>
+          <Search size={16} strokeWidth={2} className="pt-search-icon" aria-hidden="true" />
           <input
             type="text"
             className="pt-search-input"

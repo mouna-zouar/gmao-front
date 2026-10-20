@@ -14,17 +14,17 @@
   flex: 1;
   font-family: inherit;
   font-size: 0.88rem;
-  color: #0f172a;
+  color: var(--g-slate-900);
   padding: 10px 12px;
   border: 1px solid #dbe4e2;
   border-radius: 9px;
-  background: #fff;
+  background: var(--g-blanc);
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .locpicker-input:focus {
-  border-color: #0f766e;
+  border-color: var(--g-teal-700);
   box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
 }
 
@@ -35,9 +35,9 @@
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: 1px solid #99f6e4;
-  background: #f0fdfa;
-  color: #0f766e;
+  border: 1px solid var(--g-teal-200);
+  background: var(--g-teal-50);
+  color: var(--g-teal-700);
   font-size: 1rem;
   border-radius: 9px;
   cursor: pointer;
@@ -47,7 +47,7 @@
 
 .locpicker-search-btn:hover,
 .locpicker-geo-btn:hover {
-  background: #ccfbf1;
+  background: var(--g-teal-100);
   transform: translateY(-1px);
 }
 
@@ -59,17 +59,17 @@
 .locpicker-map {
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--g-slate-200);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .locpicker-coords {
   margin: 2px 0 0;
   font-size: 0.76rem;
-  color: #64748b;
+  color: var(--g-slate-500);
 }
 
 .locpicker-coords strong {
-  color: #0f766e;
+  color: var(--g-teal-700);
   font-weight: 700;
 }

@@ -3,17 +3,17 @@
    ============================================================ */
 .trx,
 .trx-etat {
-  --t-ink: var(--ink, #12303a);
-  --t-ink-soft: var(--ink-soft, #4b6670);
-  --t-ink-faint: var(--ink-faint, #7f969d);
-  --t-paper: var(--paper, #f2f6f6);
-  --t-line: var(--line, #d7e3e5);
-  --t-brand: var(--brand, #0794a4);
-  --t-brand-deep: var(--brand-deep, #05606b);
-  --t-brand-wash: var(--brand-wash, #e3f3f5);
-  --t-done: var(--done, #1f9d74);
-  --t-now: var(--now, #e8962e);
-  --t-alert: var(--alert, #d9434b);
+  --t-ink: var(--ink, var(--g-ink-900));
+  --t-ink-soft: var(--ink-soft, var(--g-ink-600));
+  --t-ink-faint: var(--ink-faint, var(--g-ink-400));
+  --t-paper: var(--paper, var(--g-ink-25));
+  --t-line: var(--line, var(--g-ink-100));
+  --t-brand: var(--brand, var(--g-brand-500));
+  --t-brand-deep: var(--brand-deep, var(--g-brand-750));
+  --t-brand-wash: var(--brand-wash, var(--g-brand-75));
+  --t-done: var(--done, var(--g-succes-500));
+  --t-now: var(--now, var(--g-attention-500));
+  --t-alert: var(--alert, var(--g-alerte-500));
   --t-titre: var(--font-titre, 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif);
 
   font-family: var(--font-texte, 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif);
@@ -26,12 +26,12 @@
 
 /* ---------- Tons ---------- */
 .trx-ton--brand  { --c: var(--t-brand-deep); --c-wash: var(--t-brand-wash); }
-.trx-ton--info   { --c: #2c5fb8; --c-wash: #e6eefb; }
+.trx-ton--info   { --c: var(--g-info-600); --c-wash: var(--g-info-50); }
 .trx-ton--violet { --c: #6b4fc8; --c-wash: #eeeafb; }
-.trx-ton--now    { --c: #b8701a; --c-wash: #fdf1e1; }
-.trx-ton--ok     { --c: var(--t-done); --c-wash: #e2f5ee; }
-.trx-ton--alert  { --c: var(--t-alert); --c-wash: #fde8e9; }
-.trx-ton--calme  { --c: var(--t-ink-soft); --c-wash: #e8eef0; }
+.trx-ton--now    { --c: var(--g-attention-700); --c-wash: var(--g-attention-50); }
+.trx-ton--ok     { --c: var(--t-done); --c-wash: var(--g-succes-50); }
+.trx-ton--alert  { --c: var(--t-alert); --c-wash: var(--g-alerte-50); }
+.trx-ton--calme  { --c: var(--t-ink-soft); --c-wash: var(--g-ink-50); }
 
 /* ---------- Chargement / vide ---------- */
 .trx-etat {
@@ -44,7 +44,7 @@
   padding: 24px;
   border-radius: 20px;
   border: 1.5px dashed var(--t-line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--t-ink-soft);
   text-align: center;
   font-size: 15px;
@@ -63,7 +63,7 @@
   flex-wrap: wrap;
   padding: 18px 20px;
   border-radius: 20px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1.5px solid var(--t-line);
 }
 
@@ -89,7 +89,7 @@
   padding: 8px 16px;
   border-radius: 999px;
   border: 1.5px solid var(--t-line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--t-ink-soft);
   font-size: 14px;
   font-weight: 600;
@@ -98,7 +98,7 @@
 
 .trx-direct-btn.is-on {
   border-color: #bfe3d6;
-  background: #e2f5ee;
+  background: var(--g-succes-50);
   color: #17785a;
 }
 
@@ -117,7 +117,7 @@
   height: 42px;
   border-radius: 50%;
   border: 1.5px solid var(--t-line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--t-ink-soft);
   cursor: pointer;
 }
@@ -134,7 +134,7 @@
   flex-wrap: wrap;
   padding: 14px 18px;
   border-radius: 16px;
-  background: #fde8e9;
+  background: var(--g-alerte-50);
   border: 1.5px solid #f5c2c5;
   color: var(--t-alert);
   font-weight: 600;
@@ -148,7 +148,7 @@
   border-radius: 999px;
   border: none;
   background: var(--t-alert);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-weight: 700;
   cursor: pointer;
 }
@@ -172,7 +172,7 @@
   padding: 6px 14px;
   border-radius: 999px;
   border: 1.5px solid var(--t-line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--t-ink-soft);
   font-size: 14px;
   font-weight: 600;
@@ -188,7 +188,7 @@
 }
 
 .trx-filtre:hover { border-color: var(--t-brand); color: var(--t-brand-deep); }
-.trx-filtre.is-actif { background: var(--t-ink); border-color: var(--t-ink); color: #ffffff; }
+.trx-filtre.is-actif { background: var(--t-ink); border-color: var(--t-ink); color: var(--g-blanc); }
 .trx-filtre.is-actif span { background: rgba(255, 255, 255, 0.18); }
 
 .trx-outils-droite { display: flex; gap: 14px; flex-wrap: wrap; }
@@ -280,7 +280,7 @@
 .trx-evt-carte {
   border-radius: 16px;
   border: 1.5px solid var(--t-line);
-  background: #ffffff;
+  background: var(--g-blanc);
   overflow: hidden;
   transition: border-color 0.15s ease;
 }

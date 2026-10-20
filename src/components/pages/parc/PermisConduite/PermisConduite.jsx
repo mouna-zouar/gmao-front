@@ -5,6 +5,7 @@ import {
   User, Calendar, CheckCircle2, XCircle, CreditCard, X,
   ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import permisConduiteService from '../../../../services/permisConduiteService';
 import personnelService from '../../../../services/personnelService';
 import PermisConduiteModal from '../../../ui/modals/PermisConduiteModal';
@@ -456,7 +457,7 @@ export default function PermisConduite() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <IdCard size={24} strokeWidth={2} />
+            <ICONES_MODULES.permis size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t("Permis de conduire")}</h2>

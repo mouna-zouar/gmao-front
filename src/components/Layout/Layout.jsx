@@ -4,7 +4,7 @@ import { NAV_PAGES, NAV_SECTIONS, trouverPage } from '../../constants/navigation
 import notificationService from '../../services/notificationService';
 import { useAuth } from '../../constants/Authcontext';
 import { t, locale, SelecteurLangue } from '../../i18n';
-import { History, X } from 'lucide-react';
+import { History, X, Bell, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Search } from 'lucide-react';
 import './Layout.css';
 import './MenuMetier.css';
 import '../ui/BadgeStatut/statuts-harmonises.css';
@@ -203,16 +203,12 @@ export default function Layout({ children }) {
                 <span style={{ fontWeight: 800, fontSize: '18px', color: '#0f172a' }}>GMAO</span>
               </Link>
               <button className="sidebar__close-btn" onClick={() => setSidebarOpen(false)} title={t('Réduire le menu')} aria-label={t('Réduire le menu')}>
-                <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
+                <ChevronLeft strokeWidth={2} aria-hidden="true" />
               </button>
             </>
           ) : (
             <button className="sidebar__menu-btn" onClick={() => setSidebarOpen(true)} title={t('Ouvrir le menu')} aria-label={t('Ouvrir le menu')}>
-              <svg fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z" clipRule="evenodd" />
-              </svg>
+              <Menu aria-hidden="true" />
             </button>
           )}
         </div>
@@ -220,9 +216,7 @@ export default function Layout({ children }) {
         {/* Search */}
         {sidebarOpen && (
           <div className="sidebar__search">
-            <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z" />
-            </svg>
+            <Search strokeWidth={2} aria-hidden="true" />
             <input
               ref={champRecherche}
               type="search"
@@ -299,9 +293,7 @@ export default function Layout({ children }) {
                 {sidebarOpen && <span className="nav-item__label">{t(item.label)}</span>}
                 {sidebarOpen && item.badge && <span className="nav-item__badge">{item.badge}</span>}
                 {sidebarOpen && item.children && (
-                  <svg className={`nav-item__chevron--${item.id} ${openSubmenu === item.id ? 'nav-item__chevron--open' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-                  </svg>
+                  <ChevronDown strokeWidth={2.5} className={`nav-item__chevron--${item.id} ${openSubmenu === item.id ? 'nav-item__chevron--open' : ''}`} aria-hidden="true" />
                 )}
                 {item.badge && !sidebarOpen && <span className="nav-item__badge-dot" />}
               </button>
@@ -375,9 +367,7 @@ export default function Layout({ children }) {
         <div className="sidebar__footer">
           <button className={`nav-item nav-item--logout ${!sidebarOpen ? 'nav-item--icon-only' : ''}`} onClick={handleLogout}>
             <span className="nav-item__icon">
-              <svg className="nav-icon-svg" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16 12H4m12 0-4 4m4-4-4-4m3-4h2a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-2" />
-              </svg>
+              <LogOut strokeWidth={1.75} className="nav-icon-svg" aria-hidden="true" />
             </span>
             {sidebarOpen && <span className="nav-item__label">{t('Déconnexion')}</span>}
           </button>
@@ -387,9 +377,7 @@ export default function Layout({ children }) {
       <header className={`navbar ${sidebarOpen ? 'navbar--shifted' : ''}`}>
         <div className="navbar__left">
           <button className="navbar__mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label={t('Menu')}>
-            <svg fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z" clipRule="evenodd" />
-            </svg>
+            <Menu aria-hidden="true" />
           </button>
           {!sidebarOpen && (
             <Link to="/" onClick={() => { setActivePopup(null); setOpenSubmenu(null); }} className="navbar__logo-link">
@@ -403,18 +391,14 @@ export default function Layout({ children }) {
 
             {activeNavItem && currentPath !== '/' && (
               <>
-                <svg className="rtl-miroir" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6" />
-                </svg>
+                <ChevronRight strokeWidth={2} className="rtl-miroir" aria-hidden="true" />
                 <span className="navbar__breadcrumb-parent">
                   {t(activeNavItem.label)}
                 </span>
 
                 {activeChild && (
                   <>
-                    <svg className="rtl-miroir" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m9 18 6-6-6-6" />
-                    </svg>
+                    <ChevronRight strokeWidth={2} className="rtl-miroir" aria-hidden="true" />
                     <span className="navbar__breadcrumb-current">{t(activeChild.label)}</span>
                   </>
                 )}
@@ -427,9 +411,7 @@ export default function Layout({ children }) {
 
           <div className="navbar__notif-container" style={{ position: 'relative' }}>
             <button className="navbar__icon-btn navbar__icon-btn--notif" onClick={toggleNotifDrop} title={t('Notifications')} aria-label={t('Notifications')}>
-              <svg fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 5.365V3m0 2.365a5.338 5.338 0 0 1 5.133 5.368v1.8c0 2.386 1.867 2.982 1.867 4.175 0 .593 0 1.292-.538 1.292H5.538C5 18 5 17.301 5 16.708c0-1.193 1.867-1.789 1.867-4.175v-1.8A5.338 5.338 0 0 1 12 5.365ZM8.733 18c.094.852.306 1.54.944 2.112a3.48 3.48 0 0 0 4.646 0c.638-.572.85-1.26.944-2.112H8.733Z" />
-              </svg>
+              <Bell strokeWidth={1.75} aria-hidden="true" />
               {notifCount > 0 && (
                 <span className="navbar__notif-badge">{notifCount > 99 ? '99+' : notifCount}</span>
               )}
@@ -479,9 +461,7 @@ export default function Layout({ children }) {
                 <span className="user-btn__name">{user?.login || t('Utilisateur')}</span>
                 <span className="user-btn__role">{user?.admin ? t('Administrateur') : t('Utilisateur')}</span>
               </div>
-              <svg className={`user-btn__chevron ${userDropOpen ? 'user-btn__chevron--open' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-              </svg>
+              <ChevronDown strokeWidth={2.5} className={`user-btn__chevron ${userDropOpen ? 'user-btn__chevron--open' : ''}`} aria-hidden="true" />
             </button>
 
             {userDropOpen && (

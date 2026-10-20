@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import planningService from '../../../services/planningService';
 import './PlanningBonMaintenance.css';
 import { t, tp, locale } from '../../../i18n';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 
 const MODE_OPTIONS = [
   { value: 'BON_MAINTENANCE', label: 'Bons de maintenance' },
@@ -266,14 +267,10 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
           <div className="planning-bm-header-left">
             <div className="planning-bm-nav-buttons">
               <button onClick={handlePrev} className="planning-bm-icon-btn" aria-label={t('Précédent')} title={t('Précédent')}>
-                <svg className="rtl-miroir" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
+                <ChevronLeft size={18} strokeWidth={2.2} className="rtl-miroir" aria-hidden="true" />
               </button>
               <button onClick={handleNext} className="planning-bm-icon-btn" aria-label={t('Suivant')} title={t('Suivant')}>
-                <svg className="rtl-miroir" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                <ChevronRight size={18} strokeWidth={2.2} className="rtl-miroir" aria-hidden="true" />
               </button>
             </div>
           </div>
@@ -396,9 +393,7 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
                 onClick={closePopover}
                 aria-label={t('Fermer')}
               >
-                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
-                </svg>
+                <X size={16} strokeWidth={2.2} aria-hidden="true" />
               </button>
             </div>
             <div className="planning-bm-popover-body">

@@ -10,7 +10,7 @@
 }
 
 .tmm-modal {
-  background: #fff;
+  background: var(--g-blanc);
   border-radius: 14px;
   width: 100%;
   max-width: 520px;
@@ -25,16 +25,16 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 22px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--g-slate-200);
 }
 
-.tmm-header h3 { margin: 0; font-size: 1.05rem; font-weight: 600; color: #0f172a; }
+.tmm-header h3 { margin: 0; font-size: 1.05rem; font-weight: 600; color: var(--g-slate-900); }
 
 .tmm-header button {
-  background: none; border: none; cursor: pointer; color: #64748b;
+  background: none; border: none; cursor: pointer; color: var(--g-slate-500);
   display: flex; padding: 4px; border-radius: 6px;
 }
-.tmm-header button:hover { background: #e9f8fa; color: #0794a4; }
+.tmm-header button:hover { background: var(--g-brand-50); color: var(--g-brand-500); }
 
 .tmm-body {
   padding: 22px; overflow-y: auto;
@@ -42,54 +42,54 @@
 }
 
 .tmm-km-row { display: flex; align-items: center; gap: 12px; }
-.tmm-arrow { color: #94a3b8; flex-shrink: 0; }
+.tmm-arrow { color: var(--g-slate-400); flex-shrink: 0; }
 
 .tmm-km-card {
-  flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+  flex: 1; background: var(--g-slate-50); border: 1px solid var(--g-slate-200); border-radius: 10px;
   padding: 12px 14px; display: flex; flex-direction: column; gap: 4px;
 }
-.tmm-km-card.readonly { background: #f1f5f9; }
+.tmm-km-card.readonly { background: var(--g-slate-100); }
 
 .tmm-km-label {
   font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
-  color: #64748b; font-weight: 600;
+  color: var(--g-slate-500); font-weight: 600;
 }
 
-.tmm-km-card strong { font-size: 1.05rem; color: #0f172a; }
+.tmm-km-card strong { font-size: 1.05rem; color: var(--g-slate-900); }
 
 .tmm-km-card input {
   border: none; background: transparent; font-size: 1.05rem; font-weight: 600;
-  color: #0f172a; outline: none; width: 100%; padding: 0;
+  color: var(--g-slate-900); outline: none; width: 100%; padding: 0;
 }
 
-.tmm-km-unit { font-size: 0.72rem; color: #94a3b8; }
+.tmm-km-unit { font-size: 0.72rem; color: var(--g-slate-400); }
 
 .tmm-info {
   display: flex; align-items: flex-start; gap: 8px;
   padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; line-height: 1.4;
 }
-.tmm-info.success { background: #f0fdf4; color: #15803d; }
-.tmm-info.error   { background: #fef2f2; color: #b91c1c; }
-.tmm-info.neutral { background: #f8fafc; color: #475569; }
+.tmm-info.success { background: var(--g-green-50); color: var(--g-green-700); }
+.tmm-info.error   { background: var(--g-red-50); color: var(--g-red-700); }
+.tmm-info.neutral { background: var(--g-slate-50); color: var(--g-slate-600); }
 .tmm-info svg { flex-shrink: 0; margin-top: 1px; }
 
 .tmm-field { display: flex; flex-direction: column; gap: 6px; }
-.tmm-field span { font-size: 0.78rem; font-weight: 600; color: #475569; }
+.tmm-field span { font-size: 0.78rem; font-weight: 600; color: var(--g-slate-600); }
 
 .tmm-field textarea {
-  border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;
+  border: 1px solid var(--g-slate-200); border-radius: 8px; padding: 10px 12px;
   font-size: 0.88rem; font-family: inherit; resize: vertical; outline: none;
   transition: all 0.15s ease;
 }
-.tmm-field textarea:hover { border-color: #a8e0e6; }
+.tmm-field textarea:hover { border-color: var(--g-brand-200); }
 .tmm-field textarea:focus {
-  border-color: #0794a4;
+  border-color: var(--g-brand-500);
   box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12);
 }
 
 .tmm-footer {
   display: flex; justify-content: flex-end; gap: 10px;
-  padding: 16px 22px; border-top: 1px solid #e2e8f0;
+  padding: 16px 22px; border-top: 1px solid var(--g-slate-200);
 }
 
 .tmm-btn {
@@ -97,17 +97,17 @@
   font-size: 0.88rem; font-weight: 600; cursor: pointer;
   transition: all 0.15s ease;
 }
-.tmm-btn.ghost { background: #f1f5f9; color: #475569; }
-.tmm-btn.ghost:hover { background: #e2e8f0; }
+.tmm-btn.ghost { background: var(--g-slate-100); color: var(--g-slate-600); }
+.tmm-btn.ghost:hover { background: var(--g-slate-200); }
 
 /* Bouton principal → teal uni */
 .tmm-btn.primary {
-  background: #0794a4;
-  color: #fff;
+  background: var(--g-brand-500);
+  color: var(--g-blanc);
   box-shadow: 0 4px 12px -4px rgba(7, 148, 164, 0.4);
 }
 .tmm-btn.primary:hover {
-  background: #067a87;
+  background: var(--g-brand-600);
   box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.5);
 }
 

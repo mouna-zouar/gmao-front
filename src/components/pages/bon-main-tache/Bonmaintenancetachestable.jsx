@@ -4,6 +4,8 @@ import bonMaintenanceService from '../../../services/bonMaintenanceService';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import { t, locale } from '../../../i18n';
+import {  Search, SquareKanban, Table2, TriangleAlert } from 'lucide-react';
+import { ICONES_MODULES } from '../../../constants/modules';
 import './Bonmaintenancetachestable.css';
 
 // Colonnes du kanban, dans l'ordre d'affichage
@@ -25,14 +27,10 @@ function ecrireVue(v) {
 }
 
 const IconeKanban = () => (
-  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="3" y="4" width="5" height="16" rx="1.5" /><rect x="10" y="4" width="5" height="10" rx="1.5" /><rect x="17" y="4" width="4" height="13" rx="1.5" />
-  </svg>
+  <SquareKanban size={16} strokeWidth={2} aria-hidden="true" />
 );
 const IconeTableau = () => (
-  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true">
-    <rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 9.5h18M3 15h18M9 4v16" />
-  </svg>
+  <Table2 size={16} strokeWidth={2} aria-hidden="true" />
 );
 
 // Tri du tableau
@@ -243,9 +241,7 @@ export default function BonMaintenanceTachesKanban() {
     <div className="bmk-container">
       <div className="bmk-header-card">
         <div className="bmk-header-title-box">
-          <svg className="bmk-header-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-          </svg>
+          <ICONES_MODULES.tachesBons strokeWidth={2} className="bmk-header-icon" aria-hidden="true" />
           <div>
             <h2>{t("Tâches — tous bons de maintenance")}</h2>
             <p className="bmk-header-subtitle">
@@ -260,9 +256,7 @@ export default function BonMaintenanceTachesKanban() {
 
       <div className="bmk-toolbar">
         <div className="bmk-search">
-          <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z" />
-          </svg>
+          <Search strokeWidth={2} aria-hidden="true" />
           <input
             type="text"
             placeholder={t("Rechercher par désignation, numéro ou titre de bon...")}
@@ -409,9 +403,7 @@ export default function BonMaintenanceTachesKanban() {
           <div className="confirm-modal-container" onClick={(e) => e.stopPropagation()}>
             <div className="confirm-modal-content">
               <div className="confirm-modal-icon-wrapper">
-                <svg width="48" height="48" className="modal-confirm-icon danger" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+                <TriangleAlert size={48} strokeWidth={2} className="modal-confirm-icon danger" aria-hidden="true" />
               </div>
               <div className="confirm-modal-text">
                 <h3>{errorModal.title}</h3>

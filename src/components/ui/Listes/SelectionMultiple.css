@@ -4,7 +4,7 @@
   width: 17px;
   height: 17px;
   margin: 0;
-  accent-color: #05606b;
+  accent-color: var(--g-brand-750);
   cursor: pointer;
   vertical-align: middle;
 }
@@ -31,8 +31,8 @@ tr.is-coche td { background: #f0f8f9; }
   padding: 10px 14px;
   border: 1px solid #b4e0e5;
   border-radius: 14px;
-  background: #e3f3f5;
-  color: #05606b;
+  background: var(--g-brand-75);
+  color: var(--g-brand-750);
   box-shadow: 0 4px 14px rgba(5, 96, 107, .10);
   animation: selection-entree .15s ease-out;
 }
@@ -54,7 +54,7 @@ tr.is-coche td { background: #f0f8f9; }
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #05606b;
+  color: var(--g-brand-750);
   font: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -70,10 +70,10 @@ tr.is-coche td { background: #f0f8f9; }
   gap: 6px;
   min-height: 36px;
   padding: 7px 14px;
-  border: 1px solid #b8323a;
+  border: 1px solid var(--g-alerte-700);
   border-radius: 10px;
-  background: #b8323a;
-  color: #fff;
+  background: var(--g-alerte-700);
+  color: var(--g-blanc);
   font: inherit;
   font-size: 13.5px;
   font-weight: 700;
@@ -81,7 +81,7 @@ tr.is-coche td { background: #f0f8f9; }
 }
 .selection-barre__supprimer:hover { background: #9c2a31; }
 .selection-barre__supprimer:disabled { opacity: .6; cursor: progress; }
-.selection-barre :focus-visible { outline: 2px solid #05606b; outline-offset: 2px; }
+.selection-barre :focus-visible { outline: 2px solid var(--g-brand-750); outline-offset: 2px; }
 
 /* Case sur les cartes (téléphone) */
 .carte-ligne__case { display: inline-flex; align-items: center; gap: 8px; }

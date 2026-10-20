@@ -16,7 +16,6 @@ import {
   Trash2,
   Search,
   Filter,
-  RefreshCw,
   Loader2,
   Info,
   Play,
@@ -511,7 +510,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [bon, setBon] = useState(bonMaintenance);
   const [loading, setLoading] = useState(!bonMaintenance);
   const [error, setError] = useState(null);
-  const [recalculatingPriorite, setRecalculatingPriorite] = useState(false);
   const [tiroir, setTiroir] = useState(null); // { key, form }
   const [aideMasquee, setAideMasquee] = useState(lireAideMasquee);
   const [celebrer, celebrationElement] = useCelebration();
@@ -587,7 +585,10 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     coutService.getPourBon(bon.id).then(setCoutInfo).catch(() => setCoutInfo(null));
   }, [bon?.id]);
 
-  useEffect(() => { chargerSlaEtCout(); }, [chargerSlaEtCout]);
+  // Les délais suivent la priorité (calculée automatiquement) et l'avancement du bon
+  const prioriteBon = bon?.priorite;
+  const etatBon = bon?.etat;
+  useEffect(() => { chargerSlaEtCout(); }, [chargerSlaEtCout, prioriteBon, etatBon]);
 
   // Messages non lus du chat (badge) ; silencieux si le chat n'est pas accessible
   const idBonChat = bon?.id;
@@ -712,20 +713,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       alert(t("Impossible de mettre à jour le statut de l'action."));
     } finally {
       setMajActionId(null);
-    }
-  };
-
-  const handleRecalculerPriorite = async () => {
-    if (!bon?.id) return;
-    setRecalculatingPriorite(true);
-    try {
-      const updated = await bonMaintenanceService.recalculerPriorite(bon.id);
-      setBon(updated);
-      chargerSlaEtCout();
-    } catch (err) {
-      console.error('Erreur recalcul priorité :', err);
-    } finally {
-      setRecalculatingPriorite(false);
     }
   };
 
@@ -1018,8 +1005,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
             expandedSections={expandedSections}
             toggleSection={toggleSection}
             loadingReclamations={loadingReclamations}
-            handleRecalculerPriorite={handleRecalculerPriorite}
-            recalculatingPriorite={recalculatingPriorite}
           />
         );
       case 'tracage':
@@ -1395,18 +1380,8 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
                       <ChevronRight size={16} className="bmx-vital-fleche" />
                     </button>
                   ) : v.priorite ? (
-                    <div className="bmx-vital">
+                    <div className="bmx-vital" title={t("Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)")}>
                       {contenu}
-                      <button
-                        type="button"
-                        className="bmx-vital-recalc"
-                        onClick={handleRecalculerPriorite}
-                        disabled={recalculatingPriorite}
-                        title={t("Recalculer la priorité")}
-                        aria-label={t("Recalculer la priorité")}
-                      >
-                        <RefreshCw size={15} className={recalculatingPriorite ? 'bmx-tourne' : ''} />
-                      </button>
                     </div>
                   ) : (
                     <div className="bmx-vital">{contenu}</div>
@@ -1599,9 +1574,7 @@ function FlowTab({
   historique,
   expandedSections,
   toggleSection,
-  loadingReclamations,
-  handleRecalculerPriorite,
-  recalculatingPriorite
+  loadingReclamations
 }) {
   const renderStepConnector = () => (
     <div className="bmd-flow-connector">
@@ -1749,18 +1722,12 @@ function FlowTab({
               <div className="detail-row">
                 <span className="detail-label">{t("Priorité")}</span>
                 <span className="detail-value" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span className={`bmd-urgence-badge priorite-color-${prioriteColor(bon.priorite)}`}>
+                  <span
+                    className={`bmd-urgence-badge priorite-color-${prioriteColor(bon.priorite)}`}
+                    title={t("Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)")}
+                  >
                     {t(prioriteLabel(bon.priorite))}
                   </span>
-                  <button
-                    type="button"
-                    className="bmd-icon-btn"
-                    title={t("Recalculer la priorité (criticité + urgence + disponibilité d'alternative)")}
-                    onClick={handleRecalculerPriorite}
-                    disabled={recalculatingPriorite}
-                  >
-                    <RefreshCw size={14} className={recalculatingPriorite ? 'spin' : ''} />
-                  </button>
                 </span>
               </div>
               <div className="detail-row">

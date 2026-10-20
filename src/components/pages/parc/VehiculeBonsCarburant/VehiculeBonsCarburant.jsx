@@ -5,6 +5,7 @@ import {
   Car, User, Calendar, Gauge, Coins,
   ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeBonCarburantService from '../../../../services/vehiculeBonCarburantService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
@@ -376,7 +377,7 @@ export default function VehiculeBonsCarburant() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <Fuel size={24} strokeWidth={2} />
+            <ICONES_MODULES.carburant size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t("Bons carburant")}</h2>

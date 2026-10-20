@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import blocageImmobilisationService from '../../../services/Blocageimmobilisationservice';
 import { t, tp, locale } from '../../../i18n';
+import { Activity, Ban, Check, Clock, Eye, Flame, Inbox, Info, Layers, LoaderCircle, ShieldCheck, TriangleAlert } from 'lucide-react';
 import './BlocagesImmobilisation.css';
 
 /* ---------- Config ---------- */
@@ -38,95 +39,51 @@ const IconSearch = (props) => (
 );
 
 const IconSpinner = () => (
-  <svg className="blocages-immob-spinner" width="15" height="15" viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 3a9 9 0 1 0 9 9" />
-  </svg>
+  <LoaderCircle size={15} strokeWidth={2.5} className="blocages-immob-spinner" aria-hidden="true" />
 );
 
 const IconClock = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 7v5l3 2" />
-  </svg>
+  <Clock size={12} strokeWidth={2} aria-hidden="true" />
 );
 
 const IconCheck = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
+  <Check size={14} strokeWidth={2.5} aria-hidden="true" />
 );
 
 const IconEye = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
+  <Eye size={14} strokeWidth={2} aria-hidden="true" />
 );
 
 const IconBan = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="9" />
-    <path d="m5.6 5.6 12.8 12.8" />
-  </svg>
+  <Ban size={14} strokeWidth={2} aria-hidden="true" />
 );
 
 const IconInfo = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="9" />
-    <path d="M12 11v5M12 8h.01" />
-  </svg>
+  <Info size={16} strokeWidth={2} aria-hidden="true" />
 );
 
 const IconInbox = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-    <path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1Z" />
-  </svg>
+  <Inbox size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconAlert = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    <path d="M12 9v4M12 17h.01" />
-  </svg>
+  <TriangleAlert size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconLayers = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m12 3 9 5-9 5-9-5 9-5Z" />
-    <path d="m3 13 9 5 9-5" />
-  </svg>
+  <Layers size={15} strokeWidth={2} aria-hidden="true" />
 );
 
 const IconFlame = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3c1.5 3 4 4.5 4 8a4 4 0 0 1-8 0c0-1 .5-2 1-2.5C9 10 8 12 8 14a4 4 0 0 0 8 0c0-3-2-5-4-11Z" />
-  </svg>
+  <Flame size={15} strokeWidth={2} aria-hidden="true" />
 );
 
 const IconPulse = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 12h4l2-6 4 12 2-6h6" />
-  </svg>
+  <Activity size={15} strokeWidth={2} aria-hidden="true" />
 );
 
 const IconShieldCheck = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6l-7-3Z" />
-    <path d="m9 12 2 2 4-4" />
-  </svg>
+  <ShieldCheck size={15} strokeWidth={2} aria-hidden="true" />
 );
 
 /* ---------- Composant ---------- */

@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import disponibiliteService from '../../../services/Disponibiliteservice ';
 import { criticiteHex, criticiteLabel } from '../../../constants/Criticite';
 import { t, tp, locale } from '../../../i18n';
+import { Activity, FileSpreadsheet, Gauge, History, Inbox, LoaderCircle, RefreshCw, Search, TrendingDown, TriangleAlert, Wrench } from 'lucide-react';
 import './Disponibilite.css';
 
 /* ---------- Config ---------- */
@@ -61,57 +62,43 @@ const Svg = (props) => (
 );
 
 const IconRefresh = () => (
-  <Svg><path d="M21 12a9 9 0 0 1-15.5 6.3M3 12a9 9 0 0 1 15.5-6.3" /><path d="M21 4v5h-5M3 20v-5h5" /></Svg>
+  <RefreshCw size={15} aria-hidden="true" />
 );
 
 const IconSpinner = () => (
-  <svg className="disp-spinner" width="15" height="15" viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 3a9 9 0 1 0 9 9" />
-  </svg>
+  <LoaderCircle size={15} strokeWidth={2.5} className="disp-spinner" aria-hidden="true" />
 );
 
 const IconSearch = () => (
-  <Svg size={15}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Svg>
+  <Search size={15} aria-hidden="true" />
 );
 
 const IconAlert = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    <path d="M12 9v4M12 17h.01" />
-  </svg>
+  <TriangleAlert size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconInbox = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-    <path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1Z" />
-  </svg>
+  <Inbox size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconGauge = () => (
-  <Svg size={16}><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /><path d="M12 3a9 9 0 0 0-9 9M4.2 9.5l1.9.8M19.8 9.5l-1.9.8" /><path d="m13.5 13.5 3-4.5" /></Svg>
+  <Gauge size={16} aria-hidden="true" />
 );
 
 const IconTrendDown = () => (
-  <Svg size={16}><path d="M22 17 13.5 8.5 8.5 13.5 2 7" /><path d="M16 17h6v-6" /></Svg>
+  <TrendingDown size={16} aria-hidden="true" />
 );
 
 const IconClockRepeat = () => (
-  <Svg size={16}><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /><path d="M12 8v4l3 2" /></Svg>
+  <History size={16} aria-hidden="true" />
 );
 
 const IconWrenchAlt = () => (
-  <Svg size={16}><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3Z" /></Svg>
+  <Wrench size={16} aria-hidden="true" />
 );
 
 const IconActivity = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-  </svg>
+  <Activity size={24} strokeWidth={2} aria-hidden="true" />
 );
 
 const IconChevron = ({ direction = 'right' }) => (
@@ -124,12 +111,7 @@ const IconChevron = ({ direction = 'right' }) => (
 
 /* Icône tableur Excel */
 const IconExcel = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" />
-    <path d="M14 3v6h6" />
-    <path d="M9 12l6 6M15 12l-6 6" />
-  </svg>
+  <FileSpreadsheet size={15} strokeWidth={2} aria-hidden="true" />
 );
 
 /* ---------- Export Excel ---------- */

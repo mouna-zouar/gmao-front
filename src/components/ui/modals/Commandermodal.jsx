@@ -10,10 +10,7 @@ import './VehiculeModal.css';
 import './CommanderModal.css';
 
 const IconCheck = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2"
-       strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
+  <Check strokeWidth={3.2} aria-hidden="true" />
 );
 
 const CommanderModal = ({ isOpen, onClose, bonMaintenance, onCommandeCreee }) => {

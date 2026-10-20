@@ -1,18 +1,18 @@
 
 :root {
-  --primary: #0f766e;
+  --primary: var(--g-teal-700);
   --primary-dark: #0d5f58;
   --primary-light: #eefaf8;
-  --gray-50: #f8fafc;
-  --gray-100: #f1f5f9;
-  --gray-200: #e2e8f0;
-  --gray-300: #cbd5e1;
-  --gray-400: #94a3b8;
-  --gray-500: #64748b;
-  --gray-600: #475569;
-  --gray-700: #334155;
-  --gray-800: #1e293b;
-  --gray-900: #0f172a;
+  --gray-50: var(--g-slate-50);
+  --gray-100: var(--g-slate-100);
+  --gray-200: var(--g-slate-200);
+  --gray-300: var(--g-slate-300);
+  --gray-400: var(--g-slate-400);
+  --gray-500: var(--g-slate-500);
+  --gray-600: var(--g-slate-600);
+  --gray-700: var(--g-slate-700);
+  --gray-800: var(--g-slate-800);
+  --gray-900: var(--g-slate-900);
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
   --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
@@ -29,7 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--g-police);
 }
 
 /* ============================================================
@@ -95,7 +95,7 @@
 .planning-bm-today-btn {
   background: var(--primary-light);
   color: var(--primary);
-  border: 1px solid #99f6e4;
+  border: 1px solid var(--g-teal-200);
   border-radius: var(--radius-sm);
   padding: 8px 18px;
   font-weight: 600;
@@ -106,7 +106,7 @@
 }
 
 .planning-bm-today-btn:hover {
-  background-color: #ccfbf1;
+  background-color: var(--g-teal-100);
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
 }
@@ -115,9 +115,9 @@
    BANNIÈRE D'ERREUR
    ============================================================ */
 .planning-bm-error-banner {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
+  background: var(--g-red-50);
+  border: 1px solid var(--g-red-200);
+  color: var(--g-red-600);
   padding: 12px 18px;
   border-radius: var(--radius-sm);
   font-size: 0.85rem;
@@ -298,8 +298,8 @@
 }
 
 .planning-bm-day-cell.is-today {
-  background-color: #f0fdfa;
-  border-color: #99f6e4;
+  background-color: var(--g-teal-50);
+  border-color: var(--g-teal-200);
 }
 
 .planning-bm-day-cell.clickable {
@@ -400,43 +400,43 @@
 
 /* ── Couleurs par état (cohérent avec BonsMaintenance) ── */
 .event-etat-nouveau {
-  background-color: #eff6ff;
-  color: #2563eb;
+  background-color: var(--g-blue-50);
+  color: var(--g-blue-600);
 }
 .event-etat-nouveau .planning-bm-event-color-bar {
-  background-color: #2563eb;
+  background-color: var(--g-blue-600);
 }
 
 .event-etat-suspendu {
-  background-color: #fef3c7;
-  color: #b45309;
+  background-color: var(--g-amber-100);
+  color: var(--g-amber-700);
 }
 .event-etat-suspendu .planning-bm-event-color-bar {
-  background-color: #b45309;
+  background-color: var(--g-amber-700);
 }
 
 .event-etat-encours {
-  background-color: #ecfdf5;
-  color: #059669;
+  background-color: var(--g-emerald-50);
+  color: var(--g-emerald-600);
 }
 .event-etat-encours .planning-bm-event-color-bar {
-  background-color: #059669;
+  background-color: var(--g-emerald-600);
 }
 
 .event-etat-effectue {
-  background-color: #f0fdfa;
-  color: #0f766e;
+  background-color: var(--g-teal-50);
+  color: var(--g-teal-700);
 }
 .event-etat-effectue .planning-bm-event-color-bar {
-  background-color: #0f766e;
+  background-color: var(--g-teal-700);
 }
 
 .event-etat-annule {
-  background-color: #fef2f2;
-  color: #dc2626;
+  background-color: var(--g-red-50);
+  color: var(--g-red-600);
 }
 .event-etat-annule .planning-bm-event-color-bar {
-  background-color: #dc2626;
+  background-color: var(--g-red-600);
 }
 
 /* ============================================================

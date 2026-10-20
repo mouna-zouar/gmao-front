@@ -192,8 +192,8 @@
   gap: 4px;
   padding: 4px;
   border-radius: 999px;
-  background: #f2f6f6;
-  border: 1.5px solid #d7e3e5;
+  background: var(--g-ink-25);
+  border: 1.5px solid var(--g-ink-100);
 }
 
 .selecteur-langue-btn {
@@ -202,25 +202,25 @@
   border-radius: 999px;
   border: none;
   background: transparent;
-  color: #4b6670;
+  color: var(--g-ink-600);
   font-family: 'Figtree', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
 
-.selecteur-langue-btn[lang='ar'] { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+.selecteur-langue-btn[lang='ar'] { font-family: var(--g-police-arabe); }
 
 .selecteur-langue-btn.is-actif {
-  background: #12303a;
-  color: #ffffff;
+  background: var(--g-ink-900);
+  color: var(--g-blanc);
 }
 
-.selecteur-langue-btn:focus-visible { outline: 3px solid #0794a4; outline-offset: 2px; }
+.selecteur-langue-btn:focus-visible { outline: 3px solid var(--g-brand-500); outline-offset: 2px; }
 
 /* ---------- Liste des bons de maintenance ---------- */
 [dir='rtl'] .bons-container {
-  font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  font-family: var(--g-police-arabe);
   letter-spacing: 0;
 }
 [dir='rtl'] .bons-container * { letter-spacing: 0 !important; text-transform: none !important; }
@@ -240,27 +240,27 @@
 .selecteur-langue.bons-langue .selecteur-langue-btn { min-height: 34px; padding: 4px 12px; font-size: 13px; }
 
 /* ---------- Tableau des tâches (kanban) ---------- */
-[dir='rtl'] .bmk-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .bmk-container { font-family: var(--g-police-arabe); }
 [dir='rtl'] .bmk-container * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] .bmk-card-arrow { display: inline-block; transform: scaleX(-1); }
 [dir='rtl'] .bmk-card-dates { direction: rtl; }
 
 /* ---------- Blocages d'équipement ---------- */
-[dir='rtl'] .blocages-immob-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .blocages-immob-page { font-family: var(--g-police-arabe); }
 [dir='rtl'] .blocages-immob-page * { letter-spacing: 0 !important; text-transform: none !important; }
 
 /* ---------- Détection d'anomalies ---------- */
-[dir='rtl'] .anomalies-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .anomalies-page { font-family: var(--g-police-arabe); }
 [dir='rtl'] .anomalies-page * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] span.rtl-miroir { display: inline-block; }
 
 /* ---------- Demandes de pièces ---------- */
-[dir='rtl'] .demandes-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .demandes-container { font-family: var(--g-police-arabe); }
 [dir='rtl'] .demandes-container * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] .demandes-table th { text-align: right; }
 
 /* ---------- Disponibilité ---------- */
-[dir='rtl'] .disp-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .disp-page { font-family: var(--g-police-arabe); }
 [dir='rtl'] .disp-page * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] .disp-barre { transform: scaleX(-1); }
 
@@ -268,7 +268,7 @@
 [dir='rtl'] .etat-page,
 [dir='rtl'] .mtp-panel,
 [dir='rtl'] .mtp-backdrop,
-[dir='rtl'] .vmp-panel { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .vmp-panel { font-family: var(--g-police-arabe); }
 [dir='rtl'] .etat-page *,
 [dir='rtl'] .mtp-panel *,
 [dir='rtl'] .mtp-backdrop *,
@@ -277,24 +277,24 @@
 [dir='rtl'] .mtp-gauge__track { transform: scaleX(-1); }
 
 /* ---------- Fiche bon de maintenance ---------- */
-[dir='rtl'] .fiche-employeur-wrapper { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .fiche-employeur-wrapper { font-family: var(--g-police-arabe); }
 [dir='rtl'] .fiche-employeur-wrapper * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] .action-bar-btn.retour-liste svg { transform: scaleX(-1); }
 [dir='rtl'] .actions-bar-right { margin-left: 0; margin-right: auto; }
 
 /* ---------- Intelligence ---------- */
-[dir='rtl'] .intel-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .intel-page { font-family: var(--g-police-arabe); }
 [dir='rtl'] .intel-page * { letter-spacing: 0 !important; text-transform: none !important; }
 
 /* ---------- Maintenance prédictive ---------- */
-[dir='rtl'] .mp-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .mp-page { font-family: var(--g-police-arabe); }
 [dir='rtl'] .mp-page * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] .mp-table th, [dir='rtl'] .mp-table td { text-align: right; }
 [dir='rtl'] .mp-score-bar { transform: scaleX(-1); }
 [dir='rtl'] .mp-tendance { direction: ltr; unicode-bidi: isolate; }
 
 /* ---------- Planning technicien ---------- */
-[dir='rtl'] .pt-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .pt-container { font-family: var(--g-police-arabe); }
 [dir='rtl'] .pt-container * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] .pt-search-icon { left: auto; right: 12px; }
 [dir='rtl'] .pt-search-input { padding-left: 32px; padding-right: 36px; }
@@ -303,14 +303,14 @@
 [dir='rtl'] .pt-creneau-heure, [dir='rtl'] .pt-creneau-bon { direction: ltr; unicode-bidi: isolate; }
 
 /* ---------- Planning par intervenant ---------- */
-[dir='rtl'] .planning-bm-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .planning-bm-container { font-family: var(--g-police-arabe); }
 [dir='rtl'] .planning-bm-container * { letter-spacing: 0 !important; }
 [dir='rtl'] .planning-bm-container svg.rtl-miroir { transform: scaleX(-1); }
 [dir='rtl'] .planning-bm-event-pill { text-align: right; }
 [dir='rtl'] .planning-bm-popover-body .planning-bm-event-etat { margin-left: 0; margin-right: auto; }
 
 /* ---------- Risques & SLA ---------- */
-[dir='rtl'] .risque-page, [dir='rtl'] .sla-page { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .risque-page, [dir='rtl'] .sla-page { font-family: var(--g-police-arabe); }
 [dir='rtl'] .risque-page *, [dir='rtl'] .sla-page * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] .risque-recherche-icon, [dir='rtl'] .sla-recherche-icon { left: auto; right: 12px; }
 [dir='rtl'] .risque-recherche, [dir='rtl'] .sla-recherche { padding-left: 12px; padding-right: 36px; }
@@ -318,7 +318,7 @@
 [dir='rtl'] .sla-card__num, [dir='rtl'] .sla-delai__detail { unicode-bidi: plaintext; }
 
 /* ---------- Sélecteur de localisation (Leaflet) ---------- */
-[dir='rtl'] .locpicker { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .locpicker { font-family: var(--g-police-arabe); }
 /* Leaflet calcule ses positions en LTR : on garde la carte en LTR */
 [dir='rtl'] .locpicker-map .leaflet-container { direction: ltr; }
 [dir='rtl'] .locpicker-map .leaflet-popup-content { direction: rtl; text-align: right; }
@@ -326,7 +326,7 @@
 /* ---------- Parc : véhicules ---------- */
 [dir='rtl'] .vehicules-container,
 [dir='rtl'] .vkh-panel,
-[dir='rtl'] .mtp-panel-overlay { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .mtp-panel-overlay { font-family: var(--g-police-arabe); }
 [dir='rtl'] .vehicules-container *,
 [dir='rtl'] .vkh-panel * { letter-spacing: 0 !important; text-transform: none !important; }
 [dir='rtl'] .vehicules-table th,
@@ -341,7 +341,7 @@
 [dir='rtl'] .vin-container,
 [dir='rtl'] .vms-container,
 [dir='rtl'] .vrs-container,
-[dir='rtl'] .vtr-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .vtr-container { font-family: var(--g-police-arabe); }
 [dir='rtl'] .vin-container *,
 [dir='rtl'] .vms-container *,
 [dir='rtl'] .vrs-container *,
@@ -363,7 +363,7 @@
 [dir='rtl'] .prj-container,
 [dir='rtl'] .pc-container,
 [dir='rtl'] .vbc-container,
-[dir='rtl'] .vcd-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .vcd-container { font-family: var(--g-police-arabe); }
 [dir='rtl'] .prj-container *,
 [dir='rtl'] .pc-container *,
 [dir='rtl'] .vbc-container *,
@@ -379,7 +379,7 @@
 [dir='rtl'] .pcd-permis-stage { direction: ltr; }
 
 /* ---------- Parc : planning hebdomadaire ---------- */
-[dir='rtl'] .parcplan-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .parcplan-container { font-family: var(--g-police-arabe); }
 [dir='rtl'] .parcplan-container * { letter-spacing: 0 !important; }
 [dir='rtl'] .parcplan-col-vehicule { text-align: right; }
 [dir='rtl'] .parcplan-matricule { direction: ltr; unicode-bidi: isolate; }
@@ -388,7 +388,7 @@
 [dir='rtl'] .reclamation-dashboard-container,
 [dir='rtl'] .bon-maintenance-dashboard-container,
 [dir='rtl'] .parcdash-container,
-[dir='rtl'] .emp-container { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .emp-container { font-family: var(--g-police-arabe); }
 [dir='rtl'] .reclamation-dashboard-container *,
 [dir='rtl'] .bon-maintenance-dashboard-container *,
 [dir='rtl'] .parcdash-container *,
@@ -409,12 +409,12 @@
   flex-direction: column;
   gap: 6px;
   padding: 10px 16px 12px;
-  border-bottom: 1px solid #e8eef0;
+  border-bottom: 1px solid var(--g-ink-50);
 }
 .user-dropdown__langue-titre {
   font-size: 11px;
   font-weight: 700;
-  color: #64748b;
+  color: var(--g-slate-500);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -422,7 +422,7 @@
 .selecteur-langue.layout-langue .selecteur-langue-btn { flex: 1; min-height: 32px; padding: 4px 8px; font-size: 13px; }
 [dir='rtl'] .sidebar,
 [dir='rtl'] .navbar,
-[dir='rtl'] .user-dropdown { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .user-dropdown { font-family: var(--g-police-arabe); }
 [dir='rtl'] .sidebar *,
 [dir='rtl'] .navbar * { letter-spacing: 0 !important; }
 [dir='rtl'] .user-dropdown__langue-titre { text-transform: none; }
@@ -430,7 +430,7 @@
 [dir='rtl'] .notif-dropdown__item { text-align: right; }
 
 /* ---------- Accueil ---------- */
-[dir='rtl'] .dashboard-wrapper { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .dashboard-wrapper { font-family: var(--g-police-arabe); }
 [dir='rtl'] .dashboard-wrapper * { letter-spacing: 0 !important; }
 
 /* ---------- Espace personnel ---------- */

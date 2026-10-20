@@ -6,6 +6,7 @@ import {
   CheckCircle2, XCircle, Activity, Hourglass, Ban, CheckCheck,
   ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeReservationService from '../../../../services/vehiculeReservationService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
@@ -451,7 +452,7 @@ export default function VehiculeReservations() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <CalendarCheck size={24} strokeWidth={2} />
+            <ICONES_MODULES.reservations size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t("Réservations véhicule")}</h2>

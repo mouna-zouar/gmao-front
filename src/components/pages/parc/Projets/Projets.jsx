@@ -6,6 +6,7 @@ import {
   Activity, Hourglass, FileText,
   ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import projetService from '../../../../services/projetService';
 import prestataireService from '../../../../services/prestataireService';
 import emplacementService from '../../../../services/emplacementService';
@@ -400,7 +401,7 @@ export default function Projets() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <FolderKanban size={24} strokeWidth={2} />
+            <ICONES_MODULES.projets size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t("Projets")}</h2>

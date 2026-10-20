@@ -1,46 +1,46 @@
 :root {
-  --teal-900: #054e57;
-  --teal-800: #066470;
-  --teal-700: #067a87;
-  --teal-600: #0794a4;
-  --teal-500: #0aa8ba;
-  --teal-400: #3dbcc9;
-  --teal-200: #a8e0e6;
-  --teal-100: #d5f0f3;
-  --teal-50: #e9f8fa;
-  --teal-25: #f3fcfd;
+  --teal-900: var(--g-brand-900);
+  --teal-800: var(--g-brand-700);
+  --teal-700: var(--g-brand-600);
+  --teal-600: var(--g-brand-500);
+  --teal-500: var(--g-brand-450);
+  --teal-400: var(--g-brand-400);
+  --teal-200: var(--g-brand-200);
+  --teal-100: var(--g-brand-100);
+  --teal-50: var(--g-brand-50);
+  --teal-25: var(--g-brand-25);
 
-  --cyan-600: #0891b2;
-  --cyan-100: #cffafe;
+  --cyan-600: var(--g-cyan-600);
+  --cyan-100: var(--g-cyan-100);
 
-  --blue-600: #2563eb;
-  --blue-100: #dbeafe;
+  --blue-600: var(--g-blue-600);
+  --blue-100: var(--g-blue-100);
 
-  --indigo-600: #6366f1;
-  --indigo-100: #e0e7ff;
+  --indigo-600: var(--g-indigo-500);
+  --indigo-100: var(--g-indigo-100);
 
-  --violet-600: #8b5cf6;
-  --violet-100: #ede9fe;
+  --violet-600: var(--g-violet-500);
+  --violet-100: var(--g-violet-100);
 
-  --green-600: #10b981;
-  --green-100: #d1fae5;
+  --green-600: var(--g-emerald-500);
+  --green-100: var(--g-emerald-100);
 
-  --red-600: #dc2626;
-  --red-100: #fee2e2;
+  --red-600: var(--g-red-600);
+  --red-100: var(--g-red-100);
 
-  --amber-500: #f59e0b;
-  --amber-700: #b45309;
-  --amber-50: #fffbeb;
-  --amber-200: #fde68a;
+  --amber-500: var(--g-amber-500);
+  --amber-700: var(--g-amber-700);
+  --amber-50: var(--g-amber-50);
+  --amber-200: var(--g-amber-200);
 
-  --slate-900: #0f172a;
-  --slate-700: #334155;
-  --slate-500: #64748b;
-  --slate-400: #94a3b8;
-  --slate-300: #cbd5e1;
-  --slate-200: #e2e8f0;
-  --slate-100: #f1f5f9;
-  --slate-50: #f8fafc;
+  --slate-900: var(--g-slate-900);
+  --slate-700: var(--g-slate-700);
+  --slate-500: var(--g-slate-500);
+  --slate-400: var(--g-slate-400);
+  --slate-300: var(--g-slate-300);
+  --slate-200: var(--g-slate-200);
+  --slate-100: var(--g-slate-100);
+  --slate-50: var(--g-slate-50);
 
   /* Alias compatibilité JSX existant */
   --primary: var(--teal-600);
@@ -75,7 +75,7 @@
 .reclamations-container {
   padding: 24px;
   margin: 0 auto;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--g-police);
   color: var(--slate-700);
   background: var(--slate-50);
   min-height: calc(100vh - 80px);
@@ -92,7 +92,7 @@
    HEADER — carte blanche style FicheEmploye
    ============================================================ */
 .reclamations-header-card {
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 16px;
   padding: 16px 24px;
@@ -162,7 +162,7 @@
    ACTIONS BAR — carte blanche style FicheEmploye
    ============================================================ */
 .reclamations-actions-bar {
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 16px;
   padding: 12px 20px;
@@ -208,28 +208,28 @@
 }
 
 .reclamations-action-btn.ajouter              { color: var(--green-600); }
-.reclamations-action-btn.ajouter:hover:not(:disabled)   { background: #ecfdf5; }
+.reclamations-action-btn.ajouter:hover:not(:disabled)   { background: var(--g-emerald-50); }
 
 .reclamations-action-btn.modifier             { color: var(--blue-600); }
-.reclamations-action-btn.modifier:hover:not(:disabled)  { background: #eff6ff; }
+.reclamations-action-btn.modifier:hover:not(:disabled)  { background: var(--g-blue-50); }
 
 .reclamations-action-btn.details              { color: var(--teal-600); }
 .reclamations-action-btn.details:hover:not(:disabled)   { background: var(--teal-50); }
 
 .reclamations-action-btn.associer             { color: var(--blue-600); }
-.reclamations-action-btn.associer:hover:not(:disabled)  { background: #eff6ff; }
+.reclamations-action-btn.associer:hover:not(:disabled)  { background: var(--g-blue-50); }
 
 .reclamations-action-btn.creer-bon            { color: var(--teal-600); }
 .reclamations-action-btn.creer-bon:hover:not(:disabled) { background: var(--teal-50); }
 
 .reclamations-action-btn.valider              { color: var(--green-600); }
-.reclamations-action-btn.valider:hover:not(:disabled)   { background: #f0fdf4; }
+.reclamations-action-btn.valider:hover:not(:disabled)   { background: var(--g-green-50); }
 
 .reclamations-action-btn.rejeter              { color: var(--red-600); }
-.reclamations-action-btn.rejeter:hover:not(:disabled)   { background: #fef2f2; }
+.reclamations-action-btn.rejeter:hover:not(:disabled)   { background: var(--g-red-50); }
 
 .reclamations-action-btn.supprimer            { color: var(--red-600); }
-.reclamations-action-btn.supprimer:hover:not(:disabled) { background: #fef2f2; }
+.reclamations-action-btn.supprimer:hover:not(:disabled) { background: var(--g-red-50); }
 
 .reclamations-actions-divider {
   width: 1px;
@@ -274,7 +274,7 @@
   display: flex;
   align-items: center;
   flex: 1;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 8px;
   overflow: hidden;
@@ -336,15 +336,15 @@
   padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid var(--slate-200);
-  background: #ffffff;
+  background: var(--g-blanc);
   cursor: pointer;
   transition: var(--transition);
   white-space: nowrap;
 }
 
 .reclamations-filter-reset:hover {
-  background: #fef2f2;
-  border-color: #fecaca;
+  background: var(--g-red-50);
+  border-color: var(--g-red-200);
   color: var(--red-600);
 }
 
@@ -363,7 +363,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: var(--g-blanc);
   cursor: pointer;
   transition: var(--transition);
 }
@@ -381,7 +381,7 @@
    TABLE — style modern-table
    ============================================================ */
 .reclamations-table-wrap {
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 14px;
   overflow: hidden;
@@ -398,7 +398,7 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88rem;
-  background: #ffffff;
+  background: var(--g-blanc);
 }
 
 .reclamations-table thead {
@@ -442,7 +442,7 @@
   padding: 60px 20px;
   color: var(--slate-400);
   font-size: 0.9rem;
-  background: #fafbfc;
+  background: var(--g-fond-25);
 }
 
 .reclamations-error-banner {
@@ -450,8 +450,8 @@
   padding: 12px 16px;
   border-radius: 10px;
   background: var(--red-100);
-  border: 1px solid #fca5a5;
-  color: #991b1b;
+  border: 1px solid var(--g-red-300);
+  color: var(--g-red-800);
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -495,8 +495,8 @@
 
 .reclamations-badge--ouverte {
   background: var(--red-100);
-  color: #b91c1c;
-  border-color: #fca5a5;
+  color: var(--g-red-700);
+  border-color: var(--g-red-300);
 }
 
 .reclamations-badge--encours {
@@ -507,14 +507,14 @@
 
 .reclamations-badge--cloturee {
   background: var(--green-100);
-  color: #047857;
-  border-color: #6ee7b7;
+  color: var(--g-emerald-700);
+  border-color: var(--g-emerald-300);
 }
 
 .reclamations-badge--attente {
   background: var(--violet-100);
-  color: #6d28d9;
-  border-color: #c4b5fd;
+  color: var(--g-violet-700);
+  border-color: var(--g-violet-300);
 }
 
 .reclamations-badge--rejetee {
@@ -533,7 +533,7 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 14px 20px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid var(--slate-200);
   border-radius: 14px;
 }
@@ -560,7 +560,7 @@
   padding: 0 10px;
   border: 1px solid var(--slate-200);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--slate-500);
   font-size: 0.82rem;
   font-weight: 600;
@@ -578,7 +578,7 @@
 .reclamations-pagination-btn.active {
   background: var(--teal-600);
   border-color: var(--teal-600);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-weight: 700;
 }
 
@@ -610,7 +610,7 @@
 
 .rejet-modal .confirm-modal-input:focus {
   border-color: var(--teal-600);
-  background: #ffffff;
+  background: var(--g-blanc);
   box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
 }
 

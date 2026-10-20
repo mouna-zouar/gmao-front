@@ -3,8 +3,8 @@
   margin: 0 0 24px;
   padding: 22px 24px;
   border-radius: var(--radius-xl, 28px);
-  background: var(--surface, #fff);
-  border: 1.5px solid var(--line, #d7e3e5);
+  background: var(--surface, var(--g-blanc));
+  border: 1.5px solid var(--line, var(--g-ink-100));
 }
 .bmr-entete { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
 .bmr-titre { display: flex; gap: 12px; align-items: flex-start; }
@@ -12,7 +12,7 @@
 .bmr-titre p { margin: 2px 0 0; font-size: 14px; color: var(--ink-faint); }
 .bmr-titre-icone {
   flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
-  background: linear-gradient(135deg, var(--brand-wash), #ede9fe); color: var(--brand-deep);
+  background: linear-gradient(135deg, var(--brand-wash), var(--g-violet-100)); color: var(--brand-deep);
 }
 .bmr-badges { display: flex; flex-wrap: wrap; gap: 8px; }
 .bmr-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; }

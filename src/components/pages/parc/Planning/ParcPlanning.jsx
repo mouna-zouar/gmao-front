@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, CalendarDays, Loader2, Route, BookmarkCheck } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Route, BookmarkCheck } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import parcPlanningService from '../../../../services/parcPlanningService';
 import './ParcPlanning.css';
 import { t, locale } from '../../../../i18n';
@@ -103,7 +104,7 @@ export default function ParcPlanning() {
     <div className="parcplan-container">
       {/* HEADER */}
       <div className="parcplan-header">
-        <div className="parcplan-header-icon-wrap"><CalendarDays size={24} /></div>
+        <div className="parcplan-header-icon-wrap"><ICONES_MODULES.planningParc size={24} /></div>
         <div className="parcplan-header-text">
           <h1>{t('Planning — Missions & Réservations')}</h1>
           <p>{t('Vue hebdomadaire par véhicule')}</p>

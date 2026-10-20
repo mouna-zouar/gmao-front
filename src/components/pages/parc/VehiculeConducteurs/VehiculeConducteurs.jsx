@@ -4,6 +4,7 @@ import {
   Download, Printer, BarChart3, Loader2, AlertTriangle,
   Car, User, Calendar, Settings2, Info, ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
@@ -367,7 +368,7 @@ export default function VehiculeConducteurs() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <UserCheck size={24} strokeWidth={2} />
+            <ICONES_MODULES.conducteurs size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t("Véhicules / Conducteurs")}</h2>

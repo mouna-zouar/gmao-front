@@ -1,8 +1,8 @@
 .vkh-panel {
-  --vkh-border: #e5e7eb;
-  --vkh-bg: #fff;
-  --vkh-text: #1f2937;
-  --vkh-muted: #6b7280;
+  --vkh-border: var(--g-gray-200);
+  --vkh-bg: var(--g-blanc);
+  --vkh-text: var(--g-gray-800);
+  --vkh-muted: var(--g-gray-500);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -69,7 +69,7 @@
   color: var(--vkh-text);
   border-color: var(--vkh-border);
 }
-.vkh-btn-ghost:hover:not(:disabled) { background: #f9fafb; }
+.vkh-btn-ghost:hover:not(:disabled) { background: var(--g-gray-50); }
 .vkh-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ═══════════════ KPI compacts ═══════════════ */
@@ -102,10 +102,10 @@
   font-size: 12px;
 }
 
-.kpi-current svg { color: #0d9488; }
-.kpi-date svg    { color: #3b82f6; }
-.kpi-delta svg   { color: #10b981; }
-.kpi-sources svg { color: #8b5cf6; }
+.kpi-current svg { color: var(--g-teal-600); }
+.kpi-date svg    { color: var(--g-blue-500); }
+.kpi-delta svg   { color: var(--g-emerald-500); }
+.kpi-sources svg { color: var(--g-violet-500); }
 
 /* ═══════════════ Alertes ═══════════════ */
 .vkh-alert {
@@ -118,7 +118,7 @@
   border: 1px solid transparent;
 }
 
-.vkh-alert.error { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+.vkh-alert.error { background: var(--g-red-50); color: var(--g-red-800); border-color: var(--g-red-200); }
 
 /* ═══════════════ Sections ═══════════════ */
 .vkh-section {
@@ -140,7 +140,7 @@
 
 .vkh-count {
   margin-left: auto;
-  background: #f3f4f6;
+  background: var(--g-gray-100);
   color: var(--vkh-muted);
   font-size: 11px;
   padding: 2px 8px;
@@ -161,14 +161,14 @@
   padding: 12px;
   background: #fafafa;
   border: 1px solid var(--vkh-border);
-  border-left: 3px solid #1b648f;
+  border-left: 3px solid var(--g-parc-600);
   border-radius: 8px;
   transition: background .15s, border-color .15s;
 }
 
 .vkh-hist-card:hover {
   background: #f5f5f5;
-  border-left-color: #0f766e;
+  border-left-color: var(--g-teal-700);
 }
 
 /* Bloc date */
@@ -179,7 +179,7 @@
   justify-content: center;
   min-width: 52px;
   padding: 6px 4px;
-  background: #fff;
+  background: var(--g-blanc);
   border: 1px solid var(--vkh-border);
   border-radius: 6px;
   flex-shrink: 0;
@@ -195,7 +195,7 @@
 .vkh-hist-month {
   font-size: 11px;
   font-weight: 600;
-  color: #1b648f;
+  color: var(--g-parc-600);
   text-transform: uppercase;
   letter-spacing: .5px;
   margin-top: 2px;
@@ -245,7 +245,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding: 8px 10px;
-  background: #fff;
+  background: var(--g-blanc);
   border: 1px solid var(--vkh-border);
   border-radius: 6px;
 }
@@ -294,12 +294,12 @@
   font-weight: 500;
 }
 
-.vkh-source-mission               { background: #dbeafe; color: #1e40af; }
-.vkh-source-bon-carburant         { background: #fef3c7; color: #92400e; }
-.vkh-source-saisie-administrateur { background: #f3f4f6; color: #4b5563; }
-.vkh-source-correction-vehicule   { background: #fef3c7; color: #92400e; }
-.vkh-source-maintenance           { background: #ccfbf1; color: #115e59; }
-.vkh-source-incident              { background: #ffedd5; color: #9a3412; }
+.vkh-source-mission               { background: var(--g-blue-100); color: var(--g-blue-800); }
+.vkh-source-bon-carburant         { background: var(--g-amber-100); color: var(--g-amber-800); }
+.vkh-source-saisie-administrateur { background: var(--g-gray-100); color: var(--g-gray-600); }
+.vkh-source-correction-vehicule   { background: var(--g-amber-100); color: var(--g-amber-800); }
+.vkh-source-maintenance           { background: var(--g-teal-100); color: var(--g-teal-800); }
+.vkh-source-incident              { background: var(--g-orange-100); color: var(--g-orange-800); }
 
 .vkh-delta {
   display: inline-flex;
@@ -311,8 +311,8 @@
   font-weight: 700;
 }
 
-.vkh-delta.is-up   { background: #dcfce7; color: #166534; }
-.vkh-delta.is-flat { background: #f3f4f6; color: #4b5563; }
+.vkh-delta.is-up   { background: var(--g-green-100); color: var(--g-green-800); }
+.vkh-delta.is-flat { background: var(--g-gray-100); color: var(--g-gray-600); }
 
 .vkh-ref {
   display: inline-flex;
@@ -320,17 +320,17 @@
   align-self: flex-start;
   padding: 2px 8px;
   border-radius: 6px;
-  background: #fff;
+  background: var(--g-blanc);
   border: 1px solid var(--vkh-border);
   color: var(--vkh-text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--g-police-mono);
   font-size: 11px;
   font-weight: 600;
 }
 
 .vkh-tag {
-  background: #ccfbf1;
-  color: #115e59;
+  background: var(--g-teal-100);
+  color: var(--g-teal-800);
   font-size: 11px;
   padding: 1px 6px;
   border-radius: 6px;

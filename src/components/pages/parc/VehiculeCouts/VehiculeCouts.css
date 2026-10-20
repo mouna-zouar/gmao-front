@@ -2,7 +2,7 @@
    COÛT PAR VÉHICULE — complète VehiculeIncidents.css (vin-*)
    ═══════════════════════════════════════════════════════════ */
 
-.vco-page { --vco-encre: #0f172a; --vco-encre-2: #475569; --vco-encre-3: #64748b; --vco-trait: #e2e8f0; --vco-surface: #ffffff; }
+.vco-page { --vco-encre: var(--g-slate-900); --vco-encre-2: var(--g-slate-600); --vco-encre-3: var(--g-slate-500); --vco-trait: var(--g-slate-200); --vco-surface: var(--g-blanc); }
 
 /* ─── Choix de la période ─── */
 .vco-periode {
@@ -12,7 +12,7 @@
   padding: 4px;
   border: 1px solid var(--vco-trait);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--g-slate-50);
 }
 .vco-periode-btn {
   padding: 7px 14px;
@@ -25,9 +25,9 @@
   font-weight: 700;
   cursor: pointer;
 }
-.vco-periode-btn:hover:not(.is-actif) { background: #e9f8fa; color: #066470; }
-.vco-periode-btn.is-actif { background: #0794a4; color: #ffffff; }
-.vco-periode-btn:focus-visible { outline: 2px solid #0794a4; outline-offset: 2px; }
+.vco-periode-btn:hover:not(.is-actif) { background: var(--g-brand-50); color: var(--g-brand-700); }
+.vco-periode-btn.is-actif { background: var(--g-brand-500); color: var(--g-blanc); }
+.vco-periode-btn:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 2px; }
 
 .vco-perso {
   display: flex;
@@ -51,7 +51,7 @@
   font-weight: 600;
   color: var(--vco-encre);
 }
-.vco-perso-erreur { color: #b91c1c; }
+.vco-perso-erreur { color: var(--g-red-700); }
 
 /* ─── Synthèse : chiffres clés + répartition ─── */
 .vco-synthese {
@@ -78,21 +78,21 @@
   flex-direction: column;
   gap: 4px;
   padding: 12px 14px;
-  border: 1px solid var(--vco-trait, #e2e8f0);
+  border: 1px solid var(--vco-trait, var(--g-slate-200));
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--g-slate-50);
   min-width: 0;
 }
-.vco-chiffre--principal { background: #e9f8fa; border-color: #a8e0e6; }
+.vco-chiffre--principal { background: var(--g-brand-50); border-color: var(--g-brand-200); }
 .vco-chiffre-val {
   font-size: 1.25rem;
   font-weight: 800;
-  color: var(--vco-encre, #0f172a);
+  color: var(--vco-encre, var(--g-slate-900));
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
-.vco-chiffre--principal .vco-chiffre-val { color: #066470; font-size: 1.45rem; }
-.vco-chiffre-nom { font-size: 12.5px; font-weight: 600; color: var(--vco-encre-3, #64748b); }
+.vco-chiffre--principal .vco-chiffre-val { color: var(--g-brand-700); font-size: 1.45rem; }
+.vco-chiffre-nom { font-size: 12.5px; font-weight: 600; color: var(--vco-encre-3, var(--g-slate-500)); }
 
 /* ─── Barre de répartition (parts d'un tout) ─── */
 .vco-repartition { margin: 0; min-width: 0; }
@@ -100,7 +100,7 @@
   margin: 0 0 10px;
   font-size: 13px;
   font-weight: 800;
-  color: var(--vco-encre-2, #475569);
+  color: var(--vco-encre-2, var(--g-slate-600));
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -112,7 +112,7 @@
   margin-bottom: 14px;
   direction: ltr;
 }
-.vco-barre--vide { background: #f1f5f9; border-radius: 4px; }
+.vco-barre--vide { background: var(--g-slate-100); border-radius: 4px; }
 .vco-barre-segment {
   position: relative;
   min-width: 3px;
@@ -138,12 +138,12 @@
   align-items: center;
   gap: 8px;
   font-size: 13px;
-  color: var(--vco-encre, #0f172a);
+  color: var(--vco-encre, var(--g-slate-900));
 }
-.vco-legende li.is-nul { color: #94a3b8; }
+.vco-legende li.is-nul { color: var(--g-slate-400); }
 .vco-legende-nom { font-weight: 600; }
 .vco-legende-val { font-weight: 700; font-variant-numeric: tabular-nums; }
-.vco-legende-pct { min-width: 44px; text-align: end; color: var(--vco-encre-3, #64748b); font-variant-numeric: tabular-nums; }
+.vco-legende-pct { min-width: 44px; text-align: end; color: var(--vco-encre-3, var(--g-slate-500)); font-variant-numeric: tabular-nums; }
 
 .vco-pastille {
   display: inline-block;
@@ -162,8 +162,8 @@
   transform: translateX(-50%);
   padding: 8px 10px;
   border-radius: 8px;
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--g-slate-900);
+  color: var(--g-blanc);
   font-size: 12.5px;
   font-weight: 500;
   white-space: nowrap;
@@ -189,21 +189,21 @@
   letter-spacing: inherit;
   cursor: pointer;
 }
-.vco-th-bouton:focus-visible { outline: 2px solid #0794a4; outline-offset: 3px; border-radius: 4px; }
-.vco-table td.vco-zero { color: #cbd5e1; }
+.vco-th-bouton:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 3px; border-radius: 4px; }
+.vco-table td.vco-zero { color: var(--g-slate-300); }
 .vco-table td.vco-total { min-width: 150px; }
 .vco-table td.vco-total strong { display: block; color: var(--vco-encre); }
-.vco-inconnu { color: #94a3b8; font-style: italic; }
-.vco-chevron { width: 28px; color: #94a3b8; }
+.vco-inconnu { color: var(--g-slate-400); font-style: italic; }
+.vco-chevron { width: 28px; color: var(--g-slate-400); }
 .vin-row.vco-maj { opacity: 0.55; }
-.vin-row:focus-visible td { background: #e9f8fa; }
-.vin-row:focus-visible { outline: 2px solid #0794a4; outline-offset: -2px; }
+.vin-row:focus-visible td { background: var(--g-brand-50); }
+.vin-row:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: -2px; }
 
 .vco-table tfoot th,
 .vco-table tfoot td {
   padding: 12px 16px;
   border-top: 2px solid var(--vco-trait);
-  background: #f8fafc;
+  background: var(--g-slate-50);
   font-weight: 800;
   color: var(--vco-encre);
   text-align: start;
@@ -242,13 +242,13 @@
 
 /* ─── Détail d'un véhicule ─── */
 .vco-detail { display: flex; flex-direction: column; gap: 18px; padding-bottom: 20px; }
-.vco-chargement { display: flex; align-items: center; gap: 8px; color: var(--vco-encre-3, #64748b); }
+.vco-chargement { display: flex; align-items: center; gap: 8px; color: var(--vco-encre-3, var(--g-slate-500)); }
 .vco-note {
   margin: -8px 0 0;
   padding: 8px 12px;
   border-radius: 8px;
-  background: #fffbeb;
-  color: #92400e;
+  background: var(--g-amber-50);
+  color: var(--g-amber-800);
   font-size: 12.5px;
 }
 
@@ -256,9 +256,9 @@
 .vco-mensuel-zone { position: relative; }
 .vco-mensuel svg { display: block; overflow: visible; }
 .vco-grille { stroke: #eef2f6; stroke-width: 1; }
-.vco-axe { stroke: #cbd5e1; stroke-width: 1; }
-.vco-graduation { fill: #64748b; font-size: 11.5px; font-family: inherit; }
-.vco-colonne-survol { fill: #f1f5f9; }
+.vco-axe { stroke: var(--g-slate-300); stroke-width: 1; }
+.vco-graduation { fill: var(--g-slate-500); font-size: 11.5px; font-family: inherit; }
+.vco-colonne-survol { fill: var(--g-slate-100); }
 .vco-bulle--mensuel {
   top: 0;
   bottom: auto;
@@ -272,7 +272,7 @@
 .vco-bulle-ligne { display: flex; align-items: center; gap: 6px; }
 .vco-bulle-ligne b, .vco-bulle-total b { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
 .vco-bulle-total { display: flex; gap: 6px; margin-top: 2px; padding-top: 4px; border-top: 1px solid rgba(255, 255, 255, 0.2); }
-.vco-unite { margin: 4px 0 0; font-size: 11.5px; color: var(--vco-encre-3, #64748b); }
+.vco-unite { margin: 4px 0 0; font-size: 11.5px; color: var(--vco-encre-3, var(--g-slate-500)); }
 
 .vco-section-entete {
   display: flex;
@@ -281,10 +281,10 @@
   gap: 12px;
   margin-bottom: 10px;
 }
-.vco-section-entete h3 { margin: 0; font-size: 15px; font-weight: 800; color: #0f172a; }
-.vco-vide { margin: 0; font-size: 13px; color: #64748b; }
+.vco-section-entete h3 { margin: 0; font-size: 15px; font-weight: 800; color: var(--g-slate-900); }
+.vco-vide { margin: 0; font-size: 13px; color: var(--g-slate-500); }
 
-.vco-frais { margin: 0; padding: 0; list-style: none; border: 1px solid #e2e8f0; border-radius: 10px; }
+.vco-frais { margin: 0; padding: 0; list-style: none; border: 1px solid var(--g-slate-200); border-radius: 10px; }
 .vco-frais li {
   display: grid;
   grid-template-columns: 130px 1fr auto;
@@ -292,11 +292,11 @@
   gap: 12px;
   padding: 10px 12px;
   font-size: 13px;
-  color: #334155;
+  color: var(--g-slate-700);
 }
 .vco-frais li + li { border-top: 1px solid #eef2f6; }
-.vco-frais-type { font-weight: 800; color: #0f172a; }
-.vco-frais-info b { font-variant-numeric: tabular-nums; color: #0f172a; }
+.vco-frais-type { font-weight: 800; color: var(--g-slate-900); }
+.vco-frais-info b { font-variant-numeric: tabular-nums; color: var(--g-slate-900); }
 .vco-frais-actions { display: inline-flex; gap: 4px; }
 .vco-icone {
   display: inline-flex;
@@ -307,29 +307,29 @@
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
-  color: #475569;
+  color: var(--g-slate-600);
   cursor: pointer;
 }
-.vco-icone:hover { background: #e9f8fa; color: #066470; }
-.vco-icone--danger:hover { background: #fff1f2; color: #be123c; }
-.vco-icone:focus-visible { outline: 2px solid #0794a4; outline-offset: 2px; }
+.vco-icone:hover { background: var(--g-brand-50); color: var(--g-brand-700); }
+.vco-icone--danger:hover { background: var(--g-rose-50); color: var(--g-rose-700); }
+.vco-icone:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 2px; }
 
-.vco-table-wrap { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 10px; }
+.vco-table-wrap { overflow-x: auto; border: 1px solid var(--g-slate-200); border-radius: 10px; }
 .vco-depenses { width: 100%; border-collapse: collapse; font-size: 13px; }
 .vco-depenses th {
   padding: 9px 12px;
-  background: #f8fafc;
-  color: #475569;
+  background: var(--g-slate-50);
+  color: var(--g-slate-600);
   font-size: 11.5px;
   font-weight: 800;
   text-align: start;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.vco-depenses td { padding: 9px 12px; border-top: 1px solid #eef2f6; color: #334155; vertical-align: top; }
-.vco-depenses .vco-num { text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; color: #0f172a; }
+.vco-depenses td { padding: 9px 12px; border-top: 1px solid #eef2f6; color: var(--g-slate-700); vertical-align: top; }
+.vco-depenses .vco-num { text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; font-weight: 700; color: var(--g-slate-900); }
 .vco-poste { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
-.vco-sous { display: block; font-size: 11.5px; font-weight: 500; color: #94a3b8; }
+.vco-sous { display: block; font-size: 11.5px; font-weight: 500; color: var(--g-slate-400); }
 
 /* Formulaire de frais */
 .vfr-aide { margin: 0 0 10px; }
@@ -384,7 +384,7 @@
   justify-content: space-between;
   gap: 12px;
 }
-.vco-onglet-intro { margin: 6px 0 0; max-width: 46ch; font-size: 13.5px; color: #64748b; }
+.vco-onglet-intro { margin: 6px 0 0; max-width: 46ch; font-size: 13.5px; color: var(--g-slate-500); }
 .vco-onglet .vco-chiffre-val { font-size: 1.15rem; }
 
 @media (max-width: 640px) {
@@ -395,9 +395,9 @@
 .vco-resume {
   margin-bottom: 20px;
   padding: 16px 20px 18px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--g-slate-200);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--g-blanc);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
 }
 .vco-resume-entete {
@@ -414,26 +414,26 @@
   margin: 0;
   font-size: 15px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--g-slate-900);
 }
-.vco-resume-entete h3 svg { color: #0794a4; }
+.vco-resume-entete h3 svg { color: var(--g-brand-500); }
 .vco-resume-lien {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  border: 1px solid #d5f0f3;
+  border: 1px solid var(--g-brand-100);
   border-radius: 999px;
-  background: #e9f8fa;
-  color: #066470;
+  background: var(--g-brand-50);
+  color: var(--g-brand-700);
   font: inherit;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
 }
-.vco-resume-lien:hover { background: #d5f0f3; }
-.vco-resume-lien:focus-visible { outline: 2px solid #0794a4; outline-offset: 2px; }
-.vco-resume-vide { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: #64748b; }
+.vco-resume-lien:hover { background: var(--g-brand-100); }
+.vco-resume-lien:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 2px; }
+.vco-resume-vide { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--g-slate-500); }
 .vco-resume-corps {
   display: grid;
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);

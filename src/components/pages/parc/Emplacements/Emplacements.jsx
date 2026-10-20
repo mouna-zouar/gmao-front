@@ -4,6 +4,7 @@ import {
   Download, Printer, BarChart3, Loader2, AlertTriangle,
   Navigation, Home, ArrowUp, ArrowDown, ArrowUpDown,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import emplacementService from '../../../../services/emplacementService';
 import EmplacementModal from '../../../ui/modals/EmplacementModal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
@@ -242,7 +243,7 @@ export default function Emplacements() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <MapPin size={24} strokeWidth={2} />
+            <ICONES_MODULES.emplacements size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t("Emplacements")}</h2>

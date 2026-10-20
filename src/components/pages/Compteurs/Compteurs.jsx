@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import compteurService from '../../../services/compteurService';
 import CompteurModal from '../../ui/modals/Compteurmodal';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
+import { ChartColumn, Download, Printer, Search, SquarePen, Trash2 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../constants/modules';
 import './Compteurs.css';
 
 const NATURE_LABELS = {
@@ -169,9 +171,7 @@ export default function Compteurs() {
 
       <div className="compteurs-header-card">
         <div className="compteurs-header-title-box">
-          <svg className="compteurs-header-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <ICONES_MODULES.compteurs strokeWidth={2} className="compteurs-header-icon" aria-hidden="true" />
           <div>
             <h2>Compteurs</h2>
             <p className="compteurs-header-subtitle">
@@ -193,9 +193,7 @@ export default function Compteurs() {
           disabled={!selectedCompteur}
           onClick={openEdit}
         >
-          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-          </svg>
+          <SquarePen size={18} strokeWidth={2} aria-hidden="true" />
           <span>Modifier</span>
         </button>
 
@@ -204,9 +202,7 @@ export default function Compteurs() {
           disabled={!selectedCompteur || isDeleting}
           onClick={handleDelete}
         >
-          <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          <Trash2 size={18} strokeWidth={2} aria-hidden="true" />
           <span>{isDeleting ? 'Suppression...' : 'Supprimer'}</span>
         </button>
       </div>
@@ -215,9 +211,7 @@ export default function Compteurs() {
         <div className="compteurs-filter-group">
           <span className="compteurs-filter-label">Recherche</span>
           <div className="compteurs-filter-input-wrap">
-            <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z" />
-            </svg>
+            <Search strokeWidth={2} aria-hidden="true" />
             <input
               type="text"
               placeholder="Rechercher par nom ou unité..."
@@ -246,19 +240,13 @@ export default function Compteurs() {
         {/* Pile Export / Imprimer / Stats */}
         <div className="compteurs-export-stack">
           <button className="compteurs-export-btn excel" title="Exporter en Excel (CSV)" onClick={handleExportExcel}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
+            <Download size={18} strokeWidth={2.5} aria-hidden="true" />
           </button>
           <button className="compteurs-export-btn print" title="Imprimer" onClick={handlePrint}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zM9 9V5a2 2 0 012-2h2a2 2 0 012 2v4M7 13h10" />
-            </svg>
+            <Printer size={18} strokeWidth={2.5} aria-hidden="true" />
           </button>
           <button className="compteurs-export-btn stats" title="Statistiques" onClick={handleStats}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-            </svg>
+            <ChartColumn size={18} strokeWidth={2.5} aria-hidden="true" />
           </button>
         </div>
       </div>

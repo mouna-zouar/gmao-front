@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import coutService from '../../../services/coutService';
 import { prioriteLabel } from '../../../constants/Priorite';
+import { ChevronLeft, ChevronRight, CircleDollarSign, FileSpreadsheet, Inbox, LoaderCircle, Package, RefreshCw, Search, TriangleAlert, Truck, Wallet, Wrench } from 'lucide-react';
 import './Cout.css';
 
 /* ---------- Config ---------- */
@@ -51,83 +52,57 @@ function formatMoisLabel(cle) {
 }
 
 /* ---------- Icônes ---------- */
-const Svg = (props) => (
-  <svg width={props.size || 15} height={props.size || 15} viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2"
-       strokeLinecap="round" strokeLinejoin="round" {...props} />
-);
-
 const IconRefresh = () => (
-  <Svg><path d="M21 12a9 9 0 0 1-15.5 6.3M3 12a9 9 0 0 1 15.5-6.3" /><path d="M21 4v5h-5M3 20v-5h5" /></Svg>
+  <RefreshCw size={15} aria-hidden="true" />
 );
 
 const IconSpinner = () => (
-  <svg className="cout-spinner" width="15" height="15" viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 3a9 9 0 1 0 9 9" />
-  </svg>
+  <LoaderCircle size={15} strokeWidth={2.5} className="cout-spinner" aria-hidden="true" />
 );
 
 const IconSearch = () => (
-  <Svg size={15}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Svg>
+  <Search size={15} aria-hidden="true" />
 );
 
 const IconAlert = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    <path d="M12 9v4M12 17h.01" />
-  </svg>
+  <TriangleAlert size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconInbox = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-    <path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1Z" />
-  </svg>
+  <Inbox size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 
 const IconCoin = () => (
-  <Svg size={16}><circle cx="12" cy="12" r="9" /><path d="M9.5 15c.5 1 1.3 1.5 2.5 1.5 1.7 0 2.5-.8 2.5-1.8 0-2.4-5-1-5-3.4 0-1 .8-1.8 2.5-1.8 1.2 0 2 .5 2.5 1.5M12 7v1M12 16v1" /></Svg>
+  <CircleDollarSign size={16} aria-hidden="true" />
 );
 
 const IconWrench = () => (
-  <Svg size={16}><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3Z" /></Svg>
+  <Wrench size={16} aria-hidden="true" />
 );
 
 const IconBox = () => (
-  <Svg size={16}><path d="M21 8 12 3 3 8v8l9 5 9-5Z" /><path d="M3 8l9 5 9-5M12 13v8" /></Svg>
+  <Package size={16} aria-hidden="true" />
 );
 
 const IconTruck = () => (
-  <Svg size={16}><path d="M3 7h11v10H3z" /><path d="M14 10h4l3 3v4h-7" /><circle cx="7" cy="18" r="1.5" /><circle cx="17.5" cy="18" r="1.5" /></Svg>
+  <Truck size={16} aria-hidden="true" />
 );
 
 const IconChevronLeft = () => (
-  <Svg size={16}><path d="m15 18-6-6 6-6" /></Svg>
+  <ChevronLeft size={16} aria-hidden="true" />
 );
 
 const IconChevronRight = () => (
-  <Svg size={16}><path d="m9 18 6-6-6-6" /></Svg>
+  <ChevronRight size={16} aria-hidden="true" />
 );
 
 const IconWallet = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5Z" />
-    <path d="M16 12h4v4h-4a2 2 0 0 1 0-4Z" />
-  </svg>
+  <Wallet size={24} strokeWidth={2} aria-hidden="true" />
 );
 
 /* Icône tableur Excel (feuille + grille) */
 const IconExcel = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" />
-    <path d="M14 3v6h6" />
-    <path d="M9 12l6 6M15 12l-6 6" />
-  </svg>
+  <FileSpreadsheet size={15} strokeWidth={2} aria-hidden="true" />
 );
 
 /* ---------- Export Excel ---------- */

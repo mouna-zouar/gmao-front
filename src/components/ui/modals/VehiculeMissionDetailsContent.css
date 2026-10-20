@@ -20,23 +20,23 @@
   gap: 10px;
   padding: 60px 24px;
   text-align: center;
-  color: #94a3b8;
+  color: var(--g-slate-400);
 }
 
 .vm-details-empty svg {
-  color: #cbd5e1;
+  color: var(--g-slate-300);
 }
 
 .vm-details-empty p {
   margin: 0;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #334155;
+  color: var(--g-slate-700);
 }
 
 .vm-details-empty span {
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   max-width: 320px;
 }
 
@@ -53,7 +53,7 @@
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid #e5e9f0;
   border-radius: 12px;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -61,7 +61,7 @@
 }
 
 .vm-details-hero-card:hover {
-  border-color: #cbd5e1;
+  border-color: var(--g-slate-300);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
@@ -79,15 +79,15 @@
 }
 
 .vm-details-hero-icon--vehicle {
-  background: #e9f8fa;
-  color: #0794a4;
-  border-color: #d5f0f3;
+  background: var(--g-brand-50);
+  color: var(--g-brand-500);
+  border-color: var(--g-brand-100);
 }
 
 .vm-details-hero-icon--driver {
-  background: #e9f8fa;
-  color: #0794a4;
-  border-color: #d5f0f3;
+  background: var(--g-brand-50);
+  color: var(--g-brand-500);
+  border-color: var(--g-brand-100);
 }
 
 .vm-details-hero-text {
@@ -100,7 +100,7 @@
 .vm-details-hero-label {
   font-size: 10px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -117,13 +117,13 @@
 
 .vm-details-hero-sub {
   font-size: 11.5px;
-  color: #64748b;
+  color: var(--g-slate-500);
   font-weight: 500;
 }
 
 /* ─────────── SECTIONS ─────────── */
 .vm-details-section {
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1px solid #e5e9f0;
   border-radius: 12px;
   padding: 16px 18px;
@@ -147,13 +147,13 @@
   margin: 0 0 14px;
   font-size: 11px;
   font-weight: 800;
-  color: #067a87;
+  color: var(--g-brand-600);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .vm-details-section-title svg {
-  color: #0794a4;
+  color: var(--g-brand-500);
 }
 
 /* ─────────── GRID DE CHAMPS ─────────── */
@@ -180,19 +180,19 @@
   gap: 5px;
   font-size: 10.5px;
   font-weight: 700;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .vm-details-field-label svg {
-  color: #0794a4;
+  color: var(--g-brand-500);
 }
 
 .vm-details-field-value {
   font-size: 13.5px;
   font-weight: 600;
-  color: #1e293b;
+  color: var(--g-slate-800);
   letter-spacing: -0.005em;
   word-break: break-word;
 }
@@ -200,7 +200,7 @@
 .vm-details-text {
   margin: 0;
   font-size: 13px;
-  color: #475569;
+  color: var(--g-slate-600);
   line-height: 1.6;
   font-weight: 400;
   white-space: pre-wrap;
@@ -221,9 +221,9 @@
   gap: 5px;
   padding: 6px 11px;
   border-radius: 8px;
-  background: #e9f8fa;
-  color: #0794a4;
-  border: 1px solid #d5f0f3;
+  background: var(--g-brand-50);
+  color: var(--g-brand-500);
+  border: 1px solid var(--g-brand-100);
   font-size: 11.5px;
   font-weight: 700;
   text-decoration: none;
@@ -232,8 +232,8 @@
 }
 
 .vm-details-map-btn:hover {
-  background: #d5f0f3;
-  border-color: #a8e0e6;
+  background: var(--g-brand-100);
+  border-color: var(--g-brand-200);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(7, 148, 164, 0.20);
 }
@@ -251,13 +251,13 @@
   align-items: center;
   gap: 5px;
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .vm-details-meta-item svg {
-  color: #cbd5e1;
+  color: var(--g-slate-300);
 }
 
 /* ─────────── RESPONSIVE ─────────── */
@@ -284,7 +284,7 @@
   display: flex;
   gap: 4px;
   padding: 4px;
-  background: #f1f5f9;
+  background: var(--g-slate-100);
   border: 1px solid #e5e9f0;
   border-radius: 12px;
   margin-bottom: 18px;
@@ -305,7 +305,7 @@
   background: transparent;
   border: none;
   border-radius: 9px;
-  color: #64748b;
+  color: var(--g-slate-500);
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -322,13 +322,13 @@
 }
 
 .vtr-modal-tab:hover {
-  color: #0f172a;
+  color: var(--g-slate-900);
 }
 
 /* Onglet actif → teal clair uni */
 .vtr-modal-tab.active {
-  background: #ffffff;
-  color: #0794a4;
+  background: var(--g-blanc);
+  color: var(--g-brand-500);
   font-weight: 700;
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.06),
@@ -336,7 +336,7 @@
 }
 
 .vtr-modal-tab.active svg {
-  color: #0794a4;
+  color: var(--g-brand-500);
 }
 
 /* Contenu de l'onglet Détails */

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SlidersHorizontal, Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench } from 'lucide-react';
+import {  Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench } from 'lucide-react';
+import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
 import EquipementMaintenanceTypesSettings from '../Etatequipement/EquipementMaintenanceTypesSettings';
 import ReglageLangue from '../../../i18n/ReglageLangue';
@@ -203,7 +204,7 @@ export default function ParametresSysteme() {
     <div className="ps-container">
       {/* HEADER */}
       <div className="ps-header-card">
-        <div className="ps-header-icon"><SlidersHorizontal size={22} /></div>
+        <div className="ps-header-icon"><ICONES_MODULES.parametresSysteme size={22} /></div>
         <div>
           <h2>{t("Paramètres système")}</h2>
           <p>{t("Heures des traitements automatiques, seuils de détection et barème SLA.")}</p>

@@ -27,6 +27,7 @@ import {
   ArrowUpDown,
   Eye,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeService from '../../../../services/vehiculeService';
 import personnelService from '../../../../services/personnelService';
@@ -555,7 +556,7 @@ export default function VehiculeMissions() {
             title={t("Paramètres des colonnes")}
             aria-label={t("Paramètres des colonnes")}
           >
-            <Route size={24} strokeWidth={2} />
+            <ICONES_MODULES.missions size={24} strokeWidth={2} />
           </button>
           <div>
             <h2>{t("Missions véhicules")}</h2>

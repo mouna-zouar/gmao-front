@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
 import articleService from '../../../services/articleService';
+import { Search, X } from 'lucide-react';
 import './Modal.css';
 import './ArticlePickerModal.css';
 
@@ -66,17 +67,13 @@ const ArticlePickerModal = ({ isOpen, onClose, onValidate, initialSelectedIds = 
         <div className="modal-header">
           <h2>Sélectionner des articles</h2>
           <button type="button" className="close-btn" onClick={onClose}>
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X size={24} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
 
         <div className="modal-body">
           <div className="article-picker-search">
-            <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0Z" />
-            </svg>
+            <Search strokeWidth={2} aria-hidden="true" />
             <input
               type="text"
               placeholder="Rechercher par désignation, code, marque, modèle..."

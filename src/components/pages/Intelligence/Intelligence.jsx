@@ -3,6 +3,7 @@ import risqueService from '../../../services/Risqueservice';
 import anomalieService from '../../../services/Anomalieservice';
 import rcaCapaService from '../../../services/rcaCapaService';
 import { t, tp, locale } from '../../../i18n';
+import { Clock, Flame, Inbox, LoaderCircle, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-react';
 import './Intelligence.css';
 
 /* ---------- Config ---------- */
@@ -35,45 +36,32 @@ function formatDateTime(iso) {
 const ACTIONS_CLOSES = new Set(['TERMINEE', 'VERIFIEE_EFFICACE', 'VERIFIEE_INEFFICACE']);
 
 /* ---------- Icônes ---------- */
-const Svg = (props) => (
-  <svg width={props.size || 15} height={props.size || 15} viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2"
-       strokeLinecap="round" strokeLinejoin="round" {...props} />
-);
-
 const IconRefresh = () => (
-  <Svg><path d="M21 12a9 9 0 0 1-15.5 6.3M3 12a9 9 0 0 1 15.5-6.3" /><path d="M21 4v5h-5M3 20v-5h5" /></Svg>
+  <RefreshCw size={15} aria-hidden="true" />
 );
 
 const IconSpinner = () => (
-  <svg className="intel-spinner" width="15" height="15" viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 3a9 9 0 1 0 9 9" />
-  </svg>
+  <LoaderCircle size={15} strokeWidth={2.5} className="intel-spinner" aria-hidden="true" />
 );
 
 const IconFlame = () => (
-  <Svg size={16}><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 0 2-1.5 3-2.5 2C15.5 7 13 5 12 2Z" /><path d="M8 14a4 4 0 1 0 8 0c0-2-1-3-2-5-1 2-2 2.5-3 1-1 2-3 2-3 4Z" /></Svg>
+  <Flame size={16} aria-hidden="true" />
 );
 
 const IconAlertTriangle = () => (
-  <Svg size={16}><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4M12 17h.01" /></Svg>
+  <TriangleAlert size={16} aria-hidden="true" />
 );
 
 const IconClock = () => (
-  <Svg size={16}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 3" /></Svg>
+  <Clock size={16} aria-hidden="true" />
 );
 
 const IconShieldAlert = () => (
-  <Svg size={16}><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6Z" /><path d="M12 8v4M12 16h.01" /></Svg>
+  <ShieldAlert size={16} aria-hidden="true" />
 );
 
 const IconInbox = () => (
-  <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-    <path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1Z" />
-  </svg>
+  <Inbox size={32} strokeWidth={1.5} aria-hidden="true" />
 );
 
 /* ---------- Composant ---------- */

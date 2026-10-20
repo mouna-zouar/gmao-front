@@ -14,18 +14,18 @@
   width: 38px;
   height: 36px;
   padding: 0;
-  border: 1px solid var(--slate-200, #e2e8f0);
+  border: 1px solid var(--slate-200, var(--g-slate-200));
   border-radius: 8px;
-  background: var(--slate-100, #f1f5f9);
-  color: var(--slate-500, #64748b);
+  background: var(--slate-100, var(--g-slate-100));
+  color: var(--slate-500, var(--g-slate-500));
   cursor: pointer;
   transition: all 0.2s;
 }
 .reclamations-toggle-stats:hover,
 .reclamations-toggle-stats.is-actif {
-  border-color: var(--teal-100, #ccfbf1);
-  background: var(--teal-50, #f0fdfa);
-  color: var(--teal-700, #0f766e);
+  border-color: var(--teal-100, var(--g-teal-100));
+  background: var(--teal-50, var(--g-teal-50));
+  color: var(--teal-700, var(--g-teal-700));
 }
 
 .reclamations-stats-bar {
@@ -34,9 +34,9 @@
   gap: 8px;
   padding: 8px;
   margin-bottom: 16px;
-  border: 1px solid var(--slate-200, #e2e8f0);
+  border: 1px solid var(--slate-200, var(--g-slate-200));
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--g-blanc);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
 }
 
@@ -49,18 +49,18 @@
   padding: 12px 10px;
   border: 1.5px solid transparent;
   border-radius: 10px;
-  background: #fff;
+  background: var(--g-blanc);
   font: inherit;
   cursor: pointer;
   transition: all 0.2s;
 }
 .reclamations-stat-item:hover {
-  border-color: var(--stat-color, var(--teal-600, #0d9488));
-  background: var(--slate-50, #f8fafc);
+  border-color: var(--stat-color, var(--teal-600, var(--g-teal-600)));
+  background: var(--slate-50, var(--g-slate-50));
 }
 .reclamations-stat-item.active {
-  border-color: var(--stat-color, var(--teal-600, #0d9488));
-  background: var(--slate-50, #f8fafc);
+  border-color: var(--stat-color, var(--teal-600, var(--g-teal-600)));
+  background: var(--slate-50, var(--g-slate-50));
   box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
 }
 .reclamations-stat-item:focus-visible { outline: 2px solid var(--stat-color); outline-offset: 2px; }
@@ -72,14 +72,14 @@
   letter-spacing: 0.05em;
   text-align: center;
   text-transform: uppercase;
-  color: var(--slate-500, #64748b);
+  color: var(--slate-500, var(--g-slate-500));
 }
 .reclamations-stat-count {
   font-size: 1.4rem;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: var(--slate-900, #0f172a);
+  color: var(--slate-900, var(--g-slate-900));
 }
 .reclamations-stat-bar-bg {
   display: block;
@@ -88,7 +88,7 @@
   margin-top: 4px;
   overflow: hidden;
   border-radius: 2px;
-  background: var(--slate-100, #f1f5f9);
+  background: var(--slate-100, var(--g-slate-100));
 }
 .reclamations-stat-bar-fill {
   display: block;

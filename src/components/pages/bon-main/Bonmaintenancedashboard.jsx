@@ -3,6 +3,8 @@ import bonMaintenanceService from '../../../services/bonMaintenanceService';
 import { t, tp, locale } from '../../../i18n';
 import './BonMaintenanceDashboard.css';
 import IndicateursBons from './IndicateursBons';
+import { CircleCheck, CirclePause, Clock, Coins, FileText, GripVertical, RefreshCw, TriangleAlert } from 'lucide-react';
+import { ICONES_MODULES } from '../../../constants/modules';
 
 const ETAT_LABELS = { 1: 'Nouveau', 2: 'Suspendu', 3: 'En cours', 4: 'Effectué', 10: 'Annulé' };
 const NIVEAU_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
@@ -32,14 +34,14 @@ function formatDate(iso) {
 
 /* ─── Icônes SVG réutilisables ─── */
 const ICONS = {
-  total: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
-  encours: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  suspendu: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  effectue: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  alerte: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>,
-  cout: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 10v2m9-8a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  delai: <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-  grip: <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="9" cy="6" r="1" /><circle cx="9" cy="12" r="1" /><circle cx="9" cy="18" r="1" /><circle cx="15" cy="6" r="1" /><circle cx="15" cy="12" r="1" /><circle cx="15" cy="18" r="1" /></svg>,
+  total: <FileText size={22} strokeWidth={2} aria-hidden="true" />,
+  encours: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
+  suspendu: <CirclePause size={22} strokeWidth={2} aria-hidden="true" />,
+  effectue: <CircleCheck size={22} strokeWidth={2} aria-hidden="true" />,
+  alerte: <TriangleAlert size={22} strokeWidth={2} aria-hidden="true" />,
+  cout: <Coins size={22} strokeWidth={2} aria-hidden="true" />,
+  delai: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
+  grip: <GripVertical size={14} strokeWidth={2} aria-hidden="true" />,
 };
 
 /* ─── Définition des cartes de stats ─── */
@@ -342,9 +344,7 @@ export default function BonMaintenanceDashboard() {
       {/* Header */}
       <div className="bon-maintenance-dashboard-header">
         <div className="bon-maintenance-dashboard-header-icon-wrap">
-          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
-          </svg>
+          <ICONES_MODULES.tableauDeBord size={24} strokeWidth={2} aria-hidden="true" />
         </div>
         <div className="bon-maintenance-dashboard-header-text">
           <h1>{t("Tableau de Bord des Bons de Maintenance")}</h1>
@@ -356,9 +356,7 @@ export default function BonMaintenanceDashboard() {
           onClick={resetOrder}
           title={t("Rétablir l'ordre par défaut")}
         >
-          <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
+          <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />
           {t("Réinitialiser l'ordre")}
         </button>
       </div>

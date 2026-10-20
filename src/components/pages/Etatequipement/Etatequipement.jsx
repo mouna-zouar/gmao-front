@@ -11,6 +11,7 @@ import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../cons
 import EquipementMaintenancePanel from './Equipementmaintenancepanel';
 import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
 import { t, tp, locale, tPdf, localePdf } from '../../../i18n';
+import { ArrowRight, ChevronDown, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, Inbox, Info, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
 import './EtatEquipement.css';
 import '../Equipements/Equipements.css';
 
@@ -80,91 +81,63 @@ function joursDepuis(iso) {
 }
 
 /* ---------- Icônes ---------- */
-const Svg = (props) => (
-  <svg width={props.size || 15} height={props.size || 15} viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2"
-       strokeLinecap="round" strokeLinejoin="round" {...props} />
-);
 const IconRefresh = () => (
-  <Svg><path d="M21 12a9 9 0 0 1-15.5 6.3M3 12a9 9 0 0 1 15.5-6.3" /><path d="M21 4v5h-5M3 20v-5h5" /></Svg>
+  <RefreshCw size={15} aria-hidden="true" />
 );
 const IconSpinner = () => (
-  <svg className="ee-spinner" width="15" height="15" viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-    <path d="M12 3a9 9 0 1 0 9 9" />
-  </svg>
+  <LoaderCircle size={15} strokeWidth={2.5} className="ee-spinner" aria-hidden="true" />
 );
 const IconSearch = () => (
-  <Svg size={15}><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></Svg>
+  <Search size={15} aria-hidden="true" />
 );
-const IconChevron = () => (<Svg size={14}><path d="m6 9 6 6 6-6" /></Svg>);
+const IconChevron = () => (<ChevronDown size={14} aria-hidden="true" />);
 const IconInfo = () => (
-  <Svg size={16}><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></Svg>
+  <Info size={16} aria-hidden="true" />
 );
 const IconInbox = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
-    <path d="M5.5 5.1 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.5-6.9A2 2 0 0 0 16.7 4H7.3a2 2 0 0 0-1.8 1.1Z" />
-  </svg>
+  <Inbox size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 const IconAlert = () => (
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
-       stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
-    <path d="M12 9v4M12 17h.01" />
-  </svg>
+  <TriangleAlert size={36} strokeWidth={1.5} aria-hidden="true" />
 );
 const IconCheckCircle = () => (
-  <Svg size={15}><circle cx="12" cy="12" r="9" /><path d="m8.5 12 2.5 2.5 4.5-5" /></Svg>
+  <CircleCheck size={15} aria-hidden="true" />
 );
 const IconXCircle = () => (
-  <Svg size={15}><circle cx="12" cy="12" r="9" /><path d="m9 9 6 6M15 9l-6 6" /></Svg>
+  <CircleX size={15} aria-hidden="true" />
 );
 const IconWrench = () => (
-  <Svg size={15}><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3Z" /></Svg>
+  <Wrench size={15} aria-hidden="true" />
 );
 const IconPause = () => (
-  <Svg size={15}><circle cx="12" cy="12" r="9" /><path d="M10 9v6M14 9v6" /></Svg>
+  <CirclePause size={15} aria-hidden="true" />
 );
 const IconFile = () => (
-  <Svg size={13}><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" /><path d="M14 3v6h6" /></Svg>
+  <File size={13} aria-hidden="true" />
 );
 const IconDownload = () => (
-  <Svg size={13}><path d="M12 3v12m0 0 4-4m-4 4-4-4" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></Svg>
+  <Download size={13} aria-hidden="true" />
 );
 const IconClock = () => (
-  <Svg size={13}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></Svg>
+  <Clock size={13} aria-hidden="true" />
 );
 const IconHistory = () => (
-  <Svg size={13}><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /><path d="M12 8v4l3 2" /></Svg>
+  <History size={13} aria-hidden="true" />
 );
 const IconGauge = () => (
-  <Svg size={13}><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" /><path d="M12 3a9 9 0 0 0-9 9M4.2 9.5l1.9.8M19.8 9.5l-1.9.8" /><path d="m13.5 13.5 3-4.5" /></Svg>
+  <Gauge size={13} aria-hidden="true" />
 );
 const IconSettings = () => (
-  <Svg size={15}>
-    <circle cx="12" cy="12" r="3" />
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-  </Svg>
+  <Settings size={15} aria-hidden="true" />
 );
 const IconPrint = () => (
-  <Svg size={15}>
-    <path d="M6 9V2h12v7" />
-    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-    <rect x="6" y="14" width="12" height="8" rx="1" />
-  </Svg>
+  <Printer size={15} aria-hidden="true" />
 );
 const IconQr = () => (
-  <Svg size={15}>
-    <rect x="3" y="3" width="7" height="7" rx="1" />
-    <rect x="14" y="3" width="7" height="7" rx="1" />
-    <rect x="3" y="14" width="7" height="7" rx="1" />
-    <path d="M14 14h3v3h-3zM21 14v3M14 21h3M21 21h.01" />
-  </Svg>
+  <QrCode size={15} aria-hidden="true" />
 );
-const IconClose = () => (<Svg size={14}><path d="M18 6 6 18M6 6l12 12" /></Svg>);
-const IconArrowRight = () => (<Svg size={13}><path d="M5 12h14M13 6l6 6-6 6" /></Svg>);
+const IconClose = () => (<X size={14} aria-hidden="true" />);
+const IconArrowRight = () => (<ArrowRight size={13} aria-hidden="true" />);
 
 const ETAT_ICONS = {
   EN_SERVICE: IconCheckCircle,

@@ -42,32 +42,32 @@
 
 .custom-btn.secondary {
     background: white;
-    border: 2px solid #f1f5f9;
-    color: #475569;
+    border: 2px solid var(--g-slate-100);
+    color: var(--g-slate-600);
 }
 
 .custom-btn.secondary:not(:disabled):hover {
-    background: #f8fafc;
+    background: var(--g-slate-50);
 }
 
 .custom-btn.danger {
-    background: #fef2f2;
-    color: #ef4444;
+    background: var(--g-red-50);
+    color: var(--g-red-500);
 }
 
 .custom-btn.danger:not(:disabled):hover {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--g-red-100);
+    color: var(--g-red-600);
     transform: translateY(-2px);
 }
 
 .custom-btn.ghost {
     background: transparent;
-    color: #3b82f6;
+    color: var(--g-blue-500);
     box-shadow: none;
 }
 
 .custom-btn.ghost:not(:disabled):hover {
-    background: #eff6ff;
-    color: #2563eb;
+    background: var(--g-blue-50);
+    color: var(--g-blue-600);
 }

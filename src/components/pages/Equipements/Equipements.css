@@ -1,29 +1,29 @@
 /* ============================================================
    ÉQUIPEMENTS — liste, fiche, étiquette QR, scanner
-   Même thème que l'espace personnel (#0794a4)
+   Même thème que l'espace personnel (var(--g-brand-500))
    ============================================================ */
 
 /* .eq-theme : mêmes couleurs pour le scanner ouvert hors de la page (formulaires) */
 .eq-page,
 .eq-theme {
-  --eq-brand: #0794a4;
-  --eq-brand-deep: #045a64;
+  --eq-brand: var(--g-brand-500);
+  --eq-brand-deep: var(--g-brand-800);
   --eq-brand-wash: #dcf0f2;
   --eq-ink: #102a30;
-  --eq-ink-soft: #45636a;
+  --eq-ink-soft: var(--g-ink-650);
   --eq-ink-faint: #7a9399;
   --eq-paper: #eef6f7;
-  --eq-surface: #ffffff;
+  --eq-surface: var(--g-blanc);
   --eq-line: #d3e5e8;
   --eq-line-2: #bcd4d8;
-  --eq-ok: #1f9d74;
+  --eq-ok: var(--g-succes-500);
   --eq-ok-wash: #e0f4ec;
-  --eq-now: #b8701a;
+  --eq-now: var(--g-attention-700);
   --eq-now-wash: #fcf0de;
   --eq-alert: #d6454d;
   --eq-alert-wash: #fce8e9;
-  --eq-info: #2c5fb8;
-  --eq-info-wash: #e6eefb;
+  --eq-info: var(--g-info-600);
+  --eq-info-wash: var(--g-info-50);
   --eq-titre: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
 
   --eq-r-sm: 10px;
@@ -156,7 +156,7 @@
 .eq-btn--primaire,
 .eq-bouton {
   background: var(--eq-brand);
-  color: #ffffff;
+  color: var(--g-blanc);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 6px 16px -6px rgba(7, 148, 164, 0.55),
@@ -203,7 +203,7 @@
 /* --- Danger : rouge plein --- */
 .eq-btn--danger {
   background: var(--eq-alert);
-  color: #ffffff;
+  color: var(--g-blanc);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     0 6px 16px -6px rgba(214, 69, 77, 0.5);
@@ -236,14 +236,14 @@
 .eq-btn--plein,
 .eq-open-button--plein {
   background: var(--eq-brand-deep);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 /* Action principale du bandeau de fiche (Signaler une panne) */
 .eq-bouton--signal {
   height: 48px;
-  background: #ffffff;
-  border-color: #ffffff;
+  background: var(--g-blanc);
+  border-color: var(--g-blanc);
   color: #b3262e;
   font-size: 15px;
   font-weight: 700;
@@ -252,7 +252,7 @@
 }
 .eq-bouton--signal:hover:not(:disabled) {
   background: #fff3f3;
-  border-color: #ffffff;
+  border-color: var(--g-blanc);
   color: #8f1f26;
   transform: translateY(-1px);
 }
@@ -261,15 +261,15 @@
 .eq-fiche-actions .eq-btn--secondaire,
 .eq-fiche-actions .eq-bouton--clair {
   background: rgba(255, 255, 255, 0.10);
-  color: #ffffff;
+  color: var(--g-blanc);
   border-color: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(6px);
 }
 .eq-fiche-actions .eq-btn--secondaire:hover,
 .eq-fiche-actions .eq-bouton--clair:hover {
   background: rgba(255, 255, 255, 0.22);
-  border-color: #ffffff;
-  color: #ffffff;
+  border-color: var(--g-blanc);
+  color: var(--g-blanc);
 }
 
 /* ---------- Boutons icône ---------- */
@@ -410,7 +410,7 @@
 }
 .eq-onglet.is-actif {
   background: var(--eq-brand);
-  color: #ffffff;
+  color: var(--g-blanc);
   box-shadow:
     0 1px 2px rgba(7, 148, 164, 0.15),
     0 3px 8px -3px rgba(7, 148, 164, 0.3);
@@ -602,7 +602,7 @@
   background:
     radial-gradient(120% 180% at 100% 0%, rgba(255, 255, 255, 0.14) 0%, transparent 55%),
     linear-gradient(135deg, var(--eq-brand-deep) 0%, var(--eq-brand) 55%, #0aa5b8 100%);
-  color: #ffffff;
+  color: var(--g-blanc);
   box-shadow: 0 14px 30px -18px rgba(4, 90, 100, 0.55);
   overflow: hidden;
 }
@@ -625,7 +625,7 @@
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.10);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
@@ -637,7 +637,7 @@
   border-color: rgba(255, 255, 255, 0.55);
   text-decoration: none;
 }
-.eq-fiche-entete :focus-visible { outline: 3px solid #ffffff; outline-offset: 3px; }
+.eq-fiche-entete :focus-visible { outline: 3px solid var(--g-blanc); outline-offset: 3px; }
 
 .eq-fiche-titre {
   display: flex;
@@ -649,7 +649,7 @@
 
 .eq-page .eq-fiche-titre h1 {
   margin: 0;
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 34px;
   font-weight: 800;
   line-height: 1.1;
@@ -671,7 +671,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.16);
   border: 1px solid rgba(255, 255, 255, 0.24);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -685,7 +685,7 @@
 }
 .eq-fiche-pastilles .eq-pastille {
   background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
+  color: var(--g-blanc);
   border: 1px solid rgba(255, 255, 255, 0.32);
   backdrop-filter: blur(8px);
   font-size: 12.5px;
@@ -707,7 +707,7 @@
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.24);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 13.5px;
   backdrop-filter: blur(6px);
 }
@@ -832,7 +832,7 @@
 /* Résumé du rapport d'intervention validé, sous la panne */
 .eq-panne-rapport {
   display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; font-size: 13px; line-height: 1.45;
-  color: #4b6670; text-align: start; unicode-bidi: plaintext;
+  color: var(--g-ink-600); text-align: start; unicode-bidi: plaintext;
 }
 .eq-panne-rapport svg { flex: none; margin-top: 2px; color: #7c5ce0; }
 
@@ -1057,7 +1057,7 @@
   padding: 16px;
   border: 1.5px dashed #9bbbc0;
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--g-blanc);
 }
 .eq-etiquette-qr { width: 150px; height: 150px; flex-shrink: 0; }
 .eq-etiquette-qr svg { width: 100%; height: 100%; display: block; }
@@ -1083,7 +1083,7 @@
 .eq-scanner-viseur {
   position: absolute;
   inset: 18% 24%;
-  border: 3px solid #ffffff;
+  border: 3px solid var(--g-blanc);
   border-radius: 18px;
   box-shadow: 0 0 0 999px rgba(13, 34, 38, 0.35);
 }
@@ -1096,7 +1096,7 @@
   justify-content: center;
   gap: 10px;
   padding: 24px;
-  color: #ffffff;
+  color: var(--g-blanc);
   text-align: center;
 }
 .eq-scanner-message p { margin: 0; max-width: 36ch; font-size: 14px; }

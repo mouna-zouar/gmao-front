@@ -1,9 +1,9 @@
 .vmp-panel {
-  --vmp-ring-track: #e5e7eb;
-  --vmp-border: #e5e7eb;
-  --vmp-bg: #fff;
-  --vmp-text: #1f2937;
-  --vmp-muted: #6b7280;
+  --vmp-ring-track: var(--g-gray-200);
+  --vmp-border: var(--g-gray-200);
+  --vmp-bg: var(--g-blanc);
+  --vmp-text: var(--g-gray-800);
+  --vmp-muted: var(--g-gray-500);
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -66,17 +66,17 @@
 }
 
 .vmp-btn-primary {
-  background: #1b648f;
-  color: #fff;
+  background: var(--g-parc-600);
+  color: var(--g-blanc);
 }
-.vmp-btn-primary:hover { background: #287da8; }
+.vmp-btn-primary:hover { background: var(--g-parc-500); }
 
 .vmp-btn-ghost {
   background: transparent;
   color: var(--vmp-text);
   border-color: var(--vmp-border);
 }
-.vmp-btn-ghost:hover { background: #f9fafb; }
+.vmp-btn-ghost:hover { background: var(--g-gray-50); }
 .vmp-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 .vmp-spin { animation: vmp-spin 1s linear infinite; }
@@ -110,10 +110,10 @@
   font-size: 12px;
 }
 
-.kpi-ok svg { color: #10b981; }
-.kpi-soon svg { color: #3b82f6; }
-.kpi-late svg { color: #d97706; }
-.kpi-total svg { color: #6366f1; }
+.kpi-ok svg { color: var(--g-emerald-500); }
+.kpi-soon svg { color: var(--g-blue-500); }
+.kpi-late svg { color: var(--g-amber-600); }
+.kpi-total svg { color: var(--g-indigo-500); }
 
 /* ═══════════════ Alertes ═══════════════ */
 .vmp-alert {
@@ -126,10 +126,10 @@
   border: 1px solid transparent;
 }
 
-.vmp-alert.success { background: #ecfdf5; color: #065f46; border-color: #a7f3d0; }
-.vmp-alert.error   { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
-.vmp-alert.danger  { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
-.vmp-alert.warning { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+.vmp-alert.success { background: var(--g-emerald-50); color: var(--g-emerald-800); border-color: var(--g-emerald-200); }
+.vmp-alert.error   { background: var(--g-red-50); color: var(--g-red-800); border-color: var(--g-red-200); }
+.vmp-alert.danger  { background: var(--g-red-50); color: var(--g-red-800); border-color: var(--g-red-200); }
+.vmp-alert.warning { background: var(--g-amber-50); color: var(--g-amber-800); border-color: var(--g-amber-200); }
 
 .vmp-link {
   display: inline-flex;
@@ -137,7 +137,7 @@
   gap: 4px;
   background: none;
   border: none;
-  color: #1b648f;
+  color: var(--g-parc-600);
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
@@ -178,7 +178,7 @@
 }
 
 .vmp-section-head--clickable:hover {
-  color: #1b648f;
+  color: var(--g-parc-600);
 }
 
 .vmp-section-head--clickable[aria-expanded="true"] {
@@ -195,11 +195,11 @@
 
 .vmp-section-head--clickable:hover .vmp-section-chevron,
 .vmp-section-head--clickable[aria-expanded="true"] .vmp-section-chevron {
-  color: #1b648f;
+  color: var(--g-parc-600);
 }
 
 .vmp-count {
-  background: #f3f4f6;
+  background: var(--g-gray-100);
   color: var(--vmp-muted);
   font-size: 11px;
   padding: 2px 8px;
@@ -256,11 +256,11 @@
   border-radius: 10px;
 }
 
-.vmp-badge-ok        { background: #ecfdf5; color: #065f46; }
-.vmp-badge-a-venir   { background: #eff6ff; color: #1e40af; }
-.vmp-badge-atteint   { background: #fffbeb; color: #92400e; }
-.vmp-badge-en-retard { background: #fef2f2; color: #991b1b; }
-.vmp-badge-en-cours  { background: #eef2ff; color: #3730a3; }
+.vmp-badge-ok        { background: var(--g-emerald-50); color: var(--g-emerald-800); }
+.vmp-badge-a-venir   { background: var(--g-blue-50); color: var(--g-blue-800); }
+.vmp-badge-atteint   { background: var(--g-amber-50); color: var(--g-amber-800); }
+.vmp-badge-en-retard { background: var(--g-red-50); color: var(--g-red-800); }
+.vmp-badge-en-cours  { background: var(--g-indigo-50); color: var(--g-indigo-800); }
 
 /* Anneau de progression */
 .vmp-ring { position: relative; flex-shrink: 0; }
@@ -298,7 +298,7 @@
   font-size: 12px;
 }
 
-.vmp-op-foot .is-late { color: #dc2626; font-weight: 600; }
+.vmp-op-foot .is-late { color: var(--g-red-600); font-weight: 600; }
 
 /* ═══════════════ Historique — cartes ═══════════════ */
 .vmp-historique {
@@ -313,14 +313,14 @@
   padding: 12px;
   background: #fafafa;
   border: 1px solid var(--vmp-border);
-  border-left: 3px solid #1b648f;
+  border-left: 3px solid var(--g-parc-600);
   border-radius: 8px;
   transition: background .15s, border-color .15s;
 }
 
 .vmp-hist-card:hover {
   background: #f5f5f5;
-  border-left-color: #0f766e;
+  border-left-color: var(--g-teal-700);
 }
 
 /* Bloc date compact */
@@ -331,7 +331,7 @@
   justify-content: center;
   min-width: 52px;
   padding: 6px 4px;
-  background: #fff;
+  background: var(--g-blanc);
   border: 1px solid var(--vmp-border);
   border-radius: 6px;
   flex-shrink: 0;
@@ -347,7 +347,7 @@
 .vmp-hist-month {
   font-size: 11px;
   font-weight: 600;
-  color: #1b648f;
+  color: var(--g-parc-600);
   text-transform: uppercase;
   letter-spacing: .5px;
   margin-top: 2px;
@@ -397,7 +397,7 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding: 8px 10px;
-  background: #fff;
+  background: var(--g-blanc);
   border: 1px solid var(--vmp-border);
   border-radius: 6px;
 }
@@ -451,20 +451,20 @@
   font-size: 11px;
   font-weight: 500;
 }
-.vmp-origine.manuelle { background: #fef3c7; color: #92400e; }
-.vmp-origine.auto     { background: #e0f2fe; color: #075985; }
+.vmp-origine.manuelle { background: var(--g-amber-100); color: var(--g-amber-800); }
+.vmp-origine.auto     { background: var(--g-sky-100); color: var(--g-sky-800); }
 
 .vmp-etat {
   padding: 1px 8px;
   border-radius: 8px;
-  background: #f3f4f6;
+  background: var(--g-gray-100);
   font-size: 11px;
   color: var(--vmp-muted);
 }
 
 .vmp-tag {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--g-amber-100);
+  color: var(--g-amber-800);
   font-size: 11px;
   padding: 1px 6px;
   border-radius: 6px;

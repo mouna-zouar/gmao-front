@@ -3,21 +3,21 @@
    Mêmes couleurs que BmdPage.css, valeurs de secours incluses
    ============================================================ */
 .bmf-form {
-  --f-ink: var(--ink, #12303a);
-  --f-ink-soft: var(--ink-soft, #4b6670);
-  --f-ink-faint: var(--ink-faint, #7f969d);
-  --f-line: var(--line, #d7e3e5);
-  --f-paper: var(--paper, #f2f6f6);
-  --f-brand: var(--brand, #0794a4);
-  --f-brand-deep: var(--brand-deep, #05606b);
-  --f-brand-wash: var(--brand-wash, #e3f3f5);
-  --f-done: var(--done, #1f9d74);
-  --f-now: var(--now, #e8962e);
-  --f-alert: var(--alert, #d9434b);
+  --f-ink: var(--ink, var(--g-ink-900));
+  --f-ink-soft: var(--ink-soft, var(--g-ink-600));
+  --f-ink-faint: var(--ink-faint, var(--g-ink-400));
+  --f-line: var(--line, var(--g-ink-100));
+  --f-paper: var(--paper, var(--g-ink-25));
+  --f-brand: var(--brand, var(--g-brand-500));
+  --f-brand-deep: var(--brand-deep, var(--g-brand-750));
+  --f-brand-wash: var(--brand-wash, var(--g-brand-75));
+  --f-done: var(--done, var(--g-succes-500));
+  --f-now: var(--now, var(--g-attention-500));
+  --f-alert: var(--alert, var(--g-alerte-500));
 
   margin-bottom: 24px;
   border-radius: 24px;
-  background: #ffffff;
+  background: var(--g-blanc);
   border: 1.5px solid var(--f-line);
   overflow: hidden;
   font-family: var(--font-texte, 'Figtree', system-ui, sans-serif);
@@ -87,7 +87,7 @@
   height: 30px;
   border-radius: 50%;
   background: var(--f-ink);
-  color: #ffffff;
+  color: var(--g-blanc);
   font-size: 14px;
   font-weight: 800;
   flex-shrink: 0;
@@ -121,7 +121,7 @@
   white-space: nowrap;
 }
 
-.bmf-requis { color: #b8701a; }
+.bmf-requis { color: var(--g-attention-700); }
 .bmf-optionnel { color: var(--f-ink-faint); font-weight: 500; }
 
 .bmf-aide,
@@ -163,7 +163,7 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 .bmf-nombre input:focus {
   outline: none;
   border-color: var(--f-brand);
-  background: #ffffff;
+  background: var(--g-blanc);
   box-shadow: 0 0 0 4px var(--f-brand-wash);
 }
 
@@ -186,7 +186,7 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   align-items: center;
   padding: 0 12px;
   border-radius: 10px;
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--f-ink-soft);
   font-weight: 700;
   font-size: 14px;
@@ -210,7 +210,7 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   padding: 10px 18px;
   border-radius: 999px;
   border: 1.5px solid var(--f-line);
-  background: #ffffff;
+  background: var(--g-blanc);
   color: var(--f-ink-soft);
   font-family: inherit;
   font-size: 15px;
@@ -226,14 +226,14 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 .bmf-choix-btn.is-actif {
   background: var(--c);
   border-color: var(--c);
-  color: #ffffff;
+  color: var(--g-blanc);
 }
 
 .bmf-ton--brand { --c: var(--f-brand-deep); }
 .bmf-ton--ok    { --c: var(--f-done); }
 .bmf-ton--now   { --c: #c27618; }
 .bmf-ton--alert { --c: var(--f-alert); }
-.bmf-ton--info  { --c: #2c5fb8; }
+.bmf-ton--info  { --c: var(--g-info-600); }
 .bmf-ton--calme { --c: var(--f-ink-soft); }
 
 /* Grandes cartes de choix (décision importante : conforme ? autorisée ?) */
@@ -265,7 +265,7 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 }
 
 .bmf-choix.is-grand .bmf-choix-btn.is-actif {
-  background: #ffffff;
+  background: var(--g-blanc);
   border-color: var(--c);
   box-shadow: 0 0 0 3px var(--c) inset;
 }
@@ -286,8 +286,8 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   font-weight: 600;
 }
 
-.bmf-stock.is-ok { background: #e2f5ee; color: #17785a; }
-.bmf-stock.is-manque { background: #fde8e9; color: var(--f-alert); }
+.bmf-stock.is-ok { background: var(--g-succes-50); color: #17785a; }
+.bmf-stock.is-manque { background: var(--g-alerte-50); color: var(--f-alert); }
 
 /* ---------- Listes avec recherche dans les formulaires ---------- */
 .bmf-form .bmd-searchable-input-wrap {
@@ -299,7 +299,7 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 
 .bmf-form .bmd-searchable-input-wrap.is-open,
 .bmf-form .bmd-searchable-input-wrap:focus-within {
-  background: #ffffff;
+  background: var(--g-blanc);
   border-color: var(--f-brand);
   box-shadow: 0 0 0 4px var(--f-brand-wash);
 }
@@ -349,7 +349,7 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 .bmf-btn:active { transform: scale(0.98); }
 
 .bmf-btn--annuler {
-  background: #ffffff;
+  background: var(--g-blanc);
   border-color: var(--f-line);
   color: var(--f-ink-soft);
 }
@@ -357,7 +357,7 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 
 .bmf-btn--valider {
   background: var(--f-brand);
-  color: #ffffff;
+  color: var(--g-blanc);
   min-width: 200px;
 }
 .bmf-btn--valider:hover:not(:disabled) { background: var(--f-brand-deep); }
@@ -374,17 +374,17 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   min-height: 50px;
   padding: 12px 16px;
   border-radius: 14px;
-  border: 1.5px solid var(--f-line, #d7e3e5);
-  background: #f2f6f6;
+  border: 1.5px solid var(--f-line, var(--g-ink-100));
+  background: var(--g-ink-25);
   font-size: 16px;
 }
 
 .bmx-tiroir .bmd-comment-form textarea:focus,
 .bmx-tiroir .bmd-inline-form input:focus,
 .bmx-tiroir .bmd-inline-form textarea:focus {
-  background: #ffffff;
-  border-color: #0794a4;
-  box-shadow: 0 0 0 4px #e3f3f5;
+  background: var(--g-blanc);
+  border-color: var(--g-brand-500);
+  box-shadow: 0 0 0 4px var(--g-brand-75);
 }
 
 /* ---------- Responsive ---------- */

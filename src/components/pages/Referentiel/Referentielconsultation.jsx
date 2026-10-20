@@ -13,6 +13,7 @@ import depotQteLotService from '../../../services/depotQteLotService';
 import articleStockDepotService from '../../../services/articleStockDepotService';
 import cliniqueStockDepotService from '../../../services/cliniqueStockDepotService';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
+import { Archive, Banknote, Building2, Calendar, Columns3, Database, Eye, FileText, Hospital, Search, Settings, Tag, UserCheck, Warehouse, X } from 'lucide-react';
 import './ReferentielConsultation.css';
 
 function formatDate(iso) {
@@ -26,7 +27,7 @@ const ENTITY_CONFIG = {
   personnel: {
     title: 'Personnel',
     service: personnelService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" /><circle cx="8.5" cy="7" r="4" /><path d="M17 11l2 2 4-4" /></svg>,
+    icon: <UserCheck strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'matricule', label: 'Matricule', searchable: true },
       { key: 'nom', label: 'Nom', searchable: true },
@@ -39,7 +40,7 @@ const ENTITY_CONFIG = {
   prestataire: {
     title: 'Prestataires',
     service: prestataireService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5" /></svg>,
+    icon: <Building2 strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'raisonSociale', label: 'Raison sociale', searchable: true },
       { key: 'nom', label: 'Nom', searchable: true },
@@ -51,7 +52,7 @@ const ENTITY_CONFIG = {
   lotArticleImmobilistation: {
     title: 'Lots article immobilisé',
     service: lotArticleImmobilistationService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
+    icon: <Banknote strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'designation', label: 'Désignation', searchable: true },
       { key: 'marque', label: 'Marque', searchable: true },
@@ -64,7 +65,7 @@ const ENTITY_CONFIG = {
   piece: {
     title: 'Pièces',
     service: pieceService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>,
+    icon: <FileText strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'numPiece', label: 'N° pièce', searchable: true },
       { key: 'num', label: 'N°', searchable: false },
@@ -78,7 +79,7 @@ const ENTITY_CONFIG = {
   pieceLigne: {
     title: 'Lignes de pièce',
     service: pieceLigneService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg>,
+    icon: <Columns3 strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'pieceId', label: 'Pièce (ID)', searchable: false },
       { key: 'prestataireArticlesId', label: 'Article (ID)', searchable: false },
@@ -92,7 +93,7 @@ const ENTITY_CONFIG = {
   calendrier: {
     title: 'Calendriers',
     service: calendrierService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>,
+    icon: <Calendar strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'code', label: 'Code', searchable: true },
       { key: 'description', label: 'Description', searchable: true },
@@ -105,7 +106,7 @@ const ENTITY_CONFIG = {
   service: {
     title: 'Services',
     service: serviceService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5" /></svg>,
+    icon: <Building2 strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'code', label: 'Code', searchable: true },
       { key: 'description', label: 'Description', searchable: true },
@@ -117,7 +118,7 @@ const ENTITY_CONFIG = {
   clinique: {
     title: 'Cliniques',
     service: cliniqueService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9v.01M9 12v.01M9 15v.01M9 18v.01" /></svg>,
+    icon: <Hospital strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'nom', label: 'Nom', searchable: true },
       { key: 'adresse', label: 'Adresse', searchable: true },
@@ -128,7 +129,7 @@ const ENTITY_CONFIG = {
   prestataireDepot: {
     title: 'Dépôts',
     service: prestataireDepotService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" /></svg>,
+    icon: <Database strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'nom', label: 'Nom', searchable: true },
       { key: 'codeDepots', label: 'Code', searchable: true },
@@ -140,7 +141,7 @@ const ENTITY_CONFIG = {
   articleStockDepot: {
     title: 'Articles de stock',
     service: articleStockDepotService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25-2.25M12 13.875V7.5m-8.25 0h16.5" /></svg>,
+    icon: <Archive strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'nom', label: 'Nom', searchable: true },
       { key: 'description', label: 'Description', searchable: true },
@@ -150,7 +151,7 @@ const ENTITY_CONFIG = {
   depotQte: {
     title: 'Quantités en dépôt',
     service: depotQteService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125l2.25 2.25m0 0l2.25-2.25M12 13.875V7.5m-8.25 0h16.5" /></svg>,
+    icon: <Archive strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'prestataireArticleId', label: 'Article (ID)', searchable: false },
       { key: 'depotId', label: 'Dépôt (ID)', searchable: false },
@@ -164,7 +165,7 @@ const ENTITY_CONFIG = {
   depotQteLot: {
     title: 'Lots / N° série',
     service: depotQteLotService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /></svg>,
+    icon: <Tag strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'depotQteId', label: 'Ligne stock (ID)', searchable: false },
       { key: 'nSerie', label: 'N° série / lot', searchable: true },
@@ -175,7 +176,7 @@ const ENTITY_CONFIG = {
   cliniqueStockDepot: {
     title: 'Stock clinique',
     service: cliniqueStockDepotService,
-    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4" /></svg>,
+    icon: <Warehouse strokeWidth={2} aria-hidden="true" />,
     columns: [
       { key: 'cliniqueId', label: 'Clinique (ID)', searchable: false },
       { key: 'articleStockDepotId', label: 'Article (ID)', searchable: false },
@@ -286,10 +287,7 @@ export default function ReferentielConsultation() {
                 className={`referentiel-h-action-btn view ${activeView === type ? 'viewing' : ''}`}
                 onClick={() => openView(type)}
               >
-                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+                <Eye size={18} strokeWidth={2.5} aria-hidden="true" />
                 <span>{activeView === type ? 'Fermer' : 'Visualiser'}</span>
               </button>
             </div>
@@ -373,15 +371,10 @@ function ReferentielDetailView({
         <span className="referentiel-view-title">{title}</span>
         <div className="referentiel-actions-right">
           <button className="referentiel-settings-btn" onClick={onOpenSettings} title="Paramètres des colonnes">
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
+            <Settings size={20} strokeWidth={2} aria-hidden="true" />
           </button>
           <button className="referentiel-action-btn fermer" onClick={onClose}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X size={18} strokeWidth={2} aria-hidden="true" />
             <span>Fermer</span>
           </button>
         </div>
@@ -410,9 +403,7 @@ function ReferentielDetailView({
         </div>
 
         <button className="referentiel-search-btn" onClick={onSearchApply}>
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+          <Search size={16} strokeWidth={2.5} aria-hidden="true" />
           Chercher
         </button>
 

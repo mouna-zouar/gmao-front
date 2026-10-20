@@ -14,7 +14,7 @@
 }
 
 .modal-container {
-  background: #ffffff;
+  background: var(--g-blanc);
   width: 92%;
   max-width: 560px;
   border-radius: 16px;
@@ -31,7 +31,7 @@
   align-items: center;
   padding: 20px 28px;
   border-bottom: 1px solid #eef2f6;
-  background: #fafbfc;
+  background: var(--g-fond-25);
 }
 
 .modal-header h2 {
@@ -92,7 +92,7 @@
 .form-group label {
   font-size: 0.82rem;
   font-weight: 600;
-  color: #475569;
+  color: var(--g-slate-600);
   letter-spacing: 0.2px;
 }
 
@@ -103,11 +103,11 @@
 .bmd-inline-form input,
 .bmd-inline-form select {
   padding: 11px 14px;
-  border: 1.5px solid #e2e8f0;
+  border: 1.5px solid var(--g-slate-200);
   border-radius: 10px;
   font-size: 0.92rem;
-  color: #1e293b;
-  background: #f8fafc;
+  color: var(--g-slate-800);
+  background: var(--g-slate-50);
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
   outline: none;
   width: 100%;
@@ -117,7 +117,7 @@
 .form-group input::placeholder,
 .form-group textarea::placeholder,
 .bmd-inline-form input::placeholder {
-  color: #94a3b8;
+  color: var(--g-slate-400);
 }
 
 .form-group input:hover,
@@ -125,8 +125,8 @@
 .form-group textarea:hover,
 .bmd-inline-form input:hover,
 .bmd-inline-form select:hover {
-  border-color: #cbd5e1;
-  background: #ffffff;
+  border-color: var(--g-slate-300);
+  background: var(--g-blanc);
 }
 
 .form-group input:focus,
@@ -134,15 +134,15 @@
 .form-group textarea:focus,
 .bmd-inline-form input:focus,
 .bmd-inline-form select:focus {
-  border-color: #0f766e;
-  background: #ffffff;
+  border-color: var(--g-teal-700);
+  background: var(--g-blanc);
   box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
 }
 
 .form-group input:disabled,
 .form-group select:disabled {
-  background: #f1f5f9;
-  color: #94a3b8;
+  background: var(--g-slate-100);
+  color: var(--g-slate-400);
   cursor: not-allowed;
 }
 
@@ -166,7 +166,7 @@
 .checkbox-label input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: #0f766e;
+  accent-color: var(--g-teal-700);
   cursor: pointer;
 }
 
@@ -187,9 +187,9 @@
   grid-column: 1 / -1;
   padding: 10px 14px;
   border-radius: 8px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
+  background: var(--g-red-50);
+  border: 1px solid var(--g-red-200);
+  color: var(--g-red-700);
   font-size: 0.85rem;
 }
 
@@ -226,15 +226,15 @@
 }
 
 .dot.active {
-  background: #0f766e;
-  color: #fff;
+  background: var(--g-teal-700);
+  color: var(--g-blanc);
   transform: scale(1.1);
   box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);
 }
 
 .dot.done {
   background: #a8ddd6;
-  color: #0f766e;
+  color: var(--g-teal-700);
 }
 
 .line {
@@ -245,7 +245,7 @@
 }
 
 .line.filled {
-  background: #0f766e;
+  background: var(--g-teal-700);
 }
 
 .step-label {
@@ -280,9 +280,9 @@
 .bmd-notice {
   padding: 20px;
   text-align: center;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   font-size: 0.85rem;
-  background: #f8fafc;
+  background: var(--g-slate-50);
   border-radius: 10px;
 }
 
@@ -290,8 +290,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--g-slate-50);
+  border: 1px solid var(--g-slate-200);
   border-radius: 10px;
   padding: 14px;
   margin-bottom: 14px;
@@ -301,7 +301,7 @@
 .bmd-empty {
   text-align: center;
   padding: 16px;
-  color: #94a3b8;
+  color: var(--g-slate-400);
   font-size: 0.82rem;
 }
 
@@ -319,21 +319,21 @@
   justify-content: space-between;
   align-items: center;
   padding: 9px 14px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: var(--g-slate-50);
+  border: 1px solid var(--g-slate-200);
   border-radius: 10px;
 }
 
 .bmd-item-title {
   font-size: 0.83rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--g-slate-800);
 }
 
 .bmd-delete-btn {
   font-size: 0.76rem;
   font-weight: 600;
-  color: #e11d48;
+  color: var(--g-rose-600);
   padding: 4px 10px;
   border-radius: 6px;
   transition: background 0.2s ease;
@@ -342,5 +342,5 @@
 }
 
 .bmd-delete-btn:hover {
-  background: #fff1f2;
+  background: var(--g-rose-50);
 }

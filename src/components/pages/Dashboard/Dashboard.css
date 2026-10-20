@@ -48,14 +48,14 @@
     font-weight: 800;
     margin-bottom: 0.5rem;
     letter-spacing: -0.025em;
-    background: linear-gradient(to right, #38bdf8, #011a25);
+    background: linear-gradient(to right, var(--g-sky-400), #011a25);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .dashboard-header p {
-    color: #e0f2fe;
+    color: var(--g-sky-100);
     font-size: 1.1rem;
     font-weight: 500;
     text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
@@ -101,11 +101,11 @@
     z-index: 2;
     opacity: 1;
     transform: scale(1);
-    color: #fff;
+    color: var(--g-blanc);
 }
 
 .card-front .icon-wrapper {
-    color: #38bdf8;
+    color: var(--g-sky-400);
     margin-bottom: 0.75rem;
 }
 
@@ -197,14 +197,14 @@
 }
 
 .sub-module-icon {
-    color: #38bdf8;
+    color: var(--g-sky-400);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
 .sub-module-item span {
-    color: #fff;
+    color: var(--g-blanc);
     font-size: 0.8rem;
     font-weight: 600;
     text-align: center;
@@ -224,7 +224,7 @@
 }
 
 .card-description {
-    color: #cbd5e1;
+    color: var(--g-slate-300);
     font-size: 0.85rem;
     margin-top: 0.5rem;
     font-weight: 500;
@@ -237,7 +237,7 @@
 }
 
 .dashboard-attribution a {
-    color: #38bdf8;
+    color: var(--g-sky-400);
     text-decoration: underline;
 }
 

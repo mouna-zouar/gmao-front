@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../../ui/Button';
+import { X } from 'lucide-react';
 import '../../ui/modals/Modal.css';
 
 const CompteurModal = ({ isOpen, onClose, onSave, compteur, isEditing }) => {
@@ -64,9 +65,7 @@ const CompteurModal = ({ isOpen, onClose, onSave, compteur, isEditing }) => {
         <div className="modal-header">
           <h2>{isEditing ? 'Modifier le compteur' : 'Nouveau compteur'}</h2>
           <button type="button" className="close-btn" onClick={onClose}>
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X size={24} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
 

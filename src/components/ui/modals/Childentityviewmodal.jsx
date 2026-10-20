@@ -1,4 +1,5 @@
 import React from 'react';
+import { X } from 'lucide-react';
 import './ChildEntityModals.css';
 
 const ChildEntityViewModal = ({ show, onClose, title, columns, item }) => {
@@ -10,9 +11,7 @@ const ChildEntityViewModal = ({ show, onClose, title, columns, item }) => {
         <div className="cem-header">
           <h3>{title}</h3>
           <button type="button" className="cem-close-btn" onClick={onClose} aria-label="Fermer">
-            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X size={18} strokeWidth={2} aria-hidden="true" />
           </button>
         </div>
 

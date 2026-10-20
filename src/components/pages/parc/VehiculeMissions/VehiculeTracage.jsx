@@ -5,6 +5,7 @@ import {
   Loader2, AlertTriangle, Activity, RefreshCw, ChevronDown,
   Wrench, Play, Flag, TrendingUp, Timer, Zap, Target, Circle,
 } from 'lucide-react';
+import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeService from '../../../../services/vehiculeService';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
@@ -291,7 +292,7 @@ export default function VehiculeTracage({
         <div className="vtr-header">
           <div className="vtr-header-left">
             <div className="vtr-header-icon">
-              <Navigation size={24} strokeWidth={2} />
+              <ICONES_MODULES.tracage size={24} strokeWidth={2} />
             </div>
             <div>
               <h2>{t("Traçage véhicule")}</h2>

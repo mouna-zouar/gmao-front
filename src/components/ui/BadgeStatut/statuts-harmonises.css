@@ -5,12 +5,12 @@
  * Le préfixe « html body » passe devant les feuilles propres à chaque écran.
  */
 :root {
-  --ton-info-texte: #2c5fb8;      --ton-info-fond: #e6eefb;      --ton-info-bord: #c4d5f5;      --ton-info: #2c5fb8;
-  --ton-action-texte: #05606b;    --ton-action-fond: #e3f3f5;    --ton-action-bord: #b4e0e5;    --ton-action: #0794a4;
-  --ton-attention-texte: #97570e; --ton-attention-fond: #fdf1e1; --ton-attention-bord: #f6d5a8; --ton-attention: #e8962e;
-  --ton-ok-texte: #157553;        --ton-ok-fond: #e2f5ee;        --ton-ok-bord: #b3e3d1;        --ton-ok: #1f9d74;
-  --ton-alerte-texte: #b8323a;    --ton-alerte-fond: #fde8e9;    --ton-alerte-bord: #f6c2c5;    --ton-alerte: #d9434b;
-  --ton-neutre-texte: #4b6670;    --ton-neutre-fond: #e8eef0;    --ton-neutre-bord: #d0dcdf;    --ton-neutre: #7f969d;
+  --ton-info-texte: var(--g-info-600);      --ton-info-fond: var(--g-info-50);      --ton-info-bord: #c4d5f5;      --ton-info: var(--g-info-600);
+  --ton-action-texte: var(--g-brand-750);    --ton-action-fond: var(--g-brand-75);    --ton-action-bord: #b4e0e5;    --ton-action: var(--g-brand-500);
+  --ton-attention-texte: #97570e; --ton-attention-fond: var(--g-attention-50); --ton-attention-bord: #f6d5a8; --ton-attention: var(--g-attention-500);
+  --ton-ok-texte: #157553;        --ton-ok-fond: var(--g-succes-50);        --ton-ok-bord: #b3e3d1;        --ton-ok: var(--g-succes-500);
+  --ton-alerte-texte: var(--g-alerte-700);    --ton-alerte-fond: var(--g-alerte-50);    --ton-alerte-bord: #f6c2c5;    --ton-alerte: var(--g-alerte-500);
+  --ton-neutre-texte: var(--g-ink-600);    --ton-neutre-fond: var(--g-ink-50);    --ton-neutre-bord: #d0dcdf;    --ton-neutre: var(--g-ink-400);
 }
 
 /* Planning (bons, par intervenant) */

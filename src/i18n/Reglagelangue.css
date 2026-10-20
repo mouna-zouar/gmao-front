@@ -7,13 +7,13 @@
   margin-bottom: 20px;
   padding: 20px 22px;
   border-radius: 20px;
-  background: #ffffff;
-  border: 1.5px solid #d7e3e5;
-  color: #12303a;
+  background: var(--g-blanc);
+  border: 1.5px solid var(--g-ink-100);
+  color: var(--g-ink-900);
   font-family: 'Figtree', 'IBM Plex Sans Arabic', system-ui, sans-serif;
 }
 
-[dir='rtl'] .rl-carte { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+[dir='rtl'] .rl-carte { font-family: var(--g-police-arabe); }
 
 .rl-entete {
   display: flex;
@@ -29,13 +29,13 @@
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: #e3f3f5;
-  color: #05606b;
+  background: var(--g-brand-75);
+  color: var(--g-brand-750);
   flex-shrink: 0;
 }
 
-.rl-entete h2 { margin: 0; font-size: 19px; font-weight: 800; color: #12303a; }
-.rl-entete p { margin: 2px 0 0; font-size: 14px; color: #7f969d; }
+.rl-entete h2 { margin: 0; font-size: 19px; font-weight: 800; color: var(--g-ink-900); }
+.rl-entete p { margin: 2px 0 0; font-size: 14px; color: var(--g-ink-400); }
 
 .rl-choix {
   display: grid;
@@ -51,7 +51,7 @@
   min-height: 110px;
   padding: 16px 18px;
   border-radius: 18px;
-  border: 1.5px solid #d7e3e5;
+  border: 1.5px solid var(--g-ink-100);
   background: #f8fbfb;
   color: inherit;
   text-align: start;
@@ -59,17 +59,17 @@
   transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
 }
 
-.rl-option[lang='ar'] { font-family: 'IBM Plex Sans Arabic', system-ui, sans-serif; }
+.rl-option[lang='ar'] { font-family: var(--g-police-arabe); }
 .rl-option[lang='fr'], .rl-option[lang='en'] { font-family: 'Figtree', system-ui, sans-serif; }
 
-.rl-option:hover { border-color: #0794a4; background: #ffffff; }
+.rl-option:hover { border-color: var(--g-brand-500); background: var(--g-blanc); }
 .rl-option:active { transform: scale(0.99); }
-.rl-option:focus-visible { outline: 3px solid #0794a4; outline-offset: 2px; }
+.rl-option:focus-visible { outline: 3px solid var(--g-brand-500); outline-offset: 2px; }
 
 .rl-option.is-actif {
-  border-color: #0794a4;
-  background: #ffffff;
-  box-shadow: 0 0 0 2px #0794a4 inset;
+  border-color: var(--g-brand-500);
+  background: var(--g-blanc);
+  box-shadow: 0 0 0 2px var(--g-brand-500) inset;
 }
 
 .rl-option-haut {
@@ -89,12 +89,12 @@
   height: 24px;
   border-radius: 50%;
   border: 2px solid #b9ccd0;
-  background: #ffffff;
-  color: #ffffff;
+  background: var(--g-blanc);
+  color: var(--g-blanc);
   flex-shrink: 0;
 }
 
-.rl-option.is-actif .rl-radio { background: #0794a4; border-color: #0794a4; }
+.rl-option.is-actif .rl-radio { background: var(--g-brand-500); border-color: var(--g-brand-500); }
 
-.rl-option-exemple { font-size: 15px; color: #4b6670; }
-.rl-option-sens { font-size: 13px; color: #7f969d; }
+.rl-option-exemple { font-size: 15px; color: var(--g-ink-600); }
+.rl-option-sens { font-size: 13px; color: var(--g-ink-400); }

@@ -8,38 +8,38 @@
 
   --line: #e9eaf0;
   --line-soft: #f2f3f7;
-  --surface: #ffffff;
+  --surface: var(--g-blanc);
   --canvas: #f6f7f9;
 
   /* Palette teal unifiée */
-  --teal-500: #0794a4;
-  --teal-600: #067a87;
-  --teal-50: #e9f8fa;
-  --teal-100: #d5f0f3;
-  --teal-200: #a8e0e6;
+  --teal-500: var(--g-brand-500);
+  --teal-600: var(--g-brand-600);
+  --teal-50: var(--g-brand-50);
+  --teal-100: var(--g-brand-100);
+  --teal-200: var(--g-brand-200);
 
   /* Sémantiques (risque / statut) */
-  --green-500: #22c55e;
-  --green-600: #16a34a;
-  --green-700: #15803d;
-  --green-50: #f0fdf4;
-  --green-100: #dcfce7;
+  --green-500: var(--g-green-500);
+  --green-600: var(--g-green-600);
+  --green-700: var(--g-green-700);
+  --green-50: var(--g-green-50);
+  --green-100: var(--g-green-100);
 
-  --red-500: #ef4444;
-  --red-600: #dc2626;
-  --red-700: #b91c1c;
-  --red-50: #fef2f2;
-  --red-100: #fee2e2;
+  --red-500: var(--g-red-500);
+  --red-600: var(--g-red-600);
+  --red-700: var(--g-red-700);
+  --red-50: var(--g-red-50);
+  --red-100: var(--g-red-100);
 
-  --orange-500: #f97316;
-  --orange-600: #ea580c;
-  --orange-700: #c2410c;
-  --orange-50: #fff7ed;
-  --orange-100: #ffedd5;
+  --orange-500: var(--g-orange-500);
+  --orange-600: var(--g-orange-600);
+  --orange-700: var(--g-orange-700);
+  --orange-50: var(--g-orange-50);
+  --orange-100: var(--g-orange-100);
 
-  --amber-50: #fefce8;
-  --amber-600: #ca8a04;
-  --amber-700: #a16207;
+  --amber-50: var(--g-yellow-50);
+  --amber-600: var(--g-yellow-600);
+  --amber-700: var(--g-yellow-700);
 
   --r-sm: 10px;
   --r-md: 14px;
@@ -200,7 +200,7 @@
 /* Panneau chauds → fond uni blanc (plus de dégradé) */
 .intel-panel--chauds {
   border: 1.5px solid var(--orange-500) !important;
-  background: #ffffff !important;
+  background: var(--g-blanc) !important;
   background-image: none !important;
 }
 
@@ -252,7 +252,7 @@
   align-items: center;
   gap: 14px;
   padding: 12px 14px;
-  background: #fff;
+  background: var(--g-blanc);
   border: 1px solid var(--orange-100);
   border-radius: var(--r-md);
 }
