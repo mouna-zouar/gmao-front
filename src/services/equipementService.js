@@ -15,9 +15,17 @@ const enTetesAuteur = () => {
 
 const equipementService = {
   /** Page<{ id, designation, marque, modele, numPiece, codeBarre, etatActuel, criticite, garantie }> */
-  async rechercher(recherche = '', page = 0, taille = 30) {
-    const { data } = await api.get('/equipements', { params: { recherche: recherche || undefined, page, taille } });
+  async rechercher(recherche = '', page = 0, taille = 30, familleId = null) {
+    const { data } = await api.get('/equipements', {
+      params: { recherche: recherche || undefined, familleId: familleId || undefined, page, taille },
+    });
     return data;
+  },
+
+  /** Familles d'articles des équipements (lues dans Cubix) : [{ id, nom, nombre }] */
+  async familles() {
+    const { data } = await api.get('/equipements/familles');
+    return data ?? [];
   },
 
   /** Code lu sur une étiquette (URL de la fiche, identifiant ou code-barre) → identifiant. */

@@ -12,7 +12,7 @@ import EquipementMaintenancePanel from './Equipementmaintenancepanel';
 import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
 import { t, tp, locale, tPdf, localePdf } from '../../../i18n';
 import { ArrowRight, ChevronDown, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
-import { VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
+import { VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
 
 /* ---------- Risque ---------- */
 const RISQUE_NIVEAU_LABELS = { CRITIQUE: 'Critique', ELEVE: 'Élevé', MODERE: 'Modéré', FAIBLE: 'Faible' };
@@ -209,6 +209,17 @@ export default function EtatEquipement({ isModal = false }) {
   // Adresse IP des équipements (fiche équipement → « Connexion réseau ») : filtre Avec / Sans IP
   const [connexions, setConnexions] = useState({});
   const [filtreIp, setFiltreIp] = useState('TOUS');
+  const [filtreFamille, setFiltreFamille] = useState('');
+  // Pagination de la liste (taille choisie gardée dans ce navigateur)
+  const [page, setPage] = useState(0);
+  const [taillePage, setTaillePage] = useState(() => {
+    try { return Number(localStorage.getItem('gmao.equipements.taillePage')) || 50; } catch { return 50; }
+  });
+  const changerTaillePage = (n) => {
+    setTaillePage(n);
+    setPage(0);
+    try { localStorage.setItem('gmao.equipements.taillePage', String(n)); } catch { /* stockage indisponible */ }
+  };
   const [equipementOuvert, setEquipementOuvert] = useState(null);
   const [historique, setHistorique] = useState([]);
   const [loadingHistorique, setLoadingHistorique] = useState(false);
@@ -370,7 +381,7 @@ export default function EtatEquipement({ isModal = false }) {
   const motsRecherche = sansAccents(recherche).split(/\s+/).filter(Boolean);
   const correspond = (e) => {
     if (motsRecherche.length === 0) return true;
-    const texte = sansAccents([e.cibleNom, e.lotArticleImmobilistationId, e.bonMaintenanceReferenceNum, connexions[e.lotArticleImmobilistationId]?.adresseIp].filter((x) => x != null).join(' '));
+    const texte = sansAccents([e.cibleNom, e.lotArticleImmobilistationId, e.bonMaintenanceReferenceNum, e.familleNom, connexions[e.lotArticleImmobilistationId]?.adresseIp].filter((x) => x != null).join(' '));
     return motsRecherche.every((m) => texte.includes(m.replace(/^#/, '')));
   };
 
@@ -389,6 +400,19 @@ export default function EtatEquipement({ isModal = false }) {
   // Hors ligne : déclaré par la surveillance automatique (plusieurs tests ratés d'affilée)
   const estHorsLigne = (e) => !!connexions[e.lotArticleImmobilistationId]?.horsLigneDepuis;
   const nbAvecIp = etatsUniques.filter(aUneIp).length;
+  // Familles d'articles présentes dans le parc (lues dans Cubix), avec leur nombre
+  const familles = useMemo(() => {
+    const m = new Map();
+    let sansFamille = 0;
+    etatsUniques.forEach((e) => {
+      if (e.familleId == null) { sansFamille += 1; return; }
+      const cle = String(e.familleId);
+      const f = m.get(cle) || { id: cle, nom: e.familleNom || t('Famille #{id}', { id: cle }), n: 0 };
+      f.n += 1;
+      m.set(cle, f);
+    });
+    return { liste: [...m.values()].sort((a, b) => b.n - a.n), sansFamille };
+  }, [etatsUniques]);
   const nbHorsLigne = etatsUniques.filter(estHorsLigne).length;
 
   const etatsAffiches = etatsUniques
@@ -397,7 +421,15 @@ export default function EtatEquipement({ isModal = false }) {
       || (filtreIp === 'AVEC' && aUneIp(e))
       || (filtreIp === 'SANS' && !aUneIp(e))
       || (filtreIp === 'HORS_LIGNE' && estHorsLigne(e)))
+    .filter((e) => !filtreFamille
+      || (filtreFamille === 'AUCUNE' ? e.familleId == null : String(e.familleId) === filtreFamille))
     .filter(correspond);
+
+  // Retour à la première page quand le filtre ou la recherche change
+  useEffect(() => { setPage(0); }, [filtreEtat, filtreIp, filtreFamille, recherche]);
+  const nbPagesEq = Math.max(1, Math.ceil(etatsAffiches.length / taillePage));
+  const pageCourante = Math.min(page, nbPagesEq - 1);
+  const etatsPage = etatsAffiches.slice(pageCourante * taillePage, (pageCourante + 1) * taillePage);
 
   const compteurs = useMemo(() => {
     return etatsUniques.reduce((acc, e) => {
@@ -409,11 +441,12 @@ export default function EtatEquipement({ isModal = false }) {
   const total = etatsUniques.length;
 
   // Sélection de toutes les lignes visibles (impression des étiquettes)
-  const tousCoches = etatsAffiches.length > 0 && etatsAffiches.every((e) => selection.has(e.lotArticleImmobilistationId));
+  // La case d'en-tête coche / décoche les équipements de la page affichée
+  const tousCoches = etatsPage.length > 0 && etatsPage.every((e) => selection.has(e.lotArticleImmobilistationId));
   const basculerTout = () => setSelection((s) => {
     const n = new Map(s);
-    if (tousCoches) etatsAffiches.forEach((e) => n.delete(e.lotArticleImmobilistationId));
-    else etatsAffiches.forEach((e) => n.set(e.lotArticleImmobilistationId, e.cibleNom));
+    if (tousCoches) etatsPage.forEach((e) => n.delete(e.lotArticleImmobilistationId));
+    else etatsPage.forEach((e) => n.set(e.lotArticleImmobilistationId, e.cibleNom));
     return n;
   });
 
@@ -475,6 +508,16 @@ export default function EtatEquipement({ isModal = false }) {
               aria-label={t("Rechercher un équipement...")}
             />
           </label>
+          {familles.liste.length > 0 && (
+            <label className="vl-select" title={t('Filtrer par famille')}>
+              <span className="vl-sr">{t('Filtrer par famille')}</span>
+              <select value={filtreFamille} onChange={(ev) => setFiltreFamille(ev.target.value)} aria-label={t('Filtrer par famille')}>
+                <option value="">{t('Toutes les familles')} ({etatsUniques.length})</option>
+                {familles.liste.map((f) => <option key={f.id} value={f.id}>{f.nom} ({f.n})</option>)}
+                {familles.sansFamille > 0 && <option value="AUCUNE">{t('Sans famille')} ({familles.sansFamille})</option>}
+              </select>
+            </label>
+          )}
           <VeilleSegments
             label={t("Filtrer par adresse IP")}
             valeur={filtreIp}
@@ -525,8 +568,8 @@ export default function EtatEquipement({ isModal = false }) {
       ) : (
         <ul className="vl-liste vl-eq">
           <li className="vl-ligne vl-ligne--tete" aria-hidden="false">
-            <label className="vl-eq__case" title={t('Tout sélectionner pour les étiquettes')}>
-              <input type="checkbox" checked={tousCoches} onChange={basculerTout} aria-label={t('Tout sélectionner pour les étiquettes')} />
+            <label className="vl-eq__case" title={t('Sélectionner cette page pour les étiquettes')}>
+              <input type="checkbox" checked={tousCoches} onChange={basculerTout} aria-label={t('Sélectionner cette page pour les étiquettes')} />
             </label>
             <span>{t("Équipement")}</span>
             <span>{t("Disponibilité")}</span>
@@ -534,7 +577,7 @@ export default function EtatEquipement({ isModal = false }) {
             <span>{t("Criticité")}</span>
             <span />
           </li>
-          {etatsAffiches.map((e) => {
+          {etatsPage.map((e) => {
             const id = e.lotArticleImmobilistationId;
             const isOpen = equipementOuvert === id;
             const jours = e.depuisLe ? joursDepuis(e.depuisLe) : null;
@@ -574,6 +617,7 @@ export default function EtatEquipement({ isModal = false }) {
                         {t(ETAT_LABELS[e.etatActuel] || e.etatActuel)}
                       </Pastille>
                       {jours !== null && <span><IconClock /> {tp('depuis jours', jours)}</span>}
+                      {e.familleNom && <span className="vl-eq__famille" title={t('Famille')}>{e.familleNom}</span>}
                       {e.bonMaintenanceReferenceNum && (
                         <span><IconFile /> {t("Bon")} <strong>{e.bonMaintenanceReferenceNum}</strong></span>
                       )}
@@ -728,6 +772,16 @@ export default function EtatEquipement({ isModal = false }) {
             );
           })}
         </ul>
+      )}
+
+      {!loading && !error && (
+        <VeillePagination
+          page={pageCourante}
+          taille={taillePage}
+          total={etatsAffiches.length}
+          onPage={(p) => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          onTaille={changerTaillePage}
+        />
       )}
 
       {scanner && <ScannerQR onClose={fermerScanner} />}

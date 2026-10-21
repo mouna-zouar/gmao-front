@@ -1,4 +1,4 @@
-import { Inbox, Info, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Inbox, Info, X } from 'lucide-react';
 import { t, locale } from '../../../i18n';
 import './Veille.css';
 
@@ -131,6 +131,65 @@ export function Panneau({ icone: Icone, titre, n, aide, ton, actions, children, 
       {aide && <p className="vl-panneau__aide">{aide}</p>}
       <div className="vl-panneau__corps">{children}</div>
     </section>
+  );
+}
+
+/** Numéros à afficher : 1 … 4 5 [6] 7 8 … 40 */
+function numerosPages(page, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+  const set = new Set([0, total - 1, page - 1, page, page + 1]);
+  if (page <= 2) [1, 2, 3].forEach((i) => set.add(i));
+  if (page >= total - 3) [total - 4, total - 3, total - 2].forEach((i) => set.add(i));
+  const tries = [...set].filter((i) => i >= 0 && i < total).sort((a, b) => a - b);
+  const res = [];
+  tries.forEach((i, k) => {
+    if (k > 0 && i - tries[k - 1] > 1) res.push(`…${i}`);
+    res.push(i);
+  });
+  return res;
+}
+
+/** Barre de pagination sous une liste (page commence à 0). */
+export function VeillePagination({ page, taille, total, onPage, onTaille, tailles = [25, 50, 100, 200] }) {
+  const nbPages = Math.max(1, Math.ceil(total / taille));
+  if (total === 0) return null;
+  const debut = page * taille + 1;
+  const fin = Math.min(total, (page + 1) * taille);
+  const aller = (p) => onPage(Math.max(0, Math.min(nbPages - 1, p)));
+  return (
+    <nav className="vl-pagination" aria-label={t('Pagination')}>
+      <span className="vl-pagination__info">
+        {t('{debut}–{fin} sur {total}', { debut: debut.toLocaleString(locale()), fin: fin.toLocaleString(locale()), total: total.toLocaleString(locale()) })}
+      </span>
+      <div className="vl-pagination__pages">
+        <button type="button" className="vl-pagination__btn" onClick={() => aller(0)} disabled={page === 0} aria-label={t('Première page')}><ChevronsLeft size={15} aria-hidden="true" /></button>
+        <button type="button" className="vl-pagination__btn" onClick={() => aller(page - 1)} disabled={page === 0} aria-label={t('Page précédente')}><ChevronLeft size={15} aria-hidden="true" /></button>
+        {numerosPages(page, nbPages).map((n) => (typeof n === 'string'
+          ? <span key={n} className="vl-pagination__ellipse" aria-hidden="true">…</span>
+          : (
+            <button
+              key={n}
+              type="button"
+              className={`vl-pagination__btn vl-pagination__num ${n === page ? 'is-actif' : ''}`}
+              onClick={() => aller(n)}
+              aria-current={n === page ? 'page' : undefined}
+              aria-label={t('Page {n}', { n: n + 1 })}
+            >
+              {n + 1}
+            </button>
+          )))}
+        <button type="button" className="vl-pagination__btn" onClick={() => aller(page + 1)} disabled={page >= nbPages - 1} aria-label={t('Page suivante')}><ChevronRight size={15} aria-hidden="true" /></button>
+        <button type="button" className="vl-pagination__btn" onClick={() => aller(nbPages - 1)} disabled={page >= nbPages - 1} aria-label={t('Dernière page')}><ChevronsRight size={15} aria-hidden="true" /></button>
+      </div>
+      {onTaille && (
+        <label className="vl-pagination__taille">
+          {t('Par page')}
+          <select value={taille} onChange={(e) => onTaille(Number(e.target.value))}>
+            {tailles.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+        </label>
+      )}
+    </nav>
   );
 }
 

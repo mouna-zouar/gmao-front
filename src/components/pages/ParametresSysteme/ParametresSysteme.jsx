@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import {  Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench } from 'lucide-react';
+import {  Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
+import prestataireService from '../../../services/prestataireService';
+import authService from '../../../services/Authservice';
 import EquipementMaintenanceTypesSettings from '../Etatequipement/EquipementMaintenanceTypesSettings';
 import ReglageLangue from '../../../i18n/ReglageLangue';
-import { t } from '../../../i18n';
+import { t, locale } from '../../../i18n';
 import './ParametresSysteme.css';
 
 /** Pour les paramètres « planif.<code>.heure » : code du traitement exécutable à la main. */
@@ -13,10 +15,129 @@ function codeTache(cle) {
   return m ? m[1] : null;
 }
 
-function ChampValeur({ param, valeur, onChange }) {
+const nomPrestataire = (p) => (p ? (p.raisonSociale || `${p.nom || ''} ${p.prenom || ''}`.trim() || null) : null);
+
+/** ID d'un prestataire Cubix : saisie de l'ID, nom affiché dessous, raccourci « Ma clinique ». */
+function ChampPrestataire({ param, valeur, onChange }) {
+  const id = Number(valeur) || 0;
+  const [etat, setEtat] = useState({ statut: 'vide' });
+  const contexte = authService.getContexteMetier();
+  const monId = Number(contexte.prestataireId) || 0;
+
+  useEffect(() => {
+    if (id <= 0) { setEtat({ statut: 'vide' }); return undefined; }
+    let annule = false;
+    setEtat({ statut: 'chargement' });
+    const minuterie = setTimeout(() => {
+      prestataireService.getById(id)
+        .then((p) => { if (!annule) setEtat({ statut: 'ok', nom: nomPrestataire(p) || t('Prestataire #{id}', { id }) }); })
+        .catch(() => { if (!annule) setEtat({ statut: 'introuvable' }); });
+    }, 400);
+    return () => { annule = true; clearTimeout(minuterie); };
+  }, [id]);
+
+  return (
+    <div className="ps-presta">
+      <div className="ps-presta-ligne">
+        <input
+          id={`ps-${param.cle}`}
+          type="number"
+          step="1"
+          min={0}
+          value={valeur ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          aria-describedby={`ps-${param.cle}-nom`}
+        />
+        {monId > 0 && monId !== id && (
+          <button type="button" className="ps-action" onClick={() => onChange(String(monId))} title={t('Utiliser le prestataire de ma session')}>
+            <Building2 size={13} /> {contexte.prestataireNom || t('Ma clinique')}
+          </button>
+        )}
+      </div>
+      <p id={`ps-${param.cle}-nom`} className={`ps-presta-nom ps-presta-nom--${etat.statut}`}>
+        {etat.statut === 'chargement' && <><LoaderCircle size={13} className="ps-tourne" /> {t('Recherche dans Cubix…')}</>}
+        {etat.statut === 'ok' && <><CheckCircle2 size={13} /> {etat.nom}</>}
+        {etat.statut === 'introuvable' && <><AlertTriangle size={13} /> {t('Aucun prestataire avec cet ID dans Cubix.')}</>}
+        {etat.statut === 'vide' && t('0 : prestataire de la session Cubix, sinon tous les prestataires (liste très longue).')}
+      </p>
+    </div>
+  );
+}
+
+/** Familles d'articles Cubix à suivre : liste à cocher avec le nombre d'immobilisations de chacune. */
+function ChampFamilles({ param, valeur, onChange, prestataireId }) {
+  const [familles, setFamilles] = useState(null);
+  const [erreur, setErreur] = useState(null);
+  const [filtre, setFiltre] = useState('');
+  const choisies = useMemo(() => new Set(String(valeur || '').split(',').map((x) => x.trim()).filter(Boolean)), [valeur]);
+
+  useEffect(() => {
+    let annule = false;
+    setErreur(null);
+    parametreService.getFamillesCubix(prestataireId)
+      .then((l) => { if (!annule) setFamilles(l.filter((f) => f.id != null)); })
+      .catch(() => { if (!annule) { setFamilles([]); setErreur(t('Impossible de lire les familles dans Cubix.')); } });
+    return () => { annule = true; };
+  }, [prestataireId]);
+
+  const basculer = (id) => {
+    const n = new Set(choisies);
+    const cle = String(id);
+    if (n.has(cle)) n.delete(cle); else n.add(cle);
+    onChange([...n].join(','));
+  };
+
+  const liste = (familles || []).filter((f) => !filtre.trim()
+    || `${f.nom || ''} ${f.code || ''}`.toLowerCase().includes(filtre.trim().toLowerCase()));
+  const total = (familles || []).reduce((s, f) => s + f.nombre, 0);
+  const totalChoisi = (familles || []).filter((f) => choisies.has(String(f.id))).reduce((s, f) => s + f.nombre, 0);
+  const fmt = (n) => n.toLocaleString(locale());
+
+  return (
+    <div className="ps-familles">
+      <div className="ps-familles-tete">
+        <span className="ps-familles-resume">
+          {choisies.size === 0
+            ? t('Toutes les familles : {n} équipements', { n: fmt(total) })
+            : t('{f} famille(s) cochée(s) : {n} équipements sur {total}', { f: choisies.size, n: fmt(totalChoisi), total: fmt(total) })}
+        </span>
+        {choisies.size > 0 && (
+          <button type="button" className="ps-action" onClick={() => onChange('')}>{t('Tout décocher')}</button>
+        )}
+      </div>
+      <label className="ps-familles-recherche">
+        <Search size={14} aria-hidden="true" />
+        <input type="text" value={filtre} onChange={(e) => setFiltre(e.target.value)} placeholder={t('Rechercher une famille…')} aria-label={t('Rechercher une famille…')} />
+      </label>
+      {familles === null ? (
+        <p className="ps-presta-nom"><LoaderCircle size={13} className="ps-tourne" /> {t('Recherche dans Cubix…')}</p>
+      ) : erreur ? (
+        <p className="ps-presta-nom ps-presta-nom--introuvable"><AlertTriangle size={13} /> {erreur}</p>
+      ) : (
+        <ul className="ps-familles-liste" id={`ps-${param.cle}`}>
+          {liste.map((f) => (
+            <li key={f.id}>
+              <label className={choisies.has(String(f.id)) ? 'is-coche' : ''}>
+                <input type="checkbox" checked={choisies.has(String(f.id))} onChange={() => basculer(f.id)} />
+                <span className="ps-familles-nom">{f.nom || t('Sans famille')}</span>
+                <span className="ps-familles-n">{fmt(f.nombre)}</span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function ChampValeur({ param, valeur, onChange, draft }) {
   const common = { id: `ps-${param.cle}`, value: valeur ?? '' };
 
   switch (param.type) {
+    case 'PRESTATAIRE':
+      return <ChampPrestataire param={param} valeur={valeur} onChange={onChange} />;
+    case 'FAMILLES':
+      return <ChampFamilles param={param} valeur={valeur} onChange={onChange} prestataireId={draft?.['cubix.prestataire_id']} />;
     case 'BOOLEEN':
       return (
         <label className="ps-switch">
@@ -155,7 +276,7 @@ export default function ParametresSysteme() {
     const code = codeTache(p.cle);
 
     return (
-      <article key={p.cle} className={`ps-pcard ${modifie ? 'is-dirty' : ''}`}>
+      <article key={p.cle} className={`ps-pcard ${modifie ? 'is-dirty' : ''} ${p.type === 'FAMILLES' ? 'ps-pcard--large' : ''}`}>
         <div className="ps-pcard-head">
           <label htmlFor={`ps-${p.cle}`}>{p.libelle}</label>
           {modifie && <span className="ps-pcard-badge">{t("modifié")}</span>}
@@ -168,6 +289,7 @@ export default function ParametresSysteme() {
             param={p}
             valeur={draft[p.cle]}
             onChange={(v) => setValue(p.cle, v)}
+            draft={draft}
           />
           {p.unite && <span className="ps-unit">{p.unite}</span>}
         </div>

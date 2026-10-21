@@ -317,6 +317,33 @@
   box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.15);
 }
 
+/* Paramètre « prestataire Cubix » : ID + nom trouvé dans Cubix */
+.ps-presta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.ps-presta-ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ps-presta-ligne input { flex: 1 1 120px; }
+.ps-presta-ligne .ps-action { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-presta-nom { margin: 0; display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 1.4; color: var(--ps-text-mute); }
+.ps-presta-nom--ok { color: var(--g-emerald-700); font-weight: 600; }
+.ps-presta-nom--introuvable { color: #b42318; font-weight: 600; }
+.ps-tourne { animation: ps-tourne 0.9s linear infinite; }
+@keyframes ps-tourne { to { transform: rotate(360deg); } }
+
+/* Paramètre « familles suivies » : carte sur toute la largeur, liste à cocher */
+.ps-pcard--large { grid-column: 1 / -1; }
+.ps-familles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.ps-familles-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.ps-familles-resume { font-size: 13px; font-weight: 700; color: var(--ps-text); font-variant-numeric: tabular-nums; }
+.ps-familles-recherche { display: flex; align-items: center; gap: 8px; padding: 0 12px; border: 1.5px solid var(--ps-border); border-radius: var(--ps-radius-sm); background: var(--g-blanc); color: var(--ps-text-mute); }
+.ps-pcard-control .ps-familles-recherche input[type='text'] { flex: 1; min-width: 0; border: 0; outline: none; box-shadow: none; padding: 8px 0; font: inherit; font-size: 13px; font-weight: 500; background: transparent; color: var(--ps-text); }
+.ps-familles-recherche:focus-within { border-color: var(--ps-accent); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.15); }
+.ps-familles-liste { list-style: none; margin: 0; padding: 4px; max-height: 300px; overflow: auto; border: 1px solid var(--ps-border); border-radius: var(--ps-radius-sm); display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2px 8px; background: var(--g-blanc); }
+.ps-familles-liste label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 12.5px; color: var(--ps-text); }
+.ps-familles-liste label:hover { background: var(--g-slate-50); }
+.ps-familles-liste label.is-coche { background: rgba(7, 148, 164, 0.08); font-weight: 600; }
+.ps-familles-liste input { accent-color: var(--ps-accent); flex-shrink: 0; }
+.ps-familles-nom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ps-familles-n { flex-shrink: 0; font-variant-numeric: tabular-nums; color: var(--ps-text-mute); font-weight: 600; }
+
 .ps-unit {
   font-size: 12px;
   color: var(--ps-text-mute);

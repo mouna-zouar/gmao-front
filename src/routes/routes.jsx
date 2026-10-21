@@ -66,7 +66,6 @@ const AppRoutes = () => {
             <Route path="/mes-demandes" element={<VersMesDemandes />} />
             <Route path="/mon-espace" element={<EspacePersonnel />} />
             <Route path="/equipements" element={<EtatEquipement />} />
-            {/* Ouverte aussi en scannant le QR code collé sur l'appareil */}
             <Route path="/equipement/:id" element={<EquipementFiche />} />
             <Route path="/bons-maintenance" element={<BonsMaintenance />} />
             <Route path="/tables-parametrage" element={<Referentielconsultation  />} />

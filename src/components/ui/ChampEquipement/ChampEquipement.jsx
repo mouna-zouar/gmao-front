@@ -20,6 +20,7 @@ import './ChampEquipement.css';
 
 const libelle = (e) => e?.designation || e?.libelle || e?.code || (e?.id != null ? `${t('Équipement')} n° ${e.id}` : '');
 const details = (e) => [
+  e?.familleNom || e?.articleFamilleNom || null,
   [e?.marque, e?.modele].filter(Boolean).join(' '),
   e?.numPiece ? `${t('Série')} ${e.numPiece}` : null,
   e?.codeBarre ? `${t('Code')} ${e.codeBarre}` : (e?.code ? `${t('Code')} ${e.code}` : null),
@@ -54,6 +55,9 @@ export default function ChampEquipement({
   const [resolution, setResolution] = useState(false);
   const [scanner, setScanner] = useState(false);
   const [choisi, setChoisi] = useState(null); // dernier équipement choisi (pour son libellé)
+  // Filtre par famille d'article (liste chargée à la première ouverture)
+  const [famille, setFamille] = useState('');
+  const [familles, setFamilles] = useState(null);
 
   const racine = useRef(null);
   const champ = useRef(null);
@@ -83,35 +87,47 @@ export default function ChampEquipement({
 
   const libelleChoisi = valeur ? libelle(connu || { id: valeur }) : '';
 
-  // ─── Recherche serveur (après une courte pause de frappe) ───
+  useEffect(() => {
+    if (!ouvert || familles !== null) return;
+    equipementService.familles()
+      .then((l) => setFamilles(Array.isArray(l) ? l : []))
+      .catch(() => setFamilles([]));
+  }, [ouvert, familles]);
+
+  // ─── Recherche serveur (après une courte pause de frappe), éventuellement limitée à une famille ───
   const motifActif = ouvert && motif && motif.toLowerCase() !== libelleChoisi.toLowerCase() ? motif : '';
-  const aJour = reponse.motif === motifActif;
-  const resultats = motifActif && aJour ? reponse.liste : null;
-  const horsLigne = Boolean(motifActif && aJour && reponse.horsLigne);
-  const recherche = Boolean(motifActif && !aJour);
+  const cleRequete = motifActif || famille ? `${motifActif}|${famille}` : '';
+  const aJour = reponse.motif === cleRequete;
+  const resultats = cleRequete && aJour ? reponse.liste : null;
+  const horsLigne = Boolean(cleRequete && aJour && reponse.horsLigne);
+  const recherche = Boolean(cleRequete && !aJour);
 
   useEffect(() => {
-    if (!motifActif) return undefined;
+    if (!cleRequete) return undefined;
     let annule = false;
     const minuterie = setTimeout(async () => {
       try {
-        const page = await equipementService.rechercher(motifActif, 0, 25);
-        if (!annule) setReponse({ motif: motifActif, liste: page?.content ?? [], horsLigne: false });
+        const page = await equipementService.rechercher(motifActif, 0, famille ? 60 : 25, famille || null);
+        if (!annule) setReponse({ motif: cleRequete, liste: page?.content ?? [], total: page?.totalElements ?? null, horsLigne: false });
       } catch {
         // serveur ou source des équipements injoignable : la liste déjà chargée sert de repli
-        if (!annule) setReponse({ motif: motifActif, liste: null, horsLigne: true });
+        if (!annule) setReponse({ motif: cleRequete, liste: null, total: null, horsLigne: true });
       }
-    }, 280);
+    }, motifActif ? 280 : 0);
     return () => { annule = true; clearTimeout(minuterie); };
-  }, [motifActif]);
+  }, [cleRequete, motifActif, famille]);
 
   const liste = useMemo(() => {
-    if (!motifActif) return optionsLocales.slice(0, 60);
+    if (!cleRequete) return optionsLocales.slice(0, 60);
     if (resultats) return resultats;
     // serveur injoignable (ou réponse en attente) : filtre de la liste déjà chargée
     const m = motifActif.toLowerCase();
-    return optionsLocales.filter((o) => contient(o, m)).slice(0, 60);
-  }, [motifActif, resultats, optionsLocales]);
+    return optionsLocales
+      .filter((o) => !famille || String(o.articleFamilleId ?? o.familleId) === famille)
+      .filter((o) => !m || contient(o, m))
+      .slice(0, 60);
+  }, [cleRequete, motifActif, famille, resultats, optionsLocales]);
+  const totalFamille = famille && aJour ? reponse.total : null;
 
 
   // ─── Fermeture au clic extérieur ───
@@ -260,6 +276,24 @@ export default function ChampEquipement({
 
       {ouvert && (
         <div className="cheq-menu">
+          {familles?.length > 0 && (
+            <div className="cheq-filtre">
+              <label htmlFor={`${idChamp}-famille`}>{t('Famille')}</label>
+              <select
+                id={`${idChamp}-famille`}
+                value={famille}
+                onChange={(e) => { setFamille(e.target.value); setActif(-1); }}
+              >
+                <option value="">{t('Toutes les familles')}</option>
+                {familles.map((f) => (
+                  <option key={f.id} value={String(f.id)}>{f.nom || t('Famille #{id}', { id: f.id })} ({Number(f.nombre || 0).toLocaleString()})</option>
+                ))}
+              </select>
+              {totalFamille != null && totalFamille > liste.length && (
+                <span className="cheq-filtre-note">{t('{n} premiers sur {total} : tapez pour affiner', { n: liste.length, total: totalFamille.toLocaleString() })}</span>
+              )}
+            </div>
+          )}
           <ul className="cheq-options" id={idListe} role="listbox" aria-label={t('Équipements')}>
             {facultatif && !motifActif && (
               <li

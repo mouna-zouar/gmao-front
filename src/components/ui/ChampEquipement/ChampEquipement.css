@@ -167,3 +167,33 @@
   .cheq-scanner span { display: none; }
   .cheq-scanner { padding: 0 11px; }
 }
+
+/* Filtre « famille » en haut de la liste */
+.cheq-filtre {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--g-bordure, #e2e8f0);
+  background: var(--g-slate-50, #f8fafc);
+  font-size: 0.78rem;
+}
+.cheq .cheq-menu .cheq-filtre label { font-weight: 700; color: var(--g-texte-2, #475569); }
+.cheq .cheq-menu .cheq-filtre select {
+  box-sizing: border-box;
+  line-height: 1.2;
+  padding-block: 0;
+  flex: 1 1 200px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--g-bordure, #e2e8f0);
+  border-radius: 8px;
+  background: var(--g-blanc, #fff);
+  color: var(--g-texte, #0f172a);
+  font: inherit;
+  font-size: 0.8rem;
+}
+.cheq .cheq-menu .cheq-filtre select:focus { outline: none; border-color: var(--g-marque, #0e7490); box-shadow: 0 0 0 3px var(--g-marque-clair, rgba(14,116,144,.15)); }
+.cheq-filtre-note { flex-basis: 100%; color: var(--g-texte-discret, #94a3b8); }
