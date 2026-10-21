@@ -32,6 +32,16 @@ const alerteMachineService = {
     return data;
   },
 
+  /** Agents de terrain (agent-gmao) : état EN_LIGNE / ARRETE, dernier signal, liaisons actives. */
+  async agents() {
+    const { data } = await api.get('/machines/agents');
+    return data ?? [];
+  },
+
+  async supprimerAgent(id) {
+    await api.delete(`/machines/agents/${id}`);
+  },
+
   /** 10 dernières alertes d'un équipement. */
   async parEquipement(equipementId) {
     const { data } = await api.get(`/equipements/${equipementId}/alertes`);

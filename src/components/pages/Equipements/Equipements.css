@@ -1174,3 +1174,29 @@
 .eq-cnx-alerte-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .eq-cnx-alerte-texte strong { font-size: 13px; font-weight: 600; color: var(--g-slate-800); overflow-wrap: anywhere; }
 .eq-cnx-alerte-texte em { font-style: normal; font-size: 12px; color: var(--g-slate-500); }
+
+/* ── Liaison avec l'agent (machines sans adresse IP) ── */
+.eq-lia-form { gap: 12px; }
+.eq-lia-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+.eq-lia-aide { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 500; color: var(--g-slate-500); }
+.eq-lia-explication { margin: -4px 0 0; padding: 8px 10px; border-radius: 8px; background: var(--g-slate-50); font-size: 12.5px; color: var(--g-slate-600); }
+.eq-lia-astuce { margin: 0; font-size: 12px; color: var(--g-slate-500); }
+.eq-lia-regles { display: flex; flex-direction: column; gap: 8px; }
+.eq-lia-regles-titre { font-size: 12.5px; font-weight: 700; color: var(--g-slate-600); }
+.eq-lia-regle { display: grid; grid-template-columns: 80px minmax(0, 1fr) 120px 32px; gap: 6px; align-items: center; }
+.eq-lia-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.eq-lia-liste li {
+  display: flex; flex-direction: column; gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--g-bordure);
+  border-inline-start: 3px solid var(--eq-ton, var(--g-slate-300));
+  border-radius: 10px;
+  background: var(--g-blanc);
+}
+.eq-lia-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.eq-lia-tete strong { font-size: 13.5px; color: var(--g-slate-900); }
+.eq-lia-detail { font-size: 12px; color: var(--g-slate-500); }
+.eq-lia-etat { font-size: 12.5px; color: var(--g-slate-700); font-weight: 600; }
+.eq-lia-actions { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin-top: 2px; }
+@media (max-width: 520px) { .eq-lia-regle { grid-template-columns: 64px minmax(0, 1fr); } }
+.eq-lia-attention { margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--g-amber-50, #fffbeb); border: 1px solid var(--g-amber-200, #fde68a); color: #92400e; font-size: 12.5px; font-weight: 600; }

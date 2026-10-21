@@ -2,8 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Ban, CircleCheck, ClipboardPlus, Eye, FileText, Globe, LoaderCircle, Plug, RadioTower, RefreshCw, ScrollText, Server,
+  ServerCog, Trash2,
 } from 'lucide-react';
 import alerteMachineService from '../../../services/alerteMachineService';
+import liaisonAgentService from '../../../services/liaisonAgentService';
+import { ETATS_LIAISON, libelleType, resumeLiaison } from '../Equipements/EquipementLiaisonAgent';
 import reclamationService from '../../../services/Reclamationservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import { t } from '../../../i18n';
@@ -34,7 +37,91 @@ const SOURCE = {
   SYSLOG: { label: 'Syslog', icone: ScrollText },
   HTTP: { label: 'HTTP', icone: Globe },
   SURVEILLANCE: { label: 'Surveillance réseau', icone: Plug },
+  AGENT: { label: 'Agent de terrain', icone: ServerCog },
 };
+
+const LIBELLE_MODULE = {
+  RESEAU: 'Réseau', USB: 'USB / RS232', RS485: 'RS485', ALARMES: 'Alarmes Modbus', ZIGBEE: 'Zigbee',
+};
+
+/** Bandeau des agents de terrain : en ligne / arrêté, dernier signal, liaisons actives. */
+function BandeauAgents({ agents, liaisons, onSupprimer, onOuvrir }) {
+  if (agents === null) return null;
+  if (agents.length === 0) {
+    return (
+      <div className="vl-agents vl-agents--vide">
+        <ServerCog size={16} aria-hidden="true" />
+        <span>{t('Aucun agent de terrain relié. Lancez agent-gmao sur le PC placé près des machines pour surveiller le réseau, l’USB, le RS485 ou le Zigbee.')}</span>
+      </div>
+    );
+  }
+  return (
+    <section className="vl-agents" aria-label={t('Agents de terrain')}>
+      {agents.map((ag) => {
+        const arrete = ag.etat === 'ARRETE';
+        return (
+          <article key={ag.id} className={`vl-agent ${arrete ? 'is-arrete' : ''}`}>
+            <span className="vl-agent__icone" aria-hidden="true"><ServerCog size={18} /></span>
+            <div className="vl-agent__corps">
+              <div className="vl-agent__ligne">
+                <strong className="vl-agent__nom">{ag.nom}</strong>
+                <Pastille ton={arrete ? 'danger' : 'succes'}>{arrete ? t('Arrêté') : t('En ligne')}</Pastille>
+              </div>
+              <div className="vl-agent__sous">
+                <span title={dateHeure(ag.derniereActivite)}>
+                  {arrete
+                    ? t('Aucun signal depuis {quand}', { quand: ilYa(ag.derniereActivite) || '—' })
+                    : t('Signal {quand}', { quand: ilYa(ag.derniereActivite) || '—' })}
+                </span>
+                {(ag.hote || ag.adresse) && <span>{[ag.hote, ag.adresse].filter(Boolean).join(' · ')}</span>}
+                {ag.equipementsSurveilles != null && <span>{t('{n} équipement(s) testé(s)', { n: ag.equipementsSurveilles })}</span>}
+              </div>
+              {ag.modules?.length > 0 && (
+                <div className="vl-agent__modules">
+                  {ag.modules.map((m) => <span key={m} className="vl-agent__module">{t(LIBELLE_MODULE[m] || m)}</span>)}
+                </div>
+              )}
+              {(() => {
+                const siennes = (liaisons || []).filter((l) => l.agentNom?.toLowerCase() === ag.nom.toLowerCase() && l.actif !== false);
+                if (siennes.length === 0) return null;
+                return (
+                  <ul className="vl-agent__liaisons" aria-label={t('Liaisons de l’agent')}>
+                    {siennes.slice(0, 6).map((l) => {
+                      const et = ETATS_LIAISON[l.dernierEtat] || { ton: 'neutre', label: 'Pas encore lue' };
+                      const ton = et.ton === 'ok' ? 'succes' : et.ton === 'alerte' ? 'danger' : et.ton === 'attention' ? 'attention' : et.ton === 'info' ? 'info' : 'neutre';
+                      return (
+                        <li key={l.id}>
+                          <button type="button" className="vl-agent__liaison" onClick={() => onOuvrir(l.lotArticleImmobilistationId)}
+                            title={[t(libelleType(l.type)), resumeLiaison(l)].filter(Boolean).join(' · ')}>
+                            <span className="vl-agent__liaison-nom">{l.equipementNom || `#${l.lotArticleImmobilistationId}`}</span>
+                            <span className="vl-agent__liaison-msg">{l.dernierMessage || t(libelleType(l.type))}</span>
+                          </button>
+                          <Pastille ton={ton}>{t(et.label)}</Pastille>
+                        </li>
+                      );
+                    })}
+                    {siennes.length > 6 && <li className="vl-agent__plus">{t('+ {n} autre(s)', { n: siennes.length - 6 })}</li>}
+                  </ul>
+                );
+              })()}
+            </div>
+            {arrete && (
+              <button
+                type="button"
+                className="vl-btn vl-btn--petit vl-btn--discret vl-btn--icone"
+                onClick={() => onSupprimer(ag)}
+                title={t('Retirer cet agent (ancien PC ou agent renommé)')}
+                aria-label={t('Retirer cet agent (ancien PC ou agent renommé)')}
+              >
+                <Trash2 size={14} aria-hidden="true" />
+              </button>
+            )}
+          </article>
+        );
+      })}
+    </section>
+  );
+}
 
 /** Valeurs proposées dans la réclamation créée depuis une alerte (modifiables avant d'enregistrer). */
 function valeursDepuisAlerte(a) {
@@ -69,6 +156,9 @@ export default function AlertesMachines({ isModal = false }) {
   const [enCours, setEnCours] = useState(null);
   const [detail, setDetail] = useState(null);
   const [alerteReclamation, setAlerteReclamation] = useState(null);
+  const [agents, setAgents] = useState(null);
+  const [liaisons, setLiaisons] = useState([]);
+  const [filtreSource, setFiltreSource] = useState('');
   const [message, setMessage] = useState(null);
   const valeursReclamation = useMemo(() => (alerteReclamation ? valeursDepuisAlerte(alerteReclamation) : null), [alerteReclamation]);
 
@@ -76,8 +166,14 @@ export default function AlertesMachines({ isModal = false }) {
     setLoading(true);
     setError(null);
     try {
-      const page = await alerteMachineService.getAll('', 0, 300);
+      const [page, listeAgents, listeLiaisons] = await Promise.all([
+        alerteMachineService.getAll('', 0, 300),
+        alerteMachineService.agents().catch(() => null),
+        liaisonAgentService.liste().catch(() => []),
+      ]);
       setAlertes(page?.content ?? []);
+      setAgents(listeAgents);
+      setLiaisons(listeLiaisons);
     } catch (err) {
       console.error('Erreur chargement alertes machines :', err);
       setError(t('Impossible de charger les alertes des machines.'));
@@ -123,6 +219,26 @@ export default function AlertesMachines({ isModal = false }) {
 
   const estOuverte = (a) => a.statut === 'NOUVELLE' || a.statut === 'VUE';
 
+  /** Nom de l'agent qui a envoyé l'alerte (message « [nom] … » ou alerte « agent arrêté »), sinon null. */
+  const agentDe = (a) => {
+    if (a.source === 'AGENT') return (a.adresseSource || '').replace(/^agent:/, '');
+    const m = /^\[([^\]]+)\]\s/.exec(a.message || '');
+    if (!m) return null;
+    return (agents || []).some((ag) => ag.nom.toLowerCase() === m[1].toLowerCase()) ? m[1] : null;
+  };
+  const sourceAffichee = (a) => (agentDe(a) ? 'AGENT' : a.source);
+
+  const supprimerAgent = async (ag) => {
+    if (!window.confirm(t('Retirer l’agent « {nom} » de la liste ? Il réapparaîtra s’il envoie de nouveau son signal.', { nom: ag.nom }))) return;
+    try {
+      await alerteMachineService.supprimerAgent(ag.id);
+      setAgents((l) => (l || []).filter((x) => x.id !== ag.id));
+      charger();
+    } catch (err) {
+      console.error('Erreur suppression agent :', err);
+    }
+  };
+
   const compte = useMemo(() => {
     const c = { total: alertes.length, ouvertes: 0, NOUVELLE: 0, VUE: 0, IGNOREE: 0, RESOLUE: 0, CRITIQUE: 0, ALERTE: 0, inconnues: 0 };
     alertes.forEach((a) => {
@@ -130,7 +246,7 @@ export default function AlertesMachines({ isModal = false }) {
       if (estOuverte(a)) {
         c.ouvertes += 1;
         c[a.niveau] = (c[a.niveau] || 0) + 1;
-        if (!a.lotArticleImmobilistationId) c.inconnues += 1;
+        if (!a.lotArticleImmobilistationId && a.source !== 'AGENT') c.inconnues += 1;
       }
     });
     return c;
@@ -139,11 +255,19 @@ export default function AlertesMachines({ isModal = false }) {
   const affichees = useMemo(() => alertes
     .filter((a) => (filtreStatut === 'TOUTES' ? true : filtreStatut === 'OUVERTES' ? estOuverte(a) : a.statut === filtreStatut))
     .filter((a) => !filtreNiveau || a.niveau === filtreNiveau)
-    .filter((a) => !filtreInconnues || !a.lotArticleImmobilistationId)
+    .filter((a) => !filtreInconnues || (!a.lotArticleImmobilistationId && a.source !== 'AGENT'))
+    .filter((a) => !filtreSource || sourceAffichee(a) === filtreSource)
     .sort((x, y) => (Number(y.statut === 'NOUVELLE') - Number(x.statut === 'NOUVELLE'))
       || ((NIVEAU[y.niveau]?.rang ?? 0) - (NIVEAU[x.niveau]?.rang ?? 0))
       || String(y.derniereReception || '').localeCompare(String(x.derniereReception || ''))),
-  [alertes, filtreStatut, filtreNiveau, filtreInconnues]);
+  [alertes, filtreStatut, filtreNiveau, filtreInconnues, filtreSource, agents]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sources présentes (pour la liste « Source »)
+  const sources = useMemo(() => {
+    const m = new Map();
+    alertes.forEach((a) => { const s = sourceAffichee(a); m.set(s, (m.get(s) || 0) + 1); });
+    return [...m.entries()].sort((x, y) => y[1] - x[1]);
+  }, [alertes, agents]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const basculerNiveau = (n) => { setFiltreInconnues(false); setFiltreNiveau((v) => (v === n ? null : n)); };
 
@@ -162,6 +286,8 @@ export default function AlertesMachines({ isModal = false }) {
       description={t('Warnings envoyés par les machines (SNMP, Syslog) et coupures détectées par la surveillance réseau.')}
       actions={boutonRafraichir}
     >
+      {!error && <BandeauAgents agents={agents} liaisons={liaisons} onSupprimer={supprimerAgent} onOuvrir={(id) => navigate(`/equipement/${id}`)} />}
+
       {!error && (
         <VeilleKpis
           label={t('Résumé des alertes machines')}
@@ -187,6 +313,15 @@ export default function AlertesMachines({ isModal = false }) {
             { cle: 'TOUTES', label: t('Toutes'), n: compte.total },
           ]}
         />
+        {sources.length > 1 && (
+          <label className="vl-select" title={t('Filtrer par source')}>
+            <span className="vl-sr">{t('Filtrer par source')}</span>
+            <select value={filtreSource} onChange={(e) => setFiltreSource(e.target.value)} aria-label={t('Filtrer par source')}>
+              <option value="">{t('Toutes les sources')}</option>
+              {sources.map(([s, n]) => <option key={s} value={s}>{t(SOURCE[s]?.label || s)} ({n})</option>)}
+            </select>
+          </label>
+        )}
         <div className="vl-barre__droite">
           <span className="vl-barre__note">{t('Mise à jour automatique toutes les 30 secondes')}</span>
           {isModal && boutonRafraichir}
@@ -212,7 +347,8 @@ export default function AlertesMachines({ isModal = false }) {
           {affichees.map((a) => {
             const niv = NIVEAU[a.niveau] || { label: a.niveau, ton: 'neutre' };
             const st = STATUT[a.statut] || { label: a.statut, ton: 'neutre' };
-            const src = SOURCE[a.source] || { label: a.source, icone: Server };
+            const src = SOURCE[sourceAffichee(a)] || { label: a.source, icone: Server };
+            const nomAgent = agentDe(a);
             const IconeSource = src.icone;
             const nom = a.equipementNom || (a.lotArticleImmobilistationId ? t('Équipement #{id}', { id: a.lotArticleImmobilistationId }) : null);
             return (
@@ -226,15 +362,19 @@ export default function AlertesMachines({ isModal = false }) {
                         {nom}
                       </button>
                     ) : (
-                      <h3 className="vl-ligne__titre">{t('Adresse inconnue')} <span className="vl-eq__ip"><strong>{a.adresseSource}</strong></span></h3>
+                      a.source === 'AGENT'
+                        ? <h3 className="vl-ligne__titre">{t('Agent « {nom} »', { nom: nomAgent || a.adresseSource })}</h3>
+                        : <h3 className="vl-ligne__titre">{t('Adresse inconnue')} <span className="vl-eq__ip"><strong>{a.adresseSource}</strong></span></h3>
                     )}
                     <Pastille ton={niv.ton}>{t(niv.label)}</Pastille>
                   </div>
                   <div className="vl-ligne__sous">
-                    <span title={a.message} style={{ color: 'var(--g-texte-2)' }}>{a.message}</span>
+                    <span title={a.message} style={{ color: 'var(--g-texte-2)' }}>
+                      {nomAgent ? String(a.message || '').replace(/^\[[^\]]+\]\s*/, '') : a.message}
+                    </span>
                   </div>
                   <div className="vl-ligne__sous">
-                    <span>{t(src.label)}</span>
+                    <span>{t(src.label)}{nomAgent ? ` · ${nomAgent}` : ''}</span>
                     {nom && a.adresseSource && <span className="vl-eq__ip"><strong>{a.adresseSource}</strong></span>}
                     <span title={dateHeure(a.dateReception)}>{t('Reçue')} {ilYa(a.dateReception) || dateHeure(a.dateReception)}</span>
                     {a.brut && (
@@ -264,7 +404,7 @@ export default function AlertesMachines({ isModal = false }) {
                       <ClipboardPlus size={14} aria-hidden="true" />
                       {a.reclamationNum ? t('Réclamation {num}', { num: a.reclamationNum }) : t('Réclamation créée')}
                     </button>
-                  ) : estOuverte(a) && (
+                  ) : estOuverte(a) && a.source !== 'AGENT' && (
                     <button type="button" className="vl-btn vl-btn--petit vl-btn--primaire" onClick={() => setAlerteReclamation(a)} title={t('Créer une réclamation pré-remplie à partir de cette alerte')}>
                       <ClipboardPlus size={14} aria-hidden="true" /> {t('Créer une réclamation')}
                     </button>

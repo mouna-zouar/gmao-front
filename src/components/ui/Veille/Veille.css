@@ -520,3 +520,57 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
   background: var(--g-slate-100, #f1f5f9); color: var(--g-texte-2);
   font-size: 0.72rem; font-weight: 600;
 }
+
+/* Agents de terrain (fenêtre Alertes machines) */
+.vl-agents {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.vl-agents--vide {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px;
+  border: 1px dashed var(--g-bordure-forte);
+  border-radius: 12px;
+  background: var(--g-surface);
+  color: var(--g-texte-2);
+  font-size: 0.82rem;
+}
+.vl-agent {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--g-bordure);
+  border-inline-start: 4px solid var(--g-emerald-500);
+  border-radius: 12px;
+  background: var(--g-blanc);
+}
+.vl-agent.is-arrete { border-inline-start-color: var(--g-red-500); background: var(--g-red-50, #fef2f2); }
+.vl-agent__icone {
+  width: 34px; height: 34px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 9px;
+  background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-700, #047857);
+}
+.vl-agent.is-arrete .vl-agent__icone { background: var(--g-blanc); color: var(--g-red-600, #dc2626); }
+.vl-agent__corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.vl-agent__ligne { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.vl-agent__nom { font-size: 0.9rem; color: var(--g-texte); }
+.vl-agent__sous { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.76rem; color: var(--g-texte-2); }
+.vl-agent__modules { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+.vl-agent__module {
+  padding: 1px 8px; border-radius: 999px;
+  background: var(--g-slate-100, #f1f5f9); color: var(--g-texte-2);
+  font-size: 0.7rem; font-weight: 600;
+}
+.vl-agent__liaisons { list-style: none; margin: 6px 0 0; padding: 6px 0 0; border-top: 1px solid var(--g-bordure); display: flex; flex-direction: column; gap: 4px; }
+.vl-agent__liaisons li { display: flex; align-items: center; gap: 8px; }
+.vl-agent__liaison {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start;
+  padding: 2px 4px; border: 0; border-radius: 6px; background: transparent; cursor: pointer; text-align: start;
+  font: inherit;
+}
+.vl-agent__liaison:hover { background: var(--g-slate-50); }
+.vl-agent__liaison-nom { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.78rem; font-weight: 700; color: var(--g-texte); }
+.vl-agent__liaison-msg { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.72rem; color: var(--g-texte-2); }
+.vl-agent__plus { font-size: 0.72rem; color: var(--g-texte-2); padding-inline-start: 4px; }
