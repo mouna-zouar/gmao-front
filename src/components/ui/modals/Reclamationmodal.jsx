@@ -14,6 +14,7 @@ import authService from '../../../services/Authservice';
 import './Modal.css';
 import './ReclamationModal.css';
 import ChampEquipement from '../ChampEquipement/ChampEquipement';
+import SuggestionCodePanne from './SuggestionCodePanne';
 import { SOURCES_INFORMATION, optionsTypeEntretien } from '../../../constants/FicheIntervention';
 
 const ETAT_OPTIONS = [
@@ -46,6 +47,8 @@ const emptyForm = {
   serviceId: '',
   depotId: '',
   prestataireId: '',
+  codePanneId: '',
+  codePanneSource: '',
 };
 
 // ─── Sections de navigation ───
@@ -389,6 +392,8 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
         serviceId: reclamation.serviceId ?? '',
         depotId: reclamation.depotId ?? '',
         prestataireId: reclamation.prestataireId ?? '',
+        codePanneId: reclamation.codePanneId != null ? String(reclamation.codePanneId) : '',
+        codePanneSource: reclamation.codePanneSource || '',
       });
     } else if (isOpen) {
       const ctx = authService.getContexteMetier();
@@ -459,6 +464,8 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
         prestataireNom: formData.prestataireId === ''
           ? null
           : nomPrestataire(prestataires.find((p) => String(p.id) === String(formData.prestataireId))),
+        codePanneId: formData.codePanneId === '' ? null : Number(formData.codePanneId),
+        codePanneSource: formData.codePanneId === '' ? null : (formData.codePanneSource || 'MANUEL'),
       };
 
       // Création : on enregistre qui fait la demande (suivi dans Mon espace → « Mes demandes »)
@@ -531,6 +538,16 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
                   required
                 />
               </div>
+
+              <SuggestionCodePanne
+                description={formData.description}
+                lotArticleImmobilistationId={formData.lotArticleImmobilistationId}
+                reclamationId={isEditing ? reclamation?.id : null}
+                codePanneId={formData.codePanneId}
+                codePanneSource={formData.codePanneSource}
+                libelleActuel={isEditing && reclamation?.codePanneCode ? `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}` : null}
+                onChoisir={(id, source) => setFormData((prev) => ({ ...prev, codePanneId: id, codePanneSource: id ? source : '' }))}
+              />
 
               <div className="rm-field">
                 <label htmlFor="rcm-num">Numéro</label>

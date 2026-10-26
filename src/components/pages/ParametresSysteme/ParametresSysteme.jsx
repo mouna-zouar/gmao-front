@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search,
-  Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2,
+  Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags,
 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
@@ -9,6 +9,7 @@ import prestataireService from '../../../services/prestataireService';
 import authService from '../../../services/Authservice';
 import EquipementMaintenanceTypesSettings from '../Etatequipement/EquipementMaintenanceTypesSettings';
 import ReglesConditionnellesVue from './ReglesConditionnellesVue';
+import CodesPanneVue from './CodesPanneVue';
 import ReglageLangue from '../../../i18n/ReglageLangue';
 import { t, locale } from '../../../i18n';
 import './ParametresSysteme.css';
@@ -193,6 +194,7 @@ const RUBRIQUES = [
   { id: 'general', titre: 'Général', aide: 'Langue de l’application sur cet ordinateur.', Icone: Languages },
   { id: 'planif', groupe: 'Planification des traitements', titre: 'Traitements automatiques', aide: 'Quand les analyses et les alertes tournent toutes seules.', Icone: CalendarClock },
   { id: 'preventif', titre: 'Maintenance préventive', aide: 'Déclenchement des bons préventifs et types de maintenance réglementaire.', Icone: Wrench },
+  { id: 'codes_panne', titre: 'Codes panne', aide: 'Codes proposés par l’IA pendant la saisie des réclamations.', Icone: Tags },
   { id: 'sla', groupe: 'SLA (délais en heures)', titre: 'Délais SLA', aide: 'Délais de réponse et de résolution selon la priorité du bon.', Icone: Timer },
   { id: 'anomalies', groupe: "Détection d'anomalies", titre: 'Détection d’anomalies', aide: 'Quand un pic de réclamations est signalé.', Icone: Activity },
   { id: 'blocages', groupe: 'Détection de blocages', titre: 'Détection de blocages', aide: 'Quand un équipement à l’arrêt est signalé.', Icone: CirclePause },
@@ -279,7 +281,7 @@ export default function ParametresSysteme() {
 
   const rubriques = useMemo(() => [
     ...RUBRIQUES.map((r) => ({ ...r, items: parRubrique.m.get(r.id) || [] }))
-      .filter((r) => r.id === 'general' || r.id === 'preventif' || r.items.length > 0),
+      .filter((r) => r.id === 'general' || r.id === 'preventif' || r.id === 'codes_panne' || r.items.length > 0),
     ...parRubrique.autres,
   ], [parRubrique]);
 
@@ -509,6 +511,7 @@ export default function ParametresSysteme() {
         </>
       );
     }
+    if (r.id === 'codes_panne') return <div className="ps-carte"><CodesPanneVue /></div>;
     if (r.id === 'sla') return <div className="ps-carte">{tableauSla(r.items)}</div>;
     if (r.id === 'planif') return <div className="ps-carte"><div className="ps-lignes">{lignesTaches(r.items)}</div></div>;
     return <div className="ps-carte"><div className="ps-lignes">{r.items.map(ligneParametre)}</div></div>;

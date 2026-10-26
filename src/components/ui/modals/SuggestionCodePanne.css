@@ -1,0 +1,117 @@
+/* Code panne + assistant (codes proposés, pannes semblables résolues) sous la description */
+.scp { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; }
+.scp-ligne { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.scp-champ { grid-column: 1 / 2; }
+
+.scp-panneau {
+  border: 1.5px solid var(--g-brand-100);
+  background: var(--g-brand-50);
+  border-radius: 11px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.scp-panneau--attente { background: var(--g-slate-50); border-color: var(--g-slate-200); border-style: dashed; }
+
+.scp-entete {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 0.8rem; font-weight: 800; color: var(--g-brand-600);
+}
+.scp-panneau--attente .scp-entete { color: var(--g-slate-500); }
+.scp-tourne { animation: scp-tour 0.9s linear infinite; }
+@keyframes scp-tour { to { transform: rotate(360deg); } }
+
+.scp-badge {
+  font-size: 0.66rem; font-weight: 800; letter-spacing: 0.02em;
+  padding: 2px 7px; border-radius: 999px; text-transform: uppercase;
+}
+.scp-badge--ia { background: var(--g-brand-500); color: var(--g-blanc); }
+.scp-badge--mc { background: var(--g-slate-200); color: var(--g-slate-700); }
+
+.scp-relancer {
+  margin-inline-start: auto;
+  border: none; background: transparent; color: var(--g-slate-400);
+  padding: 4px; border-radius: 6px; cursor: pointer; display: inline-flex;
+}
+.scp-relancer:hover { color: var(--g-brand-600); background: var(--g-blanc); }
+
+.scp-vide { margin: 0; font-size: 0.78rem; color: var(--g-slate-500); line-height: 1.45; }
+
+.scp-codes { display: flex; flex-wrap: wrap; gap: 7px; }
+.scp-code {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: inherit; font-size: 0.78rem;
+  padding: 6px 10px;
+  border: 1.5px solid var(--g-brand-200);
+  border-radius: 999px;
+  background: var(--g-blanc);
+  color: var(--g-slate-700);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  max-width: 100%;
+}
+.scp-code strong { color: var(--g-slate-900); font-weight: 800; white-space: nowrap; }
+.scp-code-lib { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scp-code:hover { border-color: var(--g-brand-500); }
+.scp-code--actif { background: var(--g-brand-500); border-color: var(--g-brand-500); color: var(--g-blanc); }
+.scp-code--actif strong { color: var(--g-blanc); }
+
+.scp-conf { font-size: 0.68rem; font-weight: 800; padding: 1px 6px; border-radius: 999px; white-space: nowrap; }
+.scp-conf--fort { background: #d1fae5; color: #065f46; }
+.scp-conf--moyen { background: #fef3c7; color: #854d0e; }
+.scp-conf--faible { background: var(--g-slate-100); color: var(--g-slate-600); }
+.scp-code--actif .scp-conf { background: rgba(255, 255, 255, 0.22); color: var(--g-blanc); }
+
+.scp-raison { margin: 0; font-size: 0.76rem; color: var(--g-slate-600); font-style: italic; }
+
+.scp-piste {
+  display: flex; gap: 7px; align-items: flex-start;
+  font-size: 0.78rem; color: var(--g-slate-700);
+  background: var(--g-blanc); border-radius: 8px; padding: 8px 10px;
+}
+.scp-piste svg { color: #ca8a04; flex-shrink: 0; margin-top: 1px; }
+
+.scp-sous-titre {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 0.78rem; font-weight: 800; color: var(--g-slate-700);
+  margin-top: 2px;
+}
+.scp-compte {
+  font-size: 0.68rem; font-weight: 800; color: var(--g-brand-600);
+  background: var(--g-blanc); border-radius: 999px; padding: 1px 7px;
+}
+
+.scp-semblables { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; max-height: 260px; overflow-y: auto; }
+.scp-semblable {
+  background: var(--g-blanc);
+  border: 1px solid var(--g-slate-200);
+  border-radius: 9px;
+  padding: 8px 10px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.scp-s-haut { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 0.74rem; }
+.scp-s-pct { font-weight: 800; color: var(--g-brand-600); }
+.scp-s-eq { font-weight: 700; color: var(--g-slate-900); }
+.scp-s-meme { font-size: 0.66rem; font-weight: 800; color: #065f46; background: #d1fae5; border-radius: 999px; padding: 1px 7px; }
+.scp-s-code { font-size: 0.66rem; font-weight: 800; color: var(--g-slate-600); background: var(--g-slate-100); border-radius: 999px; padding: 1px 7px; }
+.scp-s-date { margin-inline-start: auto; color: var(--g-slate-400); }
+.scp-s-desc {
+  margin: 0; font-size: 0.78rem; color: var(--g-slate-600);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.scp-s-sol { margin: 0; font-size: 0.78rem; color: var(--g-slate-900); line-height: 1.4; }
+.scp-s-sol strong { color: #047857; }
+.scp-s-bas { display: flex; align-items: center; gap: 12px; font-size: 0.72rem; color: var(--g-slate-500); }
+.scp-s-bas span { display: inline-flex; align-items: center; gap: 4px; }
+.scp-lien {
+  margin-inline-start: auto;
+  border: none; background: none; padding: 0; cursor: pointer;
+  font-family: inherit; font-size: 0.74rem; font-weight: 700; color: var(--g-brand-600);
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.scp-lien:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .scp-ligne { grid-template-columns: 1fr; }
+}

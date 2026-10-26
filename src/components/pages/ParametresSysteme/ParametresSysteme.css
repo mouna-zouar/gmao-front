@@ -440,3 +440,16 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-mc-ton--info { background: var(--g-blue-50); color: var(--g-blue-700); }
 .ps-mc-ton--neutre { background: var(--g-slate-100); color: var(--g-slate-600); }
 .ps-mc-bon { display: block; margin-top: 4px; font-size: 12px; }
+
+/* Codes panne (catalogue proposé par l'IA dans les réclamations) */
+.ps-cp-barre { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 18px 0; }
+.ps-cp-filtre { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--g-slate-600); cursor: pointer; }
+.ps-cp-erreur { margin: 10px 18px 0; padding: 8px 12px; border-radius: 8px; background: var(--g-amber-50); color: var(--g-amber-700); font-size: 12.5px; }
+.ps-cp-table td { vertical-align: middle; }
+.ps-cp-mots { max-width: 340px; font-size: 12px; color: var(--g-slate-500) !important; }
+.ps-cp-actions { white-space: nowrap; text-align: end; }
+.ps-cp-actions .ps-icone-btn { display: inline-flex; }
+.ps-cp-inactif td { opacity: 0.55; }
+.ps-cp-edition td { background: var(--ps-accent-soft); }
+.ps-cp-input { width: 100%; min-width: 90px; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--g-slate-300); border-radius: 7px; font: 13px var(--g-police); color: var(--g-slate-900); background: var(--g-blanc, #fff); }
+.ps-cp-input:focus { outline: none; border-color: var(--ps-accent); box-shadow: 0 0 0 3px var(--ps-accent-soft); }

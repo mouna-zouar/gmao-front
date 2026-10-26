@@ -26,6 +26,7 @@ import {
   Package,
   Printer,
   QrCode,
+  Tag,
 } from 'lucide-react';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import { t, tp, locale } from '../../../i18n';
@@ -315,6 +316,7 @@ export default function ReclamationDetails({
             { label: t('Personne affectée'), valeur: personnel || t('Personne pour l’instant') },
             { label: t('Criticité'), valeur: t(criticite?.texte || 'Non définie') },
             { label: t('Urgence'), valeur: t(urgence?.texte || 'Non définie') },
+            reclamation.codePanneCode && { label: t('Code panne'), valeur: `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}` },
           ],
         },
         { titre: t('Ce qui a été signalé'), texte: reclamation.description || t('Aucune description n’a été saisie.') },
@@ -401,6 +403,9 @@ export default function ReclamationDetails({
           <div><dt><Calendar size={15} /> {t("Date")}</dt><dd>{formatDate(reclamation.date)}</dd></div>
           {nomEquipement && (
             <div><dt><Package size={15} /> {t("Équipement")}</dt><dd>{nomEquipement}</dd></div>
+          )}
+          {reclamation.codePanneCode && (
+            <div><dt><Tag size={15} /> {t("Code panne")}</dt><dd><strong>{reclamation.codePanneCode}</strong> · {reclamation.codePanneLibelle}</dd></div>
           )}
         </dl>
       </section>

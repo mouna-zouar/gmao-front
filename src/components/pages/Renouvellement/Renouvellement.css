@@ -137,3 +137,37 @@ th.rv-num { text-align: end; }
   .rv-detail__score li { grid-template-columns: 86px 46px; }
   .rv-detail__score li > span:last-child { grid-column: 1 / -1; }
 }
+
+/* ── Style « Supervision » : panneaux du tableau de bord ── */
+.rv-page .rv-carte { border-radius: 10px; }
+.rv-page .rv-carte:hover { border-color: var(--g-bordure-forte); }
+.rv-classement .rv-barre { padding: 10px 14px 0; }
+.rv-classement .rv-legende { padding: 0 14px; }
+.rv-classement .rv-defile { margin: 0; }
+.rv-classement .rv-vide { padding: 0 14px 12px; }
+.rv-pagination { padding: 0 14px 10px; }
+.rv-zone { fill: #fef2f2; }
+.rv-repere { stroke: var(--g-red-400, #f87171); stroke-width: 1; stroke-dasharray: 4 4; }
+.rv-zone__txt { fill: var(--g-red-700); font: 600 10.5px var(--g-police); }
+.rv-point { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.rv-legende__note { color: var(--g-texte-discret); }
+.rv-barre__n { fill: var(--g-texte); font: 700 11px var(--g-police); font-variant-numeric: tabular-nums; }
+.rv-repartition { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.rv-repartition button {
+  display: flex; flex-direction: column; gap: 5px; width: calc(100% + 16px); margin-inline: -8px; padding: 7px 8px;
+  border: 0; border-radius: 8px; background: none; cursor: pointer; text-align: start; font-family: var(--g-police);
+}
+.rv-repartition button:hover { background: var(--g-slate-50); }
+.rv-repartition button:focus-visible { outline: 2px solid var(--g-marque); }
+.rv-repartition__tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.rv-repartition__tete b { font-size: 0.86rem; font-variant-numeric: tabular-nums; color: var(--g-texte); }
+.rv-repartition__piste { height: 7px; border-radius: 4px; background: var(--g-slate-100); overflow: hidden; }
+.rv-repartition__piste > span { display: block; height: 100%; border-radius: 4px; }
+.rv-repartition small { font-size: 0.72rem; color: var(--g-texte-secondaire); }
+.rv-familles li { padding: 6px 0; }
+.rv-familles li + li { border-top: 1px solid var(--g-slate-100); }
+.rv-familles__ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; }
+.rv-familles__ligne .sv-classement__n small { font-weight: 500; color: var(--g-texte-discret); }
+.rv-familles__piste { display: flex; gap: 1px; height: 8px; border-radius: 4px; background: var(--g-slate-100); overflow: hidden; }
+.rv-familles__piste > span { height: 100%; }
+.rv-familles__cout { font-size: 0.72rem; color: var(--g-texte-secondaire); font-variant-numeric: tabular-nums; text-align: end; }

@@ -130,7 +130,7 @@ function graduationsValeurs(min, max, n = 4) {
 }
 
 /** Largeur réelle d'un conteneur (les graphiques se redessinent quand elle change). */
-function useLargeur() {
+export function useLargeur() {
   const ref = useRef(null);
   const [largeur, setLargeur] = useState(0);
   useLayoutEffect(() => {
@@ -146,7 +146,7 @@ function useLargeur() {
 
 /* ---------- Briques ---------- */
 
-function Panneau({ titre, aide, meta, children, className = '', corpsClass = '' }) {
+export function Panneau({ titre, aide, meta, children, className = '', corpsClass = '' }) {
   return (
     <section className={`sv-panneau ${className}`}>
       <header className="sv-panneau__tete">
@@ -164,11 +164,11 @@ function Panneau({ titre, aide, meta, children, className = '', corpsClass = '' 
   );
 }
 
-function Vide({ children }) {
+export function Vide({ children }) {
   return <div className="sv-vide">{children}</div>;
 }
 
-function Bulle({ bulle }) {
+export function Bulle({ bulle }) {
   if (!bulle) return null;
   return (
     <div className="sv-bulle" style={{ left: bulle.x, top: bulle.y, transform: bulle.aGauche ? 'translate(calc(-100% - 12px), 0)' : 'translate(12px, 0)' }} role="status">
@@ -203,7 +203,7 @@ function Etincelle({ valeurs, couleur }) {
   );
 }
 
-function Indicateur({ icone: Icone, label, valeur, total, ton, etat, sous, etincelle }) {
+export function Indicateur({ icone: Icone, label, valeur, total, ton, etat, sous, etincelle }) {
   return (
     <div className="sv-stat" data-ton={ton}>
       <div className="sv-stat__tete">
