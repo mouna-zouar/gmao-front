@@ -7,11 +7,35 @@ import {
 import renouvellementService from '../../../services/renouvellementService';
 import { t, locale } from '../../../i18n';
 import {
-  VeillePage, VeilleSegments, VeilleMessage, VeillePagination, Pastille,
+  VeilleSegments, VeilleMessage, VeillePagination, Pastille,
 } from '../../ui/Veille/Veille';
-import { Panneau, Indicateur, Vide, Bulle as BulleSv, useLargeur as useLargeurSv } from '../Supervision/Supervision';
+import { Info as InfoIcone } from 'lucide-react';
+import { Vide, Bulle as BulleSv, useLargeur as useLargeurSv } from '../Supervision/Supervision';
+import { Stat, Badge } from '../TableauDeBord/TableauDeBord';
 import '../Supervision/Supervision.css';
+import '../TableauDeBord/TableauDeBord.css';
 import './Renouvellement.css';
+
+/* Carte au style des tableaux de bord (titre, pastille, aide au survol). */
+function Panneau({ titre, aide, meta, className = '', corpsClass = '', children }) {
+  return (
+    <section className={`tb-carte rv-panneau ${className}`}>
+      <div className="tb-carte-tete">
+        <h3>
+          {titre}
+          {aide && (
+            <span className="sv-aide" tabIndex={0} aria-label={aide}>
+              <InfoIcone size={13} aria-hidden="true" />
+              <span className="sv-aide__bulle" role="tooltip">{aide}</span>
+            </span>
+          )}
+        </h3>
+        {meta && <span className="tb-pastille">{meta}</span>}
+      </div>
+      <div className={`rv-panneau__corps ${corpsClass}`}>{children}</div>
+    </section>
+  );
+}
 
 /*
  * « Plan de renouvellement » (équivalent de Maximo Asset Investment Planning) :
@@ -459,49 +483,58 @@ export default function Renouvellement() {
 
   const ind = donnees?.indicateurs || {};
   const barre = (
-    <div className="sv-outils">
-      <VeilleSegments label={t('Vue')} valeur={vue} onChange={choisirVue} options={[
-        { cle: 'tableau', label: t('Tableau de bord') },
-        { cle: 'scenarios', label: t('Comparer des budgets') },
-        { cle: 'reglages', label: t('Durées de vie') },
-      ]} />
-      <button type="button" className="vl-btn" onClick={() => charger(true)} disabled={chargement}
+    <div className="tb-header-actions">
+      <div className="tb-periodes" role="group" aria-label={t('Vue')}>
+        {[
+          { cle: 'tableau', label: t('Tableau de bord') },
+          { cle: 'scenarios', label: t('Comparer des budgets') },
+          { cle: 'reglages', label: t('Durées de vie') },
+        ].map((o) => (
+          <button key={o.cle} type="button" aria-pressed={vue === o.cle} onClick={() => choisirVue(o.cle)}>{o.label}</button>
+        ))}
+      </div>
+      <button type="button" className="tb-btn" onClick={() => charger(true)} disabled={chargement}
         title={t('Relit les coûts, les pannes et les rapports (sinon gardés 10 minutes)')}>
-        {chargement ? <LoaderCircle size={15} className="vl-tourne" /> : <RefreshCw size={15} />} {t('Recalculer')}
+        {chargement ? <LoaderCircle size={14} className="tb-tourne" /> : <RefreshCw size={14} strokeWidth={2.4} />} {t('Recalculer')}
       </button>
     </div>
   );
 
   return (
-    <VeillePage icone={CalendarSync} titre={t('Plan de renouvellement')}
-      description={t('Quels équipements remplacer, quand, et avec quel budget : âge, coût de maintenance, pannes, criticité et avis de l’IA.')}
-      actions={barre} className="sv-page rv-page">
+    <div className="tb-container rv-page">
+      <div className="tb-header">
+        <div className="tb-header-icone"><CalendarSync size={24} strokeWidth={2} aria-hidden="true" /></div>
+        <div className="tb-header-texte">
+          <h1>{t('Plan de renouvellement')}</h1>
+        </div>
+        {barre}
+      </div>
       {donnees && (
-        <p className="sv-maj">
-          <span className="sv-maj__point" aria-hidden="true" />
+        <p className="tb-maj">
           {t('Calculé à {h} · {n} équipements analysés', {
             h: new Date(donnees.calculeLe).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }), n: nb(ind.parc),
           })}
         </p>
       )}
-      {erreur && <VeilleMessage ton="danger">{erreur}</VeilleMessage>}
-      {!donnees && !erreur && <div className="sv-chargement"><LoaderCircle size={22} className="vl-tourne" />{t('Analyse du parc…')}</div>}
+      {erreur && <p className="tb-message tb-message--erreur">{erreur}</p>}
+      {!donnees && !erreur && <div className="tb-chargement">{t('Analyse du parc…')}</div>}
 
       {donnees && vue === 'tableau' && (
         <div className="sv-grille-panneaux">
-          <div className="sv-stats sv-l12">
-            <Indicateur icone={TriangleAlert} label={t('À remplacer')} valeur={nb(ind.remplacer)} ton={ind.remplacer ? 'danger' : 'succes'}
-              etat={ind.remplacer ? t('score ≥ 70') : t('Aucun')} sous={dt(ind.cout_remplacer, true)} />
-            <Indicateur icone={CalendarClock} label={t('À planifier')} valeur={nb(ind.planifier)} ton={ind.planifier ? 'orange' : 'neutre'}
-              etat={t('score ≥ 50')} sous={dt(ind.cout_planifier, true)} />
-            <Indicateur icone={Wallet} label={t('Budget nécessaire')} valeur={dt((ind.cout_remplacer || 0) + (ind.cout_planifier || 0), true)} ton="marque"
+          <div className="tb-stats sv-l12">
+            <Stat featured icone={TriangleAlert} ton={ind.remplacer ? 'rouge' : 'vert'} valeur={nb(ind.remplacer)} label={t('À remplacer')}
+              badge={<Badge ton={ind.remplacer ? 'rouge' : 'vert'}>{ind.remplacer ? t('score ≥ 70') : t('Aucun')}</Badge>} sous={dt(ind.cout_remplacer, true)} />
+            <Stat icone={CalendarClock} ton={ind.planifier ? 'orange' : 'neutre'} valeur={nb(ind.planifier)} label={t('À planifier')}
+              badge={<Badge ton="orange">{t('score ≥ 50')}</Badge>} sous={dt(ind.cout_planifier, true)} />
+            <Stat icone={Wallet} ton="teal" valeur={dt((ind.cout_remplacer || 0) + (ind.cout_planifier || 0), true)} label={t('Budget nécessaire')}
               sous={t('pour remplacer et planifier')} />
-            <Indicateur icone={Wrench} label={t('Maintenance sur 12 mois')} valeur={dt(ind.maintenance12Mois_remplacer, true)} ton="neutre"
+            <Stat icone={Wrench} ton="neutre" valeur={dt(ind.maintenance12Mois_remplacer, true)} label={t('Maintenance sur 12 mois')}
               sous={t('dépensée sur les équipements à remplacer')} />
-            <Indicateur icone={Bot} label={t('Avis de l’IA')} valeur={nb(ind.avisIa)} ton={ind.avisIa ? 'info' : 'neutre'}
+            <Stat icone={Bot} ton={ind.avisIa ? 'bleu' : 'neutre'} valeur={nb(ind.avisIa)} label={t('Avis de l’IA')}
               sous={t('rapports qui conseillent un remplacement')} />
-            <Indicateur icone={FileWarning} label={t('Données manquantes')} valeur={nb(ind.sansPrix)} ton={ind.sansPrix ? 'attention' : 'succes'}
-              etat={ind.sansPrix ? t('À compléter') : t('Complet')} sous={t('sans prix d’achat · {n} sans date de mise en service', { n: nb(ind.sansDate) })} />
+            <Stat icone={FileWarning} ton={ind.sansPrix ? 'ambre' : 'vert'} valeur={nb(ind.sansPrix)} label={t('Données manquantes')}
+              badge={<Badge ton={ind.sansPrix ? 'ambre' : 'vert'}>{ind.sansPrix ? t('À compléter') : t('Complet')}</Badge>}
+              sous={t('sans prix d’achat · {n} sans date de mise en service', { n: nb(ind.sansDate) })} />
           </div>
 
           <Panneau className="sv-l8" titre={t('Âge et coût de maintenance')}
@@ -532,7 +565,7 @@ export default function Renouvellement() {
       )}
       {donnees && vue === 'scenarios' && <Scenarios donnees={donnees} onOuvrir={(id) => navigate(`/equipement/${id}`)} />}
       {donnees && vue === 'reglages' && <Reglages donnees={donnees} onEnregistre={() => charger(false)} />}
-    </VeillePage>
+    </div>
   );
 }
 

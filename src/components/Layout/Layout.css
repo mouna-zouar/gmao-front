@@ -2274,3 +2274,12 @@ button {
 .nav-popup__simple-link--equipements .nav-popup__card-icon { background: var(--color-equipements-bg); color: var(--color-equipements); }
 
 .nav-item__chevron--equipements { width: 14px; height: 14px; flex-shrink: 0; transition: transform var(--transition); color: var(--color-equipements); }
+
+/* ── Tableau de bord global ── */
+:root { --color-tableau-de-bord: var(--g-indigo-700, #4338ca); --color-tableau-de-bord-bg: var(--g-indigo-50, #eef2ff); }
+.sidebar--closed .nav-item--tableau-de-bord { background: white !important; color: var(--color-tableau-de-bord) !important; }
+.nav-item--tableau-de-bord .nav-item__icon { color: var(--color-tableau-de-bord); }
+.nav-item--tableau-de-bord,
+.nav-item--tableau-de-bord:is(:hover, .nav-item--active) { background: var(--color-tableau-de-bord-bg); color: var(--color-tableau-de-bord); }
+.nav-popup__card-icon--tableau-de-bord,
+.nav-popup__simple-link--tableau-de-bord .nav-popup__card-icon { background: var(--color-tableau-de-bord-bg); color: var(--color-tableau-de-bord); }

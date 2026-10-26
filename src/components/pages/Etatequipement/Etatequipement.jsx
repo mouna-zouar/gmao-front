@@ -11,8 +11,10 @@ import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../cons
 import EquipementMaintenancePanel from './Equipementmaintenancepanel';
 import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
 import { t, tp, locale, tPdf, localePdf } from '../../../i18n';
+import '../TableauDeBord/TableauDeBord.css';
+import './Etatequipement.css';
 import { ArrowRight, ChevronDown, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
-import { VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
+import { VeillePage, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
 
 /* ---------- Risque ---------- */
 const RISQUE_NIVEAU_LABELS = { CRITIQUE: 'Critique', ELEVE: 'Élevé', MODERE: 'Modéré', FAIBLE: 'Faible' };
@@ -112,6 +114,38 @@ const IconQr = () => (
 );
 const IconClose = () => (<X size={14} aria-hidden="true" />);
 const IconArrowRight = () => (<ArrowRight size={13} aria-hidden="true" />);
+
+/* Cartes d'indicateurs (style des tableaux de bord) : icône et couleur par état. */
+const ETAT_STAT = {
+  EN_SERVICE: { Icone: CircleCheck, ton: 'vert' },
+  EN_PANNE: { Icone: CircleX, ton: 'rouge' },
+  EN_REPARATION: { Icone: Wrench, ton: 'bleu' },
+  HORS_SERVICE: { Icone: CirclePause, ton: 'orange' },
+};
+
+/* Page au style des tableaux de bord (bons, réclamations, parc) ; dans une fenêtre, l'ancien cadre compact. */
+function Cadre({ isModal, actions, children }) {
+  if (isModal) {
+    return (
+      <VeillePage isModal icone={Gauge} titre={t("Équipements")}
+        description={t("État, fiche, historique des pannes, documents et étiquettes QR")} actions={actions}>
+        {children}
+      </VeillePage>
+    );
+  }
+  return (
+    <div className="tb-container eq-page">
+      <div className="tb-header">
+        <div className="tb-header-icone"><Gauge size={24} strokeWidth={2} aria-hidden="true" /></div>
+        <div className="tb-header-texte">
+          <h1>{t("Équipements")}</h1>
+        </div>
+        <div className="tb-header-actions">{actions}</div>
+      </div>
+      {children}
+    </div>
+  );
+}
 
 const ETAT_ICONS = {
   EN_SERVICE: IconCheckCircle,
@@ -458,11 +492,8 @@ export default function EtatEquipement({ isModal = false }) {
   );
 
   return (
-    <VeillePage
+    <Cadre
       isModal={isModal}
-      icone={Gauge}
-      titre={t("Équipements")}
-      description={t("État, fiche, historique des pannes, documents et étiquettes QR")}
       actions={(
         <>
           <button type="button" className="vl-btn" onClick={() => setSettingsOpen((v) => !v)}>
@@ -480,22 +511,42 @@ export default function EtatEquipement({ isModal = false }) {
       )}
 
       {!loading && total > 0 && (
-        <VeilleKpis
-          label={t("Équipements par état")}
-          items={[
-            { cle: 'TOUS', label: t("Tous"), valeur: total, ton: 'marque', actif: filtreEtat === 'TOUS', onClick: () => setFiltreEtat('TOUS') },
-            ...ETATS.map((et) => ({
-              cle: et,
-              label: t(ETAT_LABELS[et]),
-              valeur: compteurs[et] || 0,
-              ton: ETAT_TON[et],
-              actif: filtreEtat === et,
-              onClick: () => setFiltreEtat((v) => (v === et ? 'TOUS' : et)),
-            })),
-          ]}
-        />
+        <div className="tb-stats eq-stats" role="group" aria-label={t("Équipements par état")}>
+          <button type="button" className="tb-stat tb-stat--featured tb-ton--teal eq-stat" aria-pressed={filtreEtat === 'TOUS'}
+            onClick={() => setFiltreEtat('TOUS')}>
+            <div className="tb-stat-haut"><div className="tb-stat-icone"><Gauge size={22} strokeWidth={2} aria-hidden="true" /></div></div>
+            <div>
+              <div className="tb-stat-valeur">{total.toLocaleString(locale())}</div>
+              <div className="tb-stat-label">{t("Tous les équipements")}</div>
+            </div>
+          </button>
+          {ETATS.map((et) => {
+            const { Icone, ton } = ETAT_STAT[et];
+            const n = compteurs[et] || 0;
+            return (
+              <button key={et} type="button" className={`tb-stat tb-ton--${ton} eq-stat`} aria-pressed={filtreEtat === et}
+                onClick={() => setFiltreEtat((v) => (v === et ? 'TOUS' : et))}>
+                <div className="tb-stat-haut">
+                  <div className="tb-stat-icone"><Icone size={22} strokeWidth={2} aria-hidden="true" /></div>
+                  {total > 0 && <span className={`tb-badge tb-badge--${ton === 'bleu' ? 'bleu' : ton}`}>{Math.round((n / total) * 100)} %</span>}
+                </div>
+                <div>
+                  <div className="tb-stat-valeur">{n.toLocaleString(locale())}</div>
+                  <div className="tb-stat-label">{t(ETAT_LABELS[et])}</div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       )}
 
+      <section className={isModal ? 'eq-liste-modal' : 'tb-carte eq-liste-carte'}>
+      {!isModal && (
+        <div className="tb-carte-tete">
+          <h3>{t("Liste des équipements")}</h3>
+          {!loading && <span className="tb-pastille">{t('{n} équipements', { n: etatsAffiches.length })}</span>}
+        </div>
+      )}
       <div className="vl-barre">
         <div className="vl-barre__gauche" style={{ flex: '1 1 320px' }}>
           <label className="vl-recherche">
@@ -783,8 +834,9 @@ export default function EtatEquipement({ isModal = false }) {
           onTaille={changerTaillePage}
         />
       )}
+      </section>
 
       {scanner && <ScannerQR onClose={fermerScanner} />}
-    </VeillePage>
+    </Cadre>
   );
 }

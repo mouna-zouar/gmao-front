@@ -16,9 +16,13 @@ const ALL_ITEMS = [
     /* ── Au quotidien ── */
     {
         id: 'dashboard',
-        label: 'Tableau de bord',
+        label: 'Accueil',
         path: '/',
         icon: grand(M.accueil),
+        children: [
+            { label: 'Accueil', path: '/', icon: petit(M.accueil), motsCles: 'modules page d’accueil' },
+            { label: 'Tableau de bord', path: '/tableau-de-bord', icon: petit(M.tableauDeBord), motsCles: 'indicateurs kpi synthèse vue d’ensemble statistiques mttr mtbf disponibilité coûts sla' },
+        ],
     },
     {
         id: 'mon-espace',
@@ -77,6 +81,7 @@ const ALL_ITEMS = [
         children: [
             { label: 'Équipements', path: '/equipements', icon: petit(M.equipements), motsCles: 'parc immobilisations état en service en panne hors service famille matériel cubix' },
             { label: 'Plan de renouvellement', path: '/renouvellement', icon: petit(M.renouvellement), motsCles: 'remplacement investissement budget fin de vie vétusté amortissement maximo' },
+            { label: 'Supervision', path: '/supervision', icon: petit(M.supervision), motsCles: 'temps réel capteurs sondes réseau en ligne hors ligne agents alertes machines' },
         ],
     },
 
@@ -170,7 +175,7 @@ export const NAV_SECTIONS = [
     {
         id: 'gmao',
         label: 'GMAO',
-        items: byId(['dashboard', 'mon-espace', 'reclamations', 'maintenance', 'planning', 'equipements', 'supervision', 'taches', 'parametres']),
+        items: byId(['dashboard', 'mon-espace', 'reclamations', 'maintenance', 'planning', 'equipements', 'taches', 'parametres']),
     },
     {
         id: 'parc',

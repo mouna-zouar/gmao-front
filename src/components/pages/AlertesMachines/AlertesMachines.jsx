@@ -9,6 +9,7 @@ import liaisonAgentService from '../../../services/liaisonAgentService';
 import { ETATS_LIAISON, libelleType, resumeLiaison } from '../Equipements/EquipementLiaisonAgent';
 import reclamationService from '../../../services/Reclamationservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
+import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
 import { t } from '../../../i18n';
 import {
   VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, Pastille,
@@ -160,6 +161,7 @@ export default function AlertesMachines({ isModal = false }) {
   const [liaisons, setLiaisons] = useState([]);
   const [filtreSource, setFiltreSource] = useState('');
   const [message, setMessage] = useState(null);
+  const [reclamationCreee, setReclamationCreee] = useState(null);
   const valeursReclamation = useMemo(() => (alerteReclamation ? valeursDepuisAlerte(alerteReclamation) : null), [alerteReclamation]);
 
   const charger = useCallback(async () => {
@@ -214,7 +216,7 @@ export default function AlertesMachines({ isModal = false }) {
         console.error('Erreur liaison alerte / réclamation :', err);
       }
     }
-    setMessage(t('Réclamation créée : l’équipe de maintenance l’a reçue.'));
+    setReclamationCreee(creee || {});
   };
 
   const estOuverte = (a) => a.statut === 'NOUVELLE' || a.statut === 'VUE';
@@ -430,6 +432,8 @@ export default function AlertesMachines({ isModal = false }) {
           })}
         </ul>
       )}
+
+      <ReclamationCreeeModal reclamation={reclamationCreee} onClose={() => setReclamationCreee(null)} />
 
       <ReclamationModal
         isOpen={!!alerteReclamation}

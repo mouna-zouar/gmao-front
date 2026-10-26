@@ -9,6 +9,7 @@ import reclamationService from '../../../services/Reclamationservice';
 import bonMaintenanceRapportService from '../../../services/bonMaintenanceRapportService';
 import authService from '../../../services/Authservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
+import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
 import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
 import { imprimerEtiquettes, qrSvg } from './qrEtiquettes';
 import EquipementConnexion from './EquipementConnexion';
@@ -222,6 +223,7 @@ export default function EquipementFiche() {
   const [signaler, setSignaler] = useState(false);
   const [bonOuvert, setBonOuvert] = useState(null);
   const [message, setMessage] = useState('');
+  const [reclamationCreee, setReclamationCreee] = useState(null);
   // Heure de référence pour l'âge de l'appareil et la garantie (fixée au chargement de la page)
   const [maintenant] = useState(() => Date.now());
   const connecte = !!(authService.getCurrentUser() && authService.getSessionId());
@@ -257,9 +259,9 @@ export default function EquipementFiche() {
   }), [idEquipement, nomEquipement]);
 
   const enregistrerReclamation = async (payload) => {
-    await reclamationService.create(payload);
+    const creee = await reclamationService.create(payload);
     setSignaler(false);
-    setMessage(t('Panne signalée : l’équipe de maintenance a reçu la réclamation.'));
+    setReclamationCreee(creee || {});
     charger();
   };
 
@@ -498,6 +500,8 @@ export default function EquipementFiche() {
       </div>
 
       {etiquette && <ModaleEtiquette identite={identite} onClose={fermerEtiquette} />}
+
+      <ReclamationCreeeModal reclamation={reclamationCreee} onClose={() => setReclamationCreee(null)} />
 
       <ReclamationModal
         isOpen={signaler}

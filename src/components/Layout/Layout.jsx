@@ -391,10 +391,15 @@ export default function Layout({ children }) {
 
             {activeNavItem && currentPath !== '/' && (
               <>
-                <ChevronRight strokeWidth={2} className="rtl-miroir" aria-hidden="true" />
-                <span className="navbar__breadcrumb-parent">
-                  {t(activeNavItem.label)}
-                </span>
+                {/* Groupe « Accueil » : déjà la racine du fil d'Ariane, on ne le répète pas */}
+                {activeNavItem.id !== 'dashboard' && (
+                  <>
+                    <ChevronRight strokeWidth={2} className="rtl-miroir" aria-hidden="true" />
+                    <span className="navbar__breadcrumb-parent">
+                      {t(activeNavItem.label)}
+                    </span>
+                  </>
+                )}
 
                 {activeChild && (
                   <>

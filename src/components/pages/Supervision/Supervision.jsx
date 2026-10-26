@@ -6,8 +6,9 @@ import {
 import supervisionService from '../../../services/supervisionService';
 import { libelleType } from '../Equipements/EquipementLiaisonAgent';
 import { t, locale } from '../../../i18n';
-import { VeillePage, VeilleSegments, VeilleMessage, Pastille, ilYa } from '../../ui/Veille/Veille';
+import { Pastille, ilYa } from '../../ui/Veille/Veille';
 import './Supervision.css';
+import '../TableauDeBord/TableauDeBord.css';
 
 /*
  * « Supervision » : tableau de bord du parc connecté, façon Grafana (thème clair de la GMAO).
@@ -146,20 +147,23 @@ export function useLargeur() {
 
 /* ---------- Briques ---------- */
 
+/* Carte au style des tableaux de bord (bons, réclamations, parc) : titre, aide au survol, pastille. */
 export function Panneau({ titre, aide, meta, children, className = '', corpsClass = '' }) {
   return (
-    <section className={`sv-panneau ${className}`}>
-      <header className="sv-panneau__tete">
-        <h2>{titre}</h2>
-        {aide && (
-          <span className="sv-aide" tabIndex={0} aria-label={aide}>
-            <Info size={13} aria-hidden="true" />
-            <span className="sv-aide__bulle" role="tooltip">{aide}</span>
-          </span>
-        )}
-        {meta && <span className="sv-panneau__meta">{meta}</span>}
-      </header>
-      <div className={`sv-panneau__corps ${corpsClass}`}>{children}</div>
+    <section className={`tb-carte sv-carte ${className}`}>
+      <div className="tb-carte-tete">
+        <h3>
+          {titre}
+          {aide && (
+            <span className="sv-aide" tabIndex={0} aria-label={aide}>
+              <Info size={13} aria-hidden="true" />
+              <span className="sv-aide__bulle" role="tooltip">{aide}</span>
+            </span>
+          )}
+        </h3>
+        {meta && <span className="tb-pastille">{meta}</span>}
+      </div>
+      <div className={`sv-carte__corps ${corpsClass}`}>{children}</div>
     </section>
   );
 }
@@ -203,20 +207,22 @@ function Etincelle({ valeurs, couleur }) {
   );
 }
 
-export function Indicateur({ icone: Icone, label, valeur, total, ton, etat, sous, etincelle }) {
+/* Tons de la supervision → couleurs des cartes d'indicateurs des tableaux de bord. */
+const TON_CARTE = { marque: 'teal', succes: 'vert', attention: 'ambre', danger: 'rouge', orange: 'orange', info: 'bleu', neutre: 'neutre' };
+const TON_BADGE = { marque: 'teal', succes: 'vert', attention: 'ambre', danger: 'rouge', orange: 'orange', info: 'bleu', neutre: 'gris' };
+
+/* Carte d'indicateur au style des tableaux de bord : icône colorée, grand chiffre, libellé, badge d'état. */
+export function Indicateur({ icone: Icone, label, valeur, total, ton = 'neutre', etat, sous, etincelle }) {
   return (
-    <div className="sv-stat" data-ton={ton}>
-      <div className="sv-stat__tete">
-        <Icone size={15} aria-hidden="true" />
-        <span>{label}</span>
+    <div className={`tb-stat sv-indicateur tb-ton--${TON_CARTE[ton] || 'neutre'}`}>
+      <div className="tb-stat-haut">
+        <div className="tb-stat-icone"><Icone size={22} strokeWidth={2} aria-hidden="true" /></div>
+        {etat && <span className={`tb-badge tb-badge--${TON_BADGE[ton] || 'gris'}`}>{etat}</span>}
       </div>
-      <div className="sv-stat__valeur">
-        {valeur}
-        {total != null && <small> / {total}</small>}
-      </div>
-      <div className="sv-stat__pied">
-        {etat && <Pastille ton={ton}>{etat}</Pastille>}
-        {sous && <span className="sv-stat__sous">{sous}</span>}
+      <div>
+        <div className="tb-stat-valeur">{valeur}{total != null && <small> / {total}</small>}</div>
+        <div className="tb-stat-label">{label}</div>
+        {sous && <div className="tb-stat-sous">{sous}</div>}
       </div>
       {etincelle}
     </div>
@@ -607,10 +613,13 @@ export default function Supervision() {
   const agentsArretes = (ind.agents || 0) - (ind.agentsEnLigne || 0);
 
   const barre = (
-    <div className="sv-outils">
-      <VeilleSegments label={t('Période')} valeur={heures}
-        options={PERIODES.map((p) => ({ cle: p.cle, label: t(p.label) }))}
-        onChange={(v) => { setHeures(v); ecrire(CLE_PERIODE, v); }} />
+    <div className="tb-header-actions">
+      <div className="tb-periodes" role="group" aria-label={t('Période')}>
+        {PERIODES.map((p) => (
+          <button key={p.cle} type="button" aria-pressed={heures === p.cle}
+            onClick={() => { setHeures(p.cle); ecrire(CLE_PERIODE, p.cle); }}>{t(p.label)}</button>
+        ))}
+      </div>
       <label className="sv-auto">
         <RefreshCw size={14} aria-hidden="true" />
         <span className="vl-sr">{t('Rafraîchissement automatique')}</span>
@@ -618,21 +627,22 @@ export default function Supervision() {
           {RAFRAICHISSEMENTS.map((r) => <option key={r.cle} value={r.cle}>{t(r.label)}</option>)}
         </select>
       </label>
-      <button type="button" className="vl-btn" onClick={charger} disabled={chargement}>
-        {chargement ? <LoaderCircle size={15} className="vl-tourne" aria-hidden="true" /> : <RefreshCw size={15} aria-hidden="true" />}
+      <button type="button" className="tb-btn" onClick={charger} disabled={chargement}>
+        {chargement ? <LoaderCircle size={14} className="tb-tourne" aria-hidden="true" /> : <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />}
         {t('Rafraîchir')}
       </button>
     </div>
   );
 
   return (
-    <VeillePage
-      className="sv-page"
-      icone={MonitorDot}
-      titre={t('Supervision')}
-      description={t('État du parc connecté en temps réel : réseau, sondes des agents et alertes des machines.')}
-      actions={barre}
-    >
+    <div className="tb-container sv-page">
+      <div className="tb-header">
+        <div className="tb-header-icone"><MonitorDot size={24} strokeWidth={2} aria-hidden="true" /></div>
+        <div className="tb-header-texte">
+          <h1>{t('Supervision')}</h1>
+        </div>
+        {barre}
+      </div>
       {majLe && (
         <p className="sv-maj">
           <span className={`sv-maj__point ${auto ? 'is-live' : ''}`} aria-hidden="true" />
@@ -640,15 +650,13 @@ export default function Supervision() {
           {pret && <> · {dateHeureCourte(debut)} → {dateHeureCourte(fin)}</>}
         </p>
       )}
-      {erreur && <VeilleMessage ton="danger">{erreur}</VeilleMessage>}
-      {!donnees && !erreur && (
-        <div className="sv-chargement"><LoaderCircle size={22} className="vl-tourne" aria-hidden="true" />{t('Chargement…')}</div>
-      )}
+      {erreur && <p className="tb-message tb-message--erreur">{erreur}</p>}
+      {!donnees && !erreur && <div className="tb-chargement">{t('Chargement…')}</div>}
 
       {pret && (
         <div className="sv-grille-panneaux">
           {/* Ligne 1 : indicateurs */}
-          <div className="sv-stats sv-l12">
+          <div className="tb-stats sv-l12">
             <Indicateur icone={MonitorDot} label={t('Équipements connectés')} valeur={nombre(ind.equipementsConnectes)} ton="marque"
               sous={t('{ip} en IP · {l} liaison(s) agent', { ip: ind.avecIp, l: ind.liaisons })} />
             <Indicateur icone={Wifi} label={t('En ligne')} valeur={nombre(ind.enLigne)} total={ind.avecIp}
@@ -776,6 +784,6 @@ export default function Supervision() {
           </Panneau>
         </div>
       )}
-    </VeillePage>
+    </div>
   );
 }

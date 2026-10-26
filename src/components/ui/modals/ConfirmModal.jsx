@@ -61,9 +61,11 @@ const ConfirmModal = ({
                 )}
 
                 <div className="confirm-modal-footer">
-                    <button type="button" className="confirm-btn secondary" onClick={onClose} disabled={confirming}>
-                        {cancelText}
-                    </button>
+                    {cancelText && (
+                        <button type="button" className="confirm-btn secondary" onClick={onClose} disabled={confirming}>
+                            {cancelText}
+                        </button>
+                    )}
                     <button type="button" className={`confirm-btn primary ${type}`} onClick={onConfirm} disabled={confirming}>
                         {confirming ? 'Patientez...' : confirmText}
                     </button>

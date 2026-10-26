@@ -8,6 +8,7 @@ import suiviDemandeService from '../../../services/suiviDemandeService';
 import reclamationService from '../../../services/Reclamationservice';
 import authService from '../../../services/Authservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
+import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
 import { t, locale } from '../../../i18n';
 import './MesDemandes.css';
 
@@ -218,6 +219,7 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir } = {}
   const [erreur, setErreur] = useState(null);
   const [filtre, setFiltre] = useState('en-cours');
   const [modalOuvert, setModalOuvert] = useState(false);
+  const [reclamationCreee, setReclamationCreee] = useState(null);
   const refCible = useRef(null);
   const personnelId = personnelConnecte();
 
@@ -272,7 +274,8 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir } = {}
   }), [demandes, filtre]);
 
   const enregistrer = async (payload) => {
-    await reclamationService.create(payload);
+    const creee = await reclamationService.create(payload);
+    setReclamationCreee(creee || {});
     setFiltre('en-cours');
     await charger({ silencieux: true });
   };
@@ -374,6 +377,8 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir } = {}
           ))}
         </div>
       )}
+
+      <ReclamationCreeeModal reclamation={reclamationCreee} onClose={() => setReclamationCreee(null)} lienBon={false} />
 
       <ReclamationModal
         isOpen={modalOuvert}

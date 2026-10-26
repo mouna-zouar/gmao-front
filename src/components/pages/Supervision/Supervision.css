@@ -248,3 +248,20 @@
   .sv-table th, .sv-table td { padding-inline: 8px; }
   .sv-table th, .sv-table td { padding-inline: 10px; }
 }
+
+/* ═══ Style des tableaux de bord (bons, réclamations, parc) ═══ */
+.sv-page.tb-container { gap: 20px; }
+.sv-page .sv-maj { margin: -8px 0 0; }
+.sv-page .sv-grille-panneaux { gap: 14px; }
+.sv-page .sv-auto { height: 38px; border-radius: 8px; border-color: var(--g-slate-200); background: var(--g-blanc); }
+.sv-carte .tb-carte-tete h3 { display: inline-flex; align-items: center; gap: 6px; }
+.sv-carte .tb-pastille { text-transform: none; letter-spacing: 0.01em; font-size: 0.72rem; }
+.sv-carte__corps { position: relative; flex: 1; min-width: 0; }
+.sv-carte__corps.sv-sans-marge { margin: -6px -22px -20px; padding: 0 0 6px; }
+.sv-carte__corps.sv-defile { max-height: 380px; overflow: auto; }
+.sv-indicateur { overflow: hidden; }
+.sv-indicateur .sv-etincelle { opacity: 0.9; }
+.sv-indicateur:has(.sv-etincelle) { padding-bottom: 42px; }
+@media (max-width: 640px) {
+  .sv-carte__corps.sv-sans-marge { margin-inline: -16px; margin-bottom: -16px; }
+}

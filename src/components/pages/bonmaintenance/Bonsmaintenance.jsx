@@ -914,7 +914,7 @@ export default function BonsMaintenance() {
       show: true,
       type: 'danger',
       title: t("Supprimer le bon de maintenance"),
-      message: t('Supprimer le bon « {titre} » ? Cette action est irréversible.', { titre: selectedBon.titre }),
+      message: t('Supprimer le bon « {titre} » et tout ce qui lui est lié (tâches, intervenants, pièces, diagnostics, rapport, discussion, historique) ? La réclamation d’origine est gardée. Cette action est irréversible.', { titre: selectedBon.titre }),
       confirmText: t("Supprimer"),
       error: null,
       confirming: false,
@@ -975,8 +975,8 @@ export default function BonsMaintenance() {
       type: 'danger',
       title: ids.length === 1 ? t('Supprimer le bon de maintenance') : t('Supprimer {n} bons de maintenance', { n: ids.length }),
       message: ids.length === 1
-        ? t('Supprimer le bon « {titre} » ? Cette action est irréversible.', { titre: apercu })
-        : `${t('Supprimer les {n} bons sélectionnés ? Cette action est irréversible.', { n: ids.length })} (${apercu}${ids.length > 5 ? '…' : ''})`,
+        ? t('Supprimer le bon « {titre} » et tout ce qui lui est lié (tâches, intervenants, pièces, diagnostics, rapport, discussion, historique) ? La réclamation d’origine est gardée. Cette action est irréversible.', { titre: apercu })
+        : `${t('Supprimer les {n} bons sélectionnés et tout ce qui leur est lié (tâches, intervenants, pièces, diagnostics, rapports, discussions, historique) ? Les réclamations d’origine sont gardées. Cette action est irréversible.', { n: ids.length })} (${apercu}${ids.length > 5 ? '…' : ''})`,
       confirmText: erreur ? t('Réessayer') : t('Supprimer la sélection'),
       error: erreur,
       confirming: false,

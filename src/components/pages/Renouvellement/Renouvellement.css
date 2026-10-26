@@ -171,3 +171,29 @@ th.rv-num { text-align: end; }
 .rv-familles__piste { display: flex; gap: 1px; height: 8px; border-radius: 4px; background: var(--g-slate-100); overflow: hidden; }
 .rv-familles__piste > span { height: 100%; }
 .rv-familles__cout { font-size: 0.72rem; color: var(--g-texte-secondaire); font-variant-numeric: tabular-nums; text-align: end; }
+
+/* ═══ Style des tableaux de bord (bons, réclamations, parc) ═══ */
+.rv-page.tb-container { gap: 20px; }
+.rv-page .sv-grille-panneaux { gap: 14px; }
+.rv-page .tb-header-actions .tb-periodes button { padding-inline: 14px; }
+.rv-panneau .tb-carte-tete h3 { display: inline-flex; align-items: center; gap: 6px; }
+.rv-panneau .tb-pastille { text-transform: none; letter-spacing: 0.01em; font-size: 0.72rem; }
+.rv-panneau__corps { position: relative; flex: 1; min-width: 0; }
+.rv-panneau__corps.sv-sans-marge { margin: -6px -22px -20px; padding: 0; }
+.rv-panneau__corps.sv-defile { max-height: 380px; overflow: auto; }
+.rv-page .rv-carte {
+  background: var(--g-blanc); border: 1px solid var(--g-slate-200); border-radius: 14px;
+  padding: 20px 22px; box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+}
+.rv-page .rv-titre {
+  justify-content: space-between; align-items: center;
+  margin: 0 0 16px; padding-bottom: 14px; border-bottom: 1px solid var(--g-slate-100);
+  font-size: 0.9rem; font-weight: 800; color: var(--g-slate-900); letter-spacing: -0.005em;
+}
+.rv-page .rv-titre small {
+  font-size: 0.72rem; font-weight: 700; color: var(--g-brand-600);
+  padding: 3px 9px; border-radius: 999px; background: var(--g-brand-50); border: 1px solid var(--g-brand-100);
+}
+@media (max-width: 640px) {
+  .rv-panneau__corps.sv-sans-marge { margin-inline: -16px; margin-bottom: -16px; }
+}

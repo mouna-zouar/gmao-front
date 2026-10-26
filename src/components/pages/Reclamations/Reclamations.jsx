@@ -36,6 +36,7 @@ import BonMaintenanceModal from '../../ui/modals/BonMaintenanceModal';
 import bonMaintenanceFullService from '../../../services/bonMaintenanceFullService';
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
+import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import { t, tp, locale } from '../../../i18n';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
@@ -165,6 +166,7 @@ export default function Reclamations() {
   const [detailsData, setDetailsData] = useState(null);
   const [bonOuvert, setBonOuvert] = useState(null);
 
+  const [reclamationCreee, setReclamationCreee] = useState(null);
   const [confirmModal, setConfirmModal] = useState({
     show: false,
     type: 'warning',
@@ -440,9 +442,7 @@ export default function Reclamations() {
       saved = await reclamationService.update(selectedReclamation.id, payload);
     } else {
       saved = await reclamationService.create(payload);
-      if (saved.bonMaintenanceId) {
-        alert(t('Réclamation créée. Bon de maintenance associé généré (id {id}).', { id: saved.bonMaintenanceId }));
-      }
+      setReclamationCreee(saved || {});
     }
 
     await apresAction();
@@ -1038,6 +1038,8 @@ export default function Reclamations() {
         titleOverride={t('Nouveau bon') + ` — ${selectedReclamation?.num || t('Réclamation #{id}', { id: selectedReclamation?.id ?? '' })}`}
       />
 
+      <ReclamationCreeeModal reclamation={reclamationCreee} onClose={() => setReclamationCreee(null)} />
+
       <ConfirmModal
         show={confirmModal.show}
         onClose={closeConfirmModal}
@@ -1046,6 +1048,7 @@ export default function Reclamations() {
         title={confirmModal.title}
         message={confirmModal.message}
         confirmText={confirmModal.confirmText}
+        cancelText={confirmModal.cancelText === undefined ? t('Annuler') : confirmModal.cancelText}
         error={confirmModal.error}
         confirming={confirmModal.confirming}
       />
