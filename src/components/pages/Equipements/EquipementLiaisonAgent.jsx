@@ -171,14 +171,14 @@ export default function EquipementLiaisonAgent({ equipementId, Bloc, Pastille })
       </div>
       <p className="eq-lia-explication">{t(TYPES_LIAISON.find((x) => x.value === form.type)?.aide || '')}</p>
 
-      {form.type === 'ALARMES' && champ(t('Raccordement'), (
+      {(form.type === 'ALARMES' || form.type === 'RS485') && champ(t('Raccordement'), (
         <select value={form.transport} onChange={(e) => maj('transport', e.target.value)}>
           <option value="RTU">{t('Port série (RS485 / RS232)')}</option>
           <option value="TCP">{t('Réseau (Modbus TCP)')}</option>
         </select>
       ))}
 
-      {SERIE.includes(form.type) && !(form.type === 'ALARMES' && form.transport === 'TCP') && (
+      {SERIE.includes(form.type) && !((form.type === 'ALARMES' || form.type === 'RS485') && form.transport === 'TCP') && (
         <>
           {champ(`${t('Port COM')} *`, (
             <>
@@ -216,7 +216,7 @@ export default function EquipementLiaisonAgent({ equipementId, Bloc, Pastille })
         </>
       )}
 
-      {form.type === 'ALARMES' && form.transport === 'TCP' && (
+      {(form.type === 'ALARMES' || form.type === 'RS485') && form.transport === 'TCP' && (
         <div className="eq-cnx-ligne">
           {champ(`${t('Adresse de l’appareil')} *`, <input value={form.hote} onChange={(e) => maj('hote', e.target.value)} placeholder="192.168.0.50" />)}
           {champ(t('Port TCP'), <input type="number" value={form.portTcp} onChange={(e) => maj('portTcp', e.target.value)} />)}

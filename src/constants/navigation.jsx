@@ -6,7 +6,7 @@ import { ICONES_MODULES as M } from './modules';
  *   path   : page ouverte par défaut ; un enfant peut porter des paramètres (?vue=…)
  *   motsCles : mots supplémentaires pour la recherche du menu
  * Pages volontairement absentes : /fiche-bon-maintenance (ouverte depuis un bon),
- * /equipement/:id (ouverte depuis un équipement) et les Équipements, ouverts depuis la page des bons.
+ * /equipement/:id (ouverte depuis un équipement).
  */
 
 const grand = (Icone) => <Icone className="nav-icon-svg" strokeWidth={1.75} aria-hidden="true" />;
@@ -50,6 +50,7 @@ const ALL_ITEMS = [
             { label: 'Bons de maintenance', path: '/bons-maintenance', icon: petit(M.bonsMaintenance), motsCles: 'bon intervention équipements' },
             { label: 'Tâches des bons', path: '/bon-maintenance-taches', icon: petit(M.tachesBons), motsCles: 'kanban' },
             { label: 'Maintenance prédictive', path: '/maintenance-predictive', icon: petit(M.maintenancePredictive) },
+            
         ],
     },
 
@@ -64,6 +65,28 @@ const ALL_ITEMS = [
             { label: 'Planning par intervenant', path: '/planning-par-intervenant', icon: petit(M.planningIntervenant) },
             { label: 'Planning technicien', path: '/planning-technicien', icon: petit(M.planningTechnicien) },
         ],
+    },
+
+    /* ── Parc d'équipements ── */
+    {
+        id: 'equipements',
+        label: 'Équipements',
+        path: '/equipements',
+        icon: grand(M.equipements),
+        motsCles: 'parc immobilisations état en service en panne hors service famille matériel cubix',
+        children: [
+            { label: 'Équipements', path: '/equipements', icon: petit(M.equipements), motsCles: 'parc immobilisations état en service en panne hors service famille matériel cubix' },
+            { label: 'Plan de renouvellement', path: '/renouvellement', icon: petit(M.renouvellement), motsCles: 'remplacement investissement budget fin de vie vétusté amortissement maximo' },
+        ],
+    },
+
+    /* ── Parc connecté ── */
+    {
+        id: 'supervision',
+        label: 'Supervision',
+        path: '/supervision',
+        icon: grand(M.supervision),
+        motsCles: 'Tableau de bord temps réel capteurs sondes réseau en ligne hors ligne agents alertes machines',
     },
 
    /* 
@@ -147,7 +170,7 @@ export const NAV_SECTIONS = [
     {
         id: 'gmao',
         label: 'GMAO',
-        items: byId(['dashboard', 'mon-espace', 'reclamations', 'maintenance', 'planning', 'taches', 'parametres']),
+        items: byId(['dashboard', 'mon-espace', 'reclamations', 'maintenance', 'planning', 'equipements', 'supervision', 'taches', 'parametres']),
     },
     {
         id: 'parc',
@@ -166,10 +189,6 @@ export const NAV_PAGES = NAV_ITEMS.flatMap((item) =>
         : [{ path: item.path, label: item.label, icon: item.icon, motsCles: item.motsCles, parent: item, racine: true }],
 );
 
-/**
- * Page du menu correspondant à l'adresse courante (la plus précise gagne :
- * /bons-maintenance?vue=equipements ne se confond pas avec /bons-maintenance).
- */
 export function trouverPage(pathname, search = '') {
     const params = new URLSearchParams(search);
     let meilleure = null;

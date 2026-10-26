@@ -13,6 +13,7 @@ import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
 import { imprimerEtiquettes, qrSvg } from './qrEtiquettes';
 import EquipementConnexion from './EquipementConnexion';
 import EquipementLiaisonAgent from './EquipementLiaisonAgent';
+import EquipementMaintenanceConditionnelle from './EquipementMaintenanceConditionnelle';
 import {
   CATEGORIES_DOCUMENT, CRITICITES, ETATS_BON, ETATS_EQUIPEMENT, ETATS_RECLAMATION,
   dateCourte, duree, garantieEnClair, montant, taille,
@@ -490,6 +491,7 @@ export default function EquipementFiche() {
           {/* ---- Connexion réseau (adresse IP) : réservée aux utilisateurs connectés ---- */}
           {connecte && <EquipementConnexion equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />}
           {connecte && <EquipementLiaisonAgent equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />}
+          {connecte && <EquipementMaintenanceConditionnelle equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />}
 
           <Documents equipementId={identite.id} documents={documents} onChange={charger} />
         </aside>

@@ -8,6 +8,7 @@ import parametreService from '../../../services/parametreService';
 import prestataireService from '../../../services/prestataireService';
 import authService from '../../../services/Authservice';
 import EquipementMaintenanceTypesSettings from '../Etatequipement/EquipementMaintenanceTypesSettings';
+import ReglesConditionnellesVue from './ReglesConditionnellesVue';
 import ReglageLangue from '../../../i18n/ReglageLangue';
 import { t, locale } from '../../../i18n';
 import './ParametresSysteme.css';
@@ -268,7 +269,7 @@ export default function ParametresSysteme() {
         if (!inconnues.has(p.groupe)) inconnues.set(p.groupe, []);
         inconnues.get(p.groupe).push(p);
       }
-      if (p.cle.startsWith('planif.equipement_echeances.')) m.get('preventif').push(p);
+      if (p.cle.startsWith('planif.equipement_echeances.') || p.cle.startsWith('planif.maintenance_conditionnelle.')) m.get('preventif').push(p);
     });
     const autres = [...inconnues.entries()].map(([groupe, items], i) => ({
       id: `autre_${i}`, groupe, titre: groupe, aide: '', Icone: Settings2, items,
@@ -501,6 +502,9 @@ export default function ParametresSysteme() {
           )}
           <div className="ps-carte ps-carte--libre">
             <EquipementMaintenanceTypesSettings />
+          </div>
+          <div className="ps-carte">
+            <ReglesConditionnellesVue />
           </div>
         </>
       );

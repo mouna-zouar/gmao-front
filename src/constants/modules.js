@@ -1,7 +1,7 @@
 import {
-    Activity, BrainCircuit, Calculator, CalendarCheck, CalendarDays, CalendarRange, Car, ChartColumn,
+    Activity, Boxes, BrainCircuit, CalendarSync, Calculator, CalendarCheck, CalendarDays, CalendarRange, Car, ChartColumn,
     ClipboardList, FolderKanban, Fuel, Gauge, House, IdCard, LayoutDashboard, ListChecks, MapPin,
-    MessageSquareWarning, Navigation, Receipt, Route, Settings, ShieldAlert, SlidersHorizontal, Table2,
+    MessageSquareWarning, MonitorDot, Navigation, Receipt, Route, Settings, ShieldAlert, SlidersHorizontal, Table2,
     Timer, TrendingUp, TriangleAlert, UserCheck, UserCog, UserRound, Wrench,
 } from 'lucide-react';
 
@@ -23,6 +23,9 @@ export const ICONES_MODULES = {
     planningIntervenant: CalendarRange,
     planningTechnicien: UserCog,
     analyse: ChartColumn,
+    equipements: Boxes,
+    renouvellement: CalendarSync,
+    supervision: MonitorDot,
     intelligence: BrainCircuit,
     cout: Calculator,
     sla: Timer,

@@ -36,6 +36,8 @@ import ParcPlanning from '../components/pages/parc/Planning/ParcPlanning';
 import Risque from '../components/pages/Risque/Risque';
 import Intelligence from '../components/pages/Intelligence/Intelligence';
 import AlertesMachines from '../components/pages/AlertesMachines/AlertesMachines';
+import Supervision from '../components/pages/Supervision/Supervision';
+import Renouvellement from '../components/pages/Renouvellement/Renouvellement';
 import ParametresSysteme from '../components/pages/ParametresSysteme/ParametresSysteme';
 import EspacePersonnel from '../components/pages/EspacePersonnel/EspacePersonnel';
 import EtatEquipement from '../components/pages/EtatEquipement/EtatEquipement';
@@ -89,6 +91,8 @@ const AppRoutes = () => {
             <Route path="/parc-planning" element={<ParcPlanning />} />
             <Route path="/intelligence" element={<Intelligence />} />
             <Route path="/alertes-machines" element={<AlertesMachines />} />
+            <Route path="/supervision" element={<Supervision />} />
+            <Route path="/renouvellement" element={<Renouvellement />} />
             <Route path="/vehicules" element={<VehiculesPage />} />
             <Route path="/vehicule-conducteurs" element={<VehiculeConducteurs />} />
             <Route path="/permis-conduite" element={<PermisConduite />} />

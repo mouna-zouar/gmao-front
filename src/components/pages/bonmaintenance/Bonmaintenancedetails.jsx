@@ -117,7 +117,6 @@ import {
 } from './bmdShared';
 import './BmdPage.css';
 
-// Constantes d'état
 const ETAT = {
   NOUVEAU: 1,
   SUSPENDU: 2,

@@ -418,3 +418,25 @@ label.ps-ligne-titre { cursor: pointer; }
   .ps-savebar { flex-direction: column; align-items: stretch; }
   .ps-savebar-actions { justify-content: flex-end; }
 }
+
+/* ── Maintenance conditionnelle (vue d'ensemble) ── */
+.ps-mc-titre { display: flex; align-items: center; gap: 8px; }
+.ps-mc-titre .ps-icone-btn { margin-inline-start: auto; }
+.ps-mc-aide { margin: 0; padding: 12px 18px 0; font-size: 12.5px; color: var(--g-slate-500); max-width: 80ch; }
+.ps-mc-vide { display: flex; align-items: center; gap: 8px; margin: 0; padding: 12px 18px 16px; font-size: 13px; color: var(--g-slate-500); }
+.ps-mc-defile { margin-top: 12px; overflow-x: auto; }
+.ps-mc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ps-mc-table th { padding: 7px 10px; text-align: start; font-size: 11.5px; font-weight: 600; color: var(--g-slate-500); background: var(--g-slate-50); border-block: 1px solid var(--g-slate-200); }
+.ps-mc-table td { padding: 9px 10px; border-bottom: 1px solid var(--g-slate-100); vertical-align: top; color: var(--g-slate-700); }
+.ps-mc-table td strong { display: block; color: var(--g-slate-900); }
+.ps-mc-table td small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--g-slate-500); }
+.ps-mc-table th:first-child, .ps-mc-table td:first-child { padding-inline-start: 18px; }
+.ps-mc-table tr:last-child td { border-bottom: 0; }
+.ps-mc-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ps-mc-etat { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.ps-mc-ton--ok { background: var(--g-emerald-50); color: var(--g-emerald-700); }
+.ps-mc-ton--attention { background: var(--g-amber-50); color: var(--g-amber-700); }
+.ps-mc-ton--action { background: var(--g-marque-clair); color: var(--g-marque-tres-fonce); }
+.ps-mc-ton--info { background: var(--g-blue-50); color: var(--g-blue-700); }
+.ps-mc-ton--neutre { background: var(--g-slate-100); color: var(--g-slate-600); }
+.ps-mc-bon { display: block; margin-top: 4px; font-size: 12px; }
