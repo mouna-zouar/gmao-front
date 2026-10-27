@@ -1487,9 +1487,10 @@ export default function BonsMaintenance() {
                   key={b.id}
                   className={`bons-row ${selectedBon?.id === b.id ? 'selected' : ''} ${coches.has(b.id) ? 'is-coche' : ''} ${rowInfo[b.id]?.stockInsuffisant ? 'stock-insuffisant' : ''}`}
                   onClick={() => handleRowClick(b)}
-                  title={rowInfo[b.id]?.tooltip || ''}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelectedBon(b); setViewMode('details'); }}
+                  title={rowInfo[b.id]?.tooltip || t('Double-clic pour ouvrir le détail')}
                 >
-                  <td className="selection-col" onClick={(e) => e.stopPropagation()}>
+                  <td className="selection-col" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
                     <CaseSelection
                       coche={coches.has(b.id)}
                       onChange={(e) => basculerCoche(b, index, e.nativeEvent?.shiftKey)}

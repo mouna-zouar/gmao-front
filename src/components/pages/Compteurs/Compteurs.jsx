@@ -281,6 +281,7 @@ export default function Compteurs() {
                   key={c.id}
                   className={`compteurs-row ${selectedCompteur?.id === c.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(c)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelectedCompteur(c); setModalOpen(true); }}
                 >
                   <td style={{ fontWeight: 600 }}>{c.nom}</td>
                   <td>{c.unite || '—'}</td>

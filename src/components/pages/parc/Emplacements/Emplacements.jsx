@@ -379,6 +379,8 @@ export default function Emplacements() {
                   key={e.id}
                   className={`emp-row ${selected?.id === e.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(e)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelected(e); setModalOpen(true); }}
+                  title={t('Double-clic pour ouvrir la fiche')}
                 >
                   {visibleColumns.map((c) => renderCell(c.key, e))}
                 </tr>

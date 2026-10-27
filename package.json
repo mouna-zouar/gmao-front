@@ -13,6 +13,7 @@
     "@heroui/react": "^3.2.4",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.1",
+    "@reduxjs/toolkit": "^2.13.0",
     "@tailwindcss/postcss": "^4.3.3",
     "axios": "^1.19.0",
     "framer-motion": "^13.1.0",
@@ -24,6 +25,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-leaflet": "^5.0.0",
+    "react-redux": "^9.3.0",
     "react-router-dom": "^7.18.2",
     "three": "^0.186.1",
     "xlsx": "^0.18.5"

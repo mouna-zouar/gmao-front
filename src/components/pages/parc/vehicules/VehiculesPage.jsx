@@ -1086,7 +1086,9 @@ export default function VehiculesPage() {
                   key={v.id}
                   className={`vehicules-row ${selectedVehicule?.id === v.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(v)}
+                  title={t('Double-clic pour ouvrir le détail')}
                   onDoubleClick={() => {
+                    window.getSelection?.()?.removeAllRanges();
                     setSelectedVehicule(v);
                     setActiveTab('infos');
                     setViewMode('details');

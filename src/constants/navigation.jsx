@@ -66,7 +66,6 @@ const ALL_ITEMS = [
         icon: grand(M.planningBons),
         children: [
             { label: 'Planning des bons', path: '/planning-bon-maintenance', icon: petit(M.planningBons), motsCles: 'calendrier' },
-            { label: 'Planning par intervenant', path: '/planning-par-intervenant', icon: petit(M.planningIntervenant) },
             { label: 'Planning technicien', path: '/planning-technicien', icon: petit(M.planningTechnicien) },
         ],
     },

@@ -217,6 +217,7 @@ export default function MaintenanceTaches() {
                   key={t.id}
                   className={`mtaches-row ${selectedTache?.id === t.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(t)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelectedTache(t); setModalOpen(true); }}
                 >
                   <td style={{ fontWeight: 600 }}>{t.nom}</td>
                 </tr>

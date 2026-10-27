@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_PAGES, NAV_SECTIONS, trouverPage } from '../../constants/navigation';
 import notificationService from '../../services/notificationService';
 import { useAuth } from '../../constants/Authcontext';
 import { t, locale, SelecteurLangue } from '../../i18n';
-import { History, X, Bell, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Search } from 'lucide-react';
+import { History, X, Bell, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Search, Sparkles } from 'lucide-react';
+import AssistantQuestions from '../ui/AssistantQuestions/AssistantQuestions';
 import './Layout.css';
 import './MenuMetier.css';
 import '../ui/BadgeStatut/statuts-harmonises.css';
@@ -24,6 +25,8 @@ export default function Layout({ children }) {
   const [activePopup, setActivePopup] = useState(null);
   const [notifDropOpen, setNotifDropOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [assistantOuvert, setAssistantOuvert] = useState(false);
+  const fermerAssistant = useCallback(() => setAssistantOuvert(false), []);
   const [notifCount, setNotifCount] = useState(0);
   const [notifLoading, setNotifLoading] = useState(false);
 
@@ -413,6 +416,11 @@ export default function Layout({ children }) {
         </div>
 
         <div className="navbar__right">
+          <button type="button" className="navbar__icon-btn navbar__icon-btn--ia" onClick={() => setAssistantOuvert(true)}
+            title={t('Demander à l’IA')} aria-label={t('Demander à l’IA')}>
+            <Sparkles strokeWidth={2} aria-hidden="true" />
+            <span>{t('Demander à l’IA')}</span>
+          </button>
 
           <div className="navbar__notif-container" style={{ position: 'relative' }}>
             <button className="navbar__icon-btn navbar__icon-btn--notif" onClick={toggleNotifDrop} title={t('Notifications')} aria-label={t('Notifications')}>
@@ -497,6 +505,8 @@ export default function Layout({ children }) {
       </main>
 
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+
+      <AssistantQuestions ouvert={assistantOuvert} onFermer={fermerAssistant} />
     </div>
   );
 }

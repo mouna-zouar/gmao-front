@@ -59,6 +59,7 @@ import {
   Phone,
   Tag,
   UserRound,
+  ScanSearch,
 } from 'lucide-react';
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
 import { prioriteLabel, prioriteColor } from '../../../constants/Priorite';
@@ -116,6 +117,7 @@ import {
   nomIntervenantAffiche,
 } from './bmdShared';
 import './BmdPage.css';
+import RecapImmobilisation from './RecapImmobilisation';
 
 const ETAT = {
   NOUVEAU: 1,
@@ -518,6 +520,8 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   // Rapport d'intervention (IA) : repris dans la fiche imprimée
   const [rapportIa, setRapportIa] = useState(null);
   const fermerQr = useCallback(() => setQrOuvert(false), []);
+  const [recapImmoOuvert, setRecapImmoOuvert] = useState(false);
+  const fermerRecapImmo = useCallback(() => setRecapImmoOuvert(false), []);
   const etatBonRef = useRef(bonMaintenance?.etat);
   useEffect(() => { etatBonRef.current = bon?.etat; }, [bon?.etat]);
 
@@ -1240,6 +1244,12 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
               <span className="bmx-btn-pastille" aria-label={tp('message non lu', nonLusChat)}>{nonLusChat}</span>
             )}
           </button>
+          {bon.lotArticleImmobilistationId && (
+            <button type="button" className="bmx-btn bmx-btn--clair" onClick={() => setRecapImmoOuvert(true)}
+              title={t('État, pannes, coûts, préventif et historique de l’équipement')}>
+              <ScanSearch size={18} /> {t('Récap équipement')}
+            </button>
+          )}
           <button type="button" className="bmx-btn bmx-btn--clair" onClick={() => setQrOuvert(true)}>
             <QrCode size={18} /> {t('QR code')}
           </button>
@@ -1443,6 +1453,9 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         <div key={`${tiroir?.key}-${tiroir?.form}`}>{contenuTiroir()}</div>
       </Tiroir>
 
+      {recapImmoOuvert && bon.lotArticleImmobilistationId && (
+        <RecapImmobilisation lotArticleImmobilistationId={bon.lotArticleImmobilistationId} bonCourantId={bon.id} onFermer={fermerRecapImmo} />
+      )}
       {qrOuvert && (
         <ModaleQrCode
           url={urlBon(bon.id)}

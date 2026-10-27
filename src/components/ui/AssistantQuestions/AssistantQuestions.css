@@ -1,0 +1,128 @@
+/* Assistant de questions (« Demander à l'IA ») — panneau latéral */
+
+.aq-voile { position: fixed; inset: 0; z-index: 1190; background: rgba(15, 23, 42, 0.18); }
+.aq-panneau {
+  position: fixed; top: 0; bottom: 0; inset-inline-end: 0; z-index: 1200;
+  width: min(520px, 100vw);
+  display: flex; flex-direction: column;
+  background: var(--g-slate-50);
+  border-inline-start: 1px solid var(--g-slate-200);
+  box-shadow: -12px 0 32px rgba(15, 23, 42, 0.12);
+  font-family: var(--g-police);
+  animation: aqEntree 0.2s ease-out;
+}
+[dir="rtl"] .aq-panneau { box-shadow: 12px 0 32px rgba(15, 23, 42, 0.12); }
+@keyframes aqEntree { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+[dir="rtl"] .aq-panneau { animation-name: aqEntreeRtl; }
+@keyframes aqEntreeRtl { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* En-tête */
+.aq-tete { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--g-blanc); border-bottom: 1px solid var(--g-slate-200); }
+.aq-tete__icone {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--g-brand-50); border: 1px solid var(--g-brand-100); color: var(--g-brand-600);
+}
+.aq-tete__texte { flex: 1; min-width: 0; }
+.aq-tete h2 { margin: 0; font-size: 1rem; font-weight: 800; color: var(--g-slate-900); }
+.aq-tete p { margin: 1px 0 0; font-size: 0.76rem; color: var(--g-slate-500); }
+.aq-icone-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px;
+  border: 0; border-radius: 8px; background: transparent; color: var(--g-slate-500); cursor: pointer;
+}
+.aq-icone-btn:hover { background: var(--g-slate-100); color: var(--g-slate-900); }
+.aq-icone-btn:focus-visible, .aq-envoyer:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 2px; }
+
+/* Fil de la conversation */
+.aq-fil { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.aq-accueil { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 18px 6px; color: var(--g-brand-600); }
+.aq-accueil h3 { margin: 4px 0 0; font-size: 1.05rem; font-weight: 800; color: var(--g-slate-900); }
+.aq-accueil p { margin: 0 0 8px; font-size: 0.82rem; line-height: 1.5; color: var(--g-slate-500); max-width: 40ch; }
+.aq-suggestions { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+.aq-suggestions button {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px; border: 1px solid var(--g-slate-200); border-radius: 10px;
+  background: var(--g-blanc); color: var(--g-slate-700); cursor: pointer; text-align: start;
+  font: 600 0.82rem var(--g-police); transition: all 0.15s ease;
+}
+.aq-suggestions button:hover { border-color: var(--g-brand-200); background: var(--g-brand-50); color: var(--g-brand-700); }
+.aq-suggestions button svg { flex-shrink: 0; color: var(--g-slate-400); }
+.aq-suggestions--petites { flex-direction: row; flex-wrap: wrap; margin-top: 10px; }
+.aq-suggestions--petites button { padding: 6px 10px; border-radius: 999px; font-size: 0.76rem; }
+
+.aq-bulle { max-width: 100%; font-size: 0.86rem; line-height: 1.5; color: var(--g-slate-700); }
+.aq-bulle--moi {
+  align-self: flex-end; max-width: 85%;
+  padding: 9px 13px; border-radius: 14px 14px 4px 14px;
+  background: var(--g-brand-500); color: var(--g-blanc); white-space: pre-wrap; word-break: break-word;
+}
+[dir="rtl"] .aq-bulle--moi { border-radius: 14px 14px 14px 4px; }
+.aq-bulle--ia {
+  align-self: stretch;
+  padding: 12px 14px; border-radius: 14px;
+  background: var(--g-blanc); border: 1px solid var(--g-slate-200);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+.aq-texte p { margin: 0 0 6px; }
+.aq-texte p:last-child { margin-bottom: 0; }
+.aq-texte ul { margin: 4px 0 6px; padding-inline-start: 18px; list-style: disc; }
+.aq-texte li { margin: 2px 0; display: list-item; }
+.aq-texte strong { color: var(--g-slate-900); }
+.aq-message { margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--g-amber-50); color: var(--g-amber-700); font-size: 0.8rem; font-weight: 600; }
+.aq-attente { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; color: var(--g-slate-500); font-size: 0.82rem; }
+.aq-tourne { animation: aqTour 0.8s linear infinite; color: var(--g-brand-500); }
+@keyframes aqTour { to { transform: rotate(360deg); } }
+
+/* Tableaux de résultats */
+.aq-resultat { margin-top: 12px; border: 1px solid var(--g-slate-200); border-radius: 10px; overflow: hidden; }
+.aq-resultat header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: var(--g-slate-50); border-bottom: 1px solid var(--g-slate-200); }
+.aq-resultat h4 { margin: 0; font-size: 0.78rem; font-weight: 800; color: var(--g-slate-900); }
+.aq-pastille { font-size: 0.68rem; font-weight: 700; color: var(--g-brand-600); padding: 2px 8px; border-radius: 999px; background: var(--g-brand-50); border: 1px solid var(--g-brand-100); }
+.aq-table-defile { max-height: 260px; overflow: auto; }
+.aq-resultat table { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
+.aq-resultat th {
+  position: sticky; top: 0; z-index: 1;
+  padding: 6px 8px; text-align: start; white-space: nowrap;
+  font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em;
+  color: var(--g-brand-600); background: var(--g-blanc); border-bottom: 1.5px solid var(--g-brand-100);
+}
+.aq-resultat td { padding: 6px 8px; border-bottom: 1px solid var(--g-slate-100); color: var(--g-slate-700); vertical-align: top; }
+.aq-resultat td:first-child { font-weight: 600; color: var(--g-slate-900); white-space: nowrap; }
+.aq-resultat tr:last-child td { border-bottom: 0; }
+.aq-resultat tr.is-lien { cursor: pointer; }
+.aq-resultat tr.is-lien:hover td { background: var(--g-brand-50); }
+.aq-resultat tr.is-lien:hover td:first-child { color: var(--g-brand-700); text-decoration: underline; }
+.aq-resultat tr.is-lien:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: -2px; }
+.aq-autres { margin: 0; padding: 6px 10px; font-size: 0.72rem; color: var(--g-slate-500); border-top: 1px solid var(--g-slate-100); }
+
+/* Saisie */
+.aq-saisie {
+  display: flex; align-items: flex-end; gap: 8px; margin: 0 16px; padding: 8px 8px 8px 12px;
+  background: var(--g-blanc); border: 1.5px solid var(--g-slate-200); border-radius: 12px;
+}
+.aq-saisie:focus-within { border-color: var(--g-brand-500); box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.12); }
+.aq-saisie textarea {
+  flex: 1; min-height: 24px; max-height: 120px; resize: none; border: 0; outline: none; background: transparent;
+  font: 500 0.86rem/1.5 var(--g-police); color: var(--g-slate-900); field-sizing: content;
+}
+.aq-envoyer {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 34px; height: 34px; border: 0; border-radius: 9px; cursor: pointer;
+  background: var(--g-brand-500); color: var(--g-blanc);
+}
+.aq-envoyer:disabled { background: var(--g-slate-200); color: var(--g-slate-400); cursor: default; }
+.aq-note { margin: 6px 16px 12px; font-size: 0.68rem; color: var(--g-slate-400); text-align: center; }
+
+/* Bouton de l'en-tête de l'application */
+.navbar__right .navbar__icon-btn--ia {
+  width: auto; height: 36px; padding: 0 12px; gap: 6px; white-space: nowrap; flex-shrink: 0;
+  color: var(--g-brand-600); background: var(--g-brand-50); border: 1px solid var(--g-brand-100); border-radius: 9px;
+  font: 700 0.8rem var(--g-police); cursor: pointer;
+}
+.navbar__right .navbar__icon-btn--ia:hover { background: var(--g-brand-100); color: var(--g-brand-700); }
+.navbar__right .navbar__icon-btn--ia svg { width: 16px; height: 16px; flex-shrink: 0; }
+@media (max-width: 760px) {
+  .navbar__right .navbar__icon-btn--ia span { display: none; }
+  .navbar__right .navbar__icon-btn--ia { width: 36px; padding: 0; justify-content: center; }
+}
+@media (prefers-reduced-motion: reduce) { .aq-panneau { animation: none; } }

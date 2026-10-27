@@ -535,6 +535,8 @@ export default function VehiculeAmendes() {
                 <tr key={a.id}
                   className={`vin-row ${s?.id === a.id ? 'selected' : ''} ${a.enRetard ? 'vam-ligne-retard' : ''}`}
                   onClick={() => setSelection((p) => (p?.id === a.id ? null : a))}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelection(a); setFormulaire('modifier'); }}
+                  title={t('Double-clic pour ouvrir la fiche')}
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelection((p) => (p?.id === a.id ? null : a)); } }}
                   tabIndex={0}
                   aria-selected={s?.id === a.id}>

@@ -699,6 +699,8 @@ export default function VehiculeIncidents() {
                   key={i.id}
                   className={`vin-row ${selected?.id === i.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(i)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelected(i); setModalOpen(true); }}
+                  title={t('Double-clic pour ouvrir la fiche')}
                 >
                   {visibleColumns.map((c) => renderCell(c.key, i))}
                 </tr>

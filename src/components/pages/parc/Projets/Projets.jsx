@@ -563,6 +563,8 @@ export default function Projets() {
                   key={p.id}
                   className={`prj-row ${selected?.id === p.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(p)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelected(p); setModalOpen(true); }}
+                  title={t('Double-clic pour ouvrir la fiche')}
                 >
                   {visibleColumns.map((c) => renderCell(c.key, p))}
                 </tr>

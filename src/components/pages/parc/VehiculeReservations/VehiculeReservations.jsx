@@ -651,6 +651,8 @@ export default function VehiculeReservations() {
                   key={r.id}
                   className={`vrs-row ${selected?.id === r.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(r)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelected(r); setModalOpen(true); }}
+                  title={t('Double-clic pour ouvrir la fiche')}
                 >
                   {visibleColumns.map((c) => renderCell(c.key, r))}
                 </tr>

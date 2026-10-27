@@ -543,6 +543,8 @@ export default function VehiculeBonsCarburant() {
                   key={b.id}
                   className={`vbc-row ${selected?.id === b.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(b)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelected(b); setModalOpen(true); }}
+                  title={t('Double-clic pour ouvrir la fiche')}
                 >
                   {visibleColumns.map((c) => renderCell(c.key, b))}
                 </tr>

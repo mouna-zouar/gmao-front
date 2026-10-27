@@ -927,7 +927,7 @@ export default function Reclamations() {
                   key={r.id}
                   className={`reclamations-row ${selectedReclamation?.id === r.id ? 'selected' : ''} ${coches.has(r.id) ? 'is-coche' : ''}`}
                   onClick={() => handleRowClick(r)}
-                  onDoubleClick={() => openDetails(r)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); openDetails(r); }}
                   title={t("Double-cliquez pour voir le détail")}
                 >
                   <td className="selection-col" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>

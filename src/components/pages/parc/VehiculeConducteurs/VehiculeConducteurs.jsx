@@ -532,6 +532,8 @@ export default function VehiculeConducteurs() {
                   key={a.id}
                   className={`vcd-row ${selected?.id === a.id ? 'selected' : ''}`}
                   onClick={() => handleRowClick(a)}
+                  onDoubleClick={() => { window.getSelection?.()?.removeAllRanges(); setSelected(a); setModalOpen(true); }}
+                  title={t('Double-clic pour ouvrir la fiche')}
                 >
                   {visibleColumns.map((c) => renderCell(c.key, a))}
                 </tr>
