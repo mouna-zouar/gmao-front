@@ -49,7 +49,6 @@ import SelectionMultiple, { CaseSelection } from '../../ui/Listes/SelectionMulti
 import { useVueActive } from '../../ui/Listes/stockageVues';
 import { contexteUtilisateur, vuesReclamations } from '../../ui/Listes/vuesMetier';
 import './Reclamations.css';
-import './ReclamationsStats.css';
 import Pagination from '../../commun/Pagination';
 
 // Barre de statistiques : un compteur par état, mêmes couleurs et icônes que les pastilles

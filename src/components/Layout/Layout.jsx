@@ -11,7 +11,6 @@ import { t, locale, SelecteurLangue } from '../../i18n';
 import { History, X, Bell, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Search, Sparkles } from 'lucide-react';
 import AssistantQuestions from '../ui/AssistantQuestions/AssistantQuestions';
 import './Layout.css';
-import './MenuMetier.css';
 import '../ui/BadgeStatut/statuts-harmonises.css';
 
 const NB_RECENTS = 5;
