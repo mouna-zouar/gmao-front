@@ -7,7 +7,6 @@ import bonMaintenanceRapportService from '../../../services/bonMaintenanceRappor
 import authService from '../../../services/Authservice';
 import { t, locale, langueActuelle } from '../../../i18n';
 import { imprimerFiche } from '../../../utils/imprimerListe';
-import './BmdRapport.css';
 
 const ETAT_EFFECTUE = 4;
 const VIDE = {

@@ -1,3 +1,399 @@
+/* ═════════════════════════════════════════════════════════════
+   Rapport d’intervention (ancien BmdRapport.css)
+   ═════════════════════════════════════════════════════════════ */
+/* Rapport d'intervention (IA) dans le détail du bon — variables de .bmx-page (BmdPage.css) */
+.bmr {
+  margin: 0 0 24px;
+  padding: 22px 24px;
+  border-radius: var(--radius-xl, 28px);
+  background: var(--surface, var(--g-blanc));
+  border: 1.5px solid var(--line, var(--g-ink-100));
+}
+.bmr-entete { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.bmr-titre { display: flex; gap: 12px; align-items: flex-start; }
+.bmr-titre h2 { margin: 0; font-size: 20px; }
+.bmr-titre p { margin: 2px 0 0; font-size: 14px; color: var(--ink-faint); }
+.bmr-titre-icone {
+  flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--brand-wash), var(--g-violet-100)); color: var(--brand-deep);
+}
+.bmr-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.bmr-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.bmr-badge--brouillon { background: var(--now-wash); color: #9a5d12; }
+.bmr-badge--valide { background: var(--done-wash); color: #13684d; }
+.bmr-badge--source { background: #f1edfd; color: #5b3fb5; }
+
+.bmr-alerte { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; background: var(--now-wash); color: #8a5310; font-size: 14px; font-weight: 600; }
+.bmr-alerte--erreur { background: var(--alert-wash); color: var(--alert); }
+
+.bmr-vide { display: flex; align-items: center; gap: 12px; padding: 20px; border-radius: 18px; background: var(--paper); color: var(--ink-soft); }
+.bmr-vide--cta { flex-direction: column; align-items: stretch; }
+.bmr-vide--cta p { margin: 0; }
+.bmr-vide--redaction div { display: flex; flex-direction: column; }
+.bmr-vide--redaction strong { color: var(--ink); }
+.bmr-vide--redaction span { font-size: 14px; }
+.bmr-vide--redaction svg { color: #7c5ce0; flex: none; }
+.bmr-tourne { animation: bmr-tourne 0.9s linear infinite; }
+@keyframes bmr-tourne { to { transform: rotate(360deg); } }
+.bmr-pulse { animation: bmr-pulse 1.4s ease-in-out infinite; }
+@keyframes bmr-pulse { 50% { opacity: 0.35; transform: scale(0.9); } }
+
+.bmr-resume {
+  margin: 0 0 16px; padding: 14px 16px; border-radius: 16px; background: var(--brand-wash);
+  font-size: 16px; color: var(--ink); border-inline-start: 4px solid var(--brand);
+  unicode-bidi: plaintext;
+}
+.bmr-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.bmr-bloc { padding: 12px 14px; border-radius: 14px; background: var(--paper); min-width: 0; }
+.bmr-bloc--large { grid-column: 1 / -1; }
+.bmr-bloc--accent { background: #f6f3ff; }
+.bmr-bloc h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; font-family: var(--font-texte); }
+.bmr-bloc h3 svg { color: var(--brand); }
+.bmr-bloc--accent h3 svg { color: #7c5ce0; }
+.bmr-bloc p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.bmr-bloc ul { margin: 0; padding-inline-start: 20px; list-style: disc; }
+.bmr-bloc li::marker { color: var(--brand); }
+.bmr-bloc li { margin: 2px 0; unicode-bidi: plaintext; }
+.bmr-non-renseigne { color: var(--ink-faint); font-style: italic; }
+
+.bmr-pied { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.bmr-trace { font-size: 13px; color: var(--ink-faint); max-width: 46ch; }
+.bmr-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: flex-end; }
+.bmr-langue { height: 40px; padding: 0 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+.bmr-case { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-soft); max-width: 30ch; }
+
+.bmr-edition { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.bmr-champ { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.bmr-champ--large { grid-column: 1 / -1; }
+.bmr-champ span { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.bmr-champ em { font-style: normal; font-weight: 500; color: var(--ink-faint); }
+.bmr-champ textarea {
+  width: 100%; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface);
+  font: inherit; color: var(--ink); resize: vertical; box-sizing: border-box;
+}
+.bmr-champ textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-wash); }
+
+@media (max-width: 760px) {
+  .bmr { padding: 16px 14px; border-radius: 20px; }
+  .bmr-grille, .bmr-edition { grid-template-columns: 1fr; }
+  .bmr-actions { justify-content: stretch; }
+  .bmr-actions .bmx-btn { flex: 1 1 auto; justify-content: center; }
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Animations de fin d'étape (ancien Bmdcelebration.css)
+   ═════════════════════════════════════════════════════════════ */
+/* ============================================================
+   ANIMATIONS DE FIN D'ÉTAPE
+   ============================================================ */
+.bmdc-overlay {
+  --bmdc-c: var(--g-brand-500);
+  --bmdc-soft: rgba(7, 148, 164, 0.12);
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  cursor: pointer;
+  animation: bmdc-fond 0.25s ease-out;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+.bmdc--teal  { --bmdc-c: var(--g-brand-500); --bmdc-soft: rgba(7, 148, 164, 0.12); }
+.bmdc--green { --bmdc-c: var(--g-emerald-500); --bmdc-soft: rgba(16, 185, 129, 0.14); }
+.bmdc--red   { --bmdc-c: var(--g-red-500); --bmdc-soft: rgba(239, 68, 68, 0.12); }
+.bmdc--ink   { --bmdc-c: var(--g-slate-900); --bmdc-soft: rgba(15, 23, 42, 0.08); }
+
+@keyframes bmdc-fond { from { opacity: 0; } to { opacity: 1; } }
+
+.bmdc-card {
+  position: relative;
+  width: min(340px, 100%);
+  padding: 22px 24px 18px;
+  background: var(--g-blanc);
+  border-radius: 22px;
+  border: 1px solid var(--g-slate-200);
+  box-shadow: 0 30px 70px -20px rgba(15, 23, 42, 0.35);
+  text-align: center;
+  overflow: hidden;
+  animation: bmdc-entree 0.45s cubic-bezier(0.34, 1.45, 0.64, 1);
+}
+
+@keyframes bmdc-entree {
+  from { opacity: 0; transform: translateY(18px) scale(0.92); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.bmdc-visual {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.bmdc-svg {
+  width: 200px;
+  height: 140px;
+  overflow: visible;
+}
+
+.bmdc-svg path,
+.bmdc-svg circle,
+.bmdc-svg line {
+  fill: none;
+  stroke: var(--bmdc-c);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Tracés « dessinés » : pathLength=1 → dasharray 1 */
+.bmdc-ecg,
+.bmdc-ring,
+.bmdc-check,
+.bmdc-power-arc,
+.bmdc-power-bar,
+.bmdc-cross {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+
+@keyframes bmdc-dessin { to { stroke-dashoffset: 0; } }
+
+/* ---- Intervenant : ECG → coche ---- */
+.bmdc-ecg {
+  stroke-width: 3.5;
+  animation:
+    bmdc-dessin 0.9s cubic-bezier(0.65, 0, 0.35, 1) forwards,
+    bmdc-ecg-sortie 0.35s ease-in 1s forwards;
+}
+
+@keyframes bmdc-ecg-sortie { to { opacity: 0; } }
+
+.bmdc-ring {
+  stroke-width: 4;
+  transform: rotate(-90deg);
+  transform-origin: 100px 70px;
+  animation: bmdc-dessin 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.85s forwards;
+}
+
+.bmdc-check {
+  stroke-width: 6;
+  animation: bmdc-dessin 0.38s cubic-bezier(0.65, 0, 0.35, 1) 1.3s forwards;
+}
+
+/* Ondes qui partent du cercle une fois terminé */
+.bmdc-ripples circle {
+  stroke-width: 2;
+  opacity: 0;
+  transform-origin: 100px 70px;
+  animation: bmdc-onde 1.1s ease-out 1.4s forwards;
+}
+
+.bmdc-ripples circle:nth-child(2) { animation-delay: 1.7s; }
+
+@keyframes bmdc-onde {
+  0%   { opacity: 0.55; transform: scale(1); }
+  100% { opacity: 0;    transform: scale(1.55); }
+}
+
+/* Étincelles radiales (pas de confettis) */
+.bmdc-sparks line {
+  stroke-width: 3;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: bmdc-etincelle 0.55s ease-out 1.5s forwards;
+}
+
+@keyframes bmdc-etincelle {
+  0%   { opacity: 0; transform: translateY(6px) scaleY(0.4); }
+  40%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-8px) scaleY(1); }
+}
+
+/* ---- Remise en service : power qui s'allume ---- */
+.bmdc-card--remise-autorisee .bmdc-ring { animation-delay: 0.1s; }
+
+.bmdc-ring--glow {
+  animation:
+    bmdc-dessin 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.1s forwards,
+    bmdc-allumage 0.6s ease-out 1.15s forwards !important;
+}
+
+@keyframes bmdc-allumage {
+  0%   { fill: transparent; filter: none; }
+  50%  { fill: var(--bmdc-soft); filter: drop-shadow(0 0 14px var(--bmdc-c)); }
+  100% { fill: var(--bmdc-soft); filter: drop-shadow(0 0 6px var(--bmdc-c)); }
+}
+
+.bmdc-power-arc {
+  stroke-width: 6;
+  animation: bmdc-dessin 0.6s cubic-bezier(0.65, 0, 0.35, 1) 0.55s forwards;
+}
+
+.bmdc-power-bar {
+  stroke-width: 6;
+  animation: bmdc-dessin 0.3s ease-out 0.95s forwards;
+}
+
+.bmdc-card--remise-autorisee .bmdc-ripples circle { animation-delay: 1.2s; }
+.bmdc-card--remise-autorisee .bmdc-ripples circle:nth-child(2) { animation-delay: 1.5s; }
+.bmdc-card--remise-autorisee .bmdc-sparks line { animation-delay: 1.25s; }
+
+/* ---- Remise refusée : croix + secousse ---- */
+.bmdc-card--remise-refusee {
+  animation:
+    bmdc-entree 0.45s cubic-bezier(0.34, 1.45, 0.64, 1),
+    bmdc-secousse 0.45s ease-in-out 1.05s;
+}
+
+.bmdc-card--remise-refusee .bmdc-ring { animation-delay: 0.1s; }
+
+.bmdc-cross {
+  stroke-width: 6;
+  animation: bmdc-dessin 0.25s ease-out 0.6s forwards;
+}
+
+.bmdc-cross--2 { animation-delay: 0.8s; }
+
+@keyframes bmdc-secousse {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(3px); }
+}
+
+/* ---- Bon clôturé : tampon ---- */
+.bmdc-card--bon-cloture {
+  animation:
+    bmdc-entree 0.45s cubic-bezier(0.34, 1.45, 0.64, 1),
+    bmdc-impact 0.3s ease-out 0.85s;
+}
+
+@keyframes bmdc-impact {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(3px) scale(0.985); }
+}
+
+.bmdc-stamp-zone {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+}
+
+.bmdc-stamp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 22px 8px;
+  border: 4px double var(--g-red-700);
+  border-radius: 10px;
+  color: var(--g-red-700);
+  opacity: 0;
+  transform: scale(2.6) rotate(6deg);
+  animation: bmdc-tampon 0.45s cubic-bezier(0.5, 0, 0.75, 0) 0.45s forwards;
+  mix-blend-mode: multiply;
+}
+
+@keyframes bmdc-tampon {
+  0%   { opacity: 0;   transform: scale(2.6) rotate(6deg); }
+  85%  { opacity: 1;   transform: scale(0.94) rotate(-11deg); }
+  100% { opacity: 0.9; transform: scale(1) rotate(-10deg); }
+}
+
+.bmdc-stamp-texte {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 1;
+}
+
+.bmdc-stamp-date {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bmdc-dust {
+  position: absolute;
+  width: 180px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid rgba(185, 28, 28, 0.35);
+  opacity: 0;
+  animation: bmdc-poussiere 0.6s ease-out 0.85s forwards;
+}
+
+@keyframes bmdc-poussiere {
+  0%   { opacity: 0.6; transform: scale(0.7); }
+  100% { opacity: 0;   transform: scale(1.35); }
+}
+
+/* ---- Textes ---- */
+.bmdc-titre {
+  margin: 4px 0 0;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--g-slate-900);
+  opacity: 0;
+  animation: bmdc-texte 0.4s ease-out 0.9s forwards;
+}
+
+.bmdc-sous {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--g-slate-500);
+  opacity: 0;
+  animation: bmdc-texte 0.4s ease-out 1.05s forwards;
+}
+
+@keyframes bmdc-texte {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Barre de temps restant avant fermeture automatique */
+.bmdc-progress {
+  height: 3px;
+  margin: 16px -24px -18px;
+  background: var(--g-slate-100);
+}
+
+.bmdc-progress span {
+  display: block;
+  height: 100%;
+  background: var(--bmdc-c);
+  transform-origin: left;
+  animation: bmdc-temps linear forwards;
+}
+
+@keyframes bmdc-temps {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* ---- Accessibilité : mouvements réduits ---- */
+@media (prefers-reduced-motion: reduce) {
+  .bmdc-overlay *,
+  .bmdc-card {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+  }
+  .bmdc-ecg { display: none; }
+  .bmdc-progress span { animation-duration: 2900ms !important; }
+}
+
 :root {
   /* Palette TEAL unifiée */
   --primary: var(--g-brand-500);
@@ -2373,3 +2769,1940 @@
 .bmd-doc-imprimer { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font: inherit; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; }
 .bmd-doc-imprimer:hover:not(:disabled) { border-color: #0794a4; color: #066d79; }
 .bmd-doc-imprimer:disabled { opacity: 0.6; cursor: wait; }
+
+/* ═════════════════════════════════════════════════════════════
+   Formulaires des rubriques (ancien Bmdform.css)
+   ═════════════════════════════════════════════════════════════ */
+/* ============================================================
+   FORMULAIRES GUIDÉS (onglets du bon de maintenance)
+   Mêmes couleurs que BmdPage.css, valeurs de secours incluses
+   ============================================================ */
+.bmf-form {
+  --f-ink: var(--ink, var(--g-ink-900));
+  --f-ink-soft: var(--ink-soft, var(--g-ink-600));
+  --f-ink-faint: var(--ink-faint, var(--g-ink-400));
+  --f-line: var(--line, var(--g-ink-100));
+  --f-paper: var(--paper, var(--g-ink-25));
+  --f-brand: var(--brand, var(--g-brand-500));
+  --f-brand-deep: var(--brand-deep, var(--g-brand-750));
+  --f-brand-wash: var(--brand-wash, var(--g-brand-75));
+  --f-done: var(--done, var(--g-succes-500));
+  --f-now: var(--now, var(--g-attention-500));
+  --f-alert: var(--alert, var(--g-alerte-500));
+
+  margin-bottom: 24px;
+  border-radius: 24px;
+  background: var(--g-blanc);
+  border: 1.5px solid var(--f-line);
+  overflow: hidden;
+  font-family: var(--font-texte, 'Figtree', system-ui, sans-serif);
+  color: var(--f-ink);
+  animation: bmf-ouvre 0.25s ease-out;
+}
+
+@keyframes bmf-ouvre {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.bmf-form-entete {
+  padding: 20px 24px 4px;
+}
+
+.bmf-form-entete h3 {
+  margin: 0;
+  font-family: var(--font-titre, inherit);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.bmf-form-entete p {
+  margin: 4px 0 0;
+  color: var(--f-ink-soft);
+  font-size: 15px;
+}
+
+.bmf-etapes { padding: 8px 24px 0; }
+
+/* ---------- Étapes ---------- */
+.bmf-etape {
+  margin: 0;
+  padding: 18px 0 20px;
+  border: none;
+  border-bottom: 1.5px dashed var(--f-line);
+  min-width: 0;
+}
+
+.bmf-etape:last-of-type { border-bottom: none; }
+
+.bmf-etape-titre {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 0;
+  margin-bottom: 14px;
+  font-family: var(--font-titre, inherit);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.bmf-etape-titre small {
+  display: block;
+  font-family: var(--font-texte, inherit);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--f-ink-faint);
+}
+
+.bmf-etape-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--f-ink);
+  color: var(--g-blanc);
+  font-size: 14px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.bmf-etape-champs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px 20px;
+  padding-left: 42px;
+}
+
+/* ---------- Champ ---------- */
+.bmf-champ { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.bmf-champ.is-large { grid-column: 1 / -1; }
+
+.bmf-label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--f-ink);
+}
+
+.bmf-requis,
+.bmf-optionnel {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bmf-requis { color: var(--g-attention-700); }
+.bmf-optionnel { color: var(--f-ink-faint); font-weight: 500; }
+
+.bmf-aide,
+.bmf-info,
+.bmf-alerte {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+.bmf-aide { color: var(--f-ink-faint); }
+.bmf-info { color: var(--f-brand-deep); font-weight: 600; }
+.bmf-alerte { color: var(--f-alert); font-weight: 700; }
+
+/* ---------- Entrées texte, date, nombre ---------- */
+.bmf-input,
+.bmf-nombre input {
+  width: 100%;
+  min-height: 50px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--f-line);
+  background: var(--f-paper);
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--f-ink);
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
+
+.bmf-input::placeholder,
+.bmf-nombre input::placeholder { color: #9fb3b8; }
+
+.bmf-input:hover,
+.bmf-nombre input:hover { border-color: #b9ccd0; }
+
+.bmf-input:focus,
+.bmf-nombre input:focus {
+  outline: none;
+  border-color: var(--f-brand);
+  background: var(--g-blanc);
+  box-shadow: 0 0 0 4px var(--f-brand-wash);
+}
+
+.bmf-input--date { font-variant-numeric: tabular-nums; }
+
+.bmf-nombre {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.bmf-nombre input { padding-right: 56px; font-variant-numeric: tabular-nums; }
+
+.bmf-unite {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  bottom: 6px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--g-blanc);
+  color: var(--f-ink-soft);
+  font-weight: 700;
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* ---------- Choix en pastilles ---------- */
+.bmf-choix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bmf-choix-btn {
+  --c: var(--f-brand-deep);
+  --c-wash: var(--f-brand-wash);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 46px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--f-line);
+  background: var(--g-blanc);
+  color: var(--f-ink-soft);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+
+.bmf-choix-btn:hover { border-color: var(--c); color: var(--c); }
+.bmf-choix-btn:active { transform: scale(0.97); }
+.bmf-choix-btn:focus-visible { outline: 3px solid var(--f-brand); outline-offset: 2px; }
+
+.bmf-choix-btn.is-actif {
+  background: var(--c);
+  border-color: var(--c);
+  color: var(--g-blanc);
+}
+
+.bmf-ton--brand { --c: var(--f-brand-deep); }
+.bmf-ton--ok    { --c: var(--f-done); }
+.bmf-ton--now   { --c: #c27618; }
+.bmf-ton--alert { --c: var(--f-alert); }
+.bmf-ton--info  { --c: var(--g-info-600); }
+.bmf-ton--calme { --c: var(--f-ink-soft); }
+
+/* Grandes cartes de choix (décision importante : conforme ? autorisée ?) */
+.bmf-choix.is-grand {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.bmf-choix.is-grand .bmf-choix-btn {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 92px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--f-ink);
+}
+
+.bmf-choix.is-grand .bmf-choix-btn svg { color: var(--c); margin-bottom: 4px; }
+
+.bmf-choix.is-grand .bmf-choix-btn small {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--f-ink-faint);
+}
+
+.bmf-choix.is-grand .bmf-choix-btn.is-actif {
+  background: var(--g-blanc);
+  border-color: var(--c);
+  box-shadow: 0 0 0 3px var(--c) inset;
+}
+
+.bmf-choix.is-grand .bmf-choix-btn.is-actif small { color: var(--f-ink-soft); }
+
+/* ---------- Stock ---------- */
+.bmf-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--f-paper);
+  color: var(--f-ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bmf-stock.is-ok { background: var(--g-succes-50); color: #17785a; }
+.bmf-stock.is-manque { background: var(--g-alerte-50); color: var(--f-alert); }
+
+/* ---------- Listes avec recherche dans les formulaires ---------- */
+.bmf-form .bmd-searchable-input-wrap {
+  height: 50px;
+  padding: 0 12px 0 16px;
+  border-radius: 14px;
+  background: var(--f-paper);
+}
+
+.bmf-form .bmd-searchable-input-wrap.is-open,
+.bmf-form .bmd-searchable-input-wrap:focus-within {
+  background: var(--g-blanc);
+  border-color: var(--f-brand);
+  box-shadow: 0 0 0 4px var(--f-brand-wash);
+}
+
+.bmf-form .bmd-searchable-input { font-size: 16px; }
+
+.bmf-form .bmd-searchable-menu { border-radius: 16px; }
+
+.bmf-form .bmd-searchable-option {
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 15px;
+  border-radius: 12px;
+}
+
+/* ---------- Actions ---------- */
+.bmf-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 -24px;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(6px);
+  border-top: 1.5px solid var(--f-line);
+}
+
+.bmf-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.bmf-btn:active { transform: scale(0.98); }
+
+.bmf-btn--annuler {
+  background: var(--g-blanc);
+  border-color: var(--f-line);
+  color: var(--f-ink-soft);
+}
+.bmf-btn--annuler:hover { border-color: var(--f-ink-soft); color: var(--f-ink); }
+
+.bmf-btn--valider {
+  background: var(--f-brand);
+  color: var(--g-blanc);
+  min-width: 200px;
+}
+.bmf-btn--valider:hover:not(:disabled) { background: var(--f-brand-deep); }
+.bmf-btn--valider:disabled { opacity: 0.7; cursor: wait; }
+
+.bmf-tourne { animation: bmf-rotation 0.9s linear infinite; }
+@keyframes bmf-rotation { to { transform: rotate(360deg); } }
+
+/* ---------- Formulaires simples restants (commentaires, documents) ---------- */
+.bmx-tiroir .bmd-comment-form textarea,
+.bmx-tiroir .bmd-inline-form input,
+.bmx-tiroir .bmd-inline-form select,
+.bmx-tiroir .bmd-inline-form textarea {
+  min-height: 50px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--f-line, var(--g-ink-100));
+  background: var(--g-ink-25);
+  font-size: 16px;
+}
+
+.bmx-tiroir .bmd-comment-form textarea:focus,
+.bmx-tiroir .bmd-inline-form input:focus,
+.bmx-tiroir .bmd-inline-form textarea:focus {
+  background: var(--g-blanc);
+  border-color: var(--g-brand-500);
+  box-shadow: 0 0 0 4px var(--g-brand-75);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  .bmf-form-entete,
+  .bmf-etapes { padding-left: 16px; padding-right: 16px; }
+  .bmf-etape-champs { padding-left: 0; grid-template-columns: 1fr; }
+  .bmf-actions { margin: 0 -16px; padding: 12px 16px; }
+  .bmf-btn { flex: 1; }
+  .bmf-choix-btn { flex: 1 1 auto; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bmf-form { animation: none; }
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Tableaux, fiches et vues détail (ancien Bmdentityviews.css)
+   ═════════════════════════════════════════════════════════════ */
+/* ============================================================
+   TABLEAU DES SOUS-ENTITÉS (diagnostics, tâches, intervenants…)
+   Utilise les variables définies dans BonMaintenanceDetails.css
+   ============================================================ */
+.bmd-table-wrap {
+  background: var(--g-blanc);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  animation: bmdFadeIn 0.25s ease-out;
+}
+
+.bmd-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.bmd-table-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  max-width: 320px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--g-blanc);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  color: var(--gray-400);
+  transition: var(--transition);
+  cursor: text;
+}
+
+.bmd-table-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+  color: var(--primary);
+}
+
+.bmd-table-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--gray-800);
+}
+
+.bmd-table-search input::placeholder { color: var(--gray-400); }
+
+.bmd-table-count {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--gray-500);
+  white-space: nowrap;
+}
+
+.bmd-table-scroll { overflow-x: auto; }
+
+.bmd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.bmd-table thead th {
+  padding: 11px 14px;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray-500);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+  white-space: nowrap;
+}
+
+.bmd-table tbody td {
+  padding: 12px 14px;
+  color: var(--gray-800);
+  border-bottom: 1px solid var(--gray-100);
+  vertical-align: middle;
+}
+
+.bmd-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.bmd-table tbody tr:last-child td { border-bottom: none; }
+.bmd-table tbody tr:hover { background: var(--primary-soft); }
+.bmd-table tbody tr:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+
+.bmd-table-chevron-col {
+  width: 36px;
+  text-align: right;
+  color: var(--gray-300);
+}
+
+.bmd-table tbody td.bmd-table-chevron-col { padding-right: 12px; }
+.bmd-table tbody tr:hover .bmd-table-chevron-col { color: var(--primary); }
+
+.bmd-table tbody td.bmd-table-empty {
+  padding: 28px 14px;
+  text-align: center;
+  color: var(--gray-400);
+  font-style: italic;
+  cursor: default;
+}
+
+.bmd-cell-main { font-weight: 600; color: var(--gray-900); }
+.bmd-cell-sub { display: block; font-size: 11.5px; color: var(--gray-500); margin-top: 2px; }
+.bmd-cell-muted { color: var(--gray-400); }
+.bmd-cell-nowrap { white-space: nowrap; }
+.bmd-cell-truncate {
+  display: block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   PILLS
+   ============================================================ */
+.bmd-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.bmd-pill--slate { background: var(--gray-100); color: var(--gray-600); border-color: var(--gray-200); }
+.bmd-pill--blue  { background: var(--g-blue-50); color: var(--g-blue-700); border-color: var(--g-blue-100); }
+.bmd-pill--amber { background: var(--warning-light); color: var(--g-amber-700); border-color: var(--g-amber-200); }
+.bmd-pill--red   { background: var(--danger-light); color: var(--g-red-700); border-color: var(--g-red-200); }
+.bmd-pill--green { background: var(--success-light); color: var(--g-emerald-700); border-color: var(--g-emerald-200); }
+.bmd-pill--teal  { background: var(--primary-soft); color: var(--primary-darker); border-color: var(--primary-light); }
+
+/* ============================================================
+   PAGE DE DÉTAIL
+   ============================================================ */
+.bmd-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: bmdFadeIn 0.25s ease-out;
+}
+
+.bmd-detail-back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-600);
+  padding: 7px 13px;
+  background: var(--g-blanc);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.bmd-detail-back:hover {
+  color: var(--primary-darker);
+  background: var(--primary-soft);
+  border-color: var(--primary-light);
+}
+
+/* ---- Partie 1 : en-tête ---- */
+.bmd-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 22px;
+  background: linear-gradient(135deg, var(--primary-soft) 0%, var(--g-blanc) 70%);
+  border: 1px solid var(--primary-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.bmd-detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.bmd-detail-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 13px;
+  background: var(--primary);
+  color: var(--g-blanc);
+  box-shadow: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
+}
+
+.bmd-detail-header-text { min-width: 0; }
+
+.bmd-detail-surtitre {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--primary-dark);
+  margin-bottom: 2px;
+}
+
+.bmd-detail-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--gray-900);
+  line-height: 1.3;
+}
+
+.bmd-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.bmd-detail-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.bmd-detail-header-actions .bmd-edit-btn,
+.bmd-detail-header-actions .bmd-delete-btn {
+  background: var(--g-blanc);
+  border-color: var(--gray-200);
+}
+
+/* ---- Informations générales ---- */
+.bmd-detail-infos {
+  padding: 20px 22px;
+  background: var(--g-blanc);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+.bmd-detail-section-title {
+  margin: 0 0 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray-500);
+}
+
+.bmd-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.bmd-detail-field {
+  padding: 12px 14px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius-sm);
+}
+
+.bmd-detail-field.is-wide { grid-column: 1 / -1; }
+
+.bmd-detail-field dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray-400);
+}
+
+.bmd-detail-field dd {
+  margin: 4px 0 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--gray-900);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ---- Partie 2 : cartes de détail ---- */
+.bmd-detail-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.bmd-detail-card {
+  background: var(--g-blanc);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.bmd-detail-card:hover {
+  border-color: var(--primary-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.bmd-detail-card.is-wide { grid-column: 1 / -1; }
+
+.bmd-detail-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.bmd-detail-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--primary-soft);
+  color: var(--primary-darker);
+  border: 1px solid var(--primary-light);
+  flex-shrink: 0;
+}
+
+.bmd-detail-card-title {
+  flex: 1;
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.bmd-detail-subtab-count {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--g-blanc);
+}
+
+.bmd-detail-card-body { padding: 16px 18px; }
+
+.bmd-detail-card-body .bmd-detail-grid {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.bmd-detail-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--gray-700);
+  white-space: pre-wrap;
+}
+
+.bmd-detail-inline-select {
+  min-width: 140px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .bmd-detail-header,
+  .bmd-detail-infos { padding: 16px; }
+  .bmd-detail-cards { grid-template-columns: 1fr; }
+
+  .bmd-detail-header-actions { width: 100%; }
+  .bmd-detail-grid { grid-template-columns: 1fr; }
+  .bmd-table-search { max-width: none; }
+}
+
+/* ============================================================
+   PAGE DU BON — PARTIE 2 : RUBRIQUES EN CARTES
+   (remplace la barre d'onglets .bmd-tabs)
+   ============================================================ */
+.bmd-section-label {
+  margin: 0 0 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gray-500);
+}
+
+.bmd-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.bmd-card {
+  --card-bg: var(--primary-soft);
+  --card-fg: var(--primary-darker);
+  --card-bd: var(--primary-light);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--g-blanc);
+  border: 1.5px solid var(--gray-200);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.bmd-card--teal   { --card-bg: var(--primary-soft); --card-fg: var(--primary-darker); --card-bd: var(--primary-light); }
+.bmd-card--blue   { --card-bg: var(--info-light); --card-fg: var(--g-blue-700); --card-bd: var(--g-blue-200); }
+.bmd-card--purple { --card-bg: var(--purple-light); --card-fg: var(--g-violet-700); --card-bd: var(--g-violet-200); }
+.bmd-card--amber  { --card-bg: var(--warning-light); --card-fg: var(--g-amber-700); --card-bd: var(--g-amber-200); }
+.bmd-card--green  { --card-bg: var(--success-light); --card-fg: var(--g-emerald-700); --card-bd: var(--g-emerald-200); }
+.bmd-card--pink   { --card-bg: var(--g-pink-100); --card-fg: var(--g-pink-700); --card-bd: var(--g-pink-200); }
+.bmd-card--slate  { --card-bg: var(--gray-100); --card-fg: var(--gray-600); --card-bd: var(--gray-200); }
+
+.bmd-card:hover {
+  border-color: var(--card-bd);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.bmd-card:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.bmd-card.active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: 0 0 0 3px var(--primary-light), var(--shadow-sm);
+}
+
+.bmd-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--card-bg);
+  color: var(--card-fg);
+  border: 1px solid var(--card-bd);
+}
+
+.bmd-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.bmd-card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.bmd-card-desc {
+  font-size: 11.5px;
+  color: var(--gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bmd-card-count {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--card-bg);
+  color: var(--card-fg);
+  border: 1px solid var(--card-bd);
+}
+
+.bmd-card-arrow {
+  flex-shrink: 0;
+  color: var(--gray-300);
+  transition: var(--transition);
+}
+
+.bmd-card:hover .bmd-card-arrow,
+.bmd-card.active .bmd-card-arrow { color: var(--primary); transform: translateX(2px); }
+
+/* Contenu de la carte sélectionnée */
+.bmd-panel--carte {
+  scroll-margin-top: 16px;
+  padding-top: 4px;
+}
+
+.bmd-panel-carte-titre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--primary);
+  background: var(--primary-soft);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--primary-darker);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  .bmd-cards { grid-template-columns: 1fr; }
+}
+
+/* ═════════════════════════════════════════════════════════════
+   Page du détail : parcours, panneau latéral (ancien BmdPage.css)
+   ═════════════════════════════════════════════════════════════ */
+/* ============================================================
+   BON DE MAINTENANCE — NOUVELLE PAGE « PARCOURS DE RÉPARATION »
+   Chargé après BonMaintenanceDetails.css
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap');
+
+.bmx-page {
+  --ink: var(--g-ink-900);
+  --ink-soft: var(--g-ink-600);
+  --ink-faint: var(--g-ink-400);
+  --paper: var(--g-ink-25);
+  --surface: var(--g-blanc);
+  --line: var(--g-ink-100);
+  --brand: var(--g-brand-500);
+  --brand-deep: var(--g-brand-750);
+  --brand-wash: var(--g-brand-75);
+  --done: var(--g-succes-500);
+  --done-wash: var(--g-succes-50);
+  --now: var(--g-attention-500);
+  --now-wash: var(--g-attention-50);
+  --alert: var(--g-alerte-500);
+  --alert-wash: var(--g-alerte-50);
+  --radius-xl: 28px;
+  --radius-l: 18px;
+  --radius-m: 12px;
+  --font-titre: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+  --font-texte: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  font-family: var(--font-texte);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+  border-radius: var(--radius-xl);
+  padding: 24px 28px 40px;
+  min-height: 100vh;
+  animation: none;
+}
+
+.bmx-page h1,
+.bmx-page h2,
+.bmx-page h3 {
+  font-family: var(--font-titre);
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.bmx-page button { font-family: inherit; }
+
+.bmx-page :focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ---------- Boutons ---------- */
+.bmx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1.5px solid transparent;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.bmx-btn:active { transform: scale(0.98); }
+
+.bmx-btn--clair {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+.bmx-btn--clair:hover { border-color: var(--brand); color: var(--brand-deep); }
+
+.bmx-btn--fantome {
+  background: transparent;
+  color: var(--brand-deep);
+}
+.bmx-btn--fantome:hover { background: var(--brand-wash); }
+
+.bmx-btn--principal {
+  background: var(--now);
+  color: #2b1a04;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 12px 24px;
+  min-height: 50px;
+}
+.bmx-btn--principal:hover { background: #f1a646; }
+
+.bmx-btn--sur-fonce {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.35);
+  color: var(--g-blanc);
+}
+.bmx-btn--sur-fonce:hover { border-color: var(--g-blanc); background: rgba(255, 255, 255, 0.08); }
+
+/* ---------- Tons communs ---------- */
+.bmx-ton--ok        { --ton: var(--done);  --ton-wash: var(--done-wash); }
+.bmx-ton--attention { --ton: var(--g-attention-700);      --ton-wash: var(--now-wash); }
+.bmx-ton--action    { --ton: var(--brand-deep); --ton-wash: var(--brand-wash); }
+.bmx-ton--info      { --ton: var(--g-info-600);      --ton-wash: var(--g-info-50); }
+.bmx-ton--alerte    { --ton: var(--alert); --ton-wash: var(--alert-wash); }
+.bmx-ton--neutre    { --ton: var(--ink-soft); --ton-wash: var(--g-ink-50); }
+.bmx-ton--prio-red   { --ton: var(--alert); --ton-wash: var(--alert-wash); }
+.bmx-ton--prio-amber { --ton: var(--g-attention-700);      --ton-wash: var(--now-wash); }
+.bmx-ton--prio-blue  { --ton: var(--g-info-600);      --ton-wash: var(--g-info-50); }
+.bmx-ton--prio-slate { --ton: var(--ink-soft); --ton-wash: var(--g-ink-50); }
+
+.bmx-pastille {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ton);
+  background: var(--ton-wash);
+  white-space: nowrap;
+}
+
+/* ---------- Barre du haut ---------- */
+.bmx-barre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+/* ============================================================
+   PARTIE 1 — IDENTITÉ DU BON
+   ============================================================ */
+.bmx-identite { margin-bottom: 28px; max-width: 920px; }
+
+/* Bracelet : comme celui d'un patient, il identifie l'équipement */
+.bmx-bracelet {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  overflow: hidden;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.bmx-bracelet-etat {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px 6px 16px;
+  background: var(--ton);
+  color: var(--g-blanc);
+  font-weight: 700;
+}
+
+.bmx-bracelet-num {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 34px 6px 14px;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.bmx-bracelet-trou {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: inset 0 0 0 1.5px var(--line);
+}
+
+.bmx-titre {
+  margin: 0 0 8px;
+  font-size: clamp(30px, 4.6vw, 46px);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.bmx-resume {
+  margin: 0 0 18px;
+  font-size: 17px;
+  color: var(--ink-soft);
+  max-width: 64ch;
+}
+
+.bmx-fiche {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  margin: 0;
+}
+
+.bmx-fiche div { min-width: 0; }
+
+.bmx-fiche dt {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.bmx-fiche dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------- Aide de première visite ---------- */
+.bmx-aide {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 18px 22px;
+  margin-bottom: 24px;
+  border-radius: var(--radius-l);
+  background: var(--brand-wash);
+  border: 1.5px dashed #9fd3da;
+}
+
+.bmx-aide h2 { margin: 0 0 6px; font-size: 18px; }
+
+.bmx-aide ol {
+  margin: 0;
+  padding-left: 22px;
+  color: var(--ink-soft);
+}
+
+.bmx-aide li { margin: 2px 0; }
+
+/* ============================================================
+   PARTIE 2 — LE PARCOURS (élément principal)
+   ============================================================ */
+.bmx-parcours {
+  padding: 24px 26px 28px;
+  margin-bottom: 20px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+}
+
+.bmx-parcours-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+}
+
+.bmx-parcours-entete h2 { margin: 0; font-size: 22px; font-weight: 700; }
+
+.bmx-parcours-compte {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.bmx-ligne {
+  --point: 48px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Rail de fond + remplissage selon l'avancement */
+.bmx-ligne::before,
+.bmx-ligne::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--point) / 2 - 4px);
+  left: calc(100% / 12);
+  height: 8px;
+  border-radius: 999px;
+}
+
+.bmx-ligne::before {
+  right: calc(100% / 12);
+  background: #e3ecee;
+}
+
+.bmx-ligne::after {
+  width: calc((100% - 100% / 6) * var(--bmx-p, 0));
+  background: var(--brand);
+  transition: width 0.6s ease;
+}
+
+.bmx-station { position: relative; z-index: 1; }
+
+.bmx-station-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 0 4px 6px;
+  border: none;
+  background: none;
+  text-align: center;
+  cursor: pointer;
+  border-radius: var(--radius-m);
+}
+
+.bmx-station-point {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--point);
+  height: var(--point);
+  border-radius: 50%;
+  background: var(--surface);
+  border: 3px solid #cbd9dc;
+  color: #9fb3b8;
+  transition: transform 0.15s ease;
+}
+
+.bmx-station-btn:hover .bmx-station-point { transform: scale(1.08); }
+
+.bmx-station-nom {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink-faint);
+}
+
+.bmx-station-aide {
+  font-size: 13px;
+  color: var(--ink-faint);
+  max-width: 16ch;
+}
+
+/* Étape faite */
+.bmx-station.is-fait .bmx-station-point {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--g-blanc);
+}
+.bmx-station.is-fait .bmx-station-nom { color: var(--ink); }
+
+/* Étape actuelle : le seul mouvement continu de la page */
+.bmx-station.is-actuel .bmx-station-point,
+.bmx-station.is-probleme .bmx-station-point {
+  width: calc(var(--point) + 8px);
+  height: calc(var(--point) + 8px);
+  margin-top: -4px;
+  color: var(--g-blanc);
+}
+
+.bmx-station.is-actuel .bmx-station-point {
+  background: var(--now);
+  border-color: var(--g-blanc);
+  box-shadow: 0 0 0 3px var(--now);
+  animation: bmx-pouls 2.2s ease-out infinite;
+}
+
+.bmx-station.is-probleme .bmx-station-point {
+  background: var(--alert);
+  border-color: var(--g-blanc);
+  box-shadow: 0 0 0 3px var(--alert);
+}
+
+.bmx-station.is-actuel .bmx-station-nom,
+.bmx-station.is-probleme .bmx-station-nom { color: var(--ink); font-size: 16px; }
+.bmx-station.is-actuel .bmx-station-aide { color: #9a5d12; font-weight: 600; }
+.bmx-station.is-probleme .bmx-station-aide { color: var(--alert); font-weight: 600; }
+
+@keyframes bmx-pouls {
+  0%   { box-shadow: 0 0 0 3px var(--now), 0 0 0 3px rgba(232, 150, 46, 0.45); }
+  70%  { box-shadow: 0 0 0 3px var(--now), 0 0 0 18px rgba(232, 150, 46, 0); }
+  100% { box-shadow: 0 0 0 3px var(--now), 0 0 0 18px rgba(232, 150, 46, 0); }
+}
+
+/* ============================================================
+   À FAIRE MAINTENANT + EN UN COUP D'ŒIL
+   ============================================================ */
+.bmx-duo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+  gap: 20px;
+  margin-bottom: 36px;
+}
+
+.bmx-maintenant {
+  position: relative;
+  padding: 28px 30px 30px;
+  border-radius: var(--radius-xl);
+  background: var(--ink);
+  color: var(--g-blanc);
+  overflow: hidden;
+}
+
+/* Courbe discrète en fond, comme un tracé de moniteur */
+.bmx-maintenant::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  bottom: -60px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.03), 0 0 0 62px rgba(255, 255, 255, 0.02);
+  pointer-events: none;
+}
+
+.bmx-maintenant--alerte { background: #5a1a22; }
+.bmx-maintenant--fini { background: #0f4a3a; }
+.bmx-maintenant--neutre { background: #3a4a50; }
+
+.bmx-maintenant-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--now);
+  margin-bottom: 16px;
+}
+
+.bmx-maintenant--alerte .bmx-maintenant-icone { color: #ff9aa0; }
+.bmx-maintenant--fini .bmx-maintenant-icone { color: #7fe0bd; }
+
+.bmx-maintenant-sur {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.bmx-page .bmx-maintenant-titre {
+  margin: 0 0 10px;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 800;
+  line-height: 1.12;
+  color: var(--g-blanc);
+}
+
+.bmx-maintenant-texte {
+  margin: 0 0 22px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 52ch;
+}
+
+.bmx-maintenant-actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Coup d'œil */
+.bmx-vitaux {
+  padding: 22px 20px 14px;
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+}
+
+.bmx-vitaux h2 { margin: 0 0 10px 6px; font-size: 18px; font-weight: 700; }
+
+.bmx-vitaux ul { margin: 0; padding: 0; list-style: none; }
+
+.bmx-vital {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 6px;
+  border: none;
+  border-bottom: 1px solid #e8eff0;
+  background: none;
+  text-align: left;
+  color: inherit;
+  font-size: 15px;
+}
+
+.bmx-vitaux li:last-child .bmx-vital { border-bottom: none; }
+
+button.bmx-vital { cursor: pointer; border-radius: var(--radius-m); }
+button.bmx-vital:hover { background: var(--paper); }
+
+.bmx-vital-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+
+.bmx-vital-label { flex: 1; color: var(--ink-soft); }
+
+.bmx-vital-valeur {
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ton);
+  background: var(--ton-wash);
+  text-align: right;
+}
+
+.bmx-vital-fleche { color: var(--ink-faint); flex-shrink: 0; }
+
+.bmx-vital-recalc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.bmx-vital-recalc:hover:not(:disabled) { border-color: var(--brand); color: var(--brand-deep); }
+.bmx-vital-recalc:disabled { cursor: wait; opacity: 0.7; }
+
+/* ============================================================
+   TOUT LE DOSSIER
+   ============================================================ */
+.bmx-dossier-titre { margin: 0 0 16px; font-size: 22px; font-weight: 700; }
+
+.bmx-groupes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.bmx-groupe h3 { margin: 0; font-size: 17px; font-weight: 700; }
+
+.bmx-groupe > p {
+  margin: 2px 0 10px;
+  font-size: 14px;
+  color: var(--ink-faint);
+}
+
+.bmx-groupe ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bmx-rubrique {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 14px;
+  border-radius: var(--radius-l);
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bmx-rubrique:hover { border-color: var(--brand); background: #fbfefe; }
+
+.bmx-rubrique-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--brand-wash);
+  color: var(--brand-deep);
+  flex-shrink: 0;
+}
+
+.bmx-rubrique-texte { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.bmx-rubrique-nom { font-weight: 700; font-size: 15px; }
+.bmx-rubrique-aide { font-size: 13px; color: var(--ink-faint); }
+
+.bmx-rubrique-nb {
+  min-width: 26px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+}
+
+.bmx-rubrique-fleche { color: var(--ink-faint); flex-shrink: 0; }
+.bmx-rubrique:hover .bmx-rubrique-fleche { color: var(--brand); }
+
+/* ============================================================
+   PANNEAU LATÉRAL
+   ============================================================ */
+.bmx-tiroir-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(18, 48, 58, 0.35);
+  animation: bmx-fondu 0.2s ease-out;
+}
+
+@keyframes bmx-fondu { from { opacity: 0; } to { opacity: 1; } }
+
+.bmx-tiroir {
+  display: flex;
+  flex-direction: column;
+  width: min(880px, 100vw);
+  height: 100%;
+  background: var(--paper);
+  border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  box-shadow: -20px 0 60px rgba(18, 48, 58, 0.25);
+  animation: bmx-glisse 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  outline: none;
+}
+
+/* Réparation en deux étapes : 1. intervenants, 2. tâches */
+.bmx-rep { display: flex; flex-direction: column; gap: 18px; }
+.bmx-rep-etapes { display: flex; align-items: center; gap: 0; margin: 0; padding: 6px; list-style: none; border: 1.5px solid var(--line); border-radius: var(--radius-l); background: var(--surface); }
+.bmx-rep-etape { display: flex; align-items: center; flex: 1; min-width: 0; }
+.bmx-rep-etape button { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 8px 12px; border: 0; border-radius: 12px; background: none; font: inherit; color: var(--ink-faint); text-align: start; cursor: pointer; }
+.bmx-rep-etape button:hover { background: var(--paper); }
+.bmx-rep-etape.is-actif button { background: var(--paper); color: var(--ink); }
+.bmx-rep-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid var(--line); font-weight: 800; font-size: 13px; }
+.bmx-rep-etape.is-actif .bmx-rep-num { border-color: var(--brand); background: var(--brand); color: var(--g-blanc); }
+.bmx-rep-etape.is-passe .bmx-rep-num { border-color: var(--brand); color: var(--brand); }
+.bmx-rep-texte { display: flex; flex-direction: column; min-width: 0; }
+.bmx-rep-texte strong { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+.bmx-rep-texte small { font-size: 12px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bmx-rep-trait { width: 40px; height: 2px; margin: 0 6px; flex-shrink: 0; background: var(--line); border-radius: 2px; }
+.bmx-rep-etape.is-passe .bmx-rep-trait { background: var(--brand); }
+.bmx-rep-nav { display: flex; justify-content: space-between; gap: 10px; padding-top: 14px; border-top: 1.5px solid var(--line); }
+
+@keyframes bmx-glisse { from { transform: translateX(40px); opacity: 0.4; } to { transform: none; opacity: 1; } }
+
+.bmx-tiroir-entete {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 24px;
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--line);
+  border-radius: var(--radius-xl) 0 0 0;
+}
+
+.bmx-tiroir-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--brand);
+  color: var(--g-blanc);
+  flex-shrink: 0;
+}
+
+.bmx-tiroir-titres { flex: 1; min-width: 0; }
+.bmx-tiroir-titres h2 { margin: 0; font-size: 22px; font-weight: 800; }
+.bmx-tiroir-titres p { margin: 0; color: var(--ink-faint); font-size: 14px; }
+
+.bmx-tiroir-fermer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+.bmx-tiroir-fermer:hover { border-color: var(--ink); }
+
+.bmx-tiroir-corps {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  overscroll-behavior: contain;
+}
+
+/* ---------- Délais ---------- */
+.bmx-delais { display: flex; flex-direction: column; gap: 14px; }
+
+.bmx-delai {
+  padding: 18px 20px;
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+}
+
+.bmx-delai-haut {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bmx-delai h3 { margin: 0; font-size: 17px; }
+.bmx-delai-haut p { margin: 2px 0 0; color: var(--ink-faint); font-size: 14px; }
+
+.bmx-jauge {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: #e3ecee;
+  margin-bottom: 10px;
+}
+
+.bmx-jauge span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--done);
+}
+.bmx-jauge span.is-depasse { background: var(--alert); }
+
+.bmx-jauge i {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--ink);
+}
+
+.bmx-delai-chiffres { margin: 0; color: var(--ink-soft); font-size: 14px; }
+
+/* ---------- Coût ---------- */
+.bmx-cout {
+  padding: 24px;
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+}
+
+.bmx-cout-total {
+  margin: 0;
+  font-family: var(--font-titre);
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.bmx-cout-sous { margin: 6px 0 18px; color: var(--ink-faint); }
+
+.bmx-cout-barre {
+  display: flex;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e3ecee;
+  gap: 2px;
+  margin-bottom: 16px;
+}
+
+.bmx-cout-barre .is-mo,     .bmx-cout-puce.is-mo     { background: var(--brand); }
+.bmx-cout-barre .is-pieces, .bmx-cout-puce.is-pieces { background: var(--now); }
+.bmx-cout-barre .is-achats, .bmx-cout-puce.is-achats { background: #6b5bd2; }
+
+.bmx-cout-liste { margin: 0; padding: 0; list-style: none; }
+
+.bmx-cout-liste li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e8eff0;
+}
+.bmx-cout-liste li:last-child { border-bottom: none; }
+.bmx-cout-liste span:nth-child(2) { flex: 1; color: var(--ink-soft); }
+.bmx-cout-liste strong { font-variant-numeric: tabular-nums; }
+
+.bmx-cout-puce { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
+
+/* ---------- RCA dans le panneau ---------- */
+.bmx-rca .bmd-rca-panel { margin-bottom: 0; border-radius: var(--radius-l); }
+
+/* ---------- États vides, chargement, erreur ---------- */
+.bmx-vide {
+  margin: 0;
+  padding: 22px;
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  border: 1.5px dashed var(--line);
+  color: var(--ink-soft);
+}
+
+.bmx-chargement,
+.bmx-erreur {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 60vh;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+.bmx-erreur { color: var(--alert); }
+.bmx-erreur p { max-width: 44ch; color: var(--ink); }
+
+.bmx-tourne { animation: bmx-rotation 0.9s linear infinite; }
+@keyframes bmx-rotation { to { transform: rotate(360deg); } }
+
+/* Les onglets internes héritent de la nouvelle typographie */
+.bmx-tiroir .bmd-panel-header { border-bottom-color: var(--line); }
+/* Bouton « Ajouter … » placé à gauche, avant le titre */
+.bmx-tiroir .bmd-panel-header { justify-content: flex-start; }
+.bmx-tiroir .bmd-panel-header .bmd-add-btn { order: -1; }
+/* Boutons des formulaires (Ajouter / Enregistrer puis Annuler) et « Publier » des commentaires, à gauche aussi */
+.bmx-tiroir .bmf-actions { flex-direction: row-reverse; justify-content: flex-end; }
+.bmx-tiroir .bmd-comment-form { flex-direction: column; align-items: flex-start; }
+.bmx-tiroir .bmd-comment-form textarea { width: 100%; }
+.bmx-tiroir .bmd-panel-title h3 { font-family: var(--font-titre); font-size: 18px; }
+.bmx-tiroir .bmd-add-btn { border-radius: 999px; min-height: 42px; padding: 10px 18px; font-size: 14px; }
+.bmx-tiroir .bmd-inline-form,
+.bmx-tiroir .bmd-table-wrap,
+.bmx-tiroir .bmd-detail-header,
+.bmx-tiroir .bmd-detail-infos,
+.bmx-tiroir .bmd-detail-card { border-radius: var(--radius-l); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1100px) {
+  .bmx-groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .bmx-duo { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+  .bmx-page { padding: 16px 16px 32px; border-radius: 0; }
+
+  /* Le parcours devient vertical */
+  .bmx-ligne {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .bmx-ligne::before,
+  .bmx-ligne::after {
+    top: 24px;
+    bottom: 24px;
+    left: calc(var(--point) / 2 - 3px);
+    right: auto;
+    width: 6px;
+    height: auto;
+  }
+
+  .bmx-ligne::after {
+    bottom: auto;
+    height: calc((100% - 48px) * var(--bmx-p, 0));
+  }
+
+  .bmx-station-btn {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    text-align: left;
+    column-gap: 14px;
+    row-gap: 0;
+    padding: 4px 0;
+  }
+
+  .bmx-station-aide { max-width: none; flex-basis: 100%; padding-left: calc(var(--point) + 14px); margin-top: -8px; }
+
+  .bmx-station.is-actuel .bmx-station-point,
+  .bmx-station.is-probleme .bmx-station-point { margin: 0 -4px; }
+
+  .bmx-maintenant { padding: 24px 22px; }
+  .bmx-maintenant-actions .bmx-btn { width: 100%; }
+
+  .bmx-groupes { grid-template-columns: 1fr; }
+
+  .bmx-tiroir { border-radius: 0; }
+  .bmx-tiroir-entete { border-radius: 0; padding: 14px 16px; }
+  .bmx-tiroir-corps { padding: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bmx-station.is-actuel .bmx-station-point { animation: none; }
+  .bmx-tiroir,
+  .bmx-tiroir-fond { animation: none; }
+  .bmx-ligne::after { transition: none; }
+}
+
+/* ---------- Bouton « Imprimer la fiche » ---------- */
+.bmx-btn:disabled { opacity: 0.6; cursor: progress; }
+.bmx-spin { animation: bmx-tourne 0.9s linear infinite; }
+@keyframes bmx-tourne { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .bmx-spin { animation: none; } }
+.bmx-barre-droite { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- Chat en direct : badges des messages non lus ---------- */
+.bmx-rubrique-nb--alerte {
+  background: var(--alert);
+  color: var(--g-blanc);
+}
+
+.bmx-btn-chat { position: relative; }
+
+.bmx-btn-pastille {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--alert);
+  color: var(--g-blanc);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+
+/* ============================================================
+   VERSION COMPACTE : moins d'espace vide sur grand écran
+   ============================================================ */
+@media (min-width: 761px) {
+  .bmx-page { padding: 16px 22px 28px; }
+  .bmx-page .bmx-barre { margin-bottom: 14px; }
+  .bmx-page .bmx-parcours { padding: 16px 20px 18px; margin-bottom: 16px; border-radius: var(--radius-l); }
+  .bmx-page .bmx-parcours-entete { margin-bottom: 14px; }
+  .bmx-page .bmx-parcours-entete h2 { font-size: 18px; }
+  .bmx-page .bmx-ligne { --point: 40px; }
+  .bmx-page .bmx-station-nom { font-size: 14px; }
+  .bmx-page .bmx-station.is-actuel .bmx-station-nom,
+  .bmx-page .bmx-station.is-probleme .bmx-station-nom { font-size: 15px; }
+  .bmx-page .bmx-station-aide { font-size: 12px; }
+  .bmx-page .bmx-identite { margin-bottom: 16px; max-width: none; }
+  .bmx-page .bmx-bracelet { margin-bottom: 8px; }
+  .bmx-page .bmx-titre { margin-bottom: 4px; font-size: clamp(24px, 2.6vw, 32px); }
+  .bmx-page .bmx-resume { margin-bottom: 12px; font-size: 15px; max-width: none; }
+  .bmx-page .bmx-fiche { gap: 8px 26px; }
+  .bmx-page .bmx-aide { padding: 12px 16px; margin-bottom: 16px; }
+  .bmx-page .bmx-duo { gap: 16px; margin-bottom: 20px; }
+  .bmx-page .bmx-maintenant { padding: 20px 22px 22px; border-radius: var(--radius-l); }
+  .bmx-page .bmx-maintenant-icone { margin-bottom: 10px; }
+  .bmx-page .bmx-maintenant-titre { font-size: 24px; }
+  .bmx-page .bmx-maintenant-texte { margin-bottom: 14px; }
+  .bmx-page .bmx-vitaux { padding: 14px 16px 8px; border-radius: var(--radius-l); }
+  .bmx-page .bmx-vital { min-height: 42px; padding: 6px; }
+  .bmx-page .bmx-dossier-titre { margin-bottom: 10px; font-size: 18px; }
+  .bmx-page .bmx-rubrique { min-height: 52px; padding: 8px 12px; }
+}

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ClipboardList, LoaderCircle, RefreshCw, Search, Timer, Users, Wrench } from 'lucide-react';
 import performanceEmployesService from '../../../services/performanceEmployesService';
 import { PastillesStats } from '../../commun';
-import { formatTemps, useMaintenant } from '../bonmaintenance/TempsPasse';
+import { formatTemps, useMaintenant } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
 

@@ -3,7 +3,6 @@ import { AlarmClock, ArrowUpRight, Loader2, RefreshCw, Search, Timer, Wrench } f
 import { t, locale } from '../../../i18n';
 import { prioriteLabel } from '../../../constants/Priorite';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
-import './SlaRetards.css';
 
 /*
  * Bons en dépassement SLA (délai de réponse et/ou de résolution), tous encore ouverts.

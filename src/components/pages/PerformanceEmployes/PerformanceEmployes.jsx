@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ClipboardCheck, Timer, Users, Wrench } from 'lucide-react';
 import performanceEmployesService from '../../../services/performanceEmployesService';
 import { Carte, Stat, Vide } from '../../commun/TableauBord';
-import { formatTemps } from '../bonmaintenance/TempsPasse';
+import { formatTemps } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
 

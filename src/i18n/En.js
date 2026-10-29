@@ -3713,6 +3713,7 @@ const en = {
   "Aucune intervention ni tâche réalisée sur la période.": "No intervention or task completed in this period.",
   "Nombre": "Count",
   "Seul le travail réalisé compte : interventions terminées et tâches effectuées pendant la période. La durée vient du chronomètre ; pour les plus anciennes, elle est calculée à partir des dates de début et de fin.": "Only completed work counts: interventions finished and tasks done during the period. Time comes from the timer; for older ones it is calculated from start and end dates.",
+  "Détails du bon": "Work order details",
 };
 
 export default en;

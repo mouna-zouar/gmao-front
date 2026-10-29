@@ -1,0 +1,78 @@
+/* Rapport d'intervention (IA) dans le détail du bon — variables de .bmx-page (BmdPage.css) */
+.bmr {
+  margin: 0 0 24px;
+  padding: 22px 24px;
+  border-radius: var(--radius-xl, 28px);
+  background: var(--surface, var(--g-blanc));
+  border: 1.5px solid var(--line, var(--g-ink-100));
+}
+.bmr-entete { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.bmr-titre { display: flex; gap: 12px; align-items: flex-start; }
+.bmr-titre h2 { margin: 0; font-size: 20px; }
+.bmr-titre p { margin: 2px 0 0; font-size: 14px; color: var(--ink-faint); }
+.bmr-titre-icone {
+  flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--brand-wash), var(--g-violet-100)); color: var(--brand-deep);
+}
+.bmr-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+.bmr-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px; border-radius: 999px; font-size: 13px; font-weight: 700; }
+.bmr-badge--brouillon { background: var(--now-wash); color: #9a5d12; }
+.bmr-badge--valide { background: var(--done-wash); color: #13684d; }
+.bmr-badge--source { background: #f1edfd; color: #5b3fb5; }
+
+.bmr-alerte { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; padding: 10px 14px; border-radius: 14px; background: var(--now-wash); color: #8a5310; font-size: 14px; font-weight: 600; }
+.bmr-alerte--erreur { background: var(--alert-wash); color: var(--alert); }
+
+.bmr-vide { display: flex; align-items: center; gap: 12px; padding: 20px; border-radius: 18px; background: var(--paper); color: var(--ink-soft); }
+.bmr-vide--cta { flex-direction: column; align-items: stretch; }
+.bmr-vide--cta p { margin: 0; }
+.bmr-vide--redaction div { display: flex; flex-direction: column; }
+.bmr-vide--redaction strong { color: var(--ink); }
+.bmr-vide--redaction span { font-size: 14px; }
+.bmr-vide--redaction svg { color: #7c5ce0; flex: none; }
+.bmr-tourne { animation: bmr-tourne 0.9s linear infinite; }
+@keyframes bmr-tourne { to { transform: rotate(360deg); } }
+.bmr-pulse { animation: bmr-pulse 1.4s ease-in-out infinite; }
+@keyframes bmr-pulse { 50% { opacity: 0.35; transform: scale(0.9); } }
+
+.bmr-resume {
+  margin: 0 0 16px; padding: 14px 16px; border-radius: 16px; background: var(--brand-wash);
+  font-size: 16px; color: var(--ink); border-inline-start: 4px solid var(--brand);
+  unicode-bidi: plaintext;
+}
+.bmr-grille { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.bmr-bloc { padding: 12px 14px; border-radius: 14px; background: var(--paper); min-width: 0; }
+.bmr-bloc--large { grid-column: 1 / -1; }
+.bmr-bloc--accent { background: #f6f3ff; }
+.bmr-bloc h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.03em; font-family: var(--font-texte); }
+.bmr-bloc h3 svg { color: var(--brand); }
+.bmr-bloc--accent h3 svg { color: #7c5ce0; }
+.bmr-bloc p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; unicode-bidi: plaintext; }
+.bmr-bloc ul { margin: 0; padding-inline-start: 20px; list-style: disc; }
+.bmr-bloc li::marker { color: var(--brand); }
+.bmr-bloc li { margin: 2px 0; unicode-bidi: plaintext; }
+.bmr-non-renseigne { color: var(--ink-faint); font-style: italic; }
+
+.bmr-pied { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.bmr-trace { font-size: 13px; color: var(--ink-faint); max-width: 46ch; }
+.bmr-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: flex-end; }
+.bmr-langue { height: 40px; padding: 0 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font: inherit; }
+.bmr-case { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-soft); max-width: 30ch; }
+
+.bmr-edition { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.bmr-champ { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.bmr-champ--large { grid-column: 1 / -1; }
+.bmr-champ span { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+.bmr-champ em { font-style: normal; font-weight: 500; color: var(--ink-faint); }
+.bmr-champ textarea {
+  width: 100%; padding: 10px 12px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface);
+  font: inherit; color: var(--ink); resize: vertical; box-sizing: border-box;
+}
+.bmr-champ textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-wash); }
+
+@media (max-width: 760px) {
+  .bmr { padding: 16px 14px; border-radius: 20px; }
+  .bmr-grille, .bmr-edition { grid-template-columns: 1fr; }
+  .bmr-actions { justify-content: stretch; }
+  .bmr-actions .bmx-btn { flex: 1 1 auto; justify-content: center; }
+}

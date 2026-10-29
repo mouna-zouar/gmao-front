@@ -34,7 +34,7 @@ import {
   BmfDate,
   BmfStock,
   BmfActions,
-} from './BmdForm';
+} from './BmdCommun';
 
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
 import bonMaintenanceIntervenantService from '../../../services/bonMaintenanceIntervenantService';
@@ -57,7 +57,7 @@ import {
   BmdFieldGrid,
   Pill,
   TexteOuVide,
-} from './BmdEntityViews';
+} from './BmdCommun';
 import {
   SearchableSelect,
   INTERVENANT_ETAT_LABELS,
@@ -71,9 +71,9 @@ import {
   coutIntervenant,
   nomIntervenantAffiche,
   libelleActionHistoriqueIntervenant,
-} from './bmdShared';
+} from './BmdCommun';
 import { t } from '../../../i18n';
-import { TempsPasse, totalTemps, formatTemps, tempsPasse, useMaintenant, TACHE_EN_COURS, INTERVENANT_EN_COURS } from './TempsPasse';
+import { TempsPasse, totalTemps, formatTemps, tempsPasse, useMaintenant, TACHE_EN_COURS, INTERVENANT_EN_COURS } from './BmdCommun';
 
 // ------------------------------------------------------------
 // Constantes d'affichage

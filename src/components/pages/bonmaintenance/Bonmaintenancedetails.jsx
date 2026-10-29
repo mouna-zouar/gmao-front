@@ -98,10 +98,10 @@ import ConfirmModal from '../../ui/modals/ConfirmModal';
 import Tracage3DTab from './Tracage3DTab';
 import BmdRapport from './BmdRapport';
 import { libelleTypeEntretien, libelleSourceInformation } from '../../../constants/FicheIntervention';
-import { useCelebration } from './BmdCelebration';
+import { useCelebration } from './BmdCommun';
 import { t, tp, locale } from '../../../i18n';
 import { imprimerFiche } from '../../../utils/imprimerListe';
-import './BonMaintenanceDetails.css';
+import './Bonmaintenancedetails.css';
 import {
   DiagnosticTab,
   TachesTab,
@@ -120,8 +120,7 @@ import {
   formatMontant,
   coutIntervenant,
   nomIntervenantAffiche,
-} from './bmdShared';
-import './BmdPage.css';
+} from './BmdCommun';
 import './BmdEpure.css';
 import RecapImmobilisation from './RecapImmobilisation';
 
@@ -1397,52 +1396,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
             </div>
           </section>
 
-          <section className="bmz-carte bmz-infos" aria-label={t("Informations générales du bon")}>
-            <h2 className="bmz-carte-titre">{t("Informations")}</h2>
-            <dl>
-              {ToutesInfos.map((i) => {
-                const Icon = i.icon;
-                return (
-                  <div key={i.label}>
-                    <dt><Icon size={14} /> {i.label}</dt>
-                    <dd title={i.valeur}>{i.valeur}</dd>
-                  </div>
-                );
-              })}
-            </dl>
-          </section>
-        </div>
-
-        <div className="bmz-col">
-          <section className="bmz-carte bmz-vitaux" aria-label={t("En un coup d'œil")}>
-            <h2 className="bmz-carte-titre">{t("En un coup d'œil")}</h2>
-            <ul>
-              {signesVitaux.map((v) => {
-                const Icon = v.icon;
-                const contenu = (
-                  <>
-                    <Icon size={15} className="bmz-vital-icone" />
-                    <span className="bmz-vital-label">{t(v.label)}</span>
-                    <span className={`bmz-vital-valeur bmz-point--${pointTon(v.ton)}`}>{t(v.valeur)}</span>
-                  </>
-                );
-                return (
-                  <li key={v.key}>
-                    {v.rubrique ? (
-                      <button type="button" className="bmz-vital" onClick={() => ouvrir(v.rubrique)}>
-                        {contenu}<ChevronRight size={15} className="bmz-fleche" />
-                      </button>
-                    ) : (
-                      <div className="bmz-vital" title={v.priorite ? t("Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)") : undefined}>
-                        {contenu}
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-
           {/* Rapport d'intervention (IA), après la clôture : défile dans sa zone */}
           <div className="bmz-defile bmz-rapport">
             <BmdRapport
@@ -1452,6 +1405,55 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
               onBonModifie={rafraichirBon}
             />
           </div>
+        </div>
+
+        <div className="bmz-col">
+          {/* Informations : « En un coup d'œil » puis le détail, dans la même carte */}
+          <section className="bmz-carte bmz-infos" aria-label={t("Informations générales du bon")}>
+            <h2 className="bmz-carte-titre">{t("Informations")}</h2>
+            <div className="bmz-vitaux bmz-infos-bloc" aria-label={t("En un coup d'œil")}>
+              <h3 className="bmz-sous-titre">{t("En un coup d'œil")}</h3>
+              <ul>
+                {signesVitaux.map((v) => {
+                  const Icon = v.icon;
+                  const contenu = (
+                    <>
+                      <Icon size={15} className="bmz-vital-icone" />
+                      <span className="bmz-vital-label">{t(v.label)}</span>
+                      <span className={`bmz-vital-valeur bmz-point--${pointTon(v.ton)}`}>{t(v.valeur)}</span>
+                    </>
+                  );
+                  return (
+                    <li key={v.key}>
+                      {v.rubrique ? (
+                        <button type="button" className="bmz-vital" onClick={() => ouvrir(v.rubrique)}>
+                          {contenu}<ChevronRight size={15} className="bmz-fleche" />
+                        </button>
+                      ) : (
+                        <div className="bmz-vital" title={v.priorite ? t("Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)") : undefined}>
+                          {contenu}
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+            <div className="bmz-infos-bloc">
+              <h3 className="bmz-sous-titre">{t("Détails du bon")}</h3>
+              <dl>
+                {ToutesInfos.map((i) => {
+                  const Icon = i.icon;
+                  return (
+                    <div key={i.label}>
+                      <dt><Icon size={14} /> {i.label}</dt>
+                      <dd title={i.valeur}>{i.valeur}</dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </div>
+          </section>
         </div>
 
         <section className="bmz-col bmz-carte bmz-dossier" aria-label={t("Tout le dossier")}>

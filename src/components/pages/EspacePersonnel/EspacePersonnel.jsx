@@ -35,7 +35,7 @@ import {
   TACHE_ETAT_LABELS,
   GRAVITE_LABELS,
   ETAT_IMMOBILISATION_OPTIONS,
-} from '../bonmaintenance/Bmdshared';
+} from '../bonmaintenance/BmdCommun';
 import { t, tp, locale } from '../../../i18n';
 import { libelleTypeEntretien, libelleSourceInformation } from '../../../constants/FicheIntervention';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';

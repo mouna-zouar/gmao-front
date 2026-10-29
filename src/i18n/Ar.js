@@ -3714,6 +3714,7 @@ const ar = {
   "Aucune intervention ni tâche réalisée sur la période.": "لا توجد تدخلات أو مهام منجزة خلال الفترة.",
   "Nombre": "العدد",
   "Seul le travail réalisé compte : interventions terminées et tâches effectuées pendant la période. La durée vient du chronomètre ; pour les plus anciennes, elle est calculée à partir des dates de début et de fin.": "يُحتسب العمل المنجز فقط: التدخلات المنتهية والمهام المنجزة خلال الفترة. تأتي المدة من المؤقت، وللقديمة تُحسب من تاريخي البداية والنهاية.",
+  "Détails du bon": "تفاصيل أمر العمل",
 };
 
 export default ar;
