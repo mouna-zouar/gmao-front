@@ -35,6 +35,7 @@ import { qrSvg, urlReclamation } from '../../../utils/qrCode';
 import ModaleQrCode from '../../ui/QrCode/ModaleQrCode';
 import BmdChat from '../bonmaintenance/BmdChat';
 import { chatReclamationService } from '../../../services/chatBonService';
+import '../bonmaintenance/BmdEpure.css';
 import './ReclamationDetails.css';
 
 // États de la réclamation (identiques à Reclamations.jsx)
@@ -253,7 +254,8 @@ export default function ReclamationDetails({
   const etatClair = ETAT_EN_CLAIR[reclamation.etat] || { texte: t("Inconnu"), ton: 'neutre' };
   const etapes = construireParcours(reclamation, bons);
   const nbFaites = etapes.filter((e) => e.statut === 'fait').length;
-  const progression = reclamation.etat === ETAT.CLOTUREE ? 1 : Math.max(nbFaites - 1, 0) / (ETAPES_DEF.length - 1);
+  // La barre remplie va jusqu'à l'étape en cours
+  const progression = reclamation.etat === ETAT.CLOTUREE ? 1 : Math.min(nbFaites, ETAPES_DEF.length - 1) / (ETAPES_DEF.length - 1);
   const action = prochaineAction(reclamation, bons);
   const ActionIcon = action?.icon;
 
@@ -337,34 +339,67 @@ export default function ReclamationDetails({
     });
   };
 
+  // Une seule couleur d'accent : seuls les points d'alerte gardent du rouge ou de l'orange
+  const pointTon = (ton) => (ton === 'alerte' ? 'alerte' : ton === 'attention' ? 'attention' : ton === 'ok' ? 'ok' : 'neutre');
+  const infos = [
+    { icon: Building2, label: t("Service"), valeur: service || '—' },
+    { icon: User, label: t("Personne affectée"), valeur: personnel || t("Personne pour l’instant") },
+    { icon: Calendar, label: t("Date"), valeur: formatDate(reclamation.date) },
+    { icon: Package, label: t("Équipement"), valeur: nomEquipement || '—' },
+    reclamation.codePanneCode && { icon: Tag, label: t("Code panne"), valeur: `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}`, large: true },
+  ].filter(Boolean);
+  const fermerAide = () => { setAideMasquee(true); ecrireAideMasquee(true); };
+  const ouvrirAide = () => { setAideMasquee(false); ecrireAideMasquee(false); };
+
   return (
-    <div className="rcx-page">
-      {/* ===== Barre du haut ===== */}
-      <div className="rcx-barre">
-        <button type="button" className="rcx-btn rcx-btn--clair" onClick={onBack}>
-          <ArrowLeft size={18} /> {libelleRetour || t("Toutes les réclamations")}
+    <div className="rcx-page bmz-page rcz-page">
+      {/* ===== En-tête : retour, identité, actions ===== */}
+      <header className="bmz-entete">
+        <button type="button" className="bmz-retour" onClick={onBack}
+          title={libelleRetour || t("Toutes les réclamations")} aria-label={libelleRetour || t("Toutes les réclamations")}>
+          <ArrowLeft size={18} />
         </button>
-        <div className="rcx-barre-droite">
-          {aideMasquee && (
-            <button
-              type="button"
-              className="rcx-btn rcx-btn--fantome"
-              onClick={() => { setAideMasquee(false); ecrireAideMasquee(false); }}
-            >
-              <HelpCircle size={18} /> {t("Comment ça marche ?")}
+        <div className="bmz-identite">
+          <div className="bmz-identite-haut">
+            <span className="bmz-num">{reclamation.num || t('Réclamation #{id}', { id: reclamation.id })}</span>
+            <span className={`bmz-etat bmz-point--${pointTon(etatClair.ton)}`}>{t(etatClair.texte)}</span>
+          </div>
+          <h1 className="bmz-titre" tabIndex={-1} ref={titreRef}>{titre}</h1>
+          <p className="bmz-resume">
+            {t("Déclarée le")} {formatDate(reclamation.date)}
+            {joursDepuis(reclamation.date) ? t(', {quand}', { quand: joursDepuis(reclamation.date) }) : ''}
+            {service ? t(', pour le service {service}', { service }) : ''}
+          </p>
+        </div>
+        <div className="bmz-actions">
+          <div className="bmz-aide-zone">
+            <button type="button" className="bmz-btn" onClick={aideMasquee ? ouvrirAide : fermerAide} aria-expanded={!aideMasquee}>
+              <HelpCircle size={16} /> <span>{t("Aide")}</span>
             </button>
-          )}
-          <button type="button" className="rcx-btn rcx-btn--clair" onClick={onModifier}>
-            <Edit size={17} /> {t("Modifier")}
+            {!aideMasquee && (
+              <div className="bmz-aide" role="dialog" aria-label={t("Aide")}>
+                <ol>
+                  <li>{t("La ligne du parcours montre où en est la demande.")}</li>
+                  <li>{t("Le bloc « À faire maintenant » vous dit quoi faire, avec un seul bouton.")}</li>
+                  <li>{t("Au milieu, retrouvez le bon de maintenance lié ; à droite, la discussion.")}</li>
+                </ol>
+                <button type="button" className="bmz-btn bmz-btn--plein" onClick={fermerAide}>
+                  <Check size={15} /> {t("J'ai compris")}
+                </button>
+              </div>
+            )}
+          </div>
+          <button type="button" className="bmz-btn" onClick={onModifier}>
+            <Edit size={16} /> <span>{t("Modifier")}</span>
           </button>
-          <button type="button" className="rcx-btn rcx-btn--clair" onClick={() => setQrOuvert(true)}>
-            <QrCode size={17} /> {t("QR code")}
+          <button type="button" className="bmz-btn" onClick={() => setQrOuvert(true)}>
+            <QrCode size={16} /> <span>{t("QR code")}</span>
           </button>
-          <button type="button" className="rcx-btn rcx-btn--clair" onClick={imprimerReclamation}>
-            <Printer size={17} /> {t("Imprimer la fiche")}
+          <button type="button" className="bmz-btn" onClick={imprimerReclamation}>
+            <Printer size={16} /> <span>{t("Imprimer")}</span>
           </button>
         </div>
-      </div>
+      </header>
 
       {qrOuvert && (
         <ModaleQrCode
@@ -377,235 +412,171 @@ export default function ReclamationDetails({
         />
       )}
 
-      {/* ===== PARTIE 1 : la réclamation, en clair ===== */}
-      <section className="rcx-identite" aria-label={t("Informations générales de la réclamation")}>
-        <div className={`rcx-bracelet rcx-ton--${etatClair.ton}`}>
-          <span className="rcx-bracelet-etat">{t(etatClair.texte)}</span>
-          <span className="rcx-bracelet-num">{reclamation.num || t('Réclamation #{id}', { id: reclamation.id })}</span>
-          <span className="rcx-bracelet-trou" aria-hidden="true" />
-        </div>
-
-        <h1 className="rcx-titre" tabIndex={-1} ref={titreRef}>{titre}</h1>
-        <p className="rcx-resume">
-          {t("Déclarée le")} {formatDate(reclamation.date)}
-          {joursDepuis(reclamation.date) ? t(', {quand}', { quand: joursDepuis(reclamation.date) }) : ''}
-          {service ? t(', pour le service {service}', { service }) : ''}{t('.')}
-        </p>
-
-        <figure className="rcx-citation">
-          <figcaption>{t("Ce qui a été signalé")}</figcaption>
-          <blockquote>{reclamation.description || t("Aucune description n’a été saisie.")}</blockquote>
-        </figure>
-
-        <dl className="rcx-fiche">
-          <div><dt><Building2 size={15} /> {t("Service")}</dt><dd>{service || '—'}</dd></div>
-          <div><dt><User size={15} /> {t("Personne affectée")}</dt><dd>{personnel || t("Personne pour l’instant")}</dd></div>
-          <div><dt><Calendar size={15} /> {t("Date")}</dt><dd>{formatDate(reclamation.date)}</dd></div>
-          {nomEquipement && (
-            <div><dt><Package size={15} /> {t("Équipement")}</dt><dd>{nomEquipement}</dd></div>
-          )}
-          {reclamation.codePanneCode && (
-            <div><dt><Tag size={15} /> {t("Code panne")}</dt><dd><strong>{reclamation.codePanneCode}</strong> · {reclamation.codePanneLibelle}</dd></div>
-          )}
-        </dl>
-      </section>
-
-      {/* ===== Deux colonnes : le suivi à gauche, l'essentiel et la discussion à droite ===== */}
-      <div className="rcx-grille">
-      <div className="rcx-col-principale">
-
-      {!aideMasquee && (
-        <section className="rcx-aide" aria-label={t("Aide")}>
-          <div>
-            <h2>{t("Comment lire cette page ?")}</h2>
-            <ol>
-              <li>{t("La ligne du parcours montre où en est la demande.")}</li>
-              <li>{t("Le bloc foncé vous dit quoi faire maintenant.")}</li>
-              <li>{t("En bas, retrouvez le bon de maintenance lié à cette réclamation.")}</li>
-            </ol>
-          </div>
-          <button
-            type="button"
-            className="rcx-btn rcx-btn--clair"
-            onClick={() => { setAideMasquee(true); ecrireAideMasquee(true); }}
-          >
-            <Check size={16} /> {t("J'ai compris")}
-          </button>
-        </section>
-      )}
-
-      {/* ===== PARTIE 2 : le parcours ===== */}
-      <section className="rcx-parcours" aria-label={t("Parcours de la réclamation")}>
-        <div className="rcx-parcours-entete">
-          <h2>{t("Parcours de la demande")}</h2>
-          <span className="rcx-parcours-compte">
-            {reclamation.etat === ETAT.CLOTUREE ? t("Terminé")
-              : reclamation.etat === ETAT.REJETEE ? t("Arrêté à la validation")
-                : t('Étape {n} sur {total}', { n: Math.min(nbFaites + 1, ETAPES_DEF.length), total: ETAPES_DEF.length })}
-          </span>
-        </div>
-
-        <ol className="rcx-ligne" style={{ '--rcx-p': progression }}>
+      {/* ===== Parcours de la demande ===== */}
+      <section className="bmz-parcours" aria-label={t("Parcours de la réclamation")}>
+        <ol className="bmz-ligne" style={{ '--bmz-p': progression, '--bmz-nb': ETAPES_DEF.length }}>
           {etapes.map((e) => {
             const Icon = e.statut === 'fait' ? Check : e.statut === 'probleme' ? XCircle : e.icon;
             return (
-              <li key={e.key} className={`rcx-station is-${e.statut}`}>
-                <span className="rcx-station-point" aria-hidden="true"><Icon size={18} strokeWidth={2.4} /></span>
-                <span className="rcx-station-nom">{t(e.label)}</span>
-                <span className="rcx-station-aide">{t(e.detail || e.aide)}</span>
-                {(e.statut === 'actuel' || e.statut === 'probleme') && <span className="rcx-sr">{t("Étape actuelle")}</span>}
+              <li key={e.key} className={`bmz-etape is-${e.statut}`}>
+                <span className="bmz-etape-contenu">
+                  <span className="bmz-etape-point" aria-hidden="true"><Icon size={14} strokeWidth={2.6} /></span>
+                  <span className="bmz-etape-nom">{t(e.label)}</span>
+                  <span className="bmz-etape-aide">{t(e.detail || e.aide)}</span>
+                  {(e.statut === 'actuel' || e.statut === 'probleme') && <span className="rcx-sr">{t("Étape actuelle")}</span>}
+                </span>
               </li>
             );
           })}
         </ol>
+        <span className="bmz-parcours-compte">
+          {reclamation.etat === ETAT.CLOTUREE ? t("Terminé")
+            : reclamation.etat === ETAT.REJETEE ? t("Arrêté à la validation")
+              : t('Étape {n} sur {total}', { n: Math.min(nbFaites + 1, ETAPES_DEF.length), total: ETAPES_DEF.length })}
+        </span>
       </section>
 
-      {/* ===== À faire maintenant ===== */}
-      <div className="rcx-duo rcx-duo--seul">
-        {action && (
-          <section className={`rcx-maintenant rcx-maintenant--${action.ton}`} aria-label={t("À faire maintenant")}>
-            <span className="rcx-maintenant-icone"><ActionIcon size={26} /></span>
-            <p className="rcx-maintenant-sur">{t("À faire maintenant")}</p>
-            <h2 className="rcx-maintenant-titre">{t(action.titre)}</h2>
-            <p className="rcx-maintenant-texte">{t(action.texte)}</p>
-            {(action.bouton || action.secondaire) && (
-              <div className="rcx-maintenant-actions">
-                {action.bouton && (
-                  <button
-                    type="button"
-                    className="rcx-btn rcx-btn--principal"
-                    onClick={() => executer(action.bouton)}
-                    disabled={validating && enAttente}
-                  >
-                    {validating && enAttente ? <Loader2 size={18} className="rcx-tourne" /> : null}
-                    {t(action.bouton.label)}
-                  </button>
-                )}
-                {action.secondaire && (
-                  <button
-                    type="button"
-                    className="rcx-btn rcx-btn--sur-fonce"
-                    onClick={() => executer(action.secondaire)}
-                    disabled={validating && enAttente}
-                  >
-                    {t(action.secondaire.label)}
-                  </button>
-                )}
-              </div>
-            )}
-          </section>
-        )}
-
-      </div>
-
-      {/* ===== Motif de rejet ===== */}
-      {reclamation.etat === ETAT.REJETEE && reclamation.motifRejet && (
-        <section className="rcx-rejet" aria-label={t("Motif du rejet")}>
-          <AlertTriangle size={20} />
-          <div>
-            <h2>{t("Pourquoi elle a été rejetée")}</h2>
-            <p>{reclamation.motifRejet}</p>
-          </div>
-        </section>
-      )}
-
-      {/* ===== Bons de maintenance liés ===== */}
-      <section className="rcx-bons" aria-label={t("Bons de maintenance liés")}>
-        <div className="rcx-bons-entete">
-          <h2>{t("Bon de maintenance lié")}</h2>
-          {bons.length > 0 && (
-            <button type="button" className="rcx-btn rcx-btn--fantome" onClick={onAssocier}>
-              <LinkIcon size={17} /> {t("Associer un autre bon")}
-            </button>
-          )}
-        </div>
-
-        {bons.length === 0 ? (
-          <div className="rcx-vide">
-            <p>
-              {enAttente
-                ? t("Le bon de maintenance sera créé après la validation de la réclamation.")
-                : t("Aucun bon de maintenance n’est lié à cette réclamation.")}
-            </p>
-            {!enAttente && reclamation.etat !== ETAT.REJETEE && (
-              <div className="rcx-vide-actions">
-                <button type="button" className="rcx-btn rcx-btn--plein" onClick={onCreerBon}>
-                  <FilePlus size={17} /> {t("Créer un bon")}
-                </button>
-                <button type="button" className="rcx-btn rcx-btn--clair" onClick={onAssocier}>
-                  <LinkIcon size={17} /> {t("Associer un bon existant")}
-                </button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <ul className="rcx-bons-liste">
-            {bons.map((b) => {
-              const eb = ETAT_BON_EN_CLAIR[b.etat];
-              return (
-                <li key={b.id}>
-                  <button type="button" className="rcx-bon" onClick={() => onOuvrirBon?.(b)}>
-                    <span className="rcx-bon-icone"><Wrench size={20} /></span>
-                    <span className="rcx-bon-texte">
-                      <span className="rcx-bon-num">{b.num || t('Bon #{id}', { id: b.id })}</span>
-                      <span className="rcx-bon-titre">{b.titre || t("Ouvrir le bon pour voir son parcours")}</span>
-                    </span>
-                    {eb && <span className={`rcx-pastille rcx-ton--${eb.ton}`}>{t(eb.texte)}</span>}
-                    {b.date && <span className="rcx-bon-date">{formatDate(b.date)}</span>}
-                    <span className="rcx-bon-ouvrir">{t("Ouvrir")} <ChevronRight size={16} /></span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
-
-      </div>
-
-      <aside className="rcx-col-cote">
-        <section className="rcx-vitaux" aria-label={t("En un coup d'œil")}>
-          <h2>{t("En un coup d'œil")}</h2>
-          <ul>
-            {vitaux.map((v) => {
-              const Icon = v.icon;
-              const contenu = (
-                <>
-                  <span className="rcx-vital-icone"><Icon size={17} /></span>
-                  <span className="rcx-vital-label">{t(v.label)}</span>
-                  <span className={`rcx-vital-valeur rcx-ton--${v.ton}`}>{t(v.valeur)}</span>
-                </>
-              );
-              return (
-                <li key={v.key}>
-                  {v.onClick ? (
-                    <button type="button" className="rcx-vital" onClick={v.onClick}>
-                      {contenu}
-                      <ChevronRight size={16} className="rcx-vital-fleche" />
+      {/* ===== Corps : trois colonnes, sans défilement de la page ===== */}
+      <div className="bmz-corps">
+        <div className="bmz-col">
+          {action && (
+            <section className={`bmz-carte bmz-maintenant bmz-maintenant--${action.ton}`} aria-label={t("À faire maintenant")}>
+              <p className="bmz-surtitre"><ActionIcon size={15} /> {t("À faire maintenant")}</p>
+              <h2 className="bmz-maintenant-titre">{t(action.titre)}</h2>
+              <p className="bmz-maintenant-texte">{t(action.texte)}</p>
+              {(action.bouton || action.secondaire) && (
+                <div className="bmz-maintenant-actions">
+                  {action.bouton && (
+                    <button type="button" className="bmz-btn bmz-btn--plein" onClick={() => executer(action.bouton)} disabled={validating && enAttente}>
+                      {validating && enAttente ? <Loader2 size={15} className="rcx-tourne" /> : null}
+                      {t(action.bouton.label)}
                     </button>
-                  ) : (
-                    <div className="rcx-vital">{contenu}</div>
                   )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+                  {action.secondaire && (
+                    <button type="button" className="bmz-btn" onClick={() => executer(action.secondaire)} disabled={validating && enAttente}>
+                      {t(action.secondaire.label)}
+                    </button>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
 
-      {/* ===== Discussion en direct (demandeur, personne affectée, équipe du bon lié) ===== */}
-      <section className="rcx-chat" aria-label={t("Discussion")}>
-        <div className="rcx-chat-entete">
-          <h2>{t("Discussion")}</h2>
-          <span>{t("Demandeur, personne affectée et équipe du bon")}</span>
+          <section className="bmz-carte bmz-infos" aria-label={t("Informations générales de la réclamation")}>
+            <h2 className="bmz-carte-titre">{t("Ce qui a été signalé")}</h2>
+            <p className="rcz-description">{reclamation.description || t("Aucune description n’a été saisie.")}</p>
+            {reclamation.etat === ETAT.REJETEE && reclamation.motifRejet && (
+              <p className="rcz-rejet"><AlertTriangle size={15} /> <span><strong>{t("Motif du rejet")} :</strong> {reclamation.motifRejet}</span></p>
+            )}
+            <dl>
+              {infos.map((i) => {
+                const Icon = i.icon;
+                return (
+                  <div key={i.label} className={i.large ? 'rcz-large' : undefined}>
+                    <dt><Icon size={14} /> {i.label}</dt>
+                    <dd title={i.valeur}>{i.valeur}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </section>
         </div>
-        <BmdChat
-          key={reclamation.id}
-          bonId={reclamation.id}
-          service={chatReclamationService}
-          sujet="reclamation"
-        />
-      </section>
-      </aside>
+
+        <div className="bmz-col">
+          <section className="bmz-carte bmz-vitaux" aria-label={t("En un coup d'œil")}>
+            <h2 className="bmz-carte-titre">{t("En un coup d'œil")}</h2>
+            <ul>
+              {vitaux.map((v) => {
+                const Icon = v.icon;
+                const contenu = (
+                  <>
+                    <Icon size={15} className="bmz-vital-icone" />
+                    <span className="bmz-vital-label">{t(v.label)}</span>
+                    <span className={`bmz-vital-valeur bmz-point--${pointTon(v.ton)}`}>{t(v.valeur)}</span>
+                  </>
+                );
+                return (
+                  <li key={v.key}>
+                    {v.onClick ? (
+                      <button type="button" className="bmz-vital" onClick={v.onClick}>
+                        {contenu}<ChevronRight size={15} className="bmz-fleche" />
+                      </button>
+                    ) : (
+                      <div className="bmz-vital">{contenu}</div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+
+          <section className="bmz-carte rcz-bons" aria-label={t("Bons de maintenance liés")}>
+            <div className="rcz-carte-tete">
+              <h2 className="bmz-carte-titre">{t("Bon de maintenance lié")}</h2>
+              {bons.length > 0 && (
+                <button type="button" className="bmz-btn rcz-btn-petit" onClick={onAssocier}>
+                  <LinkIcon size={14} /> {t("Associer un autre bon")}
+                </button>
+              )}
+            </div>
+            <div className="bmz-defile">
+              {bons.length === 0 ? (
+                <div className="rcz-vide">
+                  <p>
+                    {enAttente
+                      ? t("Le bon de maintenance sera créé après la validation de la réclamation.")
+                      : t("Aucun bon de maintenance n’est lié à cette réclamation.")}
+                  </p>
+                  {!enAttente && reclamation.etat !== ETAT.REJETEE && (
+                    <div className="bmz-maintenant-actions">
+                      <button type="button" className="bmz-btn bmz-btn--plein" onClick={onCreerBon}>
+                        <FilePlus size={15} /> {t("Créer un bon")}
+                      </button>
+                      <button type="button" className="bmz-btn" onClick={onAssocier}>
+                        <LinkIcon size={15} /> {t("Associer un bon existant")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <ul className="rcz-bons-liste">
+                  {bons.map((b) => {
+                    const eb = ETAT_BON_EN_CLAIR[b.etat];
+                    return (
+                      <li key={b.id}>
+                        <button type="button" className="rcz-bon" onClick={() => onOuvrirBon?.(b)}>
+                          <Wrench size={16} className="bmz-rubrique-icone" />
+                          <span className="rcz-bon-texte">
+                            <span className="rcz-bon-num">{b.num || t('Bon #{id}', { id: b.id })}</span>
+                            <span className="rcz-bon-titre">{b.titre || t("Ouvrir le bon pour voir son parcours")}</span>
+                          </span>
+                          {eb && <span className={`bmz-etat bmz-point--${pointTon(eb.ton)}`}>{t(eb.texte)}</span>}
+                          <ChevronRight size={15} className="bmz-fleche" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </section>
+        </div>
+
+        {/* ===== Discussion en direct (demandeur, personne affectée, équipe du bon lié) ===== */}
+        <section className="bmz-col bmz-carte rcz-chat" aria-label={t("Discussion")}>
+          <div className="rcz-carte-tete">
+            <h2 className="bmz-carte-titre">{t("Discussion")}</h2>
+            <span className="rcz-chat-aide">{t("Demandeur, personne affectée et équipe du bon")}</span>
+          </div>
+          <div className="rcz-chat-corps">
+            <BmdChat
+              key={reclamation.id}
+              bonId={reclamation.id}
+              service={chatReclamationService}
+              sujet="reclamation"
+            />
+          </div>
+        </section>
       </div>
     </div>
   );

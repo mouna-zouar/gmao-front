@@ -5,7 +5,7 @@ import {
   Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw,
   Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, BarChart3, Search,
   Filter, RefreshCw, AlertCircle, Clock, Calendar, Users, Building2, ChevronLeft, ChevronRight, Loader2, Info,
-  AlertTriangle, Ban, Gauge, Sparkles, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, X, TriangleAlert, RadioTower } from 'lucide-react';
+  AlertTriangle, Ban, Gauge, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, X, TriangleAlert, RadioTower, Timer } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
@@ -14,17 +14,17 @@ import bonMaintenancePieceService from '../../../services/bonMaintenancePieceSer
 import { prioriteLabel, prioriteRang, prioriteColor } from '../../../constants/Priorite';
 
 import BonMaintenanceModal from '../../ui/modals/BonMaintenanceModal';
+import { PastillesStats } from '../../commun';
 import BonMaintenanceDetails from './BonMaintenanceDetails';
 import FicheBonMaintenance from '../Fichebonmaintenance/FicheBonMaintenance';
-import CommanderModal from '../../ui/modals/CommanderModal';
-import DemanderModal from '../../ui/modals/DemanderModal';
+import PieceEditor from '../../ui/PieceEditor/PieceEditor';
 import PageModal from '../../ui/modals/PageModal';
 import Button from '../../ui/Button';
 
 import Anomalies from '../Anomalies/Anomalies';
 import BlocagesImmobilisation from '../BlocagesImmobilisation/BlocagesImmobilisation';
 import EquipementsEtEtat from '../Equipements/EquipementsEtEtat';
-import Intelligence from '../Intelligence/Intelligence';
+import ChronoEmployes from '../PerformanceEmployes/ChronoEmployes';
 import AlertesMachines from '../AlertesMachines/AlertesMachines';
 import alerteMachineService from '../../../services/alerteMachineService';
 import SlaRetards from './SlaRetards';
@@ -49,6 +49,7 @@ import CartesListe from '../../ui/Listes/CartesListe';
 import SelectionMultiple, { CaseSelection } from '../../ui/Listes/SelectionMultiple';
 import { bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
 import './BonsMaintenance.css';
+import Pagination from '../../commun/Pagination';
 
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
 
@@ -418,6 +419,14 @@ export default function BonsMaintenance() {
     setSelectedBon((actuel) => (actuel?.id === idLien ? actuel : { id: idLien }));
     setViewMode('details');
   }, [idLien]);
+
+  // Lien /bons-maintenance?chrono=1 (tableau de bord) : ouvre le chrono des employés
+  const chronoLien = parametres.get('chrono') === '1';
+  useEffect(() => {
+    if (!chronoLien) return;
+    setIntelligenceOpen(true);
+    setParametres({}, { replace: true });
+  }, [chronoLien, setParametres]);
 
   const retourListe = () => {
     setViewMode('list');
@@ -1151,7 +1160,6 @@ export default function BonsMaintenance() {
         </div>
 
         <div className="bons-header-stats">
-          <span className="bons-badge-total">{t('Total : {n}', { n: bons.length })}</span>
 
 
           <button className="bons-toggle-stats" title={t("Anomalies")} onClick={() => setAnomaliesOpen(true)}>
@@ -1175,65 +1183,39 @@ export default function BonsMaintenance() {
             {nbAlertesMachines > 0 && <span className="bons-toggle-badge" aria-label={t('{n} alertes à traiter', { n: nbAlertesMachines })}>{nbAlertesMachines > 99 ? '99+' : nbAlertesMachines}</span>}
           </button>
 
-          <button className="bons-toggle-stats" title={t("Intelligence")} onClick={() => setIntelligenceOpen(true)}>
-            <Sparkles size={20} />
-            <span>{t("Intelligence")}</span>
+          <button className="bons-toggle-stats" title={t("Qui travaille en ce moment, sur quel bon et depuis combien de temps")} onClick={() => setIntelligenceOpen(true)}>
+            <Timer size={20} />
+            <span>{t("Chrono des employés")}</span>
           </button>
 
           <button className="bons-toggle-stats" onClick={() => setShowFilterStats(!showFilterStats)} title="Afficher/masquer les statistiques">
             <BarChart3 size={20} />
           </button>
         </div>
-      </div>
 
-      {/* STATISTIQUES */}
-      {showFilterStats && (
-        <div className="bons-stats-bar">
-          {ETAT_FILTER_OPTIONS.filter((opt) => opt.value !== 'all').map((option) => {
-            const count = etatStats[Number(option.value)] || 0;
-            const total = bons.length || 1;
-            const percentage = Math.round((count / total) * 100);
-            const isActive = etatFilter === option.value;
-            const Icon = option.icon;
-            return (
-              <div
-                key={option.value}
-                className={`bons-stat-item ${isActive ? 'active' : ''}`}
-                onClick={() => setEtatFilter(option.value)}
-                style={{ '--stat-color': option.color }}
-                title={`${t(option.label)} : ${tp('bon (compte)', count)}`}
-              >
-                <Icon size={18} style={{ color: option.color }} />
-                <span className="bons-stat-label">{t(option.label)}</span>
-                <span className="bons-stat-count">{count}</span>
-                <div className="bons-stat-bar-bg">
-                  <div className="bons-stat-bar-fill" style={{ width: `${percentage}%`, backgroundColor: option.color }} />
-                </div>
-              </div>
-            );
-          })}
-          <div
-            className={`bons-stat-item bons-stat-item--sla ${nbSlaRetards > 0 ? 'is-retard' : ''}`}
-            onClick={ouvrirSlaRetards}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ouvrirSlaRetards(); } }}
-            role="button"
-            tabIndex={0}
-            style={{ '--stat-color': '#d9434b' }}
-            title={t('Voir les bons en retard SLA')}
-          >
-            {nbSlaRetards > 0 && <span className="bons-stat-point" aria-hidden="true" />}
-            <AlarmClock size={18} style={{ color: nbSlaRetards > 0 ? '#d9434b' : '#7f969d' }} />
-            <span className="bons-stat-label">{t('SLA en retard')}</span>
-            <span className="bons-stat-count">{slaRetards == null ? '…' : nbSlaRetards}</span>
-            <div className="bons-stat-bar-bg">
-              <div
-                className="bons-stat-bar-fill"
-                style={{ width: `${Math.round((nbSlaRetards / (bons.length || 1)) * 100)}%`, backgroundColor: '#d9434b' }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+        {/* STATISTIQUES : pastilles cliquables (filtre par état) */}
+        {showFilterStats && (
+          <PastillesStats
+            ariaLabel={t('Répartition par état')}
+            stats={[
+              { cle: 'all', label: t('Total'), valeur: bons.length, actif: etatFilter === 'all', onClick: () => setEtatFilter('all'), aide: t('Tous les états') },
+              ...ETAT_FILTER_OPTIONS.filter((opt) => opt.value !== 'all').map((option) => {
+                const count = etatStats[Number(option.value)] || 0;
+                return {
+                  cle: option.value, label: t(option.label), valeur: count, couleur: option.color, icone: option.icon,
+                  actif: etatFilter === option.value, onClick: () => setEtatFilter(option.value),
+                  aide: `${t(option.label)} : ${tp('bon (compte)', count)}`,
+                };
+              }),
+              {
+                cle: 'sla', label: t('SLA en retard'), valeur: slaRetards == null ? '…' : nbSlaRetards, icone: AlarmClock,
+                couleur: nbSlaRetards > 0 ? '#d9434b' : '#7f969d', alerte: nbSlaRetards > 0, onClick: ouvrirSlaRetards,
+                aide: t('Voir les bons en retard SLA'),
+              },
+            ]}
+          />
+        )}
+      </div>
 
       {/* ALERTE SLA */}
       {nbSlaRetards > 0 && !slaBandeauMasque && (
@@ -1531,28 +1513,7 @@ export default function BonsMaintenance() {
       />
 
       {/* PAGINATION */}
-      {!loading && sortedBons.length > 0 && (
-        <div className="bons-pagination">
-          <span className="bons-pagination-info">
-            {tp('résultat', sortedBons.length)} — {t('page {p} / {total}', { p: currentPage, total: totalPages })}
-          </span>
-          <div className="bons-pagination-controls">
-            <button type="button" className="bons-pagination-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>
-              <ChevronLeft size={16} />
-              {t("Précédent")}
-            </button>
-            {paginationRange.map((p) => (
-              <button key={p} type="button" className={`bons-pagination-btn ${p === currentPage ? 'active' : ''}`} onClick={() => goToPage(p)}>
-                {p}
-              </button>
-            ))}
-            <button type="button" className="bons-pagination-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>
-              {t("Suivant")}
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      {!loading && <Pagination base={1} page={currentPage} taille={PAGE_SIZE} total={sortedBons.length} onPage={goToPage} />}
 
       {/* MODAL CREATION / MODIFICATION */}
       <BonMaintenanceModal
@@ -1563,26 +1524,20 @@ export default function BonsMaintenance() {
         isEditing={!!selectedBon}
       />
 
-      {/* MODAL DEMANDER */}
-      <DemanderModal
-        isOpen={demanderOpen}
-        onClose={() => setDemanderOpen(false)}
+      {/* DEMANDER / COMMANDER : éditeur de pièce (une pièce, ses lignes, numéro de souche, totaux) */}
+      <PieceEditor
+        ouvert={demanderOpen}
+        type="DEMANDE"
         bonMaintenance={selectedBon}
-        onDemandeCreee={() => {
-          alert(t("✅ Demande créée avec succès."));
-          setActionsRefreshKey((k) => k + 1);
-        }}
+        onFermer={() => setDemanderOpen(false)}
+        onCree={() => setActionsRefreshKey((k) => k + 1)}
       />
-
-      {/* MODAL COMMANDER */}
-      <CommanderModal
-        isOpen={commanderOpen}
-        onClose={() => setCommanderOpen(false)}
+      <PieceEditor
+        ouvert={commanderOpen}
+        type="COMMANDE"
         bonMaintenance={selectedBon}
-        onCommandeCreee={() => {
-          alert(t("✅ Commande créée avec succès."));
-          setActionsRefreshKey((k) => k + 1);
-        }}
+        onFermer={() => setCommanderOpen(false)}
+        onCree={() => setActionsRefreshKey((k) => k + 1)}
       />
 
       {/* MODAL DEMANDES */}
@@ -2082,13 +2037,19 @@ export default function BonsMaintenance() {
       <PageModal
         isOpen={intelligenceOpen}
         onClose={() => setIntelligenceOpen(false)}
-        title={t("Intelligence")}
-        subtitle={t("Vue consolidée : Risques, Anomalies et RCA/CAPA croisés")}
-        icon={Sparkles}
+        title={t("Chrono des employés")}
+        subtitle={t("Qui travaille en ce moment, sur quel bon et depuis combien de temps")}
+        icon={Timer}
         eyebrow={t('Bons de maintenance')}
         size="full"
       >
-        <Intelligence isModal />
+        <ChronoEmployes
+          onOuvrirBon={(id) => {
+            setIntelligenceOpen(false);
+            setSelectedBon(bons.find((b) => b.id === id) || { id });
+            setViewMode('details');
+          }}
+        />
       </PageModal>
 
       <PageModal

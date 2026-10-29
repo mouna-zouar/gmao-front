@@ -15,6 +15,7 @@ import cliniqueStockDepotService from '../../../services/cliniqueStockDepotServi
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import { Archive, Banknote, Building2, Calendar, Columns3, Database, Eye, FileText, Hospital, Search, Settings, Tag, UserCheck, Warehouse, X } from 'lucide-react';
 import './ReferentielConsultation.css';
+import Pagination from '../../commun/Pagination';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -454,38 +455,7 @@ function ReferentielDetailView({
           </table>
         </div>
 
-        {!loading && !error && filteredData.length > 0 && (
-          <div className="referentiel-pagination">
-            <span className="referentiel-pagination-info">
-              {filteredData.length} élément{filteredData.length > 1 ? 's' : ''} — page {safePage} / {totalPages}
-            </span>
-            <div className="referentiel-pagination-controls">
-              <button
-                className="referentiel-pag-btn"
-                onClick={() => goToPage(safePage - 1)}
-                disabled={safePage === 1}
-              >
-                Précédent
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                <button
-                  key={p}
-                  className={`referentiel-pag-btn ${p === safePage ? 'active' : ''}`}
-                  onClick={() => goToPage(p)}
-                >
-                  {p}
-                </button>
-              ))}
-              <button
-                className="referentiel-pag-btn"
-                onClick={() => goToPage(safePage + 1)}
-                disabled={safePage === totalPages}
-              >
-                Suivant
-              </button>
-            </div>
-          </div>
-        )}
+        {!loading && !error && <Pagination base={1} page={safePage} taille={PAGE_SIZE} total={filteredData.length} onPage={goToPage} />}
       </div>
     </div>
   );

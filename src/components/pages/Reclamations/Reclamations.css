@@ -873,3 +873,6 @@
 
 .reclamations-date-cell { display: inline-flex; align-items: center; gap: 6px; color: var(--slate-500); }
 .reclamations-date-cell svg { color: var(--slate-400); }
+
+/* Statistiques en pastilles dans l'en-tête (composant commun PastillesStats) */
+.reclamations-header-card { flex-wrap: wrap; }

@@ -31,3 +31,6 @@
   .eq-liste-carte > .vl-liste { margin-inline: -16px; }
   .eq-liste-carte > .vl-pagination { margin: -14px -16px -16px; }
 }
+
+/* Pastilles d'état dans une fenêtre (pas d'en-tête de page) */
+.eq-pastilles-modal { border-top: 0; padding-top: 0; margin-bottom: 12px; }

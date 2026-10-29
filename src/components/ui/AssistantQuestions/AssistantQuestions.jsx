@@ -2,6 +2,10 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowUp, ChevronRight, LoaderCircle, MessageSquarePlus, Sparkles, X } from 'lucide-react';
 import assistantService from '../../../services/assistantService';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import {
+  nouvelleConversation, poserQuestion, selectAssistantEnCours, selectMessagesAssistant,
+} from '../../../store/assistantSlice';
 import { t, langueActuelle } from '../../../i18n';
 import './AssistantQuestions.css';
 
@@ -21,8 +25,6 @@ const SUGGESTIONS_DEFAUT = [
   'Quels documents de véhicules expirent bientôt ?',
 ];
 
-const CLE_CONVERSATION = 'gmao.assistant.conversation';
-
 const LIENS = {
   bon: (id) => `/bons-maintenance?id=${id}`,
   equipement: (id) => `/equipement/${id}`,
@@ -30,15 +32,6 @@ const LIENS = {
   vehicule: () => '/vehicules',
 };
 
-function lireConversation() {
-  try {
-    const v = JSON.parse(sessionStorage.getItem(CLE_CONVERSATION) || '[]');
-    return Array.isArray(v) ? v : [];
-  } catch { return []; }
-}
-function ecrireConversation(l) {
-  try { sessionStorage.setItem(CLE_CONVERSATION, JSON.stringify(l.slice(-20))); } catch { /* stockage indisponible */ }
-}
 
 /* Texte de l'IA : paragraphes, listes « - », **gras** — sans HTML injecté. */
 function TexteIa({ texte }) {
@@ -102,14 +95,15 @@ function TableauResultat({ r, onOuvrir }) {
 
 export default function AssistantQuestions({ ouvert, onFermer }) {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState(lireConversation);
+  // Conversation dans le store Redux (src/store/assistantSlice.js) : gardée d'une page à l'autre
+  const dispatch = useAppDispatch();
+  const messages = useAppSelector(selectMessagesAssistant);
+  const enCours = useAppSelector(selectAssistantEnCours);
   const [saisie, setSaisie] = useState('');
-  const [enCours, setEnCours] = useState(false);
   const [suggestions, setSuggestions] = useState(SUGGESTIONS_DEFAUT);
   const finRef = useRef(null);
   const saisieRef = useRef(null);
 
-  useEffect(() => { ecrireConversation(messages); }, [messages]);
   useEffect(() => {
     if (!ouvert) return undefined;
     setTimeout(() => saisieRef.current?.focus(), 50);
@@ -124,22 +118,8 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
     const question = (texte ?? saisie).trim();
     if (!question || enCours) return;
     setSaisie('');
-    const historique = messages.filter((m) => m.role === 'ia' && m.question).slice(-3)
-      .map((m) => ({ question: m.question, reponse: m.reponse || '' }));
-    setMessages((l) => [...l, { role: 'moi', texte: question }]);
-    setEnCours(true);
-    try {
-      const r = await assistantService.question(question, langueActuelle(), historique);
-      setMessages((l) => [...l, {
-        role: 'ia', question, reponse: r.reponse, resultats: r.resultats || [], message: r.message,
-        suggestions: r.suggestions || [],
-      }]);
-    } catch (e) {
-      setMessages((l) => [...l, { role: 'ia', question, message: e?.response?.data?.message || t('L’assistant est injoignable pour le moment.') }]);
-    } finally {
-      setEnCours(false);
-      setTimeout(() => saisieRef.current?.focus(), 50);
-    }
+    await dispatch(poserQuestion({ question, langue: langueActuelle() }));
+    setTimeout(() => saisieRef.current?.focus(), 50);
   };
 
   const ouvrir = (lien) => {
@@ -160,7 +140,7 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
             <p>{t('Posez une question sur vos données')}</p>
           </div>
           {messages.length > 0 && (
-            <button type="button" className="aq-icone-btn" onClick={() => setMessages([])} title={t('Nouvelle conversation')} aria-label={t('Nouvelle conversation')}>
+            <button type="button" className="aq-icone-btn" onClick={() => dispatch(nouvelleConversation())} title={t('Nouvelle conversation')} aria-label={t('Nouvelle conversation')}>
               <MessageSquarePlus size={17} />
             </button>
           )}
@@ -190,7 +170,7 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
           ) : (
             <div key={i} className="aq-bulle aq-bulle--ia">
               {m.reponse && <TexteIa texte={m.reponse} />}
-              {m.message && <p className="aq-message">{t(m.message)}</p>}
+              {(m.message || m.injoignable) && <p className="aq-message">{m.message ? t(m.message) : t('L’assistant est injoignable pour le moment.')}</p>}
               {(m.resultats || []).map((r, k) => <TableauResultat key={k} r={r} onOuvrir={ouvrir} />)}
               {m.suggestions?.length > 0 && (
                 <div className="aq-suggestions aq-suggestions--petites">

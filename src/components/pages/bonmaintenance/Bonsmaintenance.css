@@ -1399,3 +1399,6 @@ td.bons-table-empty > svg { display: block; margin: 0 auto 12px; }
   background: var(--g-red-600); color: var(--g-blanc);
   font-size: 0.68rem; font-weight: 800; line-height: 18px; text-align: center;
 }
+
+/* ===== Statistiques en pastilles dans l'en-tête (composant commun PastillesStats) ===== */
+.bons-header-card { flex-wrap: wrap; }

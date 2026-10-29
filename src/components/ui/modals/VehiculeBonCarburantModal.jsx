@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
-import vehiculeService from '../../../services/vehiculeService';
+import { commePage, obtenirVehicules } from '../../../store/referentiels';
 import personnelService from '../../../services/personnelService';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
 import vehiculeMissionService from '../../../services/vehiculeMissionService';
@@ -97,7 +97,7 @@ const VehiculeBonCarburantModal = ({
       setLoadingVehicules(true);
 
       try {
-        const page = await vehiculeService.getAll(0, 300);
+        const page = await obtenirVehicules().then(commePage);
         setVehicules(page.content ?? []);
       } catch (err) {
         console.error('Erreur chargement véhicules :', err);

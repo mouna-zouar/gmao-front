@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import vehiculeService from '../../../../services/vehiculeService';
+import { commePage, obtenirVehicules } from '../../../../store/referentiels';
 import vehiculeBonCarburantService from '../../../../services/vehiculeBonCarburantService';
 import vehiculeIncidentService from '../../../../services/vehiculeIncidentService';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
@@ -33,7 +33,7 @@ export default function IndicateursParc() {
       .then((r) => { if (actif) setSrc((s) => ({ ...s, [cle]: r })); })
       .catch(() => { if (actif) setSrc((s) => ({ ...s, [cle]: null, [`${cle}Erreur`]: true })); });
     const auj = new Date();
-    charger('vehicules', vehiculeService.getAll(0, 1000).then(liste));
+    charger('vehicules', obtenirVehicules().then(commePage).then(liste));
     charger('carburant', vehiculeBonCarburantService.getAll(0, 3000).then(liste));
     charger('incidents', vehiculeIncidentService.getAll(0, 2000).then(liste));
     charger('missions', vehiculeMissionService.getAll(0, 3000).then(liste));

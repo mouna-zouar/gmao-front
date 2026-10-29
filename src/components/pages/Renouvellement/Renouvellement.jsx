@@ -11,7 +11,7 @@ import {
 } from '../../ui/Veille/Veille';
 import { Info as InfoIcone } from 'lucide-react';
 import { Vide, Bulle as BulleSv, useLargeur as useLargeurSv } from '../Supervision/Supervision';
-import { Stat, Badge } from '../TableauDeBord/TableauDeBord';
+import { Stat, Badge } from '../../commun/TableauBord';
 import '../Supervision/Supervision.css';
 import '../TableauDeBord/TableauDeBord.css';
 import './Renouvellement.css';
@@ -575,7 +575,7 @@ function Classement({ donnees, onMaj, onOuvrir, focus, filtreDemande }) {
   const [famille, setFamille] = useState('');
   const [recherche, setRecherche] = useState('');
   const [page, setPage] = useState(0);
-  const [taille, setTaille] = useState(25);
+  const [taille, setTaille] = useState(10);
   const [ouvert, setOuvert] = useState(null);
 
   const familles = useMemo(() => {

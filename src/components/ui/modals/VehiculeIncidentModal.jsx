@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Button from '../Button';
-import vehiculeService from '../../../services/vehiculeService';
+import { commePage, obtenirVehicules } from '../../../store/referentiels';
 import personnelService from '../../../services/personnelService';
 import authService from '../../../services/Authservice';
 import {
@@ -259,7 +259,7 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
     const fetchVehicules = async () => {
       setLoadingVehicules(true);
       try {
-        const page = await vehiculeService.getAll(0, 300);
+        const page = await obtenirVehicules().then(commePage);
         setVehicules(page.content ?? []);
       } catch (err) {
         console.error(err);

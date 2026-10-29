@@ -5,6 +5,7 @@ import { criticiteHex, criticiteLabel } from '../../../constants/Criticite';
 import { t, tp, locale } from '../../../i18n';
 import { Activity, FileSpreadsheet, Gauge, History, Inbox, LoaderCircle, RefreshCw, Search, TrendingDown, TriangleAlert, Wrench } from 'lucide-react';
 import './Disponibilite.css';
+import PaginationCommune from '../../commun/Pagination';
 
 /* ---------- Config ---------- */
 const ETAT_LABELS = {
@@ -24,8 +25,8 @@ const PERIODES = [
 const SEUIL_BON = 95;
 const SEUIL_MOYEN = 80;
 /* ---------- Pagination ---------- */
-const TAILLES_PAGE = [7, 14, 21, 50];
-const TAILLE_PAGE_DEFAUT = 7;
+const TAILLES_PAGE = [10, 25, 50, 100];
+const TAILLE_PAGE_DEFAUT = 10;
 
 /* ---------- Utils ---------- */
 function calculerBornes(periodeKey) {
@@ -209,95 +210,12 @@ function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
 }
 
 /* ---------- Pagination ---------- */
-function construirePages(pageActuelle, totalPages) {
-  const pages = [];
-  const ajouter = (v) => { if (!pages.includes(v)) pages.push(v); };
 
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) ajouter(i);
-    return pages;
-  }
-
-  ajouter(1);
-  if (pageActuelle > 3) ajouter('…');
-  for (let i = Math.max(2, pageActuelle - 1); i <= Math.min(totalPages - 1, pageActuelle + 1); i++) {
-    ajouter(i);
-  }
-  if (pageActuelle < totalPages - 2) ajouter('…');
-  ajouter(totalPages);
-  return pages;
-}
-
-function Pagination({
-  page, totalPages, totalItems, taillePage,
-  onChangePage, onChangeTaille,
-}) {
-  if (totalPages <= 1 && totalItems <= TAILLES_PAGE[0]) return null;
-
-  const pages = construirePages(page, totalPages);
-
+/* Pagination : composant commun (même style dans toute la GMAO) */
+function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille }) {
   return (
-    <div className="disp-pagination">
-      <div className="disp-pagination__left">
-        <span className="disp-pagination__info">
-          {t('Page {p} sur {total}', { p: page, total: totalPages })}
-          {' · '}<span className="disp-pagination__count">{tp('équipement', totalItems)}</span>
-        </span>
-      </div>
-
-      <div className="disp-pagination__center">
-        <button
-          type="button"
-          className="disp-pagination__btn disp-pagination__btn--nav"
-          onClick={() => onChangePage(page - 1)}
-          disabled={page <= 1}
-          aria-label={t("Page précédente")}
-        >
-          <span className="rtl-miroir"><IconChevron direction="left" /></span>
-        </button>
-
-        {pages.map((p, idx) =>
-          p === '…' ? (
-            <span key={`ellipsis-${idx}`} className="disp-pagination__ellipsis">…</span>
-          ) : (
-            <button
-              key={p}
-              type="button"
-              className={`disp-pagination__btn ${p === page ? 'is-active' : ''}`}
-              onClick={() => onChangePage(p)}
-              aria-current={p === page ? 'page' : undefined}
-            >
-              {p}
-            </button>
-          )
-        )}
-
-        <button
-          type="button"
-          className="disp-pagination__btn disp-pagination__btn--nav"
-          onClick={() => onChangePage(page + 1)}
-          disabled={page >= totalPages}
-          aria-label={t("Page suivante")}
-        >
-          <span className="rtl-miroir"><IconChevron direction="right" /></span>
-        </button>
-      </div>
-
-      <div className="disp-pagination__right">
-        <label className="disp-pagination__size">
-          <span>{t("Par page")}</span>
-          <select
-            value={taillePage}
-            onChange={(e) => onChangeTaille(Number(e.target.value))}
-            className="disp-pagination__select"
-          >
-            {TAILLES_PAGE.map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-    </div>
+    <PaginationCommune base={1} page={page} taille={taillePage} total={totalItems}
+      onPage={onChangePage} onTaille={onChangeTaille} tailles={TAILLES_PAGE} />
   );
 }
 

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { t, tp, locale, estRTL } from '../../../i18n';
 import { COLONNES_KANBAN, comparerEcheances, refBon, statutEcheance, versDate } from './espacePlanning';
+import Pagination from '../../commun/Pagination';
 
 /*
  * Mes tâches en tableau kanban : une colonne par état, on glisse une carte vers une autre
@@ -212,29 +213,7 @@ export default function EspaceKanban({ taches, bonsParId, enCours, onDeplacer, o
                 {cartes.length > 0 && cible && <p className="ep-kcolonne-depot">{t('Déposez ici')}</p>}
 
                 {/* Pagination de la colonne (4 cartes par page) */}
-                {nbPages > 1 && (
-                  <nav className="ep-kcolonne-pagination" aria-label={t('Pagination des tâches')}>
-                    <button
-                      type="button"
-                      onClick={() => changerPage(col.etat, pageCourante - 1)}
-                      disabled={pageCourante === 0}
-                      aria-label={t('Page précédente')}
-                    >
-                      <ChevronLeft size={14} className="rtl-miroir" />
-                    </button>
-                    <span aria-live="polite">
-                      {pageCourante + 1} / {nbPages}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => changerPage(col.etat, pageCourante + 1)}
-                      disabled={pageCourante >= nbPages - 1}
-                      aria-label={t('Page suivante')}
-                    >
-                      <ChevronRight size={14} className="rtl-miroir" />
-                    </button>
-                  </nav>
-                )}
+                <Pagination compact page={pageCourante} nbPages={nbPages} onPage={(n) => changerPage(col.etat, n)} masquerSiUnePage />
               </div>
             </section>
           );

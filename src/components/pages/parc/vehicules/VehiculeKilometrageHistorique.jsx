@@ -7,6 +7,7 @@ import {
 import vehiculeService from '../../../../services/vehiculeService';
 import { t, tp, locale } from '../../../../i18n';
 import './VehiculeKilometrageHistorique.css';
+import Pagination from '../../../commun/Pagination';
 
 const SOURCE_LABELS = {
   MISSION: 'Mission',
@@ -46,7 +47,7 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await vehiculeService.getHistoriqueKilometrage(vehiculeId, p, 15);
+      const data = await vehiculeService.getHistoriqueKilometrage(vehiculeId, p, 10);
       setRows(data.content ?? []);
       setTotalPages(data.totalPages ?? 0);
       setTotalElements(data.totalElements ?? data.content?.length ?? 0);
@@ -257,31 +258,7 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
       </div>
 
       {/* ═══════════════ PAGINATION BAS ═══════════════ */}
-      {totalPages > 1 && (
-        <div className="vkh-pagination">
-          <button
-            type="button"
-            className="vkh-btn vkh-btn-ghost"
-            disabled={page === 0 || loading}
-            onClick={goPrev}
-          >
-            <ChevronLeft size={15} className="rtl-miroir" /> {t("Précédent")}
-          </button>
-
-          <span className="vkh-page-info">
-            {t("Page")} <strong>{page + 1}</strong> / {totalPages}
-          </span>
-
-          <button
-            type="button"
-            className="vkh-btn vkh-btn-ghost"
-            disabled={page >= totalPages - 1 || loading}
-            onClick={goNext}
-          >
-            {t("Suivant")} <ChevronRight size={15} className="rtl-miroir" />
-          </button>
-        </div>
-      )}
+      <Pagination page={page} taille={10} total={totalElements} nbPages={totalPages} onPage={(p) => { setPage(p); load(p); }} desactive={loading} masquerSiUnePage />
     </section>
   );
 }

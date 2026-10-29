@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Button from '../Button';
 import vehiculeService from '../../../services/vehiculeService';
-import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
-import prestataireService from '../../../services/prestataireService';
+import { commePage, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../constants/Criticite';
 import authService from '../../../services/Authservice';
 import {
@@ -305,7 +304,7 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
     const fetchImmobilisations = async () => {
       setLoadingImmobilisations(true);
       try {
-        const page = await lotArticleImmobilistationService.getAll(0, 300);
+        const page = await obtenirEquipements().then(commePage);
         setImmobilisations(page.content ?? []);
       } catch (err) {
         console.error('Erreur immobilisations :', err);
@@ -318,8 +317,7 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
     const fetchPrestataires = async () => {
       setLoadingPrestataires(true);
       try {
-        const page = await prestataireService.getAll(0, 300);
-        setPrestataires(page.content ?? []);
+        setPrestataires(await obtenirPrestataires());
       } catch (err) {
         console.error('Erreur prestataires :', err);
         setPrestataires([]);

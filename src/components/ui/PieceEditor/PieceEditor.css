@@ -1,0 +1,143 @@
+/* Éditeur de pièce d'un bon (demande de fourniture, commande fournisseur) — design épuré
+ * Une seule couleur d'accent ; orange/rouge réservés au stock insuffisant et aux erreurs. */
+.pe-modale.cm-modale--plein { width: min(1280px, 96vw); height: min(820px, 92vh); }
+.pe-modale .cm-modale__corps { padding: 16px 20px; }
+.pe { display: flex; flex-direction: column; gap: 14px; }
+.pe-chargement { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 48px; color: #64748b; }
+.pe-tourne { animation: peTour 0.8s linear infinite; }
+@keyframes peTour { to { transform: rotate(360deg); } }
+
+.pe-alerte { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 12px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; font-size: 0.84rem; font-weight: 600; }
+.pe-alerte--attention { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+.pe-requis { border-color: #f59e0b !important; }
+
+/* ── Disposition : articles à gauche, la pièce à droite ── */
+.pe--deux { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; height: 100%; }
+.pe-principal { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; }
+.pe-cote { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 0; }
+
+/* ── Cartes latérales ── */
+.pe-carte { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+.pe-carte__titre { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #94a3b8; }
+.pe-numero { margin-top: -6px; font-size: 1.25rem; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
+.pe-champ { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pe-champ__titre { font-size: 0.74rem; font-weight: 600; color: #64748b; }
+.pe-champ input, .pe-champ select, .pe-champ textarea {
+  width: 100%; min-width: 0; padding: 7px 10px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff;
+  font: inherit; font-size: 0.86rem; color: #0f172a;
+}
+.pe-champ input, .pe-champ select { height: 36px; padding-block: 0; }
+.pe-champ textarea { resize: vertical; min-height: 54px; }
+.pe-champ input:focus, .pe-champ select:focus, .pe-champ textarea:focus { outline: none; border-color: var(--g-brand-500, #0794a4); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12); }
+
+/* Totaux */
+.pe-totaux dl { display: flex; flex-direction: column; gap: 6px; margin: 0; }
+.pe-totaux dl div { display: flex; justify-content: space-between; gap: 12px; font-size: 0.84rem; }
+.pe-totaux dt { color: #64748b; }
+.pe-totaux dd { margin: 0; font-variant-numeric: tabular-nums; color: #334155; font-weight: 600; }
+.pe-totaux__ttc { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding-top: 10px; border-top: 1px solid #e2e8f0; }
+.pe-totaux__ttc span { font-weight: 700; color: #0f172a; }
+.pe-totaux__ttc strong { font-size: 1.3rem; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; }
+.pe-totaux__ttc small { font-size: 0.75rem; font-weight: 600; color: #94a3b8; }
+.pe-totaux__nb { font-size: 0.76rem; color: #94a3b8; }
+
+/* ── Barre articles : recherche + outils de commande ── */
+.pe-barre-articles { display: flex; gap: 8px; align-items: stretch; }
+.pe-recherche { position: relative; flex: 1; }
+.pe-recherche__icone { position: absolute; inset-inline-start: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.pe-recherche input {
+  width: 100%; height: 40px; padding-inline: 38px 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: #f8fafc;
+  font: inherit; font-size: 0.88rem;
+}
+.pe-recherche input:focus { outline: none; background: #fff; border-color: var(--g-brand-500, #0794a4); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12); }
+.pe-suggestions {
+  position: absolute; z-index: 30; top: calc(100% + 4px); inset-inline: 0; margin: 0; padding: 4px; list-style: none;
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 16px 32px -12px rgba(15, 23, 42, 0.22);
+  max-height: 320px; overflow-y: auto;
+}
+.pe-suggestions button { width: 100%; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 0; border-radius: 8px; background: none; cursor: pointer; font: inherit; text-align: start; color: #334155; }
+.pe-suggestions button:hover { background: #f1f5f9; }
+.pe-suggestions__nom { flex: 1; font-weight: 600; font-size: 0.86rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pe-suggestions__code { font-size: 0.74rem; color: #94a3b8; }
+.pe-suggestions__dispo { font-size: 0.74rem; color: #64748b; white-space: nowrap; }
+.pe-suggestions__vide { padding: 10px; color: #94a3b8; font-size: 0.84rem; }
+.pe-outil {
+  display: inline-flex; align-items: center; gap: 6px; padding: 0 14px; border-radius: 10px;
+  border: 1px solid #e2e8f0; background: #fff; color: #334155; font: inherit; font-weight: 600; font-size: 0.84rem; cursor: pointer;
+}
+.pe-outil svg { color: var(--g-brand-500, #0794a4); }
+.pe-outil:hover { border-color: var(--g-brand-500, #0794a4); color: #0f172a; }
+
+/* ── Tableau des lignes ── */
+.pe-tableau-cadre { border: 1px solid #e2e8f0; border-radius: 12px; overflow: auto; min-height: 0; }
+.pe-tableau { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.pe-tableau thead th {
+  position: sticky; top: 0; z-index: 1; padding: 9px 8px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #64748b; text-align: start; white-space: nowrap;
+}
+.pe-tableau td { padding: 6px 8px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; color: #334155; }
+.pe-tableau tbody tr:last-child td { border-bottom: 0; }
+.pe-tableau tbody tr:hover td { background: #fafbfc; }
+.pe-tableau th.pe-col-num, .pe-tableau td.pe-col-num, .pe-tableau th.pe-col-pct, .pe-tableau td.pe-col-pct { text-align: end; }
+.pe-col-n { width: 32px; color: #94a3b8 !important; font-variant-numeric: tabular-nums; }
+.pe-col-x { width: 40px; text-align: center; }
+.pe-tableau td input {
+  width: 100%; height: 32px; padding: 0 8px; border-radius: 6px; border: 1px solid transparent; background: transparent;
+  font: inherit; font-size: 0.85rem; color: #0f172a; text-align: end; font-variant-numeric: tabular-nums;
+}
+.pe-tableau td.pe-col-unite input { text-align: start; }
+.pe-tableau tbody tr:hover td input { border-color: #e2e8f0; background: #fff; }
+.pe-tableau td input:focus { outline: none; border-color: var(--g-brand-500, #0794a4) !important; background: #fff; box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12); }
+.pe-tableau td.pe-col-num:has(input) { width: 96px; }
+.pe-tableau td.pe-col-pct { width: 74px; }
+.pe-tableau td.pe-col-unite { width: 78px; }
+.pe-article { display: flex; flex-direction: column; gap: 1px; min-width: 160px; }
+.pe-article__nom { font-weight: 600; color: #0f172a; }
+.pe-article__sous { display: flex; gap: 8px; font-size: 0.74rem; color: #94a3b8; }
+.pe-origine.is-besoin { color: var(--g-brand-600, #067d8b); font-weight: 600; }
+.pe-dispo { font-variant-numeric: tabular-nums; color: #64748b; }
+.pe-dispo.is-manque { color: #c2410c; font-weight: 700; }
+.pe-montant { font-weight: 700; color: #0f172a; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pe-retirer { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 6px; background: none; color: #94a3b8; cursor: pointer; }
+.pe-retirer:hover { background: #fef2f2; color: #dc2626; }
+
+.pe-vide { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 24px; border: 1px dashed #e2e8f0; border-radius: 12px; color: #94a3b8; text-align: center; }
+.pe-vide p { margin: 0; font-size: 0.86rem; max-width: 420px; }
+
+/* Confirmation intégrée */
+.pe-dialogue {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 600; font-size: 0.86rem;
+}
+.pe-dialogue div { display: flex; gap: 6px; }
+
+/* Succès */
+.pe-succes { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 36px 20px; text-align: center; }
+.pe-succes__icone { color: #059669; }
+.pe-succes h3 { margin: 0; font-size: 1.15rem; color: #0f172a; }
+.pe-succes p { margin: 0; color: #334155; }
+.pe-succes__aide { font-size: 0.84rem; color: #64748b !important; }
+
+/* Mode express : un bloc par fournisseur */
+.pe-express-intro { display: flex; align-items: center; gap: 8px; margin: 0; color: #334155; font-size: 0.86rem; }
+.pe-groupe { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; overflow: hidden; }
+.pe-groupe.is-fait { border-color: #a7f3d0; }
+.pe-groupe__tete { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+.pe-groupe.is-fait .pe-groupe__tete { background: #ecfdf5; }
+.pe-groupe__titre { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pe-groupe__titre strong { color: #0f172a; }
+.pe-groupe__titre span { font-size: 0.78rem; color: #64748b; }
+.pe-groupe__titre select { height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid #e2e8f0; font: inherit; font-size: 0.86rem; max-width: 360px; }
+.pe-groupe__ok { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; color: #059669; }
+.pe-groupe__lignes { margin: 0; padding: 4px 14px; list-style: none; }
+.pe-groupe__lignes li { display: grid; grid-template-columns: 1fr auto 120px; gap: 12px; padding: 6px 0; font-size: 0.84rem; color: #334155; }
+.pe-groupe__lignes li + li { border-top: 1px solid #f1f5f9; }
+.pe-groupe__lignes li span:last-child { text-align: end; font-variant-numeric: tabular-nums; font-weight: 600; }
+.pe-groupe__nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 1000px) {
+  .pe--deux { grid-template-columns: 1fr; }
+  .pe-cote { position: static; order: -1; }
+  .pe-barre-articles { flex-wrap: wrap; }
+  .pe-recherche { flex-basis: 100%; }
+}

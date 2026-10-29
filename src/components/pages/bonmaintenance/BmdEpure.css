@@ -1,0 +1,230 @@
+/* ============================================================
+   DÉTAIL DU BON — VERSION ÉPURÉE (une seule page, sans défilement)
+   Une couleur d'accent (teal), des gris, et du rouge / orange
+   uniquement pour signaler un retard ou un problème.
+   Chargé après BmdPage.css (les tiroirs et fenêtres restent ceux de BmdPage.css).
+   ============================================================ */
+.bmz-page {
+  --z-encre: #0f172a;
+  --z-texte: #334155;
+  --z-doux: #64748b;
+  --z-pale: #94a3b8;
+  --z-trait: #e2e8f0;
+  --z-fond: #f8fafc;
+  --z-carte: #ffffff;
+  --z-accent: var(--g-brand-500, #0794a4);
+  --z-accent-fonce: var(--g-brand-700, #066d79);
+  --z-accent-pale: #e6f6f8;
+  --z-alerte: #dc2626;
+  --z-attention: #d97706;
+  --z-ok: #059669;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+  height: calc(100dvh - var(--bmz-haut-barre, 64px));
+  min-height: 560px;
+  padding: 14px 20px 16px !important;
+  background: transparent !important;
+  font-family: var(--font-texte, 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif);
+  color: var(--z-texte);
+  overflow: hidden;
+}
+.bmz-page h1, .bmz-page h2, .bmz-page h3 { font-family: inherit; color: var(--z-encre); }
+
+/* ---------- Boutons ---------- */
+.bmz-btn {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 8px;
+  border: 1px solid var(--z-trait); background: var(--z-carte);
+  font-family: inherit; font-size: 13px; font-weight: 600; color: var(--z-texte);
+  cursor: pointer; white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.bmz-btn:hover:not(:disabled) { border-color: var(--z-accent); color: var(--z-accent-fonce); }
+.bmz-btn:disabled { opacity: 0.6; cursor: wait; }
+.bmz-btn--plein { background: var(--z-accent); border-color: var(--z-accent); color: #fff; }
+.bmz-btn--plein:hover:not(:disabled) { background: var(--z-accent-fonce); border-color: var(--z-accent-fonce); color: #fff; }
+.bmz-page :focus-visible { outline: 2px solid var(--z-accent); outline-offset: 2px; }
+.bmz-pastille {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+  background: var(--z-alerte); color: #fff; font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+/* ---------- En-tête ---------- */
+.bmz-entete {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 16px; border-radius: 14px;
+  background: var(--z-carte); border: 1px solid var(--z-trait);
+}
+.bmz-retour {
+  flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--z-trait); background: var(--z-carte); color: var(--z-texte); cursor: pointer;
+}
+.bmz-retour:hover { border-color: var(--z-accent); color: var(--z-accent-fonce); }
+.bmz-identite { flex: 1; min-width: 0; }
+.bmz-identite-haut { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+.bmz-num { font-size: 12px; font-weight: 700; color: var(--z-doux); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.bmz-etat {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 2px 9px; border-radius: 999px; background: var(--z-fond); border: 1px solid var(--z-trait);
+  font-size: 12px; font-weight: 700; color: var(--z-texte);
+}
+.bmz-page .bmz-titre {
+  margin: 0; font-size: 20px; font-weight: 800; line-height: 1.2; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bmz-resume { margin: 2px 0 0; font-size: 13px; color: var(--z-doux); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bmz-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+/* Point de couleur devant un état (seule touche de couleur, et seulement si utile) */
+[class*="bmz-point--"]::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--z-pale);
+}
+.bmz-point--neutre::before { display: none; }
+.bmz-point--ok::before { background: var(--z-ok); }
+.bmz-point--attention::before { background: var(--z-attention); }
+.bmz-point--alerte::before { background: var(--z-alerte); }
+.bmz-point--alerte { color: var(--z-alerte) !important; }
+
+/* Aide : petite bulle, sans pousser la page */
+.bmz-aide-zone { position: relative; }
+.bmz-aide {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; width: 320px;
+  padding: 14px 16px; border-radius: 12px; background: var(--z-carte); border: 1px solid var(--z-trait);
+  box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.18);
+  font-size: 13px; color: var(--z-texte);
+}
+.bmz-aide ol { margin: 0 0 12px; padding-inline-start: 18px; display: grid; gap: 4px; }
+
+/* ---------- Parcours ---------- */
+.bmz-parcours {
+  position: relative;
+  padding: 14px 16px 10px; border-radius: 14px;
+  background: var(--z-carte); border: 1px solid var(--z-trait);
+}
+.bmz-parcours-compte { position: absolute; top: 10px; right: 14px; font-size: 12px; font-weight: 600; color: var(--z-pale); }
+.bmz-ligne {
+  --point: 28px;
+  position: relative; display: grid; grid-template-columns: repeat(var(--bmz-nb, 6), 1fr);
+  margin: 0; padding: 0; list-style: none;
+}
+.bmz-ligne::before, .bmz-ligne::after {
+  content: ''; position: absolute; top: calc(var(--point) / 2 - 1.5px); height: 3px; border-radius: 999px;
+  left: calc(100% / (2 * var(--bmz-nb, 6)));
+}
+.bmz-ligne::before { right: calc(100% / (2 * var(--bmz-nb, 6))); background: var(--z-trait); }
+.bmz-ligne::after { width: calc((100% - 100% / var(--bmz-nb, 6)) * var(--bmz-p, 0)); background: var(--z-accent); transition: width 0.5s ease; }
+.bmz-etape { position: relative; z-index: 1; }
+.bmz-etape button, .bmz-etape-contenu {
+  width: 100%; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 0 4px; border: 0; background: none; cursor: pointer; text-align: center; font: inherit;
+}
+.bmz-etape-point {
+  width: var(--point); height: var(--point); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--z-carte); border: 2px solid var(--z-trait); color: var(--z-pale);
+  transition: transform 0.15s ease;
+}
+.bmz-etape button:hover .bmz-etape-point { transform: scale(1.08); }
+.bmz-etape-contenu { cursor: default; }
+.bmz-etape.is-barre { opacity: 0.45; }
+.bmz-etape.is-barre .bmz-etape-nom { text-decoration: line-through; }
+.bmz-etape-nom { font-size: 13px; font-weight: 700; color: var(--z-pale); }
+.bmz-etape-aide { font-size: 11.5px; color: var(--z-pale); max-width: 18ch; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bmz-etape.is-fait .bmz-etape-point { background: var(--z-accent); border-color: var(--z-accent); color: #fff; }
+.bmz-etape.is-fait .bmz-etape-nom { color: var(--z-texte); }
+.bmz-etape.is-actuel .bmz-etape-point { background: var(--z-carte); border-color: var(--z-accent); color: var(--z-accent); box-shadow: 0 0 0 4px var(--z-accent-pale); }
+.bmz-etape.is-actuel .bmz-etape-nom { color: var(--z-encre); }
+.bmz-etape.is-actuel .bmz-etape-aide { color: var(--z-accent-fonce); font-weight: 600; }
+.bmz-etape.is-probleme .bmz-etape-point { background: var(--z-alerte); border-color: var(--z-alerte); color: #fff; box-shadow: 0 0 0 4px #fee2e2; }
+.bmz-etape.is-probleme .bmz-etape-nom { color: var(--z-encre); }
+.bmz-etape.is-probleme .bmz-etape-aide { color: var(--z-alerte); font-weight: 600; }
+
+/* ---------- Corps en trois colonnes ---------- */
+.bmz-corps {
+  flex: 1; min-height: 0;
+  display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px;
+}
+.bmz-col { min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.bmz-carte { padding: 14px 16px; border-radius: 14px; background: var(--z-carte); border: 1px solid var(--z-trait); }
+.bmz-page .bmz-carte-titre { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--z-doux); text-transform: uppercase; letter-spacing: 0.05em; }
+.bmz-defile { flex: 1; min-height: 0; overflow-y: auto; }
+
+/* À faire maintenant : carte claire, trait d'accent à gauche */
+.bmz-maintenant { border-inline-start: 4px solid var(--z-accent); }
+.bmz-maintenant--alerte { border-inline-start-color: var(--z-alerte); }
+.bmz-maintenant--fini { border-inline-start-color: var(--z-ok); }
+.bmz-maintenant--neutre { border-inline-start-color: var(--z-pale); }
+.bmz-surtitre { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; font-size: 12px; font-weight: 700; color: var(--z-accent-fonce); text-transform: uppercase; letter-spacing: 0.05em; }
+.bmz-maintenant--alerte .bmz-surtitre { color: var(--z-alerte); }
+.bmz-maintenant--fini .bmz-surtitre { color: var(--z-ok); }
+.bmz-page .bmz-maintenant-titre { margin: 0 0 4px; font-size: 18px; font-weight: 800; line-height: 1.25; }
+.bmz-maintenant-texte { margin: 0 0 12px; font-size: 13.5px; color: var(--z-doux); }
+.bmz-maintenant-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Informations : grille clé / valeur */
+.bmz-infos { flex: 1; min-height: 0; overflow-y: auto; }
+.bmz-infos dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+.bmz-infos div { min-width: 0; }
+.bmz-infos dt { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--z-pale); }
+.bmz-infos dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; color: var(--z-encre); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* En un coup d'œil */
+.bmz-vitaux ul, .bmz-dossier ul { margin: 0; padding: 0; list-style: none; }
+.bmz-vital {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 9px 4px; border: 0; border-bottom: 1px solid var(--z-trait); background: none;
+  font: inherit; text-align: start; color: inherit;
+}
+.bmz-vitaux li:last-child .bmz-vital { border-bottom: 0; }
+button.bmz-vital { cursor: pointer; border-radius: 6px; }
+button.bmz-vital:hover { background: var(--z-fond); }
+.bmz-vital-icone { color: var(--z-pale); flex-shrink: 0; }
+.bmz-vital-label { flex: 1; font-size: 13.5px; color: var(--z-doux); }
+.bmz-vital-valeur { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--z-encre); text-align: end; }
+.bmz-fleche { color: var(--z-pale); flex-shrink: 0; }
+
+/* Rapport IA (après la clôture) : défile dans sa propre zone */
+.bmz-rapport:empty { display: none; }
+.bmz-rapport .bmr { margin: 0; }
+
+/* Dossier : liste compacte des rubriques */
+.bmz-dossier { display: flex; flex-direction: column; }
+.bmz-groupe + .bmz-groupe { margin-top: 10px; }
+.bmz-page .bmz-groupe h3 { margin: 0 0 2px; padding: 0 4px; font-size: 11px; font-weight: 700; color: var(--z-pale); text-transform: uppercase; letter-spacing: 0.06em; }
+.bmz-rubrique {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 7px 6px; border: 0; border-radius: 8px; background: none; cursor: pointer;
+  font: inherit; text-align: start; color: var(--z-texte);
+}
+.bmz-rubrique:hover { background: var(--z-accent-pale); color: var(--z-accent-fonce); }
+.bmz-rubrique:hover .bmz-rubrique-icone, .bmz-rubrique:hover .bmz-fleche { color: var(--z-accent); }
+.bmz-rubrique-icone { color: var(--z-pale); flex-shrink: 0; }
+.bmz-rubrique-nom { flex: 1; font-size: 14px; font-weight: 600; }
+.bmz-nb { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--z-fond); border: 1px solid var(--z-trait); font-size: 12px; font-weight: 700; color: var(--z-doux); text-align: center; }
+.bmz-nb--alerte { background: var(--z-alerte); border-color: var(--z-alerte); color: #fff; }
+
+/* ---------- Écrans moyens et petits : la page défile normalement ---------- */
+@media (max-width: 1180px) {
+  .bmz-page { height: auto; min-height: 0; overflow: visible; padding: 14px 16px 24px !important; }
+  .bmz-corps { grid-template-columns: 1fr 1fr; }
+  .bmz-dossier { grid-column: 1 / -1; }
+  .bmz-defile { overflow: visible; }
+  .bmz-btn span { display: none; }
+}
+@media (max-width: 760px) {
+  .bmz-entete { flex-wrap: wrap; }
+  .bmz-actions { width: 100%; justify-content: flex-start; }
+  .bmz-corps { grid-template-columns: 1fr; }
+  .bmz-ligne { grid-template-columns: repeat(3, 1fr); row-gap: 12px; }
+  .bmz-ligne::before, .bmz-ligne::after { display: none; }
+  .bmz-parcours-compte { position: static; display: block; margin-top: 8px; text-align: center; }
+  .bmz-infos dl { grid-template-columns: 1fr; }
+}
+@media print { .bmz-page { height: auto; overflow: visible; } }
+.bmz-page .bmz-titre:focus { outline: none; }

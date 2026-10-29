@@ -645,6 +645,23 @@ button.bmx-vital:hover { background: var(--paper); }
   outline: none;
 }
 
+/* Réparation en deux étapes : 1. intervenants, 2. tâches */
+.bmx-rep { display: flex; flex-direction: column; gap: 18px; }
+.bmx-rep-etapes { display: flex; align-items: center; gap: 0; margin: 0; padding: 6px; list-style: none; border: 1.5px solid var(--line); border-radius: var(--radius-l); background: var(--surface); }
+.bmx-rep-etape { display: flex; align-items: center; flex: 1; min-width: 0; }
+.bmx-rep-etape button { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; padding: 8px 12px; border: 0; border-radius: 12px; background: none; font: inherit; color: var(--ink-faint); text-align: start; cursor: pointer; }
+.bmx-rep-etape button:hover { background: var(--paper); }
+.bmx-rep-etape.is-actif button { background: var(--paper); color: var(--ink); }
+.bmx-rep-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid var(--line); font-weight: 800; font-size: 13px; }
+.bmx-rep-etape.is-actif .bmx-rep-num { border-color: var(--brand); background: var(--brand); color: var(--g-blanc); }
+.bmx-rep-etape.is-passe .bmx-rep-num { border-color: var(--brand); color: var(--brand); }
+.bmx-rep-texte { display: flex; flex-direction: column; min-width: 0; }
+.bmx-rep-texte strong { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+.bmx-rep-texte small { font-size: 12px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bmx-rep-trait { width: 40px; height: 2px; margin: 0 6px; flex-shrink: 0; background: var(--line); border-radius: 2px; }
+.bmx-rep-etape.is-passe .bmx-rep-trait { background: var(--brand); }
+.bmx-rep-nav { display: flex; justify-content: space-between; gap: 10px; padding-top: 14px; border-top: 1.5px solid var(--line); }
+
 @keyframes bmx-glisse { from { transform: translateX(40px); opacity: 0.4; } to { transform: none; opacity: 1; } }
 
 .bmx-tiroir-entete {
@@ -823,6 +840,13 @@ button.bmx-vital:hover { background: var(--paper); }
 
 /* Les onglets internes héritent de la nouvelle typographie */
 .bmx-tiroir .bmd-panel-header { border-bottom-color: var(--line); }
+/* Bouton « Ajouter … » placé à gauche, avant le titre */
+.bmx-tiroir .bmd-panel-header { justify-content: flex-start; }
+.bmx-tiroir .bmd-panel-header .bmd-add-btn { order: -1; }
+/* Boutons des formulaires (Ajouter / Enregistrer puis Annuler) et « Publier » des commentaires, à gauche aussi */
+.bmx-tiroir .bmf-actions { flex-direction: row-reverse; justify-content: flex-end; }
+.bmx-tiroir .bmd-comment-form { flex-direction: column; align-items: flex-start; }
+.bmx-tiroir .bmd-comment-form textarea { width: 100%; }
 .bmx-tiroir .bmd-panel-title h3 { font-family: var(--font-titre); font-size: 18px; }
 .bmx-tiroir .bmd-add-btn { border-radius: 999px; min-height: 42px; padding: 10px 18px; font-size: 14px; }
 .bmx-tiroir .bmd-inline-form,
@@ -924,4 +948,35 @@ button.bmx-vital:hover { background: var(--paper); }
   font-weight: 700;
   line-height: 20px;
   text-align: center;
+}
+
+/* ============================================================
+   VERSION COMPACTE : moins d'espace vide sur grand écran
+   ============================================================ */
+@media (min-width: 761px) {
+  .bmx-page { padding: 16px 22px 28px; }
+  .bmx-page .bmx-barre { margin-bottom: 14px; }
+  .bmx-page .bmx-parcours { padding: 16px 20px 18px; margin-bottom: 16px; border-radius: var(--radius-l); }
+  .bmx-page .bmx-parcours-entete { margin-bottom: 14px; }
+  .bmx-page .bmx-parcours-entete h2 { font-size: 18px; }
+  .bmx-page .bmx-ligne { --point: 40px; }
+  .bmx-page .bmx-station-nom { font-size: 14px; }
+  .bmx-page .bmx-station.is-actuel .bmx-station-nom,
+  .bmx-page .bmx-station.is-probleme .bmx-station-nom { font-size: 15px; }
+  .bmx-page .bmx-station-aide { font-size: 12px; }
+  .bmx-page .bmx-identite { margin-bottom: 16px; max-width: none; }
+  .bmx-page .bmx-bracelet { margin-bottom: 8px; }
+  .bmx-page .bmx-titre { margin-bottom: 4px; font-size: clamp(24px, 2.6vw, 32px); }
+  .bmx-page .bmx-resume { margin-bottom: 12px; font-size: 15px; max-width: none; }
+  .bmx-page .bmx-fiche { gap: 8px 26px; }
+  .bmx-page .bmx-aide { padding: 12px 16px; margin-bottom: 16px; }
+  .bmx-page .bmx-duo { gap: 16px; margin-bottom: 20px; }
+  .bmx-page .bmx-maintenant { padding: 20px 22px 22px; border-radius: var(--radius-l); }
+  .bmx-page .bmx-maintenant-icone { margin-bottom: 10px; }
+  .bmx-page .bmx-maintenant-titre { font-size: 24px; }
+  .bmx-page .bmx-maintenant-texte { margin-bottom: 14px; }
+  .bmx-page .bmx-vitaux { padding: 14px 16px 8px; border-radius: var(--radius-l); }
+  .bmx-page .bmx-vital { min-height: 42px; padding: 6px; }
+  .bmx-page .bmx-dossier-titre { margin-bottom: 10px; font-size: 18px; }
+  .bmx-page .bmx-rubrique { min-height: 52px; padding: 8px 12px; }
 }

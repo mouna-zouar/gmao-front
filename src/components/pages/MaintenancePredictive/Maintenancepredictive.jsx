@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import maintenanceRisqueService from '../../../services/maintenanceRisqueService ';
 import './MaintenancePredictive.css';
 import { t, tp, locale } from '../../../i18n';
+import Pagination from '../../commun/Pagination';
 
 const NIVEAU_LABELS = {
   FAIBLE: 'Faible',
@@ -214,41 +215,7 @@ export default function MaintenancePredictive() {
           </div>
 
           {/* PAGINATION */}
-          <div className="mp-pagination">
-            <span className="mp-pagination-info">
-              {tp('résultat', risquesFiltres.length)} — {t('Page {p} sur {total}', { p: currentPage, total: totalPages })}
-            </span>
-            <div className="mp-pagination-controls">
-              <button
-                type="button"
-                className="mp-pagination-btn"
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                {t('Précédent')}
-              </button>
-
-              {paginationRange.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  className={`mp-pagination-btn ${p === currentPage ? 'active' : ''}`}
-                  onClick={() => goToPage(p)}
-                >
-                  {p}
-                </button>
-              ))}
-
-              <button
-                type="button"
-                className="mp-pagination-btn"
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                {t('Suivant')}
-              </button>
-            </div>
-          </div>
+          <Pagination base={1} page={currentPage} taille={PAGE_SIZE} total={risquesFiltres.length} onPage={setCurrentPage} />
         </>
       )}
     </div>

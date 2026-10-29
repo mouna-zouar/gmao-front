@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Button from '../Button';
-import vehiculeService from '../../../services/vehiculeService';
+import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../store/referentiels';
 import personnelService from '../../../services/personnelService';
 import vehiculeMissionService from '../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
-import emplacementService from '../../../services/emplacementService';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
 import { CARBURANT_TYPE_OPTIONS, carburantTypeLabel } from '../../../constants/carburantType';
 import { etatVehiculeLabel, isVehiculeDisponiblePourMission } from '../../../constants/Vehiculeetat';
@@ -483,7 +482,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     const fetchVehicules = async () => {
       setLoadingVehicules(true);
       try {
-        const response = await vehiculeService.getAll(0, 200);
+        const response = await obtenirVehicules().then(commePage);
         const data = response?.content ?? response?.data ?? [];
         setVehicules(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -511,7 +510,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     const fetchEmplacements = async () => {
       setLoadingEmplacements(true);
       try {
-        const response = await emplacementService.getAll(0, 200);
+        const response = await obtenirEmplacements().then(commePage);
         const data = response?.content ?? response?.data ?? response ?? [];
         setEmplacements(Array.isArray(data) ? data : []);
       } catch (err) {

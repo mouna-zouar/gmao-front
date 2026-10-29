@@ -2152,3 +2152,6 @@
     padding: 22px 18px 24px !important;
   }
 }
+
+/* Statistiques en pastilles dans l'en-tête (composant commun PastillesStats) */
+.vehicules-header-card { flex-wrap: wrap; }

@@ -6,9 +6,8 @@ import {
 } from 'lucide-react';
 import Button from '../Button';
 import personnelService from '../../../services/personnelService';
-import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
 import serviceService from '../../../services/Serviceservice';
-import prestataireService from '../../../services/prestataireService';
+import { commePage, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import authService from '../../../services/Authservice';
 import './Modal.css';
@@ -283,7 +282,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
       // (ou si la liste ne peut pas être chargée)
       const initial = valeursInitiales?.immobilisation;
       try {
-        const page = await lotArticleImmobilistationService.getAll(0, 200);
+        const page = await obtenirEquipements().then(commePage);
         const liste = page.content ?? [];
         setImmobilisations(initial && !liste.some((i) => String(i.id) === String(initial.id)) ? [initial, ...liste] : liste);
       } catch (err) {
@@ -310,8 +309,7 @@ const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, val
     const fetchPrestataires = async () => {
       setLoadingPrestataires(true);
       try {
-        const page = await prestataireService.getAll(0, 200);
-        setPrestataires(page.content ?? []);
+        setPrestataires(await obtenirPrestataires());
       } catch (err) {
         console.error('Erreur chargement prestataires :', err);
         setPrestataires([]);

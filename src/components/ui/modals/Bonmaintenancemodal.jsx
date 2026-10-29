@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Button from '../Button';
 import personnelService from '../../../services/personnelService';
-import prestataireService from '../../../services/prestataireService';
+import { commePage, obtenirArticles, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
 import lotArticleService from '../../../services/lotArticleService';
-import prestataireArticleService from '../../../services/prestataireArticleService';
 import pieceLigneService from '../../../services/pieceLigneService';
 import diagnosticAssistantService from '../../../services/Diagnosticassistantservice';
 import repartitionInterventionsService from '../../../services/repartitionInterventionsService';
@@ -309,14 +308,14 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
       try {
         const [persPage, prestPage, immoPage, articlesPage, techPage] = await Promise.all([
           personnelService.getAll(0, 200),
-          prestataireService.getAll(0, 200),
-          lotArticleImmobilistationService.getAll(0, 200),
-          prestataireArticleService.getMaintenance(), // articles du prestataire, catégorie 15
+          obtenirPrestataires(),
+          obtenirEquipements().then(commePage),
+          obtenirArticles(), // articles du prestataire, catégorie 15
           personnelService.getMaintenance(0, 200),
         ]);
         setPersonnels(persPage.content ?? []);
         setTechniciens(techPage.content ?? []);
-        setPrestataires(prestPage.content ?? []);
+        setPrestataires(prestPage ?? []);
         setImmobilisations(immoPage.content ?? []);
         setArticles(Array.isArray(articlesPage) ? articlesPage : []);
       } catch (err) {

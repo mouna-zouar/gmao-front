@@ -229,7 +229,7 @@ function ficheHtml({ titre, sousTitre, reference, statut, sections, signatures, 
 }
 
 // ---------- Impression via un iframe caché ----------
-function imprimerHtml(html) {
+export function imprimerHtml(html) {
   const iframe = document.createElement('iframe');
   iframe.setAttribute('aria-hidden', 'true');
   iframe.style.cssText = 'position:fixed;inset-inline-end:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
 import { Fenetre, Champ } from './VehiculeAmendeModal';
-import vehiculeService from '../../../services/vehiculeService';
+import { commePage, obtenirVehicules } from '../../../store/referentiels';
 import authService from '../../../services/Authservice';
 import { t, locale } from '../../../i18n';
 import { TYPES_FRAIS, ltr } from '../../../constants/Coutlibelles';
@@ -35,7 +35,7 @@ export default function VehiculeFraisModal({ frais, vehicules = [], vehiculeIdIn
   useEffect(() => {
     if (aDesVehicules) return undefined;
     let actif = true;
-    vehiculeService.getAll(0, 1000)
+    obtenirVehicules().then(commePage)
       .then((page) => { if (actif) setVehiculesCharges(page?.content ?? (Array.isArray(page) ? page : [])); })
       .catch(() => { if (actif) setErreurVehicules(t('Impossible de charger la liste des véhicules.')); })
       .finally(() => { if (actif) setChargementVehicules(false); });

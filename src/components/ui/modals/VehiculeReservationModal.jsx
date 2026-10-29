@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Button from '../Button';
-import vehiculeService from '../../../services/vehiculeService';
+import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../store/referentiels';
 import personnelService from '../../../services/personnelService';
-import emplacementService from '../../../services/emplacementService';
 import projetService from '../../../services/projetService';
 import vehiculeReservationService from '../../../services/vehiculeReservationService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
@@ -373,7 +372,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
     const fetchVehicules = async () => {
       setLoadingVehicules(true);
       try {
-        const page = await vehiculeService.getAll(0, 300);
+        const page = await obtenirVehicules().then(commePage);
         setVehicules(page.content ?? []);
       } catch (err) {
         console.error(err);
@@ -399,7 +398,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
     const fetchEmplacements = async () => {
       setLoadingEmplacements(true);
       try {
-        const page = await emplacementService.getAll(0, 300);
+        const page = await obtenirEmplacements().then(commePage);
         setEmplacements(page.content ?? []);
       } catch (err) {
         console.error(err);

@@ -1,0 +1,48 @@
+/* Barre de pagination unique de la GMAO (composant commun Pagination) */
+.cp-pagination {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--g-bordure, #e2e8f0);
+  border-radius: 12px;
+  background: var(--g-blanc, #fff);
+  font-size: 0.8rem;
+  color: var(--g-texte-2, #475569);
+}
+.cp-pagination__info { font-variant-numeric: tabular-nums; font-weight: 600; }
+.cp-pagination__pages { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.cp-pagination__btn {
+  min-width: 32px; height: 32px; padding: 0 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--g-bordure, #e2e8f0); border-radius: 8px;
+  background: var(--g-blanc, #fff); color: var(--g-texte-2, #475569);
+  font: inherit; font-weight: 600; font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.cp-pagination__btn:hover:not(:disabled):not(.is-actif) { border-color: var(--g-bordure-forte, #cbd5e1); color: var(--g-texte, #0f172a); background: var(--g-slate-50, #f8fafc); }
+.cp-pagination__btn:focus-visible { outline: 2px solid var(--g-marque, #0794a4); outline-offset: 2px; }
+.cp-pagination__btn:disabled { opacity: 0.45; cursor: default; }
+.cp-pagination__num.is-actif { background: var(--g-marque, #0794a4); border-color: var(--g-marque, #0794a4); color: var(--g-blanc, #fff); opacity: 1; }
+.cp-pagination__ellipse { padding: 0 4px; color: var(--g-slate-400, #94a3b8); }
+.cp-pagination__taille { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.cp-pagination__taille select {
+  height: 32px; padding: 0 8px;
+  border: 1px solid var(--g-bordure, #e2e8f0); border-radius: 8px;
+  background: var(--g-blanc, #fff); color: var(--g-texte, #0f172a); font: inherit;
+}
+.cp-pagination__vide { min-width: 1px; }
+[dir='rtl'] .cp-pagination__btn svg { transform: scaleX(-1); }
+
+/* Version compacte : précédent / « 2 / 5 » / suivant */
+.cp-pagination--compact {
+  justify-content: center; gap: 8px;
+  margin-top: 8px; padding: 4px; border: 0; background: transparent;
+}
+.cp-pagination--compact .cp-pagination__btn { min-width: 28px; height: 28px; padding: 0 4px; }
+
+@media (max-width: 640px) {
+  .cp-pagination { justify-content: center; }
+  .cp-pagination__info { width: 100%; text-align: center; }
+}
+@media print { .cp-pagination { display: none; } }

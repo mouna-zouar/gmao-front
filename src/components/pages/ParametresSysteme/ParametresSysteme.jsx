@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search,
-  Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags,
+  Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer,
 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
@@ -201,6 +201,7 @@ const RUBRIQUES = [
   { id: 'parc', groupe: "Alertes d'échéance du Parc", titre: 'Alertes du Parc', aide: 'Assurance, visite technique, vignette et vidange des véhicules.', Icone: CarFront },
   { id: 'cubix_immo', groupe: 'Cubix — équipements lus', titre: 'Équipements lus dans Cubix', aide: 'Prestataire et familles d’articles que la GMAO suit.', Icone: Boxes },
   { id: 'cubix_etat', groupe: 'Synchronisation Cubix (état des équipements)', titre: 'État envoyé à Cubix', aide: 'Codes EtatFonc écrits dans Cubix au fil des pannes.', Icone: RefreshCw },
+  { id: 'impression', groupe: 'En-tête des impressions', titre: 'En-tête des impressions', aide: 'Société, adresse, matricule fiscal et téléphone imprimés en haut des demandes et commandes.', Icone: Printer },
 ];
 
 const CLE_RUBRIQUE = 'gmao.parametres.rubrique';

@@ -2358,3 +2358,18 @@
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+/* Temps passé sur une tâche / par un intervenant */
+.bmd-temps { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: #334155; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bmd-temps svg { color: #94a3b8; }
+.bmd-temps.is-en-cours { color: #066d79; }
+.bmd-temps.is-en-cours svg { color: #059669; animation: bmdTempsPouls 1.6s ease-in-out infinite; }
+@keyframes bmdTempsPouls { 50% { opacity: 0.35; } }
+.bmd-temps-total { margin-inline-end: 6px; }
+@media (prefers-reduced-motion: reduce) { .bmd-temps.is-en-cours svg { animation: none; } }
+
+/* Documents d'achat : bouton Imprimer (format des rapports Cubix) */
+.bmd-doc-actions { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.bmd-doc-imprimer { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font: inherit; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; }
+.bmd-doc-imprimer:hover:not(:disabled) { border-color: #0794a4; color: #066d79; }
+.bmd-doc-imprimer:disabled { opacity: 0.6; cursor: wait; }

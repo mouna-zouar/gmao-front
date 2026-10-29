@@ -734,3 +734,39 @@ button.rcx-vital:hover { background: var(--paper); }
   .rcx-bons, .rcx-chat { padding: 16px 12px; border-radius: 20px; }
   .rcx-chat .bch { height: 70dvh; }
 }
+
+/* ============================================================
+   VERSION ÉPURÉE (styles communs dans bonmaintenance/BmdEpure.css)
+   ============================================================ */
+.rcz-page { max-width: none; margin: 0; }
+.rcz-description {
+  margin: 0 0 12px; padding: 10px 12px; border-radius: 10px;
+  background: var(--z-fond); border: 1px solid var(--z-trait);
+  font-size: 14px; line-height: 1.5; color: var(--z-encre);
+  max-height: 9.5em; overflow-y: auto; white-space: pre-wrap;
+}
+.rcz-rejet { display: flex; gap: 8px; align-items: flex-start; margin: 0 0 12px; font-size: 13px; color: var(--z-alerte); }
+.rcz-rejet svg { flex-shrink: 0; margin-top: 2px; }
+.rcz-large { grid-column: 1 / -1; }
+.rcz-carte-tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.rcz-carte-tete .bmz-carte-titre { margin: 0; }
+.rcz-btn-petit { padding: 4px 9px; font-size: 12px; }
+.rcz-bons { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.rcz-vide p { margin: 0 0 10px; font-size: 13.5px; color: var(--z-doux); }
+.rcz-bons-liste { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.rcz-bon {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px; border-radius: 10px; border: 1px solid var(--z-trait); background: var(--z-carte);
+  font: inherit; text-align: start; cursor: pointer; color: var(--z-texte);
+}
+.rcz-bon:hover { border-color: var(--z-accent); background: var(--z-accent-pale); }
+.rcz-bon-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.rcz-bon-num { font-size: 13.5px; font-weight: 700; color: var(--z-encre); }
+.rcz-bon-titre { font-size: 12.5px; color: var(--z-doux); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rcz-chat { display: flex; flex-direction: column; }
+.rcz-chat-aide { font-size: 11.5px; color: var(--z-pale); text-align: end; }
+.rcz-chat-corps { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.rcz-chat-corps > * { flex: 1; min-height: 0; }
+@media (max-width: 1180px) {
+  .rcz-chat { grid-column: 1 / -1; min-height: 480px; }
+}

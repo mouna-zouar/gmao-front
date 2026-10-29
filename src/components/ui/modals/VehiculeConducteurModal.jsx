@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../Button';
-import vehiculeService from '../../../services/vehiculeService';
+import { commePage, obtenirVehicules } from '../../../store/referentiels';
 import personnelService from '../../../services/personnelService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
 import {
@@ -67,7 +67,7 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
     const fetchVehicules = async () => {
       setLoadingVehicules(true);
       try {
-        const page = await vehiculeService.getAll(0, 200);
+        const page = await obtenirVehicules().then(commePage);
         setVehicules(page.content ?? []);
       } catch (err) {
         console.error('Erreur chargement véhicules :', err);

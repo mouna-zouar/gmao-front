@@ -5,7 +5,9 @@ import {
   ChevronLeft, ChevronRight, ArrowLeft, Printer, FileText, Gauge,
   Info, Activity, History as HistoryIcon, Wallet, ChartColumn, Download, Search, SquarePen, Trash2 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
+import { PastillesStats } from '../../../commun';
 import vehiculeService from '../../../../services/vehiculeService';
+import { commePage, obtenirVehicules } from '../../../../store/referentiels';
 import vehiculeMaintenanceService from '../../../../services/vehiculeMaintenanceService';
 import VehiculeMaintenancePanel from './VehiculeMaintenancePanel';
 import VehiculeModal from '../../../ui/modals/VehiculeModal';
@@ -27,6 +29,7 @@ import { criticiteLabel, criticiteColor } from '../../../../constants/Criticite'
 import { t, tp, locale } from '../../../../i18n';
 import { imprimerListe, imprimerFiche } from '../../../../utils/imprimerListe';
 import './VehiculesPage.css';
+import Pagination from '../../../commun/Pagination';
 
 const PAGE_SIZE = 10;
 
@@ -135,7 +138,7 @@ export default function VehiculesPage() {
     setLoading(true);
     setError(null);
     try {
-      const page = await vehiculeService.getAll(0, 100);
+      const page = await obtenirVehicules().then(commePage);
       setVehicules(page.content ?? []);
     } catch (err) {
       console.error(err);
@@ -868,53 +871,20 @@ export default function VehiculesPage() {
             <h2>{t("Véhicules")}</h2>
           </div>
         </div>
-        <span className="vehicules-badge-total">{t("Total :")} {filteredVehicules.length}</span>
+        {/* Statistiques du parc : pastilles dans l'en-tête */}
+        <PastillesStats
+          ariaLabel={t('Véhicules par état')}
+          stats={[
+            { cle: 'total', label: t('Véhicules au total'), valeur: stats.total, icone: Truck },
+            { cle: 'service', label: t('En service'), valeur: stats.enService, ton: 'vert', icone: ShieldCheck },
+            { cle: 'maintenance', label: t('En maintenance'), valeur: stats.enMaintenance, ton: 'orange', icone: HardHat },
+            { cle: 'alerte', label: t('Alertes actives'), valeur: stats.enAlerte, ton: 'rouge', icone: AlertOctagon, alerte: stats.enAlerte > 0 },
+          ]}
+        />
       </div>
 
       {/* Coûts du parc (année en cours) : carburant, entretien, incidents, amendes, frais fixes */}
       <CoutsParcResume version={coutsVersion} onOuvrir={() => setCoutsOpen(true)} />
-
-      <div className="vehicules-kpi-grid">
-        <div className="vehicules-kpi-card kpi-total">
-          <div className="vehicules-kpi-icon">
-            <Truck size={20} strokeWidth={2.2} />
-          </div>
-          <div className="vehicules-kpi-body">
-            <span className="vehicules-kpi-value">{stats.total}</span>
-            <span className="vehicules-kpi-label">{t("Véhicules au total")}</span>
-          </div>
-        </div>
-
-        <div className="vehicules-kpi-card kpi-service">
-          <div className="vehicules-kpi-icon">
-            <ShieldCheck size={20} strokeWidth={2.2} />
-          </div>
-          <div className="vehicules-kpi-body">
-            <span className="vehicules-kpi-value">{stats.enService}</span>
-            <span className="vehicules-kpi-label">{t("En service")}</span>
-          </div>
-        </div>
-
-        <div className="vehicules-kpi-card kpi-maintenance">
-          <div className="vehicules-kpi-icon">
-            <HardHat size={20} strokeWidth={2.2} />
-          </div>
-          <div className="vehicules-kpi-body">
-            <span className="vehicules-kpi-value">{stats.enMaintenance}</span>
-            <span className="vehicules-kpi-label">{t("En maintenance")}</span>
-          </div>
-        </div>
-
-        <div className="vehicules-kpi-card kpi-alerte">
-          <div className="vehicules-kpi-icon">
-            <AlertOctagon size={20} strokeWidth={2.2} />
-          </div>
-          <div className="vehicules-kpi-body">
-            <span className="vehicules-kpi-value">{stats.enAlerte}</span>
-            <span className="vehicules-kpi-label">{t("Alertes actives")}</span>
-          </div>
-        </div>
-      </div>
 
       <div className="vehicules-actions-bar">
         <button className="vehicules-action-btn ajouter" onClick={openCreate}>
@@ -1101,60 +1071,7 @@ export default function VehiculesPage() {
           </tbody>
         </table>
 
-        <div className="table-footer-pagination">
-          <div className="pagination-left">
-            {tp('véhicule', filteredVehicules.length)}
-            {' — '}
-            {filteredVehicules.length > 0
-              ? t('{de}–{a} affichés', {
-                  de: (currentPageSafe - 1) * PAGE_SIZE + 1,
-                  a: Math.min(currentPageSafe * PAGE_SIZE, filteredVehicules.length),
-                })
-              : t('Page {p} sur {total}', { p: 1, total: 1 })}
-          </div>
-
-          <div className="pagination-right">
-            <button
-              type="button"
-              className="pag-btn"
-              disabled={currentPageSafe <= 1}
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              title={t("Page précédente")}
-              aria-label={t("Page précédente")}
-            >
-              <ChevronLeft size={14} className="rtl-miroir" />
-            </button>
-
-            {getPageNumbers(currentPageSafe, totalPages).map((p, i) =>
-              p === '...' ? (
-                <span key={`ellipsis-${i}`} className="pag-ellipsis">
-                  …
-                </span>
-              ) : (
-                <button
-                  key={p}
-                  type="button"
-                  className={`pag-btn ${p === currentPageSafe ? 'active' : ''}`}
-                  onClick={() => setCurrentPage(p)}
-                  disabled={totalPages <= 1}
-                >
-                  {p}
-                </button>
-              )
-            )}
-
-            <button
-              type="button"
-              className="pag-btn"
-              disabled={currentPageSafe >= totalPages || totalPages <= 1}
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              title={t("Page suivante")}
-              aria-label={t("Page suivante")}
-            >
-              <ChevronRight size={14} className="rtl-miroir" />
-            </button>
-          </div>
-        </div>
+        <Pagination base={1} page={currentPageSafe} taille={PAGE_SIZE} total={filteredVehicules.length} onPage={setCurrentPage} />
       </div>
 
       {settingsOpen && (

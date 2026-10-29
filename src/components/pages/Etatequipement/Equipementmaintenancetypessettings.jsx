@@ -21,7 +21,7 @@ import {
   Boxes,
 } from 'lucide-react';
 import equipementMaintenanceService from '../../../services/equipementMaintenanceService';
-import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
+import { commePage, obtenirEquipements } from '../../../store/referentiels';
 import { t, locale } from '../../../i18n';
 // Réutilise le style du panneau équivalent du Parc automobile (classes mtp-*
 // génériques, sans rien de spécifique au kilométrage).
@@ -201,7 +201,7 @@ export default function EquipementMaintenanceTypesSettings() {
   useEffect(() => {
     let active = true;
     // Assez large pour cocher des équipements dans tout le parc (la recherche se fait dans la liste)
-    lotArticleImmobilistationService.getAll(0, 2000)
+    obtenirEquipements().then(commePage)
       .then((page) => {
         if (!active) return;
         const data = page?.content ?? page?.data ?? page ?? [];

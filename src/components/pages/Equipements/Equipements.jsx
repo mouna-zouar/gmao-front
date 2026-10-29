@@ -7,13 +7,14 @@ import { imprimerEtiquettes } from './qrEtiquettes';
 import { CRITICITES, ETATS_EQUIPEMENT, garantieEnClair } from './equipementLibelles';
 import { t, tp } from '../../../i18n';
 import './Equipements.css';
+import Pagination from '../../commun/Pagination';
 
 /*
  * Page « Équipements » : rechercher un appareil, ouvrir sa fiche, scanner son QR code
  * et imprimer des étiquettes QR (une planche A4 pour plusieurs appareils).
  */
 
-const TAILLE_PAGE = 30;
+const TAILLE_PAGE = 10;
 
 function Pastille({ ton = 'neutre', children }) {
   return <span className={`eq-pastille eq-ton--${ton}`}>{children}</span>;
@@ -145,17 +146,7 @@ export default function Equipements({ isModal = false }) {
           })}
         </ul>
 
-        {nbPages > 1 && (
-          <nav className="eq-pagination" aria-label={t('Pages')}>
-            <button type="button" className="eq-ico" disabled={page === 0 || chargement} onClick={() => changerPage(page - 1)} aria-label={t('Page précédente')}>
-              <ChevronLeft size={18} className="rtl-miroir" />
-            </button>
-            <span>{t('Page {n} sur {total}', { n: page + 1, total: nbPages })}</span>
-            <button type="button" className="eq-ico" disabled={page + 1 >= nbPages || chargement} onClick={() => changerPage(page + 1)} aria-label={t('Page suivante')}>
-              <ChevronRight size={18} className="rtl-miroir" />
-            </button>
-          </nav>
-        )}
+        <Pagination page={page} taille={TAILLE_PAGE} total={total} nbPages={nbPages} onPage={changerPage} desactive={chargement} masquerSiUnePage />
       </section>
 
       <p className="eq-astuce">

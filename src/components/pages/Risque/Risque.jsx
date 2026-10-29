@@ -3,6 +3,7 @@ import risqueService from '../../../services/Risqueservice';
 import { t, tp, locale } from '../../../i18n';
 import { Inbox, LoaderCircle, Minus, RefreshCw, Search, ShieldAlert, TrendingDown, TrendingUp, TriangleAlert } from 'lucide-react';
 import './Risque.css';
+import PaginationCommune from '../../commun/Pagination';
 
 /* ---------- Config ---------- */
 const NIVEAU_LABELS = {
@@ -26,7 +27,7 @@ const LIMITES = [
 ];
 
 /* ---------- Pagination ---------- */
-const TAILLES_PAGE = [10, 20, 50, 100];
+const TAILLES_PAGE = [10, 25, 50, 100];
 const TAILLE_PAGE_DEFAUT = 10;
 
 /* ---------- Utils ---------- */
@@ -99,95 +100,12 @@ const TENDANCE_LABEL = { HAUSSE: 'En hausse', BAISSE: 'En baisse', STABLE: 'Stab
 const TENDANCE_CLASS = { HAUSSE: 'hausse', BAISSE: 'baisse', STABLE: 'stable' };
 
 /* ---------- Pagination : construction des pages ---------- */
-function construirePages(pageActuelle, totalPages) {
-  const pages = [];
-  const ajouter = (v) => { if (!pages.includes(v)) pages.push(v); };
 
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) ajouter(i);
-    return pages;
-  }
-
-  ajouter(1);
-  if (pageActuelle > 3) ajouter('…');
-  for (let i = Math.max(2, pageActuelle - 1); i <= Math.min(totalPages - 1, pageActuelle + 1); i++) {
-    ajouter(i);
-  }
-  if (pageActuelle < totalPages - 2) ajouter('…');
-  ajouter(totalPages);
-  return pages;
-}
-
-function Pagination({
-  page, totalPages, totalItems, taillePage,
-  onChangePage, onChangeTaille,
-}) {
-  if (totalPages <= 1 && totalItems <= TAILLES_PAGE[0]) return null;
-
-  const pages = construirePages(page, totalPages);
-
+/* Pagination : composant commun (même style dans toute la GMAO) */
+function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille }) {
   return (
-    <div className="risque-pagination">
-      <div className="risque-pagination__left">
-        <span className="risque-pagination__info">
-          {t("Page")} <strong>{page}</strong> {t("sur")} <strong>{totalPages}</strong>
-          {' · '}<span className="risque-pagination__count">{tp('équipement', totalItems)}</span>
-        </span>
-      </div>
-
-      <div className="risque-pagination__center">
-        <button
-          type="button"
-          className="risque-pagination__btn risque-pagination__btn--nav"
-          onClick={() => onChangePage(page - 1)}
-          disabled={page <= 1}
-          aria-label={t("Page précédente")}
-        >
-          <span className="rtl-miroir"><IconChevron direction="left" /></span>
-        </button>
-
-        {pages.map((p, idx) =>
-          p === '…' ? (
-            <span key={`ellipsis-${idx}`} className="risque-pagination__ellipsis">…</span>
-          ) : (
-            <button
-              key={p}
-              type="button"
-              className={`risque-pagination__btn ${p === page ? 'is-active' : ''}`}
-              onClick={() => onChangePage(p)}
-              aria-current={p === page ? 'page' : undefined}
-            >
-              {p}
-            </button>
-          )
-        )}
-
-        <button
-          type="button"
-          className="risque-pagination__btn risque-pagination__btn--nav"
-          onClick={() => onChangePage(page + 1)}
-          disabled={page >= totalPages}
-          aria-label={t("Page suivante")}
-        >
-          <span className="rtl-miroir"><IconChevron direction="right" /></span>
-        </button>
-      </div>
-
-      <div className="risque-pagination__right">
-        <label className="risque-pagination__size">
-          <span>{t("Par page")}</span>
-          <select
-            value={taillePage}
-            onChange={(e) => onChangeTaille(Number(e.target.value))}
-            className="risque-pagination__select"
-          >
-            {TAILLES_PAGE.map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-    </div>
+    <PaginationCommune base={1} page={page} taille={taillePage} total={totalItems}
+      onPage={onChangePage} onTaille={onChangeTaille} tailles={TAILLES_PAGE} />
   );
 }
 

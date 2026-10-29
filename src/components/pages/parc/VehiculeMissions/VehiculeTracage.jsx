@@ -6,11 +6,10 @@ import {
   Wrench, Play, Flag, TrendingUp, Timer, Zap, Target, Circle,
 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import vehiculeService from '../../../../services/vehiculeService';
+import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../../store/referentiels';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
 import personnelService from '../../../../services/personnelService';
-import emplacementService from '../../../../services/emplacementService';
 import { t, tp, locale } from '../../../../i18n';
 import './VehiculeTracage.css';
 
@@ -122,9 +121,9 @@ export default function VehiculeTracage({
       setError(null);
       try {
         const [vehPage, persPage, empPage] = await Promise.all([
-          vehiculeService.getAll(0, 500),
+          obtenirVehicules().then(commePage),
           personnelService.getAll(0, 500),
-          emplacementService.getAll(0, 500).catch(() => ({ content: [] })),
+          obtenirEmplacements().then(commePage).catch(() => ({ content: [] })),
         ]);
         setVehicules(vehPage.content ?? []);
 

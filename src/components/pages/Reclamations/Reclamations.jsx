@@ -26,6 +26,7 @@ import {
   Info
 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
+import { PastillesStats } from '../../commun';
 import reclamationService from '../../../services/reclamationService';
 import ReclamationModal from '../../ui/modals/ReclamationModal';
 import ReclamationDetails from './ReclamationDetails';
@@ -49,6 +50,7 @@ import { useVueActive } from '../../ui/Listes/stockageVues';
 import { contexteUtilisateur, vuesReclamations } from '../../ui/Listes/vuesMetier';
 import './Reclamations.css';
 import './ReclamationsStats.css';
+import Pagination from '../../commun/Pagination';
 
 // Barre de statistiques : un compteur par état, mêmes couleurs et icônes que les pastilles
 const ETATS_STATS = optionsStatut('reclamation');
@@ -695,7 +697,6 @@ export default function Reclamations() {
           </div>
         </div>
         <div className="reclamations-header-stats">
-          <span className="reclamations-badge-total">{t("Total :")} {filteredReclamations.length}</span>
           <button
             type="button"
             className={`reclamations-toggle-stats ${showStats ? 'is-actif' : ''}`}
@@ -707,39 +708,27 @@ export default function Reclamations() {
             <BarChart3 size={18} />
           </button>
         </div>
-      </div>
 
-      {showStats && (
-        <div className="reclamations-stats-bar" role="group" aria-label={t('Réclamations par état')}>
-          {ETATS_STATS.map((option) => {
-            const count = etatStats[option.valeur] || 0;
-            const total = reclamations.length || 1;
-            const percentage = Math.round((count / total) * 100);
-            const valeur = String(option.valeur);
-            const isActive = etatFilter === valeur;
-            const couleur = TONS[option.ton].couleur;
-            const Icone = option.Icone;
-            return (
-              <button
-                type="button"
-                key={valeur}
-                className={`reclamations-stat-item ${isActive ? 'active' : ''}`}
-                onClick={() => setEtatFilter(isActive ? 'all' : valeur)}
-                style={{ '--stat-color': couleur }}
-                aria-pressed={isActive}
-                title={isActive ? t('Retirer le filtre « {etat} »', { etat: t(option.libelle) }) : t('Afficher seulement : {etat}', { etat: t(option.libelle) })}
-              >
-                <Icone size={18} style={{ color: couleur }} aria-hidden="true" />
-                <span className="reclamations-stat-label">{t(option.libelle)}</span>
-                <span className="reclamations-stat-count">{loading ? '…' : count}</span>
-                <span className="reclamations-stat-bar-bg" aria-hidden="true">
-                  <span className="reclamations-stat-bar-fill" style={{ width: `${percentage}%`, backgroundColor: couleur }} />
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+        {/* Statistiques par état : pastilles cliquables (filtre) */}
+        {showStats && (
+          <PastillesStats
+            ariaLabel={t('Réclamations par état')}
+            stats={[
+              { cle: 'all', label: t('Total'), valeur: loading ? '…' : reclamations.length, actif: etatFilter === 'all', onClick: () => setEtatFilter('all'), aide: t('Tous les états') },
+              ...ETATS_STATS.map((option) => {
+                const valeur = String(option.valeur);
+                const actif = etatFilter === valeur;
+                return {
+                  cle: valeur, label: t(option.libelle), valeur: loading ? '…' : (etatStats[option.valeur] || 0),
+                  couleur: TONS[option.ton].couleur, icone: option.Icone, actif,
+                  onClick: () => setEtatFilter(actif ? 'all' : valeur),
+                  aide: actif ? t('Retirer le filtre « {etat} »', { etat: t(option.libelle) }) : t('Afficher seulement : {etat}', { etat: t(option.libelle) }),
+                };
+              }),
+            ]}
+          />
+        )}
+      </div>
 
       <div className="reclamations-actions-bar">
         <button className="reclamations-action-btn ajouter" onClick={openCreate}>
@@ -969,45 +958,7 @@ export default function Reclamations() {
           : t('Aucune réclamation ne correspond à ces filtres.'))}
       />
 
-      {!loading && filteredReclamations.length > 0 && (
-        <div className="reclamations-pagination">
-          <span className="reclamations-pagination-info">
-            {filteredReclamations.length} {t("résultat")}{filteredReclamations.length > 1 ? 's' : ''}
-            {t(" — page ")}{currentPage}{' / '}{totalPages}
-          </span>
-
-          <div className="reclamations-pagination-controls">
-            <button
-              type="button"
-              className="reclamations-pagination-btn"
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft size={16} />
-            </button>
-
-            {paginationRange.map((p) => (
-              <button
-                key={p}
-                type="button"
-                className={`reclamations-pagination-btn ${p === currentPage ? 'active' : ''}`}
-                onClick={() => goToPage(p)}
-              >
-                {p}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              className="reclamations-pagination-btn"
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      {!loading && <Pagination base={1} page={currentPage} taille={pageSize} total={filteredReclamations.length} onPage={goToPage} />}
     </div>
     )}
 

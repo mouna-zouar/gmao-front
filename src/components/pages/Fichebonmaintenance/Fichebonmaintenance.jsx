@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
 import personnelService from '../../../services/personnelService';
-import prestataireService from '../../../services/prestataireService';
+import { obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
 import lotArticleService from '../../../services/lotArticleService';
 import serviceService from '../../../services/Serviceservice';
@@ -124,8 +124,8 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
   const currentBonId = bon?.id ?? bonMaintenanceId ?? null;
 
   useEffect(() => {
-    prestataireService.getAll(0, 200).then((p) => setPrestataires(p.content ?? [])).catch(() => setPrestataires([]));
-    lotArticleImmobilistationService.getAll(0, 200).then((p) => setImmobilisations(p.content ?? [])).catch(() => setImmobilisations([]));
+    obtenirPrestataires().then(setPrestataires).catch(() => setPrestataires([]));
+    obtenirEquipements().then(setImmobilisations).catch(() => setImmobilisations([]));
     personnelService.getAll(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(() => setPersonnels([]));
     serviceService.getAll(0, 200).then((p) => setServices(p.content ?? [])).catch(() => setServices([]));
     prestataireDepotService.getAll(0, 200).then((p) => setDepots(p.content ?? [])).catch(() => setDepots([]));

@@ -4,6 +4,7 @@ import coutService from '../../../services/coutService';
 import { prioriteLabel } from '../../../constants/Priorite';
 import { ChevronLeft, ChevronRight, CircleDollarSign, FileSpreadsheet, Inbox, LoaderCircle, Package, RefreshCw, Search, TriangleAlert, Truck, Wallet, Wrench } from 'lucide-react';
 import './Cout.css';
+import Pagination from '../../commun/Pagination';
 
 /* ---------- Config ---------- */
 const PERIODES = [
@@ -15,8 +16,8 @@ const PERIODES = [
 
 const MOIS_COURTS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
-const PAGE_SIZE = 5;
-const EQUIP_PAGE_SIZE = 5;
+const PAGE_SIZE = 10;
+const EQUIP_PAGE_SIZE = 10;
 
 /* ---------- Chart (SVG) ---------- */
 const CHART = {
@@ -589,74 +590,7 @@ export default function Cout() {
                 ))}
               </ul>
 
-              {equipTotalPages > 1 && (
-                <div className="cout-equip-pagination">
-                  <span className="cout-equip-pagination__info">
-                    {equipDebut}–{equipFin} sur {topEquipements.length}
-                  </span>
-
-                  <div className="cout-equip-pagination__controls">
-                    <button
-                      type="button"
-                      className="cout-pagination__btn"
-                      onClick={() => goToEquipPage(equipPage - 1)}
-                      disabled={equipPage === 1}
-                      title="Page précédente"
-                    >
-                      <IconChevronLeft />
-                    </button>
-
-                    {equipPaginationRange[0] > 1 && (
-                      <>
-                        <button
-                          type="button"
-                          className={`cout-pagination__btn ${equipPage === 1 ? 'active' : ''}`}
-                          onClick={() => goToEquipPage(1)}
-                        >
-                          1
-                        </button>
-                        {equipPaginationRange[0] > 2 && <span className="cout-pagination__ellipsis">…</span>}
-                      </>
-                    )}
-
-                    {equipPaginationRange.map((p) => (
-                      <button
-                        key={p}
-                        type="button"
-                        className={`cout-pagination__btn ${p === equipPage ? 'active' : ''}`}
-                        onClick={() => goToEquipPage(p)}
-                      >
-                        {p}
-                      </button>
-                    ))}
-
-                    {equipPaginationRange[equipPaginationRange.length - 1] < equipTotalPages && (
-                      <>
-                        {equipPaginationRange[equipPaginationRange.length - 1] < equipTotalPages - 1 && (
-                          <span className="cout-pagination__ellipsis">…</span>
-                        )}
-                        <button
-                          type="button"
-                          className={`cout-pagination__btn ${equipPage === equipTotalPages ? 'active' : ''}`}
-                          onClick={() => goToEquipPage(equipTotalPages)}
-                        >
-                          {equipTotalPages}
-                        </button>
-                      </>
-                    )}
-
-                    <button
-                      type="button"
-                      className="cout-pagination__btn"
-                      onClick={() => goToEquipPage(equipPage + 1)}
-                      disabled={equipPage === equipTotalPages}
-                      title="Page suivante"
-                    >
-                      <IconChevronRight />
-                    </button>
-                  </div>
-                </div>
-              )}
+              <Pagination base={1} page={equipPage} taille={EQUIP_PAGE_SIZE} total={topEquipements.length} onPage={goToEquipPage} masquerSiUnePage />
             </div>
           )}
         </section>
@@ -731,74 +665,7 @@ export default function Cout() {
             ))}
           </ul>
 
-          {totalPages > 1 && (
-            <div className="cout-pagination">
-              <span className="cout-pagination__info">
-                {debut}–{fin} sur {bonsAffiches.length} bon{bonsAffiches.length > 1 ? 's' : ''}
-              </span>
-
-              <div className="cout-pagination__controls">
-                <button
-                  type="button"
-                  className="cout-pagination__btn"
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  title="Page précédente"
-                >
-                  <IconChevronLeft />
-                </button>
-
-                {paginationRange[0] > 1 && (
-                  <>
-                    <button
-                      type="button"
-                      className={`cout-pagination__btn ${currentPage === 1 ? 'active' : ''}`}
-                      onClick={() => goToPage(1)}
-                    >
-                      1
-                    </button>
-                    {paginationRange[0] > 2 && <span className="cout-pagination__ellipsis">…</span>}
-                  </>
-                )}
-
-                {paginationRange.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    className={`cout-pagination__btn ${p === currentPage ? 'active' : ''}`}
-                    onClick={() => goToPage(p)}
-                  >
-                    {p}
-                  </button>
-                ))}
-
-                {paginationRange[paginationRange.length - 1] < totalPages && (
-                  <>
-                    {paginationRange[paginationRange.length - 1] < totalPages - 1 && (
-                      <span className="cout-pagination__ellipsis">…</span>
-                    )}
-                    <button
-                      type="button"
-                      className={`cout-pagination__btn ${currentPage === totalPages ? 'active' : ''}`}
-                      onClick={() => goToPage(totalPages)}
-                    >
-                      {totalPages}
-                    </button>
-                  </>
-                )}
-
-                <button
-                  type="button"
-                  className="cout-pagination__btn"
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  title="Page suivante"
-                >
-                  <IconChevronRight />
-                </button>
-              </div>
-            </div>
-          )}
+          <Pagination base={1} page={currentPage} taille={PAGE_SIZE} total={bonsAffiches.length} onPage={goToPage} masquerSiUnePage />
         </>
       )}
     </div>

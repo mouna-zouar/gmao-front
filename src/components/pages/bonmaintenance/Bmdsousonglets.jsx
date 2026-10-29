@@ -22,6 +22,7 @@ import {
   CheckCircle,
   XCircle,
   Power,
+  X,
 } from 'lucide-react';
 import {
   BmfFormulaire,
@@ -43,11 +44,10 @@ import bonMaintenanceDiagnosticService from '../../../services/Bonmaintenancedia
 import bonMaintenanceControleEquipementService from '../../../services/bonMaintenanceControleEquipementService';
 import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenanceRemiseEnServiceService';
 import personnelService from '../../../services/Personnelservice';
-import prestataireService from '../../../services/prestataireService';
+import { obtenirArticles, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../services/lotArticleService';
 import pieceLigneService from '../../../services/PieceLigneService';
-import prestataireArticleService from '../../../services/prestataireArticleService';
 import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 
@@ -73,6 +73,7 @@ import {
   libelleActionHistoriqueIntervenant,
 } from './bmdShared';
 import { t } from '../../../i18n';
+import { TempsPasse, totalTemps, formatTemps, tempsPasse, useMaintenant, TACHE_EN_COURS, INTERVENANT_EN_COURS } from './TempsPasse';
 
 // ------------------------------------------------------------
 // Constantes d'affichage
@@ -105,7 +106,7 @@ const PanelHeader = ({ titre, count, extra, showForm, onToggle, labelAjout }) =>
       {extra}
     </div>
     <button className="bmd-add-btn" onClick={onToggle}>
-      <Plus size={16} />
+      {showForm ? <X size={16} /> : <Plus size={16} />}
       {showForm ? t("Annuler") : t(labelAjout)}
     </button>
   </div>
@@ -251,11 +252,11 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
 
   useEffect(() => {
     personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
-    lotArticleImmobilistationService.getAll(0, 200).then((p) => setImmobilisations(p.content ?? [])).catch(console.error);
+    obtenirEquipements().then(setImmobilisations).catch(console.error);
     bonMaintenancePieceImmoService.findByBonMaintenanceId(bonMaintenanceId).then((data) => setPiecesImmo(data ?? [])).catch(console.error);
     // Articles du prestataire de catégorie 15 (id = prestataireArticlesId)
-    prestataireArticleService.getMaintenance().then(setArticles).catch(console.error);
-    prestataireService.getAll(0, 200).then((p) => setPrestataires(p.content ?? [])).catch(console.error);
+    obtenirArticles().then(setArticles).catch(console.error);
+    obtenirPrestataires().then(setPrestataires).catch(console.error);
   }, [bonMaintenanceId]);
 
   const handleAdd = async (e) => {
@@ -671,6 +672,9 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
   const [editingId, setEditingId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
+  // Temps passé : rafraîchi toutes les 30 s tant qu'une tâche est en cours
+  const maintenantT = useMaintenant(taches.some((x) => tempsPasse(x, TACHE_EN_COURS)?.enCours));
+  const tempsTotalTaches = totalTemps(taches, TACHE_EN_COURS, maintenantT);
 
   const [tacheQteDisponible, setTacheQteDisponible] = useState(null);
   const [checkingTacheQte, setCheckingTacheQte] = useState(false);
@@ -692,8 +696,8 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
 
   useEffect(() => {
     // Articles du prestataire de catégorie 15 (id = prestataireArticlesId)
-    prestataireArticleService.getMaintenance().then(setArticles).catch(console.error);
-    prestataireService.getAll(0, 200).then((p) => setPrestataires(p.content ?? [])).catch(console.error);
+    obtenirArticles().then(setArticles).catch(console.error);
+    obtenirPrestataires().then(setPrestataires).catch(console.error);
     bonMaintenanceIntervenantService.getByBonMaintenance(bonMaintenanceId)
       .then((data) => setIntervenants(data ?? []))
       .catch(console.error);
@@ -851,6 +855,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
             { label: t("État"), value: tache.etat != null ? (TACHE_ETAT_LABELS[tache.etat] || tache.etat) : null },
             { label: t("Intervenant"), value: tache.intervenantId != null ? (nomIntervenantAffiche(intervenant) || `#${tache.intervenantId}`) : null },
             { label: t("Sous-traitant"), value: libelleSousTraitant(tache) },
+            { label: t("Temps passé"), value: <TempsPasse objet={tache} etatEnCours={TACHE_EN_COURS} maintenant={maintenantT} /> },
           ]}
           sections={[
             {
@@ -877,6 +882,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
                     { label: t("Début d'intervention"), value: formatDateTime(tache.dateDebutIntervention) },
                     { label: t("Fin d'intervention"), value: formatDateTime(tache.dateFinIntervention) },
                     { label: t("Durée réelle"), value: dureeEntre(tache.dateDebutIntervention, tache.dateFinIntervention) },
+                    { label: t("Temps passé (pauses déduites)"), value: <TempsPasse objet={tache} etatEnCours={TACHE_EN_COURS} maintenant={maintenantT} /> },
                   ]}
                 />
               ) : (
@@ -927,6 +933,11 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
       render: (tache) => (tache.etat != null ? <Pill tone={TACHE_ETAT_TONE[tache.etat]}>{TACHE_ETAT_LABELS[tache.etat] || tache.etat}</Pill> : null),
     },
     {
+      key: 'temps',
+      label: t("Temps passé"),
+      render: (tache) => <TempsPasse objet={tache} etatEnCours={TACHE_EN_COURS} maintenant={maintenantT} vide={null} />,
+    },
+    {
       key: 'planifie',
       label: t("Planifié"),
       render: (tache) => ((tache.dateDebut || tache.dateFin)
@@ -952,6 +963,11 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
       <PanelHeader
         titre={t("Tâches")}
         count={taches.length}
+        extra={tempsTotalTaches && (
+          <span className="bmd-panel-cout-total bmd-temps-total" title={t("Somme du temps passé sur toutes les tâches")}>
+            {t("Temps passé :")} {formatTemps(tempsTotalTaches.secondes)}
+          </span>
+        )}
         showForm={showForm}
         onToggle={() => (showForm ? resetForm() : setShowForm(true))}
         labelAjout="Ajouter une tâche"
@@ -1127,6 +1143,9 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
   const [loadingHistoId, setLoadingHistoId] = useState(null);
   const [savingEtatId, setSavingEtatId] = useState(null);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
+  // Temps passé : rafraîchi toutes les 30 s tant qu'un intervenant est en cours
+  const maintenantI = useMaintenant(intervenants.some((x) => tempsPasse(x, INTERVENANT_EN_COURS)?.enCours));
+  const tempsTotalIntervenants = totalTemps(intervenants, INTERVENANT_EN_COURS, maintenantI);
 
   const load = async () => {
     setLoading(true);
@@ -1146,7 +1165,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
   useEffect(() => {
     if (!showForm) return;
     personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
-    prestataireService.getAll(0, 200).then((p) => setPrestataires(p.content ?? [])).catch(console.error);
+    obtenirPrestataires().then(setPrestataires).catch(console.error);
   }, [showForm]);
 
   const chargerHistorique = async (intervenantId) => {
@@ -1342,6 +1361,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
             { label: t("Fin"), value: formatDateTime(i.dateFinIntervention) },
             { label: t("Durée"), value: dureeEntre(i.dateDebutIntervention, i.dateFinIntervention) },
             { label: t("Heures saisies"), value: i.nbrHeure != null ? `${i.nbrHeure} h` : null },
+            { label: t("Temps passé"), value: <TempsPasse objet={i} etatEnCours={INTERVENANT_EN_COURS} maintenant={maintenantI} /> },
           ]}
           sections={[
             {
@@ -1411,7 +1431,12 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
         ? <span className="bmd-cell-nowrap">{formatDateTime(i.dateDebutIntervention)} → {formatDateTime(i.dateFinIntervention)}</span>
         : null),
     },
-    { key: 'heures', label: t("Heures"), align: 'right', render: (i) => (i.nbrHeure != null ? `${i.nbrHeure} h` : null) },
+    {
+      key: 'temps',
+      label: t("Temps passé"),
+      render: (i) => <TempsPasse objet={i} etatEnCours={INTERVENANT_EN_COURS} maintenant={maintenantI} vide={null} />,
+    },
+    { key: 'heures', label: t("Heures saisies"), align: 'right', render: (i) => (i.nbrHeure != null ? `${i.nbrHeure} h` : null) },
     {
       key: 'cout',
       label: t("Coût total"),
@@ -1425,7 +1450,16 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
       <PanelHeader
         titre={t("Intervenants")}
         count={intervenants.length}
-        extra={coutTotal > 0 && <span className="bmd-panel-cout-total">{t("Total :")} {formatMontant(coutTotal)}</span>}
+        extra={(coutTotal > 0 || tempsTotalIntervenants) && (
+          <>
+            {tempsTotalIntervenants && (
+              <span className="bmd-panel-cout-total bmd-temps-total" title={t("Somme du temps passé par tous les intervenants")}>
+                {t("Temps passé :")} {formatTemps(tempsTotalIntervenants.secondes)}
+              </span>
+            )}
+            {coutTotal > 0 && <span className="bmd-panel-cout-total">{t("Total :")} {formatMontant(coutTotal)}</span>}
+          </>
+        )}
         showForm={showForm}
         onToggle={() => (showForm ? fermerForm() : (setForm(emptyIntervenantForm), setEditingId(null), setShowForm(true)))}
         labelAjout="Ajouter un intervenant"
@@ -1606,7 +1640,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
 
   useEffect(() => {
     personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
-    lotArticleImmobilistationService.getAll(0, 200).then((p) => setImmobilisations(p.content ?? [])).catch(console.error);
+    obtenirEquipements().then(setImmobilisations).catch(console.error);
   }, []);
 
   const handleAdd = async (e) => {
@@ -1953,7 +1987,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
 
   useEffect(() => {
     personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
-    lotArticleImmobilistationService.getAll(0, 200).then((p) => setImmobilisations(p.content ?? [])).catch(console.error);
+    obtenirEquipements().then(setImmobilisations).catch(console.error);
   }, []);
 
   const handleAdd = async (e) => {

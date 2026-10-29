@@ -83,6 +83,11 @@ import rcaCapaService from '../../../services/rcaCapaService';
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
 import personnelService from '../../../services/Personnelservice';
 import prestataireService from '../../../services/prestataireService';
+import { obtenirPrestataires } from '../../../store/referentiels';
+import parametreService from '../../../services/parametreService';
+import depotCubixService from '../../../services/depotCubixService';
+import authService from '../../../services/Authservice';
+import { imprimerPiece } from '../../../utils/imprimerPiece';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../services/lotArticleService';
 import pieceLigneService from '../../../services/PieceLigneService';
@@ -117,6 +122,7 @@ import {
   nomIntervenantAffiche,
 } from './bmdShared';
 import './BmdPage.css';
+import './BmdEpure.css';
 import RecapImmobilisation from './RecapImmobilisation';
 
 const ETAT = {
@@ -237,7 +243,7 @@ function rcaGlobalClass(analyses) {
 const ETAPES_DEF = [
   { key: 'signale', label: 'Signalé', aide: 'La panne a été déclarée', icon: Flag, rubrique: 'flow' },
   { key: 'diagnostic', label: 'Diagnostic', aide: 'On cherche la cause', icon: Stethoscope, rubrique: 'diagnostic' },
-  { key: 'reparation', label: 'Réparation', aide: 'Les techniciens réparent', icon: Wrench, rubrique: 'intervenants' },
+  { key: 'reparation', label: 'Réparation', aide: 'Les techniciens réparent', icon: Wrench, rubrique: 'reparation' },
   { key: 'controle', label: 'Contrôle', aide: 'On vérifie que tout marche', icon: ShieldCheck, rubrique: 'controle' },
   { key: 'remise', label: 'Remise en service', aide: "L'équipement retourne au service", icon: Power, rubrique: 'remiseEnService' },
   { key: 'cloture', label: 'Clôturé', aide: 'Le dossier est fermé', icon: CheckCircle, rubrique: 'historique' },
@@ -313,15 +319,15 @@ function prochaineAction({ bon, parcours, intervenants }) {
           ton: 'action', icon: Users,
           titre: t("Choisissez qui va réparer"),
           texte: t("Ajoutez un technicien de l’équipe ou un sous-traitant pour cette réparation."),
-          bouton: { label: t("Ajouter un intervenant"), rubrique: 'intervenants', form: true },
+          bouton: { label: t("Ajouter un intervenant"), rubrique: 'reparation', form: true },
         };
       }
       return {
         ton: 'action', icon: Wrench,
         titre: t("La réparation est en cours"),
         texte: t("Quand un intervenant a fini, changez son état en « Terminé ». L’étape suivante se débloque toute seule."),
-        bouton: { label: t("Suivre la réparation"), rubrique: 'intervenants' },
-        secondaire: { label: t("Ajouter un intervenant"), rubrique: 'intervenants', form: true },
+        bouton: { label: t("Suivre la réparation"), rubrique: 'reparation' },
+        secondaire: { label: t("Ajouter un intervenant"), rubrique: 'reparation', form: true },
       };
     case 'controle':
       if (actuelle.probleme) {
@@ -330,7 +336,7 @@ function prochaineAction({ bon, parcours, intervenants }) {
           titre: t("Le contrôle n’est pas bon"),
           texte: t("L’équipement n’a pas passé le dernier contrôle. Faites une nouvelle réparation, puis contrôlez à nouveau."),
           bouton: { label: t("Faire un nouveau contrôle"), rubrique: 'controle', form: true },
-          secondaire: { label: t("Ajouter une réparation"), rubrique: 'intervenants', form: true },
+          secondaire: { label: t("Ajouter une réparation"), rubrique: 'reparation', form: true },
         };
       }
       return {
@@ -448,6 +454,8 @@ const TITRES_TIROIR = {
   rca: { label: 'Cause racine', icon: Search },
 };
 GROUPES_RUBRIQUES.forEach((g) => g.rubriques.forEach((r) => { TITRES_TIROIR[r.key] = r; }));
+// Étape « Réparation » du parcours : les tâches et les intervenants ouverts ensemble, côte à côte
+TITRES_TIROIR.reparation = { label: 'Réparation', aide: 'Étape 1 : les intervenants · Étape 2 : les tâches', icon: Wrench };
 
 const CLE_AIDE = 'bmx-aide-masquee';
 function lireAideMasquee() {
@@ -481,7 +489,7 @@ function Tiroir({ rubrique, onClose, children }) {
   return (
     <div className="bmx-tiroir-fond" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <aside
-        className="bmx-tiroir"
+        className={`bmx-tiroir ${def.large ? 'bmx-tiroir--large' : ''}`}
         role="dialog"
         aria-modal="true"
         aria-label={t(def.label)}
@@ -500,6 +508,51 @@ function Tiroir({ rubrique, onClose, children }) {
         </header>
         <div className="bmx-tiroir-corps">{children}</div>
       </aside>
+    </div>
+  );
+}
+
+// Réparation en deux étapes : 1. les intervenants, 2. les tâches (une seule affichée à la fois)
+const ETAPES_REPARATION = [
+  { key: 'intervenants', label: 'Intervenants', aide: 'Qui répare', icon: Users },
+  { key: 'taches', label: 'Tâches', aide: 'Les travaux à faire', icon: ClipboardList },
+];
+function ReparationEtapes({ intervenants, taches }) {
+  const [etape, setEtape] = useState(0);
+  const contenus = [intervenants, taches];
+  return (
+    <div className="bmx-rep">
+      <ol className="bmx-rep-etapes" role="tablist" aria-label={t('Étapes de la réparation')}>
+        {ETAPES_REPARATION.map((e, i) => {
+          const Icon = e.icon;
+          const etat = i === etape ? 'is-actif' : i < etape ? 'is-passe' : '';
+          return (
+            <li key={e.key} className={`bmx-rep-etape ${etat}`}>
+              <button type="button" role="tab" aria-selected={i === etape} onClick={() => setEtape(i)}>
+                <span className="bmx-rep-num">{i < etape ? <Check size={14} /> : i + 1}</span>
+                <span className="bmx-rep-texte">
+                  <strong><Icon size={15} /> {t(e.label)}</strong>
+                  <small>{t(e.aide)}</small>
+                </span>
+              </button>
+              {i < ETAPES_REPARATION.length - 1 && <span className="bmx-rep-trait" aria-hidden="true" />}
+            </li>
+          );
+        })}
+      </ol>
+      <div className="bmx-rep-contenu" role="tabpanel">{contenus[etape]}</div>
+      <div className="bmx-rep-nav">
+        {etape > 0 ? (
+          <button type="button" className="bmz-btn" onClick={() => setEtape(etape - 1)}>
+            <ArrowLeft size={15} /> {t('Étape précédente : {e}', { e: t(ETAPES_REPARATION[etape - 1].label) })}
+          </button>
+        ) : <span />}
+        {etape < ETAPES_REPARATION.length - 1 && (
+          <button type="button" className="bmz-btn bmz-btn--plein" onClick={() => setEtape(etape + 1)}>
+            {t('Étape suivante : {e}', { e: t(ETAPES_REPARATION[etape + 1].label) })} <ChevronRight size={15} />
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -819,7 +872,8 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const sla = slaEnClair(slaInfo);
   const rca = rcaEnClair(rcaAnalyses);
   const nbFaites = parcours.etapes.filter((e) => e.statut === 'fait').length;
-  const progression = parcours.cloture ? 100 : Math.round((Math.max(nbFaites - 1, 0) / (ETAPES_DEF.length - 1)) * 100);
+  // La barre remplie va jusqu'à l'étape en cours
+  const progression = parcours.cloture ? 100 : Math.round((Math.min(nbFaites, ETAPES_DEF.length - 1) / (ETAPES_DEF.length - 1)) * 100);
 
   const compteurs = {
     diagnostic: resumePret ? nbDiagnostics : null,
@@ -1014,6 +1068,13 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         return <Tracage3DTab bon={bon} reclamations={reclamations} />;
       case 'diagnostic':
         return <DiagnosticTab bonMaintenanceId={bon.id} defaultLotArticleImmobilistationId={bon.lotArticleImmobilistationId} autoOpenForm={auto} />;
+      case 'reparation':
+        return (
+          <ReparationEtapes
+            intervenants={<IntervenantsTab bonMaintenanceId={bon.id} onBonMaybeChanged={rafraichirBon} onCelebrer={celebrer} autoOpenForm={auto} />}
+            taches={<TachesTab bonMaintenanceId={bon.id} />}
+          />
+        );
       case 'taches':
         return <TachesTab bonMaintenanceId={bon.id} autoOpenForm={auto} />;
       case 'intervenants':
@@ -1029,7 +1090,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       case 'historique':
         return <HistoriqueTab bonMaintenanceId={bon.id} />;
       case 'documents':
-        return <DocumentsTab bonMaintenanceId={bon.id} />;
+        return <DocumentsTab bonMaintenanceId={bon.id} bon={bon} />;
       case 'sla':
         return <PanneauDelais sla={slaInfo} />;
       case 'cout':
@@ -1225,229 +1286,204 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     }
   };
 
+  const ToutesInfos = [
+    { icon: Users, label: t("Prestataire"), valeur: bon.prestataire?.raisonSociale || bon.prestataire?.nom || '—' },
+    { icon: Building2, label: t("Service"), valeur: bon.serviceNom || bon.service?.description || '—' },
+    { icon: PackageSearch, label: t("Dépôt"), valeur: bon.depotNom || bon.depot?.codeDepots || '—' },
+    { icon: UserRound, label: t("Demandeur"), valeur: bon.personnelDemandantNom || '—' },
+    { icon: Tag, label: t("Type d'entretien"), valeur: bon.type != null ? t(libelleTypeEntretien(bon.type)) : '—' },
+    { icon: Phone, label: t("Source de l'information"), valeur: bon.sourceInformation != null ? t(libelleSourceInformation(bon.sourceInformation)) : '—' },
+    { icon: Wrench, label: t("Modèle"), valeur: [equipement?.marque, equipement?.modele].filter(Boolean).join(' ') || '—' },
+  ];
+  // Une seule couleur d'accent : seuls les points d'alerte (retard, problème) gardent du rouge ou de l'orange
+  const pointTon = (ton) => (['alerte', 'prio-red'].includes(ton) ? 'alerte' : ['attention', 'prio-amber'].includes(ton) ? 'attention' : ton === 'ok' ? 'ok' : 'neutre');
+
   return (
-    <div className="bmd-container bmx-page">
-      {/* ===== Barre du haut ===== */}
-      <div className="bmx-barre">
-        <button type="button" className="bmx-btn bmx-btn--clair" onClick={onBack}>
-          <ArrowLeft size={18} /> {t("Tous les bons")}
+    <div className="bmd-container bmx-page bmz-page">
+      {/* ===== En-tête : retour, identité du bon, actions ===== */}
+      <header className="bmz-entete">
+        <button type="button" className="bmz-retour" onClick={onBack} title={t("Tous les bons")} aria-label={t("Tous les bons")}>
+          <ArrowLeft size={18} />
         </button>
-        <div className="bmx-barre-droite">
-          {aideMasquee && (
-            <button type="button" className="bmx-btn bmx-btn--fantome" onClick={afficherAide}>
-              <HelpCircle size={18} /> {t("Comment ça marche ?")}
+        <div className="bmz-identite">
+          <div className="bmz-identite-haut">
+            <span className="bmz-num">{bon.num || t('Bon #{id}', { id: bon.id })}</span>
+            <span className={`bmz-etat bmz-point--${pointTon(etatClair.ton)}`}>{t(etatClair.texte)}</span>
+          </div>
+          <h1 className="bmz-titre">{nomEquipement}</h1>
+          <p className="bmz-resume">
+            {bon.titre && bon.titre !== nomEquipement ? <>{t(bon.titre)} · </> : null}
+            {t('Signalé le {date}', { date: formatDate(bon.date) })}
+            {joursDepuis(bon.date) ? t(', {quand}', { quand: joursDepuis(bon.date) }) : ''}
+            {reclamation ? t(' suite à la réclamation {num}', { num: reclamation.num || `#${reclamation.id}` }) : ''}
+          </p>
+        </div>
+        <div className="bmz-actions">
+          <div className="bmz-aide-zone">
+            <button type="button" className="bmz-btn" onClick={aideMasquee ? afficherAide : masquerAide} aria-expanded={!aideMasquee}>
+              <HelpCircle size={16} /> <span>{t("Aide")}</span>
             </button>
-          )}
-          <button type="button" className="bmx-btn bmx-btn--clair bmx-btn-chat" onClick={() => ouvrir('chat')}>
-            <MessageCircle size={18} /> {t('Discuter')}
-            {nonLusChat > 0 && (
-              <span className="bmx-btn-pastille" aria-label={tp('message non lu', nonLusChat)}>{nonLusChat}</span>
+            {!aideMasquee && (
+              <div className="bmz-aide" role="dialog" aria-label={t("Aide")}>
+                <ol>
+                  <li>{t("La ligne du parcours montre où en est la réparation.")}</li>
+                  <li>{t("Le bloc « À faire maintenant » vous dit quoi faire, avec un seul bouton.")}</li>
+                  <li>{t("Pour tout voir ou corriger, ouvrez une rubrique du dossier.")}</li>
+                </ol>
+                <button type="button" className="bmz-btn bmz-btn--plein" onClick={masquerAide}>
+                  <Check size={15} /> {t("J'ai compris")}
+                </button>
+              </div>
             )}
+          </div>
+          <button type="button" className="bmz-btn" onClick={() => ouvrir('chat')}>
+            <MessageCircle size={16} /> <span>{t('Discuter')}</span>
+            {nonLusChat > 0 && <span className="bmz-pastille" aria-label={tp('message non lu', nonLusChat)}>{nonLusChat}</span>}
           </button>
           {bon.lotArticleImmobilistationId && (
-            <button type="button" className="bmx-btn bmx-btn--clair" onClick={() => setRecapImmoOuvert(true)}
+            <button type="button" className="bmz-btn" onClick={() => setRecapImmoOuvert(true)}
               title={t('État, pannes, coûts, préventif et historique de l’équipement')}>
-              <ScanSearch size={18} /> {t('Récap équipement')}
+              <ScanSearch size={16} /> <span>{t('Récap équipement')}</span>
             </button>
           )}
-          <button type="button" className="bmx-btn bmx-btn--clair" onClick={() => setQrOuvert(true)}>
-            <QrCode size={18} /> {t('QR code')}
+          <button type="button" className="bmz-btn" onClick={() => setQrOuvert(true)}>
+            <QrCode size={16} /> <span>{t('QR code')}</span>
           </button>
-          <button type="button" className="bmx-btn bmx-btn--clair" onClick={imprimerBon} disabled={impressionEnCours}>
-            {impressionEnCours ? <Loader2 size={18} className="bmx-spin" /> : <Printer size={18} />}
-            {impressionEnCours ? t('Préparation…') : t('Imprimer la fiche')}
+          <button type="button" className="bmz-btn" onClick={imprimerBon} disabled={impressionEnCours}>
+            {impressionEnCours ? <Loader2 size={16} className="bmx-spin" /> : <Printer size={16} />}
+            <span>{impressionEnCours ? t('Préparation…') : t('Imprimer')}</span>
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* ===== PARTIE 1 : le bon, en clair ===== */}
-      <section className="bmx-identite" aria-label={t("Informations générales du bon")}>
-        <div className={`bmx-bracelet bmx-ton--${etatClair.ton}`}>
-          <span className="bmx-bracelet-etat">{t(etatClair.texte)}</span>
-          <span className="bmx-bracelet-num">{bon.num || t('Bon #{id}', { id: bon.id })}</span>
-          <span className="bmx-bracelet-trou" aria-hidden="true" />
-        </div>
-
-        <h1 className="bmx-titre">{nomEquipement}</h1>
-        <p className="bmx-resume">
-          {bon.titre && bon.titre !== nomEquipement ? <>{t(bon.titre)}. </> : null}
-          {t('Signalé le {date}', { date: formatDate(bon.date) })}
-          {joursDepuis(bon.date) ? t(', {quand}', { quand: joursDepuis(bon.date) }) : ''}
-          {reclamation ? t(' suite à la réclamation {num}', { num: reclamation.num || `#${reclamation.id}` }) : ''}{t('.')}
-        </p>
-
-        <dl className="bmx-fiche">
-          <div><dt><Users size={15} /> {t("Prestataire")}</dt><dd>{bon.prestataire?.raisonSociale || bon.prestataire?.nom || '—'}</dd></div>
-          <div><dt><Building2 size={15} /> {t("Service")}</dt><dd>{bon.serviceNom || bon.service?.description || '—'}</dd></div>
-          <div><dt><PackageSearch size={15} /> {t("Dépôt")}</dt><dd>{bon.depotNom || bon.depot?.codeDepots || '—'}</dd></div>
-          {bon.personnelDemandantNom && (
-            <div><dt><UserRound size={15} /> {t("Demandeur")}</dt><dd>{bon.personnelDemandantNom}</dd></div>
-          )}
-          {bon.type != null && (
-            <div><dt><Tag size={15} /> {t("Type d'entretien")}</dt><dd>{t(libelleTypeEntretien(bon.type))}</dd></div>
-          )}
-          {bon.sourceInformation != null && (
-            <div><dt><Phone size={15} /> {t("Source de l'information")}</dt><dd>{t(libelleSourceInformation(bon.sourceInformation))}</dd></div>
-          )}
-          {(equipement?.marque || equipement?.modele) && (
-            <div><dt><Wrench size={15} /> {t("Modèle")}</dt><dd>{[equipement.marque, equipement.modele].filter(Boolean).join(' ')}</dd></div>
-          )}
-        </dl>
-      </section>
-
-      {!aideMasquee && (
-        <section className="bmx-aide" aria-label={t("Aide")}>
-          <div className="bmx-aide-texte">
-            <h2>{t("Première fois sur cette page ?")}</h2>
-            <ol>
-              <li>{t("La ligne du parcours montre où en est la réparation.")}</li>
-              <li>{t("Le bloc foncé vous dit quoi faire maintenant, avec un seul bouton.")}</li>
-              <li>{t("Pour tout voir ou corriger, ouvrez une rubrique en bas de la page.")}</li>
-            </ol>
-          </div>
-          <button type="button" className="bmx-btn bmx-btn--clair" onClick={masquerAide}>
-            <Check size={16} /> {t("J'ai compris")}
-          </button>
-        </section>
-      )}
-
-      {/* ===== PARTIE 2 : le parcours ===== */}
-      <section className="bmx-parcours" aria-label={t("Parcours de la réparation")}>
-        <div className="bmx-parcours-entete">
-          <h2>{t("Parcours de la réparation")}</h2>
-          <span className="bmx-parcours-compte">
-            {parcours.cloture ? t('Terminé') : t('Étape {n} sur {total}', { n: Math.min(parcours.indexActuel + 1, ETAPES_DEF.length), total: ETAPES_DEF.length })}
-          </span>
-        </div>
-
-        <ol className="bmx-ligne" style={{ '--bmx-p': progression / 100 }}>
+      {/* ===== Parcours de la réparation ===== */}
+      <section className="bmz-parcours" aria-label={t("Parcours de la réparation")}>
+        <ol className="bmz-ligne" style={{ '--bmz-p': progression / 100 }}>
           {parcours.etapes.map((etape) => {
-            const Icon = etape.icon;
-            const IconStatut = etape.statut === 'fait' ? Check : etape.statut === 'probleme' ? AlertTriangle : Icon;
+            const IconStatut = etape.statut === 'fait' ? Check : etape.statut === 'probleme' ? AlertTriangle : etape.icon;
             return (
-              <li key={etape.key} className={`bmx-station is-${etape.statut}`}>
-                <button
-                  type="button"
-                  className="bmx-station-btn"
-                  onClick={() => ouvrir(etape.rubrique)}
-                  aria-current={etape.statut === 'actuel' || etape.statut === 'probleme' ? 'step' : undefined}
-                >
-                  <span className="bmx-station-point"><IconStatut size={18} strokeWidth={2.4} /></span>
-                  <span className="bmx-station-nom">{t(etape.label)}</span>
-                  <span className="bmx-station-aide">{t(etape.detail || etape.aide)}</span>
+              <li key={etape.key} className={`bmz-etape is-${etape.statut}`}>
+                <button type="button" onClick={() => ouvrir(etape.rubrique)} title={t(etape.detail || etape.aide)}
+                  aria-current={etape.statut === 'actuel' || etape.statut === 'probleme' ? 'step' : undefined}>
+                  <span className="bmz-etape-point"><IconStatut size={14} strokeWidth={2.6} /></span>
+                  <span className="bmz-etape-nom">{t(etape.label)}</span>
+                  <span className="bmz-etape-aide">{t(etape.detail || etape.aide)}</span>
                 </button>
               </li>
             );
           })}
         </ol>
+        <span className="bmz-parcours-compte">
+          {parcours.cloture ? t('Terminé') : t('Étape {n} sur {total}', { n: Math.min(parcours.indexActuel + 1, ETAPES_DEF.length), total: ETAPES_DEF.length })}
+        </span>
       </section>
 
-      {/* ===== À faire maintenant + en un coup d'œil ===== */}
-      <div className="bmx-duo">
-        <section className={`bmx-maintenant bmx-maintenant--${action.ton}`} aria-label={t("À faire maintenant")}>
-          <span className="bmx-maintenant-icone"><ActionIcon size={26} /></span>
-          <p className="bmx-maintenant-sur">{t("À faire maintenant")}</p>
-          <h2 className="bmx-maintenant-titre">{t(action.titre)}</h2>
-          <p className="bmx-maintenant-texte">{t(action.texte)}</p>
-          <div className="bmx-maintenant-actions">
-            <button
-              type="button"
-              className="bmx-btn bmx-btn--principal"
-              onClick={() => ouvrir(action.bouton.rubrique, action.bouton.form)}
-            >
-              {t(action.bouton.label)}
-            </button>
-            {action.secondaire && (
-              <button
-                type="button"
-                className="bmx-btn bmx-btn--sur-fonce"
-                onClick={() => ouvrir(action.secondaire.rubrique, action.secondaire.form)}
-              >
-                {t(action.secondaire.label)}
+      {/* ===== Corps : trois colonnes, sans défilement de la page ===== */}
+      <div className="bmz-corps">
+        <div className="bmz-col">
+          <section className={`bmz-carte bmz-maintenant bmz-maintenant--${action.ton}`} aria-label={t("À faire maintenant")}>
+            <p className="bmz-surtitre"><ActionIcon size={15} /> {t("À faire maintenant")}</p>
+            <h2 className="bmz-maintenant-titre">{t(action.titre)}</h2>
+            <p className="bmz-maintenant-texte">{t(action.texte)}</p>
+            <div className="bmz-maintenant-actions">
+              <button type="button" className="bmz-btn bmz-btn--plein" onClick={() => ouvrir(action.bouton.rubrique, action.bouton.form)}>
+                {t(action.bouton.label)}
               </button>
-            )}
+              {action.secondaire && (
+                <button type="button" className="bmz-btn" onClick={() => ouvrir(action.secondaire.rubrique, action.secondaire.form)}>
+                  {t(action.secondaire.label)}
+                </button>
+              )}
+            </div>
+          </section>
+
+          <section className="bmz-carte bmz-infos" aria-label={t("Informations générales du bon")}>
+            <h2 className="bmz-carte-titre">{t("Informations")}</h2>
+            <dl>
+              {ToutesInfos.map((i) => {
+                const Icon = i.icon;
+                return (
+                  <div key={i.label}>
+                    <dt><Icon size={14} /> {i.label}</dt>
+                    <dd title={i.valeur}>{i.valeur}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </section>
+        </div>
+
+        <div className="bmz-col">
+          <section className="bmz-carte bmz-vitaux" aria-label={t("En un coup d'œil")}>
+            <h2 className="bmz-carte-titre">{t("En un coup d'œil")}</h2>
+            <ul>
+              {signesVitaux.map((v) => {
+                const Icon = v.icon;
+                const contenu = (
+                  <>
+                    <Icon size={15} className="bmz-vital-icone" />
+                    <span className="bmz-vital-label">{t(v.label)}</span>
+                    <span className={`bmz-vital-valeur bmz-point--${pointTon(v.ton)}`}>{t(v.valeur)}</span>
+                  </>
+                );
+                return (
+                  <li key={v.key}>
+                    {v.rubrique ? (
+                      <button type="button" className="bmz-vital" onClick={() => ouvrir(v.rubrique)}>
+                        {contenu}<ChevronRight size={15} className="bmz-fleche" />
+                      </button>
+                    ) : (
+                      <div className="bmz-vital" title={v.priorite ? t("Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)") : undefined}>
+                        {contenu}
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+
+          {/* Rapport d'intervention (IA), après la clôture : défile dans sa zone */}
+          <div className="bmz-defile bmz-rapport">
+            <BmdRapport
+              bon={bon}
+              equipementNom={nomEquipement === 'Équipement non renseigné' ? t(nomEquipement) : nomEquipement}
+              onChange={setRapportIa}
+              onBonModifie={rafraichirBon}
+            />
+          </div>
+        </div>
+
+        <section className="bmz-col bmz-carte bmz-dossier" aria-label={t("Tout le dossier")}>
+          <h2 className="bmz-carte-titre">{t("Dossier")}</h2>
+          <div className="bmz-defile">
+            {GROUPES_RUBRIQUES.map((groupe) => (
+              <div key={groupe.titre} className="bmz-groupe">
+                <h3 title={t(groupe.aide)}>{t(groupe.titre)}</h3>
+                <ul>
+                  {groupe.rubriques.map((r) => {
+                    const Icon = r.icon;
+                    const n = compteurs[r.key];
+                    return (
+                      <li key={r.key}>
+                        <button type="button" className="bmz-rubrique" onClick={() => ouvrir(r.key)} title={t(r.aide)}>
+                          <Icon size={16} className="bmz-rubrique-icone" />
+                          <span className="bmz-rubrique-nom">{t(r.label)}</span>
+                          {n != null && (
+                            <span className={`bmz-nb ${r.key === 'chat' && n > 0 ? 'bmz-nb--alerte' : ''}`}
+                              title={r.key === 'chat' ? tp('message non lu', n) : undefined}>{n}</span>
+                          )}
+                          <ChevronRight size={15} className="bmz-fleche" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
           </div>
         </section>
-
-        <section className="bmx-vitaux" aria-label={t("En un coup d'œil")}>
-          <h2>{t("En un coup d'œil")}</h2>
-          <ul>
-            {signesVitaux.map((v) => {
-              const Icon = v.icon;
-              const contenu = (
-                <>
-                  <span className="bmx-vital-icone"><Icon size={17} /></span>
-                  <span className="bmx-vital-label">{t(v.label)}</span>
-                  <span className={`bmx-vital-valeur bmx-ton--${v.ton}`}>{t(v.valeur)}</span>
-                </>
-              );
-              return (
-                <li key={v.key}>
-                  {v.rubrique ? (
-                    <button type="button" className="bmx-vital" onClick={() => ouvrir(v.rubrique)}>
-                      {contenu}
-                      <ChevronRight size={16} className="bmx-vital-fleche" />
-                    </button>
-                  ) : v.priorite ? (
-                    <div className="bmx-vital" title={t("Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)")}>
-                      {contenu}
-                    </div>
-                  ) : (
-                    <div className="bmx-vital">{contenu}</div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
       </div>
-
-      {/* ===== Rapport d'intervention (IA), après la clôture ===== */}
-      <BmdRapport
-        bon={bon}
-        equipementNom={nomEquipement === 'Équipement non renseigné' ? t(nomEquipement) : nomEquipement}
-        onChange={setRapportIa}
-        onBonModifie={rafraichirBon}
-      />
-
-      {/* ===== Tout le dossier ===== */}
-      <section className="bmx-dossier" aria-label={t("Tout le dossier")}>
-        <h2 className="bmx-dossier-titre">{t("Tout le dossier")}</h2>
-        <div className="bmx-groupes">
-          {GROUPES_RUBRIQUES.map((groupe) => (
-            <div key={groupe.titre} className="bmx-groupe">
-              <h3>{t(groupe.titre)}</h3>
-              <p>{t(groupe.aide)}</p>
-              <ul>
-                {groupe.rubriques.map((r) => {
-                  const Icon = r.icon;
-                  const n = compteurs[r.key];
-                  return (
-                    <li key={r.key}>
-                      <button type="button" className="bmx-rubrique" onClick={() => ouvrir(r.key)}>
-                        <span className="bmx-rubrique-icone"><Icon size={18} /></span>
-                        <span className="bmx-rubrique-texte">
-                          <span className="bmx-rubrique-nom">{t(r.label)}</span>
-                          <span className="bmx-rubrique-aide">{t(r.aide)}</span>
-                        </span>
-                        {n != null && (
-                          <span
-                            className={`bmx-rubrique-nb ${r.key === 'chat' ? 'bmx-rubrique-nb--alerte' : ''}`}
-                            title={r.key === 'chat' ? tp('message non lu', n) : undefined}
-                          >
-                            {n}
-                          </span>
-                        )}
-                        <ChevronRight size={16} className="bmx-rubrique-fleche" />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </section>
 
       <Tiroir rubrique={tiroir?.key} onClose={fermerTiroir}>
         <div key={`${tiroir?.key}-${tiroir?.form}`}>{contenuTiroir()}</div>
@@ -2441,7 +2477,29 @@ function ImpactCard({ icon: Icon, label, value, color }) {
 // ============================================================
 // ONGLET DOCUMENTS
 // ============================================================
-function DocumentsTab({ bonMaintenanceId }) {
+const TYPES_PIECE = { '.COMMANDE_FOURNISSEUR': 'Commande fournisseur', '.D_Fourniture': 'Demande de fourniture' };
+
+/** En-tête société des impressions : Paramètres > En-tête des impressions, sinon le prestataire de la session Cubix. */
+async function enteteImpression() {
+  const params = await parametreService.getAll().catch(() => []);
+  const v = (cle) => (params || []).find((p) => p.cle === cle)?.valeur?.trim() || '';
+  const contexte = authService.getContexteMetier() || {};
+  let presta = null;
+  if ((!v('impression.societe.nom') || !v('impression.societe.telephone')) && Number(contexte.prestataireId) > 0) {
+    presta = await prestataireService.getById(contexte.prestataireId).catch(() => null);
+  }
+  const nomPresta = presta ? (presta.raisonSociale || `${presta.nom || ''} ${presta.prenom || ''}`.trim()) : '';
+  return {
+    nom: v('impression.societe.nom') || nomPresta || contexte.prestataireNom || '',
+    adresse: v('impression.societe.adresse'),
+    ville: v('impression.societe.ville'),
+    codePostal: v('impression.societe.code_postal'),
+    matriculeFiscal: v('impression.societe.matricule_fiscal'),
+    telephone: v('impression.societe.telephone') || presta?.telephone || '',
+  };
+}
+
+function DocumentsTab({ bonMaintenanceId, bon }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -2452,6 +2510,44 @@ function DocumentsTab({ bonMaintenanceId }) {
   const [articles, setArticles] = useState([]);
   const [prestataires, setPrestataires] = useState([]);
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
+  const [impressionId, setImpressionId] = useState(null);
+
+  // Impression au format des rapports Cubix (demande de fourniture, commande fournisseur)
+  const imprimerDocument = async (d) => {
+    const piece = d.piece || {};
+    setImpressionId(d.id);
+    try {
+      const [entete, depotCubix, cible] = await Promise.all([
+        enteteImpression(),
+        piece.depotId ? depotCubixService.getById(piece.depotId).catch(() => null) : Promise.resolve(null),
+        piece.cibleId ? prestataireService.getById(piece.cibleId).catch(() => null) : Promise.resolve(null),
+      ]);
+      const depotNom = depotCubix?.nom || depotCubix?.codeDepots || bon?.depotNom || bon?.depot?.codeDepots;
+      const user = authService.getCurrentUser() || {};
+      imprimerPiece({
+        entete,
+        titre: piece.description || TYPES_PIECE[piece.codePieceType] || t("Pièce"),
+        numero: piece.numPiece || piece.num || `#${d.pieceId}`,
+        date: piece.date || piece.dateCreation,
+        saisiePar: piece.personnelCreationNom || user.userNom || user.login || '',
+        depot: depotNom ? { nom: depotNom } : null,
+        cible: cible ? { nom: cible.raisonSociale || `${cible.nom || ''} ${cible.prenom || ''}`.trim(), telephone: cible.telephone } : null,
+        service: bon?.serviceNom || bon?.service?.description || null,
+        lignes: (d.lignes ?? []).map((l) => ({
+          designation: articles.find((a) => String(a.id) === String(l.prestataireArticlesId))?.designation
+            || t('Article #{id}', { id: l.prestataireArticlesId }),
+          qte: l.qte,
+          qteEmballage: l.qteColisee,
+          gratuit: l.estGratuit === true,
+        })),
+      });
+    } catch (err) {
+      console.error(err);
+      alert(t("L'impression n'a pas pu être préparée."));
+    } finally {
+      setImpressionId(null);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -2472,7 +2568,7 @@ function DocumentsTab({ bonMaintenanceId }) {
   useEffect(() => {
     pieceService.getAll(0, 200).then((p) => setPiecesDisponibles(p.content ?? [])).catch(console.error);
     articleService.getAll(0, 300).then((p) => setArticles(p.content ?? [])).catch(console.error);
-    prestataireService.getAll(0, 200).then((p) => setPrestataires(p.content ?? [])).catch(console.error);
+    obtenirPrestataires().then(setPrestataires).catch(console.error);
   }, []);
 
   const handleAdd = async (e) => {
@@ -2570,9 +2666,16 @@ function DocumentsTab({ bonMaintenanceId }) {
                   {d.piece?.description ? ` · ${d.piece.description}` : ''}
                 </span>
               </div>
-              <button className="bmd-delete-btn" onClick={() => handleDelete(d.id)}>
-                <Trash2 size={14} />
-              </button>
+              <div className="bmd-doc-actions">
+                <button type="button" className="bmd-doc-imprimer" onClick={() => imprimerDocument(d)} disabled={impressionId === d.id}
+                  title={t("Imprimer ce document")} aria-label={t("Imprimer ce document")}>
+                  {impressionId === d.id ? <Loader2 size={14} className="spinner" /> : <Printer size={14} />}
+                  <span>{t("Imprimer")}</span>
+                </button>
+                <button className="bmd-delete-btn" onClick={() => handleDelete(d.id)}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
             </li>
           ))}
         </ul>

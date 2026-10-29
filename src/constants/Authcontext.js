@@ -1,32 +1,31 @@
+import { useCallback, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { connecter, deconnecter, selectUtilisateur } from '../store/authSlice';
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-} from 'react';
-
-import authService from '../services/Authservice';
-
-const AuthContext = createContext(null);
+/*
+ * Utilisateur connecté : l'état est maintenant dans Redux (store/authSlice.js).
+ * useAuth() garde exactement la même forme qu'avant, les écrans n'ont rien à changer.
+ * AuthProvider ne fait plus rien ; il est gardé pour ne pas casser main.jsx.
+ */
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => authService.getSession());
+  return children;
+}
 
-  const login = useCallback(async (loginValue, password) => {
-    const session = await authService.login(loginValue, password);
+export function useAuth() {
+  const dispatch = useDispatch();
+  const user = useSelector(selectUtilisateur);
 
-    setUser(session);
-
-    return session;
-  }, []);
+  const login = useCallback(
+    (loginValue, password) => dispatch(connecter({ login: loginValue, password })).unwrap(),
+    [dispatch]
+  );
 
   const logout = useCallback(() => {
-    authService.logout();
-    setUser(null);
-  }, []);
+    dispatch(deconnecter());
+  }, [dispatch]);
 
-  const value = {
+  return useMemo(() => ({
     user,
     isAuthenticated: !!user,
     login,
@@ -36,25 +35,13 @@ export function AuthProvider({ children }) {
     prestataireId: user?.prestataireId ?? null,
     cliniqueId: user?.cliniqueId ?? null,
     privileges: user?.privileges ?? [],
-  };
-
-  return React.createElement(
-    AuthContext.Provider,
-    { value },
-    children
-  );
+  }), [user, login, logout]);
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-
-  if (!ctx) {
-    throw new Error(
-      "useAuth doit être utilisé à l'intérieur d'un <AuthProvider>"
-    );
-  }
-
-  return ctx;
+/** Vrai si l'utilisateur connecté a le privilège `code`. */
+export function useDroit(code) {
+  const user = useSelector(selectUtilisateur);
+  return (user?.privileges ?? []).includes(code);
 }
 
-export default AuthContext;
+export default null;

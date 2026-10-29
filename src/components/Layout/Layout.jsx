@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_PAGES, NAV_SECTIONS, trouverPage } from '../../constants/navigation';
-import notificationService from '../../services/notificationService';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import {
+  chargerCompteur, chargerNotifications, marquerLue, marquerToutesLues, viderNotifications,
+  selectNotifCount, selectNotifications, selectNotifChargement,
+} from '../../store/notificationsSlice';
 import { useAuth } from '../../constants/Authcontext';
 import { t, locale, SelecteurLangue } from '../../i18n';
 import { History, X, Bell, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Search, Sparkles } from 'lucide-react';
@@ -24,17 +28,20 @@ export default function Layout({ children }) {
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [activePopup, setActivePopup] = useState(null);
   const [notifDropOpen, setNotifDropOpen] = useState(false);
-  const [notifications, setNotifications] = useState([]);
+  // Notifications dans le store Redux (src/store/notificationsSlice.js) : lisibles depuis n'importe quel écran
+  const dispatch = useAppDispatch();
+  const notifications = useAppSelector(selectNotifications);
+  const notifCount = useAppSelector(selectNotifCount);
+  const notifLoading = useAppSelector(selectNotifChargement);
   const [assistantOuvert, setAssistantOuvert] = useState(false);
   const fermerAssistant = useCallback(() => setAssistantOuvert(false), []);
-  const [notifCount, setNotifCount] = useState(0);
-  const [notifLoading, setNotifLoading] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
   const handleLogout = () => {
+    dispatch(viderNotifications());
     logout();
     navigate('/login', { replace: true });
   };
@@ -129,25 +136,14 @@ export default function Layout({ children }) {
     }
   }, [activeNavItem, sidebarOpen]);
 
-  const loadCount = () => {
-    notificationService.countNonLues()
-      .then(setNotifCount)
-      .catch((err) => console.error('Erreur chargement compteur notifications :', err));
-  };
-
   useEffect(() => {
-    loadCount();
-    const interval = setInterval(loadCount, 30000);
+    const charger = () => dispatch(chargerCompteur());
+    charger();
+    const interval = setInterval(charger, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dispatch]);
 
-  const loadNotifications = () => {
-    setNotifLoading(true);
-    notificationService.getAll(0, 20)
-      .then((page) => setNotifications(page.content ?? []))
-      .catch((err) => console.error('Erreur chargement notifications :', err))
-      .finally(() => setNotifLoading(false));
-  };
+  const loadNotifications = () => dispatch(chargerNotifications());
 
   const toggleNotifDrop = () => {
     const opening = !notifDropOpen;
@@ -158,9 +154,7 @@ export default function Layout({ children }) {
   const handleNotifClick = async (notif) => {
     if (!notif.lue) {
       try {
-        await notificationService.marquerLue(notif.id);
-        setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
-        setNotifCount((prev) => Math.max(0, prev - 1));
+        await dispatch(marquerLue(notif.id)).unwrap();
       } catch (err) {
         console.error('Erreur marquage notification lue :', err);
       }
@@ -172,9 +166,7 @@ export default function Layout({ children }) {
   const handleMarquerToutesLues = async (e) => {
     e.stopPropagation();
     try {
-      await notificationService.marquerToutesLues();
-      setNotifications([]);
-      setNotifCount(0);
+      await dispatch(marquerToutesLues()).unwrap();
     } catch (err) {
       console.error('Erreur marquage toutes notifications lues :', err);
     }

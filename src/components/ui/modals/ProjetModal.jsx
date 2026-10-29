@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
-import prestataireService from '../../../services/prestataireService';
-import emplacementService from '../../../services/emplacementService';
+import { commePage, obtenirEmplacements, obtenirPrestataires } from '../../../store/referentiels';
 import {
   FolderKanban, X, Check, Building2, MapPin, Calendar,
   FileText, Loader2, Save, AlertTriangle, Activity,
@@ -84,8 +83,7 @@ const ProjetModal = ({ isOpen, onClose, onSave, projet, isEditing }) => {
     const fetchPrestataires = async () => {
       setLoadingPrestataires(true);
       try {
-        const page = await prestataireService.getAll(0, 300);
-        setPrestataires(page.content ?? []);
+        setPrestataires(await obtenirPrestataires());
       } catch (err) {
         console.error(err);
         setPrestataires([]);
@@ -97,7 +95,7 @@ const ProjetModal = ({ isOpen, onClose, onSave, projet, isEditing }) => {
     const fetchEmplacements = async () => {
       setLoadingEmplacements(true);
       try {
-        const page = await emplacementService.getAll(0, 300);
+        const page = await obtenirEmplacements().then(commePage);
         setEmplacements(page.content ?? []);
       } catch (err) {
         console.error(err);

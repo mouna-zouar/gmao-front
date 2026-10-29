@@ -13,6 +13,7 @@ import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSett
 import { t, tp, locale, tPdf, localePdf } from '../../../i18n';
 import '../TableauDeBord/TableauDeBord.css';
 import './Etatequipement.css';
+import { PastillesStats } from '../../commun';
 import { ArrowRight, ChevronDown, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
 import { VeillePage, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
 
@@ -124,11 +125,12 @@ const ETAT_STAT = {
 };
 
 /* Page au style des tableaux de bord (bons, réclamations, parc) ; dans une fenêtre, l'ancien cadre compact. */
-function Cadre({ isModal, actions, children }) {
+function Cadre({ isModal, actions, pastilles, children }) {
   if (isModal) {
     return (
       <VeillePage isModal icone={Gauge} titre={t("Équipements")}
         description={t("État, fiche, historique des pannes, documents et étiquettes QR")} actions={actions}>
+        {pastilles}
         {children}
       </VeillePage>
     );
@@ -141,6 +143,7 @@ function Cadre({ isModal, actions, children }) {
           <h1>{t("Équipements")}</h1>
         </div>
         <div className="tb-header-actions">{actions}</div>
+        {pastilles}
       </div>
       {children}
     </div>
@@ -247,12 +250,12 @@ export default function EtatEquipement({ isModal = false }) {
   // Pagination de la liste (taille choisie gardée dans ce navigateur)
   const [page, setPage] = useState(0);
   const [taillePage, setTaillePage] = useState(() => {
-    try { return Number(localStorage.getItem('gmao.equipements.taillePage')) || 50; } catch { return 50; }
+    try { return Number(localStorage.getItem('gmao.equipements.taillePage.v2')) || 10; } catch { return 10; }
   });
   const changerTaillePage = (n) => {
     setTaillePage(n);
     setPage(0);
-    try { localStorage.setItem('gmao.equipements.taillePage', String(n)); } catch { /* stockage indisponible */ }
+    try { localStorage.setItem('gmao.equipements.taillePage.v2', String(n)); } catch { /* stockage indisponible */ }
   };
   const [equipementOuvert, setEquipementOuvert] = useState(null);
   const [historique, setHistorique] = useState([]);
@@ -494,6 +497,24 @@ export default function EtatEquipement({ isModal = false }) {
   return (
     <Cadre
       isModal={isModal}
+      pastilles={!loading && total > 0 ? (
+        <PastillesStats
+          ariaLabel={t("Équipements par état")}
+          className={isModal ? 'eq-pastilles-modal' : ''}
+          stats={[
+            { cle: 'TOUS', label: t("Tous les équipements"), valeur: total.toLocaleString(locale()), icone: Gauge, actif: filtreEtat === 'TOUS', onClick: () => setFiltreEtat('TOUS') },
+            ...ETATS.map((et) => {
+              const { Icone, ton } = ETAT_STAT[et];
+              const n = compteurs[et] || 0;
+              return {
+                cle: et, label: t(ETAT_LABELS[et]), valeur: n.toLocaleString(locale()), ton, icone: Icone,
+                actif: filtreEtat === et, onClick: () => setFiltreEtat((v) => (v === et ? 'TOUS' : et)),
+                aide: t('{n} % du parc', { n: Math.round((n / total) * 100) }),
+              };
+            }),
+          ]}
+        />
+      ) : null}
       actions={(
         <>
           <button type="button" className="vl-btn" onClick={() => setSettingsOpen((v) => !v)}>
@@ -508,36 +529,6 @@ export default function EtatEquipement({ isModal = false }) {
         <section>
           <EquipementMaintenanceTypesSettings />
         </section>
-      )}
-
-      {!loading && total > 0 && (
-        <div className="tb-stats eq-stats" role="group" aria-label={t("Équipements par état")}>
-          <button type="button" className="tb-stat tb-stat--featured tb-ton--teal eq-stat" aria-pressed={filtreEtat === 'TOUS'}
-            onClick={() => setFiltreEtat('TOUS')}>
-            <div className="tb-stat-haut"><div className="tb-stat-icone"><Gauge size={22} strokeWidth={2} aria-hidden="true" /></div></div>
-            <div>
-              <div className="tb-stat-valeur">{total.toLocaleString(locale())}</div>
-              <div className="tb-stat-label">{t("Tous les équipements")}</div>
-            </div>
-          </button>
-          {ETATS.map((et) => {
-            const { Icone, ton } = ETAT_STAT[et];
-            const n = compteurs[et] || 0;
-            return (
-              <button key={et} type="button" className={`tb-stat tb-ton--${ton} eq-stat`} aria-pressed={filtreEtat === et}
-                onClick={() => setFiltreEtat((v) => (v === et ? 'TOUS' : et))}>
-                <div className="tb-stat-haut">
-                  <div className="tb-stat-icone"><Icone size={22} strokeWidth={2} aria-hidden="true" /></div>
-                  {total > 0 && <span className={`tb-badge tb-badge--${ton === 'bleu' ? 'bleu' : ton}`}>{Math.round((n / total) * 100)} %</span>}
-                </div>
-                <div>
-                  <div className="tb-stat-valeur">{n.toLocaleString(locale())}</div>
-                  <div className="tb-stat-label">{t(ETAT_LABELS[et])}</div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
       )}
 
       <section className={isModal ? 'eq-liste-modal' : 'tb-carte eq-liste-carte'}>

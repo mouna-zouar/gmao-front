@@ -5,6 +5,7 @@ import { prioriteLabel, prioriteRang } from '../../../constants/Priorite';
 import { t, tp, locale } from '../../../i18n';
 import { ClipboardCheck, FileSpreadsheet, Inbox, LoaderCircle, RefreshCw, Search, ShieldCheck, Target, Timer, TriangleAlert } from 'lucide-react';
 import './Sla.css';
+import PaginationCommune from '../../commun/Pagination';
 
 /* ---------- Config ---------- */
 const PRIORITE_HEX = { P1: '#ef4444', P2: '#f97316', P3: '#3b82f6', P4: '#64748b' };
@@ -36,8 +37,8 @@ const VUES = [
 ];
 
 /* ---------- Pagination ---------- */
-const TAILLES_PAGE = [5, 10, 20, 50];
-const TAILLE_PAGE_DEFAUT = 5;
+const TAILLES_PAGE = [10, 25, 50, 100];
+const TAILLE_PAGE_DEFAUT = 10;
 
 /* ---------- Utils ---------- */
 function calculerBornes(periodeKey) {
@@ -228,95 +229,12 @@ function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
 }
 
 /* ---------- Pagination ---------- */
-function construirePages(pageActuelle, totalPages) {
-  const pages = [];
-  const ajouter = (v) => { if (!pages.includes(v)) pages.push(v); };
 
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) ajouter(i);
-    return pages;
-  }
-
-  ajouter(1);
-  if (pageActuelle > 3) ajouter('…');
-  for (let i = Math.max(2, pageActuelle - 1); i <= Math.min(totalPages - 1, pageActuelle + 1); i++) {
-    ajouter(i);
-  }
-  if (pageActuelle < totalPages - 2) ajouter('…');
-  ajouter(totalPages);
-  return pages;
-}
-
-function Pagination({
-  page, totalPages, totalItems, taillePage,
-  onChangePage, onChangeTaille,
-}) {
-  if (totalPages <= 1 && totalItems <= TAILLES_PAGE[0]) return null;
-
-  const pages = construirePages(page, totalPages);
-
+/* Pagination : composant commun (même style dans toute la GMAO) */
+function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille }) {
   return (
-    <div className="sla-pagination">
-      <div className="sla-pagination__left">
-        <span className="sla-pagination__info">
-          {t("Page")} <strong>{page}</strong> {t("sur")} <strong>{totalPages}</strong>
-          {' · '}<span className="sla-pagination__count">{tp('bon', totalItems)}</span>
-        </span>
-      </div>
-
-      <div className="sla-pagination__center">
-        <button
-          type="button"
-          className="sla-pagination__btn sla-pagination__btn--nav"
-          onClick={() => onChangePage(page - 1)}
-          disabled={page <= 1}
-          aria-label={t("Page précédente")}
-        >
-          <span className="rtl-miroir"><IconChevron direction="left" /></span>
-        </button>
-
-        {pages.map((p, idx) =>
-          p === '…' ? (
-            <span key={`ellipsis-${idx}`} className="sla-pagination__ellipsis">…</span>
-          ) : (
-            <button
-              key={p}
-              type="button"
-              className={`sla-pagination__btn ${p === page ? 'is-active' : ''}`}
-              onClick={() => onChangePage(p)}
-              aria-current={p === page ? 'page' : undefined}
-            >
-              {p}
-            </button>
-          )
-        )}
-
-        <button
-          type="button"
-          className="sla-pagination__btn sla-pagination__btn--nav"
-          onClick={() => onChangePage(page + 1)}
-          disabled={page >= totalPages}
-          aria-label={t("Page suivante")}
-        >
-          <span className="rtl-miroir"><IconChevron direction="right" /></span>
-        </button>
-      </div>
-
-      <div className="sla-pagination__right">
-        <label className="sla-pagination__size">
-          <span>{t("Par page")}</span>
-          <select
-            value={taillePage}
-            onChange={(e) => onChangeTaille(Number(e.target.value))}
-            className="sla-pagination__select"
-          >
-            {TAILLES_PAGE.map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-    </div>
+    <PaginationCommune base={1} page={page} taille={taillePage} total={totalItems}
+      onPage={onChangePage} onTaille={onChangeTaille} tailles={TAILLES_PAGE} />
   );
 }
 

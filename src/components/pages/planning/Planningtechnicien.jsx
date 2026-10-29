@@ -4,9 +4,10 @@ import './PlanningTechnicien.css';
 import { t, tp, locale } from '../../../i18n';
 import { Search } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
+import Pagination from '../../commun/Pagination';
 
 const ETAT_LABELS = { 0: 'Nouveau', 1: 'En cours', 2: 'Terminé', 10: 'Annulé' };
-const PAGE_SIZE_OPTIONS = [6, 12, 24, 48];
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 function startOfDay(date) {
   const d = new Date(date);
@@ -50,7 +51,7 @@ export default function PlanningTechnicien() {
   // Recherche & pagination
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(12);
+  const [pageSize, setPageSize] = useState(10);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -207,47 +208,7 @@ export default function PlanningTechnicien() {
           </div>
 
           {/* Pagination */}
-          <div className="pt-pagination">
-            <div className="pt-pagination-info">
-              {t('Page')} <strong>{currentPage}</strong> {t('sur')} <strong>{totalPages}</strong>
-            </div>
-
-            <div className="pt-pagination-size">
-              <label htmlFor="pt-page-size">{t('Afficher')}</label>
-              <select
-                id="pt-page-size"
-                className="pt-page-size-select"
-                value={pageSize}
-                onChange={(e) => setPageSize(Number(e.target.value))}
-              >
-                {PAGE_SIZE_OPTIONS.map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-              <span>{t('par page')}</span>
-            </div>
-
-            <div className="pt-pagination-controls">
-              <button
-                type="button"
-                className="pt-btn pt-btn--page"
-                onClick={handlePrev}
-                disabled={currentPage <= 1}
-                aria-label={t('Page précédente')}
-              >
-                <span className="rtl-miroir">‹</span> {t('Précédent')}
-              </button>
-              <button
-                type="button"
-                className="pt-btn pt-btn--page"
-                onClick={handleNext}
-                disabled={currentPage >= totalPages}
-                aria-label={t('Page suivante')}
-              >
-                {t('Suivant')} <span className="rtl-miroir">›</span>
-              </button>
-            </div>
-          </div>
+          <Pagination base={1} page={currentPage} taille={pageSize} total={filtered.length} onPage={setPage} onTaille={(n) => { setPageSize(n); setPage(1); }} tailles={PAGE_SIZE_OPTIONS} />
         </>
       )}
     </div>
