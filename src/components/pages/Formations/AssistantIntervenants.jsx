@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Check, GraduationCap, History, ListChecks, Loader2, Sparkles, Wrench } from 'lucide-react';
 import formationService from '../../../services/formationService';
-import { dateFormation } from './formationLibelles';
+import { dateFormation, nomPersonnel } from './formationLibelles';
 import { t } from '../../../i18n';
 import './Formations.css';
 
@@ -9,8 +9,9 @@ import './Formations.css';
  * Assistant de choix des intervenants : techniciens proposés pour l'équipement (du bon ou donné),
  * classés selon les interventions et tâches déjà faites dessus, sur sa famille, et leurs formations.
  * onChoisir(personnelId, personnelNom) ; choisi : identifiant déjà sélectionné (mis en évidence).
+ * personnels : liste du personnel, pour retrouver le nom quand l'historique ne l'a pas gardé.
  */
-export default function AssistantIntervenants({ bonMaintenanceId, lotArticleImmobilistationId, onChoisir, choisi }) {
+export default function AssistantIntervenants({ bonMaintenanceId, lotArticleImmobilistationId, onChoisir, choisi, personnels = [] }) {
   const [suggestions, setSuggestions] = useState(null);
   const cle = bonMaintenanceId || lotArticleImmobilistationId ? `${bonMaintenanceId}|${lotArticleImmobilistationId}` : '';
 
@@ -25,6 +26,8 @@ export default function AssistantIntervenants({ bonMaintenanceId, lotArticleImmo
   }, [cle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!cle) return null;
+  const nom = (s) => s.personnelNom
+    || nomPersonnel(personnels.find((p) => String(p.id) === String(s.personnelId)) || { id: s.personnelId });
   return (
     <section className="fo-assistant" aria-label={t('Intervenants suggérés')}>
       <h4><Sparkles size={15} aria-hidden="true" /> {t('Intervenants suggérés')}</h4>
@@ -39,7 +42,7 @@ export default function AssistantIntervenants({ bonMaintenanceId, lotArticleImmo
             return (
               <li key={s.personnelId} className={actif ? 'est-actif' : ''}>
                 <div className="fo-assistant__tete">
-                  <strong>{s.personnelNom || t('Personnel #{id}', { id: s.personnelId })}</strong>
+                  <strong title={nom(s)}>{nom(s)}</strong>
                   <span className="fo-assistant__score" title={t('Score sur 100')}>
                     <span style={{ width: `${s.score}%` }} />
                     <b>{s.score}</b>
@@ -52,7 +55,7 @@ export default function AssistantIntervenants({ bonMaintenanceId, lotArticleImmo
                   {s.interventionsFamille > 0 && <span className="fo-r fo-r--doux"><Wrench size={12} />{t('{n} sur la famille', { n: s.interventionsFamille })}</span>}
                   {s.derniereIntervention && <span className="fo-r fo-r--doux"><History size={12} />{dateFormation(s.derniereIntervention)}</span>}
                 </div>
-                <button type="button" className="fo-assistant__choisir" onClick={() => onChoisir?.(s.personnelId, s.personnelNom)} disabled={actif}>
+                <button type="button" className="fo-assistant__choisir" onClick={() => onChoisir?.(s.personnelId, nom(s))} disabled={actif}>
                   {actif ? <><Check size={13} /> {t('Choisi')}</> : t('Choisir')}
                 </button>
               </li>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { GraduationCap, TriangleAlert } from 'lucide-react';
+import { CalendarClock, GraduationCap, TriangleAlert } from 'lucide-react';
 import formationService from '../../../services/formationService';
+import { RESULTATS_FORMATION, STATUTS_FORMATION } from './formationLibelles';
 import { t } from '../../../i18n';
 import './Formations.css';
 
@@ -31,6 +32,26 @@ export default function AlerteFormation({ personnelId, bonMaintenanceId, lotArti
         <GraduationCap size={15} aria-hidden="true" />
         {t('Formé sur « {famille} »', { famille: cible })}
       </p>
+    );
+  }
+  // Inscrit à une formation sur cet équipement, mais pas encore validée (formation « Réalisée » + résultat « Réussi »)
+  const enAttente = res.enAttente ?? [];
+  if (enAttente.length) {
+    return (
+      <div className="fo-alerte fo-alerte--attente" role="status">
+        <CalendarClock size={15} aria-hidden="true" />
+        <span>
+          {enAttente.map((f) => (
+            <span key={f.formationId} className="fo-alerte__ligne">
+              {t('« {intitule} » pas encore validée', { intitule: f.intitule })}
+              {' : '}
+              <b>{t(STATUTS_FORMATION[f.statut]?.label || f.statut || '')}</b>
+              {' · '}
+              <b>{t(RESULTATS_FORMATION[f.resultat]?.label || f.resultat || '')}</b>
+            </span>
+          ))}
+        </span>
+      </div>
     );
   }
   return (

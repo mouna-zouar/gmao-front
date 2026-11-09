@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, cloneElement, Fragment } from 'react';
-import { Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search, Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer, Gauge, Loader2, Plus, Pencil, Power, ClipboardCheck, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
+import { Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search, Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer, Gauge, Loader2, Plus, Pencil, Power, ClipboardCheck, Trash2, ArrowUp, ArrowDown, Eye } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
 import prestataireService from '../../../services/prestataireService';
@@ -196,6 +196,7 @@ const RUBRIQUES = [
   { id: 'preventif', section: 'Automatisation', titre: 'Maintenance préventive', aide: 'Déclenchement des bons préventifs et types de maintenance réglementaire.', Icone: Wrench },
   { id: 'codes_panne', section: 'Réclamations', titre: 'Codes panne', aide: 'Codes proposés par l’IA pendant la saisie des réclamations.', Icone: Tags },
   { id: 'checklists', section: 'Réclamations', titre: 'Check-lists des réclamations', aide: 'Vérifications que le demandeur fait avant d’envoyer une réclamation, selon la famille de l’équipement.', Icone: ClipboardCheck },
+  { id: 'lecture', section: 'Réclamations', groupe: 'Lu / non lu (notifications)', titre: 'Lu / non lu', aide: 'Notifications de lecture et délais avant rappel ou alerte pour les réclamations et bons non lus.', Icone: Eye },
   { id: 'sla', section: 'Automatisation', groupe: 'SLA (délais en heures)', titre: 'Délais SLA', aide: 'Délais de réponse et de résolution selon la priorité du bon.', Icone: Timer },
   { id: 'anomalies', section: 'Automatisation', groupe: "Détection d'anomalies", titre: 'Détection d’anomalies', aide: 'Quand un pic de réclamations est signalé.', Icone: Activity },
   { id: 'blocages', section: 'Automatisation', groupe: 'Détection de blocages', titre: 'Détection de blocages', aide: 'Quand un équipement à l’arrêt est signalé.', Icone: CirclePause },

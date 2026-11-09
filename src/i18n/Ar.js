@@ -4075,6 +4075,15 @@ const ar = {
   "Non finies": "غير منتهية",
   "{n} tâche(s) associée(s) au total": "{n} مهمة مسندة في المجموع",
   "Toutes finies": "كلها منتهية",
+  "Tâches suggérées": "مهام مقترحة",
+  "Aucune tâche déjà faite sur cet équipement ou sa famille.": "لا توجد مهام منجزة على هذه المعدة أو عائلتها.",
+  "Article habituel": "المادة المعتادة",
+  "Reprise": "تم الاستعمال",
+  "{n} sélectionné(s)": "{n} محدد",
+  "Tout retirer": "إزالة الكل",
+  "« {intitule} » pas encore validée": "«{intitule}» لم يُصادق عليها بعد",
+  "Lu / non lu": "مقروء / غير مقروء",
+  "Notifications de lecture et délais avant rappel ou alerte pour les réclamations et bons non lus.": "إشعارات القراءة والمهل قبل التذكير أو التنبيه للمطالبات وأوامر العمل غير المقروءة.",
 };
 
 export default ar;

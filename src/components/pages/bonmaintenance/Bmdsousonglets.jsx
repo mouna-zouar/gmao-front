@@ -44,6 +44,7 @@ import bonMaintenanceControleEquipementService from '../../../services/bonMainte
 import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenanceRemiseEnServiceService';
 import personnelService from '../../../services/Personnelservice';
 import AlerteFormation from '../Formations/AlerteFormation';
+import AssistantTaches from './AssistantTaches';
 import AssistantIntervenants from '../Formations/AssistantIntervenants';
 import authService from '../../../services/Authservice';
 import './BmdRemise.css';
@@ -881,6 +882,25 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
           onSubmit={handleSubmit}
         >
           <BmfEtape numero={1} titre={t("La tâche")}>
+            {!editingId && (
+              <BmfChamp label={t("Assistant")} large>
+                <AssistantTaches
+                  key={taches.length}
+                  bonMaintenanceId={bonMaintenanceId}
+                  articles={articles}
+                  sansArticle={sansDepot}
+                  utilisee={form.designation}
+                  onUtiliser={(s) => setForm((f) => ({
+                    ...f,
+                    designation: s.designation,
+                    nom: f.nom || s.nom || '',
+                    ...(!sansDepot && s.prestataireArticlesId
+                      ? { besoinArticle: 'true', prestataireArticlesId: String(s.prestataireArticlesId), qte: s.qte != null ? String(s.qte) : f.qte }
+                      : {}),
+                  }))}
+                />
+              </BmfChamp>
+            )}
             <BmfChamp label={t("Désignation")} requis large aide={t("Une phrase courte, par exemple « Remplacer le joint de la pompe »")} htmlFor="tache-desig">
               <BmfTexte
                 id="tache-desig"
@@ -1388,7 +1408,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
           <BmfEtape numero={1} titre={t("Qui répare ?")} aide={t("Choisissez un technicien de l'équipe, ou un sous-traitant")}>
             {!editingId && (
               <BmfChamp label={t("Assistant")} large>
-                <AssistantIntervenants bonMaintenanceId={bonMaintenanceId} choisi={form.personnelId}
+                <AssistantIntervenants bonMaintenanceId={bonMaintenanceId} choisi={form.personnelId} personnels={personnels}
                   onChoisir={(id) => setForm((f) => ({ ...f, personnelId: String(id) }))} />
               </BmfChamp>
             )}

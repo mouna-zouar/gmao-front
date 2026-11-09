@@ -54,3 +54,5 @@
 .rcz-ck-rep--non { color: #b8323a; }
 .rcz-ck-rep--sans-objet { color: #94a3b8; }
 .rcz-lecture { margin: 0 0 12px; }
+/* Fenêtre « Affecter » (Modale commune) : erreur dans le pied */
+.rec-affecter-modale .cm-modale__pied .rec-affecter-erreur { margin: 0; padding: 6px 10px; }

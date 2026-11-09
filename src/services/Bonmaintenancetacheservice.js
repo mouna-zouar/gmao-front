@@ -16,6 +16,11 @@ const bonMaintenanceTacheService = {
   async remove(id) {
     await api.delete(`/bon-maintenance-tache/${id}`);
   },
+  /** Assistant : tâches déjà faites sur l'équipement du bon et sa famille. */
+  async suggestions({ bonMaintenanceId, lotArticleImmobilistationId, limite = 6 }) {
+    const { data } = await api.get('/bon-maintenance-tache/suggestions', { params: { bonMaintenanceId, lotArticleImmobilistationId, limite } });
+    return data;
+  },
   async getAll(page = 0, size = 100) {
     const { data } = await api.get('/bon-maintenance-tache', { params: { page, size } });
     return data; // Page<BonMaintenanceTacheDTO>

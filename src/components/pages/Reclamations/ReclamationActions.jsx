@@ -10,6 +10,7 @@ import AssistantIntervenants from '../Formations/AssistantIntervenants';
 import serviceService from '../../../services/Serviceservice';
 import authService from '../../../services/Authservice';
 import SearchableSelect from '../../commun/ListeRecherche';
+import Modale from '../../commun/Modale';
 import { t } from '../../../i18n';
 import './ReclamationActions.css';
 
@@ -21,7 +22,7 @@ export function actionsPossibles(reclamation) {
   const e = reclamation.etat ?? ETAT_REC.NOUVEAU;
   const active = e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE || e === ETAT_REC.EN_COURS;
   return {
-    affecter: active,
+    affecter: true, // on peut toujours (ré)affecter un technicien, quel que soit l'état
     prendre: e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE,
     resoudre: active,
     cloturer: e === ETAT_REC.RESOLUE,
@@ -97,73 +98,78 @@ function FenetreAffecter({ reclamation, onClose, onValider }) {
   };
 
   return (
-    <div className="modal-overlay confirm-overlay" onClick={onClose}>
-      <div className="confirm-modal-container rec-fenetre rec-affecter" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="rec-affecter-titre">
-        <div className="confirm-modal-content">
-          <div className="confirm-modal-icon-wrapper">
-            <UserCheck className="modal-confirm-icon info" size={44} strokeWidth={2} />
-          </div>
-          <div className="confirm-modal-text">
-            <h3 id="rec-affecter-titre">{reaffecter ? t('Réaffecter la réclamation') : t('Affecter la réclamation')}</h3>
-            <p>{t('Choisissez le groupe responsable et/ou le technicien. Chaque affectation est gardée dans l’historique.')}</p>
-            <div className="rec-affecter-champs">
-              <label htmlFor="rec-groupe">{t('Groupe responsable')}</label>
-              <SearchableSelect
-                id="rec-groupe"
-                name="groupeId"
-                value={groupeId}
-                onChange={(e) => setGroupeId(e.target.value)}
-                options={groupes}
-                loading={chargement}
-                placeholder={t('Rechercher un service...')}
-                emptyMessage={t('Aucun service ne correspond')}
-                allowEmpty
-                emptyOptionLabel={t('— Aucun groupe —')}
-                getValue={(s) => s.id}
-                getLabel={(s) => s.description || s.code || `Service #${s.id}`}
-                getOptionHint={(s) => (s.code && s.description ? `Code : ${s.code}` : null)}
-              />
-              <AssistantIntervenants lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} choisi={technicienId}
-                onChoisir={(id) => setTechnicienId(String(id))} />
-              <label htmlFor="rec-technicien">{t('Technicien')}</label>
-              <SearchableSelect
-                id="rec-technicien"
-                name="personnelAffecteId"
-                value={technicienId}
-                onChange={(e) => setTechnicienId(e.target.value)}
-                options={techniciens}
-                loading={chargement}
-                placeholder={t('Rechercher un technicien...')}
-                emptyMessage={t('Aucun personnel ne correspond')}
-                allowEmpty
-                emptyOptionLabel={t('— Aucun technicien —')}
-                getValue={(p) => p.id}
-                getLabel={nomPersonnel}
-                getOptionHint={(p) => (p.fonction || null)}
-              />
-              <AlerteFormation personnelId={technicienId} lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} />
-              <label htmlFor="rec-affecter-commentaire">{t('Commentaire (facultatif)')}</label>
-              <textarea
-                id="rec-affecter-commentaire"
-                className="confirm-modal-input"
-                value={commentaire}
-                onChange={(e) => setCommentaire(e.target.value)}
-                placeholder={reaffecter ? t('Pourquoi cette réaffectation ?') : t('Consigne pour le technicien...')}
-                rows={2}
-              />
-            </div>
-            {erreur && <p className="rec-affecter-erreur" role="alert">{erreur}</p>}
-          </div>
-        </div>
-        <div className="confirm-modal-footer">
-          <button type="button" className="confirm-btn primary" onClick={valider} disabled={vide || inchange || envoi}>
-            {envoi && <Loader2 size={15} className="rcx-tourne" />}
+    <Modale
+      ouvert
+      onFermer={onClose}
+      icone={UserCheck}
+      surtitre={reclamation.num || t('Réclamation')}
+      titre={reaffecter ? t('Réaffecter la réclamation') : t('Affecter la réclamation')}
+      taille="md"
+      className="rec-affecter-modale"
+      infoPied={erreur ? <span className="rec-affecter-erreur" role="alert">{erreur}</span> : null}
+      pied={(
+        <>
+          <button type="button" className="cm-btn" onClick={onClose}>{t('Annuler')}</button>
+          <button type="button" className="cm-btn cm-btn--principal" onClick={valider} disabled={vide || inchange || envoi}>
+            {envoi ? <Loader2 size={16} className="cf-tourne" /> : <UserCheck size={16} />}
             {reaffecter ? t('Réaffecter') : t('Affecter')}
           </button>
-          <button type="button" className="confirm-btn secondary" onClick={onClose}>{t('Fermer')}</button>
+        </>
+      )}
+    >
+      <div className="cf-grille">
+        <div className="cf-champ cf-champ--pleine">
+          <label htmlFor="rec-groupe" className="cf-label">{t('Groupe responsable')}</label>
+          <SearchableSelect
+            id="rec-groupe"
+            name="groupeId"
+            value={groupeId}
+            onChange={(e) => setGroupeId(e.target.value)}
+            options={groupes}
+            loading={chargement}
+            placeholder={t('Rechercher un service...')}
+            emptyMessage={t('Aucun service ne correspond')}
+            allowEmpty
+            emptyOptionLabel={t('— Aucun groupe —')}
+            getValue={(s) => s.id}
+            getLabel={(s) => s.description || s.code || `Service #${s.id}`}
+            getOptionHint={(s) => (s.code && s.description ? `Code : ${s.code}` : null)}
+          />
+        </div>
+        <div className="cf-champ cf-champ--pleine">
+          <label htmlFor="rec-technicien" className="cf-label">{t('Technicien')}</label>
+          <SearchableSelect
+            id="rec-technicien"
+            name="personnelAffecteId"
+            value={technicienId}
+            onChange={(e) => setTechnicienId(e.target.value)}
+            options={techniciens}
+            loading={chargement}
+            placeholder={t('Rechercher un technicien...')}
+            emptyMessage={t('Aucun personnel ne correspond')}
+            allowEmpty
+            emptyOptionLabel={t('— Aucun technicien —')}
+            getValue={(p) => p.id}
+            getLabel={nomPersonnel}
+            getOptionHint={(p) => (p.fonction || null)}
+          />
+          <AlerteFormation personnelId={technicienId} lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} />
+        </div>
+        <div className="cf-champ cf-champ--pleine">
+          <AssistantIntervenants lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} choisi={technicienId} personnels={techniciens}
+            onChoisir={(id) => setTechnicienId(String(id))} />
+        </div>
+        <div className="cf-champ cf-champ--pleine">
+          <label htmlFor="rec-affecter-commentaire" className="cf-label">{t('Commentaire')}</label>
+          <textarea
+            id="rec-affecter-commentaire"
+            value={commentaire}
+            onChange={(e) => setCommentaire(e.target.value)}
+            rows={2}
+          />
         </div>
       </div>
-    </div>
+    </Modale>
   );
 }
 

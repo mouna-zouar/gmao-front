@@ -4074,6 +4074,15 @@ const en = {
   "Non finies": "Unfinished",
   "{n} tâche(s) associée(s) au total": "{n} assigned task(s) in total",
   "Toutes finies": "All finished",
+  "Tâches suggérées": "Suggested tasks",
+  "Aucune tâche déjà faite sur cet équipement ou sa famille.": "No task done yet on this equipment or its family.",
+  "Article habituel": "Usual item",
+  "Reprise": "Applied",
+  "{n} sélectionné(s)": "{n} selected",
+  "Tout retirer": "Remove all",
+  "« {intitule} » pas encore validée": "“{intitule}” not validated yet",
+  "Lu / non lu": "Read / unread",
+  "Notifications de lecture et délais avant rappel ou alerte pour les réclamations et bons non lus.": "Read notifications and delays before reminder or alert for unread claims and work orders.",
 };
 
 export default en;
