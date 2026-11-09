@@ -989,3 +989,56 @@
 @media (max-width: 480px) {
   .reclamations-stat-count { font-size: 1rem; }
 }
+
+/* ─── Boutons des listes : seuls « Ajouter » et « Supprimer » gardent leur couleur, les autres sont neutres ─── */
+.reclamations-action-btn.modifier, .reclamations-action-btn.details, .reclamations-action-btn.associer, .reclamations-action-btn.creer-bon, .reclamations-action-btn.valider, .reclamations-action-btn.rejeter { color: var(--g-slate-700); background: transparent; }
+.reclamations-action-btn.modifier:hover:not(:disabled), .reclamations-action-btn.details:hover:not(:disabled), .reclamations-action-btn.associer:hover:not(:disabled), .reclamations-action-btn.creer-bon:hover:not(:disabled), .reclamations-action-btn.valider:hover:not(:disabled), .reclamations-action-btn.rejeter:hover:not(:disabled) {
+  background: var(--g-slate-100);
+  border-color: var(--g-slate-300);
+  color: var(--g-slate-900);
+}
+
+/* ===== En-tête sur une ligne : titre · vues de la liste (3 au plus + « Plus ») ===== */
+.reclamations-header-card { flex-wrap: nowrap; padding: 12px 16px; gap: 12px; }
+.reclamations-header-card .reclamations-header-title-box { flex-shrink: 0; }
+.reclamations-header-card .reclamations-header-subtitle { display: none; }
+.reclamations-header-card .reclamations-header-title-box h2 { font-size: 1.2rem; white-space: nowrap; }
+.reclamations-header-vues { flex: 1 1 auto; min-width: 0; display: flex; justify-content: center; }
+.reclamations-header-vues .vues-liste { margin: 0; max-width: 100%; min-width: 0; }
+.reclamations-header-vues .vues-liste__rail { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 2px; gap: 5px; }
+.reclamations-header-vues .vues-liste__rail::-webkit-scrollbar { display: none; }
+.reclamations-header-vues .vue-puce { min-height: 30px; padding: 4px 9px; font-size: 12.5px; gap: 5px; }
+@media (max-width: 900px) {
+  .reclamations-header-card { flex-wrap: wrap; }
+  .reclamations-header-card .reclamations-header-vues { flex-basis: 100%; justify-content: flex-start; }
+}
+
+/* ===== Cycle de vie (modèle IBM Maximo) : Affecter + menu « Changer l'état » ===== */
+.reclamations-action-btn.affecter, .reclamations-action-btn.cycle { color: var(--g-slate-700); background: transparent; }
+.reclamations-action-btn.affecter:hover:not(:disabled), .reclamations-action-btn.cycle:hover:not(:disabled), .reclamations-action-btn.cycle.is-ouvert {
+  background: var(--g-slate-100);
+  border-color: var(--g-slate-300);
+  color: var(--g-slate-900);
+}
+.rec-cycle { position: relative; }
+.rec-cycle__chevron { transition: transform 0.15s ease; }
+.reclamations-action-btn.is-ouvert .rec-cycle__chevron { transform: rotate(180deg); }
+.rec-cycle__menu {
+  position: absolute; z-index: 40; top: calc(100% + 6px); inset-inline-start: 0; width: 330px;
+  padding: 6px; border-radius: 12px; background: var(--g-blanc);
+  border: 1px solid var(--slate-200); box-shadow: 0 18px 40px -16px rgba(15, 23, 42, 0.28);
+}
+.rec-cycle__item {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border: 0; border-radius: 8px; background: none;
+  font: inherit; text-align: start; color: var(--slate-700); cursor: pointer;
+}
+.rec-cycle__item:hover:not(:disabled), .rec-cycle__item:focus-visible { background: var(--slate-100); outline: none; }
+.rec-cycle__item:disabled { opacity: 0.4; cursor: not-allowed; }
+.rec-cycle__icone { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: var(--slate-100); color: var(--slate-600); }
+.rec-cycle__item.is-danger:not(:disabled) .rec-cycle__icone { background: var(--g-red-50, #fef2f2); color: var(--red-600, #dc2626); }
+.rec-cycle__textes { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.rec-cycle__textes strong { font-size: 0.86rem; color: var(--slate-900); }
+.rec-cycle__textes small { font-size: 0.74rem; color: var(--slate-500); }
+.reclamations-non-affectee { color: var(--g-orange-600, #c2410c); font-size: 0.82rem; font-weight: 600; }
+

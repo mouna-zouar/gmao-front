@@ -1,0 +1,8 @@
+/* Lu / Non lu (réclamations, bons) */
+.etat-lecture { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: #475569; white-space: nowrap; }
+.etat-lecture.is-lu { color: #157553; }
+.etat-lecture.is-non-lu { color: #97570e; }
+.etat-lecture--compact { padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.etat-lecture--compact.is-lu { background: #e2f5ee; }
+.etat-lecture--compact.is-non-lu { background: #fdf1e1; }
+.etat-lecture--compact small { font-weight: 600; opacity: 0.8; font-variant-numeric: tabular-nums; }

@@ -2155,3 +2155,11 @@
 
 /* Statistiques en pastilles dans l'en-tête (composant commun PastillesStats) */
 .vehicules-header-card { flex-wrap: wrap; }
+
+/* ─── Boutons des listes : seuls « Ajouter » et « Supprimer » gardent leur couleur, les autres sont neutres ─── */
+.vehicules-action-btn.modifier, .vehicules-action-btn.details, .vehicules-action-btn.etat-quick[class*="color-"] { color: var(--g-slate-700) !important; background: transparent; border-color: var(--g-slate-200) !important; }
+.vehicules-action-btn.modifier:hover:not(.disabled), .vehicules-action-btn.details:hover:not(.disabled), .vehicules-action-btn.etat-quick[class*="color-"]:hover:not(.disabled) {
+  background: var(--g-slate-100);
+  border-color: var(--g-slate-300) !important;
+  color: var(--g-slate-900) !important;
+}

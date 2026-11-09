@@ -9,7 +9,11 @@ import { t } from '../../i18n';
  *     { nom: 'villeId', label: 'Ville', type: 'liste', chargerOptions: () => villeService.liste(), optionValeur: 'id', optionLabel: 'nom' },
  *   ];
  *
- * Types : texte · email · tel · nombre · montant · zone (texte long) · liste · date · dateheure · case · equipement · personnalise
+ * Types : texte · email · tel · nombre · montant · zone (texte long) · liste · recherche (liste avec recherche) · date · dateheure · case · equipement · personnalise
+ * Listes : options (ou options(valeurs)) · chargerOptions(valeurs) · cleOptions (ou cleOptions(valeurs) : recharge quand elle change)
+ *          · filtrerOptions(liste, valeurs) · viderSiAbsent · libelleVers (recopie le libellé choisi dans un autre champ)
+ * Personnalisé : rendu({ valeur, changer, changerChamp, valeurs, erreur, id }) · cache (gardé et envoyé, pas affiché)
+ * Fenêtre : creation (champ seulement à la création ; voir ModaleFormulaire)
  * Règles : requis · min · max · longueurMax · motif (RegExp) · valider(valeur, valeurs) → message ou null
  * Affichage : largeur 'pleine' | 'demi' (défaut) · aide · placeholder · icone · visible(valeurs) · desactive(valeurs)
  * Envoi : versPayload convertit (texte vide → null, nombres, listes numériques) ; transformer(valeur, valeurs) pour un cas particulier.
@@ -66,7 +70,7 @@ export function versPayload(champs, valeurs) {
     if (typeof v === 'string') v = v.trim();
     if (vide(v)) { p[c.nom] = c.type === 'case' ? false : null; return; }
     if (['nombre', 'montant'].includes(c.type)) p[c.nom] = Number(String(v).replace(',', '.'));
-    else if (c.type === 'liste' && c.numerique !== false && /^-?\d+$/.test(String(v))) p[c.nom] = Number(v);
+    else if ((c.type === 'liste' || c.type === 'recherche') && c.numerique !== false && /^-?\d+$/.test(String(v))) p[c.nom] = Number(v);
     else if (c.type === 'equipement') p[c.nom] = Number(v);
     else if (c.type === 'dateheure' && String(v).length === 16) p[c.nom] = `${v}:00`;
     else p[c.nom] = v;

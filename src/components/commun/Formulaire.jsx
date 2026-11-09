@@ -1,19 +1,30 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import ChampEquipement from '../ui/ChampEquipement/ChampEquipement';
+import ListeRecherche from './ListeRecherche';
 import { t } from '../../i18n';
 import './commun.css';
 
 
 const cacheOptions = new Map();
 
-function useOptions(champ) {
-  const cle = champ.cleOptions || (champ.chargerOptions ? `${champ.nom}` : null);
-  const [etat, setEtat] = useState(() => (cle && cacheOptions.has(cle) ? { liste: cacheOptions.get(cle), chargement: false } : { liste: champ.options || [], chargement: Boolean(champ.chargerOptions) }));
+/*
+ * Options d'une liste : options (tableau, ou fonction (valeurs) → tableau) ou chargerOptions(valeurs) → promesse.
+ * cleOptions (texte, ou fonction (valeurs) → texte) : quand elle change, la liste est rechargée
+ * (ex. dépôts du service choisi : cleOptions: (v) => `depots-${v.serviceId}`).
+ */
+function useOptions(champ, valeurs) {
+  const cle = typeof champ.cleOptions === 'function' ? champ.cleOptions(valeurs) : (champ.cleOptions || (champ.chargerOptions ? `${champ.nom}` : null));
+  const statiques = typeof champ.options === 'function' ? champ.options(valeurs) : (champ.options || []);
+  const [etat, setEtat] = useState(() => (cle && cacheOptions.has(cle) ? { liste: cacheOptions.get(cle), chargement: false } : { liste: statiques, chargement: Boolean(champ.chargerOptions) }));
+  const valeursRef = useRef(valeurs);
+  valeursRef.current = valeurs;
   useEffect(() => {
-    if (!champ.chargerOptions || (cle && cacheOptions.has(cle) && !champ.sansCache)) return undefined;
+    if (!champ.chargerOptions) return undefined;
+    if (cle && cacheOptions.has(cle) && !champ.sansCache) { setEtat({ liste: cacheOptions.get(cle), chargement: false }); return undefined; }
     let annule = false;
-    Promise.resolve(champ.chargerOptions())
+    setEtat((e) => ({ ...e, chargement: true }));
+    Promise.resolve(champ.chargerOptions(valeursRef.current))
       .then((r) => {
         const liste = Array.isArray(r) ? r : (r?.content ?? r?.data ?? []);
         if (!champ.sansCache && cle) cacheOptions.set(cle, liste);
@@ -21,9 +32,11 @@ function useOptions(champ) {
       })
       .catch(() => { if (!annule) setEtat({ liste: [], chargement: false, erreur: true }); });
     return () => { annule = true; };
-  }, [champ, cle]);
-  if (!champ.chargerOptions) return { liste: champ.options || [], chargement: false };
-  return etat;
+  }, [cle]); // eslint-disable-line react-hooks/exhaustive-deps
+  const brute = champ.chargerOptions ? etat.liste : statiques;
+  // filtrerOptions(liste, valeurs) : ne garder que les options compatibles avec les autres champs
+  const liste = champ.filtrerOptions ? champ.filtrerOptions(brute, valeurs) : brute;
+  return { liste, chargement: champ.chargerOptions ? etat.chargement : false };
 }
 
 const valeurOption = (champ, o) => (typeof o === 'object' ? o[champ.optionValeur || 'value'] ?? o.id : o);
@@ -35,7 +48,22 @@ const labelOption = (champ, o) => {
 
 /** Un champ : libellé, saisie selon le type, aide et message d'erreur. */
 export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
-  const options = useOptions(champ);
+  const options = useOptions(champ, valeurs);
+  const estListe = champ.type === 'liste' || champ.type === 'recherche';
+
+  // viderSiAbsent : la valeur choisie n'est plus dans la liste (filtrée par un autre champ) → on la vide
+  // libelleVers : recopie le libellé de l'option choisie dans un autre champ (ex. serviceNom)
+  const choisie = estListe && valeur !== '' && valeur != null
+    ? options.liste.find((o) => String(valeurOption(champ, o)) === String(valeur)) : null;
+  useEffect(() => {
+    if (!estListe || options.chargement) return;
+    if (champ.viderSiAbsent && valeur !== '' && valeur != null && !choisie) { onChange(champ.nom, ''); return; }
+    if (champ.libelleVers) {
+      const libelle = choisie ? labelOption(champ, choisie) : (valeur ? valeurs?.[champ.libelleVers] ?? '' : '');
+      if ((valeurs?.[champ.libelleVers] ?? '') !== libelle) onChange(champ.libelleVers, libelle);
+    }
+  }, [estListe, options.chargement, valeur, choisie]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const id = `cf-${champ.nom}`;
   const desactive = typeof champ.desactive === 'function' ? champ.desactive(valeurs) : champ.desactive;
   const Icone = champ.icone;
@@ -66,6 +94,17 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
         </div>
       );
       break;
+    case 'recherche':
+      saisie = (
+        <ListeRecherche id={id} name={champ.nom} value={valeur ?? ''} onChange={(e) => changer(e.target.value)}
+          options={options.liste} loading={options.chargement} disabled={desactive}
+          getValue={(o) => valeurOption(champ, o)} getLabel={(o) => labelOption(champ, o)}
+          getOptionHint={champ.optionAide || (() => null)}
+          placeholder={champ.placeholder ? t(champ.placeholder) : t('Rechercher…')}
+          emptyMessage={t('Aucun résultat')} allowEmpty={!champ.requis}
+          emptyOptionLabel={champ.optionVide ? t(champ.optionVide) : t('— Aucun —')} />
+      );
+      break;
     case 'case':
       saisie = (
         <label className="cf-case">
@@ -75,10 +114,23 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
       );
       break;
     case 'equipement':
-      saisie = <ChampEquipement id={id} name={champ.nom} value={valeur ?? ''} onChange={(e) => changer(e.target.value)} facultatif={!champ.requis} disabled={desactive} />;
+      // champ.service : nom du champ service — liste limitée à ce service, et service rempli d'après l'équipement choisi
+      saisie = (
+        <ChampEquipement id={id} name={champ.nom} value={valeur ?? ''} onChange={(e) => changer(e.target.value)} facultatif={!champ.requis} disabled={desactive}
+          autoFocus={champ.autoFocus}
+          serviceId={champ.service ? valeurs?.[champ.service] || null : null}
+          serviceNom={champ.serviceLibelle ? valeurs?.[champ.serviceLibelle] || '' : ''}
+          onEquipementChoisi={champ.service ? (e) => {
+            if (e?.serviceId == null || String(e.serviceId) === String(valeurs?.[champ.service] ?? '')) return;
+            onChange(champ.service, e.serviceId);
+            // libellé recalculé par le champ service (il ne doit pas garder le nom de l'ancien service)
+            if (champ.serviceLibelle) onChange(champ.serviceLibelle, '');
+          } : undefined} />
+      );
       break;
     case 'personnalise':
-      saisie = champ.rendu({ valeur, changer, valeurs, erreur, id });
+      // changerChamp(nom, valeur) : pour un champ personnalisé qui remplit aussi d'autres champs
+      saisie = champ.rendu({ valeur, changer, changerChamp: onChange, valeurs, erreur, id });
       break;
     default: {
       const type = { email: 'email', tel: 'tel', nombre: 'number', montant: 'number', date: 'date', dateheure: 'datetime-local' }[champ.type] || 'text';
@@ -92,13 +144,13 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
 
   return (
     <div className={`cf-champ cf-champ--${champ.largeur || 'demi'} ${erreur ? 'a-erreur' : ''}`}>
-      {champ.type !== 'case' && (
+      {champ.type !== 'case' && champ.label && (
         <label htmlFor={id} className="cf-label">
           {t(champ.label)}{champ.requis && <span className="cf-requis" aria-hidden="true">*</span>}
           {champ.unite && <small>({t(champ.unite)})</small>}
         </label>
       )}
-      {Icone && !['zone', 'case', 'equipement', 'personnalise', 'liste'].includes(champ.type)
+      {Icone && !['zone', 'case', 'equipement', 'personnalise', 'liste', 'recherche'].includes(champ.type)
         ? <div className="cf-avec-icone"><Icone size={15} aria-hidden="true" />{saisie}</div>
         : saisie}
       {(erreur || champ.aide) && (
@@ -110,7 +162,8 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
 
 /** Grille de champs (2 colonnes, 1 sur téléphone). `section` : n'affiche que les champs de cette section. */
 export default function Formulaire({ champs, valeurs, erreurs = {}, onChange, section }) {
-  const visibles = champs.filter((c) => (!section || (c.section || 'general') === section) && (!c.visible || c.visible(valeurs)));
+  // cache : valeur gardée et envoyée, mais pas affichée (ex. un libellé recopié par libelleVers)
+  const visibles = champs.filter((c) => !c.cache && (!section || (c.section || 'general') === section) && (!c.visible || c.visible(valeurs)));
   return (
     <div className="cf-grille">
       {visibles.map((c) => (

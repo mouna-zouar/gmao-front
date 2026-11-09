@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   
@@ -7,14 +7,11 @@ import {
   Trash2,
   Eye,
   Link,
-  FilePlus,
-  CheckCircle,
   XCircle,
   Search,
   Filter,
   FileSpreadsheet,
   Printer,
-  BarChart3,
   ChevronLeft,
   ChevronRight,
   ArrowUp,
@@ -23,11 +20,18 @@ import {
   Building2,
   Calendar,
   RefreshCw,
-  Info
+  Info,
+  UserCheck,
+  ChevronDown,
+  Workflow,
+  PlayCircle,
+  CheckCircle2,
+  Lock,
+  RotateCcw,
 } from 'lucide-react';
+import { useActionsReclamation, actionsPossibles, estAffectee, nomGroupe, nomTechnicien } from './ReclamationActions';
 import { ICONES_MODULES } from '../../../constants/modules';
-import { PastillesStats } from '../../commun';
-import reclamationService from '../../../services/reclamationService';
+import reclamationService from '../../../services/Reclamationservice';
 import ReclamationModal from '../../ui/modals/ReclamationModal';
 import ReclamationDetails from './ReclamationDetails';
 // ⚠️ Adapte ce chemin au dossier où se trouve BonMaintenanceDetails.jsx
@@ -50,6 +54,11 @@ import { useVueActive } from '../../ui/Listes/stockageVues';
 import { contexteUtilisateur, vuesReclamations } from '../../ui/Listes/vuesMetier';
 import './Reclamations.css';
 import Pagination from '../../commun/Pagination';
+import EtatLecture from '../../commun/EtatLecture';
+import LignesChargement from '../../commun/LignesChargement';
+import {
+  AnnonceCopie, BoutonFiltresColonnes, BoutonMenuColonne, BoutonTri, ChampFiltre, choixColonnes, filtrerParColonnes, useFiltresColonnes,
+} from '../../commun/TableauColonnes';
 
 // Barre de statistiques : un compteur par état, mêmes couleurs et icônes que les pastilles
 const ETATS_STATS = optionsStatut('reclamation');
@@ -80,9 +89,7 @@ function formatDate(iso) {
 }
 
 function personnelLabel(r) {
-  return r.personnelAffecte
-    ? `${r.personnelAffecte.nom ?? ''} ${r.personnelAffecte.prenom ?? ''}`.trim()
-    : (r.personnelAffecteNom || '');
+  return nomTechnicien(r);
 }
 
 /* Colonnes paramétrables (affichage + recherche) */
@@ -92,9 +99,11 @@ const RECLAMATION_COLUMNS_DEFAULT = [
   { key: 'service',     label: 'Service',           visible: true, searchable: false },
   { key: 'criticite',   label: 'Criticité',         visible: true, searchable: false },
   { key: 'urgence',     label: 'Urgence',           visible: true, searchable: false },
-  { key: 'personnel',   label: 'Personnel affecté', visible: true, searchable: false },
+  { key: 'groupe',      label: 'Groupe',            visible: true, searchable: true  },
+  { key: 'personnel',   label: 'Technicien',        visible: true, searchable: true  },
   { key: 'date',        label: 'Date',              visible: true, searchable: false },
   { key: 'etat',        label: 'État',              visible: true, searchable: false },
+  { key: 'lecture',     label: 'Lu',                visible: true, searchable: false },
 ];
 
 function getColumnSearchValue(r, key) {
@@ -104,12 +113,22 @@ function getColumnSearchValue(r, key) {
     case 'service':     return r.serviceNom || r.service?.description || '';
     case 'criticite':   return niveauLabel(r.criticite);
     case 'urgence':     return niveauLabel(r.urgence);
+    case 'groupe':      return nomGroupe(r);
     case 'personnel':   return personnelLabel(r);
     case 'date':        return formatDate(r.date);
     case 'etat':        return etatLabel(r.etat);
     default:            return '';
   }
 }
+
+/* Colonnes pour la recherche par colonne et la copie (texte affiché) */
+const COLONNES_TEXTE = RECLAMATION_COLUMNS_DEFAULT.map((c) => ({
+  cle: c.key,
+  label: c.label,
+  filtre: ['num', 'description', 'titre'].includes(c.key) ? 'texte' : (['criticite', 'urgence', 'priorite', 'etat', 'lecture'].includes(c.key) ? 'liste' : undefined),
+  texte: (r) => (c.key === 'lecture' ? (r.dateLecture ? t('Lu') : t('Non lu')) : t(getColumnSearchValue(r, c.key))),
+}));
+const COLONNE_TEXTE = Object.fromEntries(COLONNES_TEXTE.map((c) => [c.cle, c]));
 
 /* Valeurs utilisées pour le tri */
 const SORTABLE_COLUMNS = {
@@ -118,9 +137,11 @@ const SORTABLE_COLUMNS = {
   service:     (r) => r.serviceNom || r.service?.description || '',
   criticite:   (r) => r.criticite ?? -1,
   urgence:     (r) => r.urgence ?? -1,
+  groupe:      (r) => nomGroupe(r),
   personnel:   (r) => personnelLabel(r),
   date:        (r) => (r.date ? new Date(r.date).getTime() : 0),
   etat:        (r) => r.etat ?? -1,
+  lecture:     (r) => (r.dateLecture ? 1 : 0),
 };
 
 export default function Reclamations() {
@@ -129,6 +150,7 @@ export default function Reclamations() {
   const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
+  const fc = useFiltresColonnes('reclamations');
   const [etatFilter, setEtatFilter] = useState('all');
 
   // ✅ Tri par défaut : date la plus récente en premier
@@ -177,16 +199,13 @@ export default function Reclamations() {
     onConfirm: null,
   });
 
-  const [rejetModal, setRejetModal] = useState({ show: false, motif: '' });
 
   // Statistiques par état (comme dans « Bons de maintenance »), calculées sur toutes les réclamations
-  const [showStats, setShowStats] = useState(true);
   const etatStats = useMemo(() => {
     const stats = {};
     reclamations.forEach((r) => { stats[r.etat] = (stats[r.etat] || 0) + 1; });
     return stats;
   }, [reclamations]);
-  const [validating, setValidating] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -206,6 +225,7 @@ export default function Reclamations() {
     load();
   }, []);
 
+  const choixCol = useMemo(() => choixColonnes(COLONNES_TEXTE, reclamations), [reclamations]);
   const filteredReclamations = useMemo(() => {
     const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
     const term = searchTerm.trim().toLowerCase();
@@ -220,23 +240,24 @@ export default function Reclamations() {
       return matchesSearch && matchesEtat && matchesVue;
     });
 
+    const parColonne = filtrerParColonnes(filtered, COLONNES_TEXTE, fc.filtres, choixCol);
     const extractor = sortColumn ? SORTABLE_COLUMNS[sortColumn] : null;
-    if (!extractor) return filtered;
+    if (!extractor) return parColonne;
 
-    const sorted = [...filtered].sort((a, b) => {
+    const sorted = [...parColonne].sort((a, b) => {
       const va = extractor(a);
       const vb = extractor(b);
       if (typeof va === 'string') return va.localeCompare(vb, 'fr', { sensitivity: 'base', numeric: true });
       return va - vb;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
-  }, [reclamations, searchTerm, etatFilter, columnSettings, sortColumn, sortDirection, vueCourante]);
+  }, [reclamations, searchTerm, etatFilter, columnSettings, sortColumn, sortDirection, vueCourante, fc.filtres, choixCol]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReclamations.length / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, etatFilter, sortColumn, sortDirection, vueId]);
+  }, [searchTerm, etatFilter, sortColumn, sortDirection, vueId, fc.filtres]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -301,16 +322,25 @@ export default function Reclamations() {
       description: r.description || '',
       urgence: r.urgence ?? '',
       lotArticleImmobilistationId: r.lotArticleImmobilistationId ?? '',
+      serviceId: r.serviceId ?? '',
+      serviceNom: r.serviceNom || r.service?.description || '',
     };
   }, [selectedReclamation]);
 
   const TABLE_COLUMNS_DEF = {
-    num: { cell: (r) => <td key="num" style={{ fontWeight: 600 }}>{r.num || '—'}</td> },
+    num: { cell: (r) => <td key="num" className="liste-num">{r.num || '—'}</td> },
     description: { cell: (r) => <td key="description" className="reclamations-desc-cell">{t(r.description)}</td> },
     service: { cell: (r) => <td key="service">{r.serviceNom || r.service?.description || '—'}</td> },
     criticite: { cell: (r) => <td key="criticite">{r.criticite ? <BadgeStatut type="niveau" valeur={r.criticite} taille="petit" /> : '—'}</td> },
     urgence: { cell: (r) => <td key="urgence">{r.urgence ? <BadgeStatut type="niveau" valeur={r.urgence} taille="petit" /> : '—'}</td> },
-    personnel: { cell: (r) => <td key="personnel">{personnelLabel(r) || '—'}</td> },
+    groupe: { cell: (r) => <td key="groupe">{nomGroupe(r) || '—'}</td> },
+    personnel: {
+      cell: (r) => (
+        <td key="personnel">
+          {personnelLabel(r) || (estAffectee(r) ? '—' : <span className="reclamations-non-affectee">{t('Non affectée')}</span>)}
+        </td>
+      ),
+    },
     date: {
       cell: (r) => (
         <td key="date">
@@ -325,12 +355,21 @@ export default function Reclamations() {
         </td>
       ),
     },
+    // Lu / non lu par le technicien affecté ; le temps d'attente ne compte que pour une réclamation à traiter
+    lecture: {
+      cell: (r) => (
+        <td key="lecture">
+          <EtatLecture objet={r} compact actif={[0, 5, 1].includes(Number(r.etat ?? 0))} />
+        </td>
+      ),
+    },
   };
 
   const handleResetFilters = () => {
     setSearchTerm('');
     setEtatFilter('all');
     setVueId('toutes');
+    fc.vider();
   };
 
   const handleRowClick = (reclamation) => {
@@ -411,6 +450,22 @@ export default function Reclamations() {
   // Lien direct /reclamations?id=12 (QR code d'une fiche, notification)
   const [parametres, setParametres] = useSearchParams();
   const idLien = Number(parametres.get('id')) || null;
+
+  // Lien depuis un tableau de bord : /reclamations?etat=1 ou ?vue=non-affectees — applique le filtre puis nettoie l'adresse
+  const etatLien = parametres.get('etat');
+  const vueLien = parametres.get('vue');
+  useEffect(() => {
+    if (etatLien == null && vueLien == null) return;
+    setSearchTerm('');
+    fc.vider();
+    setEtatFilter(etatLien != null && /^\d+$/.test(etatLien) ? etatLien : 'all');
+    setVueId(vueLien && vuesListe.some((v) => v.id === vueLien) ? vueLien : 'toutes');
+    const reste = new URLSearchParams(parametres);
+    reste.delete('etat');
+    reste.delete('vue');
+    setParametres(reste, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etatLien, vueLien]);
 
   const fermerDetails = () => {
     setDetailsOpen(false);
@@ -555,55 +610,28 @@ export default function Reclamations() {
     demanderSuppression(cochesValides);
   };
 
-  const handleValider = async () => {
-    if (!selectedReclamation || validating) return;
-    setValidating(true);
-    try {
-      const updated = await reclamationService.valider(selectedReclamation.id, {});
-      // Sur la page de détail, le parcours se met à jour : pas besoin d'alerte
-      if (!detailsOpen) {
-        alert(updated.bonMaintenanceId
-          ? t('Réclamation validée. Bon de maintenance lié (id {id}).', { id: updated.bonMaintenanceId })
-          : 'Réclamation validée.');
-      }
-      await apresAction();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || 'Échec de la validation.');
-    } finally {
-      setValidating(false);
+  // Cycle de vie (Maximo) : affecter, prendre en charge, résoudre, clôturer, rouvrir, annuler
+  const actionsRec = useActionsReclamation(async (resultat, nom) => {
+    // Sur la liste, la prise en charge ouvre directement la page de la réclamation (le bon vient d'être créé)
+    if (nom === 'prendre' && !detailsOpen && resultat?.id) {
+      await load();
+      await openDetails(resultat);
+      return;
     }
-  };
-
-  const openRejetModal = () => {
-    if (!selectedReclamation) return;
-    setRejetModal({ show: true, motif: '' });
-  };
-
-  const confirmRejeter = async () => {
-    const motif = rejetModal.motif.trim();
-    if (!motif || !selectedReclamation) return;
-    setRejetModal({ show: false, motif: '' });
-    setValidating(true);
-    try {
-      await reclamationService.rejeter(selectedReclamation.id, { motifRejet: motif });
-      await apresAction();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || 'Échec du rejet.');
-    } finally {
-      setValidating(false);
-    }
-  };
+    await apresAction();
+  });
+  const possibles = actionsPossibles(selectedReclamation);
+  const lancerAction = (nom) => actionsRec.lancer(nom, selectedReclamation);
 
   // Données du tableau filtré, partagées par l'export CSV et l'impression
   const donneesTableau = () => {
-    const entetes = ['Numéro', 'Description', 'Criticité', 'Urgence', 'Personnel affecté', 'Date', 'État'].map((e) => t(e));
+    const entetes = ['Numéro', 'Description', 'Criticité', 'Urgence', 'Groupe', 'Technicien', 'Date', 'État'].map((e) => t(e));
     const lignes = filteredReclamations.map((r) => [
       r.num || '',
       (r.description || ''),
       t(niveauLabel(r.criticite)),
       t(niveauLabel(r.urgence)),
+      nomGroupe(r),
       personnelLabel(r),
       formatDate(r.date),
       t(etatLabel(r.etat)),
@@ -640,11 +668,11 @@ export default function Reclamations() {
         { label: t('Vue'), valeur: vueCourante.filtre ? t(vueCourante.label) : '' },
         { label: t('Recherche'), valeur: searchTerm.trim() },
         { label: t('État'), valeur: etatFilter !== 'all' ? t(etatLabel(Number(etatFilter))) : '' },
+        ...COLONNES_TEXTE.filter((c) => fc.actif(c.cle)).map((c) => ({ label: t(c.label), valeur: fc.filtres[c.cle].trim() })),
       ],
     });
   };
 
-  const handleStats = () => setShowStats((v) => !v);
 
   // Un bon ouvert depuis la page de détail s'affiche en plein écran, avec retour vers la réclamation
   if (bonOuvert) {
@@ -665,11 +693,10 @@ export default function Reclamations() {
       <ReclamationDetails
         data={detailsData}
         loading={detailsLoading}
-        validating={validating}
+        validating={actionsRec.enCours}
         onBack={fermerDetails}
         onModifier={openEdit}
-        onValider={handleValider}
-        onRejeter={openRejetModal}
+        onAction={lancerAction}
         onCreerBon={openCreateBon}
         onAssocier={openAssociate}
         onOuvrirBon={(bon) => setBonOuvert(bon)}
@@ -695,38 +722,20 @@ export default function Reclamations() {
             </p>
           </div>
         </div>
-        <div className="reclamations-header-stats">
-          <button
-            type="button"
-            className={`reclamations-toggle-stats ${showStats ? 'is-actif' : ''}`}
-            onClick={() => setShowStats((v) => !v)}
-            title={showStats ? t('Masquer les statistiques') : t('Afficher les statistiques')}
-            aria-label={showStats ? t('Masquer les statistiques') : t('Afficher les statistiques')}
-            aria-pressed={showStats}
-          >
-            <BarChart3 size={18} />
-          </button>
-        </div>
-
-        {/* Statistiques par état : pastilles cliquables (filtre) */}
-        {showStats && (
-          <PastillesStats
-            ariaLabel={t('Réclamations par état')}
-            stats={[
-              { cle: 'all', label: t('Total'), valeur: loading ? '…' : reclamations.length, actif: etatFilter === 'all', onClick: () => setEtatFilter('all'), aide: t('Tous les états') },
-              ...ETATS_STATS.map((option) => {
-                const valeur = String(option.valeur);
-                const actif = etatFilter === valeur;
-                return {
-                  cle: valeur, label: t(option.libelle), valeur: loading ? '…' : (etatStats[option.valeur] || 0),
-                  couleur: TONS[option.ton].couleur, icone: option.Icone, actif,
-                  onClick: () => setEtatFilter(actif ? 'all' : valeur),
-                  aide: actif ? t('Retirer le filtre « {etat} »', { etat: t(option.libelle) }) : t('Afficher seulement : {etat}', { etat: t(option.libelle) }),
-                };
-              }),
-            ]}
+        {/* VUES de la liste (3 au plus, les autres dans « Plus »), à la place des statistiques par état */}
+        <div className="reclamations-header-vues">
+          <VuesListe
+            liste="reclamations"
+            userKey={moi.cle}
+            vues={vuesListe}
+            items={reclamations}
+            chargement={loading}
+            vueActive={vueCourante.id}
+            reglages={{ recherche: searchTerm, etat: etatFilter, tri: sortColumn, sens: sortDirection }}
+            onChoisir={choisirVue}
+            max={3}
           />
-        )}
+        </div>
       </div>
 
       <div className="reclamations-actions-bar">
@@ -754,22 +763,29 @@ export default function Reclamations() {
         </button>
 
         <button
+          className={`reclamations-action-btn affecter ${!possibles.affecter ? 'disabled' : ''}`}
+          disabled={!possibles.affecter}
+          onClick={() => lancerAction('affecter')}
+          title={t("Affecter à un groupe et/ou un technicien")}
+        >
+          <UserCheck size={18} />
+          <span>{estAffectee(selectedReclamation) ? t("Réaffecter") : t("Affecter")}</span>
+        </button>
+
+        <MenuCycle
+          possibles={possibles}
+          desactive={!selectedReclamation || actionsRec.enCours}
+          onChoisir={lancerAction}
+        />
+
+        <button
           className={`reclamations-action-btn associer ${!selectedReclamation ? 'disabled' : ''}`}
           disabled={!selectedReclamation}
           onClick={openAssociate}
+          title={t("Lier un bon de maintenance existant (vaut prise en charge)")}
         >
           <Link size={18} />
           <span>{t("Associer")}</span>
-        </button>
-
-        <button
-          className={`reclamations-action-btn creer-bon ${!selectedReclamation ? 'disabled' : ''}`}
-          disabled={!selectedReclamation}
-          onClick={openCreateBon}
-          title={t("Créer un bon de maintenance pour cette réclamation")}
-        >
-          <FilePlus size={18} />
-          <span>{t("Créer un bon")}</span>
         </button>
 
         <div className="reclamations-actions-divider" />
@@ -791,16 +807,6 @@ export default function Reclamations() {
         )}
       </div>
 
-      <VuesListe
-        liste="reclamations"
-        userKey={moi.cle}
-        vues={vuesListe}
-        items={reclamations}
-        chargement={loading}
-        vueActive={vueCourante.id}
-        reglages={{ recherche: searchTerm, etat: etatFilter, tri: sortColumn, sens: sortDirection }}
-        onChoisir={choisirVue}
-      />
 
       <div className="reclamations-filter-panel">
         <div className="reclamations-filter-group">
@@ -822,13 +828,14 @@ export default function Reclamations() {
             <Filter size={16} />
             <select value={etatFilter} onChange={(e) => setEtatFilter(e.target.value)}>
               <option value="all">{t("Tous")}</option>
-              <option value="0">{t("Ouverte")}</option>
-              <option value="1">{t("En cours")}</option>
-              <option value="2">{t("Clôturée")}</option>
-         
+              {ETATS_STATS.map((o) => (
+                <option key={o.valeur} value={String(o.valeur)}>{t(o.libelle)}</option>
+              ))}
             </select>
           </div>
         </div>
+
+        <BoutonFiltresColonnes voir={fc.voir} onBasculer={() => fc.setVoir((v) => !v)} nb={fc.nb} />
 
         <button className="reclamations-filter-reset" onClick={handleResetFilters}>
           <RefreshCw size={16} />
@@ -847,9 +854,6 @@ export default function Reclamations() {
           </button>
           <button className="reclamations-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>
             <Printer size={18} />
-          </button>
-          <button className="reclamations-export-btn stats" title={t("Statistiques")} onClick={handleStats}>
-            <BarChart3 size={18} />
           </button>
         </div>
       </div>
@@ -884,23 +888,33 @@ export default function Reclamations() {
                 <th
                   key={c.key}
                   className={`reclamations-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
-                  onClick={() => handleSort(c.key)}
+                  onClick={() => fc.basculer(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
+                  title={t('Cliquer pour rechercher dans cette colonne')}
                 >
-                  <span className="reclamations-th-inner">
-                    <span>{t(c.label)}</span>
-                    {renderSortIcon(c.key)}
-                  </span>
+                  <div className="cl-th">
+                    <span className="reclamations-th-inner">
+                      <span>{t(c.label)}</span>
+                      <BoutonTri label={c.label} onTrier={() => handleSort(c.key)}>{renderSortIcon(c.key)}</BoutonTri>
+                    </span>
+                    <BoutonMenuColonne colonne={COLONNE_TEXTE[c.key]} triActif={sortColumn === c.key ? sortDirection : null}
+                      filtreActif={fc.actif(c.key)}
+                      onTrier={(sens) => { setSortColumn(c.key); setSortDirection(sens); }}
+                      onCopier={(d) => fc.copier(COLONNE_TEXTE[c.key], filteredReclamations, d)}
+                      onMasquer={() => setColumnSettings((prev) => prev.map((x) => (x.key === c.key ? { ...x, visible: false } : x)))}
+                      onEffacer={() => fc.changer(c.key, '')} />
+                  </div>
+                  {fc.visible(c.key) && (
+                    <ChampFiltre colonne={COLONNE_TEXTE[c.key]} valeur={fc.filtres[c.key]} choix={choixCol[c.key]} onChanger={fc.changer}
+                      focus={fc.focus(c.key)} onFermer={() => fc.fermer(c.key)} />
+                  )}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={visibleColumns.length + 1} className="reclamations-table-empty">{t("Chargement...")}</td>
-              </tr>
+              <LignesChargement colonnes={visibleColumns.length + 1} premiereCase />
             ) : filteredReclamations.length === 0 ? (
               <tr>
                 <td colSpan={visibleColumns.length + 1} className="reclamations-table-empty">
@@ -1003,6 +1017,8 @@ export default function Reclamations() {
         confirming={confirmModal.confirming}
       />
 
+      <AnnonceCopie texte={fc.annonce} />
+
       <ColumnSettingsModal
         key={columnSettingsInstanceKey}
         show={showColumnSettings}
@@ -1013,42 +1029,64 @@ export default function Reclamations() {
         onToggleSearch={toggleColumnSearchability}
       />
 
-      {rejetModal.show && (
-        <div className="modal-overlay confirm-overlay" onClick={() => setRejetModal({ show: false, motif: '' })}>
-          <div className="confirm-modal-container rejet-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-modal-content">
-              <div className="confirm-modal-icon-wrapper">
-                <XCircle className="modal-confirm-icon danger" size={48} strokeWidth={2} />
-              </div>
-              <div className="confirm-modal-text">
-                <h3>{t("Rejeter la réclamation")}</h3>
-                <p>{t("Indique le motif du rejet.")}</p>
-                <textarea
-                  className="confirm-modal-input"
-                  value={rejetModal.motif}
-                  onChange={(e) => setRejetModal((p) => ({ ...p, motif: e.target.value }))}
-                  placeholder={t("Motif de rejet...")}
-                  rows={3}
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="confirm-modal-footer">
-              <button type="button" className="confirm-btn secondary" onClick={() => setRejetModal({ show: false, motif: '' })}>
-                {t("Annuler")}
+      {actionsRec.fenetres}
+    </>
+  );
+}
+
+/* Menu « Cycle de vie » : les changements d'état possibles pour la réclamation sélectionnée */
+const ELEMENTS_CYCLE = [
+  { cle: 'prendre', label: 'Prendre en charge', aide: 'Passe « En cours » et crée le bon de maintenance', icone: PlayCircle },
+  { cle: 'resoudre', label: 'Marquer résolue', aide: 'Le problème est réglé, en attente de clôture', icone: CheckCircle2 },
+  { cle: 'cloturer', label: 'Clôturer', aide: 'Ferme définitivement une réclamation résolue', icone: Lock },
+  { cle: 'rouvrir', label: 'Rouvrir', aide: 'Résolue mais pas réglée : repasse « En cours » (motif obligatoire)', icone: RotateCcw },
+  { cle: 'annuler', label: 'Annuler', aide: 'Arrête la demande (motif obligatoire)', icone: XCircle },
+];
+
+function MenuCycle({ possibles, desactive, onChoisir }) {
+  const [ouvert, setOuvert] = useState(false);
+  const zone = useRef(null);
+  useEffect(() => {
+    if (!ouvert) return undefined;
+    const fermerDehors = (e) => { if (zone.current && !zone.current.contains(e.target)) setOuvert(false); };
+    const fermerEchap = (e) => { if (e.key === 'Escape') setOuvert(false); };
+    document.addEventListener('mousedown', fermerDehors);
+    document.addEventListener('keydown', fermerEchap);
+    return () => { document.removeEventListener('mousedown', fermerDehors); document.removeEventListener('keydown', fermerEchap); };
+  }, [ouvert]);
+  useEffect(() => { if (desactive) setOuvert(false); }, [desactive]);
+  return (
+    <div className="rec-cycle" ref={zone}>
+      <button
+        type="button"
+        className={`reclamations-action-btn cycle ${desactive ? 'disabled' : ''} ${ouvert ? 'is-ouvert' : ''}`}
+        disabled={desactive}
+        aria-haspopup="menu"
+        aria-expanded={ouvert}
+        onClick={() => setOuvert((o) => !o)}
+      >
+        <Workflow size={18} />
+        <span>{t('Changer l’état')}</span>
+        <ChevronDown size={15} className="rec-cycle__chevron" />
+      </button>
+      {ouvert && (
+        <div className="rec-cycle__menu" role="menu">
+          {ELEMENTS_CYCLE.map((el) => {
+            const Icone = el.icone;
+            const actif = !!possibles[el.cle];
+            return (
+              <button key={el.cle} type="button" role="menuitem" className={`rec-cycle__item ${el.cle === 'annuler' ? 'is-danger' : ''}`}
+                disabled={!actif} onClick={() => { setOuvert(false); onChoisir(el.cle); }}>
+                <span className="rec-cycle__icone"><Icone size={17} aria-hidden="true" /></span>
+                <span className="rec-cycle__textes">
+                  <strong>{t(el.label)}</strong>
+                  <small>{t(el.aide)}</small>
+                </span>
               </button>
-              <button
-                type="button"
-                className="confirm-btn primary danger"
-                onClick={confirmRejeter}
-                disabled={!rejetModal.motif.trim()}
-              >
-                {t("Rejeter")}
-              </button>
-            </div>
-          </div>
+            );
+          })}
         </div>
       )}
-    </>
+    </div>
   );
 }

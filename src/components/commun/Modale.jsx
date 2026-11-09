@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { t } from '../../i18n';
 import './commun.css';
 
@@ -8,6 +8,7 @@ import './commun.css';
 export default function Modale({
   ouvert, onFermer, titre, surtitre, sousTitre, icone: Icone, taille = 'lg',
   sections, sectionActive, onSection, pied, infoPied, fermerSurFond = true, className = '', children,
+  etapes = false, // sections affichées en étapes, en haut (assistant « Suivant »), au lieu du menu à gauche
 }) {
   const fenetre = useRef(null);
   // onFermer est souvent une fonction recréée à chaque rendu : on la garde dans une référence
@@ -37,7 +38,8 @@ export default function Modale({
 
   if (!ouvert) return null;
 
-  const avecSections = Array.isArray(sections) && sections.length > 1;
+  const avecSections = Array.isArray(sections) && sections.length > 1 && !etapes;
+  const avecEtapes = Array.isArray(sections) && sections.length > 1 && etapes;
 
   return createPortal(
     <div className="cm-voile" onMouseDown={(e) => { if (fermerSurFond && e.target === e.currentTarget) onFermer?.(); }}>
@@ -53,6 +55,25 @@ export default function Modale({
             <X size={18} strokeWidth={2.5} />
           </button>
         </header>
+
+        {avecEtapes && (
+          <ol className="cm-etapes" aria-label={t('Étapes')}>
+            {sections.map((s) => {
+              const SIcone = s.icone;
+              const actuelle = sectionActive === s.cle;
+              return (
+                <li key={s.cle} className={`cm-etape ${actuelle ? 'is-actuelle' : ''} ${s.fait ? 'is-faite' : ''} ${s.erreur ? 'a-erreur' : ''}`}>
+                  <button type="button" disabled={s.accessible === false} aria-current={actuelle ? 'step' : undefined} onClick={() => onSection?.(s.cle)}>
+                    <span className="cm-etape__num">
+                      {s.fait && !actuelle ? <Check size={13} strokeWidth={3} aria-hidden="true" /> : SIcone ? <SIcone size={14} aria-hidden="true" /> : null}
+                    </span>
+                    <span className="cm-etape__label">{s.label}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        )}
 
         <div className={`cm-modale__milieu ${avecSections ? 'avec-sections' : ''}`}>
           {avecSections && (

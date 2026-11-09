@@ -1,0 +1,65 @@
+/* ══════════════════════════════════════════════════════════════════════
+ * FINITIONS (design, lot 5) — chargement, clavier, téléphone, mouvements réduits.
+ * Chargé par index.css. Règles générales à faible priorité (:where) : un composant
+ * qui a déjà son propre style le garde.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Clavier : anneau turquoise visible sur tout élément cliquable sans style de focus ── */
+:where(a, button, [role='button'], [role='tab'], [role='menuitem'], input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 2px solid var(--g-brand-500);
+  outline-offset: 2px;
+}
+/* Texte sélectionné et barres de défilement aux couleurs de l'application */
+::selection { background: var(--g-brand-100); color: var(--g-slate-900); }
+* { scrollbar-width: thin; scrollbar-color: var(--g-slate-300) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--g-slate-300); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background-color: var(--g-slate-400); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Texte lu par les lecteurs d'écran seulement */
+.g-lecteur-ecran { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ── Chargement des listes : barres qui scintillent (LignesChargement) ── */
+.g-squelette {
+  display: block; height: 10px; max-width: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--g-slate-100) 0%, var(--g-slate-200) 40%, var(--g-slate-100) 80%);
+  background-size: 300% 100%;
+  animation: gScintille 1.4s ease-in-out infinite;
+}
+.g-squelette--case { width: 16px; height: 16px; border-radius: 4px; }
+@keyframes gScintille { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+.g-ligne-chargement td { height: 52px; }
+.g-ligne-chargement:nth-child(2) .g-squelette { animation-delay: 0.08s; }
+.g-ligne-chargement:nth-child(3) .g-squelette { animation-delay: 0.16s; }
+.g-ligne-chargement:nth-child(4) .g-squelette { animation-delay: 0.24s; }
+.g-ligne-chargement:nth-child(5) .g-squelette { animation-delay: 0.32s; }
+.g-ligne-chargement:nth-child(6) .g-squelette { animation-delay: 0.40s; }
+.app-shell .g-ligne-chargement:hover td { background: transparent; }
+
+/* ── Téléphone ── */
+@media (max-width: 640px) {
+  /* Barre du haut : le nom de l'utilisateur prenait la place et poussait la page en largeur */
+  .app-shell .user-btn__info, .app-shell .navbar__divider { display: none; }
+  .app-shell .navbar__right { gap: 6px; }
+  /* Vues de liste dans l'en-tête (Toutes, À traiter…) : défilent au lieu de déborder */
+  .app-shell .vues-liste--compacte { min-width: 0; max-width: 100%; }
+  .app-shell .vues-liste--compacte .vues-liste__rail { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .app-shell .vue-puce { flex-shrink: 0; }
+  .app-shell :is(.bons-header-card, .reclamations-header-card) > * { min-width: 0; max-width: 100%; }
+  .app-shell [class$='-header-vues'] { flex: 1 1 100%; }
+  .app-shell .vues-liste--compacte { width: 100%; }
+  .app-shell .vues-liste--compacte .vues-liste__rail { flex: 1 1 auto; }
+  /* Cibles tactiles confortables */
+  .app-shell .cm-btn, .app-shell .tb-btn { min-height: 44px; }
+}
+
+/* ── Mouvements réduits (réglage du système) : animations et transitions coupées partout ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

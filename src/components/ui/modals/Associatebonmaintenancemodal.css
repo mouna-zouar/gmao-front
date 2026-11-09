@@ -493,3 +493,43 @@
   .asb-panneau,
   .asb-carte--liee.is-nouveau { animation: none; }
 }
+/* ══════════════════════════════════════════════════════════════════════
+ * « Associer un bon » dans la fenêtre commune (autrefois panneau latéral) :
+ * mêmes couleurs, police, champ de recherche, filtres et cartes que les autres fenêtres.
+ * ══════════════════════════════════════════════════════════════════════ */
+.cm-modale.asb-modale {
+  --ink: var(--g-slate-900); --ink-soft: var(--g-slate-600); --ink-faint: var(--g-slate-500);
+  --paper: var(--g-slate-50); --line: var(--g-slate-200);
+  --brand: var(--g-brand-500); --brand-deep: var(--g-brand-700); --brand-wash: var(--g-brand-50);
+  --done: var(--g-succes-500); --done-wash: var(--g-succes-50);
+  --now: var(--g-attention-500); --now-wash: var(--g-attention-50);
+  --alert: var(--g-alerte-500); --alert-wash: var(--g-alerte-50);
+  --font-titre: var(--g-police); --font-texte: var(--g-police);
+}
+.asb-modale .cm-modale__corps { padding: 0; }
+.asb-modale .asb-corps { padding: 20px 24px 24px; font-family: var(--g-police); font-size: 0.875rem; color: var(--g-slate-700); }
+.asb-modale .asb-section + .asb-section { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--g-slate-200); }
+.asb-modale .asb-section h3 { font-size: 1.02rem; font-weight: 700; color: var(--g-slate-900); }
+.asb-modale .asb-compte { background: var(--g-slate-100); color: var(--g-slate-600); font-size: 0.75rem; font-weight: 600; }
+/* Recherche : comme un champ commun */
+.asb-modale .asb-recherche { height: 40px; padding: 0 10px 0 12px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); box-shadow: var(--g-ombre-xs); color: var(--g-slate-400); }
+.asb-modale .asb-recherche:focus-within { border-color: var(--g-brand-500); box-shadow: var(--g-anneau); color: var(--g-brand-600); }
+.asb-modale .asb-recherche input { font-size: 0.875rem; }
+.asb-modale .asb-recherche input::placeholder { color: var(--g-slate-400); }
+/* Filtres : rangée segmentée (comme les périodes des tableaux de bord) */
+.asb-modale .asb-filtres { display: inline-flex; gap: 2px; margin: 12px 0 14px; padding: 3px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-md); background: var(--g-slate-100); }
+.asb-modale .asb-filtre { min-height: 32px; padding: 0 12px; border: 0; border-radius: 6px; background: transparent; color: var(--g-slate-600); font-size: var(--g-texte-sm); font-weight: 600; }
+.asb-modale .asb-filtre:hover { color: var(--g-slate-900); }
+.asb-modale .asb-filtre.is-actif { background: var(--g-blanc); color: var(--g-brand-700); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08); }
+.asb-modale .asb-filtre span { background: var(--g-slate-200); color: var(--g-slate-600); font-size: 0.72rem; font-weight: 600; }
+.asb-modale .asb-filtre.is-actif span { background: var(--g-brand-50); color: var(--g-brand-700); }
+/* Cartes de bons */
+.asb-modale .asb-carte { border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-md); background: var(--g-blanc); box-shadow: none; }
+.asb-modale .asb-carte--choix:hover { border-color: var(--g-slate-400); }
+.asb-modale .asb-carte--choix.is-choisi { border-color: var(--g-brand-500); background: var(--g-brand-50); box-shadow: inset 0 0 0 1px var(--g-brand-500); }
+.asb-modale .asb-carte--liee { border-color: var(--g-slate-200); background: var(--g-blanc); }
+.asb-modale .asb-carte-num { font-size: var(--g-texte-sm); font-weight: 600; color: var(--g-slate-900); }
+.asb-modale .asb-carte-titre { font-size: 0.8rem; color: var(--g-slate-500); }
+.asb-modale .asb-carte-icone { border-radius: var(--g-rayon-md); }
+.asb-modale .asb-retirer { border-radius: var(--g-rayon-md); font-weight: 600; }
+.asb-modale .asb-vide { border-radius: var(--g-rayon-md); font-style: normal; }

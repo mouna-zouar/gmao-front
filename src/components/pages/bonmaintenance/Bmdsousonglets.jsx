@@ -22,7 +22,6 @@ import {
   CheckCircle,
   XCircle,
   Power,
-  X,
 } from 'lucide-react';
 import {
   BmfFormulaire,
@@ -44,6 +43,7 @@ import bonMaintenanceDiagnosticService from '../../../services/Bonmaintenancedia
 import bonMaintenanceControleEquipementService from '../../../services/bonMaintenanceControleEquipementService';
 import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenanceRemiseEnServiceService';
 import personnelService from '../../../services/Personnelservice';
+import AlerteFormation from '../Formations/AlerteFormation';
 import { obtenirArticles, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../services/lotArticleService';
@@ -105,10 +105,12 @@ const PanelHeader = ({ titre, count, extra, showForm, onToggle, labelAjout }) =>
       <span className="bmd-panel-count">{count}</span>
       {extra}
     </div>
-    <button className="bmd-add-btn" onClick={onToggle}>
-      {showForm ? <X size={16} /> : <Plus size={16} />}
-      {showForm ? t("Annuler") : t(labelAjout)}
-    </button>
+    {/* Formulaire ouvert : pas de second « Annuler » en haut, celui du bas du formulaire suffit */}
+    {!showForm && (
+      <button type="button" className="bmd-add-btn" onClick={onToggle}>
+        <Plus size={16} /> {t(labelAjout)}
+      </button>
+    )}
   </div>
 );
 
@@ -501,21 +503,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
               )}
             </BmfChamp>
 
-            <BmfChamp label={t("Pièce de l'équipement")} aide={t("Si la panne touche une pièce précise")} htmlFor="diag-piece">
-              <SearchableSelect
-                id="diag-piece"
-                name="bonMaintenancePieceImmoId"
-                value={form.bonMaintenancePieceImmoId}
-                onChange={(e) => setForm({ ...form, bonMaintenancePieceImmoId: e.target.value })}
-                options={piecesImmo}
-                placeholder={t("Choisir une pièce...")}
-                emptyMessage={t("Aucune pièce enregistrée sur ce bon")}
-                allowEmpty
-                emptyOptionLabel={t("Aucune")}
-                getValue={(p) => p.id}
-                getLabel={(p) => p.designation || p.nom || p.libelle || t('Pièce #{id}', { id: p.id })}
-              />
-            </BmfChamp>
+
           </BmfEtape>
 
           <BmfEtape numero={2} titre={t("Ce que vous avez constaté")}>
@@ -572,8 +560,8 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
                 value={form.besoinPiece}
                 onChange={(v) => setForm({ ...form, besoinPiece: v })}
                 options={[
-                  { value: 'false', label: t("Non, pas de pièce"), aide: t("La réparation se fait sans rien changer"), icon: CheckCircle, ton: 'ok' },
-                  { value: 'true', label: t("Oui, il faut une pièce"), aide: t("Vous choisirez l'article juste après"), icon: Package, ton: 'now' },
+                  { value: 'false', label: t("Non"), aide: t("La réparation se fait sans rien changer"), icon: CheckCircle, ton: 'ok' },
+                  { value: 'true', label: t("Oui"), aide: t("Vous choisirez l'article juste après"), icon: Package, ton: 'now' },
                 ]}
               />
             </BmfChamp>
@@ -980,7 +968,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
           onSubmit={handleSubmit}
         >
           <BmfEtape numero={1} titre={t("La tâche")}>
-            <BmfChamp label={t("Ce qu'il faut faire")} requis large aide={t("Une phrase courte, par exemple « Remplacer le joint de la pompe »")} htmlFor="tache-desig">
+            <BmfChamp label={t("Désignation")} requis large aide={t("Une phrase courte, par exemple « Remplacer le joint de la pompe »")} htmlFor="tache-desig">
               <BmfTexte
                 id="tache-desig"
                 requis
@@ -999,7 +987,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
               <BmfNombre id="tache-ordre" value={form.ordre} onChange={(v) => setForm({ ...form, ordre: v })} step="1" min="0" placeholder={t("Ex. 1")} />
             </BmfChamp>
 
-            <BmfChamp label={t("Où en est cette tâche ?")} large>
+            <BmfChamp label={t("État de la tâche")} large>
               <BmfChoix
                 nom={t("État de la tâche")}
                 effacable={false}
@@ -1486,8 +1474,9 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
                 getValue={(p) => p.id}
                 getLabel={(p) => nomPersonnel(p)}
               />
+              <AlerteFormation personnelId={form.personnelId} bonMaintenanceId={bonMaintenanceId} />
             </BmfChamp>
-            <BmfChamp label={t("Ou un sous-traitant")} htmlFor="int-st">
+            <BmfChamp label={t("Sous-traitant")} htmlFor="int-st">
               <SearchableSelect
                 id="int-st"
                 name="sousTraitantId"
@@ -1746,22 +1735,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
             { label: t("Immobilisation"), value: libelleImmo(c.lotArticleImmobilistationId), wide: true },
           ]}
           sections={[
-            {
-              key: 'mesures',
-              label: t("Mesures"),
-              icon: Gauge,
-              content: aDesMesures ? (
-                <BmdFieldGrid
-                  fields={[
-                    { label: t("Valeur mesurée"), value: c.valeurMesuree },
-                    { label: t("Valeur attendue"), value: c.valeurAttendue },
-                    { label: t("Écart"), value: ecart },
-                  ]}
-                />
-              ) : (
-                <TexteOuVide vide="Aucune mesure saisie pour ce contrôle." />
-              ),
-            },
+ 
             {
               key: 'resultat',
               label: t("Résultat & observations"),
@@ -1824,15 +1798,15 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
           onSubmit={handleAdd}
         >
           <BmfEtape numero={1} titre={t("Le résultat")} aide={t("La réponse la plus importante")}>
-            <BmfChamp label={t("L'équipement fonctionne-t-il ?")} large>
+            <BmfChamp label={t("Fonctionnement")} large>
               <BmfChoix
                 nom={t("Conformité")}
                 grand
                 value={form.conforme}
                 onChange={(v) => setForm({ ...form, conforme: v })}
                 options={[
-                  { value: 'true', label: t("Oui, ça fonctionne"), aide: t("L'équipement a passé le test"), icon: CheckCircle, ton: 'ok' },
-                  { value: 'false', label: t("Non, ça ne fonctionne pas"), aide: t("Une nouvelle réparation sera nécessaire"), icon: XCircle, ton: 'alert' },
+                  { value: 'true', label: t("Fonctionne"), aide: t("L'équipement a passé le test"), icon: CheckCircle, ton: 'ok' },
+                  { value: 'false', label: t("Ne fonctionne pas"), aide: t("Une nouvelle réparation sera nécessaire"), icon: XCircle, ton: 'alert' },
                 ]}
               />
             </BmfChamp>
@@ -1847,19 +1821,8 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
                 options={TYPE_CONTROLE_OPTIONS.map((tache) => ({ value: tache, label: tache }))}
               />
             </BmfChamp>
-            <BmfChamp label={t("Valeur mesurée")} htmlFor="ctrl-mes">
-              <BmfNombre id="ctrl-mes" value={form.valeurMesuree} onChange={(v) => setForm({ ...form, valeurMesuree: v })} placeholder={t("Ex. 12,5")} />
-            </BmfChamp>
-            <BmfChamp
-              label={t("Valeur attendue")}
-              htmlFor="ctrl-att"
-              info={form.valeurMesuree !== '' && form.valeurAttendue !== ''
-                ? t('Écart : {ecart}', { ecart: (Number(form.valeurMesuree) - Number(form.valeurAttendue)).toFixed(2) })
-                : null}
-            >
-              <BmfNombre id="ctrl-att" value={form.valeurAttendue} onChange={(v) => setForm({ ...form, valeurAttendue: v })} placeholder={t("Ex. 12")} />
-            </BmfChamp>
-            <BmfChamp label={t("Résultat en une phrase")} large htmlFor="ctrl-res">
+            
+            <BmfChamp label={t("Résultat")} large htmlFor="ctrl-res">
               <BmfTexte id="ctrl-res" value={form.resultat} onChange={(v) => setForm({ ...form, resultat: v })} placeholder={t("Ex. débit stable pendant 10 minutes")} />
             </BmfChamp>
             <BmfChamp label={t("Observations")} large htmlFor="ctrl-obs">
@@ -2156,7 +2119,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
           onSubmit={handleAdd}
         >
           <BmfEtape numero={1} titre={t("Votre décision")}>
-            <BmfChamp label={t("L'équipement peut-il repartir ?")} requis large>
+            <BmfChamp label={t("Retour au service")} requis large>
               <BmfChoix
                 nom={t("Décision de remise en service")}
                 grand
@@ -2164,8 +2127,8 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
                 value={form.conforme}
                 onChange={(v) => setForm({ ...form, conforme: v })}
                 options={[
-                  { value: 'true', label: t("Oui, il peut repartir"), aide: t("Il est conforme et retourne au service"), icon: Power, ton: 'ok' },
-                  { value: 'false', label: t("Non, pas encore"), aide: t("Il reste au service technique"), icon: XCircle, ton: 'alert' },
+                  { value: 'true', label: t("Autorisé"), aide: t("Il est conforme et retourne au service"), icon: Power, ton: 'ok' },
+                  { value: 'false', label: t("Pas encore"), aide: t("Il reste au service technique"), icon: XCircle, ton: 'alert' },
                 ]}
               />
             </BmfChamp>
@@ -2187,7 +2150,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
                 getLabel={(i) => i.designation || `#${i.id}`}
               />
             </BmfChamp>
-            <BmfChamp label={t("Dans quel état repart-il ?")} large>
+            <BmfChamp label={t("État de l'équipement après")} large>
               <BmfChoix
                 nom={t("État de l'équipement après")}
                 value={form.etatApres}

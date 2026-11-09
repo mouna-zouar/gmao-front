@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import reclamationService from '../../../services/reclamationService';
+import reclamationService from '../../../services/Reclamationservice';
 import { t } from '../../../i18n';
 import {
   Classement, CourbeTendance, GrilleKpi, SectionIndicateurs, TuileKpi,
@@ -14,12 +14,13 @@ import {
  * ancienneté des réclamations ouvertes, tendance 12 mois et classements.
  */
 
-const ACTIVES = [0, 1, 3];
+// États (cycle IBM Maximo) : 0 Nouveau, 5 En file, 1 En cours, 3 Résolue, 2 Clôturée, 4 Annulée
+const ACTIVES = [0, 5, 1, 3];
 const CLOTUREE = 2;
-const REJETEE = 4;
+const REJETEE = 4; // Annulée
 
-// Date de fin de traitement : validation si elle existe, sinon dernière modification
-const dateFin = (r) => r.dateValidation || r.dateModification;
+// Date de fin de traitement : clôture ou annulation, sinon validation, sinon dernière modification
+const dateFin = (r) => r.dateCloture || r.dateAnnulation || r.dateValidation || r.dateModification;
 
 export default function IndicateursReclamations() {
   const [maintenant] = useState(() => Date.now()); // heure de référence des calculs
@@ -66,7 +67,7 @@ export default function IndicateursReclamations() {
       actives: actives.length,
       ageMoyen: moyenne(ages),
       anciennes: ages.filter((a) => a != null && a > 7).length,
-      sansResponsable: actives.filter((r) => r.personnelAffecteId == null).length,
+      sansResponsable: actives.filter((r) => r.personnelAffecteId == null && r.groupeId == null).length,
       critiquesOuvertes: actives.filter((r) => Number(r.criticite) === 3).length,
       attenteValidation: recs.filter((r) => r.etat === 3).length,
       mois,
@@ -118,7 +119,7 @@ export default function IndicateursReclamations() {
       aide: t('Part des réclamations reçues qui ont donné lieu à un bon de maintenance.'),
     },
     {
-      libelle: t('Taux de rejet'),
+      libelle: t('Taux d’annulation'),
       valeur: c.rejet,
       precedent: p.rejet,
       format: 'pct',
@@ -145,7 +146,7 @@ export default function IndicateursReclamations() {
       valeur: k?.sansResponsable,
       ton: k?.sansResponsable > 0 ? 'alerte' : 'ok',
       chargement: chargement,
-      aide: t('Réclamations ouvertes qui ne sont affectées à personne.'),
+      aide: t('Réclamations ouvertes sans groupe ni technicien.'),
       lien: '/reclamations',
     },
     {

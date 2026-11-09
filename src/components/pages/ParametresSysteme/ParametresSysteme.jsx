@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, cloneElement } from 'react';
-import { Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search, Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer, Gauge, Loader2, Plus, Pencil, Power } from 'lucide-react';
+import { useEffect, useMemo, useState, cloneElement, Fragment } from 'react';
+import { Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search, Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer, Gauge, Loader2, Plus, Pencil, Power, ClipboardCheck, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
 import prestataireService from '../../../services/prestataireService';
@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import maintenanceConditionnelleService from '../../../services/maintenanceConditionnelleService';
 import { ETATS_REGLE, MODES, fmt } from '../Equipements/EquipementMaintenanceConditionnelle';
 import codePanneService from '../../../services/codePanneService';
+import reclamationService from '../../../services/Reclamationservice';
 import ReglageLangue from '../../../i18n/ReglageLangue';
 import { t, locale } from '../../../i18n';
 import './ParametresSysteme.css';
@@ -190,20 +191,24 @@ function ChampValeur({ param, valeur, onChange, draft }) {
 
 /** Rubriques connues (nom du groupe côté serveur → présentation). Les groupes inconnus s'ajoutent à la fin. */
 const RUBRIQUES = [
-  { id: 'general', titre: 'Général', aide: 'Langue de l’application sur cet ordinateur.', Icone: Languages },
-  { id: 'planif', groupe: 'Planification des traitements', titre: 'Traitements automatiques', aide: 'Quand les analyses et les alertes tournent toutes seules.', Icone: CalendarClock },
-  { id: 'preventif', titre: 'Maintenance préventive', aide: 'Déclenchement des bons préventifs et types de maintenance réglementaire.', Icone: Wrench },
-  { id: 'codes_panne', titre: 'Codes panne', aide: 'Codes proposés par l’IA pendant la saisie des réclamations.', Icone: Tags },
-  { id: 'sla', groupe: 'SLA (délais en heures)', titre: 'Délais SLA', aide: 'Délais de réponse et de résolution selon la priorité du bon.', Icone: Timer },
-  { id: 'anomalies', groupe: "Détection d'anomalies", titre: 'Détection d’anomalies', aide: 'Quand un pic de réclamations est signalé.', Icone: Activity },
-  { id: 'blocages', groupe: 'Détection de blocages', titre: 'Détection de blocages', aide: 'Quand un équipement à l’arrêt est signalé.', Icone: CirclePause },
-  { id: 'parc', groupe: "Alertes d'échéance du Parc", titre: 'Alertes du Parc', aide: 'Assurance, visite technique, vignette et vidange des véhicules.', Icone: CarFront },
-  { id: 'cubix_immo', groupe: 'Cubix — équipements lus', titre: 'Équipements lus dans Cubix', aide: 'Prestataire et familles d’articles que la GMAO suit.', Icone: Boxes },
-  { id: 'cubix_etat', groupe: 'Synchronisation Cubix (état des équipements)', titre: 'État envoyé à Cubix', aide: 'Codes EtatFonc écrits dans Cubix au fil des pannes.', Icone: RefreshCw },
-  { id: 'impression', groupe: 'En-tête des impressions', titre: 'En-tête des impressions', aide: 'Société, adresse, matricule fiscal et téléphone imprimés en haut des demandes et commandes.', Icone: Printer },
+  { id: 'general', section: 'Application', titre: 'Général', aide: 'Langue de l’application sur cet ordinateur.', Icone: Languages },
+  { id: 'planif', section: 'Automatisation', groupe: 'Planification des traitements', titre: 'Traitements automatiques', aide: 'Quand les analyses et les alertes tournent toutes seules.', Icone: CalendarClock },
+  { id: 'preventif', section: 'Automatisation', titre: 'Maintenance préventive', aide: 'Déclenchement des bons préventifs et types de maintenance réglementaire.', Icone: Wrench },
+  { id: 'codes_panne', section: 'Réclamations', titre: 'Codes panne', aide: 'Codes proposés par l’IA pendant la saisie des réclamations.', Icone: Tags },
+  { id: 'checklists', section: 'Réclamations', titre: 'Check-lists des réclamations', aide: 'Vérifications que le demandeur fait avant d’envoyer une réclamation, selon la famille de l’équipement.', Icone: ClipboardCheck },
+  { id: 'sla', section: 'Automatisation', groupe: 'SLA (délais en heures)', titre: 'Délais SLA', aide: 'Délais de réponse et de résolution selon la priorité du bon.', Icone: Timer },
+  { id: 'anomalies', section: 'Automatisation', groupe: "Détection d'anomalies", titre: 'Détection d’anomalies', aide: 'Quand un pic de réclamations est signalé.', Icone: Activity },
+  { id: 'blocages', section: 'Automatisation', groupe: 'Détection de blocages', titre: 'Détection de blocages', aide: 'Quand un équipement à l’arrêt est signalé.', Icone: CirclePause },
+  { id: 'parc', section: 'Automatisation', groupe: "Alertes d'échéance du Parc", titre: 'Alertes du Parc', aide: 'Assurance, visite technique, vignette et vidange des véhicules.', Icone: CarFront },
+  { id: 'cubix_immo', section: 'Cubix', groupe: 'Cubix — équipements lus', titre: 'Équipements lus dans Cubix', aide: 'Prestataire et familles d’articles que la GMAO suit.', Icone: Boxes },
+  { id: 'cubix_etat', section: 'Cubix', groupe: 'Synchronisation Cubix (état des équipements)', titre: 'État envoyé à Cubix', aide: 'Codes EtatFonc écrits dans Cubix au fil des pannes.', Icone: RefreshCw },
+  { id: 'impression', section: 'Application', groupe: 'En-tête des impressions', titre: 'En-tête des impressions', aide: 'Société, adresse, matricule fiscal et téléphone imprimés en haut des demandes et commandes.', Icone: Printer },
 ];
 
 const CLE_RUBRIQUE = 'gmao.parametres.rubrique';
+
+/** Groupes du menu de gauche, dans cet ordre ; les rubriques inconnues vont dans « Autres réglages ». */
+const SECTIONS_MENU = ['Application', 'Automatisation', 'Réclamations', 'Cubix', 'Autres réglages'];
 
 /** « planif.anomalies.heure » → { code: 'anomalies', champ: 'heure' } */
 function partiesTache(cle) {
@@ -274,14 +279,14 @@ export default function ParametresSysteme() {
       if (p.cle.startsWith('planif.equipement_echeances.') || p.cle.startsWith('planif.maintenance_conditionnelle.')) m.get('preventif').push(p);
     });
     const autres = [...inconnues.entries()].map(([groupe, items], i) => ({
-      id: `autre_${i}`, groupe, titre: groupe, aide: '', Icone: Settings2, items,
+      id: `autre_${i}`, section: 'Autres réglages', groupe, titre: groupe, aide: '', Icone: Settings2, items,
     }));
     return { m, autres };
   }, [params]);
 
   const rubriques = useMemo(() => [
     ...RUBRIQUES.map((r) => ({ ...r, items: parRubrique.m.get(r.id) || [] }))
-      .filter((r) => r.id === 'general' || r.id === 'preventif' || r.id === 'codes_panne' || r.items.length > 0),
+      .filter((r) => r.id === 'general' || r.id === 'preventif' || r.id === 'codes_panne' || r.id === 'checklists' || r.items.length > 0),
     ...parRubrique.autres,
   ], [parRubrique]);
 
@@ -511,7 +516,8 @@ export default function ParametresSysteme() {
         </>
       );
     }
-    if (r.id === 'codes_panne') return <div className="ps-carte"><CodesPanneVue /></div>;
+    if (r.id === 'codes_panne') return <div className="ps-carte"><CodesPanneVue prestataireId={draft['cubix.prestataire_id']} /></div>;
+    if (r.id === 'checklists') return <div className="ps-carte"><ChecklistsReclamationVue prestataireId={draft['cubix.prestataire_id']} /></div>;
     if (r.id === 'sla') return <div className="ps-carte">{tableauSla(r.items)}</div>;
     if (r.id === 'planif') return <div className="ps-carte"><div className="ps-lignes">{lignesTaches(r.items)}</div></div>;
     return <div className="ps-carte"><div className="ps-lignes">{r.items.map(ligneParametre)}</div></div>;
@@ -565,21 +571,30 @@ export default function ParametresSysteme() {
 
       <div className="ps-corps">
         <nav className="ps-nav" aria-label={t('Rubriques des paramètres')}>
-          {rubriques.map((r) => {
-            const n = nbModifies(r);
-            const actif = !mots.length && r.id === rubriqueActive?.id;
+          {SECTIONS_MENU.map((section) => {
+            const liste = rubriques.filter((r) => (r.section || 'Autres réglages') === section);
+            if (liste.length === 0) return null;
             return (
-              <button
-                key={r.id}
-                type="button"
-                className={`ps-nav-item ${actif ? 'is-actif' : ''}`}
-                aria-current={actif ? 'page' : undefined}
-                onClick={() => choisirRubrique(r.id)}
-              >
-                <span className="ps-nav-icone"><r.Icone size={17} aria-hidden="true" /></span>
-                <span className="ps-nav-texte">{t(r.titre)}</span>
-                {n > 0 && <span className="ps-nav-point" title={t('{n} modification(s) non enregistrée(s)', { n })}>{n}</span>}
-              </button>
+              <div key={section} className="ps-nav-groupe" role="group" aria-label={t(section)}>
+                <span className="ps-nav-groupe-titre">{t(section)}</span>
+                {liste.map((r) => {
+                  const n = nbModifies(r);
+                  const actif = !mots.length && r.id === rubriqueActive?.id;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      className={`ps-nav-item ${actif ? 'is-actif' : ''}`}
+                      aria-current={actif ? 'page' : undefined}
+                      onClick={() => choisirRubrique(r.id)}
+                    >
+                      <span className="ps-nav-icone"><r.Icone size={16} aria-hidden="true" /></span>
+                      <span className="ps-nav-texte">{t(r.titre)}</span>
+                      {n > 0 && <span className="ps-nav-point" title={t('{n} modification(s) non enregistrée(s)', { n })}>{n}</span>}
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </nav>
@@ -729,7 +744,7 @@ function ReglesConditionnellesVue() {
 // ═════════════════════════════════════════════════════════════
 // Codes panne   (ancien fichier CodesPanneVue.jsx)
 // ═════════════════════════════════════════════════════════════
-const VIDE = { id: null, code: '', libelle: '', categorie: '', motsCles: '', actif: true };
+const VIDE = { id: null, code: '', libelle: '', categorie: '', motsCles: '', familles: '', actif: true };
 
 const messageErreur = (e) => {
   const d = e?.response?.data;
@@ -738,7 +753,44 @@ const messageErreur = (e) => {
 };
 
 /** Catalogue des codes panne : proposés par l'IA pendant la saisie d'une réclamation. */
-function CodesPanneVue() {
+/** Choix des familles d'un code panne, en pastilles (aucune = toutes les familles). valeur : « 7,12 ». */
+function ChoixFamillesCode({ familles, valeur, onChange }) {
+  const choisies = new Set(String(valeur || '').split(',').map((x) => x.trim()).filter(Boolean));
+  const basculer = (id) => {
+    const n = new Set(choisies);
+    if (n.has(String(id))) n.delete(String(id)); else n.add(String(id));
+    onChange([...n].join(','));
+  };
+  return (
+    <div className="ps-cp-familles" role="group" aria-label={t('Familles')}>
+      <span className="ps-cp-familles-titre">{t('Familles concernées')} :</span>
+      <button type="button" className={`ps-cp-puce ${choisies.size === 0 ? 'is-choisie' : ''}`} aria-pressed={choisies.size === 0} onClick={() => onChange('')}>
+        {t('Toutes les familles')}
+      </button>
+      {(familles || []).map((f) => (
+        <button key={f.id} type="button" className={`ps-cp-puce ${choisies.has(String(f.id)) ? 'is-choisie' : ''}`}
+          aria-pressed={choisies.has(String(f.id))} onClick={() => basculer(f.id)}>
+          {f.nom || f.code}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function CodesPanneVue({ prestataireId }) {
+  const [familles, setFamilles] = useState([]);
+  useEffect(() => {
+    let annule = false;
+    parametreService.getFamillesCubix(prestataireId)
+      .then((l) => { if (!annule) setFamilles(l.filter((f) => f.id != null)); })
+      .catch(() => { if (!annule) setFamilles([]); });
+    return () => { annule = true; };
+  }, [prestataireId]);
+  const nomsFamilles = (valeur) => {
+    const ids = String(valeur || '').split(',').map((x) => x.trim()).filter(Boolean);
+    if (ids.length === 0) return t('Toutes');
+    return ids.map((id) => familles.find((f) => String(f.id) === id)?.nom || `#${id}`).join(', ');
+  };
   const [codes, setCodes] = useState(null);
   const [edition, setEdition] = useState(null); // VIDE (nouveau) ou une copie du code modifié
   const [occupe, setOccupe] = useState(false);
@@ -795,6 +847,7 @@ function CodesPanneVue() {
   );
 
   const ligneEdition = (
+    <Fragment>
     <tr className="ps-cp-edition">
       <td>{champ('code', { placeholder: 'ELEC-ALIM', maxLength: 30, 'aria-label': t('Code'), autoFocus: true })}</td>
       <td>{champ('libelle', { placeholder: t('Libellé'), maxLength: 200, 'aria-label': t('Libellé') })}</td>
@@ -803,6 +856,7 @@ function CodesPanneVue() {
         <datalist id="ps-cp-categories">{categories.map((c) => <option key={c} value={c} />)}</datalist>
       </td>
       <td>{champ('motsCles', { placeholder: t('mots séparés par des virgules'), 'aria-label': t('Mots-clés') })}</td>
+      <td className="ps-cp-mots">{nomsFamilles(edition?.familles)}</td>
       <td className="ps-cp-actions">
         <button type="button" className="ps-icone-btn" disabled={occupe} onClick={() => enregistrer(edition)} title={t('Enregistrer')} aria-label={t('Enregistrer')}>
           {occupe ? <Loader2 size={15} className="ps-tourne" /> : <Save size={15} />}
@@ -812,6 +866,13 @@ function CodesPanneVue() {
         </button>
       </td>
     </tr>
+    <tr className="ps-cp-edition ps-cp-edition-familles">
+      <td colSpan={6}>
+        <ChoixFamillesCode familles={familles} valeur={edition?.familles}
+          onChange={(v) => setEdition((x) => ({ ...x, familles: v }))} />
+      </td>
+    </tr>
+    </Fragment>
   );
 
   return (
@@ -824,6 +885,7 @@ function CodesPanneVue() {
       </h3>
       <p className="ps-mc-aide">
         {t('Pendant la saisie d’une réclamation, l’IA propose un de ces codes et montre les pannes semblables déjà résolues. Les mots-clés servent quand l’IA ne répond pas.')}
+        {' '}{t('Seuls les codes de la famille de l’équipement sont proposés ; un code sans famille vaut pour toutes.')}
       </p>
       <div className="ps-cp-barre">
         <button type="button" className="ps-action" disabled={edition !== null} onClick={() => setEdition({ ...VIDE })}>
@@ -848,13 +910,14 @@ function CodesPanneVue() {
                 <th>{t('Libellé')}</th>
                 <th>{t('Catégorie')}</th>
                 <th>{t('Mots-clés')}</th>
+                <th>{t('Familles')}</th>
                 <th><span className="ps-sr">{t('Actions')}</span></th>
               </tr>
             </thead>
             <tbody>
               {edition && !edition.id && ligneEdition}
               {visibles.length === 0 && !edition && (
-                <tr><td colSpan={5} className="ps-mc-vide">{t('Aucun code panne.')}</td></tr>
+                <tr><td colSpan={6} className="ps-mc-vide">{t('Aucun code panne.')}</td></tr>
               )}
               {visibles.map((c) => (edition?.id === c.id ? cloneElement(ligneEdition, { key: c.id }) : (
                 <tr key={c.id} className={c.actif ? '' : 'ps-cp-inactif'}>
@@ -862,8 +925,9 @@ function CodesPanneVue() {
                   <td dir="auto">{c.libelle}{!c.actif && <small>{t('Désactivé')}</small>}</td>
                   <td>{c.categorie || '—'}</td>
                   <td className="ps-cp-mots" dir="auto">{c.motsCles || '—'}</td>
+                  <td className="ps-cp-mots">{nomsFamilles(c.familles)}</td>
                   <td className="ps-cp-actions">
-                    <button type="button" className="ps-icone-btn" disabled={edition !== null} onClick={() => setEdition({ ...VIDE, ...c, categorie: c.categorie || '', motsCles: c.motsCles || '' })} title={t('Modifier')} aria-label={t('Modifier')}>
+                    <button type="button" className="ps-icone-btn" disabled={edition !== null} onClick={() => setEdition({ ...VIDE, ...c, categorie: c.categorie || '', motsCles: c.motsCles || '', familles: c.familles || '' })} title={t('Modifier')} aria-label={t('Modifier')}>
                       <Pencil size={15} />
                     </button>
                     <button type="button" className="ps-icone-btn" disabled={occupe || edition !== null} onClick={() => basculer(c)} title={c.actif ? t('Désactiver') : t('Réactiver')} aria-label={c.actif ? t('Désactiver') : t('Réactiver')}>
@@ -874,6 +938,158 @@ function CodesPanneVue() {
               )))}
             </tbody>
           </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+// Check-lists des réclamations
+// ═════════════════════════════════════════════════════════════
+/**
+ * Vérifications que le demandeur fait avant d'envoyer une réclamation (« Avez-vous redémarré l'appareil ? »…),
+ * par famille d'équipement. Une famille sans check-list reprend la check-list par défaut.
+ */
+function ChecklistsReclamationVue({ prestataireId }) {
+  const [familles, setFamilles] = useState(null);
+  const [ecrites, setEcrites] = useState(null); // { defaut: {...}, '12': {...} }
+  const [choix, setChoix] = useState('defaut');
+  const [questions, setQuestions] = useState([]);
+  const [filtre, setFiltre] = useState('');
+  const [occupe, setOccupe] = useState(false);
+  const [erreur, setErreur] = useState('');
+  const [info, setInfo] = useState('');
+
+  const charger = () => {
+    setErreur('');
+    reclamationService.checklists()
+      .then((l) => setEcrites(Object.fromEntries((l || []).map((c) => [String(c.famille), c]))))
+      .catch(() => { setEcrites({}); setErreur(t('Impossible de charger les check-lists.')); });
+  };
+  useEffect(charger, []);
+  useEffect(() => {
+    let annule = false;
+    parametreService.getFamillesCubix(prestataireId)
+      .then((l) => { if (!annule) setFamilles(l.filter((f) => f.id != null)); })
+      .catch(() => { if (!annule) setFamilles([]); });
+    return () => { annule = true; };
+  }, [prestataireId]);
+
+  const questionFinale = ecrites?.defaut?.questionFinale;
+  const propre = ecrites?.[choix];
+  const nomFamille = choix === 'defaut' ? null : (familles || []).find((f) => String(f.id) === choix)?.nom || propre?.familleNom || null;
+
+  // Quand on change de famille : ses questions, ou celles par défaut pour partir de quelque chose
+  useEffect(() => {
+    if (!ecrites) return;
+    setQuestions([...(ecrites[choix]?.questions ?? ecrites.defaut?.questions ?? [])]);
+    setInfo('');
+  }, [choix, ecrites]);
+
+  // Modifiée par rapport aux questions affichées au départ (celles de la famille, sinon celles par défaut)
+  const modifie = JSON.stringify(questions.map((q) => q.trim()).filter(Boolean))
+    !== JSON.stringify(propre?.questions ?? ecrites?.defaut?.questions ?? []);
+
+  const enregistrer = async (liste) => {
+    setOccupe(true);
+    setErreur('');
+    try {
+      await reclamationService.enregistrerChecklist(choix, nomFamille, liste.map((q) => q.trim()).filter(Boolean));
+      setInfo(liste.length ? t('Check-list enregistrée.') : t('Cette famille reprend maintenant la check-list par défaut.'));
+      charger();
+    } catch (e) {
+      setErreur(messageErreur(e));
+    } finally {
+      setOccupe(false);
+    }
+  };
+
+  const deplacer = (i, sens) => setQuestions((l) => {
+    const n = [...l];
+    const j = i + sens;
+    if (j < 0 || j >= n.length) return l;
+    [n[i], n[j]] = [n[j], n[i]];
+    return n;
+  });
+
+  const liste = (familles || []).filter((f) => !filtre.trim()
+    || `${f.nom || ''} ${f.code || ''}`.toLowerCase().includes(filtre.trim().toLowerCase()));
+
+  return (
+    <div className="ps-mc">
+      <h3 className="ps-carte-titre ps-mc-titre">
+        <ClipboardCheck size={15} aria-hidden="true" /> {t('Check-lists des réclamations')}
+      </h3>
+      <p className="ps-mc-aide">
+        {t('Avant d’envoyer une réclamation, le demandeur répond à ces vérifications (Oui / Non / Sans objet). Les questions dépendent de la famille de l’équipement ; une famille sans check-list reprend celle par défaut. La dernière question est toujours posée : si le problème a disparu, on lui propose de ne pas envoyer la réclamation.')}
+      </p>
+      {erreur && <p className="ps-cp-erreur" role="alert">{erreur}</p>}
+      {ecrites === null ? (
+        <p className="ps-mc-vide"><Loader2 size={15} className="ps-tourne" /> {t('Chargement…')}</p>
+      ) : (
+        <div className="ps-ck">
+          <div className="ps-ck-familles">
+            <input className="ps-cp-input" type="search" value={filtre} onChange={(e) => setFiltre(e.target.value)}
+              placeholder={t('Rechercher une famille…')} aria-label={t('Rechercher une famille…')} />
+            <ul>
+              <li>
+                <button type="button" className={`ps-ck-famille ${choix === 'defaut' ? 'is-actif' : ''}`} onClick={() => setChoix('defaut')}>
+                  <strong>{t('Par défaut (toutes les familles)')}</strong>
+                  <small>{t('{n} question(s)', { n: ecrites.defaut?.questions?.length ?? 0 })}</small>
+                </button>
+              </li>
+              {familles === null && <li className="ps-mc-vide"><Loader2 size={14} className="ps-tourne" /></li>}
+              {liste.map((f) => {
+                const c = ecrites[String(f.id)];
+                return (
+                  <li key={f.id}>
+                    <button type="button" className={`ps-ck-famille ${choix === String(f.id) ? 'is-actif' : ''}`} onClick={() => setChoix(String(f.id))}>
+                      <span>{f.nom || f.code || `#${f.id}`}</span>
+                      <small className={c ? 'is-propre' : ''}>{c ? t('{n} question(s)', { n: c.questions.length }) : t('par défaut')}</small>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          <div className="ps-ck-edition">
+            <h4>
+              {choix === 'defaut' ? t('Check-list par défaut') : t('Famille {nom}', { nom: nomFamille || `#${choix}` })}
+              {choix !== 'defaut' && !propre && <small>{t('Utilise la check-list par défaut : modifiez-la ci-dessous pour en faire une propre à cette famille.')}</small>}
+            </h4>
+            <ol className="ps-ck-questions">
+              {questions.map((q, i) => (
+                <li key={i}>
+                  <input className="ps-cp-input" value={q} maxLength={250} aria-label={t('Question {n}', { n: i + 1 })}
+                    onChange={(e) => setQuestions((l) => l.map((x, k) => (k === i ? e.target.value : x)))} />
+                  <button type="button" className="ps-icone-btn" onClick={() => deplacer(i, -1)} disabled={i === 0} title={t('Monter')} aria-label={t('Monter')}><ArrowUp size={14} /></button>
+                  <button type="button" className="ps-icone-btn" onClick={() => deplacer(i, 1)} disabled={i === questions.length - 1} title={t('Descendre')} aria-label={t('Descendre')}><ArrowDown size={14} /></button>
+                  <button type="button" className="ps-icone-btn" onClick={() => setQuestions((l) => l.filter((_, k) => k !== i))} title={t('Supprimer')} aria-label={t('Supprimer')}><Trash2 size={14} /></button>
+                </li>
+              ))}
+              {questionFinale && (
+                <li className="ps-ck-finale">
+                  <span>{questionFinale}</span>
+                  <small>{t('toujours posée en dernier')}</small>
+                </li>
+              )}
+            </ol>
+            <div className="ps-cp-barre">
+              <button type="button" className="ps-action" onClick={() => setQuestions((l) => [...l, ''])} disabled={questions.length >= 30}>
+                <Plus size={14} /> {t('Ajouter une question')}
+              </button>
+              <button type="button" className="ps-btn ps-btn--primary" disabled={occupe || !modifie || !questions.some((q) => q.trim())} onClick={() => enregistrer(questions)}>
+                {occupe ? <Loader2 size={15} className="ps-tourne" /> : <Save size={15} />} {t('Enregistrer')}
+              </button>
+              {choix !== 'defaut' && propre && (
+                <button type="button" className="ps-action" disabled={occupe} onClick={() => enregistrer([])}>
+                  <Undo2 size={14} /> {t('Revenir à la check-list par défaut')}
+                </button>
+              )}
+              {info && <span className="ps-ck-info" role="status"><CheckCircle2 size={14} /> {info}</span>}
+            </div>
+          </div>
         </div>
       )}
     </div>

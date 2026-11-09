@@ -5,9 +5,13 @@ import {
 import ConfirmModal from '../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../ui/modals/ColumnSettingsModal';
 import Pagination from './Pagination';
+import LignesChargement from './LignesChargement';
 import { imprimerListe } from '../../utils/imprimerListe';
 import { t, locale } from '../../i18n';
 import PastillesStats from './PastillesStats';
+import {
+  AnnonceCopie, BoutonFiltresColonnes, BoutonMenuColonne, BoutonTri, ChampFiltre, choixColonnes, filtrerParColonnes, texteCellule, useFiltresColonnes,
+} from './TableauColonnes';
 import './commun.css';
 
 
@@ -33,6 +37,10 @@ export default function PageListe({
   const [reglageOuvert, setReglageOuvert] = useState(false);
 
   const [recherche, setRecherche] = useState('');
+  /* Recherche par colonne (ligne de filtres sous l'en-tête) */
+  const fc = useFiltresColonnes(cleStockage);
+  const filtresCol = fc.filtres;
+  const changerFiltre = fc.changer;
   const triDefaut = triInitial || { cle: null, sens: 'asc' };
   const [tri, setTri] = useState(triDefaut);
   const [page, setPage] = useState(0);
@@ -43,15 +51,14 @@ export default function PageListe({
   const [confirmation, setConfirmation] = useState(null);
   const [suppression, setSuppression] = useState(false);
 
-  const texte = (c, l) => {
-    const v = c.texte ? c.texte(l) : (c.valeur ? c.valeur(l) : l?.[c.cle]);
-    return v == null ? '' : String(v);
-  };
+  const texte = texteCellule;
+  const choix = useMemo(() => choixColonnes(colonnes, lignes), [colonnes, lignes]);
 
   const filtrees = useMemo(() => {
     const mots = recherche.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const cherchables = cols.filter((c) => c.recherche);
     let r = lignes.filter((l) => mots.every((m) => cherchables.some((c) => texte(c, l).toLowerCase().includes(m))));
+    r = filtrerParColonnes(r, cols, filtresCol, choix);
     if (tri.cle) {
       const c = cols.find((x) => x.cle === tri.cle);
       if (c) {
@@ -65,9 +72,9 @@ export default function PageListe({
       }
     }
     return r;
-  }, [lignes, recherche, tri, reglages, colonnes]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lignes, recherche, tri, reglages, colonnes, filtresCol, choix]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { setPage(0); }, [recherche, tri, lignes.length]);
+  useEffect(() => { setPage(0); }, [recherche, tri, lignes.length, filtresCol]);
   const pageLignes = filtrees.slice(page * taille, page * taille + taille);
   const idSel = selection?.[cleLigne];
 
@@ -75,6 +82,8 @@ export default function PageListe({
     if (c.triable === false) return;
     setTri((p) => (p.cle === c.cle ? { cle: c.cle, sens: p.sens === 'asc' ? 'desc' : 'asc' } : { cle: c.cle, sens: 'asc' }));
   };
+
+  const masquerColonne = (c) => setReglages((r) => ({ ...r, [c.cle]: { ...r[c.cle], visible: false } }));
 
   const demanderSuppression = () => {
     if (!selection || !onSupprimer) return;
@@ -115,7 +124,11 @@ export default function PageListe({
   };
   const imprimer = () => {
     const { entetes, lignes: ls } = donnees();
-    imprimerListe({ titre, colonnes: entetes, lignes: ls, filtres: [{ label: t('Recherche'), valeur: recherche.trim() }, ...filtresImpression] });
+    imprimerListe({ titre, colonnes: entetes, lignes: ls, filtres: [
+      { label: t('Recherche'), valeur: recherche.trim() },
+      ...cols.filter((c) => (filtresCol[c.cle] || '').trim()).map((c) => ({ label: t(c.label), valeur: filtresCol[c.cle].trim() })),
+      ...filtresImpression,
+    ] });
   };
 
   const ouvrir = onOuvrir || onModifier;
@@ -174,9 +187,13 @@ export default function PageListe({
             placeholder={recherchePlaceholder || t('Rechercher dans les colonnes actives...')} aria-label={t('Recherche')} />
         </label>
         {filtres}
-        <button type="button" className="cl-btn-discret" onClick={() => { setRecherche(''); setTri(triDefaut); }}>
+        <BoutonFiltresColonnes voir={fc.voir} onBasculer={() => fc.setVoir((v) => !v)} nb={fc.nb} />
+        <button type="button" className="cl-btn-discret" onClick={() => { setRecherche(''); setTri(triDefaut); fc.vider(); }}>
           <RotateCcw size={14} /> {t('Réinitialiser')}
         </button>
+        {!chargement && lignes.length > 0 && (
+          <span className="cl-compte">{filtrees.length === lignes.length ? `${lignes.length} ${t('lignes')}` : `${filtrees.length} / ${lignes.length} ${t('lignes')}`}</span>
+        )}
         <div className="cl-icones">
           <button type="button" onClick={exporterCsv} title={t('Export CSV')} aria-label={t('Export CSV')}><Download size={16} /></button>
           <button type="button" onClick={imprimer} title={t('Imprimer')} aria-label={t('Imprimer')}><Printer size={16} /></button>
@@ -197,11 +214,24 @@ export default function PageListe({
                 return (
                   <th key={c.cle} style={c.largeur ? { width: c.largeur } : undefined}
                     className={`${c.triable === false ? '' : 'est-triable'} ${actif ? 'est-trie' : ''} ${c.alignement === 'droite' ? 'a-droite' : ''}`}
-                    onClick={() => trier(c)} aria-sort={actif ? (tri.sens === 'asc' ? 'ascending' : 'descending') : 'none'}>
-                    <span>
-                      {t(c.label)}
-                      {c.triable !== false && (actif ? (tri.sens === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : <ArrowUpDown size={13} className="cl-tri-repos" />)}
-                    </span>
+                    onClick={() => fc.basculer(c.cle)} title={t('Cliquer pour rechercher dans cette colonne')} aria-sort={actif ? (tri.sens === 'asc' ? 'ascending' : 'descending') : 'none'}>
+                    <div className="cl-th">
+                      <span>
+                        {t(c.label)}
+                        {c.triable !== false && (
+                          <BoutonTri label={c.label} onTrier={() => trier(c)}>
+                            {actif ? (tri.sens === 'asc' ? <ArrowUp size={13} /> : <ArrowDown size={13} />) : <ArrowUpDown size={13} className="cl-tri-repos" />}
+                          </BoutonTri>
+                        )}
+                      </span>
+                      <BoutonMenuColonne colonne={c} triActif={actif ? tri.sens : null} filtreActif={Boolean((filtresCol[c.cle] || '').trim())}
+                        onTrier={(sens) => setTri({ cle: c.cle, sens })} onCopier={(d) => fc.copier(c, filtrees, d)}
+                        onMasquer={() => masquerColonne(c)} onEffacer={() => changerFiltre(c.cle, '')} />
+                    </div>
+                    {fc.visible(c.cle) && (
+                      <ChampFiltre colonne={c} valeur={filtresCol[c.cle]} choix={choix[c.cle]} onChanger={changerFiltre}
+                        focus={fc.focus(c.cle)} onFermer={() => fc.fermer(c.cle)} />
+                    )}
                   </th>
                 );
               })}
@@ -209,7 +239,7 @@ export default function PageListe({
           </thead>
           <tbody>
             {chargement ? (
-              <tr><td colSpan={visibles.length || 1}><div className="cl-vide"><Loader2 size={24} className="cf-tourne" /> {t('Chargement…')}</div></td></tr>
+              <LignesChargement colonnes={visibles.length || 1} />
             ) : filtrees.length === 0 ? (
               <tr><td colSpan={visibles.length || 1}><div className="cl-vide"><Inbox size={30} strokeWidth={1.6} />
                 {lignes.length === 0 ? (vide.aucun || t('Aucun élément pour l’instant.')) : (vide.aucunFiltre || t('Aucun élément ne correspond à ces filtres.'))}
@@ -240,6 +270,8 @@ export default function PageListe({
       )}
 
       {children}
+
+      <AnnonceCopie texte={fc.annonce} />
 
       <ColumnSettingsModal
         show={reglageOuvert}

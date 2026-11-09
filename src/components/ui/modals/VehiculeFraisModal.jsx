@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
-import { Fenetre, Champ } from './VehiculeAmendeModal';
+import { useMemo } from 'react';
+import { CalendarRange, FileText, ShieldCheck, Wallet } from 'lucide-react';
+import ModaleFormulaire from '../../commun/ModaleFormulaire';
 import { commePage, obtenirVehicules } from '../../../store/referentiels';
 import authService from '../../../services/Authservice';
 import { t, locale } from '../../../i18n';
 import { TYPES_FRAIS, ltr } from '../../../constants/Coutlibelles';
-import'../modals/Vehiculeamendemodal.css';
 
 /*
- * Saisie d'un frais fixe : assurance, vignette, visite technique ou autre.
+ * Saisie d'un frais fixe : assurance, vignette, visite technique ou autre (fenêtre décrite par ses champs).
  * La période couverte (facultative) permet de répartir le montant : une assurance annuelle
  * ne pèse que pour les mois de la période regardée.
+ *
+ * vehicules : liste donnée par la page appelante (sinon GET /api/vehicule) · vehiculeIdInitial : véhicule proposé à la création.
  */
 
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
@@ -24,171 +25,88 @@ const unAnApres = (iso) => {
   return d.toISOString().slice(0, 10);
 };
 
+const trierVehicules = (l) => [...l].sort((a, b) => String(a.matricule || '').localeCompare(String(b.matricule || ''), locale(), { numeric: true }));
+const nomVehicule = (v) => [ltr(v.matricule), v.marque].filter(Boolean).join(' · ') || t('Véhicule #{id}', { id: v.id });
+
+const SECTIONS = [
+  { cle: 'general', label: 'Frais', icone: Wallet, description: 'Assurance, vignette, visite technique… : ils entrent dans le coût total du véhicule.' },
+  { cle: 'periode', label: 'Période couverte', icone: CalendarRange, description: 'Facultatif : avec une période, le montant est réparti jour par jour.' },
+  { cle: 'references', label: 'Références', icone: FileText, description: 'Fournisseur, numéro de pièce et commentaire.' },
+];
+
+/** Début et fin : les deux ou aucun, et la fin après le début. */
+const validerPeriode = (cote) => (v, valeurs) => {
+  const { periodeDebut: debut, periodeFin: fin } = valeurs;
+  if (!!debut !== !!fin) return (cote === 'debut' ? !debut : !fin) ? t('Indiquez le début et la fin, ou laissez les deux vides.') : null;
+  if (cote === 'fin' && debut && fin && fin < debut) return t('La fin est avant le début.');
+  return null;
+};
+
+function champs(vehicules) {
+  return [
+    {
+      nom: 'vehiculeId', label: 'Véhicule', type: 'recherche', requis: true, section: 'general', largeur: 'pleine',
+      messageRequis: t('Choisissez le véhicule.'), optionLabel: nomVehicule, placeholder: 'Rechercher un véhicule...',
+      ...(vehicules.length
+        ? { options: trierVehicules(vehicules) }
+        : { chargerOptions: () => obtenirVehicules().then(commePage).then((p) => trierVehicules(p?.content ?? (Array.isArray(p) ? p : []))), cleOptions: 'frais-vehicules' }),
+    },
+    { nom: 'type', label: 'Type de frais', type: 'liste', requis: true, section: 'general', defaut: '1', traduireOptions: true,
+      options: Object.entries(TYPES_FRAIS).map(([value, label]) => ({ value, label })) },
+    { nom: 'montant', label: 'Montant', unite: 'DT', type: 'montant', requis: true, section: 'general', messageRequis: t('Indiquez un montant positif.'),
+      valider: (v) => (Number(String(v).replace(',', '.')) > 0 ? null : t('Indiquez un montant positif.')) },
+    { nom: 'dateFrais', label: 'Payé le', type: 'date', requis: true, section: 'general', defaut: aujourdhui(), messageRequis: t('Indiquez la date du paiement.') },
+    // ── Période couverte ──
+    { nom: 'periodeDebut', label: 'Du', type: 'date', section: 'periode', valider: validerPeriode('debut') },
+    { nom: 'periodeFin', label: 'Au', type: 'date', section: 'periode', valider: validerPeriode('fin') },
+    {
+      nom: 'unAn', label: '', type: 'personnalise', section: 'periode', largeur: 'pleine', envoyer: false,
+      rendu: ({ valeurs, changerChamp }) => (
+        <div className="cf-bloc">
+          <p className="cf-aide">{t('Avec une période, le montant est réparti jour par jour : une assurance annuelle de 1 200 DT compte pour 300 DT sur un trimestre. Sans période, il compte entier à la date du paiement.')}</p>
+          <button type="button" className="cm-btn" onClick={() => {
+            const debut = valeurs.periodeDebut || valeurs.dateFrais;
+            changerChamp('periodeDebut', debut);
+            changerChamp('periodeFin', unAnApres(debut));
+          }}>
+            <CalendarRange size={16} /> {t('Couvre un an')}
+          </button>
+        </div>
+      ),
+    },
+    // ── Références ──
+    { nom: 'fournisseur', label: 'Assureur, centre, fournisseur', section: 'references' },
+    { nom: 'reference', label: 'N° de police, quittance ou facture', section: 'references' },
+    { nom: 'commentaire', label: 'Commentaire', type: 'zone', lignes: 2, section: 'references', largeur: 'pleine' },
+  ];
+}
+
 export default function VehiculeFraisModal({ frais, vehicules = [], vehiculeIdInitial, onClose, onSave }) {
-  const enModification = !!frais;
+  const liste = useMemo(() => champs(vehicules), [vehicules]);
+  const initiales = useMemo(() => (vehiculeIdInitial ? { vehiculeId: vehiculeIdInitial } : null), [vehiculeIdInitial]);
 
-  // Liste des véhicules : celle donnée par la page appelante, sinon GET /api/vehicule
-  const [vehiculesCharges, setVehiculesCharges] = useState([]);
-  const [chargementVehicules, setChargementVehicules] = useState(vehicules.length === 0);
-  const [erreurVehicules, setErreurVehicules] = useState('');
-  const aDesVehicules = vehicules.length > 0;
-  useEffect(() => {
-    if (aDesVehicules) return undefined;
-    let actif = true;
-    obtenirVehicules().then(commePage)
-      .then((page) => { if (actif) setVehiculesCharges(page?.content ?? (Array.isArray(page) ? page : [])); })
-      .catch(() => { if (actif) setErreurVehicules(t('Impossible de charger la liste des véhicules.')); })
-      .finally(() => { if (actif) setChargementVehicules(false); });
-    return () => { actif = false; };
-  }, [aDesVehicules]);
-  const listeVehicules = aDesVehicules ? vehicules : vehiculesCharges;
-  const [form, setForm] = useState(() => ({
-    vehiculeId: String(frais?.vehiculeId ?? vehiculeIdInitial ?? ''),
-    type: String(frais?.type ?? '1'),
-    montant: frais?.montant ?? '',
-    dateFrais: frais?.dateFrais ?? aujourdhui(),
-    periodeDebut: frais?.periodeDebut ?? '',
-    periodeFin: frais?.periodeFin ?? '',
-    fournisseur: frais?.fournisseur ?? '',
-    reference: frais?.reference ?? '',
-    commentaire: frais?.commentaire ?? '',
-  }));
-  const [erreurs, setErreurs] = useState({});
-  const [erreurServeur, setErreurServeur] = useState('');
-  const [envoi, setEnvoi] = useState(false);
-
-  const vehiculesTries = useMemo(
-    () => [...listeVehicules].sort((a, b) => String(a.matricule || '').localeCompare(String(b.matricule || ''), locale(), { numeric: true })),
-    [listeVehicules],
-  );
-
-  const maj = (champ, valeur) => {
-    setForm((f) => ({ ...f, [champ]: valeur }));
-    setErreurs((e) => (e[champ] ? { ...e, [champ]: undefined } : e));
-  };
-
-  const couvrirUnAn = () => {
-    const debut = form.periodeDebut || form.dateFrais;
-    setForm((f) => ({ ...f, periodeDebut: debut, periodeFin: unAnApres(debut) }));
-    setErreurs((e) => ({ ...e, periodeDebut: undefined, periodeFin: undefined }));
-  };
-
-  const valider = () => {
-    const e = {};
-    if (!form.vehiculeId) e.vehiculeId = t('Choisissez le véhicule.');
-    if (form.montant === '' || !(Number(form.montant) > 0)) e.montant = t('Indiquez un montant positif.');
-    if (!form.dateFrais) e.dateFrais = t('Indiquez la date du paiement.');
-    if (!!form.periodeDebut !== !!form.periodeFin) {
-      e[form.periodeDebut ? 'periodeFin' : 'periodeDebut'] = t('Indiquez le début et la fin, ou laissez les deux vides.');
-    } else if (form.periodeDebut && form.periodeFin < form.periodeDebut) {
-      e.periodeFin = t('La fin est avant le début.');
-    }
-    return e;
-  };
-
-  const enregistrer = async (ev) => {
-    ev.preventDefault();
-    const e = valider();
-    setErreurs(e);
-    const premier = Object.keys(e)[0];
-    if (premier) {
-      document.getElementById(`vfr-${premier}`)?.focus();
-      return;
-    }
+  const enregistrer = (payload, { creation }) => {
     const ctx = authService.getContexteMetier();
     const user = authService.getCurrentUser?.();
-    setEnvoi(true);
-    setErreurServeur('');
-    try {
-      await onSave({
-        vehiculeId: Number(form.vehiculeId),
-        type: Number(form.type),
-        montant: Number(form.montant),
-        dateFrais: form.dateFrais,
-        periodeDebut: form.periodeDebut || null,
-        periodeFin: form.periodeFin || null,
-        fournisseur: form.fournisseur,
-        reference: form.reference,
-        commentaire: form.commentaire,
-        ...(enModification ? {} : { personnelCreationId: ctx.userId ?? null, personnelCreationNom: user?.userNom || ctx.user || null }),
-      });
-      onClose();
-    } catch (err) {
-      setErreurServeur(err?.response?.data?.message || t("Échec de l'enregistrement."));
-    } finally {
-      setEnvoi(false);
-    }
+    return onSave({
+      ...payload,
+      ...(creation ? { personnelCreationId: ctx.userId ?? null, personnelCreationNom: user?.userNom || ctx.user || null } : {}),
+    });
   };
 
-  const aria = (champ) => ({ 'aria-invalid': !!erreurs[champ], 'aria-describedby': erreurs[champ] ? `vfr-${champ}-erreur` : undefined });
-
   return (
-    <Fenetre
-      titre={enModification ? t('Modifier le frais') : t('Ajouter un frais')}
-      sousTitre={t('Assurance, vignette, visite technique… : ils entrent dans le coût total du véhicule.')}
-      Icone={ShieldCheck}
-      onClose={onClose}
-      largeur={640}
-      pied={(
-        <>
-          <button type="button" className="vam-bouton vam-bouton--clair" onClick={onClose} disabled={envoi}>{t('Annuler')}</button>
-          <button type="submit" form="vfr-formulaire" className="vam-bouton" disabled={envoi}>
-            {envoi ? <Loader2 size={16} className="vam-tourne" /> : <CheckCircle2 size={16} />}
-            {t('Enregistrer')}
-          </button>
-        </>
-      )}
-    >
-      <form id="vfr-formulaire" className="vam-corps" onSubmit={enregistrer} noValidate>
-        {erreurServeur && <p className="vam-alerte" role="alert">{erreurServeur}</p>}
-        <div className="vam-grille">
-          <Champ id="vfr-vehiculeId" label={t('Véhicule')} requis erreur={erreurs.vehiculeId || erreurVehicules}>
-            <select id="vfr-vehiculeId" value={form.vehiculeId} onChange={(e) => maj('vehiculeId', e.target.value)} disabled={chargementVehicules} {...aria('vehiculeId')}>
-              <option value="">{chargementVehicules ? t('Chargement…') : t('— Choisir —')}</option>
-              {vehiculesTries.map((v) => (
-                <option key={v.id} value={v.id}>{[ltr(v.matricule), v.marque].filter(Boolean).join(' · ') || t('Véhicule #{id}', { id: v.id })}</option>
-              ))}
-            </select>
-          </Champ>
-          <Champ id="vfr-type" label={t('Type de frais')} requis>
-            <select id="vfr-type" value={form.type} onChange={(e) => maj('type', e.target.value)}>
-              {Object.entries(TYPES_FRAIS).map(([k, v]) => <option key={k} value={k}>{t(v)}</option>)}
-            </select>
-          </Champ>
-          <Champ id="vfr-montant" label={t('Montant (DT)')} requis erreur={erreurs.montant}>
-            <input id="vfr-montant" type="number" min="0" step="0.001" inputMode="decimal" value={form.montant} onChange={(e) => maj('montant', e.target.value)} {...aria('montant')} />
-          </Champ>
-          <Champ id="vfr-dateFrais" label={t('Payé le')} requis erreur={erreurs.dateFrais}>
-            <input id="vfr-dateFrais" type="date" value={form.dateFrais} onChange={(e) => maj('dateFrais', e.target.value)} {...aria('dateFrais')} />
-          </Champ>
-        </div>
-
-        <fieldset className="vam-groupe">
-          <legend>{t('Période couverte (facultatif)')}</legend>
-          <p className="vam-aide vfr-aide">{t('Avec une période, le montant est réparti jour par jour : une assurance annuelle de 1 200 DT compte pour 300 DT sur un trimestre. Sans période, il compte entier à la date du paiement.')}</p>
-          <div className="vam-grille">
-            <Champ id="vfr-periodeDebut" label={t('Du')} erreur={erreurs.periodeDebut}>
-              <input id="vfr-periodeDebut" type="date" value={form.periodeDebut} onChange={(e) => maj('periodeDebut', e.target.value)} {...aria('periodeDebut')} />
-            </Champ>
-            <Champ id="vfr-periodeFin" label={t('Au')} erreur={erreurs.periodeFin}>
-              <input id="vfr-periodeFin" type="date" value={form.periodeFin} onChange={(e) => maj('periodeFin', e.target.value)} {...aria('periodeFin')} />
-            </Champ>
-          </div>
-          <button type="button" className="vam-bouton vam-bouton--clair vfr-un-an" onClick={couvrirUnAn}>{t('Couvre un an')}</button>
-        </fieldset>
-
-        <div className="vam-grille">
-          <Champ id="vfr-fournisseur" label={t('Assureur, centre, fournisseur')}>
-            <input id="vfr-fournisseur" type="text" value={form.fournisseur} onChange={(e) => maj('fournisseur', e.target.value)} />
-          </Champ>
-          <Champ id="vfr-reference" label={t('N° de police, quittance ou facture')}>
-            <input id="vfr-reference" type="text" value={form.reference} onChange={(e) => maj('reference', e.target.value)} />
-          </Champ>
-          <Champ id="vfr-commentaire" label={t('Commentaire')} large>
-            <textarea id="vfr-commentaire" rows={2} value={form.commentaire} onChange={(e) => maj('commentaire', e.target.value)} />
-          </Champ>
-        </div>
-      </form>
-    </Fenetre>
+    <ModaleFormulaire
+      ouvert
+      onFermer={onClose}
+      icone={ShieldCheck}
+      titres={{ creation: t('Ajouter un frais'), modification: t('Modifier le frais') }}
+      champs={liste}
+      sections={SECTIONS}
+      objet={frais || null}
+      initiales={initiales}
+      taille="lg"
+      libelleEnregistrer={t('Enregistrer')}
+      onEnregistrer={enregistrer}
+    />
   );
 }

@@ -657,6 +657,26 @@
   border-color: var(--g-slate-300);
 }
 
+/* ─── Sobriété : seuls « Ajouter » (teal) et « Supprimer » (rouge) sont en couleur ─── */
+.bons-action-btn.modifier, .bons-action-btn.details, .bons-action-btn.demander, .bons-action-btn.demandes,
+.bons-action-btn.commander, .bons-action-btn.demarrer, .bons-action-btn.reprendre, .bons-action-btn.suspendre,
+.bons-action-btn.effectuer, .bons-action-btn.annuler { color: var(--g-slate-700); }
+.bons-action-btn.modifier:hover:not(.disabled), .bons-action-btn.details:hover:not(.disabled),
+.bons-action-btn.demander:hover:not(.disabled), .bons-action-btn.demandes:hover:not(.disabled),
+.bons-action-btn.commander:hover:not(.disabled), .bons-action-btn.demarrer:hover:not(.disabled),
+.bons-action-btn.reprendre:hover:not(.disabled), .bons-action-btn.suspendre:hover:not(.disabled),
+.bons-action-btn.effectuer:hover:not(.disabled), .bons-action-btn.annuler:hover:not(.disabled) {
+  background: var(--g-slate-100);
+  border-color: var(--g-slate-300);
+  color: var(--g-slate-800);
+}
+/* Demander / Commander disponibles : simple mise en avant, sans couleur */
+.bons-action-btn.demander.allume, .bons-action-btn.commander.allume {
+  background: var(--g-slate-100);
+  border-color: var(--g-slate-300);
+  color: var(--g-slate-800);
+}
+
 /* ─── Terminal state / pas de sélection ─── */
 .bons-terminal-state {
   display: flex;
@@ -1641,3 +1661,67 @@ td.bons-table-empty > svg { display: block; margin: 0 auto 12px; }
 
 /* ===== Statistiques en pastilles dans l'en-tête (composant commun PastillesStats) ===== */
 .bons-header-card { flex-wrap: wrap; }
+
+/* ===== En-tête sur une seule ligne : titre · statistiques · boutons (icônes, libellé en info-bulle) ===== */
+.bons-header-card { flex-wrap: nowrap; padding: 12px 16px; gap: 12px; }
+.bons-header-card .bons-header-title-box { flex-shrink: 0; }
+.bons-header-card .bons-header-subtitle { display: none; }
+.bons-header-card .bons-header-title-box h2 { font-size: 1.2rem; white-space: nowrap; }
+.bons-header-card .bons-header-icon-wrapper { width: 42px; height: 42px; }
+.bons-header-card .cl-pastilles {
+  flex: 1 1 auto; flex-basis: auto; min-width: 0;
+  justify-content: center; gap: 4px;
+  padding-top: 0; border-top: 0;
+}
+.bons-header-card .cl-pastille { padding: 5px 7px; gap: 4px; }
+.bons-header-card .cl-pastille small { font-size: 0.64rem; letter-spacing: 0.02em; }
+.bons-header-card .cl-pastille svg { width: 13px; height: 13px; }
+.bons-header-card .bons-header-stats { flex-shrink: 0; flex-wrap: nowrap; gap: 5px; }
+.bons-header-card .bons-toggle-stats { padding: 8px; }
+.bons-header-card .bons-toggle-stats > span:not(.bons-toggle-badge) { display: none; }
+.bons-header-card .bons-toggle-badge { position: absolute; top: -6px; right: -6px; }
+/* Écran plus étroit : les statistiques passent sous le titre */
+@media (max-width: 1280px) {
+  .bons-header-card { flex-wrap: wrap; }
+  .bons-header-card .cl-pastilles { order: 3; flex-basis: 100%; justify-content: flex-start; }
+}
+
+/* ===== Vues de la liste dans l'en-tête (à la place des statistiques par état) ===== */
+.bons-header-vues { flex: 1 1 auto; min-width: 0; display: flex; justify-content: center; }
+.bons-header-vues .vues-liste { margin: 0; max-width: 100%; min-width: 0; }
+.bons-header-vues .vues-liste__rail { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.bons-header-vues .vues-liste__rail::-webkit-scrollbar { display: none; }
+.bons-header-vues .vues-liste__rail { gap: 5px; }
+.bons-header-vues .vue-puce { min-height: 30px; padding: 4px 9px; font-size: 12.5px; gap: 5px; }
+@media (max-width: 1280px) {
+  .bons-header-card .bons-header-vues { order: 3; flex-basis: 100%; justify-content: flex-start; }
+}
+
+/* ===== Menu déroulant « Outils » de l'en-tête ===== */
+.bons-outils { position: relative; flex-shrink: 0; }
+.bons-outils__bouton {
+  position: relative; display: inline-flex; align-items: center; gap: 7px;
+  height: 38px; padding: 0 12px; border-radius: 10px;
+  border: 1px solid var(--slate-200); background: var(--g-blanc);
+  color: var(--slate-700); font: inherit; font-size: 0.84rem; font-weight: 700; cursor: pointer;
+}
+.bons-outils__bouton:hover, .bons-outils__bouton.is-ouvert { background: var(--slate-100); border-color: var(--slate-300); }
+.bons-outils__bouton .bons-toggle-badge, .bons-outils__item .bons-toggle-badge { position: static; }
+.bons-outils__chevron { transition: transform 0.15s ease; }
+.bons-outils__bouton.is-ouvert .bons-outils__chevron { transform: rotate(180deg); }
+.bons-outils__menu {
+  position: absolute; z-index: 40; top: calc(100% + 6px); inset-inline-end: 0; width: 340px;
+  padding: 6px; border-radius: 12px; background: var(--g-blanc);
+  border: 1px solid var(--slate-200); box-shadow: 0 18px 40px -16px rgba(15, 23, 42, 0.28);
+}
+.bons-outils__item {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border: 0; border-radius: 8px; background: none;
+  font: inherit; text-align: start; color: var(--slate-700); cursor: pointer;
+}
+.bons-outils__item:hover, .bons-outils__item:focus-visible { background: var(--slate-100); outline: none; }
+.bons-outils__icone { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: 8px; background: var(--slate-100); color: var(--slate-600); }
+.bons-outils__textes { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+.bons-outils__textes strong { font-size: 0.86rem; color: var(--slate-900); }
+.bons-outils__textes small { font-size: 0.74rem; color: var(--slate-500); }
+@media (max-width: 760px) { .bons-outils__bouton span:not(.bons-toggle-badge) { display: none; } }

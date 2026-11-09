@@ -30,6 +30,18 @@ const parametreService = {
     const { data } = await api.post(`/parametres/taches/${code}/executer`);
     return data;
   },
+
+  /** Prestataire du paramètre « Prestataire (clinique) des équipements » (cubix.prestataire_id) ; null si 0, absent ou illisible. */
+  async prestataireEquipements() {
+    try {
+      const liste = await this.getAll();
+      const p = (Array.isArray(liste) ? liste : []).find((x) => x.cle === 'cubix.prestataire_id');
+      const n = Number(p?.valeur);
+      return n > 0 ? n : null;
+    } catch {
+      return null;
+    }
+  },
 };
 
 export default parametreService;

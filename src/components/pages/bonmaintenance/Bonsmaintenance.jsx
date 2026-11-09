@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
-import { Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw, Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, BarChart3, Search, Filter, RefreshCw, AlertCircle, Clock, Calendar, Users, Building2, ChevronLeft, ChevronRight, Loader2, Info, AlertTriangle, Ban, Gauge, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, X, TriangleAlert, RadioTower, Timer, ArrowUpRight, Wrench } from 'lucide-react';
+import { Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw, Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, Search, Filter, RefreshCw, AlertCircle, Calendar, Building2, Loader2, Info, AlertTriangle, Ban, Gauge, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, TriangleAlert, RadioTower, Timer, ArrowUpRight, Wrench, ChevronDown, LayoutGrid } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
@@ -10,7 +10,6 @@ import bonMaintenancePieceService from '../../../services/bonMaintenancePieceSer
 import { prioriteLabel, prioriteRang, prioriteColor } from '../../../constants/Priorite';
 
 import BonMaintenanceModal from '../../ui/modals/BonMaintenanceModal';
-import { PastillesStats } from '../../commun';
 import BonMaintenanceDetails from './BonMaintenanceDetails';
 import FicheBonMaintenance from '../Fichebonmaintenance/FicheBonMaintenance';
 import PieceEditor from '../../ui/PieceEditor/PieceEditor';
@@ -26,9 +25,6 @@ import alerteMachineService from '../../../services/alerteMachineService';
 import slaService from '../../../services/slaService';
 import { delaiSla } from '../../../utils/delaiSla';
 
-import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
-import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenancedocumentachatservice';
-import pieceLigneService from '../../../services/pieceLigneService';
 
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
@@ -43,8 +39,17 @@ import { useVueActive } from '../../ui/Listes/stockageVues';
 import CartesListe from '../../ui/Listes/CartesListe';
 import SelectionMultiple, { CaseSelection } from '../../ui/Listes/SelectionMultiple';
 import { bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
+// Styles des fenêtres « Demander / Commander » de cette page (classes modal-overlay et bmm-*),
+// autrefois chargés par l'ancienne fenêtre du bon de maintenance
+import '../../ui/modals/Modal.css';
+import '../../ui/modals/BonMaintenanceModal.css';
 import './Bonsmaintenance.css';
 import Pagination from '../../commun/Pagination';
+import EtatLecture from '../../commun/EtatLecture';
+import LignesChargement from '../../commun/LignesChargement';
+import {
+  AnnonceCopie, BoutonFiltresColonnes, BoutonMenuColonne, BoutonTri, ChampFiltre, choixColonnes, filtrerParColonnes, useFiltresColonnes,
+} from '../../commun/TableauColonnes';
 
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
 
@@ -141,64 +146,53 @@ function getEtatCount(bons, etatValue) {
 }
 
 
+/*
+ * Boutons Demander / Commander et info-bulle des lignes : calculés par le serveur,
+ * en UN appel pour tous les bons demandés au même moment (toute la page + le bon sélectionné),
+ * au lieu de 2 appels + 1 par article, pour chaque bon.
+ */
+let lotBesoins = null;
+// Réponses gardées quelques secondes (la page puis le bon sélectionné ne redemandent rien) ;
+// vidées dès qu'une écriture réussit (demande, commande, tâche…), voir services/api.js.
+const besoinsConnus = new Map(); // bonId → { jusqua, valeur }
+if (typeof window !== 'undefined') window.addEventListener('gmao:ecriture', () => besoinsConnus.clear());
+function besoinsPieces(bonId) {
+  const connu = besoinsConnus.get(bonId);
+  if (connu && Date.now() < connu.jusqua) return Promise.resolve(connu.valeur);
+  if (!lotBesoins) {
+    const lot = { ids: new Set() };
+    lotBesoins = lot;
+    lot.promesse = Promise.resolve()
+      .then(() => {
+        lotBesoins = null;
+        return api.get('/bon-maintenance/besoins-pieces', { params: { ids: [...lot.ids].join(',') } });
+      })
+      .then(({ data }) => {
+        const parBon = new Map((data || []).map((x) => [x.bonId, x]));
+        const jusqua = Date.now() + 5000;
+        parBon.forEach((valeur, id) => besoinsConnus.set(id, { jusqua, valeur }));
+        return parBon;
+      });
+  }
+  lotBesoins.ids.add(bonId);
+  return lotBesoins.promesse.then((parBon) => parBon.get(bonId));
+}
+
 async function computeBonMaintenanceNeeds(bonId) {
   let tooltip = t("Aucun document d'achat (Demander/Commander) pour ce bon.");
-  let commanderNecessaire = false;
-  let demanderNecessaire = false;
-  const dejaCommandeParArticle = {};
-  const dejaDemandeParArticle = {};
-
   try {
-    const documents = await bonMaintenanceDocumentAchatService.findByBonMaintenanceId(bonId);
-
-    const lignesTexte = (documents ?? [])
-      .filter((d) => d.piece?.codePieceType === '.COMMANDE_FOURNISSEUR' || d.piece?.codePieceType === '.D_Fourniture')
-      .map((d) => {
-        const typeLabel = d.piece.codePieceType === '.COMMANDE_FOURNISSEUR' ? t('Commande') : t('Demande');
-        const articlesTexte = (d.lignes ?? []).map((l) => t('Article #{id} (Qté {qte})', { id: l.prestataireArticlesId, qte: l.qte ?? '—' })).join(t(', '));
-        return `${typeLabel} — ${articlesTexte || t('aucun article')}`;
-      });
-
-    if (lignesTexte.length > 0) tooltip = lignesTexte.join('\n');
-
-    (documents ?? []).forEach((d) => {
-      const cible = d.piece?.codePieceType === '.COMMANDE_FOURNISSEUR' ? dejaCommandeParArticle
-        : d.piece?.codePieceType === '.D_Fourniture' ? dejaDemandeParArticle : null;
-      if (!cible) return;
-      (d.lignes ?? []).forEach((l) => {
-        if (l.prestataireArticlesId == null) return;
-        cible[l.prestataireArticlesId] = (cible[l.prestataireArticlesId] ?? 0) + (l.qte ?? 0);
-      });
+    const besoins = await besoinsPieces(bonId);
+    const lignesTexte = (besoins?.documents ?? []).map((d) => {
+      const typeLabel = d.type === 'COMMANDE' ? t('Commande') : t('Demande');
+      const articlesTexte = (d.lignes ?? []).map((l) => t('Article #{id} (Qté {qte})', { id: l.prestataireArticlesId, qte: l.qte ?? '—' })).join(t(', '));
+      return `${typeLabel} — ${articlesTexte || t('aucun article')}`;
     });
+    if (lignesTexte.length > 0) tooltip = lignesTexte.join('\n');
+    return { tooltip, commanderNecessaire: Boolean(besoins?.commanderNecessaire), demanderNecessaire: Boolean(besoins?.demanderNecessaire) };
   } catch (err) {
-    console.error(`Erreur chargement documents d'achat pour le bon ${bonId} :`, err);
+    console.error(`Erreur calcul des besoins en pièces du bon ${bonId} :`, err);
+    return { tooltip, commanderNecessaire: false, demanderNecessaire: false };
   }
-
-  try {
-    const taches = await bonMaintenanceTacheService.getByBonMaintenance(bonId);
-    const tachesAvecArticle = (taches ?? []).filter((tache) => tache.prestataireArticlesId != null);
-
-    await Promise.all(tachesAvecArticle.map(async (tache) => {
-      try {
-        const disponible = await pieceLigneService.getQuantiteDisponible(tache.prestataireArticlesId);
-        const qte = tache.qte ?? 0;
-        const manquant = disponible != null ? Math.max(0, qte - disponible) : qte;
-        if (manquant <= 0) return;
-
-        const dejaCommande = dejaCommandeParArticle[tache.prestataireArticlesId] ?? 0;
-        const dejaDemande = dejaDemandeParArticle[tache.prestataireArticlesId] ?? 0;
-        const resteACommander = manquant - dejaCommande;
-        const resteADemander = manquant - dejaDemande;
-
-        if (resteADemander > 0) demanderNecessaire = true;
-        if (resteACommander > 0 && tache.sousTraitantId != null) commanderNecessaire = true;
-      } catch { /* ignore */ }
-    }));
-  } catch (err) {
-    console.error(`Erreur vérification stock pour le bon ${bonId} :`, err);
-  }
-
-  return { tooltip, commanderNecessaire, demanderNecessaire };
 }
 
 
@@ -212,6 +206,7 @@ const SORTABLE_COLUMNS = {
   delai: (b) => delaiSla(b.sla)?.echeance ?? Number.MAX_SAFE_INTEGER,
   date: (b) => (b.date ? new Date(b.date).getTime() : 0),
   etat: (b) => b.etat ?? -1,
+  lecture: (b) => (b.dateLecture ? 1 : 0),
 };
 
 const PAGE_SIZE = 10;
@@ -229,6 +224,7 @@ const BON_COLUMNS_DEFAULT = [
   { key: 'delai',       label: 'Délai',       visible: true, searchable: false },
   { key: 'date',        label: 'Date',        visible: true, searchable: false },
   { key: 'etat',        label: 'État',        visible: true, searchable: false },
+  { key: 'lecture',     label: 'Lu',          visible: true, searchable: false },
 ];
 
 /* =========================================================
@@ -347,6 +343,19 @@ function getColumnSearchValue(b, key) {
   }
 }
 
+/* Colonnes pour la recherche par colonne et la copie (texte affiché) */
+const COLONNES_TEXTE = BON_COLUMNS_DEFAULT.map((c) => ({
+  cle: c.key,
+  label: c.label,
+  filtre: ['num', 'description', 'titre'].includes(c.key) ? 'texte' : (['criticite', 'urgence', 'priorite', 'etat', 'lecture'].includes(c.key) ? 'liste' : undefined),
+  texte: (b) => {
+    if (c.key === 'lecture') return b.dateLecture ? t('Lu') : t('Non lu');
+    if (c.key === 'priorite') return t(prioriteLabel(b.priorite) || '');
+    return t(getColumnSearchValue(b, c.key));
+  },
+}));
+const COLONNE_TEXTE = Object.fromEntries(COLONNES_TEXTE.map((c) => [c.cle, c]));
+
 /* =========================================================
    COMPOSANT PRINCIPAL
    ========================================================= */
@@ -359,7 +368,6 @@ export default function BonsMaintenance() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
-  const [showFilterStats, setShowFilterStats] = useState(true);
 
   const [sortColumn, setSortColumn] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -409,6 +417,22 @@ export default function BonsMaintenance() {
   // Lien direct /bons-maintenance?id=12 (QR code d'une fiche, notification) : ouvre ce bon
   const [parametres, setParametres] = useSearchParams();
   const idLien = Number(parametres.get('id')) || null;
+
+  // Lien depuis un tableau de bord : /bons-maintenance?etat=1 ou ?vue=a-traiter — applique le filtre puis nettoie l'adresse
+  const etatLien = parametres.get('etat');
+  const vueLien = parametres.get('vue');
+  useEffect(() => {
+    if (etatLien == null && vueLien == null) return;
+    setSearchTerm('');
+    fc.vider();
+    setEtatFilter(etatLien != null && /^\d+$/.test(etatLien) ? etatLien : 'all');
+    setVueId(vueLien && vuesListe.some((v) => v.id === vueLien) ? vueLien : 'tous');
+    const reste = new URLSearchParams(parametres);
+    reste.delete('etat');
+    reste.delete('vue');
+    setParametres(reste, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etatLien, vueLien]);
   useEffect(() => {
     if (!idLien) return;
     setSelectedBon((actuel) => (actuel?.id === idLien ? actuel : { id: idLien }));
@@ -500,7 +524,6 @@ export default function BonsMaintenance() {
   const [slaRetards, setSlaRetards] = useState(null);
   const [slaChargement, setSlaChargement] = useState(false);
   const [slaErreur, setSlaErreur] = useState(null);
-  const [slaBandeauMasque, setSlaBandeauMasque] = useState(false);
   // Lecture des retards : les mises à jour d'état ont lieu à l'arrivée de la réponse
   const recupererSlaRetards = useCallback(() => slaService.getDepassements()
     .then((data) => { setSlaRetards(Array.isArray(data) ? data : []); setSlaErreur(null); })
@@ -620,17 +643,20 @@ export default function BonsMaintenance() {
     return stats;
   }, [bons]);
 
+  const fc = useFiltresColonnes('bons');
+  const choixCol = useMemo(() => choixColonnes(COLONNES_TEXTE, bonsAvecSla), [bonsAvecSla]);
   const filteredBons = useMemo(() => {
     const searchableCols = columnSettings.filter((c) => c.searchable).map((c) => c.key);
     const term = searchTerm.trim().toLowerCase();
-    return bonsAvecSla.filter((b) => {
+    const parColonne = filtrerParColonnes(bonsAvecSla, COLONNES_TEXTE, fc.filtres, choixCol);
+    return parColonne.filter((b) => {
       const matchesSearch = !term
         || searchableCols.some((key) => getColumnSearchValue(b, key).toLowerCase().includes(term));
       const matchesEtat = etatFilter === 'all' || String(b.etat) === etatFilter;
       const matchesVue = !vueCourante.filtre || vueCourante.filtre(b);
       return matchesSearch && matchesEtat && matchesVue;
     });
-  }, [bonsAvecSla, searchTerm, etatFilter, columnSettings, vueCourante]);
+  }, [bonsAvecSla, searchTerm, etatFilter, columnSettings, vueCourante, fc.filtres, choixCol]);
 
   const sortedBons = useMemo(() => {
     const extractor = SORTABLE_COLUMNS[sortColumn];
@@ -646,7 +672,7 @@ export default function BonsMaintenance() {
 
   const totalPages = Math.max(1, Math.ceil(sortedBons.length / PAGE_SIZE));
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, etatFilter, sortColumn, sortDirection, vueId]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, etatFilter, sortColumn, sortDirection, vueId, fc.filtres]);
   useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
 
   const paginatedBons = useMemo(() => {
@@ -712,7 +738,7 @@ export default function BonsMaintenance() {
   const visibleColumns = columnSettings.filter((c) => c.visible);
 
   const TABLE_COLUMNS_DEF = {
-    num: { cell: (b) => <td key="num" style={{ fontWeight: 600 }}>{b.num || '—'}</td> },
+    num: { cell: (b) => <td key="num" className="liste-num">{b.num || '—'}</td> },
     titre: { cell: (b) => <td key="titre">{t(b.titre)}</td> },
     prestataire: { cell: (b) => <td key="prestataire">{b.prestataire?.raisonSociale || b.prestataire?.nom || '—'}</td> },
     service: { cell: (b) => <td key="service">{b.serviceNom || b.service?.description || '—'}</td> },
@@ -757,6 +783,14 @@ export default function BonsMaintenance() {
       cell: (b) => (
         <td key="etat">
           <BadgeStatut type="bon" valeur={b.etat} />
+        </td>
+      ),
+    },
+    // Lu / non lu par un intervenant ; le temps d'attente ne compte que pour un bon encore ouvert
+    lecture: {
+      cell: (b) => (
+        <td key="lecture">
+          <EtatLecture objet={b} compact actif={[1, 2, 3].includes(Number(b.etat))} />
         </td>
       ),
     },
@@ -866,6 +900,7 @@ export default function BonsMaintenance() {
         case 'urgence':  return t(niveauLabel(b.urgence));
         case 'priorite': return b.priorite ? `${b.priorite} · ${t(prioriteLabel(b.priorite))}` : '—';
         case 'etat':     return t(etatLabel(b.etat));
+        case 'lecture':  return b.dateLecture ? t('Lu') : t('Non lu');
         default:         return getColumnSearchValue(b, key);
       }
     };
@@ -877,10 +912,11 @@ export default function BonsMaintenance() {
         { label: t('Vue'), valeur: vueCourante.filtre ? t(vueCourante.label) : '' },
         { label: t('Recherche'), valeur: searchTerm.trim() },
         { label: t('État'), valeur: etatFilter !== 'all' ? t(etatLabel(Number(etatFilter))) : '' },
+        ...COLONNES_TEXTE.filter((c) => fc.actif(c.cle)).map((c) => ({ label: t(c.label), valeur: fc.filtres[c.cle].trim() })),
       ],
     });
   };
-  const handleResetFilters = () => { setSearchTerm(''); setEtatFilter('all'); setVueId('tous'); };
+  const handleResetFilters = () => { setSearchTerm(''); setEtatFilter('all'); setVueId('tous'); fc.vider(); };
 
   const handleRowClick = (bon) => {
     setSelectedBon((prev) => (prev?.id === bon.id ? null : bon));
@@ -1154,81 +1190,36 @@ export default function BonsMaintenance() {
           </div>
         </div>
 
-        <div className="bons-header-stats">
-
-
-          <button className="bons-toggle-stats" title={t("Anomalies")} onClick={() => setAnomaliesOpen(true)}>
-            <AlertTriangle size={20} />
-            <span>{t("Anomalies")}</span>
-          </button>
-
-          <button className="bons-toggle-stats" title={t("Blocages")} onClick={() => setBlocagesOpen(true)}>
-            <Ban size={20} />
-            <span>{t("Blocages")}</span>
-          </button>
-
-          <button className="bons-toggle-stats" title={t("Équipements et leur état : fiche, historique, documents et QR code")} onClick={() => ouvrirEquipements('etat')}>
-            <Gauge size={20} />
-            <span>{t("Équipements")}</span>
-          </button>
-
-          <button className="bons-toggle-stats" title={t("Alertes envoyées par les machines (SNMP, Syslog) et coupures réseau")} onClick={() => setAlertesMachinesOpen(true)}>
-            <RadioTower size={20} />
-            <span>{t("Alertes machines")}</span>
-            {nbAlertesMachines > 0 && <span className="bons-toggle-badge" aria-label={t('{n} alertes à traiter', { n: nbAlertesMachines })}>{nbAlertesMachines > 99 ? '99+' : nbAlertesMachines}</span>}
-          </button>
-
-          <button className="bons-toggle-stats" title={t("Qui travaille en ce moment, sur quel bon et depuis combien de temps")} onClick={() => setIntelligenceOpen(true)}>
-            <Timer size={20} />
-            <span>{t("Chrono des employés")}</span>
-          </button>
-
-          <button className="bons-toggle-stats" onClick={() => setShowFilterStats(!showFilterStats)} title="Afficher/masquer les statistiques">
-            <BarChart3 size={20} />
-          </button>
+        {/* VUES de la liste (Tous, Mes bons, À traiter…), dans l'en-tête à la place des statistiques par état */}
+        <div className="bons-header-vues">
+          <VuesListe
+            liste="bons"
+            userKey={moi.cle}
+            vues={vuesListe}
+            items={bons}
+            chargement={loading}
+            vueActive={vueCourante.id}
+            reglages={{ recherche: searchTerm, etat: etatFilter, tri: sortColumn, sens: sortDirection }}
+            onChoisir={choisirVue}
+            max={3}
+          />
         </div>
 
-        {/* STATISTIQUES : pastilles cliquables (filtre par état) */}
-        {showFilterStats && (
-          <PastillesStats
-            ariaLabel={t('Répartition par état')}
-            stats={[
-              { cle: 'all', label: t('Total'), valeur: bons.length, actif: etatFilter === 'all', onClick: () => setEtatFilter('all'), aide: t('Tous les états') },
-              ...ETAT_FILTER_OPTIONS.filter((opt) => opt.value !== 'all').map((option) => {
-                const count = etatStats[Number(option.value)] || 0;
-                return {
-                  cle: option.value, label: t(option.label), valeur: count, couleur: option.color, icone: option.icon,
-                  actif: etatFilter === option.value, onClick: () => setEtatFilter(option.value),
-                  aide: `${t(option.label)} : ${tp('bon (compte)', count)}`,
-                };
-              }),
-              {
-                cle: 'sla', label: t('SLA en retard'), valeur: slaRetards == null ? '…' : nbSlaRetards, icone: AlarmClock,
-                couleur: nbSlaRetards > 0 ? '#d9434b' : '#7f969d', alerte: nbSlaRetards > 0, onClick: ouvrirSlaRetards,
-                aide: t('Voir les bons en retard SLA'),
-              },
-            ]}
-          />
-        )}
+        {/* Outils de la liste regroupés dans un menu déroulant */}
+        <MenuOutilsBons
+          nbAlertesMachines={nbAlertesMachines + nbSlaRetards}
+          elements={[
+            { cle: 'anomalies', icone: AlertTriangle, label: t('Anomalies'), aide: t('Pics de réclamations anormaux'), onClick: () => setAnomaliesOpen(true) },
+            { cle: 'blocages', icone: Ban, label: t('Blocages'), aide: t('Équipements bloqués trop longtemps'), onClick: () => setBlocagesOpen(true) },
+            { cle: 'equipements', icone: Gauge, label: t('Équipements'), aide: t('Fiche, historique, documents et QR code'), onClick: () => ouvrirEquipements('etat') },
+            { cle: 'alertes', icone: RadioTower, label: t('Alertes machines'), aide: t('Alertes SNMP, Syslog et coupures réseau'), badge: nbAlertesMachines, onClick: () => setAlertesMachinesOpen(true) },
+            { cle: 'sla', icone: AlarmClock, label: t('Retards SLA'), aide: t('Bons qui ont dépassé leur délai de réponse ou de résolution'), badge: nbSlaRetards, onClick: ouvrirSlaRetards },
+            { cle: 'chrono', icone: Timer, label: t('Chrono des employés'), aide: t('Qui travaille en ce moment, et depuis quand'), onClick: () => setIntelligenceOpen(true) },
+          ]}
+        />
+
       </div>
 
-      {/* ALERTE SLA */}
-      {nbSlaRetards > 0 && !slaBandeauMasque && (
-        <div className="bons-sla-bandeau" role="alert">
-          <AlarmClock size={18} aria-hidden="true" />
-          <span>
-            {nbSlaRetards === 1
-              ? t('1 bon a dépassé son délai SLA.')
-              : t('{n} bons ont dépassé leur délai SLA.', { n: nbSlaRetards })}
-          </span>
-          <button type="button" className="bons-sla-bandeau__voir" onClick={ouvrirSlaRetards}>
-            {t('Voir les bons en retard')}
-          </button>
-          <button type="button" className="bons-sla-bandeau__fermer" onClick={() => setSlaBandeauMasque(true)} aria-label={t('Masquer')}>
-            <X size={15} aria-hidden="true" />
-          </button>
-        </div>
-      )}
 
       {/* ACTIONS */}
       <div className="bons-actions-bar">
@@ -1319,17 +1310,6 @@ export default function BonsMaintenance() {
         )}
       </div>
 
-      {/* VUES */}
-      <VuesListe
-        liste="bons"
-        userKey={moi.cle}
-        vues={vuesListe}
-        items={bons}
-        chargement={loading}
-        vueActive={vueCourante.id}
-        reglages={{ recherche: searchTerm, etat: etatFilter, tri: sortColumn, sens: sortDirection }}
-        onChoisir={choisirVue}
-      />
 
       {/* FILTRES */}
       <div className="bons-filter-panel">
@@ -1367,6 +1347,8 @@ export default function BonsMaintenance() {
           </div>
         </div>
 
+        <BoutonFiltresColonnes voir={fc.voir} onBasculer={() => fc.setVoir((v) => !v)} nb={fc.nb} />
+
         <button className="bons-filter-reset" onClick={handleResetFilters}>
           <RefreshCw size={16} />
           {t("Réinitialiser")}
@@ -1387,9 +1369,6 @@ export default function BonsMaintenance() {
           </button>
           <button className="bons-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>
             <Printer size={18} />
-          </button>
-          <button className="bons-export-btn stats" title={t("Statistiques")} onClick={() => setShowFilterStats(!showFilterStats)}>
-            <BarChart3 size={18} />
           </button>
         </div>
       </div>
@@ -1431,14 +1410,26 @@ export default function BonsMaintenance() {
                 <th
                   key={c.key}
                   className={`bons-th-sortable ${sortColumn === c.key ? 'is-sorted' : ''}`}
-                  onClick={() => handleSort(c.key)}
+                  onClick={() => fc.basculer(c.key)}
                   aria-sort={sortColumn === c.key ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
-                  title={t('Trier par {colonne}', { colonne: t(c.label) })}
+                  title={t('Cliquer pour rechercher dans cette colonne')}
                 >
-                  <span className="bons-th-inner">
-                    <span>{t(c.label)}</span>
-                    {renderSortIcon(c.key)}
-                  </span>
+                  <div className="cl-th">
+                    <span className="bons-th-inner">
+                      <span>{t(c.label)}</span>
+                      <BoutonTri label={c.label} onTrier={() => handleSort(c.key)}>{renderSortIcon(c.key)}</BoutonTri>
+                    </span>
+                    <BoutonMenuColonne colonne={COLONNE_TEXTE[c.key]} triActif={sortColumn === c.key ? sortDirection : null}
+                      filtreActif={fc.actif(c.key)}
+                      onTrier={(sens) => { setSortColumn(c.key); setSortDirection(sens); }}
+                      onCopier={(d) => fc.copier(COLONNE_TEXTE[c.key], sortedBons, d)}
+                      onMasquer={() => setColumnSettings((prev) => prev.map((x) => (x.key === c.key ? { ...x, visible: false } : x)))}
+                      onEffacer={() => fc.changer(c.key, '')} />
+                  </div>
+                  {fc.visible(c.key) && (
+                    <ChampFiltre colonne={COLONNE_TEXTE[c.key]} valeur={fc.filtres[c.key]} choix={choixCol[c.key]} onChanger={fc.changer}
+                      focus={fc.focus(c.key)} onFermer={() => fc.fermer(c.key)} />
+                  )}
                 </th>
               ))}
             </tr>
@@ -1446,10 +1437,7 @@ export default function BonsMaintenance() {
 
           <tbody>
             {loading ? (
-              <tr><td colSpan={visibleColumns.length + 1} className="bons-table-empty">
-                <Loader2 size={24} className="bons-spinner" />
-                <span>{t("Chargement...")}</span>
-              </td></tr>
+              <LignesChargement colonnes={visibleColumns.length + 1} premiereCase />
             ) : sortedBons.length === 0 ? (
               <tr><td colSpan={visibleColumns.length + 1} className="bons-table-empty">
                 {bons.length === 0 ? (
@@ -1859,6 +1847,8 @@ export default function BonsMaintenance() {
         </div>
       )}
 
+      <AnnonceCopie texte={fc.annonce} />
+
       {/* MODAL PARAMÈTRES DES COLONNES */}
       <ColumnSettingsModal
         key={columnSettingsInstanceKey}
@@ -2062,15 +2052,6 @@ export default function BonsMaintenance() {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Bons en retard sur leur délai SLA   (ancien fichier SlaRetards.jsx)
-// ═════════════════════════════════════════════════════════════
-/*
- * Bons en dépassement SLA (délai de réponse et/ou de résolution), tous encore ouverts.
- * Données : GET /api/sla/depassements (SlaService.findEnDepassement).
- * Un clic sur une ligne ouvre le bon.
- */
-
 const formatDateSla = (iso) => {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -2232,6 +2213,52 @@ function SlaRetards({ bons, chargement, erreur, onRecharger, onOuvrir }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+// Menu déroulant « Outils » de l'en-tête (anomalies, blocages, équipements, alertes, chrono)
+// ═════════════════════════════════════════════════════════════
+function MenuOutilsBons({ elements, nbAlertesMachines }) {
+  const [ouvert, setOuvert] = useState(false);
+  const zone = useRef(null);
+  useEffect(() => {
+    if (!ouvert) return undefined;
+    const fermerDehors = (e) => { if (zone.current && !zone.current.contains(e.target)) setOuvert(false); };
+    const fermerEchap = (e) => { if (e.key === 'Escape') setOuvert(false); };
+    document.addEventListener('mousedown', fermerDehors);
+    document.addEventListener('keydown', fermerEchap);
+    return () => { document.removeEventListener('mousedown', fermerDehors); document.removeEventListener('keydown', fermerEchap); };
+  }, [ouvert]);
+  const badge = (n) => (n > 99 ? '99+' : n);
+  return (
+    <div className="bons-outils" ref={zone}>
+      <button type="button" className={`bons-outils__bouton ${ouvert ? 'is-ouvert' : ''}`} aria-haspopup="menu" aria-expanded={ouvert}
+        onClick={() => setOuvert((o) => !o)}>
+        <LayoutGrid size={17} aria-hidden="true" />
+        <span>{t('Outils')}</span>
+        {nbAlertesMachines > 0 && <span className="bons-toggle-badge" aria-label={t('{n} éléments à traiter', { n: nbAlertesMachines })}>{badge(nbAlertesMachines)}</span>}
+        <ChevronDown size={15} className="bons-outils__chevron" aria-hidden="true" />
+      </button>
+      {ouvert && (
+        <div className="bons-outils__menu" role="menu">
+          {elements.map((el) => {
+            const Icone = el.icone;
+            return (
+              <button key={el.cle} type="button" role="menuitem" className="bons-outils__item"
+                onClick={() => { setOuvert(false); el.onClick(); }}>
+                <span className="bons-outils__icone"><Icone size={17} aria-hidden="true" /></span>
+                <span className="bons-outils__textes">
+                  <strong>{el.label}</strong>
+                  {el.aide && <small>{el.aide}</small>}
+                </span>
+                {el.badge > 0 && <span className="bons-toggle-badge">{badge(el.badge)}</span>}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -25,10 +25,12 @@ export const ETATS_BON = {
 };
 
 export const ETATS_RECLAMATION = {
-  0: { label: 'Ouverte', ton: 'info' },
+  0: { label: 'Nouveau', ton: 'info' },
+  5: { label: 'En file', ton: 'attention' },
   1: { label: 'En cours', ton: 'action' },
+  3: { label: 'Résolue', ton: 'ok' },
   2: { label: 'Clôturée', ton: 'ok' },
-  
+  4: { label: 'Annulée', ton: 'neutre' },
 };
 
 export const CATEGORIES_DOCUMENT = {

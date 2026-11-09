@@ -1,885 +1,185 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import {
-  AlertCircle, FileText, MapPin, Tag, Users, X,
-  Wrench, Save, Loader2, CheckCircle2,
-  Search, ChevronDown, Check,
-} from 'lucide-react';
-import Button from '../Button';
-import personnelService from '../../../services/personnelService';
+import { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, ClipboardCheck, FileText, MapPin, Tag, ThumbsUp, Wrench } from 'lucide-react';
+import ModaleFormulaire from '../../commun/ModaleFormulaire';
+import SuggestionCodePanne from './SuggestionCodePanne';
+import VerificationsReclamation, { manqueVerifications, problemeRegle, reponsesChecklist } from './VerificationsReclamation';
 import serviceService from '../../../services/Serviceservice';
-import { commePage, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import authService from '../../../services/Authservice';
-import './Modal.css';
-import './ReclamationModal.css';
-import ChampEquipement from '../ChampEquipement/ChampEquipement';
-import SuggestionCodePanne from './SuggestionCodePanne';
+import parametreService from '../../../services/parametreService';
 import { SOURCES_INFORMATION, optionsTypeEntretien } from '../../../constants/FicheIntervention';
 
-const ETAT_OPTIONS = [
-  { value: 0, label: 'Ouverte' },
-  { value: 1, label: 'En cours' },
-  { value: 2, label: 'Clôturée' },
+/*
+ * Fenêtre « Nouvelle réclamation » / « Modifier la réclamation », décrite par ses champs
+ * (affichage, validation et envoi faits par ModaleFormulaire).
+ * Création en assistant : Équipement → Vérifications → Description → Localisation → Classification.
+ *
+ * valeursInitiales (création) : { lotArticleImmobilistationId, description, criticite, urgence, type, sourceInformation }
+ * — fiche équipement, scan d'un QR code, alerte machine.
+ */
 
-];
-
-const NIVEAU_OPTIONS = [
+const NIVEAUX = [
   { value: 1, label: 'Faible' },
   { value: 2, label: 'Moyenne' },
   { value: 3, label: 'Élevée' },
 ];
 
 
-const nomPrestataire = (p) => (p ? (p.raisonSociale || `${p.nom || ''} ${p.prenom || ''}`.trim() || null) : null);
-
-const emptyForm = {
-  num: '',
-  n: '',
-  description: '',
-  etat: 0,
-  criticite: '',
-  urgence: '',
-  type: '',
-  sourceInformation: '',
-  personnelAffecteId: '',
-  lotArticleImmobilistationId: '',
-  serviceId: '',
-  depotId: '',
-  prestataireId: '',
-  codePanneId: '',
-  codePanneSource: '',
-};
-
-// ─── Sections de navigation ───
-const NAV_SECTIONS = [
-  { id: 'general',         label: 'Général',         Icon: FileText },
-  { id: 'immobilisation',  label: 'Immobilisation',  Icon: Wrench, createOnly: true },
-  { id: 'localisation',    label: 'Localisation',    Icon: MapPin },
-  { id: 'classification',  label: 'Classification',  Icon: Tag },
-  { id: 'affectation',     label: 'Affectation',     Icon: Users },
+const SECTIONS = [
+  { cle: 'equipement', label: 'Équipement', icone: Wrench, creation: true, description: 'Choisis l’équipement concerné : les vérifications et les codes panne dépendent de sa famille.' },
+  { cle: 'verifications', label: 'Vérifications', icone: ClipboardCheck, creation: true, description: 'Fais ces vérifications sur l’équipement : beaucoup de pannes se règlent ainsi, sans intervention.' },
+  { cle: 'general', label: 'Description', icone: FileText, description: 'Décris précisément le problème signalé.' },
+  { cle: 'localisation', label: 'Localisation', icone: MapPin, description: 'Service et dépôt concernés.' },
+  { cle: 'classification', label: 'Classification', icone: Tag, description: 'Criticité, urgence, type d’entretien et source de l’information.' },
 ];
 
-// ─── Select avec recherche intégrée (combobox) ───
-const SearchableSelect = ({
-  id,
-  name,
-  value,
-  onChange,
-  options,
-  getValue = (o) => o.id,
-  getLabel = (o) => o.label ?? o.nom ?? String(o),
-  getOptionHint = () => null,
-  placeholder = 'Sélectionner...',
-  emptyMessage = 'Aucun résultat',
-  allowEmpty = false,
-  emptyOptionLabel = '— Aucun —',
-  disabled = false,
-  loading = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const containerRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const selected = options.find((o) => String(getValue(o)) === String(value));
-  const selectedLabel = selected ? getLabel(selected) : '';
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-        setSearch('');
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-        setSearch('');
-        inputRef.current?.blur();
-      }
-    };
-    if (isOpen) document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
-
-  const handleFocus = () => {
-    if (disabled) return;
-    setIsOpen(true);
-    setSearch(selectedLabel);
-    setTimeout(() => inputRef.current?.select(), 0);
-  };
-
-  const handleInputChange = (e) => {
-    setSearch(e.target.value);
-    if (!isOpen) setIsOpen(true);
-  };
-
-  const handleSelect = (opt) => {
-    onChange({ target: { name, value: String(getValue(opt)) } });
-    setIsOpen(false);
-    setSearch('');
-    inputRef.current?.blur();
-  };
-
-  const handleClear = (e) => {
-    e.stopPropagation();
-    onChange({ target: { name, value: '' } });
-    setSearch('');
-    inputRef.current?.focus();
-  };
-
-  const term = search.trim().toLowerCase();
-  const isSelectedLabel = selected && term === selectedLabel.toLowerCase();
-  const filtered = (!term || isSelectedLabel)
-    ? options
-    : options.filter((o) => getLabel(o).toLowerCase().includes(term));
-
-  const displayValue = isOpen ? search : selectedLabel;
-
-  return (
-    <div className="rm-select" ref={containerRef}>
-      <div className={`rm-select-input-wrap ${isOpen ? 'is-open' : ''}`}>
-        <Search size={15} strokeWidth={2.3} className="rm-select-icon" />
-
-        <input
-          ref={inputRef}
-          id={id}
-          type="text"
-          className="rm-select-input"
-          value={displayValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          placeholder={loading ? 'Chargement...' : (selected ? '' : placeholder)}
-          disabled={disabled || loading}
-          autoComplete="off"
+function champs(reclamation) {
+  const liste = [
+    // ── Équipement (création) ──
+    {
+      nom: 'lotArticleImmobilistationId', label: 'Équipement', type: 'equipement', requis: true, creation: true,
+      section: 'equipement', largeur: 'pleine', messageRequis: 'Choisis l’équipement concerné pour continuer.', autoFocus: true,
+      service: 'serviceId', serviceLibelle: 'serviceNom',
+      aide: 'Tapez le nom, la marque, le n° de série ou le code-barre, ou scannez l’étiquette. Le bon de maintenance sera créé pour cet équipement à la prise en charge.',
+    },
+    // ── Vérifications (création) : réponses envoyées en « checklist » ──
+    {
+      nom: 'checklist', label: '', type: 'personnalise', creation: true, section: 'verifications', largeur: 'pleine', defaut: {},
+      rendu: ({ valeur, changer, valeurs }) => (
+        <VerificationsReclamation equipementId={valeurs.lotArticleImmobilistationId} valeur={valeur} onChange={changer} />
+      ),
+      valider: (v, valeurs) => manqueVerifications(v, valeurs.lotArticleImmobilistationId),
+      transformer: (v) => reponsesChecklist(v),
+    },
+    // ── Description ──
+    { nom: 'description', label: 'Description', type: 'zone', requis: true, section: 'general', largeur: 'pleine', lignes: 4, autoFocus: true, placeholder: 'Décrivez le problème rencontré...' },
+    {
+      nom: 'codePanneId', label: 'Code panne', type: 'personnalise', section: 'general', largeur: 'pleine',
+      rendu: ({ valeur, valeurs, changerChamp }) => (
+        <SuggestionCodePanne
+          description={valeurs.description}
+          lotArticleImmobilistationId={valeurs.lotArticleImmobilistationId || reclamation?.lotArticleImmobilistationId}
+          reclamationId={reclamation?.id ?? null}
+          codePanneId={valeur}
+          codePanneSource={valeurs.codePanneSource}
+          libelleActuel={reclamation?.codePanneCode ? `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}` : null}
+          onChoisir={(id, source) => { changerChamp('codePanneId', id ? String(id) : ''); changerChamp('codePanneSource', id ? source : ''); }}
         />
-
-        {(selected || search) && !disabled && !loading && (
-          <button
-            type="button"
-            className="rm-select-clear"
-            onClick={handleClear}
-            aria-label="Effacer"
-            tabIndex={-1}
-          >
-            <X size={13} strokeWidth={2.5} />
-          </button>
-        )}
-
-        <ChevronDown
-          size={15}
-          strokeWidth={2.3}
-          className={`rm-select-chevron ${isOpen ? 'rotated' : ''}`}
-        />
-      </div>
-
-      {isOpen && (
-        <div className="rm-select-menu">
-          <div className="rm-select-options">
-            {allowEmpty && !term && (
-              <button
-                type="button"
-                className={`rm-select-option ${!value ? 'is-selected' : ''}`}
-                onClick={() => handleSelect({ id: '' })}
-              >
-                <span className="rm-select-option-main">
-                  <span className="rm-select-option-label">{emptyOptionLabel}</span>
-                </span>
-                {!value && <Check size={14} strokeWidth={3} />}
-              </button>
-            )}
-
-            {filtered.length === 0 && (!allowEmpty || term) ? (
-              <div className="rm-select-empty">{emptyMessage}</div>
-            ) : (
-              filtered.map((o) => {
-                const val = String(getValue(o));
-                const isSelected = val === String(value);
-                const hint = getOptionHint(o);
-                return (
-                  <button
-                    key={val}
-                    type="button"
-                    className={`rm-select-option ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => handleSelect(o)}
-                  >
-                    <span className="rm-select-option-main">
-                      <span className="rm-select-option-label">{getLabel(o)}</span>
-                      {hint && (
-                        <span className="rm-select-option-hint">{hint}</span>
-                      )}
-                    </span>
-                    {isSelected && <Check size={14} strokeWidth={3} />}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// valeursInitiales (création seulement) : { lotArticleImmobilistationId, immobilisation: { id, designation } }
-// — utilisé par la fiche équipement et le scan d'un QR code pour pré-remplir l'équipement.
-const ReclamationModal = ({ isOpen, onClose, onSave, reclamation, isEditing, valeursInitiales }) => {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [formData, setFormData] = useState(emptyForm);
-  const [activeSection, setActiveSection] = useState('general');
-
-  const [personnels, setPersonnels] = useState([]);
-  const [loadingPersonnels, setLoadingPersonnels] = useState(false);
-
-  const [immobilisations, setImmobilisations] = useState([]);
-  const [loadingImmobilisations, setLoadingImmobilisations] = useState(false);
-
-  const [services, setServices] = useState([]);
-  const [loadingServices, setLoadingServices] = useState(false);
-
-  const [prestataires, setPrestataires] = useState([]);
-  const [loadingPrestataires, setLoadingPrestataires] = useState(false);
-
-  const [depots, setDepots] = useState([]);
-  const [loadingDepots, setLoadingDepots] = useState(false);
-
-  const [depotIdsDuService, setDepotIdsDuService] = useState(null);
-
-  // ─── Reset sur open ───
-  useEffect(() => {
-    if (!isOpen) return;
-    setError(null);
-    setActiveSection('general');
-  }, [isOpen]);
-
-  // ─── Chargement des listes ───
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const fetchPersonnels = async () => {
-      setLoadingPersonnels(true);
-      try {
-        // « Affecté à » : seulement le personnel du service maintenance (63)
-        const page = await personnelService.getMaintenance(0, 200);
-        setPersonnels(page.content ?? []);
-      } catch (err) {
-        console.error('Erreur chargement personnel :', err);
-        setPersonnels([]);
-      } finally {
-        setLoadingPersonnels(false);
-      }
-    };
-
-    const fetchImmobilisations = async () => {
-      setLoadingImmobilisations(true);
-      // L'équipement pré-rempli doit figurer dans la liste, même s'il n'est pas dans les 200 premiers
-      // (ou si la liste ne peut pas être chargée)
-      const initial = valeursInitiales?.immobilisation;
-      try {
-        const page = await obtenirEquipements().then(commePage);
-        const liste = page.content ?? [];
-        setImmobilisations(initial && !liste.some((i) => String(i.id) === String(initial.id)) ? [initial, ...liste] : liste);
-      } catch (err) {
-        console.error('Erreur chargement immobilisations :', err);
-        setImmobilisations(initial ? [initial] : []);
-      } finally {
-        setLoadingImmobilisations(false);
-      }
-    };
-
-    const fetchServices = async () => {
-      setLoadingServices(true);
-      try {
-        const page = await serviceService.getAll(0, 200);
-        setServices(page.content ?? []);
-      } catch (err) {
-        console.error('Erreur chargement services :', err);
-        setServices([]);
-      } finally {
-        setLoadingServices(false);
-      }
-    };
-
-    const fetchPrestataires = async () => {
-      setLoadingPrestataires(true);
-      try {
-        setPrestataires(await obtenirPrestataires());
-      } catch (err) {
-        console.error('Erreur chargement prestataires :', err);
-        setPrestataires([]);
-      } finally {
-        setLoadingPrestataires(false);
-      }
-    };
-
-    const fetchDepots = async () => {
-      setLoadingDepots(true);
-      try {
-        const page = await prestataireDepotService.getAll(0, 200);
-        setDepots(page.content ?? []);
-      } catch (err) {
-        console.error('Erreur chargement dépôts :', err);
-        setDepots([]);
-      } finally {
-        setLoadingDepots(false);
-      }
-    };
-
-    fetchPersonnels();
-    fetchImmobilisations();
-    fetchServices();
-    fetchPrestataires();
-    fetchDepots();
-  }, [isOpen, valeursInitiales?.immobilisation]);
-
-  // ─── Dépôts filtrés par service ───
-  useEffect(() => {
-    if (!formData.serviceId) {
-      setDepotIdsDuService(null);
-      return;
+      ),
+      transformer: (v) => (v === '' || v == null ? null : Number(v)),
+    },
+    { nom: 'codePanneSource', cache: true, transformer: (v, valeurs) => (valeurs.codePanneId ? (v || 'MANUEL') : null) },
+    // Numéro et N° interne : non affichés (attribués par le serveur), gardés tels quels en modification
+    { nom: 'num', cache: true },
+    { nom: 'n', cache: true },
+    // ── Localisation : le prestataire vient des paramètres système (non affiché), dépôts filtrés par service ──
+    { nom: 'prestataireId', cache: true },
+    { nom: 'prestataireNom', cache: true },
+    {
+      nom: 'serviceId', label: 'Service', type: 'recherche', section: 'localisation',
+      chargerOptions: () => serviceService.getAll(0, 200), cleOptions: 'reclamation-services',
+      optionLabel: (s) => s.description || s.code || `Service #${s.id}`,
+      optionAide: (s) => (s.code && s.description ? `Code : ${s.code}` : null),
+      filtrerOptions: (l, v) => (v.prestataireId ? l.filter((s) => s.prestataireId == null || String(s.prestataireId) === String(v.prestataireId)) : l),
+      viderSiAbsent: true, libelleVers: 'serviceNom', placeholder: 'Rechercher un service...',
+    },
+    { nom: 'serviceNom', cache: true },
+    {
+      nom: 'depotId', label: 'Dépôt', type: 'recherche', section: 'localisation',
+      cleOptions: (v) => `reclamation-depots-${v.serviceId || 'tous'}`,
+      chargerOptions: async (v) => {
+        const [page, ids] = await Promise.all([
+          prestataireDepotService.getAll(0, 200),
+          v.serviceId ? prestataireDepotService.getDepotIdsByServiceId(v.serviceId) : null,
+        ]);
+        const depots = page?.content ?? [];
+        return ids ? depots.filter((d) => ids.includes(d.id)) : depots;
+      },
+      optionLabel: (d) => d.nom || d.codeDepots || `Dépôt #${d.id}`,
+      optionAide: (d) => (d.codeDepots && d.nom ? `Code : ${d.codeDepots}` : null),
+      viderSiAbsent: true, libelleVers: 'depotNom', placeholder: 'Rechercher un dépôt...',
+    },
+    { nom: 'depotNom', cache: true },
+    // ── Classification ──
+    { nom: 'criticite', label: 'Criticité', type: 'liste', section: 'classification', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
+    { nom: 'urgence', label: 'Urgence', type: 'liste', section: 'classification', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
+    { nom: 'type', label: 'Type d’entretien', type: 'liste', section: 'classification', options: (v) => optionsTypeEntretien(v.type), optionVide: '— Non renseigné —', traduireOptions: true },
+    { nom: 'sourceInformation', label: 'Source de l’information', type: 'liste', section: 'classification', options: SOURCES_INFORMATION, optionVide: '— Non renseigné —', traduireOptions: true },
+  ];
+  // Création : le service se choisit avant l'équipement (la liste des équipements suit ce service)
+  if (!reclamation) {
+    const i = liste.findIndex((c) => c.nom === 'serviceId');
+    const j = liste.findIndex((c) => c.nom === 'lotArticleImmobilistationId');
+    if (i > j && j >= 0) {
+      const [service] = liste.splice(i, 1);
+      liste.splice(j, 0, { ...service, section: 'equipement', largeur: 'pleine' });
     }
+  }
+  return liste;
+}
+
+/** Qui fait la demande (création) : suivi dans Mon espace → « Mes demandes ». */
+function createur() {
+  const u = authService.getCurrentUser();
+  const id = u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
+  return {
+    personnelCreationId: id != null ? Number(id) : null,
+    personnelCreationNom: u?.userNom || [u?.prenom, u?.nom].filter(Boolean).join(' ') || u?.login || null,
+  };
+}
+
+export default function ReclamationModal({ isOpen, onClose, onSave, reclamation, isEditing, valeursInitiales }) {
+  const objet = isEditing ? reclamation : null;
+  const liste = useMemo(() => champs(objet), [objet]);
+
+  // Prestataire des paramètres système, relu à chaque ouverture
+  const [prestataireParametre, setPrestataireParametre] = useState(null);
+  useEffect(() => {
+    if (!isOpen) return undefined;
     let annule = false;
-    prestataireDepotService.getDepotIdsByServiceId(formData.serviceId)
-      .then((ids) => { if (!annule) setDepotIdsDuService(ids ?? []); })
-      .catch((err) => {
-        console.error('Erreur chargement dépôts du service :', err);
-        if (!annule) setDepotIdsDuService([]);
-      });
+    parametreService.prestataireEquipements().then((v) => { if (!annule) setPrestataireParametre(v); });
     return () => { annule = true; };
-  }, [formData.serviceId]);
+  }, [isOpen]);
 
-  const depotsDisponibles = useMemo(() => {
-    if (depotIdsDuService === null) return depots;
-    return depots.filter((d) => depotIdsDuService.includes(d.id));
-  }, [depots, depotIdsDuService]);
+  // Création : service et prestataire de l'utilisateur, puis ce que propose l'appelant
+  const initiales = useMemo(() => {
+    if (isEditing) return null;
+    const ctx = authService.getContexteMetier();
+    return { serviceId: ctx.serviceId, serviceNom: ctx.serviceNom || '', prestataireId: ctx.prestataireId, ...(valeursInitiales || {}) };
+  }, [isEditing, valeursInitiales, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Services filtrés par le prestataire choisi (Service.PrestataireID) ; un service sans prestataire reste proposé
-  const servicesDisponibles = useMemo(() => {
-    if (!formData.prestataireId) return services;
-    return services.filter((s) => s.prestataireId == null || String(s.prestataireId) === String(formData.prestataireId));
-  }, [services, formData.prestataireId]);
-
-  useEffect(() => {
-    if (!formData.serviceId) return;
-    const toujoursValide = servicesDisponibles.some((s) => String(s.id) === String(formData.serviceId));
-    if (!toujoursValide) {
-      setFormData((prev) => ({ ...prev, serviceId: '', depotId: '' }));
-    }
-  }, [formData.prestataireId, servicesDisponibles]);
-
-  // ─── Pré-remplissage ───
-  useEffect(() => {
-    if (isOpen && reclamation && isEditing) {
-      setFormData({
-        num: reclamation.num || '',
-        n: reclamation.n ?? '',
-        description: reclamation.description || '',
-        etat: reclamation.etat ?? 0,
-        criticite: reclamation.criticite ?? '',
-        urgence: reclamation.urgence ?? '',
-        type: reclamation.type ?? '',
-        sourceInformation: reclamation.sourceInformation ?? '',
-        personnelAffecteId: reclamation.personnelAffecteId ?? '',
-        lotArticleImmobilistationId: reclamation.lotArticleImmobilistationId ?? '',
-        serviceId: reclamation.serviceId ?? '',
-        depotId: reclamation.depotId ?? '',
-        prestataireId: reclamation.prestataireId ?? '',
-        codePanneId: reclamation.codePanneId != null ? String(reclamation.codePanneId) : '',
-        codePanneSource: reclamation.codePanneSource || '',
-      });
-    } else if (isOpen) {
-      const ctx = authService.getContexteMetier();
-      setFormData({
-        ...emptyForm,
-        serviceId: ctx.serviceId ?? '',
-        prestataireId: ctx.prestataireId ?? '',
-        ...(valeursInitiales?.lotArticleImmobilistationId != null
-          ? { lotArticleImmobilistationId: String(valeursInitiales.lotArticleImmobilistationId) }
-          : {}),
-        // Autres champs proposés par l'appelant (ex. réclamation créée depuis une alerte machine)
-        ...Object.fromEntries(['description', 'criticite', 'urgence', 'type', 'sourceInformation']
-          .filter((k) => valeursInitiales?.[k] != null && valeursInitiales[k] !== '')
-          .map((k) => [k, String(valeursInitiales[k])])),
-      });
-    }
-    setError(null);
-  }, [isOpen, reclamation, isEditing, valeursInitiales]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-
-    if (!formData.description.trim()) {
-      setError('La description est obligatoire.');
-      setActiveSection('general');
-      return;
-    }
-
-    if (!isEditing && !formData.lotArticleImmobilistationId) {
-      setError("L'immobilisation concernée est obligatoire à la création (elle sert à générer le bon de maintenance).");
-      setActiveSection('immobilisation');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    try {
-      const payload = {
-        num: formData.num.trim() || null,
-        n: formData.n === '' ? null : Number(formData.n),
-        description: formData.description.trim(),
-        etat: Number(formData.etat),
-        criticite: formData.criticite === '' ? null : Number(formData.criticite),
-        urgence: formData.urgence === '' ? null : Number(formData.urgence),
-        type: formData.type === '' ? null : Number(formData.type),
-        sourceInformation: formData.sourceInformation === '' ? null : Number(formData.sourceInformation),
-        personnelAffecteId: formData.personnelAffecteId === '' ? null : Number(formData.personnelAffecteId),
-        lotArticleImmobilistationId: formData.lotArticleImmobilistationId === ''
-          ? null
-          : Number(formData.lotArticleImmobilistationId),
-        serviceId: formData.serviceId === '' ? null : Number(formData.serviceId),
-        serviceNom: formData.serviceId === ''
-          ? null
-          : services.find((s) => String(s.id) === String(formData.serviceId))?.description || null,
-        depotId: formData.depotId === '' ? null : Number(formData.depotId),
-        depotNom: formData.depotId === ''
-          ? null
-          : (() => {
-              const d = depots.find((d) => String(d.id) === String(formData.depotId));
-              return d ? (d.nom || d.codeDepots) : null;
-            })(),
-        prestataireId: formData.prestataireId === '' ? null : Number(formData.prestataireId),
-        prestataireNom: formData.prestataireId === ''
-          ? null
-          : nomPrestataire(prestataires.find((p) => String(p.id) === String(formData.prestataireId))),
-        codePanneId: formData.codePanneId === '' ? null : Number(formData.codePanneId),
-        codePanneSource: formData.codePanneId === '' ? null : (formData.codePanneSource || 'MANUEL'),
-      };
-
-      // Création : on enregistre qui fait la demande (suivi dans Mon espace → « Mes demandes »)
-      if (!isEditing) {
-        const user = authService.getCurrentUser();
-        const createurId = user?.personnelId ?? user?.personnel?.id ?? user?.userId ?? null;
-        payload.personnelCreationId = createurId != null ? Number(createurId) : null;
-        payload.personnelCreationNom = user?.userNom
-          || [user?.prenom, user?.nom].filter(Boolean).join(' ')
-          || user?.login
-          || null;
-      }
-
-      await onSave(payload);
-      onClose();
-    } catch (err) {
-      setError(err.response?.data?.message || "Échec de l'enregistrement.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  const urgenceLabel = NIVEAU_OPTIONS.find((o) => o.value === Number(formData.urgence))?.label;
-
-  const sectionCounts = {
-    general: formData.description.trim() ? 1 : 0,
-    immobilisation: formData.lotArticleImmobilistationId ? 1 : 0,
-    localisation: [
-      formData.prestataireId,
-      formData.serviceId,
-      formData.depotId,
-    ].filter(Boolean).length,
-    classification: [
-      formData.criticite,
-      formData.urgence,
-      formData.type,
-      formData.sourceInformation,
-    ].filter(Boolean).length,
-    affectation: formData.personnelAffecteId ? 1 : 0,
-  };
-
-  const sectionsVisibles = NAV_SECTIONS.filter((s) => !s.createOnly || !isEditing);
-
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'general':
-        return (
-          <div className="rm-content-pane">
-            <div className="rm-pane-header">
-              <h3>Description du problème</h3>
-              <p>Décris précisément le problème signalé</p>
-            </div>
-
-            <div className="rm-grid">
-              <div className="rm-field rm-field--full">
-                <label htmlFor="rcm-description">
-                  Description <span className="rm-required">*</span>
-                </label>
-                <textarea
-                  id="rcm-description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="Décrire le problème signalé..."
-                  rows={5}
-                  autoFocus
-                  required
-                />
-              </div>
-
-              <SuggestionCodePanne
-                description={formData.description}
-                lotArticleImmobilistationId={formData.lotArticleImmobilistationId}
-                reclamationId={isEditing ? reclamation?.id : null}
-                codePanneId={formData.codePanneId}
-                codePanneSource={formData.codePanneSource}
-                libelleActuel={isEditing && reclamation?.codePanneCode ? `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}` : null}
-                onChoisir={(id, source) => setFormData((prev) => ({ ...prev, codePanneId: id, codePanneSource: id ? source : '' }))}
-              />
-
-              <div className="rm-field">
-                <label htmlFor="rcm-num">Numéro</label>
-                <input
-                  id="rcm-num"
-                  type="text"
-                  name="num"
-                  value={formData.num}
-                  onChange={handleChange}
-                  placeholder="Ex : REC-2026-014"
-                />
-              </div>
-
-              <div className="rm-field">
-                <label htmlFor="rcm-n">N° interne</label>
-                <input
-                  id="rcm-n"
-                  type="number"
-                  name="n"
-                  value={formData.n}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'immobilisation':
-        return (
-          <div className="rm-content-pane">
-            <div className="rm-pane-header">
-              <h3>Immobilisation concernée</h3>
-              <p>Sélectionne l'équipement qui fait l'objet de la réclamation</p>
-            </div>
-
-            <div className="rm-grid">
-              <div className="rm-field rm-field--full">
-                <label htmlFor="rcm-immobilisation">
-                  Immobilisation <span className="rm-required">*</span>
-                </label>
-                {/* Recherche par nom / n° de série / code-barre, ou scan du QR code de l'étiquette */}
-                <ChampEquipement
-                  id="rcm-immobilisation"
-                  name="lotArticleImmobilistationId"
-                  value={formData.lotArticleImmobilistationId}
-                  onChange={handleChange}
-                  optionsLocales={immobilisations}
-                  chargement={loadingImmobilisations}
-                />
-                <p className="rm-hint">
-                  Tapez le nom, la marque, le n° de série ou le code-barre, ou scannez l'étiquette de l'équipement.
-                  L'immobilisation sert à générer automatiquement le bon de maintenance associé.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'localisation':
-        return (
-          <div className="rm-content-pane">
-            <div className="rm-pane-header">
-              <h3>Localisation</h3>
-              <p>Prestataire, service et dépôt concernés</p>
-            </div>
-
-            <div className="rm-grid">
-              <div className="rm-field">
-                <label htmlFor="rcm-prestataire">Prestataire</label>
-                <select
-                  id="rcm-prestataire"
-                  name="prestataireId"
-                  value={formData.prestataireId}
-                  onChange={handleChange}
-                  disabled={loadingPrestataires}
-                >
-                  <option value="">— Sélectionner un prestataire —</option>
-                  {loadingPrestataires ? (
-                    <option disabled>Chargement...</option>
-                  ) : (
-                    prestataires.map((p) => (
-                      <option key={p.id} value={p.id}>{nomPrestataire(p) || `Prestataire #${p.id}`}</option>
-                    ))
-                  )}
-                </select>
-              </div>
-
-              <div className="rm-field">
-                <label htmlFor="rcm-service">Service</label>
-                <SearchableSelect
-                  id="rcm-service"
-                  name="serviceId"
-                  value={formData.serviceId}
-                  onChange={handleChange}
-                  options={servicesDisponibles}
-                  loading={loadingServices}
-                  placeholder="Rechercher un service..."
-                  emptyMessage="Aucun service pour ce prestataire"
-                  allowEmpty
-                  emptyOptionLabel="— Aucun service —"
-                  getValue={(s) => s.id}
-                  getLabel={(s) => s.description || s.code || `Service #${s.id}`}
-                  getOptionHint={(s) => (s.code && s.description ? `Code : ${s.code}` : null)}
-                />
-              </div>
-
-              <div className="rm-field rm-field--full">
-                <label htmlFor="rcm-depot">Dépôt</label>
-                <SearchableSelect
-                  id="rcm-depot"
-                  name="depotId"
-                  value={formData.depotId}
-                  onChange={handleChange}
-                  options={depotsDisponibles}
-                  loading={loadingDepots}
-                  placeholder="Rechercher un dépôt..."
-                  emptyMessage="Aucun dépôt associé à ce service"
-                  allowEmpty
-                  emptyOptionLabel="— Aucun dépôt —"
-                  getValue={(d) => d.id}
-                  getLabel={(d) => d.nom || d.codeDepots || `Dépôt #${d.id}`}
-                  getOptionHint={(d) => (d.codeDepots ? `Code : ${d.codeDepots}` : null)}
-                />
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'classification':
-        return (
-          <div className="rm-content-pane">
-            <div className="rm-pane-header">
-              <h3>Classification</h3>
-              <p>Criticité, urgence, type d'entretien, source et état de la réclamation</p>
-            </div>
-
-            <div className="rm-grid">
-              <div className="rm-field">
-                <label htmlFor="rcm-criticite">Criticité</label>
-                <select id="rcm-criticite" name="criticite" value={formData.criticite} onChange={handleChange}>
-                  <option value="">—</option>
-                  {NIVEAU_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="rm-field">
-                <label htmlFor="rcm-urgence">Urgence</label>
-                <select id="rcm-urgence" name="urgence" value={formData.urgence} onChange={handleChange}>
-                  <option value="">—</option>
-                  {NIVEAU_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="rm-field">
-                <label htmlFor="rcm-type">Type d'entretien</label>
-                <select id="rcm-type" name="type" value={formData.type} onChange={handleChange}>
-                  <option value="">—</option>
-                  {optionsTypeEntretien(formData.type).map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="rm-field">
-                <label htmlFor="rcm-source">Source de l'information</label>
-                <select id="rcm-source" name="sourceInformation" value={formData.sourceInformation} onChange={handleChange}>
-                  <option value="">—</option>
-                  {SOURCES_INFORMATION.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              {isEditing && (
-                <div className="rm-field">
-                  <label htmlFor="rcm-etat">État</label>
-                  <select id="rcm-etat" name="etat" value={formData.etat} onChange={handleChange}>
-                    {ETAT_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </div>
-          </div>
-        );
-
-      case 'affectation':
-        return (
-          <div className="rm-content-pane">
-            <div className="rm-pane-header">
-              <h3>Affectation</h3>
-              <p>Personnel en charge du traitement</p>
-            </div>
-
-            <div className="rm-grid">
-              <div className="rm-field rm-field--full">
-                <label htmlFor="rcm-personnel">Personnel affecté</label>
-                <SearchableSelect
-                  id="rcm-personnel"
-                  name="personnelAffecteId"
-                  value={formData.personnelAffecteId}
-                  onChange={handleChange}
-                  options={personnels}
-                  loading={loadingPersonnels}
-                  placeholder="Rechercher un personnel..."
-                  emptyMessage="Aucun personnel ne correspond"
-                  allowEmpty
-                  emptyOptionLabel="— Non affecté —"
-                  getValue={(p) => p.id}
-                  getLabel={(p) =>
-                    `${p.nom || ''} ${p.prenom || ''}`.trim() +
-                    (p.matricule ? ` (${p.matricule})` : '')
-                  }
-                  getOptionHint={(p) => (p.matricule ? `Matricule : ${p.matricule}` : null)}
-                />
-                <p className="rm-hint">
-                  Tu pourras affecter ou modifier le personnel à tout moment depuis la liste des réclamations.
-                </p>
-              </div>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+  const enregistrer = (payload, { creation }) => onSave({
+    ...payload,
+    // Création : prestataire imposé par les paramètres système (sinon celui de la session)
+    ...(creation && prestataireParametre ? { prestataireId: prestataireParametre, prestataireNom: null } : {}),
+    // L'affectation se fait avec « Affecter » : en modification, le technicien actuel est renvoyé tel quel
+    ...(creation ? createur() : {
+      personnelAffecteId: reclamation?.personnelAffecteId ?? null,
+      personnelAffecteNom: reclamation?.personnelAffecteNom ?? null,
+    }),
+  });
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="rm-modal" onClick={(e) => e.stopPropagation()}>
-
-        {/* HEADER */}
-        <div className="rm-header">
-          <div className="rm-header-left">
-            <div className="rm-header-icon-wrap">
-              <AlertCircle size={22} strokeWidth={2} />
-            </div>
-            <div>
-              <span className="rm-eyebrow">
-                {isEditing ? 'Modification' : 'Nouvelle entrée'}
-              </span>
-              <h2>{isEditing ? 'Modifier la réclamation' : 'Nouvelle réclamation'}</h2>
-            </div>
-          </div>
-          <div className="rm-header-right">
-            {urgenceLabel && (
-              <span className={`rm-urgence-badge urgence-${formData.urgence}`}>
-                {urgenceLabel}
-              </span>
-            )}
-            <button type="button" className="rm-close-btn" onClick={onClose} aria-label="Fermer">
-              <X size={18} strokeWidth={2.5} />
-            </button>
-          </div>
-        </div>
-
-        {/* LAYOUT SPLIT */}
-        <form className="rm-layout" onSubmit={handleSubmit}>
-
-          <aside className="rm-nav">
-            <div className="rm-nav-title">Sections</div>
-            <nav className="rm-nav-list">
-              {sectionsVisibles.map((s) => {
-                const isActive = activeSection === s.id;
-                const count = sectionCounts[s.id];
-                const Icon = s.Icon;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className={`rm-nav-item ${isActive ? 'active' : ''}`}
-                    onClick={() => setActiveSection(s.id)}
-                  >
-                    <span className="rm-nav-item-icon">
-                      <Icon size={15} strokeWidth={2.3} />
-                    </span>
-                    <span className="rm-nav-item-label">{s.label}</span>
-                    {count != null && count > 0 && (
-                      <span className="rm-nav-item-count">{count}</span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-          </aside>
-
-          <div className="rm-content">
-            {renderContent()}
-
-            {error && (
-              <div className="rm-error">
-                <AlertCircle size={16} strokeWidth={2.5} />
-                <span>{error}</span>
-              </div>
-            )}
-          </div>
-        </form>
-
-        {/* FOOTER */}
-        <div className="rm-footer">
-          <div className="rm-footer-left">
-            <span className="rm-footer-step">
-              {sectionsVisibles.findIndex((s) => s.id === activeSection) + 1} / {sectionsVisibles.length}
-            </span>
-          </div>
-          <div className="rm-footer-right">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
-              Annuler
-            </Button>
-            <Button type="button" variant="primary" onClick={handleSubmit} disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 size={16} strokeWidth={2.5} className="rm-spin" style={{ marginRight: 6 }} />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Save size={16} strokeWidth={2.5} style={{ marginRight: 6 }} />
-                  {isEditing ? 'Mettre à jour' : 'Créer la réclamation'}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-
-      </div>
-    </div>
+    <ModaleFormulaire
+      ouvert={isOpen}
+      onFermer={onClose}
+      icone={AlertCircle}
+      titres={{ creation: 'Nouvelle réclamation', modification: 'Modifier la réclamation' }}
+      sousTitre={isEditing && reclamation?.num ? reclamation.num : null}
+      champs={liste}
+      sections={SECTIONS}
+      objet={objet}
+      initiales={initiales}
+      etapes
+      libelleEnregistrer={isEditing ? 'Mettre à jour' : 'Créer la réclamation'}
+      onEnregistrer={enregistrer}
+      confirmerAvantEnvoi={(v) => (problemeRegle(v.checklist) ? {
+        icone: ThumbsUp,
+        titre: 'Le problème semble réglé',
+        texte: 'Tu as indiqué que le problème n’est plus présent après les vérifications. Il n’est peut-être pas nécessaire d’envoyer la réclamation.',
+        abandonner: 'Ne pas envoyer',
+        envoyer: 'Envoyer quand même',
+      } : null)}
+    />
   );
-};
-
-export default ReclamationModal;
+}

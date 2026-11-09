@@ -2256,3 +2256,101 @@ button.ep-chat-pastille:hover { filter: brightness(0.92); }
 @media (prefers-reduced-motion: reduce) {
   .ep-groupe-fleche { transition: none; }
 }
+
+/* ============================================================
+   MON ESPACE — style calme, comme les listes (réclamations, bons)
+   Carte blanche d'en-tête, onglets soulignés, couleurs neutres ;
+   la couleur reste réservée aux états (retard, échéance, en cours).
+   ============================================================ */
+.ep-page.ep-theme.ep-calme {
+  --ep-paper: var(--g-slate-50, #f8fafc);
+  --ep-line: var(--g-slate-200, #e2e8f0);
+  --ep-brand-wash: var(--g-slate-100, #f1f5f9);
+  --ep-ink: var(--g-slate-900, #0f172a);
+  --ep-ink-soft: var(--g-slate-600, #475569);
+  --ep-ink-faint: var(--g-slate-400, #94a3b8);
+  --ep-font-titre: var(--g-police, inherit);
+  --ep-font-texte: var(--g-police, inherit);
+  padding: 24px 24px 40px;
+  background: var(--ep-paper);
+  font-family: var(--g-police, inherit);
+  font-size: 14px;
+}
+
+/* En-tête : carte blanche */
+.ep-page.ep-theme.ep-calme .ep-bandeau {
+  padding: 16px 20px 0;
+  border: 1px solid var(--ep-line);
+  border-radius: 16px;
+  background: var(--g-blanc);
+  color: var(--ep-ink);
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
+}
+.ep-page.ep-theme.ep-calme .ep-bandeau-haut { gap: 14px; }
+.ep-page.ep-theme.ep-calme .ep-avatar {
+  width: 46px; height: 46px; border-radius: 10px;
+  background: var(--g-brand-50, #e6f6f8); border: 1px solid var(--g-brand-100, #c3e9ee);
+  color: var(--g-brand-600, #067d8b); box-shadow: none;
+  font-size: 16px; font-weight: 800;
+}
+.ep-page.ep-theme.ep-calme .ep-bandeau-date { font-size: 12.5px; font-weight: 600; color: var(--ep-ink-faint); }
+.ep-page.ep-theme.ep-calme .ep-bandeau h1 { margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--ep-ink); }
+.ep-page.ep-theme.ep-calme .ep-synthese { font-size: 13.5px; line-height: 1.5; color: var(--ep-ink-soft); }
+.ep-page.ep-theme.ep-calme .ep-synthese-lien { color: var(--ep-ink); font-weight: 700; text-decoration-color: var(--ep-line); }
+.ep-page.ep-theme.ep-calme .ep-synthese-lien:hover { text-decoration-color: var(--ep-ink-soft); }
+.ep-page.ep-theme.ep-calme .ep-synthese-lien.is-alerte { padding: 1px 8px; background: var(--ep-alert-wash); color: var(--ep-alert); }
+.ep-page.ep-theme.ep-calme .ep-actualiser {
+  height: 38px; padding: 0 14px; border: 1px solid var(--ep-line); border-radius: 10px;
+  background: var(--g-blanc); color: var(--g-slate-700, #334155); font-size: 13.5px;
+}
+.ep-page.ep-theme.ep-calme .ep-actualiser:hover:not(:disabled) { background: var(--g-slate-100, #f1f5f9); border-color: var(--g-slate-300, #cbd5e1); }
+.ep-page.ep-theme.ep-calme .ep-bandeau :focus-visible { outline-color: var(--g-brand-500); }
+
+/* Onglets soulignés, sur un trait fin */
+.ep-page.ep-theme.ep-calme .ep-onglets { gap: 4px; margin: 14px -20px 0; padding: 0 16px; border-top: 1px solid var(--g-slate-100, #f1f5f9); }
+.ep-page.ep-theme.ep-calme .ep-onglet {
+  gap: 8px; padding: 12px 12px 11px; border-radius: 0;
+  border-bottom: 2px solid transparent; background: transparent;
+  color: var(--ep-ink-soft); font-size: 14px; font-weight: 600;
+}
+.ep-page.ep-theme.ep-calme .ep-onglet:hover { background: transparent; color: var(--ep-ink); }
+.ep-page.ep-theme.ep-calme .ep-onglet.is-actif { background: transparent; color: var(--g-brand-700, #05606b); border-bottom-color: var(--g-brand-500); font-weight: 700; }
+.ep-page.ep-theme.ep-calme .ep-onglet.is-actif::before, .ep-page.ep-theme.ep-calme .ep-onglet.is-actif::after { display: none; }
+.ep-page.ep-theme.ep-calme .ep-onglet-nb { background: var(--g-slate-100, #f1f5f9); color: var(--ep-ink-soft); }
+.ep-page.ep-theme.ep-calme .ep-onglet.is-actif .ep-onglet-nb { background: var(--g-brand-50, #e6f6f8); color: var(--g-brand-700, #05606b); }
+
+/* Contenu */
+.ep-page.ep-theme.ep-calme .ep-error { margin: 16px 0 0; }
+.ep-page.ep-theme.ep-calme .ep-layout { gap: 20px; padding: 20px 0 0; }
+.ep-page.ep-theme.ep-calme .ep-contenu-entete h2 { font-size: 1.05rem; font-weight: 800; }
+.ep-page.ep-theme.ep-calme .ep-contenu-entete p { font-size: 13px; color: var(--ep-ink-faint); }
+.ep-page.ep-theme.ep-calme .ep-filtre-role { font-size: 13px; }
+.ep-page.ep-theme.ep-calme .ep-filtre-role.is-actif { background: var(--g-brand-700, #05606b); border-color: var(--g-brand-700, #05606b); color: var(--g-blanc); }
+.ep-page.ep-theme.ep-calme .ep-groupe-entete h3 { font-size: 14px; }
+.ep-page.ep-theme.ep-calme .ep-fiche { border-radius: 12px; border-inline-start-width: 3px; box-shadow: none; }
+.ep-page.ep-theme.ep-calme .ep-fiche h4 { font-size: 14px; }
+.ep-page.ep-theme.ep-calme .ep-ico { border-radius: 9px; background: transparent; border: 1px solid var(--ep-line); }
+.ep-page.ep-theme.ep-calme .ep-ico:hover { background: var(--g-slate-100, #f1f5f9); color: var(--ep-ink); }
+.ep-page.ep-theme.ep-calme .ep-ico--message { border-color: #fecaca; color: var(--ep-alert); }
+.ep-page.ep-theme.ep-calme .ep-ouvrir { border: 1px solid var(--ep-line); border-radius: 9px; background: var(--g-blanc); color: var(--g-slate-700, #334155); }
+.ep-page.ep-theme.ep-calme .ep-ouvrir:hover { background: var(--g-slate-100, #f1f5f9); border-color: var(--g-slate-300, #cbd5e1); color: var(--ep-ink); }
+.ep-page.ep-theme.ep-calme .ep-empty { border-radius: 14px; border-width: 1px; }
+.ep-page.ep-theme.ep-calme .ep-surface { border-radius: 14px; }
+.ep-page.ep-theme.ep-calme .ep-kcolonne { background: var(--g-slate-100, #f1f5f9); }
+
+/* Colonne de droite */
+.ep-page.ep-theme.ep-calme .ep-carte { border-radius: 14px; }
+.ep-page.ep-theme.ep-calme .ep-carte-entete h2 { font-size: 14px; }
+.ep-page.ep-theme.ep-calme .ep-carte-entete h2 svg { color: var(--ep-ink-faint); }
+.ep-page.ep-theme.ep-calme .ep-surveiller .ep-carte-entete h2 svg { color: var(--ep-alert); }
+.ep-page.ep-theme.ep-calme .ep-compteur { border-radius: 10px; background: var(--g-slate-50, #f8fafc); border: 1px solid var(--ep-line); }
+.ep-page.ep-theme.ep-calme .ep-compteur strong { font-size: 18px; }
+.ep-page.ep-theme.ep-calme .ep-compteur--proche { background: var(--g-blanc); color: #a3600f; }
+.ep-page.ep-theme.ep-calme .ep-compteur--retard { background: var(--g-blanc); }
+.ep-page.ep-theme.ep-calme .ep-cal-jour.a-travaux { background: var(--g-slate-100, #f1f5f9); }
+.ep-page.ep-theme.ep-calme .ep-cal-jour.is-choisi, .ep-page.ep-theme.ep-calme .ep-cal-jour.is-choisi:hover { background: var(--g-brand-600, #067d8b); color: var(--g-blanc); }
+
+@media (max-width: 760px) {
+  .ep-page.ep-theme.ep-calme { padding: 14px 12px 32px; }
+  .ep-page.ep-theme.ep-calme .ep-actualiser span { display: none; }
+}

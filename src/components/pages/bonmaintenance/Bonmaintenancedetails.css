@@ -4706,3 +4706,93 @@ button.bmx-vital:hover { background: var(--paper); }
   .bmx-page .bmx-dossier-titre { margin-bottom: 10px; font-size: 18px; }
   .bmx-page .bmx-rubrique { min-height: 52px; padding: 8px 12px; }
 }
+
+/* ══════════ Rubrique ouverte en fenêtre au centre (autrefois panneau latéral) ══════════ */
+/* Le contenu garde les couleurs et styles de la page (.bmx-page) sans sa mise en page. */
+.bmx-tiroir.bmx-tiroir--modale {
+  display: block; width: auto; height: auto; min-height: 0; padding: 0;
+  border-radius: 0; box-shadow: none; animation: none; background: transparent;
+}
+.bmx-modale .cm-modale__corps { min-height: min(60vh, 520px); background: var(--g-slate-50); }
+/* Formulaires des rubriques : seulement les attributs (sans étapes numérotées ni textes) */
+.bmf-etape--simple { margin: 0; padding: 0; border: 0; }
+.bmf-etape--simple + .bmf-etape--simple { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--g-slate-200); }
+.bmf-etoile { margin-inline-start: 2px; color: var(--g-red-500, #ef4444); font-weight: 700; }
+.bmf-etape--simple .bmf-etape-champs { padding-left: 0; padding-inline-start: 0; }
+.bmf-label { justify-content: flex-start; gap: 2px; }
+
+/* ══════════════════════════════════════════════════════════════════════
+ * Contenu des fenêtres de rubrique au style des fenêtres communes (comme la réclamation) :
+ * police, champs de 40 px, choix, boutons et barre d'actions identiques à ModaleFormulaire.
+ * ══════════════════════════════════════════════════════════════════════ */
+.cm-modale.bmx-modale .cm-modale__corps { background: var(--g-blanc); }
+.cm-modale.bmx-modale .bmx-tiroir--modale { font-family: var(--g-police); font-size: 0.875rem; line-height: 1.5; color: var(--g-slate-700); }
+.cm-modale.bmx-modale .bmx-tiroir--modale :is(h1, h2, h3, h4) { font-family: var(--g-police); letter-spacing: -0.01em; color: var(--g-slate-900); }
+.cm-modale.bmx-modale .bmx-tiroir--modale :focus-visible { outline: none; box-shadow: var(--g-anneau); }
+
+/* En-tête de la liste (« Diagnostics 0 » + bouton Ajouter / Annuler) */
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-panel-header { padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--g-slate-200); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-panel-title h3 { font-size: 1.02rem; font-weight: 700; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-add-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: var(--g-hauteur-md); min-height: 0; padding: 0 16px;
+  border: 1px solid var(--g-brand-600); border-radius: var(--g-rayon-md); background: var(--g-brand-500); color: var(--g-blanc);
+  font: 600 var(--g-texte-sm) var(--g-police); box-shadow: 0 1px 2px rgba(7, 148, 164, 0.3); transform: none;
+}
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-add-btn:hover { background: var(--g-brand-600); }
+
+/* Carte du formulaire */
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-form { padding: 20px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg); background: var(--g-blanc); box-shadow: none; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-form-entete { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--g-slate-100); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-form-entete h3 { margin: 0; font-size: 1.02rem; font-weight: 700; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-etape-champs { gap: 16px; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-champ { gap: 6px; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-label { font-size: var(--g-texte-sm); font-weight: 600; color: var(--g-slate-700); margin: 0; }
+
+/* Champs : comme les champs communs */
+.cm-modale.bmx-modale .bmx-tiroir--modale :is(.bmf-input, .bmf-nombre input) {
+  height: 40px; min-height: 0; padding: 0 12px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); background: var(--g-blanc);
+  font: 400 0.875rem var(--g-police); color: var(--g-slate-900); box-shadow: var(--g-ombre-xs);
+}
+.cm-modale.bmx-modale .bmx-tiroir--modale textarea.bmf-input { height: auto; min-height: 88px; padding: 10px 12px; }
+.cm-modale.bmx-modale .bmx-tiroir--modale :is(.bmf-input, .bmf-nombre input)::placeholder { color: var(--g-slate-400); }
+.cm-modale.bmx-modale .bmx-tiroir--modale :is(.bmf-input, .bmf-nombre input):hover:not(:focus) { border-color: var(--g-slate-400); }
+.cm-modale.bmx-modale .bmx-tiroir--modale :is(.bmf-input, .bmf-nombre input):focus { outline: none; border-color: var(--g-brand-500); box-shadow: var(--g-anneau); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-nombre input { padding-inline-end: 52px; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-unite { top: 5px; bottom: 5px; right: 5px; padding: 0 8px; border-radius: 6px; background: var(--g-slate-100); color: var(--g-slate-600); font-size: 0.75rem; font-weight: 600; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-searchable-input-wrap {
+  height: 40px; min-height: 0; padding: 0 10px 0 12px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md);
+  background: var(--g-blanc); box-shadow: var(--g-ombre-xs);
+}
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-searchable-input-wrap:hover { border-color: var(--g-slate-400); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-searchable-input-wrap:is(.is-open, :focus-within) { border-color: var(--g-brand-500); box-shadow: var(--g-anneau); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-searchable-input { font: 400 0.875rem var(--g-police); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmd-searchable-menu { border-radius: var(--g-rayon-md); box-shadow: var(--g-ombre-md); border-color: var(--g-slate-200); }
+
+/* Choix : boutons rectangulaires comme les cartes de choix communes ; choisi = turquoise clair */
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix { gap: 8px; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix-btn {
+  min-height: 38px; padding: 0 14px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); background: var(--g-blanc);
+  color: var(--g-slate-700); font: 500 var(--g-texte-sm) var(--g-police); box-shadow: none; transform: none;
+}
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix-btn:hover { border-color: var(--g-slate-400); color: var(--g-slate-900); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix-btn.is-actif { border-color: var(--g-brand-500); background: var(--g-brand-50); color: var(--g-brand-800); box-shadow: inset 0 0 0 1px var(--g-brand-500); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix.is-grand .bmf-choix-btn { min-height: 0; padding: 12px 14px; align-items: flex-start; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix.is-grand .bmf-choix-btn span { font-weight: 600; }
+/* « Ne fonctionne pas », « Pas encore » choisis : rouge clair */
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix-btn.bmf-ton--alert.is-actif { border-color: var(--g-red-500, #ef4444); background: var(--g-red-50); color: var(--g-red-700); box-shadow: inset 0 0 0 1px var(--g-red-500, #ef4444); }
+
+/* Barre d'actions : comme le pied des fenêtres communes (Annuler en lien, bouton principal turquoise) */
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-actions {
+  position: static; justify-content: flex-end; gap: 10px; margin: 18px -20px -20px; padding: 12px 20px;
+  border-top: 1px solid var(--g-slate-200); border-radius: 0 0 var(--g-rayon-lg) var(--g-rayon-lg); background: var(--g-slate-50); box-shadow: none;
+}
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: var(--g-hauteur-md); min-height: 0; padding: 0 16px;
+  border-radius: var(--g-rayon-md); font: 600 var(--g-texte-sm) var(--g-police); transform: none; flex: 0 0 auto;
+}
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-btn--annuler { order: 0; border: 1px solid transparent; background: transparent; color: var(--g-brand-600); box-shadow: none; }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-btn--annuler:hover { background: var(--g-brand-50); color: var(--g-brand-700); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-btn--valider { order: 1; border: 1px solid var(--g-brand-600); background: var(--g-brand-500); color: var(--g-blanc); box-shadow: 0 1px 2px rgba(7, 148, 164, 0.3); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-btn--valider:hover:not(:disabled) { background: var(--g-brand-600); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-alerte { font-size: 0.75rem; font-weight: 500; color: var(--g-red-600); }
+.cm-modale.bmx-modale .bmx-tiroir--modale .bmf-stock { font-size: 0.75rem; }

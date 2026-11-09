@@ -279,3 +279,71 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
 @media (prefers-reduced-motion: reduce) {
   .tb-container, .tb-hbar-piste > span { animation: none; transition: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+ * CARTES ET TABLEAUX DE BORD (design, lot 4)
+ * Indicateurs comme sur le tableau de bord des réclamations : libellé en haut,
+ * grand chiffre dessous, icône à droite ; cartes plus légères (sans trait sous le titre),
+ * état « aucune donnée » discret, survol doux. Couleurs inchangées.
+ * ══════════════════════════════════════════════════════════════════════ */
+.tb-container { gap: 16px; animation-duration: var(--g-duree-lente); }
+
+/* ── En-tête de page ── */
+.tb-header { padding: 16px 20px; border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-xs); }
+.tb-header-icone { width: 44px; height: 44px; border-radius: var(--g-rayon-md); }
+.tb-header h1 { font-size: 1.375rem; font-weight: 700; }
+.tb-btn { height: var(--g-hauteur-md); padding: 0 14px; font-weight: 600; box-shadow: var(--g-ombre-xs); transition: background var(--g-duree-rapide) var(--g-courbe), border-color var(--g-duree-rapide) var(--g-courbe); }
+.tb-btn:hover:not(:disabled) { transform: none; }
+.tb-btn:focus-visible, .tb-periodes button:focus-visible { outline: none; box-shadow: var(--g-anneau); }
+.tb-periodes { border-radius: var(--g-rayon-md); }
+.tb-periodes button { font-weight: 600; border-radius: 6px; transition: background var(--g-duree-rapide) var(--g-courbe), color var(--g-duree-rapide) var(--g-courbe); }
+.tb-section-titre { margin-top: 8px; font-weight: 700; }
+
+/* ── Cartes d'indicateurs ── */
+.tb-stats { gap: 12px; }
+.tb-stat {
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'texte icone';
+  align-items: start; gap: 12px; min-height: 0; padding: 16px 18px;
+  border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-xs);
+  transition: border-color var(--g-duree-rapide) var(--g-courbe), box-shadow var(--g-duree) var(--g-courbe);
+}
+.tb-stat { grid-template-areas: 'texte icone' 'badge badge'; row-gap: 10px; }
+.tb-stat > div:last-child { grid-area: texte; display: flex; flex-direction: column; min-width: 0; }
+/* Icône en haut à droite, pastille (« 4 en retard ») sur toute la largeur sous le chiffre */
+.tb-stat-haut { display: contents; }
+.tb-stat-haut > .tb-stat-icone { grid-area: icone; }
+.tb-stat-haut > :not(.tb-stat-icone) { grid-area: badge; justify-self: start; }
+.tb-stat-icone { width: 36px; height: 36px; border-radius: var(--g-rayon-md); }
+.tb-stat-icone svg { width: 18px; height: 18px; }
+.tb-stat-label { order: -1; margin: 0 0 6px; font-size: var(--g-texte-sm); font-weight: 600; color: var(--g-slate-600); }
+.tb-stat-valeur { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; }
+.tb-stat-sous { margin-top: 6px; font-size: 0.75rem; color: var(--g-slate-500); }
+.tb-stat-haut .tb-badge { max-width: none; border-radius: var(--g-rayon-pastille); }
+a.tb-stat:hover { border-color: var(--g-brand-200); box-shadow: var(--g-ombre-sm); transform: none; }
+a.tb-stat:focus-visible { outline: none; box-shadow: var(--g-anneau); }
+.tb-stat--featured { border-inline-start-width: 3px; }
+.tb-stat--featured .tb-stat-valeur { font-size: 1.875rem; }
+
+/* ── Cartes de graphiques ── */
+.tb-ligne-cartes { gap: 12px; }
+.tb-carte { padding: 18px 20px; border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-xs); }
+.tb-carte-tete { padding-bottom: 0; margin-bottom: 14px; border-bottom: 0; min-height: 26px; }
+.tb-carte-tete h3 { font-size: 0.9375rem; font-weight: 600; }
+.tb-pastille { font-weight: 600; letter-spacing: 0.04em; }
+.tb-badge { font-weight: 600; }
+/* Aucune donnée : discret, sans italique */
+.tb-vide { min-height: 96px; border: 1px dashed var(--g-slate-200); border-radius: var(--g-rayon-md); background: var(--g-slate-50); color: var(--g-slate-500); font-style: normal; font-size: var(--g-texte-sm); }
+.tb-hbar-label { font-weight: 500; }
+.tb-hbar-valeur { font-weight: 700; }
+.tb-colonne-barre { border-radius: 4px 4px 1px 1px; }
+.tb-liste { margin-inline: -20px; }
+.tb-liste button { padding-inline: 20px; }
+.tb-liste-texte strong { font-weight: 600; }
+.tb-table th { font-weight: 600; font-size: 11.5px; letter-spacing: 0.04em; border-top: 0; border-bottom: 1px solid var(--g-slate-200); }
+
+@media (max-width: 640px) {
+  .tb-stat { padding: 14px; }
+  .tb-stat-valeur { font-size: 1.4rem; }
+  .tb-carte { padding: 16px; }
+  .tb-liste { margin-inline: -16px; }
+}

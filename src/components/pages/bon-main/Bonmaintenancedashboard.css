@@ -290,6 +290,7 @@
 
 /* Couleurs icônes */
 .bon-maintenance-dashboard-stat--neutral  .bon-maintenance-dashboard-stat-icon { background: var(--slate-100); color: var(--slate-700); }
+.bon-maintenance-dashboard-stat--nouveau  .bon-maintenance-dashboard-stat-icon { background: var(--g-blue-100); color: var(--g-blue-700); }
 .bon-maintenance-dashboard-stat--encours  .bon-maintenance-dashboard-stat-icon { background: var(--green-100); color: var(--g-emerald-700); }
 .bon-maintenance-dashboard-stat--suspendu .bon-maintenance-dashboard-stat-icon { background: var(--amber-50);  color: var(--amber-700); }
 .bon-maintenance-dashboard-stat--effectue .bon-maintenance-dashboard-stat-icon { background: var(--teal-50);   color: var(--teal-700); }
@@ -720,3 +721,7 @@
     color: var(--teal-400);
   }
 }
+/* Carte cliquable : ouvre la liste filtrée sur cet état */
+.bon-maintenance-dashboard-stat-card.est-cliquable { cursor: pointer; }
+.bon-maintenance-dashboard-stat-card.est-cliquable:hover { border-color: var(--g-brand-200); box-shadow: 0 8px 20px -12px rgba(15, 23, 42, .3); }
+.bon-maintenance-dashboard-stat-card.est-cliquable:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(7, 148, 164, .3); }

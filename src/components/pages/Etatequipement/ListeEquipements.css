@@ -1,0 +1,38 @@
+/* Liste des équipements (PageListe) : cellules propres à cette liste */
+.leq-page .cl-table td { vertical-align: middle; }
+
+.leq-case { display: inline-flex; padding: 6px; cursor: pointer; }
+.leq-case input { width: 16px; height: 16px; accent-color: var(--g-brand-500); cursor: pointer; }
+
+.leq-nom { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; font-weight: 700; color: var(--g-slate-900); }
+.leq-nom small { font: 600 0.7rem var(--g-police); color: var(--g-slate-400); letter-spacing: 0.02em; }
+
+.leq-doux { color: var(--g-slate-500); font-weight: 600; font-size: 0.82rem; white-space: nowrap; }
+
+.leq-ip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 8px; background: var(--g-slate-50); border: 1px solid var(--g-slate-200); font: 600 0.75rem ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--g-slate-700); white-space: nowrap; }
+.leq-ip__point { width: 7px; height: 7px; border-radius: 50%; background: var(--g-slate-300); }
+.leq-ip--en_ligne .leq-ip__point { background: var(--g-emerald-500, #10b981); }
+.leq-ip--hors_ligne .leq-ip__point { background: var(--g-red-500, #ef4444); }
+
+.leq-dispo { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; min-width: 84px; }
+.leq-dispo b { font-size: 0.84rem; font-weight: 700; }
+.leq-jauge { width: 72px; height: 5px; border-radius: 999px; background: var(--g-slate-100); overflow: hidden; }
+.leq-jauge > span { display: block; height: 100%; border-radius: inherit; background: currentColor; }
+.leq-ton--vert { color: var(--g-emerald-700); }
+.leq-ton--ambre { color: var(--g-amber-700); }
+.leq-ton--rouge { color: var(--g-red-700); }
+.leq-ton--gris { color: var(--g-slate-500); }
+
+.leq-criticite { display: inline-flex; align-items: center; gap: 6px; }
+.leq-criticite__point { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.leq-criticite select {
+  height: 30px; padding: 0 8px; border: 1px solid var(--g-slate-200); border-radius: 8px; background: var(--g-blanc);
+  font: 600 0.78rem var(--g-police); color: var(--g-slate-700); cursor: pointer;
+}
+.leq-criticite select:hover { border-color: var(--g-slate-300); }
+.leq-criticite select:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 1px; }
+
+.leq-message { display: flex; align-items: center; gap: 10px; margin: 0; padding: 10px 14px; border-radius: 12px; font-weight: 600; font-size: 0.86rem; }
+.leq-message--ok { background: var(--g-emerald-100); color: var(--g-emerald-700); }
+.leq-message--erreur { background: var(--g-red-100); color: var(--g-red-700); }
+.leq-message button { margin-inline-start: auto; display: inline-flex; border: 0; background: transparent; color: inherit; cursor: pointer; padding: 4px; border-radius: 6px; }

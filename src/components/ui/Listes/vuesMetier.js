@@ -1,5 +1,5 @@
 import {
-  AlarmClock, CalendarCheck, CircleUserRound, Flame, Hourglass, Inbox, ListTodo, OctagonAlert, UserCheck,
+  AlarmClock, CalendarCheck, CircleUserRound, Flame, Hourglass, Inbox, ListTodo, OctagonAlert, UserCheck, UserX, Users,
 } from 'lucide-react';
 import { ACTIFS } from '../../../constants/statuts';
 import authService from '../../../services/Authservice';
@@ -75,21 +75,31 @@ export function vuesBons({ personnelId, serviceId }, mesBonIds) {
 }
 
 export const reclamationActive = (r) => ACTIFS.reclamation.includes(Number(r.etat));
+/** Nouvelle, en file ou en cours (pas encore résolue). */
+export const reclamationATraiter = (r) => [0, 5, 1].includes(Number(r.etat ?? 0));
 
 /** Vues de la liste des réclamations. */
 export function vuesReclamations({ personnelId, serviceId }) {
   const vues = [
     { id: 'toutes', label: 'Toutes', icone: Inbox },
-    { id: 'a-traiter', label: 'À traiter', icone: ListTodo, aide: 'Ouvertes et en cours', filtre: (r) => [0, 1].includes(Number(r.etat)) },
+    { id: 'a-traiter', label: 'À traiter', icone: ListTodo, aide: 'Nouvelles, en file et en cours', filtre: (r) => reclamationATraiter(r) },
+    {
+      id: 'non-affectees', label: 'Non affectées', icone: UserX, ton: 'attention', aide: 'À traiter, sans groupe ni technicien',
+      filtre: (r) => reclamationATraiter(r) && r.groupeId == null && r.personnelAffecteId == null,
+    },
   ];
   if (personnelId != null) {
     vues.push(
       { id: 'mes-reclamations', label: 'Mes réclamations', icone: CircleUserRound, aide: 'Réclamations que j\'ai créées', filtre: (r) => memeId(r.personnelCreationId, personnelId) },
-      { id: 'affectees', label: 'Affectées à moi', icone: UserCheck, filtre: (r) => memeId(r.personnelAffecteId, personnelId) && reclamationActive(r) },
-      { id: 'a-valider', label: 'À valider', icone: Hourglass, ton: 'attention', aide: 'Mes réclamations traitées qui attendent ma validation', filtre: (r) => Number(r.etat) === 3 && memeId(r.personnelCreationId, personnelId) },
+      { id: 'affectees', label: 'Affectées à moi', icone: UserCheck, filtre: (r) => memeId(r.personnelAffecteId, personnelId) && reclamationATraiter(r) },
+      { id: 'a-valider', label: 'À clôturer', icone: Hourglass, ton: 'attention', aide: 'Mes réclamations résolues qui attendent la clôture', filtre: (r) => Number(r.etat) === 3 && memeId(r.personnelCreationId, personnelId) },
     );
   }
   if (serviceId != null) {
+    vues.push({
+      id: 'mon-groupe', label: 'Mon groupe', icone: Users, aide: 'À traiter, affectées au groupe de mon service',
+      filtre: (r) => memeId(r.groupeId, serviceId) && reclamationATraiter(r),
+    });
     vues.push({
       id: 'urgentes-service', label: 'Urgentes de mon service', icone: Flame, ton: 'alerte',
       filtre: (r) => memeId(r.serviceId, serviceId) && Number(r.urgence) === 3 && reclamationActive(r),

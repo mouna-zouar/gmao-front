@@ -272,4 +272,88 @@
   --g-police-arabe: 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --g-police-titre: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
   --g-police-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* ══════════════════════════════════════════════════════════════════
+   * Fondations du design (lot 0) — échelles communes à tous les modules.
+   * Rien ne change à l'écran tant qu'un composant ne les utilise pas :
+   * les composants communs (boutons, champs, tableaux, cartes, modales) passeront dessus au lot 2.
+   * Préfixe --g- pour ne pas croiser les variables locales des pages (--radius, --shadow-sm…).
+   * ══════════════════════════════════════════════════════════════════ */
+
+  /* ── Texte : 7 tailles (au lieu de 107) ── */
+  --g-texte-xs: 0.75rem;    /* 12 px — étiquettes, aides, badges */
+  --g-texte-sm: 0.8125rem;  /* 13 px — tableaux, champs, boutons */
+  --g-texte-md: 0.875rem;   /* 14 px — texte courant */
+  --g-texte-lg: 1rem;       /* 16 px — titres de carte */
+  --g-texte-xl: 1.125rem;   /* 18 px — titres de section, de fenêtre */
+  --g-texte-2xl: 1.375rem;  /* 22 px — titre de page */
+  --g-texte-3xl: 1.75rem;   /* 28 px — chiffres clés des tableaux de bord */
+  --g-graisse-normale: 400;
+  --g-graisse-moyenne: 500;
+  --g-graisse-forte: 600;
+  --g-graisse-titre: 700;
+  --g-interligne-serre: 1.25;
+  --g-interligne: 1.5;
+  --g-lettrage-majuscules: 0.06em; /* petits titres en MAJUSCULES */
+
+  /* ── Espacements : pas de 4 px ── */
+  --g-espace-1: 4px;
+  --g-espace-2: 8px;
+  --g-espace-3: 12px;
+  --g-espace-4: 16px;
+  --g-espace-5: 20px;
+  --g-espace-6: 24px;
+  --g-espace-8: 32px;
+  --g-espace-10: 40px;
+
+  /* ── Arrondis : 3 niveaux (au lieu de 8) + pastille ── */
+  --g-rayon-sm: 6px;      /* badges, petites puces, cases */
+  --g-rayon-md: 8px;      /* boutons, champs, menus */
+  --g-rayon-lg: 12px;     /* cartes, fenêtres, tableaux */
+  --g-rayon-pastille: 999px;
+
+  /* ── Hauteurs des contrôles (boutons, champs, listes alignés) ── */
+  --g-hauteur-sm: 32px;
+  --g-hauteur-md: 38px;
+  --g-hauteur-lg: 44px;
+  --g-hauteur-ligne: 44px; /* ligne de tableau */
+
+  /* ── Ombres : 4 niveaux (au lieu de 376 variantes) ── */
+  --g-ombre-xs: 0 1px 2px rgba(15, 23, 42, 0.05);                                          /* champs, boutons secondaires */
+  --g-ombre-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);       /* cartes */
+  --g-ombre-md: 0 6px 16px -4px rgba(15, 23, 42, 0.10), 0 2px 4px -2px rgba(15, 23, 42, 0.06); /* menus, info-bulles */
+  --g-ombre-lg: 0 24px 48px -12px rgba(15, 23, 42, 0.25);                                  /* fenêtres */
+  --g-ombre-marque: 0 6px 16px -6px rgba(7, 148, 164, 0.55);                                /* bouton principal */
+
+  /* ── Focus clavier : un seul anneau partout ── */
+  --g-anneau: 0 0 0 3px rgba(7, 148, 164, 0.22);
+  --g-anneau-danger: 0 0 0 3px rgba(220, 38, 38, 0.18);
+  --g-contour-focus: 2px solid var(--g-brand-500);
+
+  /* ── Mouvements : courts et doux ── */
+  --g-duree-rapide: 120ms;  /* survol, couleur */
+  --g-duree: 180ms;         /* ouverture de menu, de carte */
+  --g-duree-lente: 260ms;   /* fenêtre, panneau latéral */
+  --g-courbe: cubic-bezier(0.2, 0, 0, 1);          /* sortie douce */
+  --g-courbe-entree: cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* ── Superpositions ── */
+  --g-z-menu: 40;
+  --g-z-entete: 50;
+  --g-z-fenetre: 1000;
+  --g-z-notification: 1100;
+  --g-voile: rgba(15, 23, 42, 0.45);
+
+  /* ── Surfaces des tableaux ── */
+  --g-ligne-survol: var(--g-slate-50);
+  --g-ligne-selection: var(--g-brand-50);
+  --g-entete-tableau: var(--g-slate-50);
+}
+
+/* Animations coupées quand le système demande « réduire les animations » (accessibilité) */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --g-duree-rapide: 0ms;
+    --g-duree: 0ms;
+    --g-duree-lente: 0ms;
+  }
 }

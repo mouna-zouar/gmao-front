@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
 import { t, tp, locale } from '../../../i18n';
 import './BonMaintenanceDashboard.css';
 import IndicateursBons from './IndicateursBons';
-import { CircleCheck, CirclePause, Clock, Coins, FileText, GripVertical, RefreshCw, TriangleAlert } from 'lucide-react';
+import { CircleCheck, CircleDot, CirclePause, Clock, Coins, FileText, GripVertical, RefreshCw, TriangleAlert } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 
 const ETAT_LABELS = { 1: 'Nouveau', 2: 'Suspendu', 3: 'En cours', 4: 'Effectué', 10: 'Annulé' };
@@ -35,6 +36,7 @@ function formatDate(iso) {
 /* ─── Icônes SVG réutilisables ─── */
 const ICONS = {
   total: <FileText size={22} strokeWidth={2} aria-hidden="true" />,
+  nouveau: <CircleDot size={22} strokeWidth={2} aria-hidden="true" />,
   encours: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
   suspendu: <CirclePause size={22} strokeWidth={2} aria-hidden="true" />,
   effectue: <CircleCheck size={22} strokeWidth={2} aria-hidden="true" />,
@@ -46,10 +48,11 @@ const ICONS = {
 
 /* ─── Définition des cartes de stats ─── */
 const CARD_DEFS = [
-  { id: 'total',    label: 'Total bons',                    field: 'totalBons',                  colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.total,    featured: true },
-  { id: 'encours',  label: 'En cours',                      field: 'parEtat.3',                  colorClass: 'bon-maintenance-dashboard-stat--encours',  icon: ICONS.encours },
-  { id: 'suspendu', label: 'Suspendus',                     field: 'parEtat.2',                  colorClass: 'bon-maintenance-dashboard-stat--suspendu', icon: ICONS.suspendu },
-  { id: 'effectue', label: 'Effectués',                     field: 'parEtat.4',                  colorClass: 'bon-maintenance-dashboard-stat--effectue', icon: ICONS.effectue },
+  { id: 'total',    label: 'Total bons',                    field: 'totalBons',                  colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.total,    featured: true, lien: '/bons-maintenance?vue=tous' },
+  { id: 'nouveau',  label: 'Nouveaux',                      field: 'parEtat.1',                  colorClass: 'bon-maintenance-dashboard-stat--nouveau',  icon: ICONS.nouveau, lien: '/bons-maintenance?etat=1' },
+  { id: 'encours',  label: 'En cours',                      field: 'parEtat.3',                  colorClass: 'bon-maintenance-dashboard-stat--encours',  icon: ICONS.encours, lien: '/bons-maintenance?etat=3' },
+  { id: 'suspendu', label: 'Suspendus',                     field: 'parEtat.2',                  colorClass: 'bon-maintenance-dashboard-stat--suspendu', icon: ICONS.suspendu, lien: '/bons-maintenance?etat=2' },
+  { id: 'effectue', label: 'Effectués',                     field: 'parEtat.4',                  colorClass: 'bon-maintenance-dashboard-stat--effectue', icon: ICONS.effectue, lien: '/bons-maintenance?etat=4' },
   { id: 'alerte',   label: 'Arrêts obligatoires en cours',  field: 'arretsObligatoiresEnCours',  colorClass: 'bon-maintenance-dashboard-stat--alerte',   icon: ICONS.alerte },
   { id: 'cout',     label: 'Coût total cumulé',             field: 'coutTotalCumule',            colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.cout,     unit: 'DT',   decimals: 0 },
   { id: 'delai',    label: 'Délai moyen résolution',        field: 'delaiMoyenResolutionJours',  colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.delai,    unit: 'j',    decimals: 1 },
@@ -87,7 +90,7 @@ function getFieldValue(data, field) {
 }
 
 /* ─── Carte de stat draggable ─── */
-function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver }) {
+function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, onOuvrir }) {
   let displayValue = value ?? '—';
 
   if (value != null && def.unit) {
@@ -100,7 +103,12 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
 
   return (
     <div
-      className={`bon-maintenance-dashboard-stat-card ${def.colorClass} ${def.featured ? 'bon-maintenance-dashboard-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
+      className={`bon-maintenance-dashboard-stat-card ${def.colorClass} ${def.featured ? 'bon-maintenance-dashboard-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''} ${onOuvrir ? 'est-cliquable' : ''}`}
+      onClick={onOuvrir}
+      onKeyDown={onOuvrir ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOuvrir(); } } : undefined}
+      role={onOuvrir ? 'link' : undefined}
+      tabIndex={onOuvrir ? 0 : undefined}
+      title={onOuvrir ? t('Ouvrir la liste filtrée') : undefined}
       draggable
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
@@ -139,6 +147,7 @@ function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEn
 }
 
 export default function BonMaintenanceDashboard() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -379,6 +388,7 @@ export default function BonMaintenanceDashboard() {
               onDragEnter={handleDragEnter(id)}
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
+              onOuvrir={def.lien ? () => navigate(def.lien) : undefined}
             />
           );
         })}

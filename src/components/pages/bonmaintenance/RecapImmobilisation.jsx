@@ -27,7 +27,7 @@ const ETATS = {
 const CRITICITES = { C1: 'Critique', C2: 'Important', C3: 'Normal', C4: 'Faible' };
 const ETATS_BON = { 1: ['Nouveau', 'neutre'], 2: ['Suspendu', 'attention'], 3: ['En cours', 'attention'], 4: ['Effectué', 'ok'], 10: ['Annulé', 'neutre'] };
 const TYPES_BON = { 1: 'Curatif', 2: 'Correctif', 3: 'Préventif', 4: 'Nouvelle installation', 5: 'Autre' };
-const ETATS_RECLAMATION = { 0: ['Ouverte', 'attention'], 1: ['En cours', 'attention'], 2: ['Clôturée', 'ok'], 3: ['En attente', 'attention'], 4: ['Rejetée', 'neutre'] };
+const ETATS_RECLAMATION = { 0: ['Nouveau', 'attention'], 5: ['En file', 'attention'], 1: ['En cours', 'attention'], 3: ['Résolue', 'ok'], 2: ['Clôturée', 'ok'], 4: ['Annulée', 'neutre'] };
 const PREVENTIF = {
   EN_RETARD: ['En retard', 'alerte'], ATTEINT: ['Échéance atteinte', 'alerte'], A_VENIR: ['Bientôt', 'attention'],
   EN_COURS: ['Bon en cours', 'attention'], OK: ['À jour', 'ok'],

@@ -2436,3 +2436,22 @@ button {
 .nav-popup__card-icon--mon-espace,
 .nav-popup__simple-link--mon-espace .nav-popup__card-icon,
 .submenu__link-icon--mon-espace { background: var(--color-mon-espace-bg); color: var(--color-mon-espace); }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+ * COQUILLE (design, lot 1) — barre du haut et fond des pages.
+ * La barre latérale garde ses couleurs d'origine (choix de Mouna).
+ * ══════════════════════════════════════════════════════════════════════ */
+.app-shell { --color-bg: var(--g-slate-50); } /* fond des pages : gris très léger, cartes blanches */
+
+/* ── Barre du haut ── */
+.app-shell .navbar {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--g-slate-200) !important;
+  box-shadow: none !important;
+}
+.app-shell .navbar__logo-img { height: 28px; width: auto; display: block; }
+/* Titre « GMAO » du menu ouvert (même rendu que l'ancien style écrit dans le composant) */
+.app-shell .sidebar__logo-text { font-weight: 800; font-size: 18px; color: #0f172a; }
+.app-shell .sidebar__logo-text span { color: var(--g-brand-500); }

@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Dashboard from '../components/pages/Dashboard/Dashboard';
 import CompteurList from '../components/pages/Compteurs/Compteurs';
+import Formations from '../components/pages/Formations/Formations';
 import Reclamations from '../components/pages/Reclamations/Reclamations';
 import BonsMaintenance  from '../components/pages/bonmaintenance/Bonsmaintenance';
 import Referentielconsultation from '../components/pages/Referentiel/Referentielconsultation';
@@ -65,6 +66,7 @@ const AppRoutes = () => {
             <Route path="/" element={<Dashboard />} />
 
             <Route path="/referentiels/compteurs" element={<CompteurList />} />
+            <Route path="/formations" element={<Formations />} />
             <Route path="/reclamations" element={<Reclamations />} />
             <Route path="/mes-demandes" element={<VersMesDemandes />} />
             <Route path="/mon-espace" element={<EspacePersonnel />} />

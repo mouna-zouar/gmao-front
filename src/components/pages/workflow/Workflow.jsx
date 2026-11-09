@@ -68,29 +68,29 @@ export default function Workflow() {
           subtitle="Service, criticité, urgence, immobilisation concernée, dépôt, clinique"
         />
 
-        <Arrow label="création automatique et immédiate, en parallèle" />
+        <Arrow label="sans affectation : Nouveau — avec groupe ou technicien : En file" />
 
         <div className="wf-parallel">
           <Step
-            icon="bon"
-            title="Bon de maintenance créé"
-            subtitle="État initial : Nouveau — lié à la réclamation"
-            tone="teal"
-          >
-            <p className="wf-note wf-note--equip">
-              🔴 Si arrêt obligatoire, l'équipement passe automatiquement <strong>En panne</strong>
-            </p>
-          </Step>
-          <Step
             icon="decision"
-            title="Valider / Rejeter (optionnel)"
-            subtitle="Enregistre une décision de validation à tout moment — n'affecte pas le bon déjà créé"
+            title="Affecter / Réaffecter"
+            subtitle="Groupe responsable (service) et/ou technicien — chaque affectation est gardée dans l'historique"
             tone="muted"
           >
             <div className="wf-mini-branches">
-              <span className="wf-mini-branch wf-mini-branch--ok"><Icon name="controle" className="wf-mini-icon" /> Validée</span>
-              <span className="wf-mini-branch wf-mini-branch--no"><Icon name="reject" className="wf-mini-icon" /> Rejetée (motif obligatoire)</span>
+              <span className="wf-mini-branch wf-mini-branch--ok"><Icon name="controle" className="wf-mini-icon" /> Nouveau → En file</span>
+              <span className="wf-mini-branch wf-mini-branch--no"><Icon name="reject" className="wf-mini-icon" /> Annulée à tout moment (motif obligatoire)</span>
             </div>
+          </Step>
+          <Step
+            icon="bon"
+            title="Prise en charge → En cours"
+            subtitle="Le bon de maintenance est créé à ce moment (état Nouveau), lié à la réclamation"
+            tone="teal"
+          >
+            <p className="wf-note wf-note--equip">
+              🔴 Dès la création de la réclamation, l'équipement passe <strong>En panne</strong> dans Cubix
+            </p>
           </Step>
         </div>
 
@@ -175,9 +175,18 @@ export default function Workflow() {
 
         <Step
           icon="cloture"
-          title="Réclamation(s) liée(s) clôturée(s)"
-          subtitle="Toutes les réclamations liées (Ouverte, En cours, En attente de validation) passent à Clôturée"
+          title="Réclamation(s) liée(s) résolue(s)"
+          subtitle="Les réclamations liées (Nouveau, En file, En cours) passent à Résolue"
           tone="teal"
+        />
+
+        <Arrow label="vérification" />
+
+        <Step
+          icon="cloture"
+          title="Clôturée — ou Rouverte"
+          subtitle="Clôturer ferme la demande ; Rouvrir (motif obligatoire) la repasse En cours"
+          tone="green"
         />
 
       </div>
@@ -185,11 +194,11 @@ export default function Workflow() {
       <div className="wf-legend">
         <h3>Légende des états</h3>
         <div className="wf-legend-grid">
-          <div><span className="wf-legend-dot wf-legend-dot--rec-ouverte" /> Réclamation — Ouverte</div>
+          <div><span className="wf-legend-dot wf-legend-dot--rec-ouverte" /> Réclamation — Nouveau</div>
+          <div><span className="wf-legend-dot wf-legend-dot--rec-attente" /> Réclamation — En file</div>
           <div><span className="wf-legend-dot wf-legend-dot--rec-encours" /> Réclamation — En cours</div>
-          <div><span className="wf-legend-dot wf-legend-dot--rec-cloturee" /> Réclamation — Clôturée</div>
-          <div><span className="wf-legend-dot wf-legend-dot--rec-attente" /> Réclamation — En attente de validation</div>
-          <div><span className="wf-legend-dot wf-legend-dot--rec-rejetee" /> Réclamation — Rejetée</div>
+          <div><span className="wf-legend-dot wf-legend-dot--rec-cloturee" /> Réclamation — Résolue / Clôturée</div>
+          <div><span className="wf-legend-dot wf-legend-dot--rec-rejetee" /> Réclamation — Annulée</div>
           <div><span className="wf-legend-dot wf-legend-dot--bon-nouveau" /> Bon — Nouveau</div>
           <div><span className="wf-legend-dot wf-legend-dot--bon-encours" /> Bon — En cours</div>
           <div><span className="wf-legend-dot wf-legend-dot--bon-suspendu" /> Bon — Suspendu</div>

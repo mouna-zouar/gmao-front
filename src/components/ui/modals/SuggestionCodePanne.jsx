@@ -43,9 +43,14 @@ const SuggestionCodePanne = ({
   const [relance, setRelance] = useState(0);
   const derniereDemande = useRef('');
 
+  // Codes de la famille de l'équipement choisi (et ceux valables pour toutes les familles)
   useEffect(() => {
-    codePanneService.liste().then(setCodes).catch(() => setCodes([]));
-  }, []);
+    let annule = false;
+    codePanneService.liste(false, lotArticleImmobilistationId || null)
+      .then((l) => { if (!annule) setCodes(l); })
+      .catch(() => { if (!annule) setCodes([]); });
+    return () => { annule = true; };
+  }, [lotArticleImmobilistationId]);
 
   const texte = (description || '').trim();
   const assezLong = texte.length >= MIN_CARACTERES;

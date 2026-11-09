@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import reclamationService from '../../../services/reclamationService';
+import { useNavigate } from 'react-router-dom';
+import reclamationService from '../../../services/Reclamationservice';
 import { t, tp, locale } from '../../../i18n';
 import './ReclamationDashboard.css';
 import IndicateursReclamations from './IndicateursReclamations';
 import { CircleAlert, CircleCheck, Clock, FileText, GripVertical, RefreshCw, TriangleAlert, X } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 
-const ETAT_LABELS = { 0: 'Ouverte', 1: 'En cours', 2: 'Clôturée'};
+const ETAT_LABELS = { 0: 'Nouveau', 5: 'En file', 1: 'En cours', 3: 'Résolue', 2: 'Clôturée', 4: 'Annulée' };
 const NIVEAU_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
 const MOIS_LABELS = {
   '01': 'Jan', '02': 'Fév', '03': 'Mar', '04': 'Avr', '05': 'Mai', '06': 'Juin',
@@ -47,11 +48,13 @@ const ICONS = {
 
 /* ─── Définition des cartes de stats (ordre par défaut) ─── */
 const CARD_DEFS = [
-  { id: 'total',    label: 'Total réclamations',         field: 'totalReclamations',          colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.total, featured: true },
-  { id: 'ouverte',  label: 'Ouvertes',                    field: 'ouvertes',                   colorClass: 'reclamation-dashboard-stat--ouverte',  icon: ICONS.ouverte },
-  { id: 'encours',  label: 'En cours',                    field: 'enCours',                    colorClass: 'reclamation-dashboard-stat--encours',  icon: ICONS.encours },
-  { id: 'cloturee', label: 'Clôturées',                   field: 'cloturees',                  colorClass: 'reclamation-dashboard-stat--cloturee', icon: ICONS.cloturee },
-  { id: 'alerte',   label: 'Non affectées',               field: 'nonAffectees',               colorClass: 'reclamation-dashboard-stat--alerte',   icon: ICONS.alerte },
+  { id: 'total',    label: 'Total réclamations',         field: 'totalReclamations',          colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.total, featured: true, lien: '/reclamations?vue=toutes' },
+  { id: 'ouverte',  label: 'Nouvelles',                   field: 'ouvertes',                   colorClass: 'reclamation-dashboard-stat--ouverte',  icon: ICONS.ouverte, lien: '/reclamations?etat=0' },
+  { id: 'enfile',   label: 'En file',                     field: 'enFile',                     colorClass: 'reclamation-dashboard-stat--attente',  icon: ICONS.attente, lien: '/reclamations?etat=5' },
+  { id: 'encours',  label: 'En cours',                    field: 'enCours',                    colorClass: 'reclamation-dashboard-stat--encours',  icon: ICONS.encours, lien: '/reclamations?etat=1' },
+  { id: 'resolue',  label: 'Résolues',                    field: 'resolues',                   colorClass: 'reclamation-dashboard-stat--cloturee', icon: ICONS.cloturee, lien: '/reclamations?etat=3' },
+  { id: 'cloturee', label: 'Clôturées',                   field: 'cloturees',                  colorClass: 'reclamation-dashboard-stat--cloturee', icon: ICONS.cloturee, lien: '/reclamations?etat=2' },
+  { id: 'alerte',   label: 'Non affectées',               field: 'nonAffectees',               colorClass: 'reclamation-dashboard-stat--alerte',   icon: ICONS.alerte, lien: '/reclamations?vue=non-affectees' },
   { id: 'delai',    label: 'Délai moyen résolution',      field: 'delaiMoyenResolutionJours',  colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.delai },
 ];
 
@@ -82,14 +85,19 @@ function saveOrder(storageKey, order) {
 }
 
 /* ─── Carte de stat draggable ─── */
-function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver }) {
+function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, onOuvrir }) {
   const displayValue = def.id === 'delai' && value != null
     ? t('{n} j', { n: Number(value).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
     : (value ?? '—');
 
   return (
     <div
-      className={`reclamation-dashboard-stat-card ${def.colorClass} ${def.featured ? 'reclamation-dashboard-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
+      className={`reclamation-dashboard-stat-card ${def.colorClass} ${def.featured ? 'reclamation-dashboard-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''} ${onOuvrir ? 'est-cliquable' : ''}`}
+      onClick={onOuvrir}
+      onKeyDown={onOuvrir ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOuvrir(); } } : undefined}
+      role={onOuvrir ? 'link' : undefined}
+      tabIndex={onOuvrir ? 0 : undefined}
+      title={onOuvrir ? t('Ouvrir la liste filtrée') : undefined}
       draggable
       onDragStart={onDragStart}
       onDragEnter={onDragEnter}
@@ -128,6 +136,7 @@ function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEn
 }
 
 export default function ReclamationDashboard() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -376,6 +385,7 @@ export default function ReclamationDashboard() {
               onDragEnter={handleDragEnter(id)}
               onDragOver={handleDragOver}
               onDragEnd={handleDragEnd}
+              onOuvrir={def.lien ? () => navigate(def.lien) : undefined}
             />
           );
         })}

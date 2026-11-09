@@ -1,0 +1,51 @@
+/* Fiche équipement : même présentation que les autres pages (en-tête blanc, indicateurs, onglets) */
+.eqf-page { max-width: none; }
+
+.eqf-entete {
+  display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  padding: 20px 24px; background: var(--g-blanc); border: 1px solid var(--g-slate-200);
+  border-radius: var(--g-rayon-lg, 16px); box-shadow: var(--g-ombre-xs, 0 1px 2px rgba(15, 23, 42, 0.05));
+}
+.eqf-entete__gauche { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.eqf-entete__texte { min-width: 0; }
+.eqf-entete h1 { margin: 0; font-size: 1.375rem; font-weight: 700; color: var(--g-slate-900); letter-spacing: -0.02em; }
+.eqf-entete p { margin: 3px 0 0; font-size: 0.86rem; font-weight: 500; color: var(--g-slate-500); }
+.eqf-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.eqf-entete__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.eqf-entete__actions .cl-action { border: 1px solid var(--g-slate-200); }
+.eqf-signaler { background: var(--g-red-600, #dc2626) !important; color: var(--g-blanc) !important; border-color: transparent !important; box-shadow: 0 6px 16px -8px rgba(220, 38, 38, 0.6); }
+.eqf-signaler:hover:not(:disabled) { background: var(--g-red-700, #b91c1c) !important; }
+
+.eqf-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1100px) { .eqf-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .eqf-stats { grid-template-columns: 1fr; } }
+
+.eqf-contenu { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.eqf-contenu > .eq-bloc { margin: 0; }
+.eqf-grille { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.eqf-grille > .eq-bloc { margin: 0; height: 100%; }
+@media (max-width: 1180px) { .eqf-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 720px) { .eqf-grille { grid-template-columns: 1fr; } }
+
+/* Lignes « libellé → valeur » */
+.eqf-lignes { margin: 0; display: flex; flex-direction: column; }
+.eqf-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--g-slate-100); }
+.eqf-ligne:last-child { border-bottom: 0; }
+.eqf-ligne dt { color: var(--g-slate-500); font-size: 0.84rem; font-weight: 500; }
+.eqf-ligne dd { margin: 0; color: var(--g-slate-900); font-size: 0.86rem; font-weight: 600; text-align: end; min-width: 0; overflow-wrap: anywhere; }
+
+/* Tableaux des onglets */
+.eqf-table-cadre { overflow-x: auto; border: 1px solid var(--g-slate-200); border-radius: 12px; }
+.eqf-table { width: 100%; border-collapse: collapse; }
+.eqf-table th { padding: 11px 14px; background: var(--g-slate-50); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-brand-700, #0e7490); border-bottom: 1px solid var(--g-slate-200); }
+.eqf-table td { padding: 11px 14px; font-size: 0.86rem; color: var(--g-slate-700); border-bottom: 1px solid var(--g-slate-100); }
+.eqf-table tr:last-child td { border-bottom: 0; }
+
+/* Police et cartes du projet (les variables --eq-* viennent de .eq-theme) */
+.eqf-page { font-family: var(--g-police); font-size: 14px; background: transparent; }
+.eqf-page h1, .eqf-page h2 { font-family: var(--g-police); }
+.eqf-page .eq-bloc { padding: 18px 20px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg, 16px); background: var(--g-blanc); box-shadow: var(--g-ombre-xs, 0 1px 2px rgba(15, 23, 42, 0.05)); }
+.eqf-page .eq-bloc-entete { padding-bottom: 12px; margin-bottom: 4px; border-bottom: 1px solid var(--g-slate-100); }
+.eqf-page .eq-bloc-entete h2 { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 1rem; font-weight: 700; color: var(--g-slate-900); }
+.eqf-page .eq-bloc-entete h2 svg { color: var(--g-brand-500); }
+.eqf-page .tb-stat { min-width: 0; }

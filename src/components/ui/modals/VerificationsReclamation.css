@@ -1,0 +1,19 @@
+/* Vérifications avant l'envoi d'une réclamation (check-list selon la famille de l'équipement) */
+.vr-vide { display: flex; align-items: center; gap: 8px; margin: 0; padding: 14px; border: 1px dashed #e2e8f0; border-radius: 10px; color: #64748b; font-size: 0.86rem; }
+.vr-lien { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--g-brand-600, #067d8b); cursor: pointer; text-decoration: underline; }
+.vr-famille { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; font-size: 0.82rem; font-weight: 700; color: #475569; }
+.vr-famille span { padding: 2px 9px; border-radius: 999px; background: #f1f5f9; color: #334155; font-variant-numeric: tabular-nums; }
+.vr-liste { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; counter-reset: vr; }
+.vr-point { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; counter-increment: vr; }
+.vr-point::before { content: counter(vr); display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; background: #f1f5f9; color: #64748b; font-size: 0.74rem; font-weight: 800; }
+.vr-point.is-repondu::before { content: '✓'; background: var(--g-brand-50, #e3f3f5); color: var(--g-brand-600, #067d8b); }
+.vr-point--finale { border-color: var(--g-brand-100, #b4e0e5); background: var(--g-brand-50, #f0f9fa); }
+.vr-point--finale::before { content: '?'; }
+.vr-question { flex: 1; min-width: 0; font-size: 0.88rem; color: #0f172a; line-height: 1.35; }
+.vr-choix { display: inline-flex; gap: 4px; flex-shrink: 0; }
+.vr-btn { padding: 6px 11px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font: inherit; font-size: 0.8rem; font-weight: 700; color: #475569; cursor: pointer; }
+.vr-btn:hover { border-color: #94a3b8; }
+.vr-btn.is-choisi { border-color: var(--g-brand-500, #0794a4); background: var(--g-brand-500, #0794a4); color: #fff; }
+.vr-btn.is-choisi.is-na { border-color: #94a3b8; background: #94a3b8; }
+@media (max-width: 640px) { .vr-point { flex-wrap: wrap; } .vr-choix { width: 100%; justify-content: flex-end; } }
+

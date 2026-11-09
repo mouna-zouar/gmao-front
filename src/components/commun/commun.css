@@ -290,3 +290,331 @@ button.cl-pastille:focus-visible { outline: 2px solid var(--stat-color); outline
   background: var(--stat-color); box-shadow: 0 0 0 2px var(--g-blanc, #fff);
 }
 @media print { .cl-pastilles { display: none; } }
+
+/* ─── Boutons des listes : seuls « Ajouter » et « Supprimer » gardent leur couleur, les autres sont neutres ─── */
+.cl-action--modifier, .cl-action--vert, .cl-action--rouge, .cl-action--orange, .cl-action--ambre, .cl-action--bleu, .cl-action--violet, .cl-action--teal, .cl-action--gris { color: var(--g-slate-700); background: transparent; }
+.cl-action--modifier:hover:not(:disabled), .cl-action--vert:hover:not(:disabled), .cl-action--rouge:hover:not(:disabled), .cl-action--orange:hover:not(:disabled), .cl-action--ambre:hover:not(:disabled), .cl-action--bleu:hover:not(:disabled), .cl-action--violet:hover:not(:disabled), .cl-action--teal:hover:not(:disabled), .cl-action--gris:hover:not(:disabled) {
+  background: var(--g-slate-100);
+  border-color: var(--g-slate-300);
+  color: var(--g-slate-900);
+}
+
+/* ===== Fenêtre en assistant pas à pas (ModaleFormulaire etapes) ===== */
+.cm-etapes { display: flex; align-items: center; margin: 0; padding: 14px 22px; list-style: none; border-bottom: 1px solid var(--g-slate-200); background: var(--g-slate-50); overflow-x: auto; flex-shrink: 0; }
+.cm-etape { display: flex; align-items: center; flex: 1; min-width: 0; }
+.cm-etape:last-child { flex: 0 0 auto; }
+.cm-etape:not(:last-child)::after { content: ''; flex: 1; height: 2px; margin: 0 8px; border-radius: 2px; background: var(--g-slate-200); min-width: 12px; }
+.cm-etape.is-faite:not(:last-child)::after { background: var(--g-brand-500); }
+.cm-etape button { display: inline-flex; align-items: center; gap: 8px; padding: 4px 6px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 0.84rem; font-weight: 600; color: var(--g-slate-500); cursor: pointer; white-space: nowrap; }
+.cm-etape button:disabled { cursor: default; opacity: 0.7; }
+.cm-etape button:not(:disabled):hover { color: var(--g-slate-900); }
+.cm-etape__num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%; background: var(--g-blanc); border: 2px solid var(--g-slate-200); color: var(--g-slate-500); }
+.cm-etape.is-faite .cm-etape__num { border-color: var(--g-brand-500); background: var(--g-brand-50); color: var(--g-brand-600); }
+.cm-etape.is-actuelle button { color: var(--g-slate-900); }
+.cm-etape.is-actuelle .cm-etape__num { border-color: var(--g-brand-500); background: var(--g-brand-500); color: var(--g-blanc); box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15); }
+.cm-etape.a-erreur:not(.is-actuelle) .cm-etape__num { border-color: var(--g-red-600); color: var(--g-red-600); }
+@media (max-width: 760px) { .cm-etape__label { display: none; } .cm-etape.is-actuelle .cm-etape__label { display: inline; } }
+
+/* Confirmation avant l'envoi, par-dessus la fenêtre */
+.cm-modale { position: relative; }
+.cm-confirmation { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, 0.45); border-radius: inherit; }
+.cm-confirmation__boite { width: min(440px, 100%); padding: 24px; border-radius: 14px; background: var(--g-blanc); text-align: center; box-shadow: 0 24px 60px -20px rgba(15, 23, 42, 0.45); }
+.cm-confirmation__icone { display: inline-flex; align-items: center; justify-content: center; width: 52px; height: 52px; border-radius: 50%; background: #e2f5ee; color: #157553; }
+.cm-confirmation__boite h3 { margin: 12px 0 6px; font-size: 1.1rem; color: var(--g-slate-900); }
+.cm-confirmation__boite p { margin: 0 0 18px; font-size: 0.9rem; color: var(--g-slate-600); line-height: 1.45; }
+.cm-confirmation__boutons { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+/* ══════════════════════════════════════════════════════════════════════
+ * FORMULAIRES ET FENÊTRES (design, lot 3)
+ * Même hauteur pour tous les champs (40 px), bordure fine, anneau turquoise au focus,
+ * champ en erreur bien visible, listes déroulantes avec la même flèche, boutons homogènes.
+ * L'en-tête turquoise des fenêtres reste (identité de l'application).
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Fenêtre ── */
+.cm-voile { background: var(--g-voile); animation: cmFondu var(--g-duree) var(--g-courbe); }
+.cm-modale {
+  border-radius: 16px;
+  box-shadow: var(--g-ombre-lg), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  animation: cmApparitionDouce var(--g-duree-lente) var(--g-courbe-entree);
+}
+@keyframes cmApparitionDouce { from { opacity: 0; transform: translateY(8px) scale(0.985); } to { opacity: 1; transform: none; } }
+.cm-modale__tete { padding: 16px 24px; }
+.cm-modale__icone { width: 40px; height: 40px; border-radius: 10px; }
+.cm-modale__titres h2 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.01em; }
+.cm-modale__surtitre { font-weight: 700; }
+.cm-modale__fermer { width: 34px; height: 34px; border-radius: var(--g-rayon-md); transition: background var(--g-duree-rapide) var(--g-courbe); }
+
+/* Sections à gauche : élément actif turquoise, sans grosse ombre */
+.cm-modale__nav { gap: 2px; padding: 16px 10px; border-inline-end-color: var(--g-slate-200); }
+.cm-modale__nav-item { padding: 9px 12px; border: 0; border-radius: var(--g-rayon-md); transition: background var(--g-duree-rapide) var(--g-courbe), color var(--g-duree-rapide) var(--g-courbe); }
+.cm-modale__nav-item:hover { background: var(--g-slate-100); border-color: transparent; color: var(--g-slate-900); }
+.cm-modale__nav-item.is-actif { box-shadow: none; }
+.cm-modale__nav-item.is-actif:hover { background: var(--g-brand-600); color: var(--g-blanc); }
+.cm-modale__nav-item:focus-visible { outline: none; box-shadow: var(--g-anneau); }
+
+.cm-section-tete h3 { font-weight: 700; letter-spacing: -0.01em; }
+.cm-alerte { border-radius: var(--g-rayon-md); padding: 10px 12px; font-size: var(--g-texte-sm); }
+
+/* Pied : fond gris léger, boutons alignés */
+.cm-modale__pied { padding: 12px 24px; background: var(--g-slate-50); border-top-color: var(--g-slate-200); }
+.cm-modale__info { background: var(--g-blanc); border: 1px solid var(--g-slate-200); font-weight: 600; }
+
+/* ── Boutons ── */
+.cm-btn {
+  height: var(--g-hauteur-md); padding: 0 16px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md);
+  font-weight: 600; font-size: var(--g-texte-sm); box-shadow: var(--g-ombre-xs);
+  transition: background var(--g-duree-rapide) var(--g-courbe), border-color var(--g-duree-rapide) var(--g-courbe), box-shadow var(--g-duree-rapide) var(--g-courbe), transform var(--g-duree-rapide) var(--g-courbe);
+}
+.cm-btn:hover:not(:disabled) { background: var(--g-slate-50); border-color: var(--g-slate-400); }
+.cm-btn:active:not(:disabled) { transform: translateY(1px); }
+.cm-btn:focus-visible { outline: none; box-shadow: var(--g-anneau); }
+.cm-btn--principal { border-color: var(--g-brand-600); box-shadow: 0 1px 2px rgba(7, 148, 164, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.cm-btn--principal:hover:not(:disabled) { background: var(--g-brand-600); border-color: var(--g-brand-700); }
+.cm-btn--danger { border-color: var(--g-red-700); }
+.cm-btn--danger:hover:not(:disabled) { background: var(--g-red-700); }
+.cm-btn--lien { box-shadow: none; border-color: transparent; }
+.cm-btn--lien:hover:not(:disabled) { border-color: transparent; }
+
+/* ── Champs ── */
+.cf-grille { gap: 16px 16px; }
+.cf-label { font-size: var(--g-texte-sm); font-weight: 600; color: var(--g-slate-700); }
+.cf-requis { color: var(--g-red-500, #ef4444); font-weight: 700; }
+.cf-champ input:not([type=checkbox]):not([type=radio]), .cf-champ select {
+  height: 40px; padding: 0 12px;
+}
+.cf-champ input:not([type=checkbox]):not([type=radio]), .cf-champ select, .cf-champ textarea {
+  border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md);
+  font-weight: 400; font-size: 0.875rem; box-shadow: var(--g-ombre-xs);
+  transition: border-color var(--g-duree-rapide) var(--g-courbe), box-shadow var(--g-duree-rapide) var(--g-courbe);
+}
+.cf-champ textarea { padding: 10px 12px; }
+.cf-champ input::placeholder, .cf-champ textarea::placeholder { color: var(--g-slate-400); }
+.cf-champ input:hover:not(:disabled):not(:focus), .cf-champ select:hover:not(:disabled):not(:focus), .cf-champ textarea:hover:not(:disabled):not(:focus) { border-color: var(--g-slate-400); }
+.cf-champ input:focus, .cf-champ select:focus, .cf-champ textarea:focus { border-color: var(--g-brand-500); box-shadow: var(--g-anneau); }
+.cf-champ input:disabled, .cf-champ select:disabled, .cf-champ textarea:disabled { box-shadow: none; }
+/* Liste déroulante : même flèche que les listes avec recherche */
+.cf-champ select {
+  appearance: none; -webkit-appearance: none; padding-inline-end: 36px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 16px;
+}
+[dir='rtl'] .cf-champ select { background-position: left 12px center; }
+/* Champ en erreur : bordure rouge, anneau rouge au focus */
+.cf-champ.a-erreur input, .cf-champ.a-erreur select, .cf-champ.a-erreur textarea,
+.cf-champ.a-erreur .rm-select-input-wrap { border-color: var(--g-red-500, #ef4444) !important; }
+.cf-champ.a-erreur input:focus, .cf-champ.a-erreur select:focus, .cf-champ.a-erreur textarea:focus,
+.cf-champ.a-erreur .rm-select-input-wrap:focus-within { box-shadow: var(--g-anneau-danger) !important; }
+.cf-erreur { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 500; color: var(--g-red-600); }
+.cf-aide { font-size: 0.75rem; color: var(--g-slate-500); }
+.cf-case input { width: 16px; height: 16px; accent-color: var(--g-brand-600); }
+
+/* Liste avec recherche (ListeRecherche) : alignée sur les autres champs */
+.cf-champ .rm-select-input-wrap, .rm-select-input-wrap {
+  height: 40px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); box-shadow: var(--g-ombre-xs);
+  transition: border-color var(--g-duree-rapide) var(--g-courbe), box-shadow var(--g-duree-rapide) var(--g-courbe);
+}
+.rm-select-input-wrap:hover { border-color: var(--g-slate-400); }
+.rm-select-input-wrap.is-open, .rm-select-input-wrap:focus-within { border-color: var(--g-brand-500) !important; box-shadow: var(--g-anneau) !important; }
+.rm-select-input { font-size: 0.875rem !important; }
+.rm-select-menu { border-radius: var(--g-rayon-md) !important; box-shadow: var(--g-ombre-md) !important; border-color: var(--g-slate-200) !important; animation: cmFondu var(--g-duree) var(--g-courbe); }
+
+/* ── Assistant pas à pas ── */
+.cm-etapes { padding: 12px 24px; background: var(--g-blanc); border-bottom-color: var(--g-slate-200); }
+.cm-etape button { font-size: var(--g-texte-sm); border-radius: var(--g-rayon-md); }
+.cm-etape button:focus-visible { outline: none; box-shadow: var(--g-anneau); }
+.cm-etape__num { width: 26px; height: 26px; border-width: 1.5px; font-size: 0.75rem; font-weight: 700; transition: background var(--g-duree) var(--g-courbe), border-color var(--g-duree) var(--g-courbe); }
+.cm-etape.is-actuelle .cm-etape__num { box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.18); }
+.cm-etape:not(:last-child)::after { height: 1.5px; transition: background var(--g-duree) var(--g-courbe); }
+
+/* Confirmation avant envoi */
+.cm-confirmation { background: rgba(15, 23, 42, 0.4); }
+.cm-confirmation__boite { border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-lg); animation: cmApparitionDouce var(--g-duree-lente) var(--g-courbe-entree); }
+
+/* Bloc libre dans un formulaire : texte d'aide suivi d'un bouton (ex. « Couvre un an ») */
+.cf-bloc { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+/* Une fenêtre commune doit passer au-dessus des panneaux et fenêtres qui l'ouvrent (détail véhicule 1200,
+   tiroir de bon 1500, fiche équipement 1600) et rester sous le scanner QR (1700) et les confirmations (2000). */
+.cm-voile { z-index: 1650; }
+
+/* Messages d'information dans un formulaire (neutre, succès, erreur) */
+.cf-infos { display: flex; flex-direction: column; gap: 8px; }
+.cf-info {
+  display: flex; align-items: flex-start; gap: 8px; margin: 0; padding: 10px 12px; border-radius: var(--g-rayon-md);
+  background: var(--g-slate-50); border: 1px solid var(--g-slate-200); color: var(--g-slate-600); font-size: var(--g-texte-sm); line-height: 1.45;
+}
+.cf-info > svg { flex-shrink: 0; margin-top: 1px; }
+.cf-info--succes { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.cf-info--erreur { background: var(--g-red-50, #fef2f2); border-color: var(--g-red-200, #fecaca); color: var(--g-red-700); }
+
+/* Informations en lecture seule dans une fenêtre (ex. équipement repris de la fiche) */
+.cf-lecture { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 0; }
+.cf-lecture > div { padding: 10px 12px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-md); background: var(--g-slate-50); }
+.cf-lecture dt { display: inline-flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; color: var(--g-slate-500); }
+.cf-lecture dd { margin: 0; font-size: 0.875rem; color: var(--g-slate-800); }
+.cf-lecture dd strong { color: var(--g-slate-900); }
+/* Note d'information sous un bloc */
+.cf-note { display: flex; align-items: flex-start; gap: 6px; margin: 12px 0 0; padding: 10px 12px; border-radius: var(--g-rayon-md); background: var(--g-brand-50); color: var(--g-brand-800); font-size: 0.78rem; line-height: 1.45; }
+.cf-note svg { flex-shrink: 0; margin-top: 1px; }
+/* Récapitulatif en bas d'une section */
+.cf-recap { margin: 4px 0 0; padding: 4px 14px; border: 1px dashed var(--g-slate-300); border-radius: var(--g-rayon-md); background: var(--g-slate-50); }
+.cf-recap > div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--g-slate-200); font-size: 0.82rem; }
+.cf-recap > div:last-child { border-bottom: 0; }
+.cf-recap dt { color: var(--g-slate-500); }
+.cf-recap dd { margin: 0; font-weight: 600; color: var(--g-slate-900); text-align: end; }
+
+/* En-tête des pages liste : même rendu que l'en-tête des tableaux de bord (lot 4) */
+.cl-entete { border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-xs); }
+.cl-entete h1 { font-size: 1.375rem; font-weight: 700; }
+
+/* ══════════ Morceaux de fenêtre réutilisables (fenêtre du bon de maintenance, etc.) ══════════ */
+/* Choix en cartes (boutons radio avec explication) */
+.cf-choix { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.cf-choix__option { position: relative; display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); background: var(--g-blanc); cursor: pointer; transition: border-color var(--g-duree-rapide) var(--g-courbe), background var(--g-duree-rapide) var(--g-courbe), box-shadow var(--g-duree-rapide) var(--g-courbe); }
+.cf-choix__option:hover { border-color: var(--g-slate-400); }
+.cf-choix__option input { position: absolute; opacity: 0; pointer-events: none; }
+.cf-choix__option:focus-within { box-shadow: var(--g-anneau); }
+.cf-choix__option.is-actif { border-color: var(--g-brand-500); background: var(--g-brand-50); box-shadow: inset 0 0 0 1px var(--g-brand-500); }
+.cf-choix__nom { font-size: var(--g-texte-sm); font-weight: 600; color: var(--g-slate-900); }
+.cf-choix__option.is-actif .cf-choix__nom { color: var(--g-brand-800); }
+.cf-choix__aide { font-size: 0.72rem; line-height: 1.35; color: var(--g-slate-500); }
+
+/* Assistant (suggestions calculées) */
+.cf-assistant { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; padding: 12px 14px; border: 1px solid var(--g-brand-100); border-radius: var(--g-rayon-lg); background: linear-gradient(180deg, var(--g-brand-50), var(--g-blanc)); }
+.cf-assistant__tete { display: flex; align-items: center; gap: 10px; }
+.cf-assistant__icone { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex-shrink: 0; border-radius: var(--g-rayon-md); background: var(--g-blanc); border: 1px solid var(--g-brand-100); color: var(--g-brand-600); }
+.cf-assistant__titre { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.cf-assistant__titre strong { font-size: var(--g-texte-sm); color: var(--g-slate-900); }
+.cf-assistant__titre small { font-size: 0.75rem; color: var(--g-slate-500); }
+.cf-suggestions { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.cf-suggestions--defile { max-height: 260px; overflow-y: auto; }
+.cf-suggestion { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-md); background: var(--g-blanc); font-size: 0.8rem; color: var(--g-slate-700); }
+.cf-suggestion p { margin: 0; line-height: 1.4; }
+.cf-suggestion .cm-btn { align-self: flex-start; height: 32px; margin-top: 4px; padding: 0 12px; }
+.cf-suggestion__tete { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.cf-suggestion__badge { padding: 2px 8px; border-radius: 999px; background: var(--g-brand-50); color: var(--g-brand-700); font-size: 0.7rem; font-weight: 600; }
+.cf-suggestion__score { font-size: 0.72rem; font-weight: 600; color: var(--g-slate-500); font-variant-numeric: tabular-nums; }
+.cf-suggestion__alerte { color: var(--g-red-700); font-weight: 600; }
+
+/* Ligne d'ajout d'un élément (tâche, intervenant, commentaire) */
+.cf-ajout { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px; align-items: end; padding: 12px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg); background: var(--g-slate-50); }
+.cf-ajout__champ { grid-column: span 3; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.cf-ajout__champ--large { grid-column: span 4; }
+.cf-ajout__champ--etroit { grid-column: span 2; }
+.cf-ajout__champ--plein { grid-column: span 10; }
+.cf-ajout__champ > span { font-size: 0.72rem; font-weight: 600; color: var(--g-slate-600); }
+.cf-ajout__champ input { width: 100%; box-sizing: border-box; height: 40px; padding: 0 10px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); background: var(--g-blanc); font: 400 0.85rem var(--g-police); color: var(--g-slate-900); box-shadow: var(--g-ombre-xs); }
+.cf-ajout__champ input:focus { outline: none; border-color: var(--g-brand-500); box-shadow: var(--g-anneau); }
+.cf-ajout__bouton { grid-column: span 2; justify-self: stretch; }
+.cf-ajout + .cf-erreur, .cf-ajout + .cf-aide { margin-top: 6px; }
+
+/* Éléments ajoutés */
+.cf-elements { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; margin: 12px 0 0; padding: 0; list-style: none; }
+.cf-element { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-md); background: var(--g-blanc); animation: cmFondu var(--g-duree) var(--g-courbe); }
+.cf-element__texte { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.cf-element__texte strong { font-size: var(--g-texte-sm); font-weight: 600; color: var(--g-slate-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cf-element__texte strong.cf-element__libre { white-space: normal; font-weight: 500; }
+.cf-element__texte small { display: inline-flex; align-items: center; gap: 4px; flex-wrap: wrap; font-size: 0.75rem; color: var(--g-slate-500); }
+.cf-element__retirer { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex-shrink: 0; border: 0; border-radius: var(--g-rayon-md); background: transparent; color: var(--g-slate-400); cursor: pointer; }
+.cf-element__retirer:hover { background: var(--g-red-50); color: var(--g-red-600); }
+.cf-elements-vide { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 12px; padding: 22px; border: 1px dashed var(--g-slate-200); border-radius: var(--g-rayon-md); color: var(--g-slate-400); font-size: var(--g-texte-sm); }
+@media (max-width: 760px) {
+  .cf-ajout__champ, .cf-ajout__champ--large, .cf-ajout__champ--plein { grid-column: span 12; }
+  .cf-ajout__champ--etroit { grid-column: span 6; }
+  .cf-ajout__bouton { grid-column: span 12; }
+}
+
+/* ══ Tableau avancé : recherche par colonne, menu de colonne, copie ══ */
+.cl-th { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.cl-col-menu {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 22px; height: 22px; padding: 0; border: 1px solid transparent; border-radius: 6px;
+  background: transparent; color: var(--g-slate-400); cursor: pointer; opacity: 0;
+  transition: opacity .12s ease, background .12s ease, color .12s ease;
+}
+.cl-table th:hover .cl-col-menu, th:hover > .cl-th .cl-col-menu, .cl-col-menu:focus-visible, .cl-col-menu.est-ouvert, .cl-col-menu.a-filtre { opacity: 1; }
+.cl-col-menu:hover, .cl-col-menu.est-ouvert { background: var(--g-blanc); border-color: var(--g-slate-200); color: var(--g-brand-600); }
+.cl-col-menu.a-filtre { color: var(--g-brand-600); background: var(--g-brand-50); }
+.cl-col-menu:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(7, 148, 164, .25); }
+@media (hover: none) { .cl-col-menu { opacity: 1; } }
+
+/* Ligne de filtres */
+.app-shell .cl-table tr.cl-ligne-filtres th, .app-shell tr.cl-ligne-filtres th, tr.cl-ligne-filtres th {
+  height: auto; padding: 6px 8px; background: var(--g-blanc); text-transform: none; letter-spacing: 0;
+  border-bottom: 1px solid var(--g-slate-200); cursor: default;
+}
+.cl-ligne-filtres :is(input, select), .cl-filtre-th :is(input, select) {
+  width: 100%; min-width: 64px; height: 32px; border: 1px solid var(--g-slate-200); border-radius: 8px;
+  background: var(--g-slate-50); font: 500 0.8rem var(--g-police); color: var(--g-slate-800);
+  transition: border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.cl-ligne-filtres input, .cl-filtre-th input { padding: 0 26px 0 10px; }
+[dir="rtl"] :is(.cl-ligne-filtres, .cl-filtre-th) input { padding: 0 10px 0 26px; }
+.cl-ligne-filtres select, .cl-filtre-th select { padding: 0 6px; cursor: pointer; }
+.cl-ligne-filtres input::placeholder, .cl-filtre-th input::placeholder { color: var(--g-slate-400); font-weight: 500; }
+:is(.cl-ligne-filtres, .cl-filtre-th) :is(input, select):hover { border-color: var(--g-slate-300); }
+:is(.cl-ligne-filtres, .cl-filtre-th) :is(input, select):focus { outline: none; background: var(--g-blanc); border-color: var(--g-brand-500); box-shadow: 0 0 0 3px rgba(7, 148, 164, .14); }
+.cl-ligne-filtres th.a-filtre :is(input, select), .cl-filtre-th.a-filtre :is(input, select) { background: var(--g-brand-50); border-color: var(--g-brand-300, var(--g-brand-200)); color: var(--g-brand-800); font-weight: 600; }
+.cl-filtre-champ { position: relative; display: block; }
+.cl-filtre-champ button {
+  position: absolute; inset-inline-end: 5px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; padding: 0;
+  border: 0; border-radius: 5px; background: transparent; color: var(--g-slate-500); cursor: pointer;
+}
+.cl-filtre-champ button:hover { background: var(--g-slate-200); color: var(--g-slate-800); }
+
+/* Bouton « Colonnes » et compteur */
+.cl-btn-filtres { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border: 1.5px solid var(--g-slate-200); border-radius: 10px; background: var(--g-blanc); cursor: pointer; font: 700 0.8rem var(--g-police); color: var(--g-slate-600); }
+.cl-btn-filtres:hover { color: var(--g-brand-600); border-color: var(--g-brand-200); }
+.cl-btn-filtres.est-actif { color: var(--g-brand-700); border-color: var(--g-brand-200); background: var(--g-brand-50); }
+.cl-btn-filtres__nb { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--g-brand-600); color: #fff; font-size: 0.7rem; line-height: 18px; text-align: center; }
+.cl-compte { font: 600 0.8rem var(--g-police); color: var(--g-slate-500); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* Menu de colonne (portail) */
+.cl-menu-colonne {
+  position: fixed; z-index: 1500; width: 252px; padding: 6px; border: 1px solid var(--g-slate-200); border-radius: 12px;
+  background: var(--g-blanc); box-shadow: 0 12px 32px -8px rgba(15, 23, 42, .22), 0 2px 6px rgba(15, 23, 42, .06);
+  font-family: var(--g-police); animation: cl-menu-entree .12s ease-out;
+}
+@keyframes cl-menu-entree { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.cl-menu-colonne__titre { margin: 0; padding: 6px 10px 8px; font-size: 0.7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--g-slate-500); }
+.cl-menu-colonne hr { margin: 4px 2px; border: 0; border-top: 1px solid var(--g-slate-100); }
+.cl-menu-colonne button {
+  display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 10px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--g-slate-700); font: 500 0.84rem var(--g-police); text-align: start; cursor: pointer;
+}
+.cl-menu-colonne button svg { color: var(--g-slate-400); flex: none; }
+.cl-menu-colonne button:is(:hover, :focus-visible) { outline: none; background: var(--g-slate-50); color: var(--g-slate-900); }
+.cl-menu-colonne button:is(:hover, :focus-visible) svg { color: var(--g-brand-600); }
+.cl-menu-colonne button.est-actif { background: var(--g-brand-50); color: var(--g-brand-800); font-weight: 600; }
+.cl-menu-colonne button.est-actif svg { color: var(--g-brand-600); }
+
+/* Annonce de copie */
+.cl-annonce { position: fixed; inset-inline-start: 50%; bottom: 24px; z-index: 1700; transform: translateX(-50%); pointer-events: none; }
+[dir="rtl"] .cl-annonce { transform: translateX(50%); }
+.cl-annonce span {
+  display: inline-block; padding: 10px 16px; border-radius: 10px; background: var(--g-slate-900); color: #fff;
+  font: 600 0.84rem var(--g-police); box-shadow: 0 10px 24px -6px rgba(15, 23, 42, .35); animation: cl-menu-entree .15s ease-out;
+}
+/* Le bouton de menu se place dans la marge de l'en-tête : il n'élargit pas la colonne */
+.cl-th { position: relative; }
+.cl-th .cl-col-menu { position: absolute; inset-inline-end: -14px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; }
+
+/* Recherche dans l'en-tête de la colonne : nom en haut, champ en dessous, même cellule */
+.cl-filtre-th { margin-top: 7px; cursor: default; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.cl-filtre-th :is(input, select) { text-transform: none; letter-spacing: 0; }
+.app-shell th:has(> .cl-filtre-th), th:has(> .cl-filtre-th) { height: auto; padding-top: 10px; padding-bottom: 10px; vertical-align: top; }
+
+/* Clic sur le nom de la colonne : ouvre sa recherche. Le tri passe par la flèche. */
+th:has(> .cl-th) { cursor: pointer; }
+.cl-tri-btn {
+  display: inline-flex; align-items: center; justify-content: center; padding: 3px; margin: -3px 0; border: 0; border-radius: 5px;
+  background: transparent; color: inherit; cursor: pointer;
+}
+.cl-tri-btn:hover { background: var(--g-brand-100); color: var(--g-brand-700); }
+.cl-tri-btn:hover .cl-tri-repos { opacity: 1; }
+.cl-tri-btn:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--g-brand-500); }
+.cl-filtre-th { animation: cl-menu-entree .12s ease-out; }
+/* Quand une recherche est ouverte, les autres titres restent alignés en haut */
+.app-shell thead:has(.cl-filtre-th) th, thead:has(.cl-filtre-th) th { vertical-align: top; padding-top: 10px; }
+.app-shell thead:has(.cl-filtre-th) th.selection-col, thead:has(.cl-filtre-th) th.selection-col { padding-top: 12px; }

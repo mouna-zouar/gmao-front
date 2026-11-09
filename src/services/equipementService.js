@@ -1,7 +1,6 @@
 import api from './api';
 import authService from './Authservice';
 
-/* Page « Équipements » et fiche d'un équipement. */
 
 const enTetesAuteur = () => {
   const user = authService.getCurrentUser();
@@ -14,10 +13,10 @@ const enTetesAuteur = () => {
 };
 
 const equipementService = {
-  /** Page<{ id, designation, marque, modele, numPiece, codeBarre, etatActuel, criticite, garantie }> */
-  async rechercher(recherche = '', page = 0, taille = 30, familleId = null) {
+  // serviceId : équipements de ce service seulement (LotArticle.ServiceID dans Cubix)
+  async rechercher(recherche = '', page = 0, taille = 30, familleId = null, serviceId = null) {
     const { data } = await api.get('/equipements', {
-      params: { recherche: recherche || undefined, familleId: familleId || undefined, page, taille },
+      params: { recherche: recherche || undefined, familleId: familleId || undefined, serviceId: serviceId || undefined, page, taille },
     });
     return data;
   },

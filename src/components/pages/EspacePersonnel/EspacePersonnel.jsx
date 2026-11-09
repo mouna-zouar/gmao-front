@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, ClipboardList, FileText, Wrench, RefreshCw, Eye, X, UserRound, CalendarDays, CheckCircle2, HardHat, ShieldCheck, Power, PenLine, ExternalLink, MessageCircle, Stethoscope, Undo2, ChevronDown, Hourglass, XCircle, ArrowLeft, Search } from 'lucide-react';
+import { AlertCircle, ClipboardList, FileText, Wrench, RefreshCw, Eye, X, UserRound, CalendarDays, CheckCircle2, HardHat, ShieldCheck, Power, PenLine, ExternalLink, MessageCircle, Stethoscope, Undo2, ChevronDown, Hourglass, GraduationCap, XCircle, ArrowLeft, Search } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 import authService from '../../../services/Authservice';
@@ -11,6 +11,7 @@ import reclamationService from '../../../services/Reclamationservice';
 import bonMaintenanceFullService from '../../../services/Bonmaintenancefullservice';
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
 import ReclamationDetails from '../Reclamations/Reclamationdetails';
+import { useActionsReclamation } from '../Reclamations/ReclamationActions';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import AssociateBonMaintenanceModal from '../../ui/modals/AssociateBonMaintenanceModal';
 import BonMaintenanceModal from '../../ui/modals/Bonmaintenancemodal';
@@ -27,6 +28,8 @@ import { t, tp, locale } from '../../../i18n';
 import { libelleTypeEntretien, libelleSourceInformation } from '../../../constants/FicheIntervention';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import EspaceKanban from './EspaceKanban';
+import MesFormations from '../Formations/MesFormations';
+import formationService from '../../../services/formationService';
 import BmdChat from '../bonmaintenance/BmdChat';
 import { MiniCalendrier, ASurveiller } from './EspaceAgenda';
 import { COLONNES_KANBAN, construireTravaux, refBon, versDate } from './espacePlanning';
@@ -39,10 +42,12 @@ import './EspacePersonnel.css';
 const ETAT_LABELS = {
   bons: { 1: 'Nouveau', 2: 'Suspendu', 3: 'En cours', 4: 'Effectué', 10: 'Annulé' },
   reclamations: {
-    0: 'Ouverte',
+    0: 'Nouveau',
+    5: 'En file',
     1: 'En cours',
+    3: 'Résolue',
     2: 'Clôturée',
-   
+    4: 'Annulée',
   },
   // Valeurs réelles de BonMaintenanceTache.etat (1 Nouveau … 10 Annulé)
   taches: TACHE_ETAT_LABELS,
@@ -65,7 +70,7 @@ const DEMANDES_TERMINEES = ['REPAREE', 'REFUSEE', 'ANNULEE'];
 
 const ACTIVE_STATES = {
   bons: [1, 2, 3],
-  reclamations: [0, 1, 3],
+  reclamations: [0, 5, 1, 3],
   taches: [1, 2, 3]
 };
 
@@ -663,7 +668,16 @@ export default function EspacePersonnel() {
   const [activeTab, setActiveTab] = useState(ongletUrl || 'bons');
   useEffect(() => { if (ongletUrl) setActiveTab(ongletUrl); }, [ongletUrl, searchParams]);
   const [filtreRole, setFiltreRole] = useState('tous');
-  const [data, setData] = useState({ bons: [], taches: [], reclamations: [], demandes: [] });
+  const [data, setData] = useState({ bons: [], taches: [], reclamations: [], demandes: [], formations: [] });
+  const [chargementFormations, setChargementFormations] = useState(true);
+  // Mes formations (onglet « Formations »), sans bloquer la page si indisponible
+  useEffect(() => {
+    if (personnelId == null || personnelId === '') { setChargementFormations(false); return; }
+    formationService.duPersonnel(personnelId)
+      .then((formations) => setData((d) => ({ ...d, formations })))
+      .catch((e) => console.error('[GMAO formations] Mes formations :', e))
+      .finally(() => setChargementFormations(false));
+  }, [personnelId]);
   const [nonLusChat, setNonLusChat] = useState({});
   // Bon dont on ouvre directement la conversation (clic sur la pastille de messages non lus)
   const [chatInitial, setChatInitial] = useState(null);
@@ -838,6 +852,13 @@ export default function EspacePersonnel() {
         icon: MessageCircle,
         items: data.bons,
         activeStates: []
+      },
+      {
+        id: 'formations',
+        label: t('Formations'),
+        icon: GraduationCap,
+        items: data.formations,
+        activeStates: []
       }
     ],
     [data]
@@ -899,6 +920,7 @@ export default function EspacePersonnel() {
   const compteOnglet = (tab) => {
     if (tab.id === 'discussions') return totalNonLus;
     if (tab.id === 'demandes') return tab.items.filter((x) => !DEMANDES_TERMINEES.includes(x.etape)).length;
+    if (tab.id === 'formations') return tab.items.filter((x) => x.formation?.statut === 'PLANIFIEE').length;
     return tab.items.filter((x) => tab.activeStates.includes(x.etat)).length;
   };
 
@@ -907,10 +929,11 @@ export default function EspacePersonnel() {
     taches: t('Glissez les cartes d’une colonne à l’autre'),
     demandes: t('Où en sont les pannes que vous avez signalées, jusqu\'à la réparation'),
     discussions: t('Les messages arrivent en direct'),
+    formations: t('Vos formations et leurs résultats'),
   }[activeTab];
 
   return (
-    <main className="ep-page ep-theme">
+    <main className="ep-page ep-theme ep-calme">
       {/* ------- BANDEAU : qui je suis, ce qui m'attend, et les onglets ------- */}
       <header className="ep-bandeau">
         <div className="ep-bandeau-haut">
@@ -1005,7 +1028,9 @@ export default function EspacePersonnel() {
             </div>
           )}
 
-          {activeTab === 'demandes' ? (
+          {activeTab === 'formations' ? (
+            <MesFormations liste={data.formations} chargement={chargementFormations} />
+          ) : activeTab === 'demandes' ? (
             <MesDemandes
               integre
               onCharge={(demandes) => setData((d) => ({ ...d, demandes }))}
@@ -1124,11 +1149,9 @@ export default function EspacePersonnel() {
 function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [validating, setValidating] = useState(false);
   const [modifierOuvert, setModifierOuvert] = useState(false);
   const [associerOuvert, setAssocierOuvert] = useState(false);
   const [creerBonOuvert, setCreerBonOuvert] = useState(false);
-  const [rejet, setRejet] = useState({ show: false, motif: '' });
 
   const reclamation = data?.reclamation ?? data;
 
@@ -1154,35 +1177,8 @@ function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
     await recharger();
   };
 
-  const valider = async () => {
-    if (validating) return;
-    setValidating(true);
-    try {
-      await reclamationService.valider(reclamationId, {});
-      await recharger();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || t('Échec de la validation.'));
-    } finally {
-      setValidating(false);
-    }
-  };
-
-  const confirmerRejet = async () => {
-    const motif = rejet.motif.trim();
-    if (!motif) return;
-    setRejet({ show: false, motif: '' });
-    setValidating(true);
-    try {
-      await reclamationService.rejeter(reclamationId, { motifRejet: motif });
-      await recharger();
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.message || t('Échec du rejet.'));
-    } finally {
-      setValidating(false);
-    }
-  };
+  // Cycle de vie (affecter, prendre en charge, résoudre, clôturer, rouvrir, annuler)
+  const actionsRec = useActionsReclamation(() => recharger());
 
   /** Crée le bon (avec ses éléments) puis le lie à la réclamation, comme dans « Réclamations ». */
   const creerBon = async (payload, children) => {
@@ -1216,12 +1212,11 @@ function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
       <ReclamationDetails
         data={data}
         loading={loading}
-        validating={validating}
+        validating={actionsRec.enCours}
         libelleRetour={t('Retour à mon espace')}
         onBack={onBack}
         onModifier={() => setModifierOuvert(true)}
-        onValider={valider}
-        onRejeter={() => setRejet({ show: true, motif: '' })}
+        onAction={(nom) => actionsRec.lancer(nom, reclamation)}
         onCreerBon={() => setCreerBonOuvert(true)}
         onAssocier={() => setAssocierOuvert(true)}
         onOuvrirBon={onOuvrirBon}
@@ -1251,37 +1246,7 @@ function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
         titleOverride={t('Nouveau bon') + ` — ${reclamation?.num || t('Réclamation')}`}
       />
 
-      {rejet.show && (
-        <div className="modal-overlay confirm-overlay" onClick={() => setRejet({ show: false, motif: '' })}>
-          <div className="confirm-modal-container rejet-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="confirm-modal-content">
-              <div className="confirm-modal-icon-wrapper">
-                <XCircle className="modal-confirm-icon danger" size={48} strokeWidth={2} />
-              </div>
-              <div className="confirm-modal-text">
-                <h3>{t('Rejeter la réclamation')}</h3>
-                <p>{t('Indique le motif du rejet.')}</p>
-                <textarea
-                  className="confirm-modal-input"
-                  value={rejet.motif}
-                  onChange={(e) => setRejet((r) => ({ ...r, motif: e.target.value }))}
-                  placeholder={t('Motif de rejet...')}
-                  rows={3}
-                  autoFocus
-                />
-              </div>
-            </div>
-            <div className="confirm-modal-footer">
-              <button type="button" className="confirm-btn secondary" onClick={() => setRejet({ show: false, motif: '' })}>
-                {t('Annuler')}
-              </button>
-              <button type="button" className="confirm-btn primary danger" onClick={confirmerRejet} disabled={!rejet.motif.trim()}>
-                {t('Rejeter')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {actionsRec.fenetres}
     </>
   );
 }

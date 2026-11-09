@@ -1,15 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import lotArticleImmobilistationService from '../services/Lotarticleimmobilistationservice';
 
-/*
- * Équipements (immobilisations Cubix) : liste de référence partagée, utilisée dans les listes de choix
- * (bons, réclamations, véhicules, contrôles, réglages de maintenance).
- * Gardée VALIDITE_MS ; toute écriture sur un équipement ou son état la marque comme périmée
- * (voir store/index.js) : elle est rechargée au prochain besoin.
- *   dispatch(chargerEquipements())                 → la liste (depuis le store si encore valable)
- *   dispatch(chargerEquipements({ forcer: true })) → recharge depuis le serveur
- *   Hors composant : obtenirEquipements() de store/referentiels.js
- */
 
 export const VALIDITE_MS = 5 * 60 * 1000;
 const TAILLE = 5000;
@@ -26,7 +17,7 @@ export const chargerEquipements = createAsyncThunk('equipements/charger', async 
 
 const equipementsSlice = createSlice({
   name: 'equipements',
-  initialState: { liste: [], statut: 'vide', erreur: null, chargeLe: 0 }, // statut : vide | chargement | pret | erreur
+  initialState: { liste: [], statut: 'vide', erreur: null, chargeLe: 0 }, 
   reducers: {
     viderEquipements(state) { state.liste = []; state.statut = 'vide'; state.erreur = null; state.chargeLe = 0; },
     /** La liste reste affichable mais sera rechargée au prochain chargerEquipements(). */
@@ -47,4 +38,6 @@ export const { viderEquipements, perimerEquipements } = equipementsSlice.actions
 export const selectEquipements = (s) => s.equipements.liste;
 export const selectEquipementsStatut = (s) => s.equipements.statut;
 export const selectEquipementParId = (id) => (s) => s.equipements.liste.find((e) => String(e.id) === String(id)) ?? null;
+export const selectEquipementsParService = (serviceId) => (s) =>
+  s.equipements.liste.filter((e) => String(e.serviceId) === String(serviceId));
 export default equipementsSlice.reducer;

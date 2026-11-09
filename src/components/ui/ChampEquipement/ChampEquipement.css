@@ -197,3 +197,18 @@
 }
 .cheq .cheq-menu .cheq-filtre select:focus { outline: none; border-color: var(--g-marque, #0e7490); box-shadow: 0 0 0 3px var(--g-marque-clair, rgba(14,116,144,.15)); }
 .cheq-filtre-note { flex-basis: 100%; color: var(--g-texte-discret, #94a3b8); }
+
+/* Filtre « équipements du service » (en tête de la liste) */
+.cheq-service { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--g-slate-100, #f1f5f9); }
+.cheq-service-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border: 1px solid var(--g-slate-300, #cbd5e1);
+  border-radius: 999px; background: var(--g-blanc, #fff); color: var(--g-slate-700, #334155); font-family: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer;
+}
+.cheq-service-btn.is-actif { border-color: var(--g-brand-200, #a5e3ea); background: var(--g-brand-50, #ecfbfc); color: var(--g-brand-700, #066f7c); }
+.cheq-service-btn:disabled { opacity: .55; cursor: default; }
+.cheq-service-nb { min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: var(--g-brand-600, #0794a4); color: #fff; font-size: 0.68rem; line-height: 18px; text-align: center; }
+.cheq-service-tous { min-height: 28px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: var(--g-slate-500, #64748b); font-family: inherit; font-size: 0.76rem; font-weight: 600; cursor: pointer; }
+.cheq-service-tous:hover { background: var(--g-slate-100, #f1f5f9); color: var(--g-slate-800, #1e293b); }
+
+/* Dans une fenêtre courte (ex. étape « Équipement ») : la fenêtre grandit pour que la liste ouverte ne soit pas coupée */
+.cm-modale__corps:has(.cheq-menu) { min-height: 470px; }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   FileText,
@@ -50,7 +50,6 @@ import {
   Wallet,
   Gauge,
   Flame,
-  HelpCircle,
   AlertTriangle,
   MessageSquare,
   MessageCircle,
@@ -77,13 +76,18 @@ import bonMaintenanceDiagnosticService from '../../../services/Bonmaintenancedia
 import bonMaintenanceControleEquipementService from '../../../services/bonMaintenanceControleEquipementService';
 import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenanceRemiseEnServiceService';
 import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
+import lectureService from '../../../services/lectureService';
+import EtatLecture from '../../commun/EtatLecture';
+import Modale from '../../commun/Modale';
 import slaService from '../../../services/slaService';
 import coutService from '../../../services/coutService';
 import rcaCapaService from '../../../services/rcaCapaService';
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
+import reclamationServiceComplet from '../../../services/Reclamationservice';
 import personnelService from '../../../services/Personnelservice';
 import prestataireService from '../../../services/prestataireService';
 import { obtenirPrestataires } from '../../../store/referentiels';
+import { precharger } from '../../../services/api';
 import parametreService from '../../../services/parametreService';
 import depotCubixService from '../../../services/depotCubixService';
 import authService from '../../../services/Authservice';
@@ -240,7 +244,7 @@ function rcaGlobalClass(analyses) {
 // PARCOURS DE RÉPARATION — construction des étapes et de la prochaine action
 // ============================================================
 const ETAPES_DEF = [
-  { key: 'signale', label: 'Signalé', aide: 'La panne a été déclarée', icon: Flag, rubrique: 'flow' },
+  { key: 'signale', label: 'Signalé', aide: 'La panne a été déclarée', icon: Flag, rubrique: 'historique' }, // « Vue d'ensemble » retirée : l'étape ouvre l'historique
   { key: 'diagnostic', label: 'Diagnostic', aide: 'On cherche la cause', icon: Stethoscope, rubrique: 'diagnostic' },
   { key: 'reparation', label: 'Réparation', aide: 'Les techniciens réparent', icon: Wrench, rubrique: 'reparation' },
   { key: 'controle', label: 'Contrôle', aide: 'On vérifie que tout marche', icon: ShieldCheck, rubrique: 'controle' },
@@ -286,6 +290,8 @@ function construireParcours({ bon, nbDiagnostics, intervenants, controle, remise
   return { etapes, indexActuel, cloture };
 }
 
+// Plus affichée depuis le retrait du bloc « À faire maintenant » ; gardée si on veut la remettre.
+// eslint-disable-next-line no-unused-vars
 function prochaineAction({ bon, parcours, intervenants }) {
   if (bon.etat === ETAT.ANNULE) {
     return {
@@ -412,15 +418,16 @@ const ETAT_EN_CLAIR = {
 const GROUPES_RUBRIQUES = [
   {
     titre: 'Comprendre',
+    icon: Eye,
     aide: 'Voir où en est le dossier',
     rubriques: [
-      { key: 'flow', label: "Vue d'ensemble", aide: 'Tout le dossier, étape par étape', icon: Eye },
       { key: 'tracage', label: 'Traçage ', aide: 'Qui a fait quoi, et quand', icon: Activity },
       { key: 'historique', label: 'Historique', aide: 'Le journal des actions', icon: History },
     ],
   },
   {
     titre: 'Réparer',
+    icon: Wrench,
     aide: 'Le travail sur l’équipement',
     rubriques: [
       { key: 'diagnostic', label: 'Diagnostic', aide: 'La cause de la panne', icon: Stethoscope },
@@ -430,6 +437,7 @@ const GROUPES_RUBRIQUES = [
   },
   {
     titre: 'Valider',
+    icon: ShieldCheck,
     aide: 'Avant de rendre l’équipement',
     rubriques: [
       { key: 'controle', label: 'Contrôle', aide: 'Les tests de bon fonctionnement', icon: ShieldCheck },
@@ -438,6 +446,7 @@ const GROUPES_RUBRIQUES = [
   },
   {
     titre: 'Échanger',
+    icon: MessageCircle,
     aide: 'Discussion, notes et achats',
     rubriques: [
       { key: 'chat', label: 'Chat en direct', aide: 'Discuter avec l’équipe du bon', icon: MessageCircle },
@@ -456,58 +465,16 @@ GROUPES_RUBRIQUES.forEach((g) => g.rubriques.forEach((r) => { TITRES_TIROIR[r.ke
 // Étape « Réparation » du parcours : les tâches et les intervenants ouverts ensemble, côte à côte
 TITRES_TIROIR.reparation = { label: 'Réparation', aide: 'Étape 1 : les intervenants · Étape 2 : les tâches', icon: Wrench };
 
-const CLE_AIDE = 'bmx-aide-masquee';
-function lireAideMasquee() {
-  try { return window.localStorage.getItem(CLE_AIDE) === '1'; } catch { return false; }
-}
-function ecrireAideMasquee(v) {
-  try { window.localStorage.setItem(CLE_AIDE, v ? '1' : '0'); } catch { /* stockage indisponible */ }
-}
 
-// Panneau latéral
+// Fenêtre d'une rubrique (diagnostic, tâches, contrôle…) : fenêtre commune au centre, comme les autres
+// fenêtres de l'application (autrefois un panneau latéral). Le contenu garde les styles de la page.
 function Tiroir({ rubrique, onClose, children }) {
-  const panneauRef = useRef(null);
-
-  useEffect(() => {
-    if (!rubrique) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    const ancien = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    panneauRef.current?.focus();
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = ancien;
-    };
-  }, [rubrique, onClose]);
-
   if (!rubrique) return null;
   const def = TITRES_TIROIR[rubrique] || { label: rubrique };
-  const Icon = def.icon;
-
   return (
-    <div className="bmx-tiroir-fond" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <aside
-        className={`bmx-tiroir ${def.large ? 'bmx-tiroir--large' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t(def.label)}
-        tabIndex={-1}
-        ref={panneauRef}
-      >
-        <header className="bmx-tiroir-entete">
-          {Icon && <span className="bmx-tiroir-icone"><Icon size={20} /></span>}
-          <div className="bmx-tiroir-titres">
-            <h2>{t(def.label)}</h2>
-            {def.aide && <p>{t(def.aide)}</p>}
-          </div>
-          <button type="button" className="bmx-tiroir-fermer" onClick={onClose} aria-label={t("Fermer le panneau")}>
-            <X size={20} />
-          </button>
-        </header>
-        <div className="bmx-tiroir-corps">{children}</div>
-      </aside>
-    </div>
+    <Modale ouvert onFermer={onClose} icone={def.icon} titre={t(def.label)} taille={def.large ? 'xl' : 'lg'} className="bmx-modale">
+      <div className="bmx-page bmx-tiroir bmx-tiroir--modale">{children}</div>
+    </Modale>
   );
 }
 
@@ -556,15 +523,37 @@ function ReparationEtapes({ intervenants, taches }) {
   );
 }
 
+/** Précharge en un appel les lectures faites à l'ouverture du détail (voir /api/bon-maintenance/{id}/resume). */
+function prechargerBon(id) {
+  if (!id) return null;
+  const b = `/bon-maintenance/${id}`;
+  return precharger(`${b}/resume`, [
+    b,
+    `/bon-maintenance-diagnostic${b}`,
+    `/bon-maintenance-tache${b}`,
+    `/bon-maintenance-intervenant${b}`,
+    `/bon-maintenance-controle-equipement${b}`,
+    `/bon-maintenance-remise-en-service${b}`,
+    `/bon-maintenance-historique${b}`,
+    `/bon-maintenance-document-achat${b}`,
+    `/reclamation-bon-maintenance${b}/reclamations`,
+    `/sla/bon/${id}`,
+    `/cout/bon/${id}`,
+    `/rca-capa/bon/${id}`,
+    `${b}/rapport`,
+  ]);
+}
+
 // ============================================================
 // COMPOSANT PRINCIPAL
 // ============================================================
 export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
+  // Tout ce que l'écran lit à l'ouverture arrive en un seul appel (au lieu d'une quinzaine en même temps)
+  useMemo(() => prechargerBon(bonMaintenance?.id), [bonMaintenance?.id]);
   const [bon, setBon] = useState(bonMaintenance);
   const [loading, setLoading] = useState(!bonMaintenance);
   const [error, setError] = useState(null);
   const [tiroir, setTiroir] = useState(null); // { key, form }
-  const [aideMasquee, setAideMasquee] = useState(lireAideMasquee);
   const [celebrer, celebrationElement] = useCelebration();
   const [impressionEnCours, setImpressionEnCours] = useState(false);
   const [nonLusChat, setNonLusChat] = useState(0);
@@ -583,11 +572,27 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [dernierControle, setDernierControle] = useState(null);
   const [derniereRemiseEnService, setDerniereRemiseEnService] = useState(null);
   const [intervenantsFlow, setIntervenantsFlow] = useState([]);
+
+  // Ouverture : marque le bon « lu » si c'est un de ses intervenants (le serveur décide).
+  // Refait quand les intervenants changent (un nouvel intervenant repasse le bon « non lu »).
+  const [lectureBon, setLectureBon] = useState(null);
+  const nbIntervenants = intervenantsFlow.length;
+  useEffect(() => {
+    const id = bonMaintenance?.id;
+    if (id == null) return undefined;
+    let annule = false;
+    lectureService.bon(id)
+      .then((l) => { if (!annule) setLectureBon(l); })
+      .catch(() => { /* serveur pas à jour : rien à afficher de plus */ });
+    return () => { annule = true; };
+  }, [bonMaintenance?.id, nbIntervenants]);
   const [loadingIntervenantsFlow, setLoadingIntervenantsFlow] = useState(false);
   const [historiqueFlow, setHistoriqueFlow] = useState([]);
   const [nbDiagnostics, setNbDiagnostics] = useState(0);
   const [nbTaches, setNbTaches] = useState(null);
   const [resumePret, setResumePret] = useState(false);
+  // Dossier : un seul bouton déroulant pour toute la liste (ouvert par défaut)
+  const [dossierOuvert, setDossierOuvert] = useState(true);
   const [slaInfo, setSlaInfo] = useState(null);
   const [coutInfo, setCoutInfo] = useState(null);
 
@@ -777,7 +782,15 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       setLoadingReclamations(true);
       try {
         const data = await reclamationBonMaintenanceService.getReclamationsByBonMaintenance(bonMaintenance.id);
-        setReclamations(data || []);
+        const liste = data || [];
+        setReclamations(liste);
+        // Code panne et vérifications : pris dans la réclamation complète si la liaison ne les donne pas
+        const completes = await Promise.all(liste.map(async (r) => (
+          r && r.id != null && !('checklist' in r && 'codePanneCode' in r)
+            ? { ...r, ...(await reclamationServiceComplet.getById(r.id).catch(() => ({}))) }
+            : r
+        )));
+        setReclamations(completes);
       } catch (err) {
         console.error('Erreur chargement réclamations:', err);
       } finally {
@@ -829,8 +842,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const masquerAide = () => { setAideMasquee(true); ecrireAideMasquee(true); };
-  const afficherAide = () => { setAideMasquee(false); ecrireAideMasquee(false); };
 
   if (loading) {
     return (
@@ -865,8 +876,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     controle: dernierControle,
     remise: derniereRemiseEnService,
   });
-  const action = prochaineAction({ bon, parcours, intervenants: intervenantsFlow });
-  const ActionIcon = action.icon;
   const etatClair = ETAT_EN_CLAIR[bon.etat] || { texte: t("Inconnu"), ton: 'neutre' };
   const sla = slaEnClair(slaInfo);
   const rca = rcaEnClair(rcaAnalyses);
@@ -1285,14 +1294,30 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     }
   };
 
-  const ToutesInfos = [
-    { icon: Users, label: t("Prestataire"), valeur: bon.prestataire?.raisonSociale || bon.prestataire?.nom || '—' },
-    { icon: Building2, label: t("Service"), valeur: bon.serviceNom || bon.service?.description || '—' },
-    { icon: PackageSearch, label: t("Dépôt"), valeur: bon.depotNom || bon.depot?.codeDepots || '—' },
-    { icon: UserRound, label: t("Demandeur"), valeur: bon.personnelDemandantNom || '—' },
-    { icon: Tag, label: t("Type d'entretien"), valeur: bon.type != null ? t(libelleTypeEntretien(bon.type)) : '—' },
-    { icon: Phone, label: t("Source de l'information"), valeur: bon.sourceInformation != null ? t(libelleSourceInformation(bon.sourceInformation)) : '—' },
-    { icon: Wrench, label: t("Modèle"), valeur: [equipement?.marque, equipement?.modele].filter(Boolean).join(' ') || '—' },
+  // Détails du bon, rangés par thème : Demande / Équipement / Intervention
+  const GROUPES_INFOS = [
+    {
+      titre: t("Demande"),
+      lignes: [
+        { icon: UserRound, label: t("Demandeur"), valeur: bon.personnelDemandantNom || '—' },
+        { icon: Tag, label: t("Type d'entretien"), valeur: bon.type != null ? t(libelleTypeEntretien(bon.type)) : '—' },
+        { icon: Phone, label: t("Source de l'information"), valeur: bon.sourceInformation != null ? t(libelleSourceInformation(bon.sourceInformation)) : '—' },
+      ],
+    },
+    {
+      titre: t("Équipement"),
+      lignes: [
+        { icon: Wrench, label: t("Modèle"), valeur: [equipement?.marque, equipement?.modele].filter(Boolean).join(' ') || '—' },
+        { icon: Building2, label: t("Service"), valeur: bon.serviceNom || bon.service?.description || '—' },
+        { icon: PackageSearch, label: t("Dépôt"), valeur: bon.depotNom || bon.depot?.codeDepots || '—' },
+      ],
+    },
+    {
+      titre: t("Intervention"),
+      lignes: [
+        { icon: Users, label: t("Prestataire"), valeur: bon.prestataire?.raisonSociale || bon.prestataire?.nom || '—' },
+      ],
+    },
   ];
   // Une seule couleur d'accent : seuls les points d'alerte (retard, problème) gardent du rouge ou de l'orange
   const pointTon = (ton) => (['alerte', 'prio-red'].includes(ton) ? 'alerte' : ['attention', 'prio-amber'].includes(ton) ? 'attention' : ton === 'ok' ? 'ok' : 'neutre');
@@ -1318,23 +1343,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
           </p>
         </div>
         <div className="bmz-actions">
-          <div className="bmz-aide-zone">
-            <button type="button" className="bmz-btn" onClick={aideMasquee ? afficherAide : masquerAide} aria-expanded={!aideMasquee}>
-              <HelpCircle size={16} /> <span>{t("Aide")}</span>
-            </button>
-            {!aideMasquee && (
-              <div className="bmz-aide" role="dialog" aria-label={t("Aide")}>
-                <ol>
-                  <li>{t("La ligne du parcours montre où en est la réparation.")}</li>
-                  <li>{t("Le bloc « À faire maintenant » vous dit quoi faire, avec un seul bouton.")}</li>
-                  <li>{t("Pour tout voir ou corriger, ouvrez une rubrique du dossier.")}</li>
-                </ol>
-                <button type="button" className="bmz-btn bmz-btn--plein" onClick={masquerAide}>
-                  <Check size={15} /> {t("J'ai compris")}
-                </button>
-              </div>
-            )}
-          </div>
           <button type="button" className="bmz-btn" onClick={() => ouvrir('chat')}>
             <MessageCircle size={16} /> <span>{t('Discuter')}</span>
             {nonLusChat > 0 && <span className="bmz-pastille" aria-label={tp('message non lu', nonLusChat)}>{nonLusChat}</span>}
@@ -1380,22 +1388,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       {/* ===== Corps : trois colonnes, sans défilement de la page ===== */}
       <div className="bmz-corps">
         <div className="bmz-col">
-          <section className={`bmz-carte bmz-maintenant bmz-maintenant--${action.ton}`} aria-label={t("À faire maintenant")}>
-            <p className="bmz-surtitre"><ActionIcon size={15} /> {t("À faire maintenant")}</p>
-            <h2 className="bmz-maintenant-titre">{t(action.titre)}</h2>
-            <p className="bmz-maintenant-texte">{t(action.texte)}</p>
-            <div className="bmz-maintenant-actions">
-              <button type="button" className="bmz-btn bmz-btn--plein" onClick={() => ouvrir(action.bouton.rubrique, action.bouton.form)}>
-                {t(action.bouton.label)}
-              </button>
-              {action.secondaire && (
-                <button type="button" className="bmz-btn" onClick={() => ouvrir(action.secondaire.rubrique, action.secondaire.form)}>
-                  {t(action.secondaire.label)}
-                </button>
-              )}
-            </div>
-          </section>
-
           {/* Rapport d'intervention (IA), après la clôture : défile dans sa zone */}
           <div className="bmz-defile bmz-rapport">
             <BmdRapport
@@ -1408,29 +1400,30 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         </div>
 
         <div className="bmz-col">
-          {/* Informations : « En un coup d'œil » puis le détail, dans la même carte */}
+          {/* Informations : « En un coup d'œil » (tuiles) puis le détail rangé par thème */}
           <section className="bmz-carte bmz-infos" aria-label={t("Informations générales du bon")}>
             <h2 className="bmz-carte-titre">{t("Informations")}</h2>
-            <div className="bmz-vitaux bmz-infos-bloc" aria-label={t("En un coup d'œil")}>
+
+            <div className="bmz-infos-bloc" aria-label={t("En un coup d'œil")}>
               <h3 className="bmz-sous-titre">{t("En un coup d'œil")}</h3>
-              <ul>
+              <ul className="bmz-tuiles">
                 {signesVitaux.map((v) => {
                   const Icon = v.icon;
                   const contenu = (
                     <>
-                      <Icon size={15} className="bmz-vital-icone" />
-                      <span className="bmz-vital-label">{t(v.label)}</span>
-                      <span className={`bmz-vital-valeur bmz-point--${pointTon(v.ton)}`}>{t(v.valeur)}</span>
+                      <span className="bmz-tuile-label"><Icon size={14} /> {t(v.label)}</span>
+                      <span className={`bmz-tuile-valeur bmz-point--${pointTon(v.ton)}`} title={t(v.valeur)}>{t(v.valeur)}</span>
+                      {v.rubrique && <ChevronRight size={14} className="bmz-tuile-fleche" />}
                     </>
                   );
                   return (
                     <li key={v.key}>
                       {v.rubrique ? (
-                        <button type="button" className="bmz-vital" onClick={() => ouvrir(v.rubrique)}>
-                          {contenu}<ChevronRight size={15} className="bmz-fleche" />
+                        <button type="button" className="bmz-tuile is-cliquable" onClick={() => ouvrir(v.rubrique)}>
+                          {contenu}
                         </button>
                       ) : (
-                        <div className="bmz-vital" title={v.priorite ? t("Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)") : undefined}>
+                        <div className="bmz-tuile" title={v.priorite ? t("Priorité calculée automatiquement (criticité + urgence + disponibilité d'alternative)") : undefined}>
                           {contenu}
                         </div>
                       )}
@@ -1438,51 +1431,82 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
                   );
                 })}
               </ul>
+              <p className="bmz-lecture">
+                <EtatLecture objet={lectureBon ?? bon} actif={[1, 2, 3].includes(Number(bon?.etat))} />
+              </p>
             </div>
+
             <div className="bmz-infos-bloc">
               <h3 className="bmz-sous-titre">{t("Détails du bon")}</h3>
-              <dl>
-                {ToutesInfos.map((i) => {
-                  const Icon = i.icon;
-                  return (
-                    <div key={i.label}>
-                      <dt><Icon size={14} /> {i.label}</dt>
-                      <dd title={i.valeur}>{i.valeur}</dd>
-                    </div>
-                  );
-                })}
-              </dl>
+              {GROUPES_INFOS.map((g) => (
+                <div key={g.titre} className="bmz-info-groupe">
+                  <h4>{g.titre}</h4>
+                  <dl>
+                    {g.lignes.map((i) => {
+                      const Icon = i.icon;
+                      return (
+                        <div key={i.label}>
+                          <dt><Icon size={13} /> {i.label}</dt>
+                          <dd title={i.valeur}>{i.valeur}</dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                </div>
+              ))}
             </div>
           </section>
         </div>
 
-        <section className="bmz-col bmz-carte bmz-dossier" aria-label={t("Tout le dossier")}>
-          <h2 className="bmz-carte-titre">{t("Dossier")}</h2>
-          <div className="bmz-defile">
-            {GROUPES_RUBRIQUES.map((groupe) => (
-              <div key={groupe.titre} className="bmz-groupe">
-                <h3 title={t(groupe.aide)}>{t(groupe.titre)}</h3>
-                <ul>
-                  {groupe.rubriques.map((r) => {
-                    const Icon = r.icon;
-                    const n = compteurs[r.key];
-                    return (
-                      <li key={r.key}>
-                        <button type="button" className="bmz-rubrique" onClick={() => ouvrir(r.key)} title={t(r.aide)}>
-                          <Icon size={16} className="bmz-rubrique-icone" />
-                          <span className="bmz-rubrique-nom">{t(r.label)}</span>
-                          {n != null && (
-                            <span className={`bmz-nb ${r.key === 'chat' && n > 0 ? 'bmz-nb--alerte' : ''}`}
-                              title={r.key === 'chat' ? tp('message non lu', n) : undefined}>{n}</span>
-                          )}
-                          <ChevronRight size={15} className="bmz-fleche" />
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            ))}
+        {/* Réclamation d'origine : sa propre colonne, pour que la page tienne sans défiler */}
+        {reclamations.length > 0 && (
+          <section className="bmz-col bmz-carte bmz-reclamations" aria-label={t('Réclamation')}>
+            <h2 className="bmz-carte-titre">{reclamations.length > 1 ? t('Réclamations') : t('Réclamation')}</h2>
+            <div className="bmz-defile">
+              {reclamations.map((r) => <InfosReclamation key={r.id} reclamation={r} />)}
+            </div>
+          </section>
+        )}
+
+        <section className={`bmz-col bmz-carte bmz-dossier ${dossierOuvert ? 'is-ouvert' : ''}`} aria-label={t("Tout le dossier")}>
+          <button
+            type="button"
+            className="bmz-dossier-btn"
+            aria-expanded={dossierOuvert}
+            aria-controls="bmz-dossier-liste"
+            onClick={() => setDossierOuvert((v) => !v)}
+          >
+            <span className="bmz-dossier-titre">{t("Dossier")}</span>
+            {compteurs.chat > 0 && !dossierOuvert && <span className="bmz-nb bmz-nb--alerte">{compteurs.chat}</span>}
+            <ChevronDown size={18} className="bmz-groupe-chevron" />
+          </button>
+          <div className="bmz-dossier-corps" id="bmz-dossier-liste">
+            <div className="bmz-defile">
+              {GROUPES_RUBRIQUES.map((groupe) => (
+                <div key={groupe.titre} className="bmz-groupe-plat">
+                  <h3 title={t(groupe.aide)}>{t(groupe.titre)}</h3>
+                  <ul>
+                    {groupe.rubriques.map((r) => {
+                      const Icon = r.icon;
+                      const n = compteurs[r.key];
+                      return (
+                        <li key={r.key}>
+                          <button type="button" className="bmz-rubrique" onClick={() => ouvrir(r.key)} title={t(r.aide)} tabIndex={dossierOuvert ? 0 : -1}>
+                            <Icon size={15} className="bmz-rubrique-icone" />
+                            <span className="bmz-rubrique-nom">{t(r.label)}</span>
+                            {n != null && (
+                              <span className={`bmz-nb ${r.key === 'chat' && n > 0 ? 'bmz-nb--alerte' : ''}`}
+                                title={r.key === 'chat' ? tp('message non lu', n) : undefined}>{n}</span>
+                            )}
+                            <ChevronRight size={14} className="bmz-fleche" />
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </div>
@@ -1605,6 +1629,52 @@ function PanneauCout({ cout }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+// ============================================================
+// RÉCLAMATION D'ORIGINE : attributs, code panne, vérifications
+// ============================================================
+const TON_REPONSE = { Oui: 'oui', Non: 'non', 'Sans objet': 'na' };
+
+function InfosReclamation({ reclamation: r }) {
+  const verifs = Array.isArray(r.checklist) ? r.checklist.filter((c) => c && c.question) : [];
+  const lignes = [
+    { icon: FileText, label: t('Description'), valeur: r.description ? t(r.description) : '—' },
+    { icon: Tag, label: t('Code panne'), valeur: r.codePanneCode ? `${r.codePanneCode} · ${t(r.codePanneLibelle || '')}` : '—' },
+    { icon: User, label: t('Signalée par'), valeur: r.personnelCreationNom || '—' },
+    { icon: Calendar, label: t('Date'), valeur: r.date ? formatDate(r.date) : '—' },
+  ];
+  return (
+    <div className="bmz-infos-bloc bmz-reclamation">
+      <h3 className="bmz-sous-titre bmz-reclamation-num">{r.num || `#${r.id}`}</h3>
+      <div className="bmz-info-groupe">
+        <dl>
+          {lignes.map((i) => {
+            const Icon = i.icon;
+            return (
+              <div key={i.label}>
+                <dt><Icon size={13} /> {i.label}</dt>
+                <dd title={i.valeur}>{i.valeur}</dd>
+              </div>
+            );
+          })}
+        </dl>
+      </div>
+      {verifs.length > 0 && (
+        <div className="bmz-info-groupe">
+          <h4>{t('Vérifications')}</h4>
+          <ul className="bmz-verifs">
+            {verifs.map((c, i) => (
+              <li key={`${i}-${c.question}`}>
+                <span className="bmz-verif-q">{t(c.question)}</span>
+                <span className={`bmz-verif-r bmz-verif-r--${TON_REPONSE[c.reponse] || 'na'}`}>{t(c.reponse || '—')}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -1972,18 +2042,7 @@ function FlowTab({
                     <span className="detail-value">{controle.typeControle}</span>
                   </div>
                 )}
-                {controle.valeurMesuree != null && (
-                  <div className="detail-row">
-                    <span className="detail-label">{t("Valeur mesurée")}</span>
-                    <span className="detail-value">{controle.valeurMesuree}</span>
-                  </div>
-                )}
-                {controle.valeurAttendue != null && (
-                  <div className="detail-row">
-                    <span className="detail-label">{t("Valeur attendue")}</span>
-                    <span className="detail-value">{controle.valeurAttendue}</span>
-                  </div>
-                )}
+               
                 {controle.resultat && (
                   <div className="detail-row">
                     <span className="detail-label">{t("Résultat")}</span>

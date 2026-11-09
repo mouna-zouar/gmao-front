@@ -11,6 +11,8 @@ import { t, locale, SelecteurLangue } from '../../i18n';
 import { History, X, Bell, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Search, Sparkles } from 'lucide-react';
 import AssistantQuestions from '../ui/AssistantQuestions/AssistantQuestions';
 import './Layout.css';
+// Logo importé (et non « ../src/assets/… ») : chemin juste aussi dans la version construite pour la production
+import logoSoftSys from '../../assets/logo_SoftSys.png';
 import '../ui/BadgeStatut/statuts-harmonises.css';
 
 const NB_RECENTS = 5;
@@ -194,7 +196,7 @@ export default function Layout({ children }) {
           {sidebarOpen ? (
             <>
               <Link to="/" onClick={() => { setActivePopup(null); setOpenSubmenu(null); }} className="sidebar__logo-link">
-                <span style={{ fontWeight: 800, fontSize: '18px', color: '#0f172a' }}>GMAO</span>
+                <span className="sidebar__logo-text">GMAO<span>.</span></span>
               </Link>
               <button className="sidebar__close-btn" onClick={() => setSidebarOpen(false)} title={t('Réduire le menu')} aria-label={t('Réduire le menu')}>
                 <ChevronLeft strokeWidth={2} aria-hidden="true" />
@@ -375,7 +377,7 @@ export default function Layout({ children }) {
           </button>
           {!sidebarOpen && (
             <Link to="/" onClick={() => { setActivePopup(null); setOpenSubmenu(null); }} className="navbar__logo-link">
-              <img src="../src/assets/logo_SoftSys.png" className="navbar__logo-img" alt="SoftSys" />
+              <img src={logoSoftSys} className="navbar__logo-img" alt="SoftSys" />
             </Link>
           )}
           <div className="navbar__breadcrumb">

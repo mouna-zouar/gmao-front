@@ -281,14 +281,14 @@ export const SearchableSelect = ({
 // Briques de formulaire guidées : chaque champ a un libellé clair, une aide en une phrase,
 // et les choix fermés deviennent de gros boutons au lieu de listes déroulantes.
 
-// Formulaire découpé en étapes numérotées (c'est une vraie séquence : on remplit dans l'ordre)
+// Formulaire : titre puis les champs (sans texte d'introduction : seulement les attributs)
+// eslint-disable-next-line no-unused-vars
 export function BmfFormulaire({ titre, intro, onSubmit, children }) {
   return (
     <form className="bmf-form" onSubmit={onSubmit}>
-      {(titre || intro) && (
+      {titre && (
         <header className="bmf-form-entete">
-          {titre && <h3>{t(titre)}</h3>}
-          {intro && <p>{t(intro)}</p>}
+          <h3>{t(titre)}</h3>
         </header>
       )}
       <div className="bmf-etapes">{children}</div>
@@ -296,33 +296,30 @@ export function BmfFormulaire({ titre, intro, onSubmit, children }) {
   );
 }
 
+// Groupe de champs : seulement les attributs (sans numéro, question ni texte d'aide).
+// Le titre reste le nom du groupe pour les lecteurs d'écran.
+// eslint-disable-next-line no-unused-vars
 export function BmfEtape({ numero, titre, aide, children }) {
   return (
-    <fieldset className="bmf-etape">
-      <legend className="bmf-etape-titre">
-        <span className="bmf-etape-num" aria-hidden="true">{numero}</span>
-        <span>
-          {t(titre)}
-          {aide && <small>{t(aide)}</small>}
-        </span>
-      </legend>
+    <fieldset className="bmf-etape bmf-etape--simple" aria-label={titre ? t(titre) : undefined}>
       <div className="bmf-etape-champs">{children}</div>
     </fieldset>
   );
 }
 
-// Un champ : libellé au-dessus, aide en dessous, jamais de placeholder seul
+// Un champ : le libellé (étoile si obligatoire) et la saisie ; plus de texte d'aide ni de « facultatif ».
+// Restent : l'information calculée (ex. stock) et le message d'erreur.
+// eslint-disable-next-line no-unused-vars
 export function BmfChamp({ label, aide, requis = false, large = false, alerte, info, children, htmlFor }) {
   return (
     <div className={`bmf-champ ${large ? 'is-large' : ''}`}>
       <label className="bmf-label" htmlFor={htmlFor}>
         {t(label)}
-        {requis ? <span className="bmf-requis">{t('obligatoire')}</span> : <span className="bmf-optionnel">{t('facultatif')}</span>}
+        {requis && <span className="bmf-etoile" aria-hidden="true">*</span>}
       </label>
       {children}
       {info && <p className="bmf-info">{t(info)}</p>}
       {alerte && <p className="bmf-alerte" role="alert">{t(alerte)}</p>}
-      {aide && !alerte && <p className="bmf-aide">{t(aide)}</p>}
     </div>
   );
 }
@@ -346,7 +343,6 @@ export function BmfChoix({ value, onChange, options, nom, effacable = true, gran
           >
             {Icon ? <Icon size={grand ? 20 : 16} /> : actif && <Check size={15} strokeWidth={3} />}
             <span>{t(o.label)}</span>
-            {o.aide && grand && <small>{t(o.aide)}</small>}
           </button>
         );
       })}

@@ -40,12 +40,14 @@ export const STATUTS = {
     4: s('Effectué', 'ok', CheckCircle2),
     10: s('Annulé', 'neutre', XCircle),
   },
-  // Reclamation.etat
+  // Reclamation.etat — cycle IBM Maximo : Nouveau → En file → En cours → Résolue → Clôturée (ou Annulée)
   reclamation: {
-    0: s('Ouverte', 'info', CircleDot),
+    0: s('Nouveau', 'info', CircleDot),
+    5: s('En file', 'attention', Hourglass),
     1: s('En cours', 'action', Activity),
+    3: s('Résolue', 'ok', CheckCircle2),
     2: s('Clôturée', 'ok', CheckCircle2),
-
+    4: s('Annulée', 'neutre', XCircle),
   },
   // BonMaintenanceIntervenant.etat
   intervenant: {
@@ -87,17 +89,26 @@ export function statut(type, valeur) {
 
 /** Liste ordonnée des statuts d'un type (filtres, légendes) : [{ valeur, libelle, ton, Icone }] */
 export function optionsStatut(type) {
-  return Object.entries(STATUTS[type] || {}).map(([valeur, def]) => ({
+  const entrees = Object.entries(STATUTS[type] || {});
+  // Les clés numériques sont triées par JavaScript : on remet l'ordre du cycle de vie quand il diffère
+  const ordre = ORDRE[type];
+  if (ordre) entrees.sort(([a], [b]) => ordre.indexOf(Number(a)) - ordre.indexOf(Number(b)));
+  return entrees.map(([valeur, def]) => ({
     valeur: /^\d+$/.test(valeur) ? Number(valeur) : valeur,
     ...def,
   }));
 }
 
+/** Ordre d'affichage quand il n'est pas l'ordre des valeurs */
+const ORDRE = {
+  reclamation: [0, 5, 1, 3, 2, 4],
+};
+
 /** Statuts « à traiter » (ni terminés ni annulés), par type */
 export const ACTIFS = {
   bon: [1, 2, 3],
   tache: [1, 2, 3],
-  reclamation: [0, 1, 3],
+  reclamation: [0, 5, 1, 3],
   intervenant: [0, 1],
   amende: [0, 1],
 };

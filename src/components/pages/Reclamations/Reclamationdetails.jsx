@@ -27,7 +27,19 @@ import {
   Printer,
   QrCode,
   Tag,
+  UserCheck,
+  Users,
+  History,
+  PlayCircle,
+  Lock,
+  RotateCcw,
+  Inbox,
+  ClipboardCheck,
 } from 'lucide-react';
+import reclamationService from '../../../services/Reclamationservice';
+import lectureService from '../../../services/lectureService';
+import EtatLecture from '../../commun/EtatLecture';
+import { ETAT_REC, actionsPossibles, estAffectee, nomTechnicien, TYPES_HISTORIQUE } from './ReclamationActions';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import { t, tp, locale } from '../../../i18n';
 import { imprimerFiche } from '../../../utils/imprimerListe';
@@ -38,15 +50,16 @@ import { chatReclamationService } from '../../../services/chatBonService';
 import '../bonmaintenance/BmdEpure.css';
 import './ReclamationDetails.css';
 
-// États de la réclamation (identiques à Reclamations.jsx)
-const ETAT = { OUVERTE: 0, EN_COURS: 1, CLOTUREE: 2, ATTENTE: 3, REJETEE: 4 };
+// États de la réclamation (cycle IBM Maximo, identiques à Reclamations.jsx)
+const ETAT = ETAT_REC;
 
 const ETAT_EN_CLAIR = {
-  0: { texte: 'Ouverte', ton: 'alerte' },
+  0: { texte: 'Nouveau', ton: 'alerte' },
+  5: { texte: 'En file', ton: 'attention' },
   1: { texte: 'En cours', ton: 'action' },
+  3: { texte: 'Résolue', ton: 'ok' },
   2: { texte: 'Clôturée', ton: 'ok' },
-  3: { texte: 'À valider', ton: 'attention' },
-  4: { texte: 'Rejetée', ton: 'neutre' },
+  4: { texte: 'Annulée', ton: 'neutre' },
 };
 
 const NIVEAU = {
@@ -95,90 +108,153 @@ function normaliser(data) {
 }
 
 // ------------------------------------------------------------
-// Parcours : Déclarée → Validation → Réparation → Clôturée
+// Parcours (modèle Maximo) : Nouveau → En file → En cours → Résolue → Clôturée
 // ------------------------------------------------------------
 const ETAPES_DEF = [
-  { key: 'declaree', label: 'Déclarée', aide: 'Le problème a été signalé', icon: Megaphone },
-  { key: 'validation', label: 'Validation', aide: 'On vérifie que la demande est justifiée', icon: ShieldQuestion },
-  { key: 'reparation', label: 'Réparation', aide: 'Un bon de maintenance est en cours', icon: Wrench },
-  { key: 'cloturee', label: 'Clôturée', aide: 'La demande est traitée', icon: CheckCircle },
+  { key: 'nouveau', label: 'Nouveau', aide: 'Le problème a été signalé', icon: Megaphone },
+  { key: 'file', label: 'En file', aide: 'Affectée à un groupe ou un technicien', icon: UserCheck },
+  { key: 'cours', label: 'En cours', aide: 'Prise en charge, bon de maintenance créé', icon: Wrench },
+  { key: 'resolue', label: 'Résolue', aide: 'Le problème est réglé', icon: CheckCircle },
+  { key: 'cloturee', label: 'Clôturée', aide: 'La demande est fermée', icon: Lock },
 ];
 
-function construireParcours(reclamation, bons) {
-  const etat = reclamation.etat;
-  let indexActuel = 1;
-  let probleme = false;
-  if (etat === ETAT.EN_COURS) indexActuel = 2;
-  if (etat === ETAT.CLOTUREE) indexActuel = ETAPES_DEF.length;
-  if (etat === ETAT.REJETEE) { indexActuel = 1; probleme = true; }
+/** Index de l'étape en cours selon l'état ; pour une réclamation annulée, l'étape où elle s'est arrêtée. */
+function indexEtape(r) {
+  switch (r.etat ?? ETAT.NOUVEAU) {
+    case ETAT.NOUVEAU: return 0;
+    case ETAT.EN_FILE: return 1;
+    case ETAT.EN_COURS: return 2;
+    case ETAT.RESOLUE: return 3;
+    case ETAT.CLOTUREE: return 4;
+    default: // annulée : première étape non atteinte
+      if (r.dateResolution) return 4;
+      if (r.datePriseEnCharge) return 3;
+      if (r.dateAffectation || estAffectee(r)) return 2;
+      return 1;
+  }
+}
 
+function construireParcours(reclamation, bons) {
+  const annulee = reclamation.etat === ETAT.ANNULEE;
+  const indexActuel = indexEtape(reclamation);
+  const affectation = [reclamation.groupeNom, nomTechnicien(reclamation)].filter(Boolean).join(' · ');
   const details = {
-    declaree: formatDate(reclamation.date),
-    validation: etat === ETAT.REJETEE ? 'Rejetée' : (indexActuel > 1 ? 'Validée' : (etat === ETAT.ATTENTE ? 'En attente' : null)),
-    reparation: bons.length > 0 ? tp('bon', bons.length) : null,
-    cloturee: etat === ETAT.CLOTUREE ? 'Terminée' : null,
+    nouveau: formatDate(reclamation.date),
+    file: affectation || null,
+    cours: bons.length > 0 ? (bons[0].num || tp('bon', bons.length)) : (reclamation.datePriseEnCharge ? formatDate(reclamation.datePriseEnCharge) : null),
+    resolue: reclamation.dateResolution ? formatDate(reclamation.dateResolution) : null,
+    cloturee: reclamation.dateCloture ? formatDate(reclamation.dateCloture) : null,
   };
 
   return ETAPES_DEF.map((def, i) => {
     let statut = 'avenir';
     if (i < indexActuel) statut = 'fait';
-    else if (i === indexActuel) statut = probleme ? 'probleme' : 'actuel';
-    if (etat === ETAT.REJETEE && i > indexActuel) statut = 'barre';
-    return { ...def, statut, detail: details[def.key] };
+    else if (i === indexActuel) statut = annulee ? 'probleme' : (reclamation.etat === ETAT.CLOTUREE ? 'fait' : 'actuel');
+    if (annulee && i > indexActuel) statut = 'barre';
+    const detail = annulee && i === indexActuel ? 'Annulée' : details[def.key];
+    return { ...def, statut, detail };
   });
 }
 
 function prochaineAction(reclamation, bons) {
-  switch (reclamation.etat) {
-    case ETAT.OUVERTE:
-    case ETAT.ATTENTE:
+  const affectation = [reclamation.groupeNom, nomTechnicien(reclamation)].filter(Boolean).join(' · ');
+  switch (reclamation.etat ?? ETAT.NOUVEAU) {
+    case ETAT.NOUVEAU:
       return {
         ton: 'action',
-        icon: ShieldQuestion,
-        titre: reclamation.etat === ETAT.ATTENTE ? 'Cette réclamation attend votre validation' : 'Vérifiez cette réclamation',
-        texte: t("Si le problème est réel, validez-la : la réparation pourra commencer. Sinon, rejetez-la en expliquant pourquoi."),
-        bouton: { label: t("Valider la réclamation"), action: 'valider' },
-        secondaire: { label: t("Rejeter"), action: 'rejeter' },
+        icon: Inbox,
+        titre: t('Personne n’est encore affecté'),
+        texte: t('Affectez la réclamation à un groupe et/ou un technicien. Vous pouvez aussi la prendre en charge directement : le bon de maintenance sera créé.'),
+        bouton: { label: t('Affecter'), action: 'affecter' },
+        secondaire: { label: t('Prendre en charge'), action: 'prendre' },
+      };
+    case ETAT.EN_FILE:
+      return {
+        ton: 'action',
+        icon: PlayCircle,
+        titre: t('En attente de prise en charge'),
+        texte: affectation
+          ? t('Affectée à {qui}. La prise en charge passe la réclamation « En cours » et crée le bon de maintenance.', { qui: affectation })
+          : t('La prise en charge passe la réclamation « En cours » et crée le bon de maintenance.'),
+        bouton: { label: t('Prendre en charge'), action: 'prendre' },
+        secondaire: { label: t('Réaffecter'), action: 'affecter' },
       };
     case ETAT.EN_COURS:
       if (bons.length > 0) {
         return {
           ton: 'action',
           icon: Wrench,
-          titre: t("La réparation est en cours"),
-          texte: t("Suivez l’avancement dans le bon de maintenance. La réclamation se clôture quand la réparation est finie."),
+          titre: t('La réparation est en cours'),
+          texte: t('Suivez l’avancement dans le bon de maintenance. La réclamation passe « Résolue » quand le bon est effectué ; vous pouvez aussi la marquer résolue vous-même.'),
           bouton: { label: t('Suivre le bon {num}', { num: bons[0].num || '' }).trim(), action: 'ouvrirBon', bon: bons[0] },
+          secondaire: { label: t('Marquer résolue'), action: 'resoudre' },
         };
       }
       return {
         ton: 'action',
         icon: FilePlus,
-        titre: t("Lancez la réparation"),
-        texte: t("Aucun bon de maintenance n’est lié. Créez-en un, ou rattachez un bon qui existe déjà."),
-        bouton: { label: t("Créer un bon de maintenance"), action: 'creerBon' },
-        secondaire: { label: t("Associer un bon existant"), action: 'associer' },
+        titre: t('Lancez la réparation'),
+        texte: t('Aucun bon de maintenance n’est lié. Créez-en un, ou rattachez un bon qui existe déjà.'),
+        bouton: { label: t('Créer un bon de maintenance'), action: 'creerBon' },
+        secondaire: { label: t('Associer un bon existant'), action: 'associer' },
+      };
+    case ETAT.RESOLUE:
+      return {
+        ton: 'action',
+        icon: CheckCircle,
+        titre: t('Vérifiez la réparation'),
+        texte: t('Le problème est marqué comme réglé. Clôturez la réclamation, ou rouvrez-la si ce n’est pas le cas.'),
+        bouton: { label: t('Clôturer'), action: 'cloturer' },
+        secondaire: { label: t('Rouvrir'), action: 'rouvrir' },
       };
     case ETAT.CLOTUREE:
       return {
         ton: 'fini',
         icon: CheckCircle,
-        titre: t("Réclamation traitée"),
-        texte: t("Le problème a été réparé et la demande est fermée."),
-        bouton: bons.length > 0 ? { label: t("Revoir le bon de maintenance"), action: 'ouvrirBon', bon: bons[0] } : null,
+        titre: t('Réclamation traitée'),
+        texte: t('Le problème a été réparé et la demande est fermée.'),
+        bouton: bons.length > 0 ? { label: t('Revoir le bon de maintenance'), action: 'ouvrirBon', bon: bons[0] } : null,
       };
-    case ETAT.REJETEE:
+    case ETAT.ANNULEE: {
+      const motif = reclamation.motifAnnulation || reclamation.motifRejet;
       return {
         ton: 'neutre',
         icon: Ban,
-        titre: t("Réclamation rejetée"),
-        texte: reclamation.motifRejet
-          ? t('Motif : {motif}', { motif: reclamation.motifRejet })
-          : 'Aucune réparation ne sera lancée pour cette demande.',
-        bouton: { label: t("Modifier la réclamation"), action: 'modifier' },
+        titre: t('Réclamation annulée'),
+        texte: motif ? t('Motif : {motif}', { motif }) : t('Aucune réparation ne sera lancée pour cette demande.'),
+        bouton: null,
       };
+    }
     default:
       return null;
   }
+}
+
+/* Une ligne de l'historique, en clair */
+function ligneHistorique(h) {
+  const titre = TYPES_HISTORIQUE[h.type] || h.type;
+  const qui = (g, p) => [g, p].filter(Boolean).join(' · ');
+  const avant = qui(h.ancienGroupeNom, h.ancienResponsableNom);
+  const apres = qui(h.nouveauGroupeNom, h.nouveauResponsableNom);
+  let detail = null;
+  if (h.type === 'AFFECTATION' || h.type === 'REAFFECTATION' || h.type === 'DESAFFECTATION') {
+    detail = avant && apres ? `${avant} → ${apres}` : (apres ? t('À {qui}', { qui: apres }) : (avant ? t('Retirée à {qui}', { qui: avant }) : null));
+  } else if (h.ancienEtat != null && h.nouvelEtat != null && h.ancienEtat !== h.nouvelEtat) {
+    detail = `${t(ETAT_EN_CLAIR[h.ancienEtat]?.texte || '')} → ${t(ETAT_EN_CLAIR[h.nouvelEtat]?.texte || '')}`;
+  } else if (h.type === 'CREATION' && apres) {
+    detail = t('Affectée à {qui}', { qui: apres });
+  }
+  const classe = h.type === 'ANNULATION' ? 'is-annulation'
+    : ['AFFECTATION', 'REAFFECTATION', 'DESAFFECTATION'].includes(h.type) ? 'is-affectation'
+      : h.type === 'CREATION' ? '' : 'is-etat';
+  return { titre, detail, classe };
+}
+
+function dateHeure(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 const CLE_AIDE = 'rcx-aide-masquee';
@@ -200,6 +276,7 @@ export default function ReclamationDetails({
   onModifier,
   onValider,
   onRejeter,
+  onAction, // cycle de vie : (nom) => …  nom = affecter | prendre | resoudre | cloturer | rouvrir | annuler
   onCreerBon,
   onAssocier,
   onOuvrirBon,
@@ -209,7 +286,32 @@ export default function ReclamationDetails({
   const [equipement, setEquipement] = useState(null);
   const [aideMasquee, setAideMasquee] = useState(lireAideMasquee);
   const [qrOuvert, setQrOuvert] = useState(false);
+  const [historique, setHistorique] = useState(null);
+  const [lecture, setLecture] = useState(null);
   const titreRef = useRef(null);
+
+  // Ouverture : marque la réclamation « lue » si c'est son technicien (le serveur décide)
+  useEffect(() => {
+    const id = reclamation?.id;
+    setLecture(null);
+    if (id == null) return undefined;
+    let annule = false;
+    lectureService.reclamation(id)
+      .then((l) => { if (!annule) setLecture(l); })
+      .catch(() => { /* serveur pas à jour : on garde l'état reçu avec la réclamation */ });
+    return () => { annule = true; };
+  }, [reclamation?.id, reclamation?.personnelAffecteId]);
+
+  // Historique des affectations et des états : rechargé à chaque modification de la réclamation
+  useEffect(() => {
+    const id = reclamation?.id;
+    if (id == null) return undefined;
+    let annule = false;
+    reclamationService.historique(id)
+      .then((h) => { if (!annule) setHistorique(Array.isArray(h) ? h : []); })
+      .catch(() => { if (!annule) setHistorique([]); });
+    return () => { annule = true; };
+  }, [reclamation?.id, reclamation?.etat, reclamation?.dateModification, lecture?.nouvelle]);
 
   useEffect(() => {
     const id = reclamation?.lotArticleImmobilistationId;
@@ -253,15 +355,14 @@ export default function ReclamationDetails({
 
   const etatClair = ETAT_EN_CLAIR[reclamation.etat] || { texte: t("Inconnu"), ton: 'neutre' };
   const etapes = construireParcours(reclamation, bons);
-  const nbFaites = etapes.filter((e) => e.statut === 'fait').length;
   // La barre remplie va jusqu'à l'étape en cours
-  const progression = reclamation.etat === ETAT.CLOTUREE ? 1 : Math.min(nbFaites, ETAPES_DEF.length - 1) / (ETAPES_DEF.length - 1);
+  const progression = reclamation.etat === ETAT.CLOTUREE ? 1 : Math.min(indexEtape(reclamation), ETAPES_DEF.length - 1) / (ETAPES_DEF.length - 1);
+  const possibles = onAction ? actionsPossibles(reclamation) : {};
   const action = prochaineAction(reclamation, bons);
   const ActionIcon = action?.icon;
 
-  const personnel = reclamation.personnelAffecte
-    ? `${reclamation.personnelAffecte.nom ?? ''} ${reclamation.personnelAffecte.prenom ?? ''}`.trim()
-    : (reclamation.personnelAffecteNom || null);
+  const personnel = nomTechnicien(reclamation) || null;
+  const groupe = reclamation.groupeNom || null;
   const service = reclamation.serviceNom || reclamation.service?.description || null;
   const nomEquipement = equipement?.designation || null;
   const titre = nomEquipement || t('Réclamation {num}', { num: reclamation.num || `#${reclamation.id}` });
@@ -271,6 +372,12 @@ export default function ReclamationDetails({
     switch (a.action) {
       case 'valider': onValider?.(); break;
       case 'rejeter': onRejeter?.(); break;
+      case 'affecter':
+      case 'prendre':
+      case 'resoudre':
+      case 'cloturer':
+      case 'rouvrir':
+      case 'annuler': onAction?.(a.action); break;
       case 'creerBon': onCreerBon?.(); break;
       case 'associer': onAssocier?.(); break;
       case 'modifier': onModifier?.(); break;
@@ -296,7 +403,7 @@ export default function ReclamationDetails({
     },
   ];
 
-  const enAttente = reclamation.etat === ETAT.OUVERTE || reclamation.etat === ETAT.ATTENTE;
+  const avantPriseEnCharge = reclamation.etat == null || reclamation.etat === ETAT.NOUVEAU || reclamation.etat === ETAT.EN_FILE;
 
   // Impression de la fiche de la réclamation (A4 portrait)
   const imprimerReclamation = async () => {
@@ -315,14 +422,28 @@ export default function ReclamationDetails({
             { label: t('Date'), valeur: formatDate(reclamation.date) },
             { label: t('Service'), valeur: service },
             { label: t('Équipement'), valeur: nomEquipement },
-            { label: t('Personne affectée'), valeur: personnel || t('Personne pour l’instant') },
+            { label: t('Groupe'), valeur: groupe || '—' },
+            { label: t('Technicien'), valeur: personnel || t('Personne pour l’instant') },
             { label: t('Criticité'), valeur: t(criticite?.texte || 'Non définie') },
             { label: t('Urgence'), valeur: t(urgence?.texte || 'Non définie') },
             reclamation.codePanneCode && { label: t('Code panne'), valeur: `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}` },
           ],
         },
         { titre: t('Ce qui a été signalé'), texte: reclamation.description || t('Aucune description n’a été saisie.') },
-        reclamation.etat === ETAT.REJETEE && { titre: t('Motif du rejet'), texte: reclamation.motifRejet },
+        Array.isArray(reclamation.checklist) && reclamation.checklist.length > 0 && {
+          titre: t('Vérifications faites par le demandeur'),
+          colonnes: [t('Vérification'), t('Réponse')],
+          lignes: reclamation.checklist.map((c) => [c.question, t(c.reponse || '—')]),
+        },
+        reclamation.etat === ETAT.ANNULEE && { titre: t('Motif d’annulation'), texte: reclamation.motifAnnulation || reclamation.motifRejet },
+        historique?.length > 0 && {
+          titre: t('Historique'),
+          colonnes: [t('Date'), t('Action'), t('Détail'), t('Par')],
+          lignes: historique.map((h) => {
+            const l = ligneHistorique(h);
+            return [dateHeure(h.date), t(l.titre), [l.detail, h.commentaire].filter(Boolean).join(' — '), h.auteurNom || ''];
+          }),
+        },
         {
           titre: t('Bons de maintenance liés'),
           colonnes: [t('Numéro'), t('Titre'), t('État'), t('Date')],
@@ -343,7 +464,8 @@ export default function ReclamationDetails({
   const pointTon = (ton) => (ton === 'alerte' ? 'alerte' : ton === 'attention' ? 'attention' : ton === 'ok' ? 'ok' : 'neutre');
   const infos = [
     { icon: Building2, label: t("Service"), valeur: service || '—' },
-    { icon: User, label: t("Personne affectée"), valeur: personnel || t("Personne pour l’instant") },
+    { icon: Users, label: t("Groupe"), valeur: groupe || '—' },
+    { icon: User, label: t("Technicien"), valeur: personnel || t("Personne pour l’instant") },
     { icon: Calendar, label: t("Date"), valeur: formatDate(reclamation.date) },
     { icon: Package, label: t("Équipement"), valeur: nomEquipement || '—' },
     reclamation.codePanneCode && { icon: Tag, label: t("Code panne"), valeur: `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}`, large: true },
@@ -389,9 +511,19 @@ export default function ReclamationDetails({
               </div>
             )}
           </div>
+          {possibles.affecter && (
+            <button type="button" className="bmz-btn" onClick={() => onAction('affecter')}>
+              <UserCheck size={16} /> <span>{estAffectee(reclamation) ? t("Réaffecter") : t("Affecter")}</span>
+            </button>
+          )}
           <button type="button" className="bmz-btn" onClick={onModifier}>
             <Edit size={16} /> <span>{t("Modifier")}</span>
           </button>
+          {possibles.annuler && (
+            <button type="button" className="bmz-btn" onClick={() => onAction('annuler')}>
+              <XCircle size={16} /> <span>{t("Annuler la réclamation")}</span>
+            </button>
+          )}
           <button type="button" className="bmz-btn" onClick={() => setQrOuvert(true)}>
             <QrCode size={16} /> <span>{t("QR code")}</span>
           </button>
@@ -431,8 +563,8 @@ export default function ReclamationDetails({
         </ol>
         <span className="bmz-parcours-compte">
           {reclamation.etat === ETAT.CLOTUREE ? t("Terminé")
-            : reclamation.etat === ETAT.REJETEE ? t("Arrêté à la validation")
-              : t('Étape {n} sur {total}', { n: Math.min(nbFaites + 1, ETAPES_DEF.length), total: ETAPES_DEF.length })}
+            : reclamation.etat === ETAT.ANNULEE ? t("Annulée")
+              : t('Étape {n} sur {total}', { n: Math.min(indexEtape(reclamation) + 1, ETAPES_DEF.length), total: ETAPES_DEF.length })}
         </span>
       </section>
 
@@ -447,13 +579,13 @@ export default function ReclamationDetails({
               {(action.bouton || action.secondaire) && (
                 <div className="bmz-maintenant-actions">
                   {action.bouton && (
-                    <button type="button" className="bmz-btn bmz-btn--plein" onClick={() => executer(action.bouton)} disabled={validating && enAttente}>
-                      {validating && enAttente ? <Loader2 size={15} className="rcx-tourne" /> : null}
+                    <button type="button" className="bmz-btn bmz-btn--plein" onClick={() => executer(action.bouton)} disabled={validating}>
+                      {validating ? <Loader2 size={15} className="rcx-tourne" /> : null}
                       {t(action.bouton.label)}
                     </button>
                   )}
                   {action.secondaire && (
-                    <button type="button" className="bmz-btn" onClick={() => executer(action.secondaire)} disabled={validating && enAttente}>
+                    <button type="button" className="bmz-btn" onClick={() => executer(action.secondaire)} disabled={validating}>
                       {t(action.secondaire.label)}
                     </button>
                   )}
@@ -465,8 +597,27 @@ export default function ReclamationDetails({
           <section className="bmz-carte bmz-infos" aria-label={t("Informations générales de la réclamation")}>
             <h2 className="bmz-carte-titre">{t("Ce qui a été signalé")}</h2>
             <p className="rcz-description">{reclamation.description || t("Aucune description n’a été saisie.")}</p>
-            {reclamation.etat === ETAT.REJETEE && reclamation.motifRejet && (
-              <p className="rcz-rejet"><AlertTriangle size={15} /> <span><strong>{t("Motif du rejet")} :</strong> {reclamation.motifRejet}</span></p>
+            {reclamation.etat === ETAT.ANNULEE && (reclamation.motifAnnulation || reclamation.motifRejet) && (
+              <p className="rcz-rejet"><AlertTriangle size={15} /> <span><strong>{t("Motif d’annulation")} :</strong> {reclamation.motifAnnulation || reclamation.motifRejet}</span></p>
+            )}
+            <p className="rcz-lecture">
+              <EtatLecture objet={lecture ?? reclamation} actif={[0, 5, 1].includes(Number(reclamation.etat ?? 0))} />
+            </p>
+            {Array.isArray(reclamation.checklist) && reclamation.checklist.length > 0 && (
+              <details className="rcz-checklist" open>
+                <summary>
+                  <ClipboardCheck size={15} /> {t("Vérifications faites par le demandeur")}
+                  <span className="rcz-checklist-compte">{reclamation.checklist.length}</span>
+                </summary>
+                <ul>
+                  {reclamation.checklist.map((c, i) => (
+                    <li key={i}>
+                      <span>{c.question}</span>
+                      <strong className={`rcz-ck-rep rcz-ck-rep--${String(c.reponse || '').toLowerCase().replace(/\s+/g, '-')}`}>{t(c.reponse || '—')}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </details>
             )}
             <dl>
               {infos.map((i) => {
@@ -523,11 +674,11 @@ export default function ReclamationDetails({
               {bons.length === 0 ? (
                 <div className="rcz-vide">
                   <p>
-                    {enAttente
-                      ? t("Le bon de maintenance sera créé après la validation de la réclamation.")
+                    {avantPriseEnCharge
+                      ? t("Le bon de maintenance sera créé à la prise en charge de la réclamation.")
                       : t("Aucun bon de maintenance n’est lié à cette réclamation.")}
                   </p>
-                  {!enAttente && reclamation.etat !== ETAT.REJETEE && (
+                  {reclamation.etat === ETAT.EN_COURS && (
                     <div className="bmz-maintenant-actions">
                       <button type="button" className="bmz-btn bmz-btn--plein" onClick={onCreerBon}>
                         <FilePlus size={15} /> {t("Créer un bon")}
@@ -557,6 +708,34 @@ export default function ReclamationDetails({
                     );
                   })}
                 </ul>
+              )}
+            </div>
+          </section>
+
+          <section className="bmz-carte rcz-historique" aria-label={t("Historique de la réclamation")}>
+            <h2 className="bmz-carte-titre"><History size={15} /> {t("Historique")}</h2>
+            <div className="bmz-defile">
+              {historique == null ? (
+                <p className="rch-vide">{t("Chargement…")}</p>
+              ) : historique.length === 0 ? (
+                <p className="rch-vide">{t("Aucune affectation ni changement d’état enregistré pour l’instant.")}</p>
+              ) : (
+                <ol className="rch-liste">
+                  {[...historique].reverse().map((h) => {
+                    const l = ligneHistorique(h);
+                    return (
+                      <li key={h.id} className={`rch-item ${l.classe}`}>
+                        <span className="rch-point" aria-hidden="true" />
+                        <span className="rch-texte">
+                          <span className="rch-titre">{t(l.titre)}</span>
+                          {l.detail && <span className="rch-detail">{l.detail}</span>}
+                          {h.commentaire && <span className="rch-commentaire">« {h.commentaire} »</span>}
+                          <span className="rch-meta">{dateHeure(h.date)}{h.auteurNom ? ` · ${h.auteurNom}` : ''}</span>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
               )}
             </div>
           </section>

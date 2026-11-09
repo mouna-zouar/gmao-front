@@ -717,3 +717,7 @@
     color: var(--teal-400);
   }
 }
+/* Carte cliquable : ouvre la liste filtrée sur cet état */
+.reclamation-dashboard-stat-card.est-cliquable { cursor: pointer; }
+.reclamation-dashboard-stat-card.est-cliquable:hover { border-color: var(--g-brand-200); box-shadow: 0 8px 20px -12px rgba(15, 23, 42, .3); }
+.reclamation-dashboard-stat-card.est-cliquable:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(7, 148, 164, .3); }

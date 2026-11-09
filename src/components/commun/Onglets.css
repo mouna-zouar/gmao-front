@@ -1,0 +1,21 @@
+/* Barre d'onglets commune */
+.co-onglets {
+  display: flex; gap: 4px; padding: 6px; overflow-x: auto; scrollbar-width: thin;
+  background: var(--g-blanc); border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg, 16px);
+  box-shadow: var(--g-ombre-xs, 0 1px 2px rgba(15, 23, 42, 0.05));
+}
+.co-onglet {
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  height: 40px; padding: 0 14px; border: 0; border-radius: 10px; background: transparent;
+  font: 600 0.86rem var(--g-police); color: var(--g-slate-600); cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.co-onglet:hover { background: var(--g-slate-50); color: var(--g-slate-900); }
+.co-onglet:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 1px; }
+.co-onglet.est-actif { background: var(--g-brand-500); color: var(--g-blanc); box-shadow: 0 6px 16px -8px rgba(7, 148, 164, 0.6); }
+.co-onglet__n {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center;
+  background: var(--g-slate-100); color: var(--g-slate-600); font-size: 0.72rem; font-weight: 700;
+}
+.co-onglet.est-actif .co-onglet__n { background: rgba(255, 255, 255, 0.22); color: var(--g-blanc); }
+.co-onglet__n--rouge { background: var(--g-red-100); color: var(--g-red-700); }

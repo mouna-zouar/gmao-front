@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Activity, BellRing, CalendarSync, Car, CircleDollarSign, FileWarning, Gauge, LayoutDashboard, LoaderCircle,
-  MessageSquareWarning, OctagonAlert, RefreshCw, Route, Timer, Wrench,
+  Activity, CircleDollarSign, LayoutDashboard, LoaderCircle,
+  MessageSquareWarning, OctagonAlert, RefreshCw, Timer, Wrench,
 } from 'lucide-react';
 import tableauDeBordService from '../../../services/tableauDeBordService';
 import { Badge, Barres, Carte, Liste, PLEIN, Repartition, Stat, Vide } from '../../commun/TableauBord';
 import { Bulle, useLargeur } from '../Supervision/Supervision';
 import { ilYa } from '../../ui/Veille/Veille';
 import PerformanceEmployes from '../PerformanceEmployes/PerformanceEmployes';
+import AccesGmao from './AccesGmao';
 import { t, locale } from '../../../i18n';
 import '../Supervision/Supervision.css';
 import './TableauDeBord.css';
@@ -59,6 +60,9 @@ const PARTIES = {
   equipements: 'équipements', disponibilite: 'disponibilité', alertes: 'alertes machines',
   conditionnelle: 'maintenance conditionnelle', renouvellement: 'plan de renouvellement', parc: 'parc véhicules',
 };
+
+/* Parties retirées de cette page (parc de véhicules, maintenance conditionnelle) : pas de message si elles manquent */
+const MASQUEES = new Set(['parc', 'conditionnelle']);
 
 const PERIODES = [
   { cle: 7, label: '7 j' },
@@ -279,17 +283,25 @@ export default function TableauDeBord() {
   const eq = d.equipements;
   const dispo = d.disponibilite;
   const al = d.alertes;
-  const mc = d.conditionnelle;
   const rv = d.renouvellement;
-  const parc = d.parc;
   const pas = d.periode?.pas;
   const libellePeriode = t(PERIODES.find((p) => p.cle === jours)?.label || '');
 
   const arretes = eq ? (eq.parEtat?.EN_PANNE || 0) + (eq.parEtat?.EN_REPARATION || 0) : null;
-  const recOuvertes = rec ? rec.ouvertes + rec.enCours + rec.enAttenteValidation : null;
+  const recOuvertes = rec ? rec.ouvertes + (rec.enFile ?? 0) + rec.enCours + rec.enAttenteValidation : null;
   const evolRec = rec ? evolution(rec.recuesPeriode, rec.recuesPeriodePrecedente) : null;
   const evolCout = couts ? evolution(couts.total, couts.totalPrecedent) : null;
-  const indisponibles = useMemo(() => (d.indisponibles || []).map((k) => t(PARTIES[k] || k)), [d.indisponibles]);
+  const indisponibles = useMemo(() => (d.indisponibles || []).filter((k) => !MASQUEES.has(k)).map((k) => t(PARTIES[k] || k)), [d.indisponibles]);
+  /* Compteurs affichés à côté des pages dans « Accès à la GMAO » */
+  const compteurs = {
+    '/reclamations': rec && { valeur: recOuvertes, ton: rec.nonAffectees ? 'orange' : 'teal' },
+    '/bons-maintenance': bons && { valeur: bons.ouverts, ton: sla?.enRetard ? 'rouge' : 'teal' },
+    '/sla': sla && { valeur: sla.enRetard, ton: 'rouge' },
+    '/equipements': eq && { valeur: arretes, ton: eq.critiquesArretes ? 'rouge' : 'orange' },
+    '/alertes-machines': al && { valeur: al.ouvertes, ton: al.critiquesOuvertes ? 'rouge' : 'orange' },
+    '/supervision': al && { valeur: al.ouvertes, ton: al.critiquesOuvertes ? 'rouge' : 'orange' },
+    '/renouvellement': rv && { valeur: rv.remplacer, ton: 'ambre' },
+  };
   const indispo = (cle) => <Vide>{t('Données « {n} » indisponibles pour le moment.', { n: t(PARTIES[cle]) })}</Vide>;
 
   return (
@@ -298,7 +310,7 @@ export default function TableauDeBord() {
       <div className="tb-header">
         <div className="tb-header-icone"><LayoutDashboard size={24} strokeWidth={2} aria-hidden="true" /></div>
         <div className="tb-header-texte">
-          <h1>{t('Tableau de bord de la GMAO')}</h1>
+          <h1>{t('Tableau de bord de la Gestion de Maintenance Assistée par Ordinateur')}</h1>
         </div>
         <div className="tb-header-actions">
           <div className="tb-periodes" role="group" aria-label={t('Période')}>
@@ -324,17 +336,19 @@ export default function TableauDeBord() {
       {indisponibles.length > 0 && (
         <p className="tb-message tb-message--attention">{t('Certaines données n’ont pas pu être chargées : {l}.', { l: indisponibles.join(', ') })}</p>
       )}
+      <AccesGmao compteurs={compteurs} />
+
       {!donnees && !erreur && <div className="tb-chargement">{t('Chargement…')}</div>}
 
       {donnees && (
         <>
           {/* ===== Indicateurs clés ===== */}
           <div className="tb-stats">
-            <Stat featured lien="/bons-maintenance" icone={Wrench} ton="teal" valeur={nb(bons?.ouverts)} label={t('Bons ouverts')}
+            <Stat featured lien="/bons-maintenance?vue=a-traiter" icone={Wrench} ton="teal" valeur={nb(bons?.ouverts)} label={t('Bons ouverts')}
               badge={sla ? (sla.enRetard ? <Badge ton="rouge">{t('{n} en retard', { n: sla.enRetard })}</Badge> : <Badge ton="vert">{t('Aucun retard')}</Badge>) : null}
               sous={bons ? t('{a} créés · {b} clôturés', { a: nb(bons.creesPeriode), b: nb(bons.cloturesPeriode) }) : null} />
-            <Stat lien="/reclamations" icone={MessageSquareWarning} ton={rec?.nonAffectees ? 'orange' : 'bleu'} valeur={nb(recOuvertes)} label={t('Réclamations ouvertes')}
-              badge={rec?.nonAffectees ? <Badge ton="orange">{t('{n} sans technicien', { n: rec.nonAffectees })}</Badge> : null}
+            <Stat lien="/reclamations?vue=a-traiter" icone={MessageSquareWarning} ton={rec?.nonAffectees ? 'orange' : 'bleu'} valeur={nb(recOuvertes)} label={t('Réclamations ouvertes')}
+              badge={rec?.nonAffectees ? <Badge ton="orange">{t('{n} non affectée(s)', { n: rec.nonAffectees })}</Badge> : null}
               sous={rec ? t('{n} reçues', { n: nb(rec.recuesPeriode) }) + (evolRec ? ` (${evolRec})` : '') : null} />
             <Stat lien="/equipements" icone={OctagonAlert} ton={!eq ? 'neutre' : eq.critiquesArretes ? 'rouge' : arretes ? 'orange' : 'vert'}
               valeur={nb(arretes)} total={eq?.total} label={t('Équipements à l’arrêt')}
@@ -361,7 +375,7 @@ export default function TableauDeBord() {
                 <>
                   <div className="tb-sous-titre">{t('Par état')}</div>
                   <Repartition label={t('Bons ouverts par état')}
-                    items={ETATS_BON.map((e) => ({ ...e, valeur: bons.parEtat?.[e.cle] || 0, onOuvrir: () => navigate('/bons-maintenance') }))} />
+                    items={ETATS_BON.map((e) => ({ ...e, valeur: bons.parEtat?.[e.cle] || 0, onOuvrir: () => navigate(`/bons-maintenance?etat=${e.cle}`) }))} />
                   <div className="tb-sous-titre">{t('Ouverts depuis')}</div>
                   <Barres lignes={ANCIENNETE.map((a, i) => ({ cle: a.label, nom: t(a.label), valeur: bons.anciennete?.[i] || 0, ton: a.ton }))} />
                   {bons.arretsObligatoires > 0 && (
@@ -478,36 +492,8 @@ export default function TableauDeBord() {
           {/* ===== Performance des employés ===== */}
           <PerformanceEmployes jours={jours} onOuvrirChrono={() => navigate('/bons-maintenance?chrono=1')} />
 
-          {/* ===== Surveillance, anticipation, parc de véhicules ===== */}
-          <h2 className="tb-section-titre">
-            {t('Surveillance et parc de véhicules')}
-            <small>{t('Alertes des machines, maintenance conditionnelle, renouvellement et véhicules')}</small>
-          </h2>
-          <div className="tb-stats">
-            <Stat lien="/alertes-machines" icone={BellRing} ton={!al ? 'neutre' : al.critiquesOuvertes ? 'rouge' : al.ouvertes ? 'orange' : 'vert'}
-              valeur={nb(al?.ouvertes)} label={t('Alertes machines ouvertes')}
-              badge={al?.critiquesOuvertes ? <Badge ton="rouge">{t('{n} critique(s)', { n: al.critiquesOuvertes })}</Badge> : null}
-              sous={al ? t('{n} reçues', { n: nb(al.recuesPeriode) }) : null} />
-            <Stat lien="/parametres-systeme" icone={Gauge} ton={!mc || !mc.regles ? 'neutre' : mc.atteintes ? 'orange' : 'vert'}
-              valeur={nb(mc?.atteintes)} total={mc?.regles} label={t('Règles conditionnelles atteintes')}
-              sous={mc?.sansDonnees ? t('{n} sans données', { n: mc.sansDonnees }) : null} />
-            <Stat lien="/renouvellement" icone={CalendarSync} ton={!rv ? 'neutre' : rv.remplacer ? 'ambre' : 'vert'}
-              valeur={nb(rv?.remplacer)} total={rv?.parc} label={t('Équipements à remplacer')}
-              badge={rv?.planifier ? <Badge ton="ambre">{t('{n} à planifier', { n: rv.planifier })}</Badge> : null}
-              sous={rv ? t('{c} à prévoir', { c: dt(rv.cout_remplacer, true) }) : null} />
-            <Stat lien="/parc-dashboard" icone={Car} ton={!parc ? 'neutre' : parc.critiquesIndisponibles ? 'rouge' : 'vert'}
-              valeur={pct(parc?.tauxDisponibilite)} label={t('Véhicules disponibles')}
-              badge={parc?.critiquesIndisponibles ? <Badge ton="rouge">{t('{n} critique(s) indisponible(s)', { n: parc.critiquesIndisponibles })}</Badge> : null}
-              sous={parc ? t('{n} véhicules', { n: nb(parc.total) }) : null} />
-            <Stat lien="/parc-dashboard" icone={FileWarning} ton={!parc ? 'neutre' : parc.documentsExpires ? 'rouge' : parc.documentsSous30Jours ? 'ambre' : 'vert'}
-              valeur={nb(parc?.documentsExpires)} label={t('Documents véhicules expirés')}
-              sous={parc ? t('{n} expirent sous 30 j', { n: nb(parc.documentsSous30Jours) }) : null} />
-            <Stat lien="/vehicule-missions" icone={Route} ton="violet" valeur={nb(parc?.missionsEnCours)} label={t('Missions en cours')}
-              sous={parc ? t('{a} incident(s) · {b} réservation(s)', { a: nb(parc.incidentsOuverts), b: nb(parc.reservationsEnAttente) }) : null} />
-          </div>
-
-          {/* ===== Bons les plus anciens + échéances des véhicules ===== */}
-          <div className="tb-ligne-cartes tb-ligne-cartes--1-1">
+          {/* ===== Bons les plus anciens ===== */}
+          <div className="tb-ligne-cartes">
             <Carte className="tb-carte--liste" titre={t('Bons ouverts depuis le plus longtemps')} pastille={bons ? t('{n} au total', { n: nb(bons.ouverts) }) : null}>
               {bons ? (bons.plusAnciens.length ? (
                 <Liste lignes={bons.plusAnciens.map((b) => {
@@ -520,18 +506,6 @@ export default function TableauDeBord() {
                   };
                 })} />
               ) : <Vide>{t('Aucun bon ouvert.')}</Vide>) : indispo('bons')}
-            </Carte>
-            <Carte className="tb-carte--liste" titre={t('Échéances des véhicules')} pastille={t('Documents')}>
-              {parc ? (parc.alertesDocuments.length ? (
-                <Liste lignes={parc.alertesDocuments.map((a) => ({
-                  cle: `${a.vehiculeId}-${a.document}`,
-                  ton: a.joursRestants < 0 ? 'rouge' : a.joursRestants <= 7 ? 'orange' : 'ambre',
-                  badge: a.joursRestants < 0 ? t('Expiré') : t('{n} j', { n: a.joursRestants }),
-                  titre: `${a.matricule || `#${a.vehiculeId}`} · ${t(a.document)}`,
-                  sous: a.echeance ? new Date(a.echeance).toLocaleDateString(locale()) : null,
-                  onOuvrir: () => navigate('/vehicules'),
-                }))} />
-              ) : <Vide>{t('Aucune échéance proche.')}</Vide>) : indispo('parc')}
             </Carte>
           </div>
         </>

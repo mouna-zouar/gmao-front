@@ -1,0 +1,38 @@
+/* Formations des techniciens */
+.fo-intitule { color: var(--g-slate-900); font-weight: 700; }
+.fo-cellule-participants { display: inline-flex; align-items: center; gap: 8px; }
+.fo-cellule-participants b { font-size: 0.9rem; color: var(--g-slate-800); }
+
+/* Champ « Participants » de la fenêtre */
+.fo-participants { display: flex; flex-direction: column; gap: 12px; }
+.fo-participants__vide { display: flex; align-items: center; gap: 8px; margin: 0; padding: 18px; border: 1.5px dashed var(--g-slate-200); border-radius: 12px; color: var(--g-slate-500); font-weight: 600; font-size: 0.86rem; justify-content: center; }
+.fo-participants__tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.fo-participants__tous { display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 600; color: var(--g-slate-500); }
+.fo-participants__tous button { border: 1px solid var(--g-slate-200); background: var(--g-blanc); border-radius: 999px; padding: 3px 10px; font: 600 0.75rem var(--g-police); color: var(--g-slate-700); cursor: pointer; }
+.fo-participants__tous button:hover { border-color: var(--g-brand-300, #7dd3dc); color: var(--g-brand-700, #0e7490); }
+.fo-participants__liste { list-style: none; margin: 0; padding: 0; border: 1px solid var(--g-slate-200); border-radius: 12px; overflow: hidden; }
+.fo-participants__liste li { display: grid; grid-template-columns: minmax(0, 1fr) 150px 36px; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--g-slate-100); }
+.fo-participants__liste li:last-child { border-bottom: 0; }
+.fo-participants__nom { font-weight: 600; color: var(--g-slate-800); font-size: 0.88rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fo-participants__liste select { height: 34px !important; padding: 0 8px !important; font-weight: 700; font-size: 0.8rem; }
+.fo-participants__liste select[data-ton="vert"] { color: var(--g-emerald-700); }
+.fo-participants__liste select[data-ton="rouge"] { color: var(--g-red-700); }
+.fo-participants__liste select[data-ton="bleu"] { color: var(--g-blue-700); }
+.fo-participants__liste select[data-ton="gris"] { color: var(--g-slate-500); }
+.fo-participants__retirer { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: transparent; color: var(--g-slate-400); cursor: pointer; }
+.fo-participants__retirer:hover { background: var(--g-red-100); color: var(--g-red-700); }
+
+/* Avertissement sous le choix d'un technicien */
+.fo-alerte { display: flex; align-items: center; gap: 7px; margin: 6px 0 0; padding: 7px 10px; border-radius: 9px; font-size: 0.8rem; font-weight: 600; line-height: 1.35; }
+.fo-alerte svg { flex-shrink: 0; }
+.fo-alerte--ok { background: var(--g-emerald-100); color: var(--g-emerald-700); }
+.fo-alerte--non { background: var(--g-amber-50, #fffbeb); color: var(--g-amber-800, #92400e); border: 1px solid var(--g-amber-200, #fde68a); }
+
+/* Mon espace : mes formations */
+.fo-mes { overflow-x: auto; background: var(--g-blanc); border: 1px solid var(--g-slate-200); border-radius: 14px; }
+.fo-mes-table { width: 100%; border-collapse: collapse; }
+.fo-mes-table th { padding: 11px 14px; background: var(--g-slate-50); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-brand-700, #0e7490); border-bottom: 1px solid var(--g-slate-200); text-align: center; white-space: nowrap; }
+.fo-mes-table td { padding: 11px 14px; font-size: 0.86rem; color: var(--g-slate-700); border-bottom: 1px solid var(--g-slate-100); text-align: center; }
+.fo-mes-table tr:last-child td { border-bottom: 0; }
+.fo-mes-table td strong { display: block; color: var(--g-slate-900); }
+.fo-mes-table td small { display: block; margin-top: 2px; color: var(--g-slate-500); font-size: 0.76rem; }

@@ -13,6 +13,7 @@ import {
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
 import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import { t, locale } from '../../../i18n';
+import Modale from '../../commun/Modale';
 import './AssociateBonMaintenanceModal.css';
 
 const BON_ETAT = {
@@ -89,17 +90,12 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
     setJusteAjouteId(null);
   }, [isOpen, reclamation]);
 
-  // Échap pour fermer, focus sur la recherche à l'ouverture
+  // Focus sur la recherche à l'ouverture (Échap et clic à côté : gérés par la fenêtre commune)
   useEffect(() => {
     if (!isOpen) return undefined;
-    const onKey = (e) => { if (e.key === 'Escape') onClose?.(); };
-    document.addEventListener('keydown', onKey);
     const tache = setTimeout(() => rechercheRef.current?.focus(), 120);
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      clearTimeout(tache);
-    };
-  }, [isOpen, onClose]);
+    return () => clearTimeout(tache);
+  }, [isOpen]);
 
   const linkedIds = useMemo(() => new Set(linkedBons.map((b) => b.id)), [linkedBons]);
 
@@ -165,21 +161,30 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
 
   const nomReclamation = reclamation?.num || t('Réclamation #{id}', { id: reclamation?.id ?? '' });
 
-  return (
-    <div className="asb-fond" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose?.(); }}>
-      <aside className="asb-panneau" role="dialog" aria-modal="true" aria-labelledby="asb-titre">
-        {/* ===== En-tête ===== */}
-        <header className="asb-entete">
-          <span className="asb-entete-icone"><LinkIcon size={20} /></span>
-          <div className="asb-entete-textes">
-            <h2 id="asb-titre">{t("Associer un bon de maintenance")}</h2>
-            <p>{t("Pour la réclamation")} {nomReclamation}</p>
-          </div>
-          <button type="button" className="asb-fermer" onClick={onClose} aria-label={t("Fermer")}>
-            <X size={20} />
-          </button>
-        </header>
+  const pied = (
+    <>
+      <button type="button" className="cm-btn cm-btn--lien" onClick={onClose}>{t('Fermer')}</button>
+      <button type="button" className="cm-btn cm-btn--principal" onClick={handleLinkBon} disabled={!bonToLink || linking}>
+        {linking ? <Loader2 size={16} className="cf-tourne" /> : <LinkIcon size={16} />}
+        {linking
+          ? t('Association…')
+          : bonToLink ? t('Associer {num}', { num: bonToLink.num || t('le bon #{id}', { id: bonToLink.id }) }) : t('Associer')}
+      </button>
+    </>
+  );
 
+  return (
+    <Modale
+      ouvert={isOpen}
+      onFermer={onClose}
+      icone={LinkIcon}
+      titre={t('Associer un bon de maintenance')}
+      sousTitre={`${t('Pour la réclamation')} ${nomReclamation}`}
+      taille="lg"
+      className="asb-modale"
+      infoPied={bonToLink ? `${t('Bon choisi :')} ${bonToLink.num || `#${bonToLink.id}`}` : t('Aucun bon choisi')}
+      pied={pied}
+    >
         <div className="asb-corps">
           {/* ===== Déjà associés ===== */}
           <section className="asb-section" aria-labelledby="asb-lies">
@@ -243,7 +248,6 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
           {/* ===== Choisir un bon ===== */}
           <section className="asb-section" aria-labelledby="asb-choisir">
             <h3 id="asb-choisir">{t("Choisir un bon à associer")}</h3>
-            <p className="asb-aide">{t("Cliquez sur un bon pour le sélectionner, puis validez en bas.")}</p>
 
             <label className="asb-recherche">
               <Search size={18} />
@@ -329,33 +333,7 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
             )}
           </section>
         </div>
-
-        {/* ===== Pied ===== */}
-        <footer className="asb-pied">
-          <p className="asb-pied-texte">
-            {bonToLink
-              ? <>{t("Bon choisi :")} <strong>{bonToLink.num || `#${bonToLink.id}`}</strong></>
-              : t("Aucun bon choisi")}
-          </p>
-          <div className="asb-pied-boutons">
-            <button type="button" className="asb-btn asb-btn--clair" onClick={onClose}>
-              {t("Fermer")}
-            </button>
-            <button
-              type="button"
-              className="asb-btn asb-btn--principal"
-              onClick={handleLinkBon}
-              disabled={!bonToLink || linking}
-            >
-              {linking ? <Loader2 size={17} className="asb-tourne" /> : <LinkIcon size={17} />}
-              {linking
-                ? t("Association…")
-                : bonToLink ? t('Associer {num}', { num: bonToLink.num || t('le bon #{id}', { id: bonToLink.id }) }) : t("Associer")}
-            </button>
-          </div>
-        </footer>
-      </aside>
-    </div>
+    </Modale>
   );
 };
 

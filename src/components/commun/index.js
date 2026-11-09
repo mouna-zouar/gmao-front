@@ -10,8 +10,13 @@ export { default as Formulaire, Champ } from './Formulaire';
 export { useFormulaire, valeursDepuis, validerChamp, versPayload } from './useFormulaire';
 export { default as PageListe } from './PageListe';
 export { default as Pagination } from './Pagination';
+export { default as LignesChargement } from './LignesChargement';
 export { default as PastillesStats, COULEURS_TONS } from './PastillesStats';
+export { default as Onglets } from './Onglets';
 export {
   EnteteTableau, Stat, Carte, Barres, Repartition, Liste, Badge, Vide, PLEIN,
 } from './TableauBord';
 export { default as ConfirmModal } from '../ui/modals/ConfirmModal';
+export {
+  BoutonMenuColonne, BoutonTri, ChampFiltre, LigneFiltres, useFiltresColonnes, BoutonFiltresColonnes, AnnonceCopie, filtrerParColonnes, choixColonnes, copierTexte, texteCellule,
+} from './TableauColonnes';

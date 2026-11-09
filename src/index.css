@@ -1,3 +1,7 @@
 @import "tailwindcss";
 /* Couleurs et polices de l'application : source unique */
 @import "./styles/tokens.css";
+/* Tableaux de liste : rendu commun à toutes les listes */
+@import "./styles/listes.css";
+/* Finitions : clavier, chargement, téléphone, mouvements réduits */
+@import "./styles/finitions.css";

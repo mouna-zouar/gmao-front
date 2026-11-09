@@ -2,8 +2,12 @@ import api from './api';
 
 /* Codes panne (catalogue) et suggestion IA pendant la saisie d'une réclamation. */
 const codePanneService = {
-  async liste(tous = false) {
-    const { data } = await api.get('/codes-panne', { params: tous ? { tous: true } : {} });
+  /** tous : y compris désactivés ; lotArticleImmobilistationId : seulement les codes de la famille de cet équipement */
+  async liste(tous = false, lotArticleImmobilistationId = null) {
+    const params = {};
+    if (tous) params.tous = true;
+    if (lotArticleImmobilistationId) params.lotArticleImmobilistationId = lotArticleImmobilistationId;
+    const { data } = await api.get('/codes-panne', { params });
     return Array.isArray(data) ? data : [];
   },
   async enregistrer(code) {

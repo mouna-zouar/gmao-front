@@ -1,0 +1,96 @@
+/* ══════════════════════════════════════════════════════════════════════
+ * TABLEAUX DE LISTE (design, lot 2) — un seul rendu pour toutes les listes.
+ * Concerne : listes construites avec PageListe (.cl-table) et les listes
+ * Réclamations, Bons de maintenance, Véhicules, Demandes de pièces, Référentiels.
+ * Les couleurs restent celles de l'application (titres de colonnes turquoise).
+ * « .app-shell » devant : ces règles passent avant celles de chaque page.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Cadre ── */
+.app-shell :is(.cl-table-cadre, .reclamations-table-wrap, .bons-table-wrap, .vehicules-table-wrap) {
+  border: 1px solid var(--g-slate-200);
+  border-radius: var(--g-rayon-lg);
+  box-shadow: var(--g-ombre-xs);
+  background: var(--g-blanc);
+}
+.app-shell :is(.reclamations-table-wrap, .bons-table-wrap, .vehicules-table-wrap):hover { box-shadow: var(--g-ombre-xs); }
+
+/* ── En-tête de colonnes ── */
+.app-shell :is(.cl-table, .reclamations-table, .bons-table, .vehicules-table, .demandes-table, .referentiel-table) th {
+  height: 42px;
+  padding: 0 16px;
+  background: var(--g-slate-50);
+  border-top: 0;
+  border-bottom: 1px solid var(--g-slate-200);
+  font-size: 11.5px;
+  font-weight: var(--g-graisse-forte);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  vertical-align: middle;
+  transition: background var(--g-duree-rapide) var(--g-courbe), color var(--g-duree-rapide) var(--g-courbe);
+}
+/* Colonne triée : fond turquoise très léger */
+.app-shell :is(.reclamations-table, .bons-table, .vehicules-table) th.is-sorted,
+.app-shell .cl-table th.est-trie { background: var(--g-brand-50); }
+.app-shell :is(.reclamations-table, .bons-table, .vehicules-table, .cl-table) th:is(.is-sorted, .est-trie, [class*='sortable'], .est-triable):hover { color: var(--g-brand-800); }
+
+/* ── Cellules ── */
+.app-shell :is(.cl-table, .reclamations-table, .bons-table, .vehicules-table, .demandes-table, .referentiel-table) td {
+  height: 52px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--g-slate-100);
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--g-slate-700);
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--g-duree-rapide) var(--g-courbe);
+}
+.app-shell :is(.cl-table, .reclamations-table, .bons-table, .vehicules-table, .demandes-table, .referentiel-table) tbody tr:last-child td { border-bottom: 0; }
+
+/* Numéro (REC-000008, BM-…) : sur une seule ligne, bien lisible */
+.app-shell td.liste-num {
+  white-space: nowrap;
+  font-weight: var(--g-graisse-forte);
+  color: var(--g-slate-900);
+}
+/* Pastilles (état, criticité, lu…) : jamais coupées en deux lignes */
+.app-shell :is(.reclamations-table, .bons-table, .vehicules-table, .cl-table) td :is(.badge-statut, [class*='badge'], .etat-lecture) { white-space: nowrap; }
+
+/* ── Lignes : survol, sélection, cochée ── */
+.app-shell :is(.reclamations-row, .bons-row, .vehicules-row):hover td,
+.app-shell .cl-table tbody tr:hover td { background: var(--g-slate-50); }
+.app-shell :is(.reclamations-row, .bons-row, .vehicules-row).selected td,
+.app-shell .cl-table tbody tr.est-selectionnee td { background: var(--g-brand-50) !important; }
+/* Trait turquoise à gauche de la ligne sélectionnée (sur la 1re cellule : visible avec border-collapse) */
+.app-shell :is(.reclamations-row, .bons-row, .vehicules-row).selected { box-shadow: none !important; }
+.app-shell :is(.reclamations-row, .bons-row, .vehicules-row).selected td:first-child,
+.app-shell .cl-table tbody tr.est-selectionnee td:first-child { box-shadow: inset 3px 0 0 var(--g-brand-500); }
+.app-shell :is(.reclamations-row, .bons-row).is-coche:not(.selected) td { background: color-mix(in srgb, var(--g-brand-50) 55%, transparent); }
+.app-shell .cl-table tbody tr:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--g-brand-400) !important; }
+
+/* Cases à cocher à la couleur de l'application */
+.app-shell :is(.reclamations-table, .bons-table, .cl-table) input[type='checkbox'] { accent-color: var(--g-brand-600); width: 16px; height: 16px; cursor: pointer; }
+
+/* ── Liste vide / chargement ── */
+.app-shell :is(.reclamations-table-empty, .bons-table-empty, .vehicules-table-empty) {
+  height: auto;
+  padding: 56px 20px !important;
+  background: var(--g-blanc) !important;
+  color: var(--g-slate-500);
+  font-size: var(--g-texte-sm);
+  text-align: center;
+}
+
+/* ── Texte centré dans les tableaux (titres et cellules) ── */
+.app-shell :is(.cl-table, .reclamations-table, .bons-table, .vehicules-table, .demandes-table, .referentiel-table) :is(th, td) {
+  text-align: center;
+}
+.app-shell :is(.cl-table, .reclamations-table, .bons-table, .vehicules-table, .demandes-table, .referentiel-table) th :is(.cl-th, [class$='-th-inner']) {
+  justify-content: center;
+}
+.app-shell :is(.cl-table, .reclamations-table, .bons-table, .vehicules-table, .demandes-table, .referentiel-table) td > :is(div, span) {
+  justify-content: center;
+  margin-inline: auto;
+}

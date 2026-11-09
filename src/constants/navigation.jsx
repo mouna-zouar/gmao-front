@@ -67,6 +67,7 @@ const ALL_ITEMS = [
         children: [
             { label: 'Planning des bons', path: '/planning-bon-maintenance', icon: petit(M.planningBons), motsCles: 'calendrier' },
             { label: 'Planning technicien', path: '/planning-technicien', icon: petit(M.planningTechnicien) },
+            { label: 'Formations des techniciens', path: '/formations', icon: petit(M.formations), motsCles: 'formation habilitation compétence stage certificat' },
         ],
     },
 

@@ -1,0 +1,56 @@
+/* Fenêtres du cycle de vie d'une réclamation (Affecter, Annuler, Rouvrir, Résoudre) */
+.rec-fenetre.confirm-modal-container { max-width: 470px; }
+.rec-fenetre .confirm-modal-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--slate-200, #e2e8f0);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  background: var(--slate-50, #f8fafc);
+  color: var(--slate-900, #0f172a);
+  box-sizing: border-box;
+}
+.rec-fenetre .confirm-modal-input:focus {
+  border-color: var(--teal-600, #0794a4);
+  background: var(--g-blanc, #fff);
+  box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
+}
+.rec-fenetre .confirm-btn { display: inline-flex; align-items: center; gap: 6px; }
+.rec-affecter.confirm-modal-container { max-width: 520px; overflow: visible; }
+.rec-affecter .confirm-modal-content { overflow: visible; }
+.rec-affecter-champs { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; text-align: start; }
+.rec-affecter-champs label { font-size: 0.8rem; font-weight: 700; color: var(--slate-600, #475569); margin-top: 6px; }
+.rec-affecter-erreur { margin: 10px 0 0; padding: 8px 10px; border-radius: 8px; background: #fef2f2; color: #b91c1c; font-size: 0.84rem; font-weight: 600; text-align: start; }
+
+.rch-liste { margin: 0; padding: 0; list-style: none; position: relative; }
+.rch-liste::before { content: ''; position: absolute; inset-inline-start: 6px; top: 6px; bottom: 6px; width: 2px; background: var(--z-trait, #e2e8f0); }
+.rch-item { position: relative; display: flex; gap: 10px; padding: 6px 0 10px; }
+.rch-point { position: relative; z-index: 1; width: 14px; height: 14px; flex-shrink: 0; margin-top: 3px; border-radius: 50%; background: #fff; border: 2px solid var(--z-pale, #94a3b8); }
+.rch-item.is-affectation .rch-point { border-color: #0794a4; }
+.rch-item.is-etat .rch-point { border-color: #0794a4; background: #0794a4; }
+.rch-item.is-annulation .rch-point { border-color: #94a3b8; background: #94a3b8; }
+.rch-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.rch-titre { font-size: 13.5px; font-weight: 700; color: var(--z-encre, #0f172a); }
+.rch-detail { font-size: 12.5px; color: var(--z-doux, #475569); overflow-wrap: anywhere; }
+.rch-commentaire { font-size: 12.5px; color: var(--z-doux, #475569); font-style: italic; overflow-wrap: anywhere; }
+.rch-meta { font-size: 11.5px; color: var(--z-pale, #94a3b8); }
+.rch-vide { margin: 0; font-size: 13px; color: var(--z-doux, #64748b); }
+.rcz-historique { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.rcz-historique .bmz-carte-titre { display: flex; align-items: center; gap: 6px; }
+.bmz-col:has(.rcz-historique) .rcz-bons { flex: 0 1 auto; max-height: 45%; }
+
+/* Vérifications faites par le demandeur (page de détail) */
+.rcz-checklist { margin: 0 0 12px; border: 1px solid var(--z-trait, #e2e8f0); border-radius: 10px; }
+.rcz-checklist summary { display: flex; align-items: center; gap: 6px; padding: 8px 10px; cursor: pointer; font-size: 13px; font-weight: 700; color: var(--z-encre, #0f172a); list-style: none; }
+.rcz-checklist summary::-webkit-details-marker { display: none; }
+.rcz-checklist-compte { margin-inline-start: auto; padding: 1px 8px; border-radius: 999px; background: #f1f5f9; font-size: 12px; color: #475569; }
+.rcz-checklist ul { margin: 0; padding: 0 10px 8px; list-style: none; }
+.rcz-checklist li { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 6px 0; border-top: 1px solid var(--z-trait, #f1f5f9); font-size: 12.5px; color: var(--z-doux, #475569); }
+.rcz-ck-rep { flex-shrink: 0; font-size: 12px; }
+.rcz-ck-rep--oui { color: #157553; }
+.rcz-ck-rep--non { color: #b8323a; }
+.rcz-ck-rep--sans-objet { color: #94a3b8; }
+.rcz-lecture { margin: 0 0 12px; }

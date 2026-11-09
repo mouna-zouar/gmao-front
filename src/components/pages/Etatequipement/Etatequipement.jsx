@@ -10,6 +10,7 @@ import risqueService from '../../../services/Risqueservice';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../constants/Criticite';
 import EquipementMaintenancePanel from './Equipementmaintenancepanel';
 import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
+import ListeEquipements from './ListeEquipements';
 import { t, tp, locale, tPdf, localePdf } from '../../../i18n';
 import '../TableauDeBord/TableauDeBord.css';
 import './Etatequipement.css';
@@ -158,7 +159,7 @@ const ETAT_ICONS = {
 };
 
 /* ---------- Export PDF ---------- */
-function exporterHistoriquePDF(equipement, historique) {
+export function exporterHistoriquePDF(equipement, historique) {
   const doc = new jsPDF();
   const marginX = 14;
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -234,7 +235,12 @@ function exporterHistoriquePDF(equipement, historique) {
 }
 
 /* ---------- Composant ---------- */
+/* Page « Équipements » : tableau commun (PageListe). La fenêtre des bons garde l'ancienne vue compacte. */
 export default function EtatEquipement({ isModal = false }) {
+  return isModal ? <EtatEquipementCompact isModal /> : <ListeEquipements />;
+}
+
+function EtatEquipementCompact({ isModal = false }) {
   const navigate = useNavigate();
   const [etats, setEtats] = useState([]);
   const [loading, setLoading] = useState(false);
