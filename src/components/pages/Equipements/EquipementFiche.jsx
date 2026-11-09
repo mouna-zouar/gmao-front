@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
-  Activity, AlertTriangle, ArrowLeft, Boxes, Cable, CalendarClock, ChevronRight, Coins, Download, FileText, Gauge, History,
+  Activity, AlertTriangle, ArrowLeft, Boxes, CalendarClock, ChevronRight, Coins, Download, FileText, History,
   Image as IconeImage, Info, Loader2, LogIn, Network, Paperclip, Printer, QrCode, ShieldCheck, Sparkles, Timer, Trash2, Upload, Wrench, X,
 } from 'lucide-react';
 import equipementService from '../../../services/equipementService';
@@ -351,9 +351,7 @@ export default function EquipementFiche() {
     { cle: 'preventif', label: t('Préventif'), icone: CalendarClock, n: preventif.length, ton: preventifEnRetard ? 'rouge' : undefined },
     ...(connecte ? [
       { cle: 'etats', label: t('États'), icone: History },
-      { cle: 'connexion', label: t('Réseau'), icone: Network },
-      { cle: 'agent', label: t('Agent'), icone: Cable },
-      { cle: 'conditionnelle', label: t('Conditionnelle'), icone: Gauge },
+      { cle: 'supervision', label: t('Réseau, agent et conditionnelle'), icone: Network },
     ] : []),
     { cle: 'documents', label: t('Documents'), icone: Paperclip, n: documents.length },
   ];
@@ -596,9 +594,13 @@ export default function EquipementFiche() {
         )}
 
         {/* ---- Connexion réseau, agent et maintenance conditionnelle : réservés aux utilisateurs connectés ---- */}
-        {ongletActif === 'connexion' && <EquipementConnexion equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />}
-        {ongletActif === 'agent' && <EquipementLiaisonAgent equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />}
-        {ongletActif === 'conditionnelle' && <EquipementMaintenanceConditionnelle equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />}
+        {ongletActif === 'supervision' && (
+          <div className="eqf-groupe">
+            <EquipementConnexion equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />
+            <EquipementLiaisonAgent equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />
+            <EquipementMaintenanceConditionnelle equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />
+          </div>
+        )}
 
         {ongletActif === 'documents' && <Documents equipementId={identite.id} documents={documents} onChange={charger} />}
       </div>

@@ -44,6 +44,7 @@ import bonMaintenanceControleEquipementService from '../../../services/bonMainte
 import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenanceRemiseEnServiceService';
 import personnelService from '../../../services/Personnelservice';
 import AlerteFormation from '../Formations/AlerteFormation';
+import AssistantIntervenants from '../Formations/AssistantIntervenants';
 import authService from '../../../services/Authservice';
 import './BmdRemise.css';
 import { obtenirArticles, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
@@ -534,7 +535,7 @@ const emptyTacheForm = {
   dateDebut: '', dateFin: '',
   dateDebutIntervention: '', dateFinIntervention: '',
   intervenantId: '', sousTraitantId: '',
-  prestataireArticlesId: '', qte: '',
+  besoinArticle: 'false', prestataireArticlesId: '', qte: '',
 };
 
 export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
@@ -638,6 +639,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
       dateFinIntervention: tache.dateFinIntervention ? tache.dateFinIntervention.slice(0, 16) : '',
       intervenantId: tache.intervenantId ?? '',
       sousTraitantId: tache.sousTraitantId ?? '',
+      besoinArticle: tache.prestataireArticlesId != null ? 'true' : 'false',
       prestataireArticlesId: tache.prestataireArticlesId ?? '',
       qte: tache.qte ?? '',
     });
@@ -649,7 +651,9 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.designation.trim()) return;
-    warnIfQuantiteInvalide(articles, form.prestataireArticlesId, form.qte, 'quantité');
+    // Article et quantité seulement si la tâche a besoin d'un article
+    const avecArticle = !sansDepot && form.besoinArticle === 'true';
+    if (avecArticle) warnIfQuantiteInvalide(articles, form.prestataireArticlesId, form.qte, 'quantité');
 
     setSaving(true);
     try {
@@ -665,8 +669,8 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
         dateFinIntervention: form.dateFinIntervention || null,
         intervenantId: form.intervenantId === '' ? null : Number(form.intervenantId),
         sousTraitantId: form.sousTraitantId === '' ? null : Number(form.sousTraitantId),
-        prestataireArticlesId: form.prestataireArticlesId === '' ? null : Number(form.prestataireArticlesId),
-        qte: form.qte === '' ? null : Number(form.qte),
+        prestataireArticlesId: !avecArticle || form.prestataireArticlesId === '' ? null : Number(form.prestataireArticlesId),
+        qte: !avecArticle || form.qte === '' ? null : Number(form.qte),
       };
 
       const idModifie = editingId;
@@ -786,7 +790,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
                 <TexteOuVide vide="Intervention pas encore démarrée." />
               ),
             },
-            !sansDepot && {
+            !sansDepot && tache.prestataireArticlesId != null && {
               key: 'article',
               label: t("Article"),
               icon: Package,
@@ -957,7 +961,18 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
               />
             </BmfChamp>
 
-            {!sansDepot && (<>
+            {!sansDepot && (
+            <BmfChamp label={t("Besoin d'un article ?")} large>
+              <BmfChoix
+                nom={t("Besoin d'un article ?")}
+                effacable={false}
+                value={form.besoinArticle}
+                onChange={(v) => setForm({ ...form, besoinArticle: v, ...(v === 'true' ? {} : { prestataireArticlesId: '', qte: '' }) })}
+                options={[{ value: 'false', label: t('Non'), ton: 'calme' }, { value: 'true', label: t('Oui'), ton: 'brand' }]}
+              />
+            </BmfChamp>
+            )}
+            {!sansDepot && form.besoinArticle === 'true' && (<>
             <BmfChamp label={t("Article utilisé")} htmlFor="tache-article">
               <SearchableSelect
                 id="tache-article"
@@ -1371,6 +1386,12 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
           onSubmit={handleAdd}
         >
           <BmfEtape numero={1} titre={t("Qui répare ?")} aide={t("Choisissez un technicien de l'équipe, ou un sous-traitant")}>
+            {!editingId && (
+              <BmfChamp label={t("Assistant")} large>
+                <AssistantIntervenants bonMaintenanceId={bonMaintenanceId} choisi={form.personnelId}
+                  onChoisir={(id) => setForm((f) => ({ ...f, personnelId: String(id) }))} />
+              </BmfChamp>
+            )}
             <BmfChamp label={t("Technicien de l'équipe")} htmlFor="int-tech">
               <SearchableSelect
                 id="int-tech"

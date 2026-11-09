@@ -441,7 +441,8 @@ const GROUPES_RUBRIQUES = [
     aide: 'Avant de rendre l’équipement',
     rubriques: [
       { key: 'controle', label: 'Contrôle', aide: 'Les tests de bon fonctionnement', icon: ShieldCheck },
-      { key: 'remiseEnService', label: 'Remise en service', aide: 'Le feu vert pour le service', icon: Power },
+      // Retirée du dossier : la remise en service se fait depuis la liste des réclamations (masque: true garde le titre du tiroir)
+      { key: 'remiseEnService', label: 'Remise en service', aide: 'Le feu vert pour le service', icon: Power, masque: true },
     ],
   },
   {
@@ -1484,7 +1485,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
                 <div key={groupe.titre} className="bmz-groupe-plat">
                   <h3 title={t(groupe.aide)}>{t(groupe.titre)}</h3>
                   <ul>
-                    {groupe.rubriques.map((r) => {
+                    {groupe.rubriques.filter((r) => !r.masque).map((r) => {
                       const Icon = r.icon;
                       const n = compteurs[r.key];
                       return (

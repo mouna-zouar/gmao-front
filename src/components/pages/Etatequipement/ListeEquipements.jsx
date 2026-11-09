@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, CircleCheck, CirclePause, CircleX, Gauge, LoaderCircle, Network, Printer, QrCode, RefreshCw, Settings, Wrench, X,
+  ArrowRight, CircleCheck, CirclePause, CircleX, Gauge, LoaderCircle, Printer, QrCode, RefreshCw, Settings, Wrench, X,
 } from 'lucide-react';
 import { PageListe, Badge, Modale } from '../../commun';
 import equipementService from '../../../services/equipementService';
@@ -196,20 +196,6 @@ export default function ListeEquipements() {
     {
       cle: 'famille', label: 'Famille', filtre: 'liste', valeur: (e) => e.familleNom || '',
       rendu: (e) => (e.familleNom ? <Badge ton="gris">{e.familleNom}</Badge> : <span className="cl-tiret">—</span>),
-    },
-    {
-      cle: 'ip', label: 'Adresse IP', valeur: (e) => connexions[e.lotArticleImmobilistationId]?.adresseIp || '',
-      rendu: (e) => {
-        const c = connexions[e.lotArticleImmobilistationId];
-        if (!c) return <span className="cl-tiret">—</span>;
-        const etat = c.horsLigneDepuis ? 'hors_ligne' : (c.dernierResultat || 'inconnu').toLowerCase();
-        const libelle = c.horsLigneDepuis ? t('Hors ligne') : c.dernierResultat === 'EN_LIGNE' ? t('En ligne') : c.dernierResultat === 'HORS_LIGNE' ? t('Hors ligne') : t('Jamais testé');
-        return (
-          <span className={`leq-ip leq-ip--${etat}`} title={libelle}>
-            <Network size={12} aria-hidden="true" />{c.adresseIp}{c.port ? `:${c.port}` : ''}<span className="leq-ip__point" aria-label={libelle} />
-          </span>
-        );
-      },
     },
     {
       cle: 'dispo', label: 'Disponibilité', valeur: (e) => dispos[e.lotArticleImmobilistationId]?.tauxDisponibilitePct ?? null,

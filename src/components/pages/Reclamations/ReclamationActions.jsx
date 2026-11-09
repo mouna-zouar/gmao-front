@@ -6,6 +6,7 @@ import { Loader2, UserCheck, XCircle, RotateCcw, CheckCircle2 } from 'lucide-rea
 import reclamationService from '../../../services/Reclamationservice';
 import personnelService from '../../../services/personnelService';
 import AlerteFormation from '../Formations/AlerteFormation';
+import AssistantIntervenants from '../Formations/AssistantIntervenants';
 import serviceService from '../../../services/Serviceservice';
 import authService from '../../../services/Authservice';
 import SearchableSelect from '../../commun/ListeRecherche';
@@ -122,6 +123,8 @@ function FenetreAffecter({ reclamation, onClose, onValider }) {
                 getLabel={(s) => s.description || s.code || `Service #${s.id}`}
                 getOptionHint={(s) => (s.code && s.description ? `Code : ${s.code}` : null)}
               />
+              <AssistantIntervenants lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} choisi={technicienId}
+                onChoisir={(id) => setTechnicienId(String(id))} />
               <label htmlFor="rec-technicien">{t('Technicien')}</label>
               <SearchableSelect
                 id="rec-technicien"

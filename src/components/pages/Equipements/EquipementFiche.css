@@ -49,3 +49,5 @@
 .eqf-page .eq-bloc-entete h2 { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 1rem; font-weight: 700; color: var(--g-slate-900); }
 .eqf-page .eq-bloc-entete h2 svg { color: var(--g-brand-500); }
 .eqf-page .tb-stat { min-width: 0; }
+.eqf-groupe { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.eqf-groupe > .eq-bloc { margin: 0; }

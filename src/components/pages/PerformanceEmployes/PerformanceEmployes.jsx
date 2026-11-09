@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ClipboardCheck, Timer, Users, Wrench } from 'lucide-react';
 import performanceEmployesService from '../../../services/performanceEmployesService';
-import { Carte, Stat, Vide } from '../../commun/TableauBord';
+import { Badge, Carte, Stat, Vide } from '../../commun/TableauBord';
 import { formatTemps } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
@@ -23,6 +23,13 @@ const TRIS = [
 ];
 const NB_VISIBLES = 10;
 
+/* Filtre sur toutes les tâches associées à l'employé (sans limite de période) */
+const FILTRES_TACHES = [
+  { cle: 'tous', label: 'Tous', garder: () => true },
+  { cle: 'finies', label: 'Toutes ses tâches finies', garder: (e) => e.nbTachesAssociees > 0 && !e.nbTachesNonFinies },
+  { cle: 'nonFinies', label: 'Tâches non finies', garder: (e) => e.nbTachesNonFinies > 0 },
+];
+
 function BarreDuree({ secondes, max, ton }) {
   return (
     <span className="pfe-temps-barre">
@@ -37,6 +44,7 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
   const [erreur, setErreur] = useState(null);
   const [tri, setTri] = useState('dureeInterventionsSecondes');
   const [tout, setTout] = useState(false);
+  const [filtreTaches, setFiltreTaches] = useState('tous');
 
   useEffect(() => {
     let annule = false;
@@ -48,10 +56,12 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
   }, [jours]);
 
   const employes = useMemo(() => {
-    const liste = [...(donnees?.employes ?? [])];
+    const garder = FILTRES_TACHES.find((f) => f.cle === filtreTaches)?.garder ?? (() => true);
+    const liste = (donnees?.employes ?? []).filter(garder);
     liste.sort((a, b) => (b[tri] ?? 0) - (a[tri] ?? 0) || b.dureeInterventionsSecondes - a.dureeInterventionsSecondes);
     return liste;
-  }, [donnees, tri]);
+  }, [donnees, tri, filtreTaches]);
+  const nbFiltre = (f) => (donnees?.employes ?? []).filter(f.garder).length;
   const tot = donnees?.totaux;
   const maxInterv = Math.max(0, ...employes.map((e) => e.dureeInterventionsSecondes));
   const maxTaches = Math.max(0, ...employes.map((e) => e.dureeTachesSecondes));
@@ -81,8 +91,18 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
 
       <Carte className="tb-carte--liste pfe-carte-tableau" titre={t('Classement des employés')}
         pastille={donnees ? t('{n} employé(s)', { n: employes.length }) : null}>
+        {donnees && (donnees.employes ?? []).length > 0 && (
+          <div className="pfe-tri" role="group" aria-label={t('Tâches')}>
+            <span>{t('Tâches')}</span>
+            {FILTRES_TACHES.map((f) => (
+              <button key={f.cle} type="button" aria-pressed={filtreTaches === f.cle} onClick={() => { setFiltreTaches(f.cle); setTout(false); }}>
+                {t(f.label)} ({nbFiltre(f)})
+              </button>
+            ))}
+          </div>
+        )}
         {!donnees && !erreur ? <Vide>{t('Chargement…')}</Vide> : employes.length === 0 ? (
-          <Vide>{t('Aucune intervention ni tâche réalisée sur la période.')}</Vide>
+          <Vide>{filtreTaches === 'tous' ? t('Aucune intervention ni tâche réalisée sur la période.') : t('Aucun employé ne correspond à ce filtre.')}</Vide>
         ) : (
           <>
             <div className="pfe-tri" role="group" aria-label={t('Trier par')}>
@@ -99,6 +119,7 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
                     <th rowSpan={2}>{t('Employé')}</th>
                     <th colSpan={3} className="pfe-groupe pfe-groupe--teal">{t('Interventions réalisées')}</th>
                     <th colSpan={3} className="pfe-groupe pfe-groupe--violet">{t('Tâches réalisées')}</th>
+                    <th rowSpan={2} className="tb-num">{t('Non finies')}</th>
                   </tr>
                   <tr>
                     <th className="tb-num">{t('Nombre')}</th>
@@ -120,6 +141,10 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
                       <td className="tb-num">{nb(e.nbTaches)}</td>
                       <td><BarreDuree secondes={e.dureeTachesSecondes} max={maxTaches} ton="violet" /></td>
                       <td className="tb-num">{duree(e.dureeMoyenneTacheSecondes)}</td>
+                      <td className="tb-num" title={t('{n} tâche(s) associée(s) au total', { n: e.nbTachesAssociees ?? 0 })}>
+                        {e.nbTachesNonFinies > 0 ? <Badge ton="ambre">{nb(e.nbTachesNonFinies)}</Badge>
+                          : e.nbTachesAssociees > 0 ? <Badge ton="vert">{t('Toutes finies')}</Badge> : <span className="cl-tiret">—</span>}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
