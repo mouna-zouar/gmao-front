@@ -5,7 +5,7 @@ import { t } from '../../../i18n';
 import './Formations.css';
 
 /*
- * Sous le choix d'un technicien : est-il formé sur la famille de l'équipement ?
+ * Sous le choix d'un technicien : est-il formé sur cet équipement (ou sa famille) ?
  * Équipement donné directement (lotArticleImmobilistationId) ou par le bon (bonMaintenanceId).
  * Rien n'est affiché si l'équipement n'a pas de famille connue ou si la vérification échoue.
  */
@@ -24,18 +24,19 @@ export default function AlerteFormation({ personnelId, bonMaintenanceId, lotArti
   }, [cle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!res || res.forme == null) return null;
+  const cible = [res.equipementNom, res.familleNom].filter(Boolean).join(' · ') || '—';
   if (res.forme) {
     return (
       <p className="fo-alerte fo-alerte--ok" role="status">
         <GraduationCap size={15} aria-hidden="true" />
-        {t('Formé sur « {famille} »', { famille: res.familleNom || '—' })}
+        {t('Formé sur « {famille} »', { famille: cible })}
       </p>
     );
   }
   return (
     <p className="fo-alerte fo-alerte--non" role="alert">
       <TriangleAlert size={15} aria-hidden="true" />
-      {t('Aucune formation réussie sur « {famille} »', { famille: res.familleNom || '—' })}
+      {t('Aucune formation réussie sur « {famille} »', { famille: cible })}
     </p>
   );
 }

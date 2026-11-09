@@ -28,11 +28,12 @@ import {
   CheckCircle2,
   Lock,
   RotateCcw,
+  Power,
 } from 'lucide-react';
 import { useActionsReclamation, actionsPossibles, estAffectee, nomGroupe, nomTechnicien } from './ReclamationActions';
 import { ICONES_MODULES } from '../../../constants/modules';
 import reclamationService from '../../../services/Reclamationservice';
-import ReclamationModal from '../../ui/modals/ReclamationModal';
+import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import ReclamationDetails from './ReclamationDetails';
 // ⚠️ Adapte ce chemin au dossier où se trouve BonMaintenanceDetails.jsx
 import BonMaintenanceDetails from '../BonMaintenance/BonMaintenanceDetails';
@@ -43,6 +44,8 @@ import reclamationBonMaintenanceService from '../../../services/Reclamationbonma
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
+import { Modale } from '../../commun';
+import { RemiseEnServiceTab } from '../bonmaintenance/Bmdsousonglets';
 import { t, tp, locale } from '../../../i18n';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import { STATUTS, TONS, optionsStatut } from '../../../constants/statuts';
@@ -178,6 +181,21 @@ export default function Reclamations() {
   const pageSize = 10;
 
   const [selectedReclamation, setSelectedReclamation] = useState(null);
+  // Remise en service du bon lié à la réclamation (fenêtre)
+  const [remiseReclamation, setRemiseReclamation] = useState(null);
+  // Bon lié à la réclamation sélectionnée (la liste ne le donne pas) : { reclamationId, bon }
+  const [bonLie, setBonLie] = useState(null);
+  useEffect(() => {
+    const id = selectedReclamation?.id;
+    if (!id) { setBonLie(null); return undefined; }
+    if (selectedReclamation.bonMaintenanceId) { setBonLie({ reclamationId: id, bon: { id: selectedReclamation.bonMaintenanceId } }); return undefined; }
+    let annule = false;
+    reclamationBonMaintenanceService.getBonMaintenancesByReclamation(id)
+      .then((bons) => { if (!annule) setBonLie({ reclamationId: id, bon: (bons ?? [])[0] || null }); })
+      .catch((e) => { console.error('[GMAO réclamations] Bon lié :', e); if (!annule) setBonLie({ reclamationId: id, bon: null }); });
+    return () => { annule = true; };
+  }, [selectedReclamation?.id, selectedReclamation?.bonMaintenanceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const bonDeLaSelection = bonLie && bonLie.reclamationId === selectedReclamation?.id ? bonLie.bon : null;
   const [modalOpen, setModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -788,6 +806,16 @@ export default function Reclamations() {
           <span>{t("Associer")}</span>
         </button>
 
+        <button
+          className={`reclamations-action-btn remise ${!bonDeLaSelection ? 'disabled' : ''}`}
+          disabled={!bonDeLaSelection}
+          onClick={() => setRemiseReclamation({ ...selectedReclamation, bonMaintenanceId: bonDeLaSelection.id, bonNum: bonDeLaSelection.num })}
+          title={selectedReclamation && bonLie && !bonDeLaSelection ? t("Aucun bon de maintenance lié à cette réclamation") : t("Demander ou faire la remise en service du bon de maintenance")}
+        >
+          <Power size={18} />
+          <span>{t("Remise en service")}</span>
+        </button>
+
         <div className="reclamations-actions-divider" />
 
         <button
@@ -991,6 +1019,23 @@ export default function Reclamations() {
         }}
         reclamation={selectedReclamation}
       />
+
+      <Modale
+        ouvert={Boolean(remiseReclamation)}
+        onFermer={() => { setRemiseReclamation(null); apresAction(); }}
+        icone={Power}
+        titre={t("Remise en service")}
+        sousTitre={remiseReclamation ? [remiseReclamation.num, remiseReclamation.bonNum].filter(Boolean).join(' → ') : null}
+        taille="lg"
+      >
+        {remiseReclamation?.bonMaintenanceId && (
+          <RemiseEnServiceTab
+            bonMaintenanceId={remiseReclamation.bonMaintenanceId}
+            defaultLotArticleImmobilistationId={remiseReclamation.lotArticleImmobilistationId}
+            onBonMaybeChanged={() => {}}
+          />
+        )}
+      </Modale>
 
       <BonMaintenanceModal
         isOpen={createBonOpen}

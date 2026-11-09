@@ -1,0 +1,10 @@
+/* Onglet « Remise en service » : demande en attente / demander */
+.bmd-rs-demande {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin: 0 0 14px; padding: 12px 14px; border-radius: 12px;
+  background: var(--g-amber-50, #fffbeb); border: 1px solid var(--g-amber-200, #fde68a);
+  font-size: 0.86rem; font-weight: 600; color: var(--g-slate-700);
+}
+.bmd-rs-demande > span { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.bmd-rs-demande:has(> button:only-child) { background: transparent; border-style: dashed; border-color: var(--g-slate-200); justify-content: flex-end; }
+.bmd-rs-demande .bmd-add-btn:disabled { opacity: 0.6; cursor: wait; }

@@ -1250,3 +1250,7 @@
 @media (max-width: 640px) {
   .eq-mc-modes { grid-template-columns: 1fr; }
 }
+
+/* Maintenance conditionnelle : règle dans une fenêtre */
+.eq-mc-modale .eq-mc-form { margin: 0; padding: 0; border: 0; background: transparent; font-family: var(--g-police); }
+.eq-mc-modale .eq-mc-mode { justify-content: center; }

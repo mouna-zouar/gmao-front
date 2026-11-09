@@ -315,7 +315,7 @@ function prochaineAction({ bon, parcours, intervenants }) {
       return {
         ton: 'action', icon: Stethoscope,
         titre: t("Trouvez la cause de la panne"),
-        texte: t("Notez ce que vous constatez sur l’équipement et indiquez si une pièce doit être changée."),
+        texte: t("Notez ce que vous constatez sur l’équipement."),
         bouton: { label: t("Faire le diagnostic"), rubrique: 'diagnostic', form: true },
       };
     case 'reparation':
@@ -909,7 +909,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         bonMaintenanceControleEquipementService.getByBonMaintenance(id).catch(() => []),
         bonMaintenanceRemiseEnServiceService.getByBonMaintenance(id).catch(() => []),
       ]);
-      const oui = (v) => (v == null ? '' : v ? t('Oui') : t('Non'));
       const periode = (debut, fin) => ((debut || fin) ? `${formatDateTime(debut)} → ${formatDateTime(fin)}` : '');
       const immo = (lotId) => (lotId == null ? '' : (lotId === bon.lotArticleImmobilistationId && equipement?.designation) || t('Équipement #{id}', { id: lotId }));
       const etatImmo = (v) => {
@@ -966,12 +965,11 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
           },
           {
             titre: t('Diagnostics'),
-            colonnes: [t('Date'), t('Technicien'), t('Gravité'), t('Pièce'), t('Cause probable'), { label: t('Durée est.'), align: 'end' }],
+            colonnes: [t('Date'), t('Technicien'), t('Gravité'), t('Cause probable'), { label: t('Durée est.'), align: 'end' }],
             lignes: (diagnostics ?? []).map((d) => [
               formatDateTime(d.dateDiagnostic),
               d.personnelNom,
               d.gravite != null ? t(GRAVITE_LABELS[d.gravite] || String(d.gravite)) : '',
-              oui(d.besoinPiece),
               d.causeProbable,
               d.dureeEstimeeHeures != null ? t('{n} h', { n: d.dureeEstimeeHeures }) : '',
             ]),

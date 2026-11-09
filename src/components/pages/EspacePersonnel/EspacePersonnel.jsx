@@ -355,7 +355,6 @@ function Participation({ item }) {
       lignes: [
         [t('Date'), dateHeureLabel(d.dateDiagnostic)],
         d.causeProbable && [t('Cause probable'), d.causeProbable],
-        d.besoinPiece != null && [t('Pièce à changer'), d.besoinPiece ? t('Oui') : t('Non')],
         d.dureeEstimeeHeures != null && [t('Durée estimée'), t('{n} h', { n: d.dureeEstimeeHeures })],
         d.observations && [t('Observations'), d.observations],
       ],

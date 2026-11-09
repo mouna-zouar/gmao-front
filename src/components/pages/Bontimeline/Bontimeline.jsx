@@ -47,7 +47,6 @@ function construireEvenements({ bon, diagnostics, taches, intervenants, controle
       titre: `Diagnostic — ${nomPersonnel(d.personnelId, d.personnelNom, personnels) || 'technicien non renseigné'}`,
       detail: [d.causeProbable, d.observations].filter(Boolean).join(' — ') || null,
       badges: [
-        d.besoinPiece ? { label: 'Besoin de pièce', tone: 'amber' } : null,
         d.dureeEstimeeHeures ? { label: `Estimé : ${d.dureeEstimeeHeures}h`, tone: 'muted' } : null,
       ].filter(Boolean),
     });

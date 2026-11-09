@@ -156,7 +156,6 @@ export async function exporterBonMaintenancePDF(bon, { personnels = [], prestata
     ligne('Date', formatDateTime(d.dateDiagnostic));
     ligne('Technicien', nomPersonnel(d.personnelId, d.personnelNom, personnels));
     ligne('Cause probable', d.causeProbable || '—');
-    ligne('Besoin de pièce', d.besoinPiece ? 'Oui' : 'Non');
     if (d.dureeEstimeeHeures) ligne('Durée estimée', `${d.dureeEstimeeHeures} h`);
     texteLibre(d.observations, 2);
     y += 2;

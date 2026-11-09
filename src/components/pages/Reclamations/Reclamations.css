@@ -1042,3 +1042,7 @@
 .rec-cycle__textes small { font-size: 0.74rem; color: var(--slate-500); }
 .reclamations-non-affectee { color: var(--g-orange-600, #c2410c); font-size: 0.82rem; font-weight: 600; }
 
+
+/* Bouton « Remise en service » du bon lié */
+.reclamations-action-btn.remise { color: var(--g-slate-700); background: transparent; }
+.reclamations-action-btn.remise:hover:not(:disabled) { background: var(--g-emerald-50, #ecfdf5); border-color: var(--g-emerald-200, #a7f3d0); color: var(--g-emerald-700); }

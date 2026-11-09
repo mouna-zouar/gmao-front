@@ -5,15 +5,16 @@ import formationService from '../../../services/formationService';
 import equipementService from '../../../services/equipementService';
 import { ICONES_MODULES } from '../../../constants/modules';
 import ChampParticipants from './ChampParticipants';
+import ChampCibles from './ChampCibles';
 import {
-  RESULTATS_FORMATION, STATUTS_FORMATION, TYPES_FORMATION, options, periodeFormation,
+  RESULTATS_FORMATION, STATUTS_FORMATION, TYPES_FORMATION, libelleCibles, options, periodeFormation,
 } from './formationLibelles';
 import { t, locale } from '../../../i18n';
 import './Formations.css';
 
 /*
  * Formations des techniciens : une session, plusieurs participants (chacun avec son résultat).
- * La famille d'équipements indique sur quels appareils la formation habilite ceux qui l'ont réussie.
+ * Les familles et équipements visés (plusieurs) indiquent sur quels appareils la formation habilite ceux qui l'ont réussie.
  */
 
 const SECTIONS = [
@@ -26,12 +27,6 @@ const CHAMPS = [
   { nom: 'type', label: 'Type', type: 'liste', options: options(TYPES_FORMATION), traduireOptions: true, defaut: 'INTERNE', numerique: false, requis: true },
   { nom: 'statut', label: 'Statut', type: 'liste', options: options(STATUTS_FORMATION), traduireOptions: true, defaut: 'PLANIFIEE', numerique: false, requis: true },
   { nom: 'organisme', label: 'Organisme', longueurMax: 255 },
-  {
-    nom: 'familleId', label: 'Famille d’équipements', type: 'recherche', cleOptions: 'formation-familles',
-    chargerOptions: () => equipementService.familles(), optionValeur: 'id', optionLabel: 'nom',
-    optionVide: '— Formation générale —', libelleVers: 'familleNom',
-  },
-  { nom: 'familleNom', cache: true },
   { nom: 'dateDebut', label: 'Date de début', type: 'date' },
   {
     nom: 'dateFin', label: 'Date de fin', type: 'date',
@@ -39,6 +34,14 @@ const CHAMPS = [
   },
   { nom: 'dureeHeures', label: 'Durée', type: 'nombre', unite: 'h', min: 0, pas: '0.5' },
   { nom: 'cout', label: 'Coût', type: 'montant', unite: 'DT', min: 0 },
+  {
+    nom: 'familles', label: 'Familles d’équipements', type: 'personnalise', largeur: 'pleine', defaut: [],
+    rendu: ({ valeur, changer, id }) => <ChampCibles id={id} mode="famille" valeur={valeur} changer={changer} chargerOptions={() => equipementService.familles()} />,
+  },
+  {
+    nom: 'equipements', label: 'Équipements', type: 'personnalise', largeur: 'pleine', defaut: [],
+    rendu: ({ valeur, changer, id }) => <ChampCibles id={id} mode="equipement" valeur={valeur} changer={changer} />,
+  },
   { nom: 'commentaire', label: 'Commentaire', type: 'zone', largeur: 'pleine', lignes: 3 },
   {
     nom: 'participants', type: 'personnalise', section: 'participants', largeur: 'pleine', defaut: [],
@@ -92,7 +95,19 @@ export default function Formations() {
       cle: 'type', label: 'Type', filtre: 'liste', valeur: (f) => t(TYPES_FORMATION[f.type]?.label || f.type || ''),
       rendu: (f) => (TYPES_FORMATION[f.type] ? <Badge ton={TYPES_FORMATION[f.type].ton}>{t(TYPES_FORMATION[f.type].label)}</Badge> : <span className="cl-tiret">—</span>),
     },
-    { cle: 'famille', label: 'Famille d’équipements', filtre: 'liste', valeur: (f) => f.familleNom || t('Formation générale') },
+    {
+      cle: 'cibles', label: 'Familles et équipements', filtre: 'texte', valeur: (f) => libelleCibles(f),
+      rendu: (f) => {
+        const cibles = [...(f.familles || []), ...(f.equipements || [])];
+        if (!cibles.length) return <span className="fo-general">{t('Formation générale')}</span>;
+        return (
+          <span className="fo-cellule-cibles" title={libelleCibles(f)}>
+            {(f.familles || []).map((c) => <Badge key={`f${c.id}`} ton="teal">{c.nom || `#${c.id}`}</Badge>)}
+            {(f.equipements || []).map((c) => <Badge key={`e${c.id}`} ton="bleu">{c.nom || `#${c.id}`}</Badge>)}
+          </span>
+        );
+      },
+    },
     { cle: 'organisme', label: 'Organisme', filtre: 'texte', valeur: (f) => f.organisme || '' },
     { cle: 'periode', label: 'Dates', valeur: (f) => f.dateDebut || f.dateFin || '', texte: periodeFormation },
     { cle: 'duree', label: 'Durée', valeur: (f) => f.dureeHeures ?? null, texte: (f) => (f.dureeHeures == null ? '' : `${nombre(f.dureeHeures)} h`) },

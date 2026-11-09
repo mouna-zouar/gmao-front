@@ -9,6 +9,11 @@ const bonMaintenanceRemiseEnServiceService = {
     const { data } = await api.post('/bon-maintenance-remise-en-service', remiseEnService);
     return data;
   },
+  /** Demande de remise en service (sans décision) : { bonMaintenanceId, lotArticleImmobilistationId, demandeParId, demandeParNom } */
+  async demander(demande) {
+    const { data } = await api.post('/bon-maintenance-remise-en-service/demander', demande);
+    return data;
+  },
   async update(id, remiseEnService) {
     const { data } = await api.put(`/bon-maintenance-remise-en-service/${id}`, remiseEnService);
     return data;

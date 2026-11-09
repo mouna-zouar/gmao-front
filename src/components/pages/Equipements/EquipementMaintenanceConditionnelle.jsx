@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ChevronDown, FlaskConical, Gauge, History, Loader2, Pencil, Plus, Timer, Trash2, TrendingUp, Zap,
+  ChevronDown, FlaskConical, Gauge, History, Loader2, Pencil, Plus, Save, Timer, Trash2, TrendingUp, Zap,
 } from 'lucide-react';
+import { Modale } from '../../commun';
 import maintenanceConditionnelleService from '../../../services/maintenanceConditionnelleService';
 import liaisonAgentService from '../../../services/liaisonAgentService';
 import { t, locale } from '../../../i18n';
@@ -182,25 +183,25 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
     }
   };
 
-  const champ = (libelle, contenu, aide) => (
+  const champ = (libelle, contenu) => (
     <label>
       {libelle}
       {contenu}
-      {aide && <small className="eq-lia-aide">{aide}</small>}
     </label>
   );
+  const fermerFormulaire = () => { if (!envoi) { setForm(null); setErreur(''); } };
 
   const avecUnite = (input) => (unite ? <span className="eq-mc-unite">{input}<span>{unite}</span></span> : input);
 
   const formulaire = form && (
-    <form className="eq-doc-form eq-mc-form" onSubmit={enregistrer} noValidate>
+    <form id="mc-formulaire" className="eq-doc-form eq-mc-form" onSubmit={enregistrer} noValidate>
       <div className="eq-cnx-ligne">
         {champ(`${t('Nom de la règle')} *`, (
           <input value={form.libelle} onChange={(e) => maj('libelle', e.target.value)} placeholder={t('Ex. surchauffe moteur, vidange compresseur…')} />
         ))}
         {champ(`${t('Sonde')} *`, (
           <select value={form.liaisonId} onChange={(e) => maj('liaisonId', e.target.value)}>
-            <option value="">{t('— Choisir —')}</option>
+            <option value="">{sondes.length ? t('— Choisir —') : t('Aucune sonde RS485 ou Zigbee sur cet équipement')}</option>
             {sondes.map((s) => (
               <option key={s.id} value={s.id}>
                 {nomSonde(s)}{s.derniereValeur != null ? ` — ${fmt(s.derniereValeur)} ${uniteSonde(s)}` : ''}
@@ -218,7 +219,6 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
               className={`eq-mc-mode ${form.mode === m.value ? 'is-actif' : ''}`} onClick={() => maj('mode', m.value)}>
               <Icone size={18} aria-hidden="true" />
               <strong>{t(m.label)}</strong>
-              <span>{t(m.aide)}</span>
             </button>
           );
         })}
@@ -237,7 +237,7 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
             <select value={form.fenetreHeures} onChange={(e) => maj('fenetreHeures', e.target.value)}>
               {FENETRES.map((h) => <option key={h} value={h}>{t('{n} h', { n: h })}</option>)}
             </select>
-          ), t('Plus la durée est longue, moins une pointe passagère compte.'))}
+          ))}
         </div>
       )}
 
@@ -249,21 +249,18 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
               <option value="INF">{t('La valeur baisse')}</option>
             </select>
           ))}
-          {champ(t('Jours de suite'), <input type="number" min="1" max="30" value={form.joursAnalyse} onChange={(e) => maj('joursAnalyse', e.target.value)} />,
-            t('Chaque moyenne sur 24 h est comparée à la précédente.'))}
-          {champ(t('Variation minimum au total'), avecUnite(<input type="number" step="any" min="0" value={form.variationMin} onChange={(e) => maj('variationMin', e.target.value)} placeholder="0" />),
-            t('Évite un bon pour une variation insignifiante.'))}
+          {champ(t('Jours de suite'), <input type="number" min="1" max="30" value={form.joursAnalyse} onChange={(e) => maj('joursAnalyse', e.target.value)} />)}
+          {champ(t('Variation minimum au total'), avecUnite(<input type="number" step="any" min="0" value={form.variationMin} onChange={(e) => maj('variationMin', e.target.value)} placeholder="0" />))}
         </div>
       )}
 
       {form.mode === 'COMPTEUR' && (
         <div className="eq-lia-grille eq-mc-grille-2">
-          {champ(`${t('Intervalle')} *`, avecUnite(<input type="number" step="any" min="0" value={form.seuil} onChange={(e) => maj('seuil', e.target.value)} placeholder="500" />),
-            t('Ex. 500 heures de fonctionnement entre deux révisions.'))}
+          {champ(`${t('Intervalle')} *`, avecUnite(<input type="number" step="any" min="0" value={form.seuil} onChange={(e) => maj('seuil', e.target.value)} placeholder="500" />))}
           {champ(t('Valeur au dernier entretien'), avecUnite(
             <input type="number" step="any" value={form.valeurReference} onChange={(e) => maj('valeurReference', e.target.value)}
               placeholder={sondeChoisie?.derniereValeur != null ? fmt(sondeChoisie.derniereValeur) : ''} />,
-          ), t('Vide : la valeur actuelle de la sonde sert de point de départ.'))}
+          ))}
         </div>
       )}
 
@@ -287,14 +284,29 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
       </label>
 
       {erreur && <p className="eq-erreur" role="alert">{erreur}</p>}
-      <p className="eq-lia-astuce">{t('Un seul bon à la fois par règle. À sa clôture, la règle repart de zéro : nouvelles mesures, ou nouvelle référence du compteur.')}</p>
-      <div className="eq-doc-form-actions">
-        <button type="button" className="eq-bouton eq-bouton--clair" onClick={() => { setForm(null); setErreur(''); }}>{t('Annuler')}</button>
-        <button type="submit" className="eq-bouton" disabled={envoi}>
-          {envoi && <Loader2 size={16} className="eq-tourne" />} {t('Enregistrer')}
-        </button>
-      </div>
     </form>
+  );
+
+  const fenetre = (
+    <Modale
+      ouvert={Boolean(form)}
+      onFermer={fermerFormulaire}
+      icone={Gauge}
+      surtitre={t('Maintenance conditionnelle')}
+      titre={form?.id ? t('Modifier la règle') : t('Nouvelle règle')}
+      taille="lg"
+      className="eq-theme eq-mc-modale"
+      pied={(
+        <>
+          <button type="button" className="cm-btn" onClick={fermerFormulaire}>{t('Annuler')}</button>
+          <button type="submit" form="mc-formulaire" className="cm-btn cm-btn--principal" disabled={envoi}>
+            {envoi ? <Loader2 size={16} className="cf-tourne" /> : <Save size={16} />} {t('Enregistrer')}
+          </button>
+        </>
+      )}
+    >
+      {formulaire}
+    </Modale>
   );
 
   const resultatTest = (r) => {
@@ -375,7 +387,7 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
     <Bloc
       titre={t('Maintenance conditionnelle')}
       icone={Gauge}
-      action={!form && !chargement && sondes.length > 0 && (
+      action={!chargement && (
         <button type="button" className="eq-lien" onClick={() => ouvrir(null)}>
           <Plus size={15} /> {t('Ajouter')}
         </button>
@@ -383,15 +395,11 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
     >
       {chargement ? (
         <p className="eq-vide-texte"><Loader2 size={15} className="eq-tourne" /> {t('Chargement…')}</p>
-      ) : form ? formulaire : regles.length === 0 ? (
-        <p className="eq-vide-texte">
-          {sondes.length === 0
-            ? t('Pour créer un bon selon l’état réel de la machine (température, pression, heures de fonctionnement…), ajoutez d’abord une liaison RS485 ou Zigbee dans le bloc « Liaison avec l’agent ».')
-            : t('Aucune règle : créez un bon préventif quand une sonde dépasse un seuil, monte plusieurs jours de suite ou qu’un compteur atteint son intervalle.')}
-        </p>
+      ) : regles.length === 0 ? (
+        <p className="eq-vide-texte">{t('Aucune règle de maintenance conditionnelle.')}</p>
       ) : liste}
 
-      {!form && historique.length > 0 && (
+      {historique.length > 0 && (
         <div className="eq-mc-historique">
           <button type="button" className="eq-lien" onClick={() => setVoirHistorique((v) => !v)} aria-expanded={voirHistorique}>
             <History size={14} /> {t('Bons créés par ces règles ({n})', { n: historique.length })}
@@ -422,6 +430,7 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
         </div>
       )}
       {erreur && !form && <p className="eq-erreur" role="alert">{erreur}</p>}
+      {fenetre}
     </Bloc>
   );
 }

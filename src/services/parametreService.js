@@ -32,6 +32,17 @@ const parametreService = {
   },
 
   /** Prestataire du paramètre « Prestataire (clinique) des équipements » (cubix.prestataire_id) ; null si 0, absent ou illisible. */
+  /** Familles d'équipements sans pièces de dépôt (cubix.familles_sans_depot) : Set d'identifiants (texte). */
+  async famillesSansDepot() {
+    try {
+      const liste = await this.getAll();
+      const p = (Array.isArray(liste) ? liste : []).find((x) => x.cle === 'cubix.familles_sans_depot');
+      return new Set(String(p?.valeur || '').split(',').map((x) => x.trim()).filter(Boolean));
+    } catch {
+      return new Set();
+    }
+  },
+
   async prestataireEquipements() {
     try {
       const liste = await this.getAll();

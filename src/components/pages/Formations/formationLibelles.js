@@ -36,4 +36,10 @@ export const periodeFormation = (f) => {
   return debut || fin || '';
 };
 
+/** Familles puis équipements visés, en texte ; « Formation générale » s'il n'y en a aucun. */
+export const libelleCibles = (f) => {
+  const noms = [...(f?.familles || []), ...(f?.equipements || [])].map((c) => c.nom || `#${c.id}`);
+  return noms.length ? noms.join(', ') : t('Formation générale');
+};
+
 export const nomPersonnel = (p) => [p?.nom, p?.prenom].filter(Boolean).join(' ') || (p?.id != null ? t('Personnel #{id}', { id: p.id }) : '');

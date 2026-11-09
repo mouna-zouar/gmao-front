@@ -44,8 +44,12 @@ import bonMaintenanceControleEquipementService from '../../../services/bonMainte
 import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenanceRemiseEnServiceService';
 import personnelService from '../../../services/Personnelservice';
 import AlerteFormation from '../Formations/AlerteFormation';
+import authService from '../../../services/Authservice';
+import './BmdRemise.css';
 import { obtenirArticles, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
+import bonMaintenanceServiceSimple from '../../../services/Bonmaintenanceservice';
+import parametreService from '../../../services/parametreService';
 import lotArticleService from '../../../services/lotArticleService';
 import pieceLigneService from '../../../services/PieceLigneService';
 import Button from '../../ui/Button';
@@ -136,8 +140,7 @@ const FicheEquipement = ({ immo, id }) => (
 // ONGLET DIAGNOSTIC
 // ============================================================
 const emptyDiagnosticForm = {
-  personnelId: '', observations: '', besoinPiece: '',
-  prestataireArticlesId: '', qteNecessaire: '', sousTraitantId: '',
+  personnelId: '', observations: '',
   lotArticleImmobilistationId: '', bonMaintenancePieceImmoId: '',
   causeProbable: '', gravite: '', dureeEstimeeHeures: '',
 };
@@ -150,8 +153,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   const [personnels, setPersonnels] = useState([]);
   const [immobilisations, setImmobilisations] = useState([]);
   const [piecesImmo, setPiecesImmo] = useState([]);
-  const [articles, setArticles] = useState([]);
-  const [prestataires, setPrestataires] = useState([]);
   const [form, setForm] = useState(emptyDiagnosticForm);
   const [lastPersonnelId, setLastPersonnelId] = useState('');
   const [selectedId, setSelectedId] = useState(null);
@@ -160,8 +161,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
 
   const [immoQteDisponible, setImmoQteDisponible] = useState(null);
   const [checkingImmoQte, setCheckingImmoQte] = useState(false);
-  const [articleQteDisponible, setArticleQteDisponible] = useState(null);
-  const [checkingArticleQte, setCheckingArticleQte] = useState(false);
 
   const openForm = () => {
     setForm({
@@ -183,10 +182,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
     setForm({
       personnelId: d.personnelId ?? '',
       observations: d.observations || '',
-      besoinPiece: d.besoinPiece == null ? '' : String(d.besoinPiece),
-      prestataireArticlesId: d.prestataireArticlesId ?? '',
-      qteNecessaire: d.qteNecessaire ?? '',
-      sousTraitantId: d.sousTraitantId ?? '',
       lotArticleImmobilistationId: d.lotArticleImmobilistationId != null ? String(d.lotArticleImmobilistationId) : '',
       bonMaintenancePieceImmoId: d.bonMaintenancePieceImmoId ?? '',
       causeProbable: d.causeProbable || '',
@@ -239,46 +234,34 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   }, [form.lotArticleImmobilistationId]);
 
   useEffect(() => {
-    if (!form.prestataireArticlesId) {
-      setArticleQteDisponible(null);
-      return;
-    }
-    let cancelled = false;
-    setCheckingArticleQte(true);
-    pieceLigneService.getQuantiteDisponible(form.prestataireArticlesId)
-      .then((qte) => { if (!cancelled) setArticleQteDisponible(qte); })
-      .catch(() => { if (!cancelled) setArticleQteDisponible(null); })
-      .finally(() => { if (!cancelled) setCheckingArticleQte(false); });
-    return () => { cancelled = true; };
-  }, [form.prestataireArticlesId]);
-
-  useEffect(() => {
     personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
     obtenirEquipements().then(setImmobilisations).catch(console.error);
     bonMaintenancePieceImmoService.findByBonMaintenanceId(bonMaintenanceId).then((data) => setPiecesImmo(data ?? [])).catch(console.error);
-    // Articles du prestataire de catégorie 15 (id = prestataireArticlesId)
-    obtenirArticles().then(setArticles).catch(console.error);
-    obtenirPrestataires().then(setPrestataires).catch(console.error);
   }, [bonMaintenanceId]);
+
+  /** Le technicien du diagnostic est affecté au bon : ajouté aux intervenants s'il n'y est pas déjà. */
+  const affecterTechnicien = async (personnelId, personnelNom) => {
+    if (!personnelId) return;
+    try {
+      const intervenants = await bonMaintenanceIntervenantService.getByBonMaintenance(bonMaintenanceId);
+      if ((intervenants ?? []).some((i) => String(i.personnelId) === String(personnelId))) return;
+      await bonMaintenanceIntervenantService.create({ bonMaintenanceId, personnelId: Number(personnelId), intervenantNom: personnelNom || null, etat: 0 });
+      console.info('[GMAO diagnostic] Technicien affecté au bon', bonMaintenanceId, personnelId);
+    } catch (err) {
+      console.error('[GMAO diagnostic] Affectation du technicien :', err);
+    }
+  };
 
   const handleAdd = async (e) => {
     e.preventDefault();
-    if (form.besoinPiece === 'true') {
-      warnIfQuantiteInvalide(articles, form.prestataireArticlesId, form.qteNecessaire, 'quantité nécessaire');
-    }
     setSaving(true);
     try {
       const personnel = personnels.find((p) => String(p.id) === String(form.personnelId));
-      const besoinPieceBool = form.besoinPiece === '' ? null : form.besoinPiece === 'true';
       const payload = {
         bonMaintenanceId,
         personnelId: form.personnelId === '' ? null : Number(form.personnelId),
         personnelNom: personnel ? `${personnel.nom} ${personnel.prenom}` : null,
         observations: form.observations.trim() || null,
-        besoinPiece: besoinPieceBool,
-        prestataireArticlesId: besoinPieceBool && form.prestataireArticlesId !== '' ? Number(form.prestataireArticlesId) : null,
-        qteNecessaire: besoinPieceBool && form.qteNecessaire !== '' ? Number(form.qteNecessaire) : null,
-        sousTraitantId: besoinPieceBool && form.sousTraitantId !== '' ? Number(form.sousTraitantId) : null,
         lotArticleImmobilistationId: form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId),
         bonMaintenancePieceImmoId: form.bonMaintenancePieceImmoId === '' ? null : Number(form.bonMaintenancePieceImmoId),
         causeProbable: form.causeProbable.trim() || null,
@@ -294,6 +277,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
       } else {
         await bonMaintenanceDiagnosticService.create(payload);
       }
+      await affecterTechnicien(payload.personnelId, payload.personnelNom);
       setLastPersonnelId(form.personnelId);
       setForm(emptyDiagnosticForm);
       fermerForm();
@@ -355,8 +339,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   if (selected) {
     const d = selected;
     const immo = findImmo(d.lotArticleImmobilistationId);
-    const article = articles.find((a) => String(a.id) === String(d.prestataireArticlesId));
-    const sousTraitant = prestataires.find((p) => String(p.id) === String(d.sousTraitantId));
 
     return (
       <>
@@ -371,11 +353,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
             <>
               {d.gravite != null && (
                 <Pill tone={GRAVITE_TONE[d.gravite]}>{t("Gravité")} {GRAVITE_LABELS[d.gravite] || d.gravite}</Pill>
-              )}
-              {d.besoinPiece != null && (
-                <Pill tone={d.besoinPiece ? 'amber' : 'green'}>
-                  {d.besoinPiece ? t("Besoin de pièce") : t("Pas de pièce nécessaire")}
-                </Pill>
               )}
             </>
           )}
@@ -395,23 +372,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
               label: t("Observations"),
               icon: FileText,
               content: <TexteOuVide texte={d.observations} vide="Aucune observation saisie." />,
-            },
-            {
-              key: 'piece',
-              label: t("Besoin en pièces"),
-              icon: Package,
-              content: d.besoinPiece ? (
-                <BmdFieldGrid
-                  fields={[
-                    { label: t("Article"), value: article?.designation || (d.prestataireArticlesId != null ? t('Article #{id}', { id: d.prestataireArticlesId }) : null) },
-                    { label: t("Code article"), value: article?.code },
-                    { label: t("Quantité nécessaire"), value: d.qteNecessaire },
-                    { label: t("Sous-traitant"), value: sousTraitant?.raisonSociale || (d.sousTraitantId != null ? `#${d.sousTraitantId}` : null) },
-                  ]}
-                />
-              ) : (
-                <TexteOuVide vide="Aucune pièce nécessaire pour ce diagnostic." />
-              ),
             },
             {
               key: 'equipement',
@@ -437,11 +397,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
       render: (d) => (d.gravite != null ? <Pill tone={GRAVITE_TONE[d.gravite]}>{GRAVITE_LABELS[d.gravite] || d.gravite}</Pill> : null),
     },
     {
-      key: 'piece',
-      label: t("Pièce"),
-      render: (d) => (d.besoinPiece == null ? null : <Pill tone={d.besoinPiece ? 'amber' : 'slate'}>{d.besoinPiece ? t("Oui") : t("Non")}</Pill>),
-    },
-    {
       key: 'cause',
       label: t("Cause probable"),
       render: (d) => (d.causeProbable ? <span className="bmd-cell-truncate" title={d.causeProbable}>{d.causeProbable}</span> : null),
@@ -462,11 +417,11 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
       {showForm && (
         <BmfFormulaire
           titre={editingId ? t("Modifier le diagnostic") : t("Nouveau diagnostic")}
-          intro={t("Décrivez la panne en trois étapes. Seuls les champs marqués « obligatoire » sont nécessaires.")}
+          intro={t("Décrivez la panne en deux étapes. Seuls les champs marqués « obligatoire » sont nécessaires.")}
           onSubmit={handleAdd}
         >
-          <BmfEtape numero={1} titre={t("Qui a examiné, et quoi ?")} aide={t("Le technicien et l'équipement concerné")}>
-            <BmfChamp label={t("Technicien")} aide={t("La personne qui a examiné l'équipement")} htmlFor="diag-tech">
+          <BmfEtape numero={1} titre={t("Technicien affecté et équipement")}>
+            <BmfChamp label={t("Technicien affecté")} aide={t("Ajouté aux intervenants du bon")} htmlFor="diag-tech">
               <SearchableSelect
                 id="diag-tech"
                 name="personnelId"
@@ -481,6 +436,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
                 getLabel={(p) => nomPersonnel(p)}
                 getOptionHint={(p) => (p.matricule ? t('Matricule {m}', { m: p.matricule }) : null)}
               />
+              <AlerteFormation personnelId={form.personnelId} bonMaintenanceId={bonMaintenanceId} />
             </BmfChamp>
 
             <BmfChamp label={t("Équipement examiné")} aide={t("Déjà rempli avec l'équipement du bon")} htmlFor="diag-immo">
@@ -552,73 +508,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
             </BmfChamp>
           </BmfEtape>
 
-          <BmfEtape numero={3} titre={t("Faut-il changer une pièce ?")} aide={t("Si oui, indiquez laquelle pour pouvoir la commander")}>
-            <BmfChamp label={t("Besoin d'une pièce")} large>
-              <BmfChoix
-                nom={t("Besoin d'une pièce")}
-                grand
-                value={form.besoinPiece}
-                onChange={(v) => setForm({ ...form, besoinPiece: v })}
-                options={[
-                  { value: 'false', label: t("Non"), aide: t("La réparation se fait sans rien changer"), icon: CheckCircle, ton: 'ok' },
-                  { value: 'true', label: t("Oui"), aide: t("Vous choisirez l'article juste après"), icon: Package, ton: 'now' },
-                ]}
-              />
-            </BmfChamp>
-
-            {form.besoinPiece === 'true' && (
-              <>
-                <BmfChamp label={t("Article nécessaire")} aide={t("Tapez quelques lettres pour chercher")} htmlFor="diag-article">
-                  <SearchableSelect
-                    id="diag-article"
-                    name="prestataireArticlesId"
-                    value={form.prestataireArticlesId}
-                    onChange={(e) => setForm({ ...form, prestataireArticlesId: e.target.value })}
-                    options={articles}
-                    placeholder={t("Tapez un nom ou un code...")}
-                    emptyMessage={t("Aucun article ne correspond")}
-                    allowEmpty
-                    emptyOptionLabel={t("Aucun")}
-                    getValue={(a) => a.id}
-                    getLabel={(a) => a.designation || `#${a.id}`}
-                    getOptionHint={(a) => (a.code ? t('Code {code}', { code: a.code }) : null)}
-                  />
-                  {form.prestataireArticlesId && (
-                    <BmfStock verification={checkingArticleQte} quantite={articleQteDisponible} demande={form.qteNecessaire} />
-                  )}
-                </BmfChamp>
-
-                <BmfChamp label={t("Quantité nécessaire")} htmlFor="diag-qte">
-                  <BmfNombre
-                    id="diag-qte"
-                    value={form.qteNecessaire}
-                    onChange={(v) => setForm({ ...form, qteNecessaire: v })}
-                    min="0"
-                    placeholder={t("Ex. 1")}
-                    onBlur={() => warnIfQuantiteInvalide(articles, form.prestataireArticlesId, form.qteNecessaire, 'quantité nécessaire')}
-                  />
-                </BmfChamp>
-
-                <BmfChamp label={t("Fournisseur")} aide={t("Nécessaire pour pouvoir commander la pièce")} htmlFor="diag-st">
-                  <SearchableSelect
-                    id="diag-st"
-                    name="sousTraitantId"
-                    value={form.sousTraitantId}
-                    onChange={(e) => setForm({ ...form, sousTraitantId: e.target.value })}
-                    options={prestataires}
-                    placeholder={t("Tapez un nom...")}
-                    emptyMessage={t("Aucun fournisseur ne correspond")}
-                    allowEmpty
-                    emptyOptionLabel={t("Aucun")}
-                    getValue={(p) => p.id}
-                    getLabel={(p) => p.raisonSociale || `${p.nom ?? ''} ${p.prenom ?? ''}`.trim() || `#${p.id}`}
-                    getOptionHint={(p) => (p.code ? t('Code {code}', { code: p.code }) : null)}
-                  />
-                </BmfChamp>
-              </>
-            )}
-          </BmfEtape>
-
           <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Enregistrer le diagnostic")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
@@ -666,6 +555,26 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
 
   const [tacheQteDisponible, setTacheQteDisponible] = useState(null);
   const [checkingTacheQte, setCheckingTacheQte] = useState(false);
+  // Famille de l'équipement sans pièces de dépôt (paramètre « Familles sans pièces de dépôt », ex. logiciels) :
+  // l'article et la quantité ne sont pas affichés
+  const [sansDepot, setSansDepot] = useState(false);
+  useEffect(() => {
+    let annule = false;
+    (async () => {
+      try {
+        const familles = await parametreService.famillesSansDepot();
+        if (!familles.size) return;
+        const bon = await bonMaintenanceServiceSimple.getById(bonMaintenanceId);
+        if (!bon?.lotArticleImmobilistationId) return;
+        const equipement = await lotArticleImmobilistationService.getById(bon.lotArticleImmobilistationId);
+        const famille = equipement?.articleFamilleId ?? equipement?.familleId;
+        if (!annule && famille != null && familles.has(String(famille))) setSansDepot(true);
+      } catch (err) {
+        console.error('[GMAO tâches] Famille de l’équipement :', err);
+      }
+    })();
+    return () => { annule = true; };
+  }, [bonMaintenanceId]);
 
   const load = async () => {
     setLoading(true);
@@ -877,7 +786,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
                 <TexteOuVide vide="Intervention pas encore démarrée." />
               ),
             },
-            {
+            !sansDepot && {
               key: 'article',
               label: t("Article"),
               icon: Package,
@@ -893,7 +802,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
                 <TexteOuVide vide="Aucun article lié à cette tâche." />
               ),
             },
-          ]}
+          ].filter(Boolean)}
         />
         {modal}
       </>
@@ -937,14 +846,14 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
       label: t("Intervenant"),
       render: (tache) => (tache.intervenantId != null ? (nomIntervenantAffiche(findIntervenant(tache.intervenantId)) || `#${tache.intervenantId}`) : null),
     },
-    {
+    !sansDepot && {
       key: 'article',
       label: t("Article"),
       render: (tache) => (tache.prestataireArticlesId != null
         ? `${findArticle(tache.prestataireArticlesId)?.designation || `#${tache.prestataireArticlesId}`}${tache.qte != null ? ` (×${tache.qte})` : ''}`
         : null),
     },
-  ];
+  ].filter(Boolean);
 
   return (
     <div>
@@ -1015,7 +924,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
             </BmfChamp>
           </BmfEtape>
 
-          <BmfEtape numero={3} titre={t("Qui, et avec quoi ?")}>
+          <BmfEtape numero={3} titre={sansDepot ? t("Qui ?") : t("Qui, et avec quoi ?")}>
             <BmfChamp label={t("Intervenant")} aide={t("Seuls les intervenants déjà ajoutés au bon apparaissent")} htmlFor="tache-int">
               <SearchableSelect
                 id="tache-int"
@@ -1048,6 +957,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
               />
             </BmfChamp>
 
+            {!sansDepot && (<>
             <BmfChamp label={t("Article utilisé")} htmlFor="tache-article">
               <SearchableSelect
                 id="tache-article"
@@ -1078,6 +988,7 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
                 onBlur={() => warnIfQuantiteInvalide(articles, form.prestataireArticlesId, form.qte, 'quantité')}
               />
             </BmfChamp>
+            </>)}
           </BmfEtape>
 
           <BmfActions
@@ -1886,28 +1797,60 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
 // ONGLET REMISE EN SERVICE
 // ============================================================
 const emptyRemiseForm = {
-  lotArticleImmobilistationId: '', conforme: '', autoriseParId: '', observations: '',
+  lotArticleImmobilistationId: '', conforme: '', observations: '',
   etatAvant: '', etatApres: '',
 };
+
+/** Personne connectée : { id, nom } (demande et « Autorisé par » de la remise en service). */
+function utilisateurConnecte() {
+  const u = authService.getCurrentUser();
+  const id = u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
+  return {
+    id: id != null && id !== '' ? Number(id) : null,
+    nom: u?.userNom || [u?.prenom, u?.nom].filter(Boolean).join(' ') || u?.login || null,
+  };
+}
 
 export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobilistationId, onBonMaybeChanged, onCelebrer, autoOpenForm = false }) {
   const [decisions, setDecisions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [personnels, setPersonnels] = useState([]);
   const [immobilisations, setImmobilisations] = useState([]);
   const [form, setForm] = useState(emptyRemiseForm);
-  const [lastAutoriseParId, setLastAutoriseParId] = useState('');
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [demandeEnCours, setDemandeEnCours] = useState(false);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
+
+  // Demande en attente : une ligne sans décision (conforme vide) ; la décision vient la compléter
+  const demande = decisions.find((d) => d.conforme == null) || null;
+  const dejaAutorisee = decisions.some((d) => d.conforme === true);
+
+  const demander = async () => {
+    const moi = utilisateurConnecte();
+    setDemandeEnCours(true);
+    try {
+      await bonMaintenanceRemiseEnServiceService.demander({
+        bonMaintenanceId,
+        lotArticleImmobilistationId: defaultLotArticleImmobilistationId ?? null,
+        demandeParId: moi.id,
+        demandeParNom: moi.nom,
+      });
+      await load();
+      onBonMaybeChanged?.();
+    } catch (err) {
+      console.error('[GMAO remise en service] Demande :', err);
+      alert(t("La demande de remise en service n'a pas pu être enregistrée."));
+    } finally {
+      setDemandeEnCours(false);
+    }
+  };
 
   const openForm = () => {
     setForm({
       ...emptyRemiseForm,
       lotArticleImmobilistationId: defaultLotArticleImmobilistationId != null ? String(defaultLotArticleImmobilistationId) : '',
-      autoriseParId: lastAutoriseParId,
     });
     setEditingId(null);
     setShowForm(true);
@@ -1923,7 +1866,6 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
     setForm({
       lotArticleImmobilistationId: d.lotArticleImmobilistationId != null ? String(d.lotArticleImmobilistationId) : '',
       conforme: d.conforme == null ? '' : String(d.conforme),
-      autoriseParId: d.autoriseParId ?? '',
       observations: d.observations || '',
       etatAvant: d.etatAvant != null ? String(d.etatAvant) : '',
       etatApres: d.etatApres != null ? String(d.etatApres) : '',
@@ -1949,7 +1891,6 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
     obtenirEquipements().then(setImmobilisations).catch(console.error);
   }, []);
 
@@ -1961,13 +1902,14 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
     }
     setSaving(true);
     try {
-      const personnel = personnels.find((p) => String(p.id) === String(form.autoriseParId));
+      // « Autorisé par » : la personne connectée
+      const moi = utilisateurConnecte();
       const payload = {
         bonMaintenanceId,
         lotArticleImmobilistationId: form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId),
         conforme: form.conforme === 'true',
-        autoriseParId: form.autoriseParId === '' ? null : Number(form.autoriseParId),
-        autoriseParNom: personnel ? `${personnel.nom} ${personnel.prenom}` : null,
+        autoriseParId: moi.id,
+        autoriseParNom: moi.nom,
         observations: form.observations.trim() || null,
         etatAvant: form.etatAvant === '' ? null : Number(form.etatAvant),
         etatApres: form.etatApres === '' ? null : Number(form.etatApres),
@@ -1975,14 +1917,12 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
       const idModifie = editingId;
       const existant = idModifie ? (decisions.find((x) => x.id === idModifie) || {}) : null;
       if (idModifie) {
-        if (!payload.autoriseParNom && payload.autoriseParId === existant.autoriseParId) payload.autoriseParNom = existant.autoriseParNom ?? null;
         await bonMaintenanceRemiseEnServiceService.update(idModifie, { ...existant, ...payload });
       } else {
         await bonMaintenanceRemiseEnServiceService.create(payload);
       }
       const autorisee = form.conforme === 'true';
       const immo = immobilisations.find((i) => String(i.id) === String(form.lotArticleImmobilistationId));
-      setLastAutoriseParId(form.autoriseParId);
       setForm(emptyRemiseForm);
       fermerForm();
       await load();
@@ -2021,9 +1961,11 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
 
   const findImmo = (id) => immobilisations.find((i) => String(i.id) === String(id));
   const libelleImmo = (id) => (id == null ? null : (findImmo(id)?.designation || `#${id}`));
-  const pillDecision = (conforme) => (conforme
-    ? <Pill tone="green">{t("Autorisée")}</Pill>
-    : <Pill tone="red">{t("Refusée")}</Pill>);
+  const pillDecision = (conforme) => (conforme == null
+    ? <Pill tone="amber">{t("Demandée")}</Pill>
+    : conforme
+      ? <Pill tone="green">{t("Autorisée")}</Pill>
+      : <Pill tone="red">{t("Refusée")}</Pill>);
 
   const modal = (
     <ConfirmModal
@@ -2048,14 +1990,16 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
           backLabel={t("Retour aux décisions")}
           icon={RotateCw}
           surtitre={t('Décision #{id}', { id: d.id })}
-          title={d.conforme ? t("Remise en service autorisée") : t("Remise en service refusée")}
+          title={d.conforme == null ? t("Remise en service demandée") : d.conforme ? t("Remise en service autorisée") : t("Remise en service refusée")}
           onEdit={() => startEdit(d)}
           badges={pillDecision(d.conforme)}
           onDelete={() => handleDelete(d.id)}
           infos={[
             { label: t("Date"), value: formatDateTime(d.date) },
             { label: t("Autorisé par"), value: d.autoriseParNom },
-            { label: t("Décision"), value: d.conforme ? 'Autorisée' : 'Refusée' },
+            { label: t("Décision"), value: d.conforme == null ? t('En attente') : d.conforme ? t('Autorisée') : t('Refusée') },
+            { label: t("Demandée par"), value: d.demandeParNom },
+            { label: t("Date de la demande"), value: d.dateDemande ? formatDateTime(d.dateDemande) : null },
             { label: t("Immobilisation"), value: libelleImmo(d.lotArticleImmobilistationId) },
           ]}
           sections={[
@@ -2097,6 +2041,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   const colonnes = [
     { key: 'date', label: t("Date"), render: (d) => <span className="bmd-cell-nowrap">{formatDateTime(d.date)}</span> },
     { key: 'decision', label: t("Décision"), render: (d) => pillDecision(d.conforme) },
+    { key: 'demande', label: t("Demandée par"), render: (d) => d.demandeParNom || null },
     { key: 'par', label: t("Autorisé par"), render: (d) => (d.autoriseParNom ? <span className="bmd-cell-main">{d.autoriseParNom}</span> : null) },
     { key: 'immo', label: t("Immobilisation"), render: (d) => libelleImmo(d.lotArticleImmobilistationId) },
     { key: 'etatApres', label: t("État après"), render: (d) => libelleEtatImmo(d.etatApres) },
@@ -2111,6 +2056,19 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
         onToggle={() => (showForm ? fermerForm() : openForm())}
         labelAjout="Ajouter une décision"
       />
+
+      {!showForm && !loading && (demande ? (
+        <div className="bmd-rs-demande">
+          <span><Pill tone="amber">{t("Demandée")}</Pill> {[demande.demandeParNom, demande.dateDemande && formatDateTime(demande.dateDemande)].filter(Boolean).join(' · ')}</span>
+          <button type="button" className="bmd-add-btn" onClick={openForm}><Power size={16} /> {t("Faire la remise en service")}</button>
+        </div>
+      ) : !dejaAutorisee && (
+        <div className="bmd-rs-demande">
+          <button type="button" className="bmd-add-btn" onClick={demander} disabled={demandeEnCours}>
+            <RotateCw size={16} /> {demandeEnCours ? t("Envoi…") : t("Demander la remise en service")}
+          </button>
+        </div>
+      ))}
 
       {showForm && (
         <BmfFormulaire
@@ -2162,22 +2120,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
             </BmfChamp>
           </BmfEtape>
 
-          <BmfEtape numero={3} titre={t("Qui autorise ?")}>
-            <BmfChamp label={t("Autorisé par")} htmlFor="rs-par">
-              <SearchableSelect
-                id="rs-par"
-                name="autoriseParId"
-                value={form.autoriseParId}
-                onChange={(e) => setForm({ ...form, autoriseParId: e.target.value })}
-                options={personnels}
-                placeholder={t("Tapez un nom...")}
-                emptyMessage={t("Aucune personne ne correspond")}
-                allowEmpty
-                emptyOptionLabel={t("Aucun")}
-                getValue={(p) => p.id}
-                getLabel={(p) => nomPersonnel(p)}
-              />
-            </BmfChamp>
+          <BmfEtape numero={3} titre={t("Observations")}>
             <BmfChamp label={t("Observations")} large htmlFor="rs-obs">
               <BmfTexte id="rs-obs" multiligne value={form.observations} onChange={(v) => setForm({ ...form, observations: v })} />
             </BmfChamp>
@@ -2194,7 +2137,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
         onRowClick={(d) => setSelectedId(d.id)}
         emptyMessage={t("Aucune décision de remise en service pour l'instant.")}
         searchPlaceholder={t("Filtrer par personne, observation...")}
-        getSearchText={(d) => [d.autoriseParNom, d.observations, libelleImmo(d.lotArticleImmobilistationId), d.conforme ? 'autorisée' : 'refusée'].join(' ')}
+        getSearchText={(d) => [d.autoriseParNom, d.demandeParNom, d.observations, libelleImmo(d.lotArticleImmobilistationId), d.conforme == null ? 'demandée' : d.conforme ? 'autorisée' : 'refusée'].join(' ')}
       />
       {modal}
     </div>

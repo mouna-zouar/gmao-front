@@ -36,3 +36,12 @@
 .fo-mes-table tr:last-child td { border-bottom: 0; }
 .fo-mes-table td strong { display: block; color: var(--g-slate-900); }
 .fo-mes-table td small { display: block; margin-top: 2px; color: var(--g-slate-500); font-size: 0.76rem; }
+
+/* Familles et équipements visés (choix multiple) */
+.fo-cibles { display: flex; flex-direction: column; gap: 8px; }
+.fo-cibles__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.fo-cibles__liste li { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 10px; border-radius: 999px; background: var(--g-brand-50); border: 1px solid var(--g-brand-100); color: var(--g-brand-700, #0e7490); font-size: 0.8rem; font-weight: 600; }
+.fo-cibles__liste button { display: inline-grid; place-items: center; width: 20px; height: 20px; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
+.fo-cibles__liste button:hover { background: var(--g-brand-100); }
+.fo-cellule-cibles { display: inline-flex; flex-wrap: wrap; gap: 4px; justify-content: center; max-width: 280px; }
+.fo-general { color: var(--g-slate-500); font-size: 0.84rem; }

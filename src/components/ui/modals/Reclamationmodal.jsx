@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, ClipboardCheck, FileText, MapPin, Tag, ThumbsUp, Wrench } from 'lucide-react';
+import { AlertCircle, ClipboardCheck, FileText, ThumbsUp, Wrench } from 'lucide-react';
 import ModaleFormulaire from '../../commun/ModaleFormulaire';
 import SuggestionCodePanne from './SuggestionCodePanne';
 import VerificationsReclamation, { manqueVerifications, problemeRegle, reponsesChecklist } from './VerificationsReclamation';
 import serviceService from '../../../services/Serviceservice';
-import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import authService from '../../../services/Authservice';
 import parametreService from '../../../services/parametreService';
 import { SOURCES_INFORMATION, optionsTypeEntretien } from '../../../constants/FicheIntervention';
@@ -12,7 +11,7 @@ import { SOURCES_INFORMATION, optionsTypeEntretien } from '../../../constants/Fi
 /*
  * Fenêtre « Nouvelle réclamation » / « Modifier la réclamation », décrite par ses champs
  * (affichage, validation et envoi faits par ModaleFormulaire).
- * Création en assistant : Équipement → Vérifications → Description → Localisation → Classification.
+ * Création en assistant : Équipement (service puis équipement) → Vérifications → Description (avec la classification).
  *
  * valeursInitiales (création) : { lotArticleImmobilistationId, description, criticite, urgence, type, sourceInformation }
  * — fiche équipement, scan d'un QR code, alerte machine.
@@ -29,8 +28,6 @@ const SECTIONS = [
   { cle: 'equipement', label: 'Équipement', icone: Wrench, creation: true, description: 'Choisis l’équipement concerné : les vérifications et les codes panne dépendent de sa famille.' },
   { cle: 'verifications', label: 'Vérifications', icone: ClipboardCheck, creation: true, description: 'Fais ces vérifications sur l’équipement : beaucoup de pannes se règlent ainsi, sans intervention.' },
   { cle: 'general', label: 'Description', icone: FileText, description: 'Décris précisément le problème signalé.' },
-  { cle: 'localisation', label: 'Localisation', icone: MapPin, description: 'Service et dépôt concernés.' },
-  { cle: 'classification', label: 'Classification', icone: Tag, description: 'Criticité, urgence, type d’entretien et source de l’information.' },
 ];
 
 function champs(reclamation) {
@@ -72,11 +69,11 @@ function champs(reclamation) {
     // Numéro et N° interne : non affichés (attribués par le serveur), gardés tels quels en modification
     { nom: 'num', cache: true },
     { nom: 'n', cache: true },
-    // ── Localisation : le prestataire vient des paramètres système (non affiché), dépôts filtrés par service ──
+    // Prestataire : vient des paramètres système (non affiché)
     { nom: 'prestataireId', cache: true },
     { nom: 'prestataireNom', cache: true },
     {
-      nom: 'serviceId', label: 'Service', type: 'recherche', section: 'localisation',
+      nom: 'serviceId', label: 'Service', type: 'recherche', section: 'general',
       chargerOptions: () => serviceService.getAll(0, 200), cleOptions: 'reclamation-services',
       optionLabel: (s) => s.description || s.code || `Service #${s.id}`,
       optionAide: (s) => (s.code && s.description ? `Code : ${s.code}` : null),
@@ -84,27 +81,11 @@ function champs(reclamation) {
       viderSiAbsent: true, libelleVers: 'serviceNom', placeholder: 'Rechercher un service...',
     },
     { nom: 'serviceNom', cache: true },
-    {
-      nom: 'depotId', label: 'Dépôt', type: 'recherche', section: 'localisation',
-      cleOptions: (v) => `reclamation-depots-${v.serviceId || 'tous'}`,
-      chargerOptions: async (v) => {
-        const [page, ids] = await Promise.all([
-          prestataireDepotService.getAll(0, 200),
-          v.serviceId ? prestataireDepotService.getDepotIdsByServiceId(v.serviceId) : null,
-        ]);
-        const depots = page?.content ?? [];
-        return ids ? depots.filter((d) => ids.includes(d.id)) : depots;
-      },
-      optionLabel: (d) => d.nom || d.codeDepots || `Dépôt #${d.id}`,
-      optionAide: (d) => (d.codeDepots && d.nom ? `Code : ${d.codeDepots}` : null),
-      viderSiAbsent: true, libelleVers: 'depotNom', placeholder: 'Rechercher un dépôt...',
-    },
-    { nom: 'depotNom', cache: true },
-    // ── Classification ──
-    { nom: 'criticite', label: 'Criticité', type: 'liste', section: 'classification', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
-    { nom: 'urgence', label: 'Urgence', type: 'liste', section: 'classification', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
-    { nom: 'type', label: 'Type d’entretien', type: 'liste', section: 'classification', options: (v) => optionsTypeEntretien(v.type), optionVide: '— Non renseigné —', traduireOptions: true },
-    { nom: 'sourceInformation', label: 'Source de l’information', type: 'liste', section: 'classification', options: SOURCES_INFORMATION, optionVide: '— Non renseigné —', traduireOptions: true },
+    // ── Classification (avec la description) ──
+    { nom: 'criticite', label: 'Criticité', type: 'liste', section: 'general', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
+    { nom: 'urgence', label: 'Urgence', type: 'liste', section: 'general', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
+    { nom: 'type', label: 'Type d’entretien', type: 'liste', section: 'general', options: (v) => optionsTypeEntretien(v.type), optionVide: '— Non renseigné —', traduireOptions: true },
+    { nom: 'sourceInformation', label: 'Source de l’information', type: 'liste', section: 'general', options: SOURCES_INFORMATION, optionVide: '— Non renseigné —', traduireOptions: true },
   ];
   // Création : le service se choisit avant l'équipement (la liste des équipements suit ce service)
   if (!reclamation) {

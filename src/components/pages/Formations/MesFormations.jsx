@@ -1,6 +1,6 @@
 import { GraduationCap } from 'lucide-react';
 import { Badge } from '../../commun';
-import { RESULTATS_FORMATION, STATUTS_FORMATION, TYPES_FORMATION, periodeFormation } from './formationLibelles';
+import { RESULTATS_FORMATION, STATUTS_FORMATION, TYPES_FORMATION, libelleCibles, periodeFormation } from './formationLibelles';
 import { t, locale } from '../../../i18n';
 import './Formations.css';
 
@@ -16,7 +16,7 @@ export default function MesFormations({ liste = [], chargement = false }) {
       <table className="fo-mes-table">
         <thead>
           <tr>
-            <th>{t('Formation')}</th><th>{t('Type')}</th><th>{t('Famille d’équipements')}</th><th>{t('Dates')}</th>
+            <th>{t('Formation')}</th><th>{t('Type')}</th><th>{t('Familles et équipements')}</th><th>{t('Dates')}</th>
             <th>{t('Durée')}</th><th>{t('Statut')}</th><th>{t('Résultat')}</th>
           </tr>
         </thead>
@@ -25,7 +25,7 @@ export default function MesFormations({ liste = [], chargement = false }) {
             <tr key={f.id}>
               <td><strong>{f.intitule}</strong>{f.organisme && <small>{f.organisme}</small>}</td>
               <td>{badge(TYPES_FORMATION, f.type)}</td>
-              <td>{f.familleNom || t('Formation générale')}</td>
+              <td>{libelleCibles(f)}</td>
               <td>{periodeFormation(f) || '—'}</td>
               <td>{f.dureeHeures == null ? '—' : `${Number(f.dureeHeures).toLocaleString(locale(), { maximumFractionDigits: 1 })} h`}</td>
               <td>{badge(STATUTS_FORMATION, f.statut)}</td>

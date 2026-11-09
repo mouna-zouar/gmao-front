@@ -155,7 +155,6 @@ function construireEtapes({ bon, reclamations, historique, diagnostics, taches, 
     details: details([
       ['Cause probable', d.causeProbable],
       ['Temps estimé', d.dureeEstimeeHeures != null ? t('{n} h', { n: d.dureeEstimeeHeures }) : null],
-      ['Pièce à changer', d.besoinPiece === true ? 'Oui' : d.besoinPiece === false ? 'Non' : null],
       ['Observations', d.observations],
     ]),
   }));
