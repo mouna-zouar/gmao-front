@@ -279,7 +279,6 @@ export function BoutonTri({ label, onTrier, children }) {
   );
 }
 
-/* Message bref après une copie */
 export function AnnonceCopie({ texte }) {
   return <div className="cl-annonce" role="status" aria-live="polite">{texte && <span>{texte}</span>}</div>;
 }
