@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState, cloneElement, Fragment } from 'react';
-import { Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search, Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer, Gauge, Loader2, Plus, Pencil, Power, ClipboardCheck, Trash2, ArrowUp, ArrowDown, Eye } from 'lucide-react';
+import { Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search, Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer, Gauge, Loader2, Plus, Pencil, Power, ClipboardCheck, Trash2, ArrowUp, ArrowDown, Eye, ArrowLeft, ChevronRight } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
 import prestataireService from '../../../services/prestataireService';
 import authService from '../../../services/Authservice';
 import EquipementMaintenanceTypesSettings from '../Etatequipement/EquipementMaintenanceTypesSettings';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import maintenanceConditionnelleService from '../../../services/maintenanceConditionnelleService';
 import { ETATS_REGLE, MODES, fmt } from '../Equipements/EquipementMaintenanceConditionnelle';
 import codePanneService from '../../../services/codePanneService';
@@ -185,8 +185,9 @@ function ChampValeur({ param, valeur, onChange, draft }) {
 }
 
 /* ────────────────────────────────────────────────────────────
- * Structure de la page : une colonne de rubriques à gauche, la rubrique choisie à droite.
- * Chaque réglage est une ligne « libellé + explication | valeur ».
+ * Structure de la page : un accueil en tuiles (une tuile par rubrique, rangées par section) ;
+ * un clic ouvre la rubrique en plein écran (?r=<rubrique>, le bouton Retour du navigateur revient à l'accueil).
+ * Chaque réglage est une carte « libellé + explication + valeur ».
  * ──────────────────────────────────────────────────────────── */
 
 /** Rubriques connues (nom du groupe côté serveur → présentation). Les groupes inconnus s'ajoutent à la fin. */
@@ -210,6 +211,8 @@ const CLE_RUBRIQUE = 'gmao.parametres.rubrique';
 
 /** Groupes du menu de gauche, dans cet ordre ; les rubriques inconnues vont dans « Autres réglages ». */
 const SECTIONS_MENU = ['Application', 'Automatisation', 'Réclamations', 'Cubix', 'Autres réglages'];
+/** Couleur des tuiles de chaque section */
+const TON_SECTION = { Application: 'indigo', Automatisation: 'teal', Réclamations: 'ambre', Cubix: 'violet', 'Autres réglages': 'ardoise' };
 
 /** « planif.anomalies.heure » → { code: 'anomalies', champ: 'heure' } */
 function partiesTache(cle) {
@@ -234,14 +237,15 @@ export default function ParametresSysteme() {
   const [runningCode, setRunningCode] = useState(null);
   const [message, setMessage] = useState(null);
   const [recherche, setRecherche] = useState('');
-  const [rubrique, setRubrique] = useState(() => {
-    try { return localStorage.getItem(CLE_RUBRIQUE) || 'planif'; } catch { return 'planif'; }
-  });
+  // Rubrique ouverte dans l'URL (?r=sla) : null = accueil en tuiles
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rubrique = searchParams.get('r');
 
   const choisirRubrique = (id) => {
-    setRubrique(id);
     setRecherche('');
-    try { localStorage.setItem(CLE_RUBRIQUE, id); } catch { /* stockage indisponible */ }
+    setSearchParams(id ? { r: id } : {});
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    try { if (id) localStorage.setItem(CLE_RUBRIQUE, id); } catch { /* stockage indisponible */ }
   };
 
   const apply = (list) => {
@@ -291,7 +295,7 @@ export default function ParametresSysteme() {
     ...parRubrique.autres,
   ], [parRubrique]);
 
-  const rubriqueActive = rubriques.find((r) => r.id === rubrique) || rubriques[1] || rubriques[0];
+  const rubriqueActive = rubrique ? rubriques.find((r) => r.id === rubrique) || null : null;
 
   const setValue = (cle, valeur) => {
     setMessage(null);
@@ -359,20 +363,18 @@ export default function ParametresSysteme() {
   /** Ligne d'un réglage simple. */
   const ligneParametre = (p) => {
     const bloc = p.type === 'FAMILLES';
+    const large = bloc || p.type === 'PRESTATAIRE' || p.type === 'TEXTE';
     return (
-      <div key={p.cle} className={`ps-ligne ${estModifie(p) ? 'is-modifie' : ''} ${bloc ? 'ps-ligne--bloc' : ''}`}>
-        <div className="ps-ligne-texte">
-          <label htmlFor={`ps-${p.cle}`} className="ps-ligne-titre">
-            {t(p.libelle)} <Badge liste={[p]} />
-          </label>
-          {p.description && <p className="ps-ligne-aide">{t(p.description)}</p>}
-        </div>
-        <div className="ps-ligne-valeur">
-          <div className="ps-pcard-control">
-            <ChampValeur param={p} valeur={draft[p.cle]} onChange={(v) => setValue(p.cle, v)} draft={draft} />
-            {p.unite && <span className="ps-unit">{t(p.unite)}</span>}
-          </div>
+      <div key={p.cle} className={`ps-reglage ${estModifie(p) ? 'is-modifie' : ''} ${large ? 'ps-reglage--large' : ''} ${p.type === 'BOOLEEN' ? 'ps-reglage--bascule' : ''}`}>
+        <div className="ps-reglage-tete">
+          <label htmlFor={`ps-${p.cle}`} className="ps-reglage-titre">{t(p.libelle)}</label>
+          <Badge liste={[p]} />
           <BoutonDefaut liste={[p]} />
+        </div>
+        {p.description && <p className="ps-reglage-aide">{t(p.description)}</p>}
+        <div className="ps-reglage-valeur ps-pcard-control">
+          <ChampValeur param={p} valeur={draft[p.cle]} onChange={(v) => setValue(p.cle, v)} draft={draft} />
+          {p.unite && <span className="ps-unit">{t(p.unite)}</span>}
         </div>
       </div>
     );
@@ -399,12 +401,13 @@ export default function ParametresSysteme() {
           const titre = t(ref.libelle).replace(/\s—\s.*$/, '');
           const executable = Boolean(tache.heure && codeTache(tache.heure.cle));
           return (
-            <div key={code} className={`ps-ligne ps-ligne--tache ${liste.some(estModifie) ? 'is-modifie' : ''} ${actif ? '' : 'is-eteint'}`}>
-              <div className="ps-ligne-texte">
-                <span className="ps-ligne-titre">{titre} <Badge liste={liste} /></span>
-                {ref.description && <p className="ps-ligne-aide">{t(ref.description)}</p>}
+            <div key={code} className={`ps-reglage ps-reglage--tache ${liste.some(estModifie) ? 'is-modifie' : ''} ${actif ? '' : 'is-eteint'}`}>
+              <div className="ps-reglage-tete">
+                <span className="ps-reglage-titre">{titre}</span>
+                <Badge liste={liste} />
               </div>
-              <div className="ps-ligne-valeur">
+              {ref.description && <p className="ps-reglage-aide">{t(ref.description)}</p>}
+              <div className="ps-reglage-valeur ps-reglage-valeur--tache">
                 {tache.actif && (
                   <ChampValeur param={tache.actif} valeur={draft[tache.actif.cle]} onChange={(v) => setValue(tache.actif.cle, v)} draft={draft} />
                 )}
@@ -485,7 +488,7 @@ export default function ParametresSysteme() {
             </table>
           </div>
         )}
-        {reste.length > 0 && <div className="ps-lignes">{reste.map(ligneParametre)}</div>}
+        {reste.length > 0 && <div className="ps-grille">{reste.map(ligneParametre)}</div>}
       </>
     );
   };
@@ -503,9 +506,9 @@ export default function ParametresSysteme() {
       return (
         <>
           {r.items.length > 0 && (
-            <div className="ps-carte">
+            <div className="ps-carte ps-carte--transparente">
               <h3 className="ps-carte-titre">{t('Déclenchement automatique')}</h3>
-              <div className="ps-lignes">{lignesTaches(r.items)}</div>
+              <div className="ps-grille">{lignesTaches(r.items)}</div>
             </div>
           )}
           <div className="ps-carte ps-carte--libre">
@@ -520,8 +523,8 @@ export default function ParametresSysteme() {
     if (r.id === 'codes_panne') return <div className="ps-carte"><CodesPanneVue prestataireId={draft['cubix.prestataire_id']} /></div>;
     if (r.id === 'checklists') return <div className="ps-carte"><ChecklistsReclamationVue prestataireId={draft['cubix.prestataire_id']} /></div>;
     if (r.id === 'sla') return <div className="ps-carte">{tableauSla(r.items)}</div>;
-    if (r.id === 'planif') return <div className="ps-carte"><div className="ps-lignes">{lignesTaches(r.items)}</div></div>;
-    return <div className="ps-carte"><div className="ps-lignes">{r.items.map(ligneParametre)}</div></div>;
+    if (r.id === 'planif') return <div className="ps-grille">{lignesTaches(r.items)}</div>;
+    return <div className="ps-grille">{r.items.map(ligneParametre)}</div>;
   };
 
   /* ─── Recherche dans tous les réglages ─── */
@@ -535,6 +538,76 @@ export default function ParametresSysteme() {
 
   const nbModifies = (r) => r.items.filter(estModifie).length;
 
+  /** Petite ligne d'état sous le titre de chaque tuile */
+  const resumeTuile = (r) => {
+    if (r.id === 'general') return t('Langue de l’application');
+    if (r.id === 'codes_panne' || r.id === 'checklists') return t('Liste à gérer');
+    if (r.id === 'preventif') return t('Types, règles et déclenchement');
+    if (r.id === 'planif') {
+      const actifs = r.items.filter((p) => /\.actif$/.test(p.cle));
+      return t('{a} sur {n} traitement(s) activé(s)', { a: actifs.filter((p) => draft[p.cle] === 'true').length, n: actifs.length });
+    }
+    const bascules = r.items.filter((p) => p.type === 'BOOLEEN');
+    if (bascules.length === 1 && draft[bascules[0].cle] !== 'true') return t('Désactivé');
+    return t('{n} réglage(s)', { n: r.items.length });
+  };
+
+  const enTeteRubrique = (r) => {
+    const ton = TON_SECTION[r.section] || 'ardoise';
+    return (
+      <header className={`ps-detail-tete ps-ton--${ton}`}>
+        <button type="button" className="ps-retour" onClick={() => choisirRubrique(null)}>
+          <ArrowLeft size={16} aria-hidden="true" /> {t('Paramètres')}
+        </button>
+        <div className="ps-detail-titre">
+          <span className="ps-detail-icone"><r.Icone size={22} aria-hidden="true" /></span>
+          <div className="ps-detail-texte">
+            <span className="ps-detail-section">{t(r.section || 'Autres réglages')}</span>
+            <h2 id="ps-rubrique-titre">{t(r.titre)}</h2>
+            {r.aide && <p>{t(r.aide)}</p>}
+          </div>
+          {r.items.length > 0 && r.id !== 'preventif' && r.items.some((p) => draft[p.cle] !== p.valeurDefaut) && (
+            <button type="button" className="ps-action" onClick={() => reinitialiser(r.items)}>
+              <Undo2 size={13} /> {t('Valeurs par défaut')}
+            </button>
+          )}
+        </div>
+      </header>
+    );
+  };
+
+  const accueil = () => (
+    <div className="ps-accueil">
+      {SECTIONS_MENU.map((section) => {
+        const liste = rubriques.filter((r) => (r.section || 'Autres réglages') === section);
+        if (liste.length === 0) return null;
+        const ton = TON_SECTION[section] || 'ardoise';
+        return (
+          <section key={section} className={`ps-section ps-ton--${ton}`} aria-label={t(section)}>
+            <h2 className="ps-section-titre"><span className="ps-section-point" aria-hidden="true" />{t(section)}</h2>
+            <div className="ps-tuiles">
+              {liste.map((r) => {
+                const n = nbModifies(r);
+                return (
+                  <button key={r.id} type="button" className={`ps-tuile ${n > 0 ? 'is-modifie' : ''}`} onClick={() => choisirRubrique(r.id)}>
+                    <span className="ps-tuile-icone"><r.Icone size={20} aria-hidden="true" /></span>
+                    <span className="ps-tuile-texte">
+                      <span className="ps-tuile-titre">{t(r.titre)}</span>
+                      <span className="ps-tuile-resume">{resumeTuile(r)}</span>
+                    </span>
+                    {n > 0
+                      ? <span className="ps-tuile-point" title={t('{n} modification(s) non enregistrée(s)', { n })}>{n}</span>
+                      : <ChevronRight size={16} className="ps-tuile-fleche" aria-hidden="true" />}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+
   return (
     <div className="ps-page">
       <header className="ps-entete">
@@ -542,7 +615,7 @@ export default function ParametresSysteme() {
           <span className="ps-entete-icone"><ICONES_MODULES.parametresSysteme size={22} /></span>
           <div>
             <h1>{t('Paramètres système')}</h1>
-            <p>{t('Heures des traitements automatiques, seuils de détection, barème SLA et lien avec Cubix.')}</p>
+            <p>{t('{n} rubriques · {m} réglages', { n: rubriques.length, m: params.length })}</p>
           </div>
         </div>
         <label className="ps-recherche">
@@ -570,74 +643,31 @@ export default function ParametresSysteme() {
         </div>
       )}
 
-      <div className="ps-corps">
-        <nav className="ps-nav" aria-label={t('Rubriques des paramètres')}>
-          {SECTIONS_MENU.map((section) => {
-            const liste = rubriques.filter((r) => (r.section || 'Autres réglages') === section);
-            if (liste.length === 0) return null;
-            return (
-              <div key={section} className="ps-nav-groupe" role="group" aria-label={t(section)}>
-                <span className="ps-nav-groupe-titre">{t(section)}</span>
-                {liste.map((r) => {
-                  const n = nbModifies(r);
-                  const actif = !mots.length && r.id === rubriqueActive?.id;
-                  return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      className={`ps-nav-item ${actif ? 'is-actif' : ''}`}
-                      aria-current={actif ? 'page' : undefined}
-                      onClick={() => choisirRubrique(r.id)}
-                    >
-                      <span className="ps-nav-icone"><r.Icone size={16} aria-hidden="true" /></span>
-                      <span className="ps-nav-texte">{t(r.titre)}</span>
-                      {n > 0 && <span className="ps-nav-point" title={t('{n} modification(s) non enregistrée(s)', { n })}>{n}</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </nav>
-
-        <main className="ps-contenu">
-          {loading ? (
-            <div className="ps-vide"><LoaderCircle size={20} className="ps-tourne" /> {t('Chargement...')}</div>
-          ) : mots.length > 0 ? (
-            resultats.length === 0 ? (
-              <div className="ps-vide">{t('Aucun réglage ne correspond à « {texte} ».', { texte: recherche.trim() })}</div>
-            ) : (
-              resultats.map((r) => (
-                <section key={r.id} className="ps-rubrique">
-                  <header className="ps-rubrique-tete ps-rubrique-tete--petite">
-                    <span className="ps-rubrique-icone"><r.Icone size={16} aria-hidden="true" /></span>
-                    <h2>{t(r.titre)}</h2>
-                    <button type="button" className="ps-lien" onClick={() => choisirRubrique(r.id)}>{t('Ouvrir la rubrique')}</button>
-                  </header>
-                  <div className="ps-carte"><div className="ps-lignes">{r.trouves.map(ligneParametre)}</div></div>
-                </section>
-              ))
-            )
-          ) : rubriqueActive && (
-            <section className="ps-rubrique" aria-labelledby="ps-rubrique-titre">
-              <header className="ps-rubrique-tete">
-                <span className="ps-rubrique-icone"><rubriqueActive.Icone size={20} aria-hidden="true" /></span>
-                <div className="ps-rubrique-texte">
-                  <h2 id="ps-rubrique-titre">{t(rubriqueActive.titre)}</h2>
-                  {rubriqueActive.aide && <p>{t(rubriqueActive.aide)}</p>}
-                </div>
-                {rubriqueActive.items.length > 0 && rubriqueActive.id !== 'preventif'
-                  && rubriqueActive.items.some((p) => draft[p.cle] !== p.valeurDefaut) && (
-                  <button type="button" className="ps-action" onClick={() => reinitialiser(rubriqueActive.items)}>
-                    <Undo2 size={13} /> {t('Valeurs par défaut')}
-                  </button>
-                )}
-              </header>
-              {contenuRubrique(rubriqueActive)}
-            </section>
-          )}
-        </main>
-      </div>
+      <main className="ps-contenu">
+        {loading ? (
+          <div className="ps-vide"><LoaderCircle size={20} className="ps-tourne" /> {t('Chargement...')}</div>
+        ) : mots.length > 0 ? (
+          resultats.length === 0 ? (
+            <div className="ps-vide">{t('Aucun réglage ne correspond à « {texte} ».', { texte: recherche.trim() })}</div>
+          ) : (
+            resultats.map((r) => (
+              <section key={r.id} className={`ps-resultat ps-ton--${TON_SECTION[r.section] || 'ardoise'}`}>
+                <header className="ps-resultat-tete">
+                  <span className="ps-tuile-icone"><r.Icone size={16} aria-hidden="true" /></span>
+                  <h2>{t(r.titre)}</h2>
+                  <button type="button" className="ps-lien" onClick={() => choisirRubrique(r.id)}>{t('Ouvrir la rubrique')} <ChevronRight size={14} /></button>
+                </header>
+                <div className="ps-grille">{r.trouves.map(ligneParametre)}</div>
+              </section>
+            ))
+          )
+        ) : rubriqueActive ? (
+          <section className="ps-detail" aria-labelledby="ps-rubrique-titre">
+            {enTeteRubrique(rubriqueActive)}
+            {contenuRubrique(rubriqueActive)}
+          </section>
+        ) : accueil()}
+      </main>
 
       {dirtyKeys.length > 0 && (
         <div className="ps-savebar" role="region" aria-label={t('Modifications non enregistrées')}>

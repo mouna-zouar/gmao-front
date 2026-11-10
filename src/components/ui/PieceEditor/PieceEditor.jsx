@@ -7,6 +7,7 @@ import bonMaintenanceCommandeService from '../../../services/bonMaintenanceComma
 import { obtenirArticles, obtenirPrestataires } from '../../../store/referentiels';
 import { useAppDispatch } from '../../../store/hooks';
 import { chargerDepots } from '../../../store/depotsSlice';
+import serviceService from '../../../services/Serviceservice';
 import pieceLigneService from '../../../services/pieceLigneService';
 import { t, locale } from '../../../i18n';
 import './PieceEditor.css';
@@ -65,8 +66,10 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
   const [articles, setArticles] = useState([]);
   const [depots, setDepots] = useState([]);
   const [fournisseurs, setFournisseurs] = useState([]);
+  const [services, setServices] = useState([]);
   const [besoins, setBesoins] = useState([]);
-  const [entete, setEntete] = useState({ date: aujourdhui(), depotId: '', cibleId: '', note: '' });
+  // Mêmes attributs que l'API Cubix (GMAOApiController) : date, dépôt, service, dépôt destinataire / fournisseur
+  const [entete, setEntete] = useState({ date: aujourdhui(), depotId: '', depotDestinationId: '', serviceId: '', cibleId: '', note: '' });
   const [numero, setNumero] = useState(null);
   const [lignes, setLignes] = useState([]);
   const [recherche, setRecherche] = useState('');
@@ -93,24 +96,27 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     try { depotMemorise = localStorage.getItem(CLE_DEPOT) || ''; } catch { /* stockage indisponible */ }
     (async () => {
       try {
-        const [arts, deps, besoinsBon, presta] = await Promise.all([
+        const [arts, deps, besoinsBon, presta, servs] = await Promise.all([
           obtenirArticles().catch(() => []),
           dispatch(chargerDepots()).unwrap().catch(() => []),
           (type === 'COMMANDE'
             ? bonMaintenanceCommandeService.getArticlesDisponibles(bonMaintenance.id)
             : bonMaintenanceCommandeService.getArticlesADemander(bonMaintenance.id)).catch(() => []),
           type === 'COMMANDE' ? obtenirPrestataires().catch(() => []) : Promise.resolve([]),
+          type === 'DEMANDE' ? serviceService.getAll(0, 200).then((d) => d?.content ?? d ?? []).catch(() => []) : Promise.resolve([]),
         ]);
         if (annule) return;
         const listeDepots = Array.isArray(deps) ? deps : [];
         setArticles(Array.isArray(arts) ? arts : []);
         setDepots(listeDepots);
         setFournisseurs(Array.isArray(presta) ? presta : []);
+        setServices(Array.isArray(servs) ? servs : []);
         setBesoins(besoinsBon ?? []);
         const depotDefaut = listeDepots.some((d) => String(d.id) === depotMemorise) ? depotMemorise
           : String(listeDepots.find((d) => d.estPrincipal)?.id ?? listeDepots[0]?.id ?? '');
         const cibleDefaut = type === 'COMMANDE' ? String((besoinsBon ?? []).find((b) => b.sousTraitantId)?.sousTraitantId ?? '') : '';
-        setEntete({ date: aujourdhui(), depotId: depotDefaut, cibleId: cibleDefaut, note: '' });
+        const serviceBon = bonMaintenance.serviceId ?? bonMaintenance.service?.id ?? '';
+        setEntete({ date: aujourdhui(), depotId: depotDefaut, depotDestinationId: '', serviceId: serviceBon ? String(serviceBon) : '', cibleId: cibleDefaut, note: '' });
       } catch {
         if (!annule) setErreur(t('Impossible de préparer la pièce. Vérifie que le serveur est bien lancé.'));
       } finally {
@@ -191,6 +197,8 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
 
   const problemes = [];
   if (lignes.length === 0) problemes.push(t('Ajoutez au moins un article.'));
+  if (!entete.depotId) problemes.push(type === 'DEMANDE' ? t('Choisissez le dépôt source.') : t('Choisissez le dépôt.'));
+  if (type === 'DEMANDE' && !entete.depotDestinationId) problemes.push(t('Choisissez le dépôt destinataire.'));
   if (type === 'COMMANDE' && !entete.cibleId) problemes.push(t('Choisissez le fournisseur.'));
   if (lignes.some((l) => nz(l.qte) <= 0)) problemes.push(t('Chaque quantité doit être supérieure à zéro.'));
 
@@ -200,6 +208,8 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     type,
     cibleId: cibleId ? Number(cibleId) : null,
     depotId: entete.depotId ? Number(entete.depotId) : null,
+    depotDestinationId: type === 'DEMANDE' && entete.depotDestinationId ? Number(entete.depotDestinationId) : null,
+    serviceId: type === 'DEMANDE' && entete.serviceId ? Number(entete.serviceId) : null,
     date: entete.date || null,
     note: entete.note || null,
     personnelId: authService.getUserId?.() ?? null,
@@ -209,8 +219,8 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
       designation: l.designation,
       qte: nz(l.qte),
       prixUnitaire: nz(l.prixUnitaire),
-      remise: nz(l.remise),
-      tva: nz(l.tva),
+      remise: 0,
+      tva: type === 'COMMANDE' ? nz(l.tva) : 0,
       unite: l.unite || null,
       bonMaintenanceTacheId: l.bonMaintenanceTacheId,
     })),
@@ -473,11 +483,13 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
                       <th>{t('Article')}</th>
                       <th className="pe-col-num">{t('Disponible')}</th>
                       <th className="pe-col-num">{t('Qté')}</th>
-                      <th className="pe-col-unite">{t('Unité')}</th>
-                      <th className="pe-col-num">{t('PU (DT)')}</th>
-                      <th className="pe-col-pct">{t('Remise %')}</th>
-                      <th className="pe-col-pct">{t('TVA %')}</th>
-                      <th className="pe-col-num">{t('Montant HT')}</th>
+                      {type === 'COMMANDE' && (
+                        <>
+                          <th className="pe-col-num">{t('PU (DT)')}</th>
+                          <th className="pe-col-pct">{t('TVA %')}</th>
+                          <th className="pe-col-num">{t('Montant HT')}</th>
+                        </>
+                      )}
                       <th className="pe-col-x" aria-label={t('Retirer la ligne')} />
                     </tr>
                   </thead>
@@ -506,19 +518,17 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
                             <input type="number" min="0" step="any" value={l.qte} aria-label={t('Qté')}
                               onChange={(e) => changerLigne(l.cle, 'qte', e.target.value)} className={nz(l.qte) <= 0 ? 'pe-requis' : ''} />
                           </td>
-                          <td className="pe-col-unite">
-                            <input type="text" value={l.unite} aria-label={t('Unité')} onChange={(e) => changerLigne(l.cle, 'unite', e.target.value)} />
-                          </td>
-                          <td className="pe-col-num">
-                            <input type="number" min="0" step="any" value={l.prixUnitaire} aria-label={t('PU (DT)')} onChange={(e) => changerLigne(l.cle, 'prixUnitaire', e.target.value)} />
-                          </td>
-                          <td className="pe-col-pct">
-                            <input type="number" min="0" max="100" step="any" value={l.remise} aria-label={t('Remise %')} onChange={(e) => changerLigne(l.cle, 'remise', e.target.value)} />
-                          </td>
-                          <td className="pe-col-pct">
-                            <input type="number" min="0" step="any" value={l.tva} aria-label={t('TVA %')} onChange={(e) => changerLigne(l.cle, 'tva', e.target.value)} />
-                          </td>
-                          <td className="pe-col-num pe-montant">{nombre(m.net)}</td>
+                          {type === 'COMMANDE' && (
+                            <>
+                              <td className="pe-col-num">
+                                <input type="number" min="0" step="any" value={l.prixUnitaire} aria-label={t('PU (DT)')} onChange={(e) => changerLigne(l.cle, 'prixUnitaire', e.target.value)} />
+                              </td>
+                              <td className="pe-col-pct">
+                                <input type="number" min="0" step="any" value={l.tva} aria-label={t('TVA %')} onChange={(e) => changerLigne(l.cle, 'tva', e.target.value)} />
+                              </td>
+                              <td className="pe-col-num pe-montant">{nombre(m.net)}</td>
+                            </>
+                          )}
                           <td className="pe-col-x">
                             <button type="button" className="pe-retirer" onClick={() => retirerLigne(l.cle)} aria-label={t('Retirer la ligne')} title={t('Retirer la ligne')}>
                               <X size={15} />
@@ -548,12 +558,32 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
                 <input type="date" value={entete.date} onChange={(e) => changerEntete('date', e.target.value)} />
               </label>
               <label className="pe-champ">
-                <span className="pe-champ__titre">{t('Dépôt')}</span>
-                <select value={entete.depotId} onChange={(e) => changerEntete('depotId', e.target.value)}>
+                <span className="pe-champ__titre">{type === 'DEMANDE' ? t('Dépôt source') : t('Dépôt')} *</span>
+                <select value={entete.depotId} onChange={(e) => changerEntete('depotId', e.target.value)} className={!entete.depotId ? 'pe-requis' : ''}>
                   <option value="">{t('— Non précisé —')}</option>
                   {depots.map((d) => <option key={d.id} value={d.id}>{d.nom || d.codeDepots || `#${d.id}`}</option>)}
                 </select>
               </label>
+              {type === 'DEMANDE' && (
+                <label className="pe-champ">
+                  <span className="pe-champ__titre">{t('Service')}</span>
+                  <select value={entete.serviceId} onChange={(e) => changerEntete('serviceId', e.target.value)}>
+                    <option value="">{t('— Non précisé —')}</option>
+                    {services.map((sv) => <option key={sv.id} value={sv.id}>{sv.description || sv.code || `#${sv.id}`}</option>)}
+                  </select>
+                </label>
+              )}
+              {type === 'DEMANDE' && (
+                <label className="pe-champ">
+                  <span className="pe-champ__titre">{t('Dépôt destinataire')} *</span>
+                  <select value={entete.depotDestinationId} onChange={(e) => changerEntete('depotDestinationId', e.target.value)} className={!entete.depotDestinationId ? 'pe-requis' : ''}>
+                    <option value="">{t('— Non précisé —')}</option>
+                    {depots.filter((d) => String(d.id) !== String(entete.depotId)).map((d) => (
+                      <option key={d.id} value={d.id}>{d.nom || d.codeDepots || `#${d.id}`}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
               {type === 'COMMANDE' && (
                 <label className="pe-champ">
                   <span className="pe-champ__titre">{t('Fournisseur')} *</span>
@@ -570,26 +600,30 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
                   </select>
                 </label>
               )}
-              <label className="pe-champ">
-                <span className="pe-champ__titre">{t('Note')}</span>
-                <textarea rows={2} value={entete.note} onChange={(e) => changerEntete('note', e.target.value)} placeholder={t('Ex. urgent, à livrer au service radiologie')} />
-              </label>
             </section>
 
-            <section className="pe-carte pe-totaux">
-              <span className="pe-carte__titre">{t('Totaux')}</span>
-              <dl>
-                <div><dt>{t('Total brut')}</dt><dd>{nombre(totaux.brut)}</dd></div>
-                <div><dt>{t('Remise')}</dt><dd>− {nombre(totaux.brut - totaux.net)}</dd></div>
-                <div><dt>{t('Total HT')}</dt><dd>{nombre(totaux.net)}</dd></div>
-                <div><dt>{t('TVA')}</dt><dd>{nombre(totaux.tva)}</dd></div>
-              </dl>
-              <div className="pe-totaux__ttc">
-                <span>{t('Total TTC')}</span>
-                <strong>{nombre(totaux.net + totaux.tva)} <small>DT</small></strong>
-              </div>
-              <span className="pe-totaux__nb">{t('{n} ligne(s)', { n: lignes.length })}</span>
-            </section>
+            {type === 'COMMANDE' ? (
+              <section className="pe-carte pe-totaux">
+                <span className="pe-carte__titre">{t('Totaux')}</span>
+                <dl>
+                  <div><dt>{t('Total HT')}</dt><dd>{nombre(totaux.net)}</dd></div>
+                  <div><dt>{t('TVA')}</dt><dd>{nombre(totaux.tva)}</dd></div>
+                </dl>
+                <div className="pe-totaux__ttc">
+                  <span>{t('Total TTC')}</span>
+                  <strong>{nombre(totaux.net + totaux.tva)} <small>DT</small></strong>
+                </div>
+                <span className="pe-totaux__nb">{t('{n} ligne(s)', { n: lignes.length })}</span>
+              </section>
+            ) : (
+              <section className="pe-carte pe-totaux">
+                <span className="pe-carte__titre">{t('Articles')}</span>
+                <div className="pe-totaux__ttc">
+                  <span>{t('{n} ligne(s)', { n: lignes.length })}</span>
+                  <strong>{nombre(lignes.reduce((n, l) => n + nz(l.qte), 0), 0)} <small>{t('unités')}</small></strong>
+                </div>
+              </section>
+            )}
           </aside>
         </div>
       )}

@@ -1,5 +1,16 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import assistantService from '../services/assistantService';
+import authService from '../services/Authservice';
+
+/** Personne connectée : auteur des actions faites par l'assistant. */
+function utilisateur() {
+  const u = authService.getCurrentUser();
+  const id = u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
+  return {
+    id: id != null && id !== '' ? Number(id) : null,
+    nom: u?.userNom || [u?.prenom, u?.nom].filter(Boolean).join(' ') || u?.login || null,
+  };
+}
 
 
 export const CLE_CONVERSATION = 'gmao.assistant.conversation';
@@ -17,7 +28,8 @@ export const poserQuestion = createAsyncThunk('assistant/poserQuestion', async (
     .filter((m) => m.role === 'ia' && m.question).slice(-3)
     .map((m) => ({ question: m.question, reponse: m.reponse || '' }));
   try {
-    return await assistantService.question(question, langue, historique);
+    // L'agent répond ET peut agir (il se replie seul sur les questions si l'IA ne gère pas les outils)
+    return await assistantService.agent(question, langue, historique, utilisateur());
   } catch (e) {
     return rejectWithValue(e?.response?.data?.message || null);
   }
@@ -40,7 +52,7 @@ const assistantSlice = createSlice({
         state.enCours = false;
         state.messages.push({
           role: 'ia', question: action.meta.arg.question, reponse: r.reponse, resultats: r.resultats || [],
-          message: r.message, suggestions: r.suggestions || [],
+          message: r.message, suggestions: r.suggestions || [], actions: r.actions || [],
         });
       })
       .addCase(poserQuestion.rejected, (state, action) => {

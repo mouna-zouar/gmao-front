@@ -607,3 +607,125 @@ label.ps-ligne-titre { cursor: pointer; }
   .ps-ligne:not(.ps-ligne--bloc):not(.ps-ligne--tache) .ps-ligne-valeur { justify-content: flex-start; }
   .ps-ligne--tache { grid-template-columns: minmax(0, 1fr) auto; }
 }
+
+/* ============================================================
+   Nouvelle présentation : accueil en tuiles + rubrique en plein écran
+   ============================================================ */
+
+/* Couleur de chaque section */
+.ps-ton--indigo  { --ps-ton: #4f46e5; --ps-ton-doux: #eef2ff; --ps-ton-bord: #c7d2fe; }
+.ps-ton--teal    { --ps-ton: var(--g-brand-600, #0e7490); --ps-ton-doux: var(--g-brand-50); --ps-ton-bord: var(--g-brand-100); }
+.ps-ton--ambre   { --ps-ton: #b45309; --ps-ton-doux: #fffbeb; --ps-ton-bord: #fde68a; }
+.ps-ton--violet  { --ps-ton: #7c3aed; --ps-ton-doux: #f5f3ff; --ps-ton-bord: #ddd6fe; }
+.ps-ton--ardoise { --ps-ton: #475569; --ps-ton-doux: #f1f5f9; --ps-ton-bord: #cbd5e1; }
+
+/* Pleine largeur, sans marge autour de la page (seul l'espace bas reste pour la barre Enregistrer) */
+.ps-page { max-width: none; margin: 0; padding: 16px 20px 100px; background: transparent; }
+.ps-entete {
+  padding: 18px 22px; background: var(--ps-bg); border: 1px solid var(--ps-border);
+  border-radius: 16px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.ps-contenu { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+/* ─── Accueil ─── */
+.ps-accueil { display: flex; flex-direction: column; gap: 26px; }
+.ps-section-titre {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
+  font-size: 0.74rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ps-text-mute);
+}
+.ps-section-point { width: 8px; height: 8px; border-radius: 999px; background: var(--ps-ton); box-shadow: 0 0 0 3px var(--ps-ton-doux); }
+.ps-tuiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.ps-tuile {
+  position: relative; display: flex; align-items: center; gap: 14px; min-height: 78px;
+  padding: 14px 16px; text-align: start; cursor: pointer;
+  background: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  font-family: var(--g-police);
+  transition: transform 0.18s var(--ps-ease), box-shadow 0.18s, border-color 0.18s;
+}
+.ps-tuile::before {
+  content: ''; position: absolute; inset-inline-start: 0; top: 14px; bottom: 14px; width: 3px;
+  border-radius: 0 3px 3px 0; background: var(--ps-ton); opacity: 0; transition: opacity 0.18s;
+}
+.ps-tuile:hover { transform: translateY(-2px); border-color: var(--ps-ton-bord); box-shadow: 0 10px 24px -14px rgba(15, 23, 42, 0.35); }
+.ps-tuile:hover::before { opacity: 1; }
+.ps-tuile:focus-visible { outline: 2px solid var(--ps-ton); outline-offset: 2px; }
+.ps-tuile.is-modifie { border-color: var(--ps-amber-border); }
+.ps-tuile-icone {
+  width: 42px; height: 42px; flex-shrink: 0; display: inline-grid; place-items: center;
+  border-radius: 12px; background: var(--ps-ton-doux); color: var(--ps-ton); border: 1px solid var(--ps-ton-bord);
+}
+.ps-tuile-texte { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.ps-tuile-titre { font-size: 0.93rem; font-weight: 700; color: var(--ps-text); line-height: 1.25; }
+.ps-tuile-resume { font-size: 0.78rem; font-weight: 500; color: var(--ps-text-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ps-tuile-fleche { color: var(--g-slate-300); flex-shrink: 0; transition: transform 0.18s, color 0.18s; }
+.ps-tuile:hover .ps-tuile-fleche { color: var(--ps-ton); transform: translateX(3px); }
+[dir='rtl'] .ps-tuile-fleche { transform: scaleX(-1); }
+.ps-tuile-point {
+  min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; display: inline-grid; place-items: center;
+  background: var(--ps-amber-soft); color: #b45309; border: 1px solid var(--ps-amber-border); font-size: 0.72rem; font-weight: 800;
+}
+
+/* ─── Rubrique ouverte ─── */
+.ps-detail { display: flex; flex-direction: column; gap: 16px; }
+.ps-detail-tete {
+  padding: 14px 20px 18px; background: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); border-top: 3px solid var(--ps-ton);
+}
+.ps-retour {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; padding: 5px 10px 5px 6px;
+  border: 0; border-radius: 8px; background: transparent; color: var(--ps-text-mute);
+  font: 600 0.82rem var(--g-police); cursor: pointer;
+}
+.ps-retour:hover { background: var(--ps-ton-doux); color: var(--ps-ton); }
+[dir='rtl'] .ps-retour svg { transform: scaleX(-1); }
+.ps-detail-titre { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ps-detail-icone {
+  width: 48px; height: 48px; flex-shrink: 0; display: inline-grid; place-items: center;
+  border-radius: 14px; background: var(--ps-ton-doux); color: var(--ps-ton); border: 1px solid var(--ps-ton-bord);
+}
+.ps-detail-texte { flex: 1; min-width: 220px; }
+.ps-detail-section { font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ps-ton); }
+.ps-detail-texte h2 { margin: 2px 0 0; font-size: 1.25rem; font-weight: 800; color: var(--ps-text); letter-spacing: -0.01em; }
+.ps-detail-texte p { margin: 3px 0 0; font-size: 0.85rem; color: var(--ps-text-mute); }
+
+/* ─── Cartes de réglages (2 colonnes) ─── */
+.ps-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 12px; align-items: stretch; }
+.ps-reglage {
+  position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+  padding: 14px 16px; background: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04); transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ps-reglage:hover { border-color: var(--ps-border-strong); }
+.ps-reglage:focus-within { border-color: var(--ps-accent); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.1); }
+.ps-reglage.is-modifie { border-color: var(--ps-amber-border); background: linear-gradient(0deg, var(--ps-bg), var(--ps-bg)) padding-box; box-shadow: inset 3px 0 0 var(--ps-amber); }
+.ps-reglage--large { grid-column: 1 / -1; }
+.ps-reglage-tete { display: flex; align-items: center; gap: 8px; min-height: 26px; }
+.ps-reglage-titre { flex: 1; min-width: 0; font-size: 0.9rem; font-weight: 700; color: var(--ps-text); line-height: 1.3; }
+.ps-reglage-aide { margin: 0; font-size: 0.79rem; line-height: 1.45; color: var(--ps-text-mute); }
+.ps-reglage-valeur { margin-top: auto; padding-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ps-reglage-valeur input[type='number'], .ps-reglage-valeur input[type='time'] { width: 140px; }
+.ps-reglage-valeur input[type='text'] { flex: 1; min-width: 200px; }
+/* Interrupteur : à droite du titre, la carte reste basse */
+.ps-reglage--bascule { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 14px; align-items: center; }
+.ps-reglage--bascule .ps-reglage-tete { grid-column: 1; }
+.ps-reglage--bascule .ps-reglage-aide { grid-column: 1; }
+.ps-reglage--bascule .ps-reglage-valeur { grid-column: 2; grid-row: 1 / span 2; margin: 0; padding: 0; }
+.ps-reglage--tache.is-eteint .ps-reglage-titre { color: var(--ps-text-mute); }
+.ps-reglage-valeur--tache { gap: 10px; }
+.ps-reglage-valeur--tache .ps-action--run { margin-inline-start: auto; }
+.ps-carte--transparente { padding: 0; background: transparent; border: 0; box-shadow: none; }
+.ps-carte--transparente > .ps-carte-titre { margin: 0 0 10px; }
+
+/* ─── Résultats de recherche ─── */
+.ps-resultat { display: flex; flex-direction: column; gap: 10px; }
+.ps-resultat-tete { display: flex; align-items: center; gap: 10px; }
+.ps-resultat-tete .ps-tuile-icone { width: 32px; height: 32px; border-radius: 9px; }
+.ps-resultat-tete h2 { flex: 1; margin: 0; font-size: 1rem; font-weight: 800; color: var(--ps-text); }
+.ps-resultat-tete .ps-lien { display: inline-flex; align-items: center; gap: 2px; }
+
+@media (max-width: 640px) {
+  .ps-page { padding: 12px 12px 100px; }
+  .ps-tuiles { grid-template-columns: 1fr; }
+  .ps-reglage-valeur input[type='number'], .ps-reglage-valeur input[type='time'] { width: 110px; }
+}

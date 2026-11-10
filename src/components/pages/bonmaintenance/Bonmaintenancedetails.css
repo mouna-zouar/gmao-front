@@ -4796,3 +4796,19 @@ button.bmx-vital:hover { background: var(--paper); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-btn--valider:hover:not(:disabled) { background: var(--g-brand-600); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-alerte { font-size: 0.75rem; font-weight: 500; color: var(--g-red-600); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-stock { font-size: 0.75rem; }
+
+/* Transfert des documents d'achat vers Cubix */
+.bmd-doc-cubix { border-color: #99e4ec; color: #066d79; background: #f0fbfc; }
+.bmd-doc-cubix:hover:not(:disabled) { background: #0794a4; border-color: #0794a4; color: #fff; }
+.bmd-cubix-badge {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; padding: 2px 9px; border-radius: 999px;
+  background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 12px; font-weight: 700;
+}
+.bmd-cubix-message {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 9px 12px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; border: 1px solid;
+}
+.bmd-cubix-message span { flex: 1; }
+.bmd-cubix-message button { border: 0; background: transparent; cursor: pointer; color: inherit; display: inline-flex; padding: 2px; }
+.bmd-cubix-message.is-ok { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.bmd-cubix-message.is-erreur { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }

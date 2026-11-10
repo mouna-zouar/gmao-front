@@ -23,6 +23,8 @@ import {
   RotateCcw,
   Download,
   Printer,
+  Send,
+  CloudCheck,
   ChevronDown,
   Eye,
   PackageSearch,
@@ -70,6 +72,7 @@ import BmdChat from './BmdChat';
 import { qrSvg, urlBon } from '../../../utils/qrCode';
 import ModaleQrCode from '../../ui/QrCode/ModaleQrCode';
 import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenancedocumentachatservice';
+import PieceEditor from '../../ui/PieceEditor/PieceEditor';
 import bonMaintenancePieceImmoService from '../../../services/Bonmaintenancepieceimmoservice';
 import bonMaintenanceHistoriqueService from '../../../services/Bonmaintenancehistoriqueservice';
 import bonMaintenanceDiagnosticService from '../../../services/Bonmaintenancediagnosticservice';
@@ -248,7 +251,8 @@ const ETAPES_DEF = [
   { key: 'diagnostic', label: 'Diagnostic', aide: 'On cherche la cause', icon: Stethoscope, rubrique: 'diagnostic' },
   { key: 'reparation', label: 'Réparation', aide: 'Les techniciens réparent', icon: Wrench, rubrique: 'reparation' },
   { key: 'controle', label: 'Contrôle', aide: 'On vérifie que tout marche', icon: ShieldCheck, rubrique: 'controle' },
-  { key: 'remise', label: 'Remise en service', aide: "L'équipement retourne au service", icon: Power, rubrique: 'remiseEnService' },
+  // Étape retirée : la remise en service se fait depuis la liste des réclamations
+  // { key: 'remise', label: 'Remise en service', aide: "L'équipement retourne au service", icon: Power, rubrique: 'remiseEnService' },
   { key: 'cloture', label: 'Clôturé', aide: 'Le dossier est fermé', icon: CheckCircle, rubrique: 'historique' },
 ];
 
@@ -559,6 +563,9 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [impressionEnCours, setImpressionEnCours] = useState(false);
   const [nonLusChat, setNonLusChat] = useState(0);
   const [qrOuvert, setQrOuvert] = useState(false);
+  // Demander (demande de fourniture) / Commander (commande fournisseur) depuis le détail du bon
+  const [editeurPiece, setEditeurPiece] = useState(null); // 'DEMANDE' | 'COMMANDE'
+  const [versionDocuments, setVersionDocuments] = useState(0);
   // Rapport d'intervention (IA) : repris dans la fiche imprimée
   const [rapportIa, setRapportIa] = useState(null);
   const fermerQr = useCallback(() => setQrOuvert(false), []);
@@ -1097,7 +1104,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       case 'historique':
         return <HistoriqueTab bonMaintenanceId={bon.id} />;
       case 'documents':
-        return <DocumentsTab bonMaintenanceId={bon.id} bon={bon} />;
+        return <DocumentsTab key={versionDocuments} bonMaintenanceId={bon.id} bon={bon} />;
       case 'sla':
         return <PanneauDelais sla={slaInfo} />;
       case 'cout':
@@ -1352,6 +1359,12 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
               <ScanSearch size={16} /> <span>{t('Récap équipement')}</span>
             </button>
           )}
+          <button type="button" className="bmz-btn" onClick={() => setEditeurPiece('DEMANDE')} title={t('Demande de fourniture')}>
+            <PackageSearch size={16} /> <span>{t('Demander')}</span>
+          </button>
+          <button type="button" className="bmz-btn" onClick={() => setEditeurPiece('COMMANDE')} title={t('Commande fournisseur')}>
+            <ShoppingCart size={16} /> <span>{t('Commander')}</span>
+          </button>
           <button type="button" className="bmz-btn" onClick={() => setQrOuvert(true)}>
             <QrCode size={16} /> <span>{t('QR code')}</span>
           </button>
@@ -1364,7 +1377,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
 
       {/* ===== Parcours de la réparation ===== */}
       <section className="bmz-parcours" aria-label={t("Parcours de la réparation")}>
-        <ol className="bmz-ligne" style={{ '--bmz-p': progression / 100 }}>
+        <ol className="bmz-ligne" style={{ '--bmz-p': progression / 100, '--bmz-nb': ETAPES_DEF.length }}>
           {parcours.etapes.map((etape) => {
             const IconStatut = etape.statut === 'fait' ? Check : etape.statut === 'probleme' ? AlertTriangle : etape.icon;
             return (
@@ -1509,6 +1522,14 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
           </div>
         </section>
       </div>
+
+      <PieceEditor
+        ouvert={editeurPiece != null}
+        type={editeurPiece || 'DEMANDE'}
+        bonMaintenance={bon}
+        onFermer={() => setEditeurPiece(null)}
+        onCree={() => setVersionDocuments((v) => v + 1)}
+      />
 
       <Tiroir rubrique={tiroir?.key} onClose={fermerTiroir}>
         <div key={`${tiroir?.key}-${tiroir?.form}`}>{contenuTiroir()}</div>
@@ -2571,6 +2592,35 @@ function DocumentsTab({ bonMaintenanceId, bon }) {
   const [prestataires, setPrestataires] = useState([]);
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
   const [impressionId, setImpressionId] = useState(null);
+  const [transfertId, setTransfertId] = useState(null);
+  const [messageCubix, setMessageCubix] = useState(null);
+
+  // Transfert à Cubix / MEDSYS : demande → bon de fourniture BF-…, commande → commande CMD-…
+  const transfererCubix = (d) => {
+    const piece = d.piece || {};
+    const commande = piece.codePieceType === '.COMMANDE_FOURNISSEUR';
+    setConfirmModal({
+      show: true,
+      title: t('Transférer à Cubix'),
+      type: 'info',
+      confirmText: t('Transférer'),
+      message: commande
+        ? t('Créer la commande fournisseur {num} dans Cubix ? Le stock du dépôt sera crédité.', { num: piece.numPiece || `#${d.pieceId}` })
+        : t('Créer le bon de fourniture de la demande {num} dans Cubix ? Les articles sortiront du dépôt source et entreront dans le dépôt destinataire.', { num: piece.numPiece || `#${d.pieceId}` }),
+      onConfirm: async () => {
+        closeConfirmModal();
+        setTransfertId(d.id);
+        setMessageCubix(null);
+        const u = authService.getCurrentUser() || {};
+        const r = await bonMaintenanceDocumentAchatService.transfererCubix(d.pieceId, {
+          id: u.personnelId ?? u.userId ?? null, nom: u.userNom || u.login || null,
+        });
+        setTransfertId(null);
+        setMessageCubix({ ok: r?.succes === true, texte: r?.message || t('Cubix est injoignable pour le moment.') });
+        if (r?.succes) await load();
+      },
+    });
+  };
 
   // Impression au format des rapports Cubix (demande de fourniture, commande fournisseur)
   const imprimerDocument = async (d) => {
@@ -2677,6 +2727,14 @@ function DocumentsTab({ bonMaintenanceId, bon }) {
         </div>
       </div>
 
+      {messageCubix && (
+        <p className={`bmd-cubix-message ${messageCubix.ok ? 'is-ok' : 'is-erreur'}`} role="status">
+          {messageCubix.ok ? <CloudCheck size={15} /> : <AlertTriangle size={15} />}
+          <span>{messageCubix.texte}</span>
+          <button type="button" onClick={() => setMessageCubix(null)} aria-label={t('Fermer')}><X size={13} /></button>
+        </p>
+      )}
+
       {showForm && (
         <form className="bmd-inline-form" onSubmit={handleAdd}>
           <SearchableSelect
@@ -2725,8 +2783,20 @@ function DocumentsTab({ bonMaintenanceId, bon }) {
                     : ''}
                   {d.piece?.description ? ` · ${d.piece.description}` : ''}
                 </span>
+                {d.piece?.cubixNumPiece && (
+                  <span className="bmd-cubix-badge" title={d.piece.dateTransfertCubix ? new Date(d.piece.dateTransfertCubix).toLocaleString() : undefined}>
+                    <CloudCheck size={13} /> {t('Cubix')} : {d.piece.cubixNumPiece}
+                  </span>
+                )}
               </div>
               <div className="bmd-doc-actions">
+                {!d.piece?.cubixNumPiece && ['.D_Fourniture', '.COMMANDE_FOURNISSEUR'].includes(d.piece?.codePieceType) && (
+                  <button type="button" className="bmd-doc-imprimer bmd-doc-cubix" onClick={() => transfererCubix(d)} disabled={transfertId === d.id}
+                    title={t('Transférer à Cubix')} aria-label={t('Transférer à Cubix')}>
+                    {transfertId === d.id ? <Loader2 size={14} className="spinner" /> : <Send size={14} />}
+                    <span>{t('Transférer à Cubix')}</span>
+                  </button>
+                )}
                 <button type="button" className="bmd-doc-imprimer" onClick={() => imprimerDocument(d)} disabled={impressionId === d.id}
                   title={t("Imprimer ce document")} aria-label={t("Imprimer ce document")}>
                   {impressionId === d.id ? <Loader2 size={14} className="spinner" /> : <Printer size={14} />}
@@ -2745,10 +2815,10 @@ function DocumentsTab({ bonMaintenanceId, bon }) {
         show={confirmModal.show}
         onClose={closeConfirmModal}
         onConfirm={confirmModal.onConfirm}
-        type="danger"
+        type={confirmModal.type || 'danger'}
         title={confirmModal.title}
         message={confirmModal.message}
-        confirmText={t("Retirer")}
+        confirmText={confirmModal.confirmText || t("Retirer")}
       />
     </div>
   );

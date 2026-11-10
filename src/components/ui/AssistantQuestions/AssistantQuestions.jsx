@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUp, ChevronRight, LoaderCircle, MessageSquarePlus, Sparkles, X } from 'lucide-react';
+import { ArrowUp, CheckCircle2, ChevronRight, LoaderCircle, MessageSquarePlus, Sparkles, X } from 'lucide-react';
 import assistantService from '../../../services/assistantService';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import {
@@ -17,6 +17,7 @@ import './AssistantQuestions.css';
  */
 
 const SUGGESTIONS_DEFAUT = [
+  'Quelles réclamations sont encore ouvertes ?',
   'Quels bons sont en retard ?',
   'Quels équipements sont en panne en ce moment ?',
   'Quels équipements ont eu le plus de pannes ce trimestre ?',
@@ -137,7 +138,7 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
           <span className="aq-tete__icone"><Sparkles size={18} aria-hidden="true" /></span>
           <div className="aq-tete__texte">
             <h2>{t('Assistant GMAO')}</h2>
-            <p>{t('Posez une question sur vos données')}</p>
+            <p>{t('Posez une question ou demandez une action')}</p>
           </div>
           {messages.length > 0 && (
             <button type="button" className="aq-icone-btn" onClick={() => dispatch(nouvelleConversation())} title={t('Nouvelle conversation')} aria-label={t('Nouvelle conversation')}>
@@ -155,6 +156,7 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
               <Sparkles size={26} aria-hidden="true" />
               <h3>{t('Que voulez-vous savoir ?')}</h3>
               <p>{t('Bons, équipements, pannes, délais, coûts, réclamations, alertes et véhicules : je cherche dans la GMAO et je vous réponds avec les chiffres.')}</p>
+              <p className="aq-accueil-agent">{t('Je peux aussi agir : signaler une panne, trouver le bon technicien, vérifier l’état d’un équipement.')}</p>
               <div className="aq-suggestions">
                 {suggestions.map((s) => (
                   <button key={s} type="button" onClick={() => envoyer(t(s))}>
@@ -170,6 +172,20 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
           ) : (
             <div key={i} className="aq-bulle aq-bulle--ia">
               {m.reponse && <TexteIa texte={m.reponse} />}
+              {(m.actions || []).length > 0 && (
+                <div className="aq-actions">
+                  {m.actions.map((a, k) => {
+                    const lien = LIENS[a.type] ? LIENS[a.type](a.id) : null;
+                    return (
+                      <button key={k} type="button" className="aq-action" onClick={lien ? () => ouvrir(lien) : undefined} disabled={!lien}>
+                        <CheckCircle2 size={15} aria-hidden="true" />
+                        <span dir="auto">{t(a.libelle)}</span>
+                        {lien && <ChevronRight size={14} className="rtl-miroir" aria-hidden="true" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               {(m.message || m.injoignable) && <p className="aq-message">{m.message ? t(m.message) : t('L’assistant est injoignable pour le moment.')}</p>}
               {(m.resultats || []).map((r, k) => <TableauResultat key={k} r={r} onOuvrir={ouvrir} />)}
               {m.suggestions?.length > 0 && (

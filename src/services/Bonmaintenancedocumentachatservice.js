@@ -26,6 +26,18 @@ const bonMaintenanceDocumentAchatService = {
     return data;
   },
 
+  /** Transfère la pièce à Cubix (bon de fourniture BF-… / commande CMD-…) ; renvoie { succes, cubixNumPiece, message }. */
+  async transfererCubix(pieceId, personnel = {}) {
+    try {
+      const { data } = await api.post(`/piece-editor/${pieceId}/transferer-cubix`, {
+        personnelId: personnel.id ?? null, personnelNom: personnel.nom ?? null,
+      });
+      return data;
+    } catch (e) {
+      return e?.response?.data?.message ? e.response.data : { succes: false, message: null };
+    }
+  },
+
   async remove(id) {
     await api.delete(`/bon-maintenance-document-achat/${id}`);
   },

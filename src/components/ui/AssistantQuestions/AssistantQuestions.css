@@ -126,3 +126,15 @@
   .navbar__right .navbar__icon-btn--ia { width: 36px; padding: 0; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) { .aq-panneau { animation: none; } }
+
+/* Actions faites par l'assistant (ex. réclamation créée) */
+.aq-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.aq-action {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; text-align: start;
+  border: 1px solid var(--g-emerald-200, #a7f3d0); border-radius: 10px; background: var(--g-emerald-50, #ecfdf5);
+  color: var(--g-emerald-700, #047857); font: 700 0.84rem var(--g-police); cursor: pointer;
+}
+.aq-action span { flex: 1; min-width: 0; }
+.aq-action:hover:not(:disabled) { background: var(--g-emerald-100, #d1fae5); }
+.aq-action:disabled { cursor: default; }
+.aq-accueil-agent { margin-top: 6px !important; color: var(--g-brand-700, #0e7490) !important; font-weight: 600; }
