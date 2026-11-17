@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Bot, CalendarClock, CalendarSync, ChevronDown, FileWarning, Info, LoaderCircle, Play, Plus, RefreshCw, Save, Search,
+  Bot, CalendarClock, CalendarSync, ChevronDown, Clock, FileWarning, Info, LoaderCircle, Minus, Play, Plus, RotateCcw, RefreshCw, Save, Search,
   Trash2, TriangleAlert, Wallet, Wrench, X,
 } from 'lucide-react';
 import renouvellementService from '../../../services/renouvellementService';
@@ -971,17 +971,68 @@ function Legende({ resultats }) {
 }
 
 /* ---------- Durées de vie par famille ---------- */
+const FILTRES_DUREE = [
+  { cle: 'toutes', label: 'Toutes' },
+  { cle: 'perso', label: 'Personnalisées' },
+  { cle: 'defaut', label: 'Par défaut' },
+  { cle: 'fin', label: 'En fin de vie' },
+];
 function Reglages({ donnees, onEnregistre }) {
   const [lignes, setLignes] = useState(null);
   const [envoi, setEnvoi] = useState(false);
   const [msg, setMsg] = useState(null);
   const [page, setPage] = useState(0);
   const [taille, setTaille] = useState(10);
+  const [recherche, setRecherche] = useState('');
+  const [filtre, setFiltre] = useState('toutes');
+  const defaut = Number(donnees.parametres.dureeVieDefaut) || 10;
+  const versLignes = (l) => l.map((x) => ({ ...x, saisie: x.dureeAnnees ?? '', origine: x.dureeAnnees ?? '' }));
   useEffect(() => {
-    renouvellementService.dureesVie()
-      .then((l) => setLignes(l.map((x) => ({ ...x, saisie: x.dureeAnnees ?? '' }))))
-      .catch(() => setLignes([]));
+    renouvellementService.dureesVie().then((l) => setLignes(versLignes(l))).catch(() => setLignes([]));
   }, []);
+
+  // Âge du parc par famille (équipements analysés) : âge moyen et nombre déjà au-delà de la durée de vie
+  const agesParFamille = useMemo(() => {
+    const m = new Map();
+    (donnees.lignes || []).forEach((l) => {
+      if (l.familleId == null || l.ageAnnees == null) return;
+      const k = String(l.familleId);
+      const a = m.get(k) || [];
+      a.push(Number(l.ageAnnees));
+      m.set(k, a);
+    });
+    return m;
+  }, [donnees.lignes]);
+
+  const enrichies = useMemo(() => (lignes || []).map((x) => {
+    const duree = x.saisie === '' ? defaut : Number(x.saisie);
+    const ages = agesParFamille.get(String(x.id)) || [];
+    const ageMoyen = ages.length ? ages.reduce((s, v) => s + v, 0) / ages.length : null;
+    return {
+      ...x, duree, ageMoyen,
+      finDeVie: ages.filter((a) => a >= duree).length,
+      modifiee: String(x.saisie) !== String(x.origine),
+      perso: x.saisie !== '',
+    };
+  }), [lignes, agesParFamille, defaut]);
+
+  const visibles = useMemo(() => {
+    const q = recherche.trim().toLowerCase();
+    return enrichies.filter((x) => (!q || String(x.nom || '').toLowerCase().includes(q))
+      && (filtre === 'toutes' || (filtre === 'perso' && x.perso) || (filtre === 'defaut' && !x.perso) || (filtre === 'fin' && x.finDeVie > 0)));
+  }, [enrichies, recherche, filtre]);
+  useEffect(() => { setPage(0); }, [recherche, filtre]);
+
+  const nbModifs = enrichies.filter((x) => x.modifiee).length;
+  const compte = {
+    toutes: enrichies.length,
+    perso: enrichies.filter((x) => x.perso).length,
+    defaut: enrichies.filter((x) => !x.perso).length,
+    fin: enrichies.filter((x) => x.finDeVie > 0).length,
+  };
+  const changer = (id, v) => setLignes((l) => l.map((y) => (y.id === id ? { ...y, saisie: v } : y)));
+  const pas = (x, d) => changer(x.id, String(Math.min(50, Math.max(1, (x.saisie === '' ? defaut : Number(x.saisie)) + d))));
+
   const enregistrer = async () => {
     setEnvoi(true);
     setMsg(null);
@@ -989,7 +1040,7 @@ function Reglages({ donnees, onEnregistre }) {
       const l = await renouvellementService.enregistrerDureesVie(lignes.map((x) => ({
         familleId: x.id, familleNom: x.nom, dureeAnnees: x.saisie === '' ? null : Number(x.saisie),
       })));
-      setLignes(l.map((x) => ({ ...x, saisie: x.dureeAnnees ?? '' })));
+      setLignes(versLignes(l));
       setMsg({ ok: true, texte: t('Durées de vie enregistrées : le classement est recalculé.') });
       onEnregistre();
     } catch (e) {
@@ -998,38 +1049,85 @@ function Reglages({ donnees, onEnregistre }) {
       setEnvoi(false);
     }
   };
+  const annuler = () => setLignes((l) => l.map((x) => ({ ...x, saisie: x.origine })));
+
+  const pageSure = Math.min(page, Math.max(0, Math.ceil(visibles.length / taille) - 1));
   return (
-    <section className="rv-carte">
-      <h3 className="rv-titre">{t('Durée de vie par famille d’équipements')}</h3>
-      <p className="rv-aide">{t('Âge à partir duquel un équipement est considéré en fin de vie. Vide : {n} ans (réglable dans Paramètres système → Plan de renouvellement, avec le budget annuel et la hausse des prix).', { n: donnees.parametres.dureeVieDefaut })}</p>
+    <section className="rv-carte rvd">
+      <header className="rvd-tete">
+        <h3 className="rv-titre">{t('Durée de vie par famille d’équipements')}</h3>
+        <span className="rvd-defaut" title={t('Réglable dans Paramètres système → Plan de renouvellement')}>
+          <Clock size={13} aria-hidden="true" /> {t('Par défaut : {n} ans', { n: defaut })}
+        </span>
+      </header>
+
       {lignes === null ? <p className="rv-vide"><LoaderCircle size={15} className="vl-tourne" /> {t('Chargement…')}</p> : lignes.length === 0 ? (
         <p className="rv-vide">{t('Aucune famille dans le parc lu depuis Cubix.')}</p>
       ) : (
         <>
-          <table className="rv-table rv-table--familles">
-            <thead><tr><th>{t('Famille')}</th><th className="rv-num">{t('Équipements')}</th><th>{t('Durée de vie')}</th></tr></thead>
-            <tbody>
-              {lignes.slice(page * taille, (page + 1) * taille).map((x) => (
-                <tr key={x.id}>
-                  <td>{x.nom || `#${x.id}`}</td>
-                  <td className="rv-num">{nb(x.nombre)}</td>
-                  <td>
-                    <span className="rv-unite rv-unite--court">
-                      <input type="number" min="1" max="50" value={x.saisie} placeholder={String(donnees.parametres.dureeVieDefaut)}
-                        onChange={(e) => setLignes((l) => l.map((y) => (y.id === x.id ? { ...y, saisie: e.target.value } : y)))}
-                        aria-label={t('Durée de vie de {f}', { f: x.nom })} />
-                      <span>{t('ans')}</span>
-                    </span>
-                  </td>
-                </tr>
+          <div className="rvd-barre">
+            <label className="rvd-recherche">
+              <Search size={15} aria-hidden="true" />
+              <input type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)}
+                placeholder={t('Rechercher une famille…')} aria-label={t('Rechercher une famille')} />
+            </label>
+            <div className="rvd-filtres" role="group" aria-label={t('Filtrer')}>
+              {FILTRES_DUREE.map((f) => (
+                <button key={f.cle} type="button" aria-pressed={filtre === f.cle} className={filtre === f.cle ? 'is-actif' : ''}
+                  onClick={() => setFiltre(f.cle)}>
+                  {t(f.label)} <b>{compte[f.cle]}</b>
+                </button>
               ))}
-            </tbody>
-          </table>
-          <Pagination page={Math.min(page, Math.max(0, Math.ceil(lignes.length / taille) - 1))} taille={taille} total={lignes.length}
+            </div>
+          </div>
+
+          {visibles.length === 0 ? <p className="rv-vide">{t('Aucune famille ne correspond.')}</p> : (
+            <ul className="rvd-liste">
+              {visibles.slice(pageSure * taille, (pageSure + 1) * taille).map((x) => {
+                const pct = x.ageMoyen == null ? null : Math.min(100, (x.ageMoyen / x.duree) * 100);
+                const ton = pct == null ? '' : pct >= 100 ? 'is-depasse' : pct >= 80 ? 'is-proche' : 'is-ok';
+                return (
+                  <li key={x.id} className={`rvd-ligne ${x.modifiee ? 'is-modifiee' : ''}`}>
+                    <div className="rvd-famille">
+                      <strong title={x.nom}>{x.nom || `#${x.id}`}</strong>
+                      <span>{t('{n} équipements', { n: nb(x.nombre) })}</span>
+                    </div>
+                    <div className={`rvd-age ${ton}`}>
+                      {pct == null ? <span className="rvd-age__vide">—</span> : (
+                        <>
+                          <span className="rvd-age__piste" aria-hidden="true"><span style={{ width: `${pct}%` }} /></span>
+                          <span className="rvd-age__txt">
+                            {t('Âge moyen {a} ans', { a: nb(x.ageMoyen, 1) })}
+                            {x.finDeVie > 0 && <b>{t('{n} en fin de vie', { n: x.finDeVie })}</b>}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="rvd-duree">
+                      <button type="button" className="rvd-pas" onClick={() => pas(x, -1)} aria-label={t('Moins')}><Minus size={14} /></button>
+                      <span className="rv-unite rvd-champ">
+                        <input type="number" min="1" max="50" value={x.saisie} placeholder={String(defaut)}
+                          onChange={(e) => changer(x.id, e.target.value)} aria-label={t('Durée de vie de {f}', { f: x.nom })} />
+                        <span>{t('ans')}</span>
+                      </span>
+                      <button type="button" className="rvd-pas" onClick={() => pas(x, 1)} aria-label={t('Plus')}><Plus size={14} /></button>
+                      {x.perso ? (
+                        <button type="button" className="rvd-reset" onClick={() => changer(x.id, '')} title={t('Revenir à la durée par défaut')}
+                          aria-label={t('Revenir à la durée par défaut')}><RotateCcw size={14} /></button>
+                      ) : <span className="rvd-etiquette">{t('Défaut')}</span>}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          <Pagination page={pageSure} taille={taille} total={visibles.length}
             onPage={setPage} onTaille={(v) => { setTaille(v); setPage(0); }} />
           {msg && <p className={msg.ok ? 'rv-ok' : 'rv-erreur'} role="status">{msg.texte}</p>}
-          <div className="rv-detail__actions">
-            <button type="button" className="vl-btn vl-btn--primaire" onClick={enregistrer} disabled={envoi}>
+          <div className={`rvd-pied ${nbModifs > 0 ? 'is-actif' : ''}`}>
+            <span>{nbModifs > 0 ? t('{n} modification(s) non enregistrée(s)', { n: nbModifs }) : t('Aucune modification')}</span>
+            {nbModifs > 0 && <button type="button" className="vl-btn" onClick={annuler} disabled={envoi}>{t('Annuler')}</button>}
+            <button type="button" className="vl-btn vl-btn--primaire" onClick={enregistrer} disabled={envoi || nbModifs === 0}>
               {envoi ? <LoaderCircle size={15} className="vl-tourne" /> : <Save size={15} />} {t('Enregistrer')}
             </button>
           </div>

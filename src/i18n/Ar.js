@@ -4260,6 +4260,18 @@ const ar = {
   "Anciennes demandes de pièces": "طلبات القطع السابقة",
   "Achats à faire": "مشتريات مطلوبة",
   "Bons dont les tâches ont des articles à demander ou à commander": "أوامر عمل تحتوي مهامها على مواد للطلب أو الشراء",
+  "Par défaut : {n} ans": "افتراضي: {n} سنوات",
+  "Réglable dans Paramètres système → Plan de renouvellement": "قابل للتعديل في إعدادات النظام ← خطة التجديد",
+  "Rechercher une famille": "ابحث عن عائلة",
+  "Personnalisées": "مخصصة",
+  "Par défaut": "افتراضي",
+  "En fin de vie": "نهاية العمر",
+  "Aucune famille ne correspond.": "لا توجد عائلة مطابقة.",
+  "Âge moyen {a} ans": "متوسط العمر {a} سنوات",
+  "{n} en fin de vie": "{n} في نهاية العمر",
+  "Moins": "أقل",
+  "Revenir à la durée par défaut": "العودة إلى المدة الافتراضية",
+  "Aucune modification": "لا تعديلات",
 };
 
 export default ar;

@@ -4259,6 +4259,18 @@ const en = {
   "Anciennes demandes de pièces": "Former parts requests",
   "Achats à faire": "Purchases to do",
   "Bons dont les tâches ont des articles à demander ou à commander": "Work orders whose tasks have items to request or order",
+  "Par défaut : {n} ans": "Default: {n} years",
+  "Réglable dans Paramètres système → Plan de renouvellement": "Adjustable in System settings → Renewal plan",
+  "Rechercher une famille": "Search a family",
+  "Personnalisées": "Custom",
+  "Par défaut": "Default",
+  "En fin de vie": "End of life",
+  "Aucune famille ne correspond.": "No matching family.",
+  "Âge moyen {a} ans": "Average age {a} years",
+  "{n} en fin de vie": "{n} at end of life",
+  "Moins": "Less",
+  "Revenir à la durée par défaut": "Back to default duration",
+  "Aucune modification": "No changes",
 };
 
 export default en;

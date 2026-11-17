@@ -40,7 +40,7 @@ import VuesListe from '../../ui/Listes/VuesListe';
 import { useVueActive } from '../../ui/Listes/stockageVues';
 import CartesListe from '../../ui/Listes/CartesListe';
 import SelectionMultiple, { CaseSelection } from '../../ui/Listes/SelectionMultiple';
-import { bonActif, bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
+import { bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
 // Styles des fenêtres « Demander / Commander » de cette page (classes modal-overlay et bmm-*),
 // autrefois chargés par l'ancienne fenêtre du bon de maintenance
 import '../../ui/modals/Modal.css';
@@ -416,7 +416,7 @@ export default function BonsMaintenance() {
         .then(({ data }) => setMesBonIds(ids(data)))
         .catch(() => { /* « Mes bons » se limite alors aux bons créés ou demandés */ }));
   }, [moi.personnelId]);
-  // « Achats à faire » : bons à traiter dont les tâches ont des articles à demander ou à commander
+  // « Achats à faire » : bons (tous états, effectués compris) dont les tâches ont des articles à demander ou à commander
   const [achatIds, setAchatIds] = useState(null);
   const vuesListe = useMemo(() => vuesBons(moi, mesBonIds, achatIds), [moi, mesBonIds, achatIds]);
   const vueCourante = vuesListe.find((v) => v.id === vueId) || vuesListe[0];
@@ -697,9 +697,9 @@ export default function BonsMaintenance() {
     });
   }, [bonsAvecSla, searchTerm, etatFilter, columnSettings, vueCourante, fc.filtres, choixCol, dansLieu]);
 
-  // Tous les bons à traiter en UN appel (regroupé avec celui de la page), au chargement et après une demande / commande
+  // Tous les bons, effectués compris, en UN appel (regroupé avec celui de la page), au chargement et après une demande / commande
   useEffect(() => {
-    const ids = bons.filter(bonActif).map((b) => b.id);
+    const ids = bons.map((b) => b.id);
     if (ids.length === 0) { setAchatIds(new Set()); return undefined; }
     let annule = false;
     Promise.all(ids.map((id) => besoinsPieces(id).catch(() => null)))

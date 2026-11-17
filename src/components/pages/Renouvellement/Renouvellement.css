@@ -68,12 +68,12 @@ th.rv-num { text-align: end; }
 .rv-detail__ajuster { display: flex; flex-direction: column; gap: 10px; }
 .rv-detail__ajuster label, .rv-scen label { display: flex; flex-direction: column; gap: 4px; font-size: 0.76rem; font-weight: 600; color: var(--g-texte-2); }
 .rv-detail__ajuster small { font-weight: 500; color: var(--g-texte-discret); }
-.rv-detail__ajuster input, .rv-detail__ajuster textarea, .rv-scen input, .rv-scen select, .rv-table--familles input {
+.rv-detail__ajuster input, .rv-detail__ajuster textarea, .rv-scen input, .rv-scen select, .rv-table--familles input, .rvd-champ input {
   height: 34px; padding: 0 10px; border: 1px solid var(--g-bordure); border-radius: 8px; background: var(--g-surface);
   font: 500 0.82rem var(--g-police); color: var(--g-texte); width: 100%;
 }
 .rv-detail__ajuster textarea { height: auto; padding: 8px 10px; resize: vertical; }
-.rv-detail__ajuster input:focus, .rv-detail__ajuster textarea:focus, .rv-scen input:focus, .rv-scen select:focus, .rv-table--familles input:focus {
+.rv-detail__ajuster input:focus, .rv-detail__ajuster textarea:focus, .rv-scen input:focus, .rv-scen select:focus, .rv-table--familles input:focus, .rvd-champ input:focus {
   outline: none; border-color: var(--g-marque); box-shadow: 0 0 0 3px var(--g-marque-clair);
 }
 .rv-detail__ajuster .rv-case { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
@@ -259,3 +259,53 @@ th.rv-num { text-align: end; }
 .rv-combo__leg-ligne { display: inline-block; width: 16px; height: 0; border-top: 2.5px solid var(--g-brand-750, #05606b); margin-right: 6px; vertical-align: 3px; }
 
 
+
+/* ── Durées de vie par famille ── */
+.rvd-tete { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.rvd-tete .rv-titre { margin: 0; }
+.rvd-defaut { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px;
+  background: var(--g-slate-100); color: var(--g-texte-secondaire); font-size: 0.74rem; font-weight: 600; }
+.rvd-barre { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.rvd-recherche { flex: 1 1 240px; max-width: 360px; display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px;
+  border: 1px solid var(--g-bordure); border-radius: 9px; background: var(--g-surface); color: var(--g-texte-discret); }
+.rvd-recherche:focus-within { border-color: var(--g-marque, #0794a4); box-shadow: 0 0 0 3px var(--g-marque-clair, #e9f8fa); }
+.rvd-recherche input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; font: inherit; font-size: 0.82rem; color: var(--g-texte); }
+.rvd-filtres { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; background: var(--g-slate-100); flex-wrap: wrap; }
+.rvd-filtres button { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 0; border-radius: 7px; background: none;
+  font: inherit; font-size: 0.78rem; font-weight: 600; color: var(--g-texte-secondaire); cursor: pointer; }
+.rvd-filtres button b { font-size: 0.7rem; padding: 0 6px; border-radius: 999px; background: var(--g-slate-200); color: var(--g-texte-2); }
+.rvd-filtres button.is-actif { background: var(--g-surface); color: var(--g-texte); box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12); }
+.rvd-filtres button.is-actif b { background: var(--g-marque-clair, #e9f8fa); color: var(--g-marque, #0794a4); }
+
+.rvd-liste { list-style: none; margin: 0; padding: 0; border: 1px solid var(--g-bordure); border-radius: 10px; overflow: hidden; }
+.rvd-ligne { display: grid; grid-template-columns: minmax(180px, 1.3fr) minmax(160px, 1fr) auto; align-items: center; gap: 16px;
+  padding: 10px 14px; border-bottom: 1px solid var(--g-slate-100); border-inline-start: 3px solid transparent; transition: background .15s; }
+.rvd-ligne:last-child { border-bottom: 0; }
+.rvd-ligne:hover { background: var(--g-slate-50); }
+.rvd-ligne.is-modifiee { border-inline-start-color: var(--g-marque, #0794a4); background: var(--g-marque-clair, #e9f8fa); }
+.rvd-famille { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.rvd-famille strong { font-size: 0.84rem; color: var(--g-texte); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rvd-famille span { font-size: 0.72rem; color: var(--g-texte-discret); }
+.rvd-age { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.rvd-age__piste { height: 6px; border-radius: 999px; background: var(--g-slate-100); overflow: hidden; }
+.rvd-age__piste > span { display: block; height: 100%; border-radius: inherit; background: #10b981; }
+.rvd-age.is-proche .rvd-age__piste > span { background: #f59e0b; }
+.rvd-age.is-depasse .rvd-age__piste > span { background: #dc2626; }
+.rvd-age__txt { display: flex; gap: 8px; flex-wrap: wrap; font-size: 0.72rem; color: var(--g-texte-secondaire); }
+.rvd-age__txt b { color: #b91c1c; font-weight: 600; }
+.rvd-age__vide { font-size: 0.8rem; color: var(--g-texte-discret); }
+.rvd-duree { display: flex; align-items: center; gap: 6px; }
+.rvd-pas, .rvd-reset { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  border: 1px solid var(--g-bordure); border-radius: 8px; background: var(--g-surface); color: var(--g-texte-secondaire); cursor: pointer; }
+.rvd-pas:hover, .rvd-reset:hover { border-color: var(--g-bordure-forte); color: var(--g-texte); }
+.rvd-champ { width: 96px; }
+.rvd-champ input { text-align: center; }
+.rvd-etiquette { width: 54px; text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--g-texte-discret); }
+.rvd-reset { width: 30px; margin-inline-end: 24px; }
+.rvd-pied { position: sticky; bottom: 0; display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 12px;
+  padding: 10px 0 0; border-top: 1px solid var(--g-bordure); background: var(--g-surface); font-size: 0.8rem; color: var(--g-texte-discret); }
+.rvd-pied > span { margin-inline-end: auto; }
+.rvd-pied.is-actif > span { color: var(--g-marque, #0794a4); font-weight: 600; }
+@media (max-width: 760px) {
+  .rvd-ligne { grid-template-columns: 1fr; gap: 8px; }
+}
