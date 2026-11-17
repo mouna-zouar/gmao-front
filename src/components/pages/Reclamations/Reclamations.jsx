@@ -36,6 +36,7 @@ import { useActionsReclamation, actionsPossibles, estAffectee, nomGroupe, nomTec
 import { ICONES_MODULES } from '../../../constants/modules';
 import reclamationService from '../../../services/Reclamationservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
+import lectureService from '../../../services/lectureService';
 import ReclamationDetails from './ReclamationDetails';
 // ⚠️ Adapte ce chemin au dossier où se trouve BonMaintenanceDetails.jsx
 import BonMaintenanceDetails from '../BonMaintenance/BonMaintenanceDetails';
@@ -189,18 +190,22 @@ export default function Reclamations() {
   const [selectedReclamation, setSelectedReclamation] = useState(null);
   // Remise en service du bon lié à la réclamation (fenêtre)
   const [remiseReclamation, setRemiseReclamation] = useState(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [detailsData, setDetailsData] = useState(null);
   // Bon lié à la réclamation sélectionnée (la liste ne le donne pas) : { reclamationId, bon }
   const [bonLie, setBonLie] = useState(null);
   useEffect(() => {
     const id = selectedReclamation?.id;
     if (!id) { setBonLie(null); return undefined; }
+    if (detailsOpen) return undefined; // page de détail : le bon lié arrive avec le détail
     if (selectedReclamation.bonMaintenanceId) { setBonLie({ reclamationId: id, bon: { id: selectedReclamation.bonMaintenanceId } }); return undefined; }
     let annule = false;
     reclamationBonMaintenanceService.getBonMaintenancesByReclamation(id)
       .then((bons) => { if (!annule) setBonLie({ reclamationId: id, bon: (bons ?? [])[0] || null }); })
       .catch((e) => { console.error('[GMAO réclamations] Bon lié :', e); if (!annule) setBonLie({ reclamationId: id, bon: null }); });
     return () => { annule = true; };
-  }, [selectedReclamation?.id, selectedReclamation?.bonMaintenanceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedReclamation?.id, selectedReclamation?.bonMaintenanceId, detailsOpen]); // eslint-disable-line react-hooks/exhaustive-deps
   const bonDeLaSelection = bonLie && bonLie.reclamationId === selectedReclamation?.id ? bonLie.bon : null;
   const [modalOpen, setModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -208,9 +213,6 @@ export default function Reclamations() {
   const [associateOpen, setAssociateOpen] = useState(false);
   const [createBonOpen, setCreateBonOpen] = useState(false);
 
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [detailsLoading, setDetailsLoading] = useState(false);
-  const [detailsData, setDetailsData] = useState(null);
   const [bonOuvert, setBonOuvert] = useState(null);
 
   const [reclamationCreee, setReclamationCreee] = useState(null);
@@ -451,7 +453,15 @@ export default function Reclamations() {
       setDetailsData(null);
     }
     try {
-      const data = await reclamationService.getWithBonMaintenance(id);
+      // Un seul appel (détail + historique + équipement + « lu ») ; ancien serveur : détail seul
+      let data;
+      try {
+        const r = await lectureService.resumeReclamation(id);
+        data = { ...r.details, __resume: { historique: r.historique ?? [], equipement: r.equipement ?? null, lecture: r.lecture ?? null } };
+      } catch (e) {
+        if (e?.response?.status !== 404 && e?.response?.status !== 405) throw e;
+        data = await reclamationService.getWithBonMaintenance(id);
+      }
       setDetailsData(data);
       // Garde la sélection à jour (les actions Valider / Rejeter / Modifier s'appuient dessus)
       const rec = data?.reclamation ?? data;

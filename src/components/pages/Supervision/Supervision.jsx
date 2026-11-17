@@ -541,7 +541,7 @@ export default function Supervision() {
   useEffect(() => {
     const compter = () => alerteMachineService.compterNouvelles().then(setNbAlertes).catch(() => {});
     compter();
-    const minuterie = setInterval(compter, 60 * 1000);
+    const minuterie = setInterval(() => { if (!document.hidden) compter(); }, 60 * 1000);
     return () => clearInterval(minuterie);
   }, [alertesOuvert]);
 

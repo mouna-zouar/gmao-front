@@ -1,10 +1,12 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowUp, CheckCircle2, ChevronRight, LoaderCircle, MessageSquarePlus, Sparkles, X } from 'lucide-react';
+import { ArrowUp, CheckCircle2, ChevronRight, LoaderCircle, MessageSquarePlus, Package, Sparkles, X } from 'lucide-react';
+import ChampEquipement from '../ChampEquipement/ChampEquipement';
 import assistantService from '../../../services/assistantService';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import {
   nouvelleConversation, poserQuestion, selectAssistantEnCours, selectMessagesAssistant,
+  choisirEquipementAssistant, selectEquipementAssistant,
 } from '../../../store/assistantSlice';
 import { t, langueActuelle } from '../../../i18n';
 import './AssistantQuestions.css';
@@ -35,6 +37,14 @@ const LIENS = {
 
 
 /* Texte de l'IA : paragraphes, listes « - », **gras** — sans HTML injecté. */
+/** Questions proposées quand un équipement est choisi */
+const SUGGESTIONS_EQUIPEMENT = [
+  'Quel est l’historique de cet équipement ?',
+  'Combien de pannes a-t-il eu cette année ?',
+  'Y a-t-il un bon ou une réclamation en cours ?',
+  'Combien a coûté sa maintenance ?',
+];
+
 function TexteIa({ texte }) {
   const blocs = [];
   let liste = null;
@@ -94,11 +104,12 @@ function TableauResultat({ r, onOuvrir }) {
   );
 }
 
-export default function AssistantQuestions({ ouvert, onFermer }) {
+export default function AssistantQuestions({ ouvert, onFermer, questionInitiale, onQuestionLue }) {
   const navigate = useNavigate();
   // Conversation dans le store Redux (src/store/assistantSlice.js) : gardée d'une page à l'autre
   const dispatch = useAppDispatch();
   const messages = useAppSelector(selectMessagesAssistant);
+  const equipement = useAppSelector(selectEquipementAssistant);
   const enCours = useAppSelector(selectAssistantEnCours);
   const [saisie, setSaisie] = useState('');
   const [suggestions, setSuggestions] = useState(SUGGESTIONS_DEFAUT);
@@ -122,6 +133,14 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
     await dispatch(poserQuestion({ question, langue: langueActuelle() }));
     setTimeout(() => saisieRef.current?.focus(), 50);
   };
+
+  // Question tapée dans la barre de l'en-tête : envoyée à l'ouverture
+  useEffect(() => {
+    if (!ouvert || !questionInitiale || enCours) return;
+    onQuestionLue?.();
+    envoyer(questionInitiale);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ouvert, questionInitiale]);
 
   const ouvrir = (lien) => {
     navigate(lien);
@@ -150,6 +169,23 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
           </button>
         </header>
 
+        {/* Équipement : les questions portent sur lui tant qu'il est choisi */}
+        <div className={`aq-equipement ${equipement ? 'is-choisi' : ''}`}>
+          {equipement ? (
+            <>
+              <Package size={15} aria-hidden="true" />
+              <span className="aq-equipement__nom" dir="auto" title={equipement.nom}>{equipement.nom}</span>
+              <button type="button" className="aq-icone-btn" onClick={() => dispatch(choisirEquipementAssistant(null))}
+                title={t('Toutes les données')} aria-label={t('Toutes les données')}>
+                <X size={15} />
+              </button>
+            </>
+          ) : (
+            <ChampEquipement value="" facultatif placeholder={t('Par équipement…')}
+              onEquipementChoisi={(e) => dispatch(choisirEquipementAssistant({ id: Number(e.id), nom: e.designation || e.libelle || `#${e.id}` }))} />
+          )}
+        </div>
+
         <div className="aq-fil" aria-live="polite">
           {messages.length === 0 && (
             <div className="aq-accueil">
@@ -158,7 +194,7 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
               <p>{t('Bons, équipements, pannes, délais, coûts, réclamations, alertes et véhicules : je cherche dans la GMAO et je vous réponds avec les chiffres.')}</p>
               <p className="aq-accueil-agent">{t('Je peux aussi agir : signaler une panne, trouver le bon technicien, vérifier l’état d’un équipement.')}</p>
               <div className="aq-suggestions">
-                {suggestions.map((s) => (
+                {(equipement ? SUGGESTIONS_EQUIPEMENT : suggestions).map((s) => (
                   <button key={s} type="button" onClick={() => envoyer(t(s))}>
                     <span dir="auto">{t(s)}</span><ChevronRight size={14} className="rtl-miroir" aria-hidden="true" />
                   </button>
@@ -168,7 +204,10 @@ export default function AssistantQuestions({ ouvert, onFermer }) {
           )}
 
           {messages.map((m, i) => (m.role === 'moi' ? (
-            <div key={i} className="aq-bulle aq-bulle--moi" dir="auto">{m.texte}</div>
+            <div key={i} className="aq-bulle aq-bulle--moi" dir="auto">
+              {m.texte}
+              {m.equipement && <span className="aq-bulle__equipement"><Package size={11} aria-hidden="true" /> {m.equipement}</span>}
+            </div>
           ) : (
             <div key={i} className="aq-bulle aq-bulle--ia">
               {m.reponse && <TexteIa texte={m.reponse} />}

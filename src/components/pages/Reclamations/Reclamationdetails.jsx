@@ -278,6 +278,8 @@ export default function ReclamationDetails({
   libelleRetour, // texte du bouton retour (ex. « Retour à mon espace »)
 }) {
   const { reclamation, bons } = normaliser(data);
+  // Détail reçu en un seul appel (/reclamation/{id}/resume) : historique, équipement et « lu » inclus
+  const resume = data?.__resume ?? null;
   const [equipement, setEquipement] = useState(null);
   const carteLieux = useCarteLieux();
   const [qrOuvert, setQrOuvert] = useState(false);
@@ -287,40 +289,49 @@ export default function ReclamationDetails({
   const titreRef = useRef(null);
 
   // Ouverture : marque la réclamation « lue » si c'est son technicien (le serveur décide)
+  // Sans résumé (autre page appelante) : lecture puis historique, chacun une seule fois
   useEffect(() => {
     const id = reclamation?.id;
+    if (resume) { setLecture(resume.lecture); return undefined; }
     setLecture(null);
     if (id == null) return undefined;
     let annule = false;
     lectureService.reclamation(id)
-      .then((l) => { if (!annule) setLecture(l); })
+      .then((l) => {
+        if (annule) return;
+        setLecture(l);
+        // Première lecture : elle vient d'être ajoutée à l'historique
+        if (l?.nouvelle) reclamationService.historique(id).then((h) => { if (!annule) setHistorique(Array.isArray(h) ? h : []); }).catch(() => {});
+      })
       .catch(() => { /* serveur pas à jour : on garde l'état reçu avec la réclamation */ });
     return () => { annule = true; };
-  }, [reclamation?.id, reclamation?.personnelAffecteId]);
+  }, [reclamation?.id, reclamation?.personnelAffecteId, resume]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Historique des affectations et des états : rechargé à chaque modification de la réclamation
   useEffect(() => {
     const id = reclamation?.id;
+    if (resume) { setHistorique(Array.isArray(resume.historique) ? resume.historique : []); return undefined; }
     if (id == null) return undefined;
     let annule = false;
     reclamationService.historique(id)
       .then((h) => { if (!annule) setHistorique(Array.isArray(h) ? h : []); })
       .catch(() => { if (!annule) setHistorique([]); });
     return () => { annule = true; };
-  }, [reclamation?.id, reclamation?.etat, reclamation?.dateModification, lecture?.nouvelle]);
+  }, [reclamation?.id, reclamation?.etat, reclamation?.dateModification, resume]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const id = reclamation?.lotArticleImmobilistationId;
+    if (resume && resume.equipement !== undefined) { setEquipement(resume.equipement); return undefined; }
     if (id == null) {
       setEquipement(null);
-      return;
+      return undefined;
     }
     let annule = false;
     lotArticleImmobilistationService.getById(id)
       .then((e) => { if (!annule) setEquipement(e); })
       .catch(() => { if (!annule) setEquipement(null); });
     return () => { annule = true; };
-  }, [reclamation?.lotArticleImmobilistationId]);
+  }, [reclamation?.lotArticleImmobilistationId, resume]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (!loading) titreRef.current?.focus(); }, [loading]);
 

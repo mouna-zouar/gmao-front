@@ -7,9 +7,10 @@ const assistantService = {
     return data;
   },
   /** Assistant qui peut agir (créer une réclamation…) : réponse + tableaux + actions faites. */
-  async agent(question, langue, historique = [], utilisateur = {}) {
+  async agent(question, langue, historique = [], utilisateur = {}, lotArticleImmobilistationId = null) {
     const { data } = await api.post('/assistant/agent', {
       question, langue, historique, personnelId: utilisateur.id ?? null, personnelNom: utilisateur.nom ?? null,
+      lotArticleImmobilistationId,
     });
     return data;
   },

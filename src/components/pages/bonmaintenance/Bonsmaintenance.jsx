@@ -13,6 +13,7 @@ import { prioriteLabel, prioriteRang, prioriteColor } from '../../../constants/P
 import BonMaintenanceModal from '../../ui/modals/BonMaintenanceModal';
 import BonMaintenanceDetails from './BonMaintenanceDetails';
 import FicheBonMaintenance from '../Fichebonmaintenance/FicheBonMaintenance';
+import ListeDocumentsAchat from './ListeDocumentsAchat';
 import PieceEditor from '../../ui/PieceEditor/PieceEditor';
 import PageModal from '../../ui/modals/PageModal';
 import Button from '../../ui/Button';
@@ -39,7 +40,7 @@ import VuesListe from '../../ui/Listes/VuesListe';
 import { useVueActive } from '../../ui/Listes/stockageVues';
 import CartesListe from '../../ui/Listes/CartesListe';
 import SelectionMultiple, { CaseSelection } from '../../ui/Listes/SelectionMultiple';
-import { bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
+import { bonActif, bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
 // Styles des fenêtres « Demander / Commander » de cette page (classes modal-overlay et bmm-*),
 // autrefois chargés par l'ancienne fenêtre du bon de maintenance
 import '../../ui/modals/Modal.css';
@@ -157,9 +158,11 @@ let lotBesoins = null;
 // vidées dès qu'une écriture réussit (demande, commande, tâche…), voir services/api.js.
 const besoinsConnus = new Map(); // bonId → { jusqua, valeur }
 if (typeof window !== 'undefined') window.addEventListener('gmao:ecriture', () => besoinsConnus.clear());
+const besoinsEnCours = new Map(); // bonId → promesse déjà partie (pas de second appel pendant l'attente)
 function besoinsPieces(bonId) {
   const connu = besoinsConnus.get(bonId);
   if (connu && Date.now() < connu.jusqua) return Promise.resolve(connu.valeur);
+  if (besoinsEnCours.has(bonId)) return besoinsEnCours.get(bonId);
   if (!lotBesoins) {
     const lot = { ids: new Set() };
     lotBesoins = lot;
@@ -176,7 +179,10 @@ function besoinsPieces(bonId) {
       });
   }
   lotBesoins.ids.add(bonId);
-  return lotBesoins.promesse.then((parBon) => parBon.get(bonId));
+  const promesse = lotBesoins.promesse.then((parBon) => parBon.get(bonId))
+    .finally(() => besoinsEnCours.delete(bonId));
+  besoinsEnCours.set(bonId, promesse);
+  return promesse;
 }
 
 async function computeBonMaintenanceNeeds(bonId) {
@@ -385,6 +391,8 @@ export default function BonsMaintenance() {
   const [demanderOpen, setDemanderOpen] = useState(false);
 
   const [demandesOpen, setDemandesOpen] = useState(false);
+  // Listes des documents d'achat du bon (demandes de fourniture / commandes fournisseur) avec « Accepter »
+  const [listeAchat, setListeAchat] = useState(null); // 'DEMANDE' | 'COMMANDE' | null
   const [demandes, setDemandes] = useState([]);
   const [demandesLoading, setDemandesLoading] = useState(false);
   const [demandeActionLoading, setDemandeActionLoading] = useState(null);
@@ -398,18 +406,19 @@ export default function BonsMaintenance() {
   const [moi] = useState(contexteUtilisateur);
   const [vueId, setVueId] = useVueActive('bons', moi.cle, 'tous');
   const [mesBonIds, setMesBonIds] = useState(null);
-  useEffect(() => {
-    if (moi.personnelId == null) return undefined;
-    let annule = false;
+  // « Mes bons » : arrive avec les infos de la liste (voir chargerInfosListe) ; ancien serveur : appels séparés
+  const chargerMesBonsSepares = useCallback(() => {
+    if (moi.personnelId == null) return;
     const ids = (liste) => new Set((liste || []).map((x) => String(x?.bon?.id ?? x?.id)).filter((x) => x !== 'undefined'));
     api.get(`/espace-personnel/${moi.personnelId}/bons-roles`)
-      .then(({ data }) => { if (!annule) setMesBonIds(ids(data)); })
+      .then(({ data }) => setMesBonIds(ids(data)))
       .catch(() => api.get(`/espace-personnel/${moi.personnelId}/bons`)
-        .then(({ data }) => { if (!annule) setMesBonIds(ids(data)); })
+        .then(({ data }) => setMesBonIds(ids(data)))
         .catch(() => { /* « Mes bons » se limite alors aux bons créés ou demandés */ }));
-    return () => { annule = true; };
   }, [moi.personnelId]);
-  const vuesListe = useMemo(() => vuesBons(moi, mesBonIds), [moi, mesBonIds]);
+  // « Achats à faire » : bons à traiter dont les tâches ont des articles à demander ou à commander
+  const [achatIds, setAchatIds] = useState(null);
+  const vuesListe = useMemo(() => vuesBons(moi, mesBonIds, achatIds), [moi, mesBonIds, achatIds]);
   const vueCourante = vuesListe.find((v) => v.id === vueId) || vuesListe[0];
   const choisirVue = (id, reglages) => {
     setVueId(id);
@@ -484,12 +493,6 @@ export default function BonsMaintenance() {
   // Alertes envoyées par les machines (SNMP / Syslog) : badge = alertes à traiter
   const [alertesMachinesOpen, setAlertesMachinesOpen] = useState(false);
   const [nbAlertesMachines, setNbAlertesMachines] = useState(0);
-  useEffect(() => {
-    const compter = () => alerteMachineService.compterNouvelles().then(setNbAlertesMachines).catch(() => {});
-    compter();
-    const minuterie = setInterval(compter, 60 * 1000);
-    return () => clearInterval(minuterie);
-  }, [alertesMachinesOpen]);
 
   const [confirmModal, setConfirmModal] = useState({
     show: false, type: 'warning', title: '', message: '',
@@ -538,11 +541,6 @@ export default function BonsMaintenance() {
     })
     .finally(() => setSlaChargement(false)), []);
   const chargerSlaRetards = () => { setSlaChargement(true); recupererSlaRetards(); };
-  useEffect(() => {
-    recupererSlaRetards();
-    const minuterie = setInterval(recupererSlaRetards, 5 * 60 * 1000); // les délais SLA se comptent en heures
-    return () => clearInterval(minuterie);
-  }, [recupererSlaRetards]);
   const nbSlaRetards = slaRetards?.length ?? 0;
 
   /* ── Délai SLA de chaque bon (colonne « Délai ») : temps restant, ou résultat pour un bon effectué ── */
@@ -558,11 +556,45 @@ export default function BonsMaintenance() {
       setSlaParBon(parBon);
     })
     .catch((err) => console.error('Erreur chargement des délais SLA :', err)), [idsSla]);
-  useEffect(() => { recupererSlaOuverts(); }, [bons, recupererSlaOuverts]);
+
+  /*
+   * Infos de la liste en UN appel : délais SLA des bons, alertes machines, retards SLA (1 fois sur 5)
+   * et « Mes bons » (au premier appel). Puis toutes les 60 s, seulement quand l'onglet est visible.
+   */
+  const mesBonsCharges = useRef(false);
+  const chargerInfosListe = useCallback(async (avecRetards) => {
+    const avecMesBons = !mesBonsCharges.current && moi.personnelId != null;
+    try {
+      const { data } = await api.post('/bon-maintenance/infos-liste', {
+        ids: idsSla, depassements: !!avecRetards, personnelId: avecMesBons ? Number(moi.personnelId) : null,
+      }, { silencieux: true });
+      if (Array.isArray(data?.sla)) {
+        const parBon = {};
+        data.sla.forEach((s) => { parBon[s.bonMaintenanceId] = s; });
+        setSlaParBon(parBon);
+      }
+      if (data?.alertesMachines != null) setNbAlertesMachines(Number(data.alertesMachines) || 0);
+      if (Array.isArray(data?.depassements)) { setSlaRetards(data.depassements); setSlaErreur(null); }
+      if (Array.isArray(data?.mesBonIds)) { setMesBonIds(new Set(data.mesBonIds.map(String))); mesBonsCharges.current = true; }
+    } catch {
+      // Ancien serveur : les appels séparés d'avant
+      recupererSlaOuverts();
+      if (avecRetards) recupererSlaRetards();
+      alerteMachineService.compterNouvelles().then(setNbAlertesMachines).catch(() => {});
+      if (avecMesBons) { mesBonsCharges.current = true; chargerMesBonsSepares(); }
+    }
+  }, [idsSla, moi.personnelId, recupererSlaOuverts, recupererSlaRetards, chargerMesBonsSepares]);
+  const tourInfos = useRef(0);
   useEffect(() => {
-    const minuterie = setInterval(recupererSlaOuverts, 60 * 1000); // le temps restant avance
+    if (loading) return undefined;
+    chargerInfosListe(tourInfos.current % 5 === 0);
+    const minuterie = setInterval(() => {
+      if (document.hidden) return;
+      tourInfos.current += 1;
+      chargerInfosListe(tourInfos.current % 5 === 0);
+    }, 60 * 1000);
     return () => clearInterval(minuterie);
-  }, [recupererSlaOuverts]);
+  }, [chargerInfosListe, alertesMachinesOpen, loading]);
   const bonsAvecSla = useMemo(
     () => bons.map((b) => (slaParBon[b.id] ? { ...b, sla: slaParBon[b.id] } : b)),
     [bons, slaParBon],
@@ -583,12 +615,14 @@ export default function BonsMaintenance() {
     }
   };
 
+  // « Demandes » : demandes de fourniture du bon ; les anciennes demandes de pièces restent accessibles depuis la liste
   const openDemandes = async () => {
     if (!selectedBon) return;
     setDemandesError(null);
-    setDemandesOpen(true);
+    setListeAchat('DEMANDE');
     await loadDemandes();
   };
+  const openCommandes = () => { if (selectedBon) setListeAchat('COMMANDE'); };
 
   const handleAccepterDemande = async (id) => {
     try {
@@ -662,6 +696,19 @@ export default function BonsMaintenance() {
       return matchesSearch && matchesEtat && matchesVue && dansLieu(b);
     });
   }, [bonsAvecSla, searchTerm, etatFilter, columnSettings, vueCourante, fc.filtres, choixCol, dansLieu]);
+
+  // Tous les bons à traiter en UN appel (regroupé avec celui de la page), au chargement et après une demande / commande
+  useEffect(() => {
+    const ids = bons.filter(bonActif).map((b) => b.id);
+    if (ids.length === 0) { setAchatIds(new Set()); return undefined; }
+    let annule = false;
+    Promise.all(ids.map((id) => besoinsPieces(id).catch(() => null)))
+      .then((liste) => {
+        if (annule) return;
+        setAchatIds(new Set(liste.filter((x) => x && (x.demanderNecessaire || x.commanderNecessaire)).map((x) => String(x.bonId))));
+      });
+    return () => { annule = true; };
+  }, [bons, actionsRefreshKey]);
 
   const sortedBons = useMemo(() => {
     const extractor = SORTABLE_COLUMNS[sortColumn];
@@ -1212,7 +1259,7 @@ export default function BonsMaintenance() {
             vueActive={vueCourante.id}
             reglages={{ recherche: searchTerm, etat: etatFilter, tri: sortColumn, sens: sortDirection }}
             onChoisir={choisirVue}
-            max={3}
+            max={4}
           />
         </div>
 
@@ -1249,28 +1296,17 @@ export default function BonsMaintenance() {
           <span>{t("Détails")}</span>
         </button>
 
-        <button
-          className={`bons-action-btn demander ${!selectedBon || !demanderAllume ? 'disabled' : ''} ${demanderAllume ? 'allume' : ''}`}
-          disabled={!selectedBon || !demanderAllume}
-          onClick={openDemander}
-        >
-          <PackageSearch size={18} />
-          <span>{t("Demander")}</span>
-        </button>
-
-        <button className={`bons-action-btn demandes ${!selectedBon ? 'disabled' : ''}`} disabled={!selectedBon} onClick={openDemandes}>
-          <PackageSearch size={18} />
-          <span>{t("Demandes")}</span>
-        </button>
-
-        <button
-          className={`bons-action-btn commander ${!selectedBon || !commanderAllume ? 'disabled' : ''} ${commanderAllume ? 'allume' : ''}`}
-          disabled={!selectedBon || !commanderAllume}
-          onClick={openCommander}
-        >
-          <ShoppingCart size={18} />
-          <span>{t("Commander")}</span>
-        </button>
+        {/* Demander, Demandes, Commander, Commandes : regroupés dans le menu « Achats » */}
+        <MenuAchatsBons
+          actif={!!selectedBon}
+          allume={demanderAllume || commanderAllume}
+          elements={[
+            { cle: 'demander', icone: PackageSearch, label: t('Demander'), actif: demanderAllume, allume: demanderAllume, onClick: openDemander },
+            { cle: 'demandes', icone: PackageSearch, label: t('Demandes'), actif: true, onClick: openDemandes },
+            { cle: 'commander', icone: ShoppingCart, label: t('Commander'), actif: commanderAllume, allume: commanderAllume, onClick: openCommander },
+            { cle: 'commandes', icone: ShoppingCart, label: t('Commandes'), actif: true, onClick: openCommandes },
+          ]}
+        />
 
         <button className={`bons-action-btn supprimer ${!selectedBon || isDeleting ? 'disabled' : ''}`} disabled={!selectedBon || isDeleting} onClick={handleDelete}>
           <Trash2 size={18} />
@@ -1550,6 +1586,19 @@ export default function BonsMaintenance() {
       />
 
       {/* MODAL DEMANDES */}
+      <ListeDocumentsAchat
+        ouvert={!!listeAchat}
+        type={listeAchat || 'DEMANDE'}
+        bonMaintenance={selectedBon}
+        onFermer={() => setListeAchat(null)}
+        onChange={() => setActionsRefreshKey((k) => k + 1)}
+        enfants={listeAchat === 'DEMANDE' && demandes.length > 0 && (
+          <button type="button" className="cm-btn cm-btn--lien" onClick={() => { setListeAchat(null); setDemandesOpen(true); }}>
+            <PackageSearch size={15} /> {t('Anciennes demandes de pièces')} ({demandes.length})
+          </button>
+        )}
+      />
+
       {demandesOpen && (
         <div
           className="modal-overlay"
@@ -2239,6 +2288,50 @@ function SlaRetards({ bons, chargement, erreur, onRecharger, onOuvrir }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════
+// Menu « Achats » de la barre d'actions : Demander, Demandes, Commander, Commandes
+// ═════════════════════════════════════════════════════════════
+function MenuAchatsBons({ actif, allume, elements }) {
+  const [ouvert, setOuvert] = useState(false);
+  const zone = useRef(null);
+  useEffect(() => {
+    if (!ouvert) return undefined;
+    const fermerDehors = (e) => { if (zone.current && !zone.current.contains(e.target)) setOuvert(false); };
+    const fermerEchap = (e) => { if (e.key === 'Escape') setOuvert(false); };
+    document.addEventListener('mousedown', fermerDehors);
+    document.addEventListener('keydown', fermerEchap);
+    return () => { document.removeEventListener('mousedown', fermerDehors); document.removeEventListener('keydown', fermerEchap); };
+  }, [ouvert]);
+  useEffect(() => { if (!actif) setOuvert(false); }, [actif]);
+  return (
+    <div className="bons-achats" ref={zone}>
+      <button type="button" className={`bons-action-btn achats ${!actif ? 'disabled' : ''} ${allume ? 'allume' : ''} ${ouvert ? 'is-ouvert' : ''}`}
+        disabled={!actif} aria-haspopup="menu" aria-expanded={ouvert} onClick={() => setOuvert((o) => !o)}>
+        <ShoppingCart size={18} />
+        <span>{t('Achats')}</span>
+        {allume && <span className="bons-achats__point" aria-hidden="true" />}
+        <ChevronDown size={15} className="bons-outils__chevron" aria-hidden="true" />
+      </button>
+      {ouvert && (
+        <div className="bons-outils__menu bons-achats__menu" role="menu">
+          {elements.map((el) => {
+            const Icone = el.icone;
+            return (
+              <button key={el.cle} type="button" role="menuitem" disabled={!el.actif}
+                className={`bons-outils__item ${el.allume ? 'is-allume' : ''}`}
+                onClick={() => { setOuvert(false); el.onClick(); }}>
+                <span className="bons-outils__icone"><Icone size={17} aria-hidden="true" /></span>
+                <span className="bons-outils__textes"><strong>{el.label}</strong></span>
+                {el.allume && <span className="bons-achats__point" aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

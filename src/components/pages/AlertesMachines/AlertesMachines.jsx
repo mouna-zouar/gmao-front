@@ -187,7 +187,7 @@ export default function AlertesMachines({ isModal = false }) {
   useEffect(() => { charger(); }, [charger]);
   // Les machines envoient à tout moment : rafraîchissement toutes les 30 s
   useEffect(() => {
-    const minuterie = setInterval(charger, 30000);
+    const minuterie = setInterval(() => { if (!document.hidden) charger(); }, 30000);
     return () => clearInterval(minuterie);
   }, [charger]);
 

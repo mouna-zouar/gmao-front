@@ -133,7 +133,7 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
   useEffect(() => {
     if (chargement) return;
     const retenus = type === 'COMMANDE'
-      ? besoins.filter((b) => !entete.cibleId || String(b.sousTraitantId) === String(entete.cibleId))
+      ? besoins.filter((b) => !entete.cibleId || !b.sousTraitantId || String(b.sousTraitantId) === String(entete.cibleId))
       : besoins;
     setLignes((avant) => [
       ...retenus.map((b) => ligneDepuisArticle(type, articleParId[b.prestataireArticlesId] || { prestataireArticlesId: b.prestataireArticlesId, designation: b.designation }, {

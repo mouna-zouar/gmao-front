@@ -4243,6 +4243,22 @@ const en = {
   "Retirer la gamme et ses tâches": "Remove the work plan and its tasks",
   "— Choisir une gamme —": "— Choose a work plan —",
   "Détails de la réclamation": "Complaint details",
+  "Demander à l’IA…": "Ask AI…",
+  "Toutes les données": "All data",
+  "Par équipement…": "By equipment…",
+  "Quel est l’historique de cet équipement ?": "What is the history of this equipment?",
+  "Combien de pannes a-t-il eu cette année ?": "How many breakdowns has it had this year?",
+  "Y a-t-il un bon ou une réclamation en cours ?": "Is there an open work order or request?",
+  "Combien a coûté sa maintenance ?": "How much has its maintenance cost?",
+  '#commande': { one: '{n} order', other: '{n} orders' },
+  "Commandes — {bon}": "Orders — {bon}",
+  "Commandes": "Orders",
+  "Aucune demande de fourniture pour ce bon.": "No supply request for this work order.",
+  "Aucune commande fournisseur pour ce bon.": "No supplier order for this work order.",
+  "Impossible de charger les documents d’achat.": "Unable to load purchase documents.",
+  "Anciennes demandes de pièces": "Former parts requests",
+  "Achats à faire": "Purchases to do",
+  "Bons dont les tâches ont des articles à demander ou à commander": "Work orders whose tasks have items to request or order",
 };
 
 export default en;

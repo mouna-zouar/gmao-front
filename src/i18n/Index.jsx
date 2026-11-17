@@ -81,6 +81,7 @@ const PLURIELS_FR = {
   'bon (compte)': { one: '{n} bon', other: '{n} bons' },
   'résultat': { one: '{n} résultat', other: '{n} résultats' },
   demande: { one: '{n} demande', other: '{n} demandes' },
+  commande: { one: '{n} commande', other: '{n} commandes' },
   'analyse RCA': { one: '{n} analyse RCA', other: '{n} analyses RCA' },
   'action CAPA ouverte': { one: '{n} action CAPA ouverte', other: '{n} actions CAPA ouvertes' },
   'réclamation récente': { one: '{n} réclamation récente', other: '{n} réclamations récentes' },

@@ -1,13 +1,5 @@
 import { ICONES_MODULES as M } from './modules';
 
-/*
- * Menu rangé par métier : chaque page a une place, et une seule.
- *   id     : identifiant stable (couleur du groupe dans Layout.css, cartes du tableau de bord)
- *   path   : page ouverte par défaut ; un enfant peut porter des paramètres (?vue=…)
- *   motsCles : mots supplémentaires pour la recherche du menu
- * Pages volontairement absentes : /fiche-bon-maintenance (ouverte depuis un bon),
- * /equipement/:id (ouverte depuis un équipement).
- */
 
 const grand = (Icone) => <Icone className="nav-icon-svg" strokeWidth={1.75} aria-hidden="true" />;
 const petit = (Icone) => <Icone aria-hidden="true" />;

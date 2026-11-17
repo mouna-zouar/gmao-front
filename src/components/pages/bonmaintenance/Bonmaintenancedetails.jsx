@@ -99,9 +99,9 @@ import parametreService from '../../../services/parametreService';
 import depotCubixService from '../../../services/depotCubixService';
 import authService from '../../../services/Authservice';
 import { imprimerPiece } from '../../../utils/imprimerPiece';
-import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
-import lotArticleService from '../../../services/lotArticleService';
-import pieceLigneService from '../../../services/PieceLigneService';
+import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationCubixService';
+//import lotArticleService from '../../../services/lotArticleService';
+//import pieceLigneService from '../../../services/PieceLigneService';
 import articleService from '../../../services/articleService';
 import prestataireArticleService from '../../../services/prestataireArticleService';
 import pieceService from '../../../services/Pieceservice';
@@ -611,15 +611,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   // Refait quand les intervenants changent (un nouvel intervenant repasse le bon « non lu »).
   const [lectureBon, setLectureBon] = useState(null);
   const nbIntervenants = intervenantsFlow.length;
-  useEffect(() => {
-    const id = bonMaintenance?.id;
-    if (id == null) return undefined;
-    let annule = false;
-    lectureService.bon(id)
-      .then((l) => { if (!annule) setLectureBon(l); })
-      .catch(() => { /* serveur pas à jour : rien à afficher de plus */ });
-    return () => { annule = true; };
-  }, [bonMaintenance?.id, nbIntervenants]);
   const [loadingIntervenantsFlow, setLoadingIntervenantsFlow] = useState(false);
   const [historiqueFlow, setHistoriqueFlow] = useState([]);
   const [nbDiagnostics, setNbDiagnostics] = useState(0);
@@ -627,6 +618,16 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [resumePret, setResumePret] = useState(false);
   const [slaInfo, setSlaInfo] = useState(null);
   const [coutInfo, setCoutInfo] = useState(null);
+  // Attend le résumé (intervenants connus) pour n'appeler « lu » qu'une fois à l'ouverture
+  useEffect(() => {
+    const id = bonMaintenance?.id;
+    if (id == null || !resumePret) return undefined;
+    let annule = false;
+    lectureService.bon(id)
+      .then((l) => { if (!annule) setLectureBon(l); })
+      .catch(() => { /* serveur pas à jour : rien à afficher de plus */ });
+    return () => { annule = true; };
+  }, [bonMaintenance?.id, nbIntervenants, resumePret]);
 
   const [rcaAnalyses, setRcaAnalyses] = useState([]);
   const [loadingRca, setLoadingRca] = useState(false);

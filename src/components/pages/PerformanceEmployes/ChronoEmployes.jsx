@@ -39,7 +39,7 @@ export default function ChronoEmployes({ onOuvrirBon }) {
 
   useEffect(() => {
     charger();
-    const id = setInterval(charger, RAFRAICHIR_MS);
+    const id = setInterval(() => { if (!document.hidden) charger(); }, RAFRAICHIR_MS);
     return () => clearInterval(id);
   }, [charger]);
 

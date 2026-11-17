@@ -36,6 +36,23 @@ export default function Layout({ children }) {
   const notifLoading = useAppSelector(selectNotifChargement);
   const [assistantOuvert, setAssistantOuvert] = useState(false);
   const fermerAssistant = useCallback(() => setAssistantOuvert(false), []);
+  // Barre « Demander à l'IA » au centre de l'en-tête : la question tapée part dès l'ouverture du panneau
+  const [questionIa, setQuestionIa] = useState('');
+  const [questionEnvoyee, setQuestionEnvoyee] = useState(null);
+  const questionLue = useCallback(() => setQuestionEnvoyee(null), []);
+  // Ouverture demandée par une page (ex. fiche équipement → « Demander à l'IA »)
+  useEffect(() => {
+    const ouvrirAssistant = () => setAssistantOuvert(true);
+    window.addEventListener('gmao:assistant', ouvrirAssistant);
+    return () => window.removeEventListener('gmao:assistant', ouvrirAssistant);
+  }, []);
+  const demanderIa = (e) => {
+    e.preventDefault();
+    const q = questionIa.trim();
+    if (q) setQuestionEnvoyee(q);
+    setQuestionIa('');
+    setAssistantOuvert(true);
+  };
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -137,11 +154,14 @@ export default function Layout({ children }) {
     }
   }, [activeNavItem, sidebarOpen]);
 
+  // Compteur de notifications : toutes les 60 s, seulement quand l'onglet est visible (et au retour sur l'onglet)
   useEffect(() => {
     const charger = () => dispatch(chargerCompteur());
     charger();
-    const interval = setInterval(charger, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => { if (!document.hidden) charger(); }, 60000);
+    const auRetour = () => { if (!document.hidden) charger(); };
+    document.addEventListener('visibilitychange', auRetour);
+    return () => { clearInterval(interval); document.removeEventListener('visibilitychange', auRetour); };
   }, [dispatch]);
 
   const loadNotifications = () => dispatch(chargerNotifications());
@@ -408,11 +428,20 @@ export default function Layout({ children }) {
           </div>
         </div>
 
+        <form className="navbar__ia" onSubmit={demanderIa} role="search">
+          <Sparkles strokeWidth={2} className="navbar__ia-icone" aria-hidden="true" />
+          <input type="text" value={questionIa} onChange={(e) => setQuestionIa(e.target.value)}
+            placeholder={t('Demander à l’IA…')} aria-label={t('Demander à l’IA')} />
+          <button type="submit" className="navbar__ia-envoyer" aria-label={t('Demander à l’IA')} title={t('Demander à l’IA')}>
+            <ChevronRight strokeWidth={2.4} className="rtl-miroir" aria-hidden="true" />
+          </button>
+        </form>
+
         <div className="navbar__right">
+          {/* Petits écrans : la barre est masquée, l'icône ouvre le panneau */}
           <button type="button" className="navbar__icon-btn navbar__icon-btn--ia" onClick={() => setAssistantOuvert(true)}
             title={t('Demander à l’IA')} aria-label={t('Demander à l’IA')}>
             <Sparkles strokeWidth={2} aria-hidden="true" />
-            <span>{t('Demander à l’IA')}</span>
           </button>
 
           <div className="navbar__notif-container" style={{ position: 'relative' }}>
@@ -499,7 +528,7 @@ export default function Layout({ children }) {
 
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
-      <AssistantQuestions ouvert={assistantOuvert} onFermer={fermerAssistant} />
+      <AssistantQuestions ouvert={assistantOuvert} onFermer={fermerAssistant} questionInitiale={questionEnvoyee} onQuestionLue={questionLue} />
     </div>
   );
 }

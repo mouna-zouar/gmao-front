@@ -24,12 +24,14 @@ function lireConversation() {
 
 /** Envoie une question avec les 3 derniers échanges (pour les questions de suite). */
 export const poserQuestion = createAsyncThunk('assistant/poserQuestion', async ({ question, langue }, { getState, rejectWithValue }) => {
+  // Équipement choisi dans le panneau : la question porte sur lui
+  const equipementId = getState().assistant.equipement?.id ?? null;
   const historique = getState().assistant.messages
     .filter((m) => m.role === 'ia' && m.question).slice(-3)
     .map((m) => ({ question: m.question, reponse: m.reponse || '' }));
   try {
     // L'agent répond ET peut agir (il se replie seul sur les questions si l'IA ne gère pas les outils)
-    return await assistantService.agent(question, langue, historique, utilisateur());
+    return await assistantService.agent(question, langue, historique, utilisateur(), equipementId);
   } catch (e) {
     return rejectWithValue(e?.response?.data?.message || null);
   }
@@ -37,15 +39,17 @@ export const poserQuestion = createAsyncThunk('assistant/poserQuestion', async (
 
 const assistantSlice = createSlice({
   name: 'assistant',
-  initialState: { messages: lireConversation(), enCours: false },
+  initialState: { messages: lireConversation(), enCours: false, equipement: null },
   reducers: {
     nouvelleConversation: (state) => { state.messages = []; },
+    /** { id, nom } ou null : équipement sur lequel portent les questions */
+    choisirEquipementAssistant: (state, action) => { state.equipement = action.payload || null; },
   },
   extraReducers: (builder) => {
     builder
       .addCase(poserQuestion.pending, (state, action) => {
         state.enCours = true;
-        state.messages.push({ role: 'moi', texte: action.meta.arg.question });
+        state.messages.push({ role: 'moi', texte: action.meta.arg.question, equipement: state.equipement?.nom || null });
       })
       .addCase(poserQuestion.fulfilled, (state, action) => {
         const r = action.payload || {};
@@ -63,9 +67,10 @@ const assistantSlice = createSlice({
   },
 });
 
-export const { nouvelleConversation } = assistantSlice.actions;
+export const { nouvelleConversation, choisirEquipementAssistant } = assistantSlice.actions;
 
 export const selectMessagesAssistant = (s) => s.assistant.messages;
 export const selectAssistantEnCours = (s) => s.assistant.enCours;
+export const selectEquipementAssistant = (s) => s.assistant.equipement;
 
 export default assistantSlice.reducer;

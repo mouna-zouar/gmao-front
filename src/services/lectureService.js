@@ -22,6 +22,15 @@ const lectureService = {
     return data;
   },
 
+  /**
+   * Détail d'une réclamation en UN appel : marque « lue » et renvoie
+   * { details, historique, equipement, lecture }.
+   */
+  async resumeReclamation(id) {
+    const { data } = await api.post(`/reclamation/${id}/resume`, lecteur(), { silencieux: true });
+    return data;
+  },
+
   async bon(id) {
     const { data } = await api.post(`/bon-maintenance/${id}/lu`, lecteur(), { silencieux: true });
     return data;

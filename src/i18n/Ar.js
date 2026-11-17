@@ -4244,6 +4244,22 @@ const ar = {
   "Retirer la gamme et ses tâches": "إزالة الإجراء ومهامه",
   "— Choisir une gamme —": "— اختر إجراءً —",
   "Détails de la réclamation": "تفاصيل الشكوى",
+  "Demander à l’IA…": "اسأل الذكاء الاصطناعي…",
+  "Toutes les données": "كل البيانات",
+  "Par équipement…": "حسب المعدّة…",
+  "Quel est l’historique de cet équipement ?": "ما هو سجل هذه المعدّة؟",
+  "Combien de pannes a-t-il eu cette année ?": "كم عدد الأعطال هذه السنة؟",
+  "Y a-t-il un bon ou une réclamation en cours ?": "هل يوجد أمر عمل أو شكوى جارية؟",
+  "Combien a coûté sa maintenance ?": "كم كلفت صيانتها؟",
+  '#commande': { one: 'طلبية واحدة', other: '{n} طلبيات' },
+  "Commandes — {bon}": "الطلبيات — {bon}",
+  "Commandes": "الطلبيات",
+  "Aucune demande de fourniture pour ce bon.": "لا يوجد طلب توريد لهذا الأمر.",
+  "Aucune commande fournisseur pour ce bon.": "لا توجد طلبية مورد لهذا الأمر.",
+  "Impossible de charger les documents d’achat.": "تعذر تحميل وثائق الشراء.",
+  "Anciennes demandes de pièces": "طلبات القطع السابقة",
+  "Achats à faire": "مشتريات مطلوبة",
+  "Bons dont les tâches ont des articles à demander ou à commander": "أوامر عمل تحتوي مهامها على مواد للطلب أو الشراء",
 };
 
 export default ar;

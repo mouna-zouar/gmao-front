@@ -1,4 +1,5 @@
 import {
+  ShoppingCart,
   AlarmClock, CalendarCheck, CircleUserRound, Flame, Hourglass, Inbox, ListTodo, OctagonAlert, UserCheck, UserX, Users,
 } from 'lucide-react';
 import { ACTIFS } from '../../../constants/statuts';
@@ -40,7 +41,8 @@ export const bonEnRetard = (b) => {
 };
 
 /** Vues de la liste des bons. `mesBonIds` : Set des bons où l'utilisateur a un rôle (ou null). */
-export function vuesBons({ personnelId, serviceId }, mesBonIds) {
+/** achatIds : bons dont les tâches ont des articles à demander ou à commander (calculé par le serveur). */
+export function vuesBons({ personnelId, serviceId }, mesBonIds, achatIds) {
   const estAMoi = (b) => (mesBonIds?.has(String(b.id)))
     || memeId(b.personnelCreationId, personnelId)
     || memeId(b.personnelDemandantId, personnelId);
@@ -52,8 +54,12 @@ export function vuesBons({ personnelId, serviceId }, mesBonIds) {
   if (personnelId != null) {
     vues.push(
       { id: 'mes-bons', label: 'Mes bons', icone: CircleUserRound, aide: 'Bons que j\'ai créés, demandés ou où j\'interviens', filtre: (b) => estAMoi(b) && bonActif(b) },
+      { id: 'achats', label: 'Achats à faire', icone: ShoppingCart, ton: 'attention', aide: 'Bons dont les tâches ont des articles à demander ou à commander', filtre: (b) => !!achatIds?.has(String(b.id)) },
       { id: 'mes-retards', label: 'Mes bons en retard', icone: AlarmClock, ton: 'alerte', aide: 'Mes bons à traiter dont la date prévue est passée', filtre: (b) => estAMoi(b) && bonEnRetard(b) },
     );
+  }
+  if (personnelId == null) {
+    vues.push({ id: 'achats', label: 'Achats à faire', icone: ShoppingCart, ton: 'attention', aide: 'Bons dont les tâches ont des articles à demander ou à commander', filtre: (b) => !!achatIds?.has(String(b.id)) });
   }
   vues.push({ id: 'retard', label: 'En retard', icone: Hourglass, ton: 'attention', aide: 'Bons à traiter dont la date prévue est passée', filtre: bonEnRetard });
   if (serviceId != null) {

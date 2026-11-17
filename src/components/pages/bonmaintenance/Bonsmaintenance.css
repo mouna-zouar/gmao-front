@@ -1728,3 +1728,13 @@ td.bons-table-empty > svg { display: block; margin: 0 auto 12px; }
 
 /* Le champ de recherche se rétrécit au lieu de passer sous le filtre voisin */
 .bons-filter-input-wrap input { min-width: 0; width: 100%; }
+
+/* ─── Menu « Achats » (Demander, Demandes, Commander, Commandes) ─── */
+.bons-achats { position: relative; display: inline-flex; }
+.bons-action-btn.achats { color: var(--g-brand-600); }
+.bons-action-btn.achats:hover:not(.disabled), .bons-action-btn.achats.is-ouvert { background: var(--g-slate-100); border-color: var(--g-slate-300); }
+.bons-action-btn.achats.is-ouvert .bons-outils__chevron { transform: rotate(180deg); }
+.bons-achats__menu { inset-inline-end: auto; inset-inline-start: 0; width: 230px; }
+.bons-achats__menu .bons-outils__item:disabled { opacity: 0.45; cursor: not-allowed; background: none; }
+.bons-achats__menu .bons-outils__item.is-allume .bons-outils__icone { background: var(--g-brand-50); color: var(--g-brand-600); }
+.bons-achats__point { width: 8px; height: 8px; border-radius: 50%; background: var(--g-brand-500); flex-shrink: 0; }

@@ -27,6 +27,8 @@ import {
 import { t, tp, locale } from '../../../i18n';
 import './Equipements.css';
 import './EquipementFiche.css';
+import { useAppDispatch } from '../../../store/hooks';
+import { choisirEquipementAssistant } from '../../../store/assistantSlice';
 
 /*
  * Fiche d'un équipement : son état, ses indicateurs (disponibilité, MTBF, MTTR, coût des
@@ -239,6 +241,7 @@ export default function EquipementFiche() {
   const [statut, setStatut] = useState('chargement'); // chargement | pret | introuvable | erreur
   const [etiquette, setEtiquette] = useState(false);
   const [signaler, setSignaler] = useState(false);
+  const dispatch = useAppDispatch();
   const [bonOuvert, setBonOuvert] = useState(null);
   const [reclamationCreee, setReclamationCreee] = useState(null);
   const [nomService, setNomService] = useState(null);
@@ -359,6 +362,12 @@ export default function EquipementFiche() {
   ];
   const ongletActif = onglets.some((o) => o.cle === onglet) ? onglet : 'infos';
 
+  // Assistant IA centré sur cet équipement
+  const demanderIa = () => {
+    dispatch(choisirEquipementAssistant({ id: Number(identite.id ?? id), nom: identite.designation || `#${id}` }));
+    window.dispatchEvent(new Event('gmao:assistant'));
+  };
+
   const exporterEtats = () => exporterHistoriquePDF({
     lotArticleImmobilistationId: identite.id, cibleNom: identite.designation, etatActuel: etat?.etatActuel, depuisLe: etat?.depuisLe,
   }, transitions || []);
@@ -395,6 +404,11 @@ export default function EquipementFiche() {
           <button type="button" className="cl-action cl-action--teal" onClick={() => setEtiquette(true)}>
             <QrCode size={18} /> <span>{t('Étiquette QR')}</span>
           </button>
+          {connecte && (
+            <button type="button" className="cl-action cl-action--violet" onClick={demanderIa}>
+              <Sparkles size={18} /> <span>{t('Demander à l’IA')}</span>
+            </button>
+          )}
           {connecte ? (
             <button type="button" className="cl-action eqf-signaler" onClick={() => setSignaler(true)}>
               <AlertTriangle size={18} /> <span>{t('Signaler une panne')}</span>

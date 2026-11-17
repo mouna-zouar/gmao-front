@@ -38,6 +38,18 @@ const bonMaintenanceDocumentAchatService = {
     }
   },
 
+  /** « Accepter » (listes Demandes / Commandes) : valide la pièce puis l'envoie à Cubix. */
+  async accepter(pieceId, personnel = {}) {
+    try {
+      const { data } = await api.post(`/piece-editor/${pieceId}/accepter`, {
+        personnelId: personnel.id ?? null, personnelNom: personnel.nom ?? null,
+      });
+      return data;
+    } catch (e) {
+      return e?.response?.data?.message ? e.response.data : { succes: false, message: null };
+    }
+  },
+
   /** Lignes de la pièce avec la quantité déjà reçue (fenêtre de réception). */
   async lignesPiece(pieceId) {
     const { data } = await api.get(`/piece-editor/${pieceId}/lignes`);

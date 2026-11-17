@@ -39,7 +39,6 @@ const JOUR = 24 * 3600 * 1000;
 /* Zoom : multiple de la largeur « ajustée » (toute la période visible sans défilement) */
 const ZOOMS = [1, 1.5, 2, 3, 4, 6, 8];
 /* Largeur approximative d'un libellé (0,74 rem, gras) pour décider s'il tient dans la barre */
-const largeurTexte = (txt) => txt.length * 6.6 + 28;
 const debutJour = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
 const ajouterJours = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 const debutSemaine = (d) => { const x = debutJour(d); const j = (x.getDay() + 6) % 7; return ajouterJours(x, -j); }; // lundi
@@ -269,11 +268,9 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
             const e = ETAT[l.etat] || ETAT[1];
             const g = pos(l.d); const dr = pos(l.f);
             const coupeG = l.d < debut; const coupeD = l.f > fin;
-            const w = Math.max(dr - g, 100 / nb / 3);
+            // Au moins une journée de large, sans dépasser la fin de la période : le libellé reste dans la barre
+            const w = Math.min(Math.max(dr - g, 100 / nb), 100 - g);
             const texte = l.titre || `#${l.id}`;
-            const tl = largeurTexte(texte);
-            const dedans = (w / 100) * pistePx >= tl;
-            const aGauche = !dedans && ((g + w) / 100) * pistePx + tl > pistePx && (g / 100) * pistePx > tl;
             const bulle = `${l.titre || `#${l.id}`}\n${t(e.label)} · ${dureeTexte(l)}\n${dateCourte(l.d)} → ${dateCourte(l.f)}`;
             return (
               <div key={`${l.type}-${l.id}`} className={`pg-ligne ${survol === l.id ? 'is-survol' : ''} ${l.bonMaintenanceId ? 'is-cliquable' : ''}`}
@@ -291,14 +288,8 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
                   ))}
                   <span className={`pg-barre pg-barre--${e.classe} ${coupeG ? 'is-coupe-g' : ''} ${coupeD ? 'is-coupe-d' : ''}`}
                     style={{ left: `${g}%`, width: `${w}%` }} title={bulle}>
-                    {dedans && <span className="pg-barre__txt">{texte}</span>}
+                    <span className="pg-barre__txt">{texte}</span>
                   </span>
-                  {!dedans && (
-                    <span className={`pg-barre-ext pg-barre-ext--${e.classe} ${aGauche ? 'is-gauche' : ''}`} title={bulle}
-                      style={aGauche ? { insetInlineEnd: `calc(${100 - g}% + 6px)` } : { insetInlineStart: `calc(${g + w}% + 6px)` }}>
-                      {texte}
-                    </span>
-                  )}
                 </div>
               </div>
             );

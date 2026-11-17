@@ -150,12 +150,12 @@
 .pg-barre {
   box-sizing: border-box;
   position: absolute; top: 50%; transform: translateY(-50%); height: 26px; min-width: 6px;
-  display: flex; align-items: center; padding: 0 10px;
+  display: flex; align-items: center; padding: 0 8px; overflow: hidden;
   background: var(--pg-f); border: 1px solid var(--pg-c); border-inline-start-width: 4px; border-radius: 7px;
   color: var(--g-slate-800, #1e293b); transition: box-shadow 0.15s, transform 0.15s;
 }
-/* Le libellé reste visible quand le début d'une longue barre sort de la vue (défilement après un zoom) */
-.pg-barre__txt { position: sticky; inset-inline-start: calc(var(--pg-nom) + 10px); font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
+/* Le libellé reste dans la barre ; coupé avec « … » s il est trop long (titre complet au survol) */
+.pg-barre__txt { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
 /* Libellé à côté de la barre quand elle est trop courte pour l'afficher en entier */
 .pg-barre-ext {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 1;
