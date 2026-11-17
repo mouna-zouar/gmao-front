@@ -618,3 +618,6 @@ th:has(> .cl-th) { cursor: pointer; }
 /* Quand une recherche est ouverte, les autres titres restent alignés en haut */
 .app-shell thead:has(.cl-filtre-th) th, thead:has(.cl-filtre-th) th { vertical-align: top; padding-top: 10px; }
 .app-shell thead:has(.cl-filtre-th) th.selection-col, thead:has(.cl-filtre-th) th.selection-col { padding-top: 12px; }
+
+/* Liste sans bloc titre : seules les pastilles de statistiques, sur une ligne fine */
+.cl-entete.cl-entete--sans-titre { padding: 0; min-height: 0; background: none; border: 0; box-shadow: none; justify-content: flex-start; }

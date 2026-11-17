@@ -42,6 +42,7 @@ function ligneDepuisArticle(type, article, extra = {}) {
     designation: article.designation || t('Article #{id}', { id: article.id ?? article.prestataireArticlesId }),
     code: article.code || '',
     disponible: article.qteDisponible ?? null,
+    depotId: article.depotId ?? null, // dépôt où l'article est stocké (dépôt source d'une demande)
     qte: 1,
     unite: article.uniteStock || '',
     prixUnitaire: article.prixAchat ?? 0,
@@ -167,6 +168,26 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
       .catch(() => { if (!annule) setNumero(null); });
     return () => { annule = true; };
   }, [ouvert, chargement, type, entete.date]);
+
+  // Demande de fourniture : le dépôt source est celui où les articles sont stockés.
+  // Recalculé quand la liste des articles change ; un choix manuel reste possible ensuite.
+  const depotsDesArticles = useMemo(() => [...new Set(
+    lignes.map((l) => (l.depotId != null ? String(l.depotId) : null)).filter(Boolean),
+  )], [lignes]);
+  const cleDepotsArticles = depotsDesArticles.join(',');
+  useEffect(() => {
+    if (type !== 'DEMANDE' || depotsDesArticles.length !== 1) return;
+    const depotArticle = depotsDesArticles[0];
+    if (!depots.some((d) => String(d.id) === depotArticle)) return;
+    setEntete((e) => (String(e.depotId) === depotArticle ? e : {
+      ...e,
+      depotId: depotArticle,
+      // le dépôt destinataire ne peut pas être le même que le dépôt source
+      depotDestinationId: String(e.depotDestinationId) === depotArticle ? '' : e.depotDestinationId,
+    }));
+  }, [type, cleDepotsArticles, depots]); // eslint-disable-line react-hooks/exhaustive-deps
+  const depotSourceDesArticles = type === 'DEMANDE' && depotsDesArticles.length === 1
+    && String(entete.depotId) === depotsDesArticles[0];
 
   const changerEntete = (champ, valeur) => {
     setEntete((e) => ({ ...e, [champ]: valeur }));
@@ -563,6 +584,12 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
                   <option value="">{t('— Non précisé —')}</option>
                   {depots.map((d) => <option key={d.id} value={d.id}>{d.nom || d.codeDepots || `#${d.id}`}</option>)}
                 </select>
+                {depotSourceDesArticles && <small className="pe-champ__aide">{t('Dépôt des articles demandés')}</small>}
+                {type === 'DEMANDE' && depotsDesArticles.length > 1 && (
+                  <small className="pe-champ__aide pe-champ__aide--alerte">
+                    {t('Les articles viennent de {n} dépôts différents : faites une demande par dépôt.', { n: depotsDesArticles.length })}
+                  </small>
+                )}
               </label>
               {type === 'DEMANDE' && (
                 <label className="pe-champ">

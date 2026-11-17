@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
+  ListOrdered,
   Plus,
   Pencil,
   X,
@@ -23,6 +24,10 @@ import {
 import equipementMaintenanceService from '../../../services/equipementMaintenanceService';
 import { commePage, obtenirEquipements } from '../../../store/referentiels';
 import { t, locale } from '../../../i18n';
+import { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
+import gammeService from '../../../services/gammeService';
+import { dureeLisible } from '../gammes/Gammes';
+import { cheminLieu, lieuxAplatis } from '../../../services/lieuxCache';
 // Réutilise le style du panneau équivalent du Parc automobile (classes mtp-*
 // génériques, sans rien de spécifique au kilométrage).
 import '../parc/vehicules/VehiculeMaintenanceTypesSettings.css';
@@ -134,6 +139,8 @@ const emptyForm = {
   urgenceBon: '',
   baseRecalcul: 0,
   actif: true,
+  lieuId: '',
+  gammeId: '',
   lotArticleImmobilistationIds: [],
 };
 
@@ -172,6 +179,28 @@ export default function EquipementMaintenanceTypesSettings() {
   const [sortBy, setSortBy] = useState('code');
 
   const [immobilisations, setImmobilisations] = useState([]);
+  const carteLieux = useCarteLieux();
+  // Gammes d'intervention : la dernière version de chaque gamme (validée, sinon la plus récente)
+  const [gammes, setGammes] = useState([]);
+  useEffect(() => { gammeService.lister().then(setGammes).catch(() => setGammes([])); }, []);
+  const gammesParOrigine = useMemo(() => {
+    const m = new Map();
+    gammes.forEach((g) => {
+      const k = g.gammeOrigineId ?? g.id;
+      const d = m.get(k);
+      const rang = (x) => (x.statut === 'VALIDEE' ? 2 : x.statut === 'BROUILLON' ? 1 : 0) * 1000 + (x.version || 0);
+      if (!d || rang(g) > rang(d)) m.set(k, g);
+    });
+    return m;
+  }, [gammes]);
+  const gammeDe = (id) => {
+    if (id == null || id === '') return null;
+    const g = gammes.find((x) => String(x.id) === String(id));
+    return g ? (gammesParOrigine.get(g.gammeOrigineId ?? g.id) || g) : null;
+  };
+  const gammesChoix = useMemo(() => [...gammesParOrigine.values()].filter((g) => g.statut === 'VALIDEE')
+    .sort((a, b) => a.code.localeCompare(b.code)), [gammesParOrigine]);
+  const lieuxChoix = useMemo(() => lieuxAplatis(carteLieux), [carteLieux]);
   const [loadingImmobilisations, setLoadingImmobilisations] = useState(true);
 
   const codeInputRef = useRef(null);
@@ -234,6 +263,8 @@ export default function EquipementMaintenanceTypesSettings() {
       urgenceBon: tache.urgenceBon ?? '',
       baseRecalcul: tache.baseRecalcul ?? 0,
       actif: tache.actif ?? true,
+      lieuId: tache.lieuId != null ? String(tache.lieuId) : '',
+      gammeId: tache.gammeId != null ? String(tache.gammeId) : '',
       // Plusieurs équipements possibles ; l'ancien champ unique sert pour les types existants
       lotArticleImmobilistationIds: (tache.lotArticleImmobilistationIds?.length
         ? tache.lotArticleImmobilistationIds
@@ -300,6 +331,8 @@ export default function EquipementMaintenanceTypesSettings() {
         urgenceBon: form.urgenceBon === '' ? null : Number(form.urgenceBon),
         baseRecalcul: Number(form.baseRecalcul),
         actif: form.actif,
+        lieuId: form.lieuId === '' ? null : Number(form.lieuId),
+        gammeId: form.gammeId === '' ? null : Number(form.gammeId),
         lotArticleImmobilistationIds: form.lotArticleImmobilistationIds.map(Number),
       };
 
@@ -682,6 +715,9 @@ export default function EquipementMaintenanceTypesSettings() {
                         const ids = tache.lotArticleImmobilistationIds?.length
                           ? tache.lotArticleImmobilistationIds
                           : (tache.lotArticleImmobilistationId != null ? [tache.lotArticleImmobilistationId] : []);
+                        if (ids.length === 0 && tache.lieuId != null) {
+                          return <span className="mtp-card__tag" title={cheminLieu(carteLieux, tache.lieuId)}>{cheminLieu(carteLieux, tache.lieuId) || t('Lieu #{id}', { id: tache.lieuId })}</span>;
+                        }
                         if (ids.length === 0) return <span className="mtp-card__muted">{t("Tous les équipements")}</span>;
                         const noms = ids.map((i) => immobilisationsMap.get(String(i))?.designation || t('Équipement #{id}', { id: i }));
                         return (
@@ -692,6 +728,20 @@ export default function EquipementMaintenanceTypesSettings() {
                       })()}
                     </dd>
                   </div>
+
+                  {tache.gammeId != null && (() => {
+                    const g = gammeDe(tache.gammeId);
+                    return (
+                      <div className="mtp-card__metric">
+                        <dt><ListOrdered size={12} /> {t("Gamme")}</dt>
+                        <dd>
+                          <span className="mtp-card__tag" title={g ? `${g.code} · ${g.libelle}` : ''}>
+                            {g ? `${g.code} v${g.version} · ${g.etapes?.length ?? 0} ${t('étapes')} · ${dureeLisible(g.dureeTotaleMinutes)}` : t('Gamme #{id}', { id: tache.gammeId })}
+                          </span>
+                        </dd>
+                      </div>
+                    );
+                  })()}
                 </dl>
 
                 <footer className="mtp-card__foot">
@@ -980,6 +1030,17 @@ export default function EquipementMaintenanceTypesSettings() {
                     </div>
 
                     <div className="mtp-field">
+                      <label className="mtp-field__label" htmlFor="emt-lieu">{t("Lieu")}</label>
+                      <select id="emt-lieu" className="mtp-field__input mtp-field__input--select" value={form.lieuId} disabled={saving}
+                        onChange={(e) => setForm((prev) => ({ ...prev, lieuId: e.target.value }))}>
+                        <option value="">{t("Tous les lieux")}</option>
+                        {lieuxChoix.map((l) => (
+                          <option key={l.id} value={String(l.id)}>{'\u00A0\u00A0'.repeat(l.niveau)}{l.nom}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="mtp-field">
                       <label className="mtp-field__label" htmlFor="emt-lot-immob">{t("Lots d'immobilisation")}</label>
                       <SelectionEquipements
                         id="emt-lot-immob"
@@ -997,6 +1058,24 @@ export default function EquipementMaintenanceTypesSettings() {
                       <h5 id="mtp-group-avance" className="mtp-group__title">{t("Paramètres avancés")}</h5>
                       <p className="mtp-group__desc">{t("Bon de maintenance et cycle de recalcul")}</p>
                     </div>
+
+                    <label className="mtp-field">
+                      <span className="mtp-field__label">{t("Gamme")}</span>
+                      <select className="mtp-field__input mtp-field__input--select" name="gammeId"
+                        value={gammeDe(form.gammeId) ? String(gammeDe(form.gammeId).id) : form.gammeId}
+                        onChange={handleChange} disabled={saving}>
+                        <option value="">{t("Aucune")}</option>
+                        {(() => {
+                          const actuelle = gammeDe(form.gammeId);
+                          const liste = actuelle && !gammesChoix.some((g) => g.id === actuelle.id) ? [actuelle, ...gammesChoix] : gammesChoix;
+                          return liste.map((g) => (
+                            <option key={g.id} value={String(g.id)}>
+                              {g.code} v{g.version} · {g.libelle} · {g.etapes?.length ?? 0} {t('étapes')} · {dureeLisible(g.dureeTotaleMinutes)}
+                            </option>
+                          ));
+                        })()}
+                      </select>
+                    </label>
 
                     <div className="mtp-grid">
                       <label className="mtp-field">

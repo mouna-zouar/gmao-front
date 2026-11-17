@@ -89,3 +89,93 @@
 .fo-cibles__liste li.fo-cibles__tout { background: var(--g-slate-100); border-color: var(--g-slate-200); color: var(--g-slate-600); }
 .fo-alerte--attente { background: var(--g-sky-50, #f0f9ff); color: var(--g-sky-800, #075985); border: 1px solid var(--g-sky-200, #bae6fd); align-items: flex-start; }
 .fo-alerte__ligne { display: block; }
+
+/* ============================================================
+   Tableau des formations : cellules plus lisibles
+   ============================================================ */
+.fo-page td { vertical-align: middle; }
+.fo-intitule-bloc { display: flex; flex-direction: column; gap: 2px; text-align: start; min-width: 180px; }
+.fo-intitule-bloc small { font-size: 0.76rem; color: var(--g-slate-500); }
+
+/* Participants : pastilles avec initiales, couleur du résultat */
+.fo-pers { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 200px; text-align: start; }
+.fo-pers__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.fo-pers__chip {
+  --c: var(--g-slate-500); --c-bg: var(--g-slate-50);
+  display: inline-flex; align-items: center; gap: 5px; max-width: 220px;
+  padding: 2px 9px 2px 2px; border-radius: 999px; background: var(--c-bg); border: 1px solid color-mix(in srgb, var(--c) 25%, transparent);
+  font-size: 0.78rem; font-weight: 600; color: var(--g-slate-800);
+}
+.fo-pers__chip--vert  { --c: var(--g-emerald-600, #059669); --c-bg: var(--g-emerald-50, #ecfdf5); }
+.fo-pers__chip--rouge { --c: var(--g-red-600, #dc2626);     --c-bg: var(--g-red-50, #fef2f2); }
+.fo-pers__chip--bleu  { --c: var(--g-blue-600, #2563eb);    --c-bg: var(--g-blue-50, #eff6ff); }
+.fo-pers__chip--gris  { --c: var(--g-slate-400, #94a3b8);   --c-bg: var(--g-slate-50, #f8fafc); }
+.fo-pers__avatar {
+  width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; display: grid; place-items: center;
+  background: var(--c); color: #fff; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em;
+}
+.fo-pers__nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fo-pers__res { font-size: 0.68rem; font-weight: 700; color: var(--c); }
+.fo-pers__plus {
+  display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px;
+  background: var(--g-slate-100); color: var(--g-slate-600); font-size: 0.76rem; font-weight: 700;
+}
+.fo-pers__bilan { font-size: 0.72rem; font-weight: 700; color: var(--g-amber-700, #b45309); }
+.fo-pers__bilan.is-ok { color: var(--g-emerald-700, #047857); }
+
+/* Familles et équipements : un nom lisible par ligne (+ code / marque) */
+.fo-cibles-cell { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; text-align: start; min-width: 160px; max-width: 280px; }
+.fo-cibles-cell li { display: flex; flex-direction: column; padding-inline-start: 8px; border-inline-start: 3px solid var(--g-slate-200); line-height: 1.25; }
+.fo-cibles-cell--famille li { border-inline-start-color: var(--g-brand-300, #7dd3dc); }
+.fo-cibles-cell--equipement li { border-inline-start-color: var(--g-blue-300, #93c5fd); }
+.fo-cibles-cell__nom { font-size: 0.82rem; font-weight: 600; color: var(--g-slate-800); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fo-cibles-cell li small { font-size: 0.72rem; color: var(--g-slate-500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fo-cibles-cell li.fo-cibles-cell__plus { border: 0; padding: 0; font-size: 0.74rem; font-weight: 700; color: var(--g-slate-500); }
+
+/* Tout le contenu du tableau centré, comme les autres colonnes */
+.fo-page td { text-align: center; }
+.fo-intitule-bloc { align-items: center; text-align: center; margin: 0 auto; }
+.fo-pers { align-items: center; text-align: center; margin: 0 auto; }
+.fo-pers__liste { justify-content: center; }
+.fo-cibles-cell { align-items: center; text-align: center; margin: 0 auto; }
+.fo-cibles-cell li { align-items: center; padding-inline-start: 0; border-inline-start: 0; }
+.fo-cibles-cell--famille .fo-cibles-cell__nom { color: var(--g-brand-700, #0e7490); }
+.fo-cibles-cell--equipement .fo-cibles-cell__nom { color: var(--g-blue-700, #1d4ed8); }
+
+/* ============================================================
+   Tableau des formations — v2 : cellules compactes
+   ============================================================ */
+/* Participants : pile d'avatars + nombre + barre de réussite */
+.fo-part { display: inline-flex; align-items: center; gap: 10px; cursor: help; }
+.fo-part:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 3px; border-radius: 8px; }
+.fo-part__pile { display: inline-flex; align-items: center; }
+.fo-part__av {
+  --c: var(--g-slate-400);
+  width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0;
+  margin-inline-start: -8px; background: var(--g-blanc); color: var(--g-slate-700);
+  border: 2px solid var(--c); box-shadow: 0 0 0 2px var(--g-blanc);
+  font-size: 0.64rem; font-weight: 800; letter-spacing: 0.02em;
+}
+.fo-part__av:first-child { margin-inline-start: 0; }
+.fo-part__av--vert  { --c: var(--g-emerald-500, #10b981); }
+.fo-part__av--rouge { --c: var(--g-red-500, #ef4444); }
+.fo-part__av--bleu  { --c: var(--g-blue-500, #3b82f6); }
+.fo-part__av--gris  { --c: var(--g-slate-300, #cbd5e1); color: var(--g-slate-400); }
+.fo-part__av--plus  { --c: var(--g-slate-200); background: var(--g-slate-100); color: var(--g-slate-600); }
+.fo-part__texte { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; font-size: 0.8rem; color: var(--g-slate-600); white-space: nowrap; }
+.fo-part__texte b { color: var(--g-slate-900); font-size: 0.86rem; }
+.fo-part__reussite { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 700; color: var(--g-slate-500); }
+.fo-part__barre { width: 54px; height: 5px; border-radius: 3px; background: var(--g-slate-100); overflow: hidden; }
+.fo-part__barre span { display: block; height: 100%; background: var(--g-emerald-500, #10b981); border-radius: 3px; }
+
+/* Équipements visés : premier nom + « +N » + résumé */
+.fo-cib { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: 240px; cursor: help; text-align: start; }
+.fo-cib:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 3px; border-radius: 6px; }
+.fo-cib__ligne { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }
+.fo-cib__point { width: 8px; height: 8px; flex-shrink: 0; border-radius: 2px; }
+.fo-cib__point.is-equipement { background: var(--g-blue-500, #3b82f6); }
+.fo-cib__point.is-famille { background: var(--g-brand-500, #0794a4); }
+.fo-cib__nom { font-size: 0.84rem; font-weight: 600; color: var(--g-slate-800); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fo-cib__plus { flex-shrink: 0; padding: 0 6px; border-radius: 999px; background: var(--g-slate-100); color: var(--g-slate-600); font-size: 0.7rem; font-weight: 700; }
+.fo-cib small { padding-inline-start: 14px; font-size: 0.72rem; color: var(--g-slate-500); }
+

@@ -11,6 +11,7 @@ import Planningbonmaintenance from '../components/pages/Planning/Planningbonmain
 import PlanningParIntervenant from '../components/pages/planning/PlanningParIntervenant';
 import PlanningTechnicien from '../components/pages/planning/PlanningTechnicien';
 import Maintenancetaches from '../components/pages/taches/maintenancetaches';
+import Gammes from '../components/pages/gammes/Gammes';
 import Reclamationdashboard from '../components/pages/rec-dashboard/Reclamationdashboard';
 import Bonmaintenancedashboard from '../components/pages/bon-main/Bonmaintenancedashboard';
 import Bonmaintenancetachestable from '../components/pages/bon-main-tache/Bonmaintenancetachestable';
@@ -79,6 +80,7 @@ const AppRoutes = () => {
             <Route path="/planning-bon-maintenance" element={<Planningbonmaintenance />} />
             <Route path="/reclamation-dashboard" element={<Reclamationdashboard />} />
             <Route path="/taches" element={<Maintenancetaches />} />
+            <Route path="/gammes" element={<Gammes />} />
             <Route path="/bon-maintenance-dashboard" element={<Bonmaintenancedashboard />} />
             <Route path="/bon-maintenance-taches" element={<Bonmaintenancetachestable />} />
             <Route path="/workflow" element={<Workflow />} />

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertCircle, ClipboardList, FileText, Wrench, RefreshCw, Eye, X, UserRound, CalendarDays, CheckCircle2, HardHat, ShieldCheck, Power, PenLine, ExternalLink, MessageCircle, Stethoscope, Undo2, ChevronDown, Hourglass, GraduationCap, XCircle, ArrowLeft, Search } from 'lucide-react';
+import { AlertCircle, ClipboardList, FileText, Wrench, RefreshCw, Eye, X, UserRound, CalendarDays, CheckCircle2, HardHat, ShieldCheck, Power, PenLine, ExternalLink, MessageCircle, Stethoscope, Undo2, Hourglass, GraduationCap, XCircle, ArrowLeft, Search, Sun, MapPin } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 import authService from '../../../services/Authservice';
@@ -32,6 +32,8 @@ import MesFormations from '../Formations/MesFormations';
 import formationService from '../../../services/formationService';
 import BmdChat from '../bonmaintenance/BmdChat';
 import { MiniCalendrier, ASurveiller } from './EspaceAgenda';
+import EspaceAujourdhui from './EspaceAujourdhui';
+import EspaceTableau from './EspaceTableau';
 import { COLONNES_KANBAN, construireTravaux, refBon, versDate } from './espacePlanning';
 import './EspacePersonnel.css';
 
@@ -66,7 +68,7 @@ const ETAT_TONS = {
 const TYPE_BADGE = { bons: 'bon', reclamations: 'reclamation' };
 
 // Étapes du suivi des demandes qui ne comptent plus comme « en cours »
-const DEMANDES_TERMINEES = ['REPAREE', 'REFUSEE', 'ANNULEE'];
+const DEMANDES_TERMINEES = ['REPAREE', 'REFUSEE', 'ANNULEE', 'ANNULEE_DEMANDEUR'];
 
 const ACTIVE_STATES = {
   bons: [1, 2, 3],
@@ -428,7 +430,192 @@ function Participation({ item }) {
   );
 }
 
-function DetailModal({ item: itemBrut, type, onClose, onOuvrirBon, onOuvrirReclamation }) {
+/* ------------------------------------------------------------------ */
+/*  Aperçu d'un bon : en-tête, avancement, infos par thème, mes tâches   */
+/* ------------------------------------------------------------------ */
+// Parcours d'un bon : Nouveau (1) → En cours (3) → Effectué (4) ; Suspendu (2) et Annulé (10) à part
+const PARCOURS_BON = [
+  { etat: 1, label: 'Créé' },
+  { etat: 3, label: 'En cours' },
+  { etat: 4, label: 'Effectué' },
+];
+
+/** Barre d'avancement pleine largeur : Créé → En cours → Effectué (Suspendu / Annulé signalés). */
+function AvancementBon({ etat }) {
+  const rang = etat === 4 ? 2 : etat === 3 || etat === 2 ? 1 : 0;
+  const annule = etat === 10;
+  return (
+    <ol className={`epa-avancement ${annule ? 'is-annule' : ''}`} aria-label={t('Avancement du bon')}>
+      {PARCOURS_BON.map((p, i) => {
+        const statut = annule ? 'coupe' : i < rang || etat === 4 ? 'fait' : i === rang ? (etat === 2 ? 'pause' : 'courant') : 'avenir';
+        return (
+          <li key={p.etat} className={`epa-seg epa-seg--${statut}`} aria-current={statut === 'courant' || statut === 'pause' ? 'step' : undefined}>
+            <span className="epa-seg-barre" aria-hidden="true" />
+            <span className="epa-seg-texte">
+              {statut === 'fait' && <CheckCircle2 size={13} aria-hidden="true" />}
+              {statut === 'pause' ? t('Suspendu') : t(p.label)}
+            </span>
+          </li>
+        );
+      })}
+      {annule && (
+        <li className="epa-seg epa-seg--annule">
+          <span className="epa-seg-barre" aria-hidden="true" />
+          <span className="epa-seg-texte"><XCircle size={13} aria-hidden="true" /> {t('Annulé')}</span>
+        </li>
+      )}
+    </ol>
+  );
+}
+
+/** Petite carte d'informations (seules les lignes renseignées sont affichées). */
+function InfosBloc({ titre, icone: Icone, lignes }) {
+  const visibles = lignes.filter((l) => l && l[1] != null && l[1] !== '' && l[1] !== '—');
+  if (!visibles.length) return null;
+  return (
+    <section className="epa-carte">
+      <h3>{Icone && <Icone size={15} aria-hidden="true" />}{titre}</h3>
+      <dl>
+        {visibles.map(([label, valeur]) => (
+          <div key={label}><dt>{label}</dt><dd>{valeur}</dd></div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+function ApercuBon({ bon: brut, taches = [], nonLus = 0, onClose, onOuvrirBon, onDiscuter }) {
+  useEffect(() => {
+    if (!brut) return undefined;
+    const echap = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', echap);
+    return () => window.removeEventListener('keydown', echap);
+  }, [brut, onClose]);
+  if (!brut) return null;
+  const b = enrichirPourAffichage(brut, 'bons');
+  const mesTaches = taches.filter((x) => String(x.bonMaintenanceId) === String(b.id));
+  const urgence = NIVEAUX_URGENCE[b.urgence];
+  const etatImmo = ETAT_IMMOBILISATION_OPTIONS.find((o) => Number(o.value) === Number(b.etatImmoABM))?.label;
+  // Une seule personne : le demandeur s'il est connu, sinon le créateur du bon
+  const personne = b.personnelDemandantNom
+    ? [t('Demandeur'), b.personnelDemandantNom]
+    : [t('Créé par'), b.personnelCreationNom];
+  const tonEtat = etatTon('bons', b.etat);
+
+  return (
+    <div className="ep-modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <section className={`epa ep-ton--${tonEtat}`} role="dialog" aria-modal="true" aria-labelledby="epa-titre">
+        {/* ------- En-tête ------- */}
+        <header className="epa-entete">
+          <div className="epa-entete-ligne">
+            <span className="epa-icone" aria-hidden="true"><Wrench size={20} /></span>
+            <div className="epa-entete-texte">
+              <div className="epa-badges">
+                <span className="epa-ref">{b.num || t('Bon de maintenance')}</span>
+                <BadgeStatut type="bon" valeur={b.etat} taille="petit" />
+                {urgence && <span className={`epa-puce ${b.urgence >= 3 ? 'is-alerte' : ''}`}>{t('Urgence')} : {t(urgence)}</span>}
+                {b.arretOblig && <span className="epa-puce is-alerte">{t('Arrêt obligatoire')}</span>}
+              </div>
+              <h2 id="epa-titre">{b.titre || t('Sans objet')}</h2>
+              {(b.equipementNom || b.serviceNom) && (
+                <p className="epa-sous">
+                  {b.equipementNom && <span><Stethoscope size={14} aria-hidden="true" /> {b.equipementNom}</span>}
+                  {b.serviceNom && <span><MapPin size={14} aria-hidden="true" /> {b.serviceNom}</span>}
+                </p>
+              )}
+            </div>
+            <button type="button" className="epa-fermer" onClick={onClose} aria-label={t('Fermer')}><X size={18} /></button>
+          </div>
+          <AvancementBon etat={b.etat} />
+        </header>
+
+        {/* ------- Corps : à gauche le travail, à droite les infos ------- */}
+        <div className="epa-corps">
+          <div className="epa-principal">
+            <section className="epa-section">
+              <h3>{t('Description')}</h3>
+              {b.description
+                ? <p className="epa-description">{b.description}</p>
+                : <p className="epa-vide">{t('Aucune description.')}</p>}
+            </section>
+
+            <section className="epa-section">
+              <h3>{t('Mes tâches sur ce bon')} {mesTaches.length > 0 && <span className="epa-nb">{mesTaches.length}</span>}</h3>
+              {mesTaches.length === 0 ? (
+                <p className="epa-vide">{t('Aucune tâche ne vous est affectée sur ce bon.')}</p>
+              ) : (
+                <ul className="epa-taches">
+                  {mesTaches.map((x) => (
+                    <li key={x.id} className={`ep-ton--${etatTon('taches', x.etat)}`}>
+                      <span className="epa-tache-point" aria-hidden="true" />
+                      <span className="epa-tache-nom">{x.designation || x.nom || t('Tâche #{id}', { id: x.id })}</span>
+                      {x.dateFin && <span className="epa-tache-date"><CalendarDays size={12} aria-hidden="true" /> {dateLabel(x.dateFin)}</span>}
+                      <StatusPill ton={etatTon('taches', x.etat)}>{etatLabel('taches', x.etat)}</StatusPill>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            <Participation item={b} />
+          </div>
+
+          <aside className="epa-cote">
+            <InfosBloc titre={t('Planning')} icone={CalendarDays} lignes={[
+              [t('Créé le'), b.dateCreation ? dateLabel(b.dateCreation) : null],
+              [t('Intervention prévue'), b.date ? dateLabel(b.date) : null],
+              [t('Fin prévue'), b.dateFinIntervention ? dateLabel(b.dateFinIntervention) : null],
+              [t('Intervention'), b.dateIntervention ? dateLabel(b.dateIntervention) : null],
+              [t('Clôturé le'), b.dateCloture ? dateLabel(b.dateCloture) : null],
+            ]} />
+            <InfosBloc titre={t('Équipement')} icone={Stethoscope} lignes={[
+              [t('Équipement'), b.equipementNom],
+              [t('État'), etatImmo ? t(etatImmo) : null],
+              [t('Service'), b.serviceNom],
+              [t('Dépôt'), b.depotNom],
+            ]} />
+            <InfosBloc titre={t('Demande')} icone={UserRound} lignes={[
+              personne,
+              [t('Type d’entretien'), b.type != null ? t(libelleTypeEntretien(b.type)) : null],
+              [t('Source'), b.sourceInformation != null ? t(libelleSourceInformation(b.sourceInformation)) : null],
+              [t('Cause'), b.cause],
+              [t('Prestataire'), b.prestataireNom],
+            ]} />
+          </aside>
+        </div>
+
+        {/* ------- Actions ------- */}
+        <footer className="epa-pied">
+          <button type="button" className="ep-btn ep-btn--ghost" onClick={onClose}>{t('Fermer')}</button>
+          <span className="epa-espace" />
+          {onDiscuter && b.id != null && (
+            <button type="button" className="ep-btn ep-btn--ghost epa-discuter" onClick={() => onDiscuter(b.id)}>
+              <MessageCircle size={15} /> {t('Discuter')}
+              {nonLus > 0 && <span className="epa-nonlus">{nonLus}</span>}
+            </button>
+          )}
+          {b.id != null && (
+            <button type="button" className="ep-btn ep-btn--primaire" onClick={() => onOuvrirBon(b)}>
+              <ExternalLink size={15} /> {t('Ouvrir le bon')}
+            </button>
+          )}
+        </footer>
+      </section>
+    </div>
+  );
+}
+
+function DetailModal({ item: itemBrut, type, onClose, onOuvrirBon, onOuvrirReclamation, taches, nonLusChat, onDiscuter }) {
+  if (itemBrut && type === 'bons') {
+    return (
+      <ApercuBon bon={itemBrut} taches={taches} nonLus={nonLusChat?.[itemBrut.id] || 0}
+        onClose={onClose} onOuvrirBon={onOuvrirBon} onDiscuter={onDiscuter} />
+    );
+  }
+  return <DetailModalGenerique item={itemBrut} type={type} onClose={onClose} onOuvrirBon={onOuvrirBon} onOuvrirReclamation={onOuvrirReclamation} />;
+}
+
+function DetailModalGenerique({ item: itemBrut, type, onClose, onOuvrirBon, onOuvrirReclamation }) {
   useEffect(() => {
     if (!itemBrut) return undefined;
     const handleEscape = (event) => {
@@ -563,75 +750,68 @@ function DetailModal({ item: itemBrut, type, onClose, onOuvrirBon, onOuvrirRecla
 }
 
 /* ------------------------------------------------------------------ */
-/*  Présentation des bons et réclamations : fiches groupées par état    */
+/*  Présentation des bons : tableau (tri, recherche, filtres de rôle)   */
 /* ------------------------------------------------------------------ */
 
-// Groupes affichés dans l'ordre du travail : ce qui est en cours d'abord, le terminé replié
-const GROUPES_BONS = [
-  { id: 'cours', etats: [3], label: 'En cours', ton: 'action' },
-  { id: 'nouveaux', etats: [1], label: 'À démarrer', ton: 'info' },
-  { id: 'suspendus', etats: [2], label: 'Suspendus', ton: 'attention' },
-  { id: 'effectues', etats: [4], label: 'Effectués', ton: 'ok', replie: true },
-  { id: 'annules', etats: [10], label: 'Annulés', ton: 'neutre', replie: true },
-];
+// Ordre de tri « État » : en cours, à démarrer, suspendus, puis effectués et annulés
+const RANG_ETAT_BON = { 3: 0, 1: 1, 2: 2, 4: 3, 10: 4 };
 
-function grouper(liste, groupes) {
-  const connus = new Set(groupes.flatMap((g) => g.etats));
-  const resultat = groupes.map((g) => ({ ...g, items: liste.filter((x) => g.etats.includes(x.etat)) }));
-  const autres = liste.filter((x) => !connus.has(x.etat));
-  if (autres.length) resultat.push({ id: 'autres', etats: [], label: 'Autres', ton: 'neutre', items: autres });
-  return resultat.filter((g) => g.items.length > 0);
-}
-
-function Groupe({ groupe, children }) {
-  const [ouvert, setOuvert] = useState(!groupe.replie);
+function TableauBons({ bons, nonLusChat, onApercu, onOuvrir, onDiscuter, outils }) {
+  const sansClic = (fn) => (e) => { e.stopPropagation(); fn(); };
+  const colonnes = [
+    {
+      cle: 'num', label: 'N°', largeur: 120, valeur: (b) => b.num || '',
+      rendu: (b) => <strong className="ept-ref">{b.num || t('Sans numéro')}</strong>,
+    },
+    {
+      cle: 'titre', label: 'Objet', valeur: (b) => b.titre || '',
+      rendu: (b) => <span className="ept-texte">{b.titre || t('Sans objet')}</span>,
+    },
+    {
+      cle: 'etat', label: 'État', largeur: 140, valeur: (b) => RANG_ETAT_BON[b.etat] ?? 9,
+      rendu: (b) => <BadgeStatut type="bon" valeur={b.etat} taille="petit" />,
+    },
+    {
+      cle: 'participation', label: 'Ma participation', triable: false,
+      rendu: (b) => { const r = resumeParticipation(b); return r ? <StatusPill ton={r.ton}>{r.texte}</StatusPill> : '—'; },
+    },
+    {
+      cle: 'date', label: 'Date', largeur: 120, valeur: (b) => (b.dateCreation ? new Date(b.dateCreation).getTime() : null),
+      rendu: (b) => <span className="ept-date">{dateLabel(b.dateCreation)}</span>,
+    },
+    {
+      cle: 'actions', label: '', triable: false, largeur: 150, align: 'right',
+      rendu: (b) => {
+        const nonLus = nonLusChat[b.id] || 0;
+        return (
+          <span className="ept-actions">
+            <button type="button" className={`ep-ico ${nonLus > 0 ? 'ep-ico--message' : ''}`} onClick={sansClic(() => onDiscuter(b.id))}
+              title={nonLus > 0 ? tp('message non lu', nonLus) : t('Discuter')} aria-label={t('Discuter')}>
+              <MessageCircle size={15} />
+              {nonLus > 0 && <span className="ep-ico-nb">{nonLus}</span>}
+            </button>
+            <button type="button" className="ep-ico" onClick={sansClic(() => onApercu(b))} title={t('Aperçu')} aria-label={t('Aperçu')}>
+              <Eye size={15} />
+            </button>
+            <button type="button" className="ep-ouvrir" onClick={sansClic(() => onOuvrir(b))}>
+              <ExternalLink size={14} /> {t('Ouvrir')}
+            </button>
+          </span>
+        );
+      },
+    },
+  ];
   return (
-    <section className={`ep-groupe ep-ton--${groupe.ton}`}>
-      <button type="button" className="ep-groupe-entete" onClick={() => setOuvert((v) => !v)} aria-expanded={ouvert}>
-        <span className="ep-groupe-point" aria-hidden="true" />
-        <h3>{t(groupe.label)}</h3>
-        <span className="ep-groupe-nb">{groupe.items.length}</span>
-        <ChevronDown size={16} className={`ep-groupe-fleche ${ouvert ? 'is-ouvert' : ''}`} aria-hidden="true" />
-      </button>
-      {ouvert && <ul className="ep-fiches">{children}</ul>}
-    </section>
-  );
-}
-
-function FicheBon({ bon, nonLus, onApercu, onOuvrir, onDiscuter }) {
-  const r = resumeParticipation(bon);
-  return (
-    <li className={`ep-fiche ep-ton--${etatTon('bons', bon.etat)}`}>
-      <div className="ep-fiche-ref">
-        <strong>{bon.num || t('Sans numéro')}</strong>
-        <span className="ep-date"><CalendarDays size={12} />{dateLabel(bon.dateCreation)}</span>
-      </div>
-      <div className="ep-fiche-corps">
-        <h4>{bon.titre || t('Sans objet')}</h4>
-        <div className="ep-fiche-meta">
-          <RolePills roles={bon.roles} />
-          {r && <StatusPill ton={r.ton}>{r.texte}</StatusPill>}
-        </div>
-      </div>
-      <div className="ep-fiche-actions">
-        <button
-          type="button"
-          className={`ep-ico ${nonLus > 0 ? 'ep-ico--message' : ''}`}
-          onClick={() => onDiscuter(bon.id)}
-          title={nonLus > 0 ? tp('message non lu', nonLus) : t('Discuter')}
-          aria-label={nonLus > 0 ? `${tp('message non lu', nonLus)} · ${t('Ouvrir la discussion')}` : t('Discuter')}
-        >
-          <MessageCircle size={16} />
-          {nonLus > 0 && <span className="ep-ico-nb">{nonLus}</span>}
-        </button>
-        <button type="button" className="ep-ico" onClick={() => onApercu(bon)} title={t('Aperçu')} aria-label={t('Aperçu')}>
-          <Eye size={16} />
-        </button>
-        <button type="button" className="ep-ouvrir" onClick={() => onOuvrir(bon)}>
-          <ExternalLink size={15} /> {t('Ouvrir')}
-        </button>
-      </div>
-    </li>
+    <EspaceTableau
+      colonnes={colonnes}
+      lignes={bons}
+      onOuvrir={onOuvrir}
+      triInitial={{ cle: 'etat', sens: 'asc' }}
+      recherchePlaceholder={t('Rechercher un bon (n°, objet)…')}
+      vide={t('Aucun bon de maintenance.')}
+      ligneClasse={(b) => (b.etat === 4 || b.etat === 10 ? 'is-termine' : '')}
+      outils={outils}
+    />
   );
 }
 
@@ -664,7 +844,10 @@ export default function EspacePersonnel() {
   // ?onglet=demandes (lien des notifications « Votre demande … ») ouvre directement l'onglet voulu
   const [searchParams] = useSearchParams();
   const ongletUrl = searchParams.get('onglet');
-  const [activeTab, setActiveTab] = useState(ongletUrl || 'bons');
+  // « Aujourd'hui » (tableau de bord) par défaut
+  const [activeTab, setActiveTab] = useState(ongletUrl || 'aujourdhui');
+  // Compteur : « Signaler une panne » depuis Aujourd'hui ouvre le formulaire dans Mes demandes
+  const [demandeSignalement, setDemandeSignalement] = useState(0);
   useEffect(() => { if (ongletUrl) setActiveTab(ongletUrl); }, [ongletUrl, searchParams]);
   const [filtreRole, setFiltreRole] = useState('tous');
   const [data, setData] = useState({ bons: [], taches: [], reclamations: [], demandes: [], formations: [] });
@@ -931,28 +1114,55 @@ export default function EspacePersonnel() {
     formations: t('Vos formations et leurs résultats'),
   }[activeTab];
 
+  const aller = (onglet) => { if (onglet === 'discussions') setChatInitial(null); setActiveTab(onglet); };
+  const signaler = () => { setActiveTab('demandes'); setDemandeSignalement((n) => n + 1); };
+  const compteurs = {
+    bons: data.bons.filter((b) => ACTIVE_STATES.bons.includes(b.etat)).length,
+    taches: tachesAFaire,
+    retard: enRetard,
+    proches: travaux.filter((tr) => tr.statut?.niveau === 'aujourdhui' || tr.statut?.niveau === 'proche').length,
+    messages: totalNonLus,
+    demandes: data.demandes.filter((x) => !DEMANDES_TERMINEES.includes(x.etape)).length,
+    formations: data.formations.filter((x) => x.formation?.statut === 'PLANIFIEE').length,
+  };
+  const estAujourdhui = activeTab === 'aujourdhui';
+  const filtresRole = (
+    <div className="ep-filtres-role ept-filtres" role="group" aria-label={t('Filtrer par rôle')}>
+      {FILTRES_ROLE.map((f) => (
+        <button
+          key={f.id}
+          type="button"
+          className={`ep-filtre-role ${filtreRole === f.id ? 'is-actif' : ''}`}
+          aria-pressed={filtreRole === f.id}
+          onClick={() => setFiltreRole(f.id)}
+        >
+          {t(f.label)}
+          <span className="ep-filtre-role-compte">{compteRoles[f.id]}</span>
+        </button>
+      ))}
+    </div>
+  );
+  // Le calendrier à droite n'accompagne que les bons (les tâches et discussions prennent toute la largeur)
+  const avecCote = activeTab === 'bons';
+
   return (
-    <main className="ep-page ep-theme ep-calme">
-      {/* ------- BANDEAU : qui je suis, ce qui m'attend, et les onglets ------- */}
-      <header className="ep-bandeau">
-        <div className="ep-bandeau-haut">
-          <span className="ep-avatar" aria-hidden="true">{initialesDe(displayName)}</span>
-          <div className="ep-bandeau-texte">
-            <p className="ep-bandeau-date">
-              {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long' })}
+    <main className="ep-page ep-theme ep-calme ep2 ep3">
+      <div className="ep3-cadre">
+        {/* ------- EN-TÊTE : salutation + actualiser ------- */}
+        <header className="ep3-entete">
+          <span className="ep-avatar ep2-avatar" aria-hidden="true">{initialesDe(displayName)}</span>
+          <div className="ep3-entete-texte">
+            <p className="ep2-date">
+              {new Date().toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
-            <h1>{salutation()}{displayName ? `, ${displayName}` : ''}</h1>
-            <p className="ep-synthese">
+            <h1>{salutation()}{displayName ? `, ${displayName.split(' ')[0]}` : ''}</h1>
+            <p className="ep-synthese ep2-synthese">
               {loading ? t('Chargement de vos données…') : syntheses.length === 0 ? t('Rien d’urgent aujourd’hui.') : (
                 <>
                   {syntheses.map((x, i) => (
                     <span key={x.cle}>
                       {i > 0 && (i === syntheses.length - 1 ? ` ${t('et')} ` : ', ')}
-                      <button
-                        type="button"
-                        className={`ep-synthese-lien ${x.alerte ? 'is-alerte' : ''}`}
-                        onClick={() => { if (x.onglet === 'discussions') setChatInitial(null); setActiveTab(x.onglet); }}
-                      >
+                      <button type="button" className={`ep-synthese-lien ${x.alerte ? 'is-alerte' : ''}`} onClick={() => aller(x.onglet)}>
                         {x.texte}
                       </button>
                     </span>
@@ -962,13 +1172,20 @@ export default function EspacePersonnel() {
               )}
             </p>
           </div>
-          <button type="button" className="ep-actualiser" onClick={load} disabled={loading}>
-            <RefreshCw size={16} className={loading ? 'ep-spin' : ''} />
-            <span>{t('Actualiser')}</span>
+          <button type="button" className="ep2-actualiser" onClick={load} disabled={loading}>
+            <RefreshCw size={15} className={loading ? 'ep-spin' : ''} />
+            <span>{loading ? t('Chargement…') : t('Actualiser')}</span>
           </button>
-        </div>
+        </header>
 
-        <nav className="ep-onglets" role="tablist" aria-label={t('Mon espace')}>
+        {/* ------- ONGLETS ------- */}
+        <nav className="ep3-onglets" role="tablist" aria-label={t('Mon espace')}>
+          <button type="button" role="tab" aria-selected={estAujourdhui}
+            className={`ep3-onglet ${estAujourdhui ? 'is-actif' : ''}`} onClick={() => aller('aujourdhui')}>
+            <Sun size={16} aria-hidden="true" />
+            <span>{t("Aujourd'hui")}</span>
+            {compteurs.retard > 0 && <span className="ep2-nav-nb is-alerte" title={tp('travail en retard', compteurs.retard)}>{compteurs.retard}</span>}
+          </button>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const n = compteOnglet(tab);
@@ -979,22 +1196,27 @@ export default function EspacePersonnel() {
                 type="button"
                 role="tab"
                 aria-selected={actif}
-                className={`ep-onglet ${actif ? 'is-actif' : ''}`}
-                onClick={() => { if (tab.id === 'discussions') setChatInitial(null); setActiveTab(tab.id); }}
+                className={`ep3-onglet ${actif ? 'is-actif' : ''}`}
+                onClick={() => aller(tab.id)}
               >
-                <Icon size={17} />
+                <Icon size={16} aria-hidden="true" />
                 <span>{tab.label}</span>
-                <span
-                  className={`ep-onglet-nb ${tab.id === 'discussions' && n > 0 ? 'is-alerte' : ''}`}
-                  title={tab.id === 'discussions' ? tp('message non lu', n) : tp('actif', n)}
-                >
-                  {tab.id === 'discussions' ? n : tab.items.length}
-                </span>
+                {n > 0 && (
+                  <span
+                    className={`ep2-nav-nb ${tab.id === 'discussions' ? 'is-alerte' : ''}`}
+                    title={tab.id === 'discussions' ? tp('message non lu', n) : tp('actif', n)}
+                  >
+                    {n}
+                  </span>
+                )}
               </button>
             );
           })}
         </nav>
-      </header>
+
+        {/* ------- CONTENU (toute la largeur) ------- */}
+        <section className="ep2-contenu ep3-contenu">
+          {!estAujourdhui && <p className="ep3-aide">{aideOnglet}</p>}
 
       {error && (
         <div className="ep-error">
@@ -1003,29 +1225,18 @@ export default function EspacePersonnel() {
         </div>
       )}
 
-      <div className="ep-layout">
-        <div className="ep-principal" role="tabpanel">
-          <div className="ep-contenu-entete">
-            <h2>{currentTab.label}</h2>
-            <p>{aideOnglet}</p>
-          </div>
-
-          {activeTab === 'bons' && !loading && data.bons.length > 0 && (
-            <div className="ep-filtres-role" role="group" aria-label={t('Filtrer par rôle')}>
-              {FILTRES_ROLE.map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  className={`ep-filtre-role ${filtreRole === f.id ? 'is-actif' : ''}`}
-                  aria-pressed={filtreRole === f.id}
-                  onClick={() => setFiltreRole(f.id)}
-                >
-                  {t(f.label)}
-                  <span className="ep-filtre-role-compte">{compteRoles[f.id]}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          {estAujourdhui ? (
+            <EspaceAujourdhui
+              chargement={loading}
+              compteurs={compteurs}
+              travaux={travaux}
+              onAller={aller}
+              onOuvrirTravail={ouvrirTravail}
+              onSignaler={signaler}
+            />
+          ) : (
+      <div className={`ep-layout ep2-layout ${avecCote ? '' : 'ep2-layout--plein'}`}>
+        <div className="ep-principal ep2-principal" role="tabpanel">
 
           {activeTab === 'formations' ? (
             <MesFormations liste={data.formations} chargement={chargementFormations} />
@@ -1034,6 +1245,7 @@ export default function EspacePersonnel() {
               integre
               onCharge={(demandes) => setData((d) => ({ ...d, demandes }))}
               onOuvrir={ouvrirReclamation}
+              demandeSignalement={demandeSignalement}
             />
           ) : loading ? (
             <div className="ep-empty">
@@ -1042,25 +1254,20 @@ export default function EspacePersonnel() {
             </div>
           ) : activeTab === 'bons' ? (
             bonsFiltres.length === 0 ? (
-              <div className="ep-empty">
+              <div className="ep-empty ept-vide-bloc">
+                {data.bons.length > 0 && filtresRole}
                 <Wrench size={18} />
                 <span>{filtreRole === 'tous' ? t('Aucun bon de maintenance ne vous est associé.') : t('Aucun bon pour ce rôle.')}</span>
               </div>
             ) : (
-              grouper(bonsFiltres, GROUPES_BONS).map((g) => (
-                <Groupe key={g.id} groupe={g}>
-                  {g.items.map((bon) => (
-                    <FicheBon
-                      key={bon.id}
-                      bon={bon}
-                      nonLus={nonLusChat[bon.id] || 0}
-                      onApercu={(b) => openDetails(b, 'bons')}
-                      onOuvrir={ouvrirBon}
-                      onDiscuter={ouvrirDiscussion}
-                    />
-                  ))}
-                </Groupe>
-              ))
+              <TableauBons
+                bons={bonsFiltres}
+                nonLusChat={nonLusChat}
+                onApercu={(b) => openDetails(b, 'bons')}
+                onOuvrir={ouvrirBon}
+                onDiscuter={ouvrirDiscussion}
+                outils={filtresRole}
+              />
             )
           ) : activeTab === 'discussions' ? (
             <div className="ep-surface">
@@ -1092,11 +1299,16 @@ export default function EspacePersonnel() {
           ) : null}
         </div>
 
-        {/* ------- À DROITE : calendrier des travaux et échéances ------- */}
-        <aside className="ep-cote" aria-label={t('Mon planning')}>
-          <ASurveiller travaux={travaux} onOuvrir={ouvrirTravail} />
-          <MiniCalendrier travaux={travaux} onOuvrir={ouvrirTravail} />
-        </aside>
+        {/* ------- À DROITE : échéances (seulement avec les bons) ------- */}
+        {avecCote && (
+          <aside className="ep-cote" aria-label={t('Mon planning')}>
+            <ASurveiller travaux={travaux} onOuvrir={ouvrirTravail} />
+            <MiniCalendrier travaux={travaux} onOuvrir={ouvrirTravail} />
+          </aside>
+        )}
+      </div>
+          )}
+        </section>
       </div>
 
       {toast && (
@@ -1127,6 +1339,9 @@ export default function EspacePersonnel() {
         onClose={closeDetails}
         onOuvrirBon={ouvrirBon}
         onOuvrirReclamation={ouvrirReclamation}
+        taches={data.taches}
+        nonLusChat={nonLusChat}
+        onDiscuter={(bonId) => { closeDetails(); ouvrirDiscussion(bonId); }}
       />
     </main>
   );

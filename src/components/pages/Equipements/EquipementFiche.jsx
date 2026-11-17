@@ -19,6 +19,7 @@ import { imprimerEtiquettes, qrSvg } from './qrEtiquettes';
 import EquipementConnexion from './EquipementConnexion';
 import EquipementLiaisonAgent from './EquipementLiaisonAgent';
 import EquipementMaintenanceConditionnelle from './EquipementMaintenanceConditionnelle';
+import { PositionEquipement } from './Arborescence';
 import {
   CATEGORIES_DOCUMENT, CRITICITES, ETATS_BON, ETATS_EQUIPEMENT, ETATS_RECLAMATION,
   dateCourte, duree, garantieEnClair, montant, taille,
@@ -242,6 +243,7 @@ export default function EquipementFiche() {
   const [reclamationCreee, setReclamationCreee] = useState(null);
   const [nomService, setNomService] = useState(null);
   const [transitions, setTransitions] = useState(null);
+  const [position, setPosition] = useState(null);
   // Heure de référence pour l'âge de l'appareil et la garantie (fixée au chargement de la page)
   const [maintenant] = useState(() => Date.now());
   const connecte = !!(authService.getCurrentUser() && authService.getSessionId());
@@ -381,6 +383,8 @@ export default function EquipementFiche() {
               )}
               {critDef && <Badge ton={BADGE[critDef.ton]}>{t('Criticité : {c}', { c: t(critDef.label) })}</Badge>}
               <Badge ton={BADGE[garantieTxt.ton]}>{garantieTxt.texte}</Badge>
+              {position?.degrade && <Badge ton={BADGE.attention}>{t('Dégradé')}</Badge>}
+              {position?.parentArrete && <Badge ton={BADGE.attention}>{t('Impacté')}</Badge>}
             </div>
           </div>
         </div>
@@ -433,6 +437,9 @@ export default function EquipementFiche() {
                 <Ligne label={t('Service')}>{identite.serviceId != null ? (nomService || `#${identite.serviceId}`) : '—'}</Ligne>
                 <Ligne label={t('Fournisseur')}>{identite.fournisseurNom || '—'}</Ligne>
               </dl>
+            </Bloc>
+            <Bloc titre={t('Position')} icone={Network}>
+              <PositionEquipement equipementId={identite.id} peutModifier={connecte} onChange={setPosition} />
             </Bloc>
             <Bloc titre={t('Achat et garantie')} icone={Coins}>
               <dl className="eqf-lignes">

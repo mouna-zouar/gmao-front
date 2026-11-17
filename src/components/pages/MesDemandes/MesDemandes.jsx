@@ -2,23 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Send, UserCheck, Wrench, CheckCircle2, PauseCircle, XCircle, Ban,
-  Plus, RefreshCw, AlertCircle, Inbox, Users, Building2, Monitor, ExternalLink, ChevronDown,
+  Plus, RefreshCw, AlertCircle, Inbox, ExternalLink,
 } from 'lucide-react';
 import suiviDemandeService from '../../../services/suiviDemandeService';
 import reclamationService from '../../../services/Reclamationservice';
 import authService from '../../../services/Authservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
+import { Modale } from '../../commun';
+import EspaceTableau from '../EspacePersonnel/EspaceTableau';
 import { t, locale } from '../../../i18n';
 import './MesDemandes.css';
 
 
-const PARCOURS = [
-  { cle: 'ENVOYEE', libelle: 'Envoyée', Icone: Send },
-  { cle: 'PRISE_EN_CHARGE', libelle: 'Prise en charge', Icone: UserCheck },
-  { cle: 'EN_REPARATION', libelle: 'En réparation', Icone: Wrench },
-  { cle: 'REPAREE', libelle: 'Réparée', Icone: CheckCircle2 },
-];
 
 const ETAPES = {
   ENVOYEE: { libelle: 'Envoyée', ton: 'bleu', Icone: Send, phrase: 'Votre demande est arrivée au service maintenance.' },
@@ -28,9 +24,12 @@ const ETAPES = {
   REPAREE: { libelle: 'Réparée', ton: 'vert', Icone: CheckCircle2, phrase: 'La réparation est terminée.' },
   REFUSEE: { libelle: 'Refusée', ton: 'rouge', Icone: XCircle, phrase: 'Votre demande a été refusée.' },
   ANNULEE: { libelle: 'Annulée', ton: 'gris', Icone: Ban, phrase: 'La demande a été annulée par le service maintenance.' },
+  ANNULEE_DEMANDEUR: { libelle: 'Annulée par vous', ton: 'gris', Icone: Ban, phrase: 'Vous avez annulé cette demande.' },
 };
 
-const TERMINEES = new Set(['REPAREE', 'REFUSEE', 'ANNULEE']);
+const TERMINEES = new Set(['REPAREE', 'REFUSEE', 'ANNULEE', 'ANNULEE_DEMANDEUR']);
+/** Le demandeur peut annuler tant que la maintenance n'a pas créé de bon (la réparation n'a pas commencé). */
+const peutAnnuler = (d) => (d.etape === 'ENVOYEE' || d.etape === 'PRISE_EN_CHARGE') && !d.bonId;
 
 const FILTRES = [
   { cle: 'en-cours', libelle: 'En cours' },
@@ -46,171 +45,90 @@ function formaterDate(valeur) {
 }
 
 /** Rang de l'étape dans le parcours normal ; la pause se situe pendant la réparation. */
-function rang(etape) {
-  if (etape === 'EN_PAUSE') return 2;
-  const i = PARCOURS.findIndex((p) => p.cle === etape);
-  return i < 0 ? 0 : i;
-}
 
 function personnelConnecte() {
   const u = authService.getCurrentUser();
   return u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
 }
 
-/* ───────────────────────── Frise des étapes ───────────────────────── */
+/* ───────────────────────── Tableau des demandes ───────────────────────── */
 
-function Frise({ demande }) {
-  const etape = demande.etape;
-  const interrompue = etape === 'REFUSEE' || etape === 'ANNULEE';
-  const courant = rang(etape);
-  const dates = {
-    ENVOYEE: demande.dateDemande,
-    EN_REPARATION: demande.datePriseEnCharge,
-    REPAREE: demande.dateReparation,
-  };
+// Ordre de tri « Étape » : en cours d'abord, puis réparées, puis refusées / annulées
+const RANG_ETAPE = { EN_PAUSE: 0, EN_REPARATION: 1, PRISE_EN_CHARGE: 2, ENVOYEE: 3, REPAREE: 4, REFUSEE: 5, ANNULEE: 6, ANNULEE_DEMANDEUR: 7 };
 
-  return (
-    <ol className={`md-frise${interrompue ? ' md-frise--interrompue' : ''}`} aria-label={t('Avancement de la demande')}>
-      {PARCOURS.map((p, i) => {
-        let statut = 'avenir';
-        if (!interrompue) {
-          if (i < courant || etape === 'REPAREE') statut = 'fait';
-          else if (i === courant) statut = etape === 'EN_PAUSE' ? 'pause' : 'courant';
-        } else if (i === 0) {
-          statut = 'fait';
-        }
-        const Icone = statut === 'pause' ? PauseCircle : p.Icone;
-        const date = statut !== 'avenir' ? formaterDate(dates[p.cle]) : null;
+function TableauDemandes({ demandes, cible, onOuvrir, onAnnuler }) {
+  const sansClic = (fn) => (e) => { e.stopPropagation(); fn(); };
+  const colonnes = [
+    {
+      cle: 'num', label: 'N°', largeur: 120, valeur: (d) => d.reclamationNum || '',
+      rendu: (d) => <strong className="ept-ref">{d.reclamationNum || t('Sans numéro')}</strong>,
+    },
+    {
+      cle: 'date', label: 'Date', largeur: 150, valeur: (d) => (d.dateDemande ? new Date(d.dateDemande).getTime() : null),
+      rendu: (d) => <span className="ept-date">{formaterDate(d.dateDemande)}</span>,
+    },
+    {
+      cle: 'description', label: 'Description', valeur: (d) => d.description || '',
+      rendu: (d) => {
+        const motif = d.etape === 'REFUSEE' || d.etape === 'ANNULEE_DEMANDEUR' ? d.motifRejet : d.etape === 'EN_PAUSE' ? d.bonMotif : null;
         return (
-          <li key={p.cle} className={`md-frise__etape md-frise__etape--${statut}`} aria-current={statut === 'courant' || statut === 'pause' ? 'step' : undefined}>
-            <span className="md-frise__pastille"><Icone size={15} aria-hidden="true" /></span>
-            <span className="md-frise__libelle">{statut === 'pause' ? t('En attente') : t(p.libelle)}</span>
-            {date && <span className="md-frise__date">{date}</span>}
-          </li>
-        );
-      })}
-    </ol>
-  );
-}
-
-/* ───────────────────────── Barre d'avancement (compacte) ───────────────────────── */
-
-function Avancement({ demande, info }) {
-  const etape = demande.etape;
-  const interrompue = etape === 'REFUSEE' || etape === 'ANNULEE';
-  const courant = rang(etape);
-  return (
-    <div className="md-avancement">
-      <div className="md-avancement__barre" aria-hidden="true">
-        {PARCOURS.map((p, i) => {
-          let etat = 'avenir';
-          if (interrompue) etat = i === 0 ? 'fait' : 'coupe';
-          else if (etape === 'REPAREE' || i < courant) etat = 'fait';
-          else if (i === courant) etat = 'courant';
-          return <span key={p.cle} className={`md-segment md-segment--${etat}`} />;
-        })}
-      </div>
-      <span className="md-avancement__texte">
-        {interrompue
-          ? t(info.libelle)
-          : t('Étape {n} sur {total}', { n: courant + 1, total: PARCOURS.length }) + ' · ' + t(info.libelle)}
-      </span>
-    </div>
-  );
-}
-
-/* ───────────────────────── Ligne d'une demande ───────────────────────── */
-
-function CarteDemande({ demande, miseEnAvant, refCarte, onOuvrir }) {
-  const info = ETAPES[demande.etape] ?? ETAPES.ENVOYEE;
-  const { Icone } = info;
-  const motif = demande.etape === 'REFUSEE' ? demande.motifRejet : demande.etape === 'EN_PAUSE' ? demande.bonMotif : null;
-  const [ouverte, setOuverte] = useState(miseEnAvant);
-  useEffect(() => { if (miseEnAvant) setOuverte(true); }, [miseEnAvant]);
-  const idDetail = `md-detail-${demande.reclamationId}`;
-
-  return (
-    <article
-      ref={refCarte}
-      className={`md-carte md-carte--${info.ton}${miseEnAvant ? ' md-carte--mise-en-avant' : ''}${ouverte ? ' md-carte--ouverte' : ''}`}
-    >
-      <div className="md-ligne">
-        <span className="md-ligne__icone" aria-hidden="true"><Icone size={20} /></span>
-
-        <div className="md-ligne__corps">
-          <div className="md-ligne__ref">
-            <strong>{demande.reclamationNum || t('Sans numéro')}</strong>
-            <span>{formaterDate(demande.dateDemande)}</span>
-          </div>
-          <h4 className="md-ligne__texte">{demande.description || t('Sans description')}</h4>
-          {(demande.equipementDesignation || demande.serviceNom) && (
-            <div className="md-ligne__meta">
-              {demande.equipementDesignation && (
-                <span><Monitor size={13} aria-hidden="true" />{demande.equipementDesignation}</span>
-              )}
-              {demande.serviceNom && (
-                <span><Building2 size={13} aria-hidden="true" />{demande.serviceNom}</span>
-              )}
-            </div>
-          )}
-          <Avancement demande={demande} info={info} />
-          {motif && (
-            <p className="md-carte__motif">
-              <strong>{demande.etape === 'REFUSEE' ? t('Motif du refus :') : t('Raison :')}</strong> {motif}
-            </p>
-          )}
-        </div>
-
-        <div className="md-ligne__actions">
-          <span className={`md-badge md-badge--${info.ton}`}>
-            <Icone size={14} aria-hidden="true" />
-            {t(info.libelle)}
+          <span className="ept-texte">
+            {d.description || t('Sans description')}
+            {motif && <small className="ept-sous">{motif}</small>}
           </span>
-          <div className="md-ligne__boutons">
-            <button
-              type="button"
-              className="md-bouton-ico"
-              onClick={() => setOuverte((o) => !o)}
-              aria-expanded={ouverte}
-              aria-controls={idDetail}
-              title={ouverte ? t('Masquer le détail') : t('Voir le détail')}
-              aria-label={ouverte ? t('Masquer le détail') : t('Voir le détail')}
-            >
-              <ChevronDown size={18} className="md-chevron" aria-hidden="true" />
+        );
+      },
+    },
+    { cle: 'equipement', label: 'Équipement', valeur: (d) => d.equipementDesignation || '' },
+    { cle: 'service', label: 'Service', valeur: (d) => d.serviceNom || '' },
+    {
+      cle: 'etape', label: 'Étape', largeur: 160, valeur: (d) => RANG_ETAPE[d.etape] ?? 9,
+      rendu: (d) => {
+        const info = ETAPES[d.etape] ?? ETAPES.ENVOYEE;
+        const { Icone } = info;
+        return <span className={`md-badge md-badge--${info.ton}`}><Icone size={13} aria-hidden="true" />{t(info.libelle)}</span>;
+      },
+    },
+    {
+      cle: 'bon', label: 'Bon', largeur: 110, valeur: (d) => d.bonNum || '',
+      rendu: (d) => (d.bonNum ? <span className="ept-ref-doux">{d.bonNum}</span> : '—'),
+    },
+    {
+      cle: 'actions', label: '', triable: false, largeur: 190, align: 'right',
+      rendu: (d) => (
+        <span className="ept-actions">
+          {onAnnuler && peutAnnuler(d) && (
+            <button type="button" className="md-bouton md-bouton--danger md-bouton--petit" onClick={sansClic(() => onAnnuler(d))}
+              title={t('Annuler cette demande (tant que la réparation n’a pas commencé)')}>
+              <Ban size={13} aria-hidden="true" /> {t('Annuler')}
             </button>
-            {onOuvrir && (
-              <button type="button" className="md-bouton md-bouton--principal md-bouton--petit" onClick={() => onOuvrir(demande.reclamationId)}>
-                <ExternalLink size={14} aria-hidden="true" />
-                {t('Ouvrir')}
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {ouverte && (
-        <div className="md-detail" id={idDetail}>
-          <p className="md-carte__phrase">{t(info.phrase)}</p>
-          <Frise demande={demande} />
-          {(demande.bonNum || demande.intervenants?.length > 0) && (
-            <dl className="md-carte__infos">
-              {demande.bonNum && (
-                <div><dt><Wrench size={14} aria-hidden="true" />{t('Bon de maintenance')}</dt><dd>{demande.bonNum}</dd></div>
-              )}
-              {demande.intervenants?.length > 0 && (
-                <div><dt><Users size={14} aria-hidden="true" />{t('Intervenant(s)')}</dt><dd>{demande.intervenants.join(', ')}</dd></div>
-              )}
-            </dl>
           )}
-        </div>
-      )}
-    </article>
+          {onOuvrir && (
+            <button type="button" className="md-bouton md-bouton--principal md-bouton--petit" onClick={sansClic(() => onOuvrir(d.reclamationId))}>
+              <ExternalLink size={13} aria-hidden="true" /> {t('Ouvrir')}
+            </button>
+          )}
+        </span>
+      ),
+    },
+  ];
+  return (
+    <EspaceTableau
+      colonnes={colonnes}
+      lignes={demandes}
+      cleLigne={(d) => d.reclamationId}
+      onOuvrir={onOuvrir ? (d) => onOuvrir(d.reclamationId) : undefined}
+      triInitial={{ cle: 'date', sens: 'desc' }}
+      recherchePlaceholder={t('Rechercher une demande (n°, description, équipement)…')}
+      vide={t('Aucune demande.')}
+      ligneClasse={(d) => [d.reclamationId === cible ? 'is-cible' : '', TERMINEES.has(d.etape) ? 'is-termine' : ''].join(' ')}
+    />
   );
 }
 
 /* ───────────────────────── Page ───────────────────────── */
 
-export default function MesDemandes({ integre = false, onCharge, onOuvrir } = {}) {
+export default function MesDemandes({ integre = false, onCharge, onOuvrir, demandeSignalement = 0 } = {}) {
   const [searchParams] = useSearchParams();
   const demandeCible = Number(searchParams.get('demande')) || null;
 
@@ -220,8 +138,12 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir } = {}
   const [filtre, setFiltre] = useState('en-cours');
   const [modalOuvert, setModalOuvert] = useState(false);
   const [reclamationCreee, setReclamationCreee] = useState(null);
+  // Annulation par le demandeur : { demande, motif, envoi, erreur }
+  const [annulation, setAnnulation] = useState(null);
   const refCible = useRef(null);
   const personnelId = personnelConnecte();
+  // « Signaler une panne » cliqué ailleurs (Mon espace → Aujourd'hui) : ouvre le formulaire
+  useEffect(() => { if (demandeSignalement > 0) setModalOuvert(true); }, [demandeSignalement]);
 
   const charger = useCallback(async ({ silencieux = false } = {}) => {
     if (personnelId == null) {
@@ -272,6 +194,26 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir } = {}
     if (filtre === 'terminees') return TERMINEES.has(d.etape);
     return true;
   }), [demandes, filtre]);
+
+  const confirmerAnnulation = async () => {
+    const motif = annulation?.motif?.trim();
+    if (!motif) {
+      setAnnulation((a) => ({ ...a, erreur: t('Indiquez pourquoi vous annulez cette demande.') }));
+      return;
+    }
+    setAnnulation((a) => ({ ...a, envoi: true, erreur: null }));
+    try {
+      const u = authService.getCurrentUser() || {};
+      await reclamationService.annulerParDemandeur(annulation.demande.reclamationId, {
+        motif, auteurId: personnelId, auteurNom: u.userNom || u.nomPrenom || u.login || null,
+      });
+      setAnnulation(null);
+      await charger({ silencieux: true });
+    } catch (e) {
+      const msg = e?.response?.data?.message || e?.response?.data?.error;
+      setAnnulation((a) => ({ ...a, envoi: false, erreur: msg || t('La demande n’a pas pu être annulée.') }));
+    }
+  };
 
   const enregistrer = async (payload) => {
     const creee = await reclamationService.create(payload);
@@ -365,18 +307,47 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir } = {}
           )}
         </div>
       ) : (
-        <div className="md-liste">
-          {visibles.map((d) => (
-            <CarteDemande
-              key={d.reclamationId}
-              demande={d}
-              miseEnAvant={d.reclamationId === demandeCible}
-              refCarte={d.reclamationId === demandeCible ? refCible : undefined}
-              onOuvrir={onOuvrir}
-            />
-          ))}
-        </div>
+        <TableauDemandes
+          demandes={visibles}
+          cible={demandeCible}
+          onOuvrir={onOuvrir}
+          onAnnuler={(demande) => setAnnulation({ demande, motif: '', envoi: false, erreur: null })}
+        />
       )}
+
+      <Modale
+        ouvert={annulation != null}
+        onFermer={() => { if (!annulation?.envoi) setAnnulation(null); }}
+        icone={Ban}
+        titre={t('Annuler ma demande')}
+        sousTitre={annulation?.demande ? `${annulation.demande.reclamationNum || ''} · ${annulation.demande.description || ''}` : undefined}
+        taille="sm"
+        pied={(
+          <>
+            <button type="button" className="md-bouton md-bouton--secondaire" onClick={() => setAnnulation(null)} disabled={annulation?.envoi}>
+              {t('Garder ma demande')}
+            </button>
+            <button type="button" className="md-bouton md-bouton--danger" onClick={confirmerAnnulation} disabled={annulation?.envoi}>
+              <Ban size={16} aria-hidden="true" />
+              {annulation?.envoi ? t('Annulation…') : t('Annuler la demande')}
+            </button>
+          </>
+        )}
+      >
+        <div className="md-annulation">
+          <p>{t('Le service maintenance ne traitera plus cette demande. Si la panne revient, il faudra en signaler une nouvelle.')}</p>
+          <label htmlFor="md-motif-annulation">{t('Pourquoi annulez-vous ? (obligatoire)')}</label>
+          <textarea
+            id="md-motif-annulation"
+            rows={3}
+            value={annulation?.motif || ''}
+            onChange={(e) => setAnnulation((a) => ({ ...a, motif: e.target.value, erreur: null }))}
+            placeholder={t('Ex. : le problème a disparu, demande faite en double…')}
+            disabled={annulation?.envoi}
+          />
+          {annulation?.erreur && <p className="md-annulation__erreur" role="alert"><AlertCircle size={15} aria-hidden="true" /> {annulation.erreur}</p>}
+        </div>
+      </Modale>
 
       <ReclamationCreeeModal reclamation={reclamationCreee} onClose={() => setReclamationCreee(null)} lienBon={false} />
 

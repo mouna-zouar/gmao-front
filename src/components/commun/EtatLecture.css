@@ -6,3 +6,17 @@
 .etat-lecture--compact.is-lu { background: #e2f5ee; }
 .etat-lecture--compact.is-non-lu { background: #fdf1e1; }
 .etat-lecture--compact small { font-weight: 600; opacity: 0.8; font-variant-numeric: tabular-nums; }
+
+/* Résumé « X lus · Y non lus » d'une liste (les personnes en info-bulle) */
+.resume-lecture {
+  display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px; border-radius: 999px;
+  border: 1px solid #e2e8f0; background: #fff; font-size: 12.5px; font-weight: 600; color: #475569;
+  cursor: help; white-space: nowrap;
+}
+.resume-lecture:focus-visible { outline: 2px solid #0794a4; outline-offset: 2px; }
+.resume-lecture__lus, .resume-lecture__nonlus { display: inline-flex; align-items: center; gap: 4px; }
+.resume-lecture__lus { color: #047857; }
+.resume-lecture__nonlus { color: #64748b; }
+.resume-lecture__nonlus.is-alerte { color: #b42318; }
+.resume-lecture__sep { color: #cbd5e1; }
+

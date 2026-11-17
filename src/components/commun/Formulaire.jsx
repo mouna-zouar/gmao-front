@@ -120,6 +120,7 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
           autoFocus={champ.autoFocus}
           serviceId={champ.service ? valeurs?.[champ.service] || null : null}
           serviceNom={champ.serviceLibelle ? valeurs?.[champ.serviceLibelle] || '' : ''}
+          lieuId={champ.lieu ? valeurs?.[champ.lieu] || null : null}
           onEquipementChoisi={champ.service ? (e) => {
             if (e?.serviceId == null || String(e.serviceId) === String(valeurs?.[champ.service] ?? '')) return;
             onChange(champ.service, e.serviceId);

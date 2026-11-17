@@ -21,6 +21,7 @@ export default function PageListe({
   actions = [], filtres, recherchePlaceholder, cleStockage, nomExport, vide = {}, taillePage = 10,
   selection: selectionControlee, onSelection, avantTableau, children,
   triInitial, colonnesExport, filtresImpression = [], classe,
+  sansEntete = false, // true : pas de bloc titre (icône + titre) ; les pastilles de statistiques restent
 }) {
   /* Colonnes : visibilité et recherche réglables, gardées dans ce navigateur */
   const cle = cleStockage ? `gmao.liste.${cleStockage}.colonnes` : null;
@@ -135,17 +136,21 @@ export default function PageListe({
 
   return (
     <div className={`cl-page ${classe || ''}`.trim()}>
-      {/* En-tête */}
-      <div className="cl-entete">
-        <div className="cl-entete__gauche">
-          {Icone && <span className="cl-entete__icone"><Icone size={24} strokeWidth={2} aria-hidden="true" /></span>}
-          <div>
-            <h1>{titre}</h1>
-            {sousTitre && <p>{sousTitre}</p>}
+      {/* En-tête (titre + statistiques) ; sans titre, seules les statistiques restent */}
+      {sansEntete ? (
+        stats.length > 0 && <div className="cl-entete cl-entete--sans-titre"><PastillesStats stats={stats} /></div>
+      ) : (
+        <div className="cl-entete">
+          <div className="cl-entete__gauche">
+            {Icone && <span className="cl-entete__icone"><Icone size={24} strokeWidth={2} aria-hidden="true" /></span>}
+            <div>
+              <h1>{titre}</h1>
+              {sousTitre && <p>{sousTitre}</p>}
+            </div>
           </div>
+          <PastillesStats stats={stats} />
         </div>
-        <PastillesStats stats={stats} />
-      </div>
+      )}
 
       {/* Actions */}
       {(onAjouter || onModifier || onSupprimer || actions.length > 0) && (

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import jsPDF from 'jspdf';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import equipementService from '../../../services/equipementService';
 import ScannerQR from '../Equipements/ScannerQR';
 import { imprimerEtiquettes } from '../Equipements/qrEtiquettes';
@@ -11,11 +11,14 @@ import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../cons
 import EquipementMaintenancePanel from './Equipementmaintenancepanel';
 import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
 import ListeEquipements from './ListeEquipements';
+import Arborescence from '../Equipements/Arborescence';
+import '../Equipements/Equipements.css';
+import Onglets from '../../commun/Onglets';
 import { t, tp, locale, tPdf, localePdf } from '../../../i18n';
 import '../TableauDeBord/TableauDeBord.css';
 import './Etatequipement.css';
 import { PastillesStats } from '../../commun';
-import { ArrowRight, ChevronDown, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, List, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
 import { VeillePage, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
 
 /* ---------- Risque ---------- */
@@ -237,7 +240,34 @@ export function exporterHistoriquePDF(equipement, historique) {
 /* ---------- Composant ---------- */
 /* Page « Équipements » : tableau commun (PageListe). La fenêtre des bons garde l'ancienne vue compacte. */
 export default function EtatEquipement({ isModal = false }) {
-  return isModal ? <EtatEquipementCompact isModal /> : <ListeEquipements />;
+  return isModal ? <EtatEquipementCompact isModal /> : <EquipementsVues />;
+}
+
+/* Trois vues : la liste (tableau), l'arborescence des lieux (?vue=arbre) et les paramètres préventifs (?vue=preventif) */
+function EquipementsVues() {
+  const [params, setParams] = useSearchParams();
+  const vue = ['arbre', 'preventif'].includes(params.get('vue')) ? params.get('vue') : 'liste';
+  const changer = (v) => setParams((p) => {
+    const n = new URLSearchParams(p);
+    if (v === 'liste') n.delete('vue'); else n.set('vue', v);
+    return n;
+  }, { replace: true });
+  return (
+    <>
+      <div className="leq-vues">
+        <Onglets actif={vue} onChanger={changer} ariaLabel={t('Vues')}
+          onglets={[
+            { cle: 'liste', label: t('Liste'), icone: List },
+            { cle: 'arbre', label: t('Arborescence'), icone: Network },
+            { cle: 'preventif', label: t('Paramètres préventifs'), icone: Settings },
+          ]} />
+      </div>
+      {vue === 'arbre' && <main className="cl-page eq-theme arb-page"><Arborescence /></main>}
+      {/* Page à part (et non une fenêtre) : ses formulaires s'ouvrent sans fenêtre dans une fenêtre */}
+      {vue === 'preventif' && <main className="cl-page eq-theme leq-preventif"><EquipementMaintenanceTypesSettings /></main>}
+      {vue === 'liste' && <ListeEquipements />}
+    </>
+  );
 }
 
 function EtatEquipementCompact({ isModal = false }) {

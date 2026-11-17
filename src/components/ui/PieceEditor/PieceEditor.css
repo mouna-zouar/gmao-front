@@ -141,3 +141,7 @@
   .pe-barre-articles { flex-wrap: wrap; }
   .pe-recherche { flex-basis: 100%; }
 }
+
+/* Indication sous un champ (ex. dépôt source repris des articles) */
+.pe-champ__aide { font-size: 0.72rem; color: #0f766e; }
+.pe-champ__aide--alerte { color: #b42318; }

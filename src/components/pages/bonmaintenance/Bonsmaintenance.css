@@ -822,7 +822,7 @@
   border-color: var(--red-100);
 }
 
-.bons-filter-info { display: flex; align-items: center; }
+.bons-filter-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .bons-filter-result {
   font-size: 0.78rem;
@@ -1725,3 +1725,6 @@ td.bons-table-empty > svg { display: block; margin: 0 auto 12px; }
 .bons-outils__textes strong { font-size: 0.86rem; color: var(--slate-900); }
 .bons-outils__textes small { font-size: 0.74rem; color: var(--slate-500); }
 @media (max-width: 760px) { .bons-outils__bouton span:not(.bons-toggle-badge) { display: none; } }
+
+/* Le champ de recherche se rétrécit au lieu de passer sous le filtre voisin */
+.bons-filter-input-wrap input { min-width: 0; width: 100%; }

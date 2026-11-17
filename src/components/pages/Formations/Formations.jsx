@@ -1,5 +1,5 @@
+import { GraduationCap, Users, Wrench } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Ban, CalendarClock, CircleCheck } from 'lucide-react';
 import { Badge, ModaleFormulaire, PageListe } from '../../commun';
 import formationService from '../../../services/formationService';
 import equipementService from '../../../services/equipementService';
@@ -7,8 +7,9 @@ import { ICONES_MODULES } from '../../../constants/modules';
 import ChampParticipants from './ChampParticipants';
 import ChampCibles from './ChampCibles';
 import {
-  RESULTATS_FORMATION, STATUTS_FORMATION, TYPES_FORMATION, libelleCibles, options, periodeFormation,
+  RESULTATS_FORMATION, STATUTS_FORMATION, TYPES_FORMATION, options, periodeFormation,
 } from './formationLibelles';
+import { obtenirEquipements } from '../../../store/referentiels';
 import { t, locale } from '../../../i18n';
 import './Formations.css';
 
@@ -17,9 +18,11 @@ import './Formations.css';
  * Les familles et équipements visés (plusieurs) indiquent sur quels appareils la formation habilite ceux qui l'ont réussie.
  */
 
+// Assistant par étapes, comme la fenêtre de réclamation : frise en haut, une aide par étape
 const SECTIONS = [
-  { cle: 'general', label: 'Formation' },
-  { cle: 'participants', label: 'Participants' },
+  { cle: 'general', label: 'Formation', icone: GraduationCap, description: 'Le sujet de la formation, qui la donne et quand elle a lieu.' },
+  { cle: 'cibles', label: 'Équipements visés', icone: Wrench, description: 'Les familles et équipements sur lesquels la formation habilite ceux qui la réussissent. Rien : formation générale.' },
+  { cle: 'participants', label: 'Participants', icone: Users, description: 'Les techniciens inscrits et, une fois la formation réalisée, leur résultat.' },
 ];
 
 const CHAMPS = [
@@ -35,11 +38,11 @@ const CHAMPS = [
   { nom: 'dureeHeures', label: 'Durée', type: 'nombre', unite: 'h', min: 0, pas: '0.5' },
   { nom: 'cout', label: 'Coût', type: 'montant', unite: 'DT', min: 0 },
   {
-    nom: 'familles', label: 'Familles d’équipements', type: 'personnalise', largeur: 'pleine', defaut: [],
+    nom: 'familles', label: 'Familles d’équipements', type: 'personnalise', section: 'cibles', largeur: 'pleine', defaut: [],
     rendu: ({ valeur, changer, id }) => <ChampCibles id={id} mode="famille" valeur={valeur} changer={changer} chargerOptions={() => equipementService.familles()} />,
   },
   {
-    nom: 'equipements', label: 'Équipements', type: 'personnalise', largeur: 'pleine', defaut: [],
+    nom: 'equipements', label: 'Équipements', type: 'personnalise', section: 'cibles', largeur: 'pleine', defaut: [],
     rendu: ({ valeur, changer, id }) => <ChampCibles id={id} mode="equipement" valeur={valeur} changer={changer} />,
   },
   { nom: 'commentaire', label: 'Commentaire', type: 'zone', largeur: 'pleine', lignes: 3 },
@@ -49,13 +52,77 @@ const CHAMPS = [
   },
 ];
 
+const initiales = (nom) => {
+  const mots = String(nom || '').trim().split(/\s+/).filter(Boolean);
+  if (!mots.length) return '?';
+  return ((mots[0][0] || '') + (mots.length > 1 ? mots[mots.length - 1][0] : '')).toUpperCase();
+};
+
+/** Participants : pile d'avatars (anneau = résultat), nombre, et barre de réussite si réalisée. Noms en info-bulle. */
+function CelluleParticipants({ participants, realisee }) {
+  const ps = participants || [];
+  if (!ps.length) return <span className="cl-tiret">—</span>;
+  const MAX = 5;
+  const visibles = ps.slice(0, MAX);
+  const reste = ps.length - visibles.length;
+  const reussis = ps.filter((p) => p.resultat === 'REUSSI').length;
+  const bulle = ps.map((p) => `${p.personnelNom || `#${p.personnelId}`} · ${t(RESULTATS_FORMATION[p.resultat]?.label || '')}`).join('\n');
+  return (
+    <div className="fo-part" title={bulle} tabIndex={0} aria-label={bulle}>
+      <span className="fo-part__pile">
+        {visibles.map((p) => (
+          <span key={p.personnelId} className={`fo-part__av fo-part__av--${RESULTATS_FORMATION[p.resultat]?.ton || 'gris'}`}>
+            {initiales(p.personnelNom)}
+          </span>
+        ))}
+        {reste > 0 && <span className="fo-part__av fo-part__av--plus">+{reste}</span>}
+      </span>
+      <span className="fo-part__texte">
+        <span className="fo-part__nb"><b>{ps.length}</b> {ps.length > 1 ? t('participants') : t('participant')}</span>
+        {realisee && (
+          <span className="fo-part__reussite">
+            <span className="fo-part__barre"><span style={{ width: `${Math.round((reussis / ps.length) * 100)}%` }} /></span>
+            {t('{r}/{n} réussi(s)', { r: reussis, n: ps.length })}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+/** Équipements visés : le premier nom + « +N », un résumé dessous ; la liste complète en info-bulle. */
+function CelluleCibles({ familles, equipements, nomFamille, nomEquipement }) {
+  const fs = familles || [];
+  const es = equipements || [];
+  if (!fs.length && !es.length) return <span className="fo-general">{t('Formation générale')}</span>;
+  const premier = es.length ? nomEquipement(es[0]) : nomFamille(fs[0]);
+  const autres = es.length + fs.length - 1;
+  const resume = [
+    es.length ? (es.length > 1 ? t('{n} équipements', { n: es.length }) : t('1 équipement')) : null,
+    fs.length ? (fs.length > 1 ? t('{n} familles', { n: fs.length }) : t('1 famille')) : null,
+  ].filter(Boolean).join(' · ');
+  const bulle = [
+    es.length ? `${t('Équipements')} :\n${es.map((c) => `• ${nomEquipement(c)}`).join('\n')}` : null,
+    fs.length ? `${t('Familles')} :\n${fs.map((c) => `• ${nomFamille(c)}`).join('\n')}` : null,
+  ].filter(Boolean).join('\n\n');
+  return (
+    <div className="fo-cib" title={bulle} tabIndex={0} aria-label={bulle}>
+      <span className="fo-cib__ligne">
+        <span className={`fo-cib__point ${es.length ? 'is-equipement' : 'is-famille'}`} aria-hidden="true" />
+        <span className="fo-cib__nom">{premier}</span>
+        {autres > 0 && <span className="fo-cib__plus">+{autres}</span>}
+      </span>
+      <small>{resume}</small>
+    </div>
+  );
+}
+
 const nombre = (v, d = 1) => (v == null ? '' : Number(v).toLocaleString(locale(), { maximumFractionDigits: d }));
 
 export default function Formations() {
   const [formations, setFormations] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
-  const [filtreStatut, setFiltreStatut] = useState('');
   const [filtreTechnicien, setFiltreTechnicien] = useState('');
   const [fenetre, setFenetre] = useState({ ouverte: false, objet: null });
 
@@ -73,6 +140,23 @@ export default function Formations() {
   }, []);
   useEffect(() => { charger(); }, [charger]);
 
+  // Noms à jour des équipements et des familles (le nom enregistré peut être un simple code ou « #id »)
+  const [equipementsParId, setEquipementsParId] = useState({});
+  const [famillesParId, setFamillesParId] = useState({});
+  useEffect(() => {
+    obtenirEquipements()
+      .then((l) => setEquipementsParId(Object.fromEntries((l || []).map((e) => [String(e.id), e]))))
+      .catch(() => {});
+    equipementService.familles()
+      .then((l) => setFamillesParId(Object.fromEntries((l || []).map((f) => [String(f.id), f]))))
+      .catch(() => {});
+  }, []);
+  const nomEquipement = (c) => {
+    const e = equipementsParId[String(c.id)];
+    return e?.designation || (c.nom && !/^#\d+$/.test(c.nom) ? c.nom : null) || t('Équipement #{id}', { id: c.id });
+  };
+  const nomFamille = (c) => famillesParId[String(c.id)]?.nom || (c.nom && !/^#\d+$/.test(c.nom) ? c.nom : null) || t('Famille #{id}', { id: c.id });
+
   /* Techniciens présents dans au moins une formation (filtre) */
   const techniciens = useMemo(() => {
     const m = new Map();
@@ -81,50 +165,38 @@ export default function Formations() {
   }, [formations]);
 
   const lignes = formations
-    .filter((f) => !filtreStatut || f.statut === filtreStatut)
     .filter((f) => !filtreTechnicien || (f.participants || []).some((p) => String(p.personnelId) === filtreTechnicien));
 
-  const compte = (s) => formations.filter((f) => f.statut === s).length;
-  const heures = formations.filter((f) => f.statut === 'REALISEE')
-    .reduce((n, f) => n + (f.dureeHeures || 0) * (f.participants || []).filter((p) => p.resultat !== 'ABSENT').length, 0);
-  const basculer = (s) => setFiltreStatut((v) => (v === s ? '' : s));
 
   const colonnes = [
-    { cle: 'intitule', label: 'Intitulé', filtre: 'texte', valeur: (f) => f.intitule, rendu: (f) => <strong className="fo-intitule">{f.intitule}</strong> },
+    {
+      cle: 'intitule', label: 'Intitulé', filtre: 'texte', valeur: (f) => f.intitule,
+      rendu: (f) => (
+        <span className="fo-intitule-bloc">
+          <strong className="fo-intitule">{f.intitule}</strong>
+          {(f.organisme || f.dureeHeures != null) && (
+            <small>{[f.organisme, f.dureeHeures != null ? `${nombre(f.dureeHeures)} h` : null].filter(Boolean).join(' · ')}</small>
+          )}
+        </span>
+      ),
+    },
     {
       cle: 'type', label: 'Type', filtre: 'liste', valeur: (f) => t(TYPES_FORMATION[f.type]?.label || f.type || ''),
       rendu: (f) => (TYPES_FORMATION[f.type] ? <Badge ton={TYPES_FORMATION[f.type].ton}>{t(TYPES_FORMATION[f.type].label)}</Badge> : <span className="cl-tiret">—</span>),
     },
     {
-      cle: 'cibles', label: 'Familles et équipements', filtre: 'texte', valeur: (f) => libelleCibles(f),
-      rendu: (f) => {
-        const cibles = [...(f.familles || []), ...(f.equipements || [])];
-        if (!cibles.length) return <span className="fo-general">{t('Formation générale')}</span>;
-        return (
-          <span className="fo-cellule-cibles" title={libelleCibles(f)}>
-            {(f.familles || []).map((c) => <Badge key={`f${c.id}`} ton="teal">{c.nom || `#${c.id}`}</Badge>)}
-            {(f.equipements || []).map((c) => <Badge key={`e${c.id}`} ton="bleu">{c.nom || `#${c.id}`}</Badge>)}
-          </span>
-        );
-      },
+      cle: 'cibles', label: 'Équipements visés', filtre: 'texte',
+      valeur: (f) => [...(f.equipements || []).map(nomEquipement), ...(f.familles || []).map(nomFamille)].join(', ') || t('Formation générale'),
+      rendu: (f) => <CelluleCibles familles={f.familles} equipements={f.equipements} nomFamille={nomFamille} nomEquipement={nomEquipement} />,
     },
-    { cle: 'organisme', label: 'Organisme', filtre: 'texte', valeur: (f) => f.organisme || '' },
+    // Organisme et durée sont repris sous l'intitulé : colonnes masquées par défaut (affichables)
+    { cle: 'organisme', label: 'Organisme', visible: false, filtre: 'texte', valeur: (f) => f.organisme || '' },
     { cle: 'periode', label: 'Dates', valeur: (f) => f.dateDebut || f.dateFin || '', texte: periodeFormation },
-    { cle: 'duree', label: 'Durée', valeur: (f) => f.dureeHeures ?? null, texte: (f) => (f.dureeHeures == null ? '' : `${nombre(f.dureeHeures)} h`) },
+    { cle: 'duree', label: 'Durée', visible: false, valeur: (f) => f.dureeHeures ?? null, texte: (f) => (f.dureeHeures == null ? '' : `${nombre(f.dureeHeures)} h`) },
     {
       cle: 'participants', label: 'Participants', valeur: (f) => (f.participants || []).length,
-      texte: (f) => (f.participants || []).map((p) => p.personnelNom).filter(Boolean).join(', '),
-      rendu: (f) => {
-        const ps = f.participants || [];
-        if (!ps.length) return <span className="cl-tiret">—</span>;
-        const reussis = ps.filter((p) => p.resultat === 'REUSSI').length;
-        return (
-          <span className="fo-cellule-participants" title={ps.map((p) => `${p.personnelNom || `#${p.personnelId}`} · ${t(RESULTATS_FORMATION[p.resultat]?.label || '')}`).join('\n')}>
-            <b>{ps.length}</b>
-            {f.statut === 'REALISEE' && <Badge ton={reussis === ps.length ? 'vert' : 'ambre'}>{t('{n} réussi(s)', { n: reussis })}</Badge>}
-          </span>
-        );
-      },
+      texte: (f) => (f.participants || []).map((p) => `${p.personnelNom || `#${p.personnelId}`} (${t(RESULTATS_FORMATION[p.resultat]?.label || '')})`).join(', '),
+      rendu: (f) => <CelluleParticipants participants={f.participants} realisee={f.statut === 'REALISEE'} />,
     },
     {
       cle: 'statut', label: 'Statut', filtre: 'liste', valeur: (f) => t(STATUTS_FORMATION[f.statut]?.label || f.statut || ''),
@@ -144,13 +216,7 @@ export default function Formations() {
       classe="fo-page"
       icone={ICONES_MODULES.formations}
       titre={t('Formations des techniciens')}
-      stats={[
-        { label: t('Toutes'), valeur: formations.length, actif: !filtreStatut, onClick: () => setFiltreStatut('') },
-        { label: t('Planifiées'), valeur: compte('PLANIFIEE'), ton: 'ambre', icone: CalendarClock, actif: filtreStatut === 'PLANIFIEE', onClick: () => basculer('PLANIFIEE') },
-        { label: t('Réalisées'), valeur: compte('REALISEE'), ton: 'vert', icone: CircleCheck, actif: filtreStatut === 'REALISEE', onClick: () => basculer('REALISEE') },
-        { label: t('Annulées'), valeur: compte('ANNULEE'), ton: 'gris', icone: Ban, actif: filtreStatut === 'ANNULEE', onClick: () => basculer('ANNULEE') },
-        { label: t('Heures de formation'), valeur: `${nombre(heures)} h`, ton: 'teal' },
-      ]}
+      sansEntete // ni titre ni pastilles : le statut se filtre dans la colonne « Statut » du tableau
       colonnes={colonnes}
       lignes={lignes}
       chargement={chargement}
@@ -176,12 +242,14 @@ export default function Formations() {
         ouvert={fenetre.ouverte}
         onFermer={() => setFenetre((f) => ({ ...f, ouverte: false }))}
         icone={ICONES_MODULES.formations}
-        surtitres={{ creation: t('Nouvelle formation'), modification: t('Modification') }}
-        titres={{ creation: t('Créer une formation'), modification: fenetre.objet?.intitule || t('Modifier la formation') }}
-        sections={SECTIONS.map((s) => ({ ...s, label: t(s.label) }))}
+        titres={{ creation: t('Nouvelle formation'), modification: t('Modifier la formation') }}
+        sousTitre={fenetre.objet?.intitule || null}
+        sections={SECTIONS.map((s) => ({ ...s, label: t(s.label), description: t(s.description) }))}
         champs={CHAMPS}
         objet={fenetre.objet}
         taille="lg"
+        etapes
+        libelleEnregistrer={fenetre.objet ? t('Mettre à jour') : t('Créer la formation')}
         onEnregistrer={enregistrer}
       />
     </PageListe>

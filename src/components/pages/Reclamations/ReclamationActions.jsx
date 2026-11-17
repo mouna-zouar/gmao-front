@@ -27,7 +27,8 @@ export function actionsPossibles(reclamation) {
     resoudre: active,
     cloturer: e === ETAT_REC.RESOLUE,
     rouvrir: e === ETAT_REC.RESOLUE,
-    annuler: e !== ETAT_REC.CLOTUREE && e !== ETAT_REC.ANNULEE,
+    // Annulation seulement avant la prise en charge : une réclamation en cours ne s'annule plus
+    annuler: e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE,
   };
 }
 

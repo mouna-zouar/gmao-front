@@ -14,9 +14,10 @@ const enTetesAuteur = () => {
 
 const equipementService = {
   // serviceId : équipements de ce service seulement (LotArticle.ServiceID dans Cubix)
-  async rechercher(recherche = '', page = 0, taille = 30, familleId = null, serviceId = null) {
+  // lieuId : équipements de ce lieu et de ses sous-lieux (arborescence)
+  async rechercher(recherche = '', page = 0, taille = 30, familleId = null, serviceId = null, lieuId = null) {
     const { data } = await api.get('/equipements', {
-      params: { recherche: recherche || undefined, familleId: familleId || undefined, serviceId: serviceId || undefined, page, taille },
+      params: { recherche: recherche || undefined, familleId: familleId || undefined, serviceId: serviceId || undefined, lieuId: lieuId || undefined, page, taille },
     });
     return data;
   },

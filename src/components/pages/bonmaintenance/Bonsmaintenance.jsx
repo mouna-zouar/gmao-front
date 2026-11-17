@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
-import { Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw, Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, Search, Filter, RefreshCw, AlertCircle, Calendar, Building2, Loader2, Info, AlertTriangle, Ban, Gauge, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, TriangleAlert, RadioTower, Timer, ArrowUpRight, Wrench, ChevronDown, LayoutGrid } from 'lucide-react';
+import { Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw, Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, Search, Filter, RefreshCw, AlertCircle, Calendar, Building2, Loader2, Info, AlertTriangle, Ban, Gauge, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, TriangleAlert, RadioTower, Timer, ArrowUpRight, Wrench, ChevronDown, LayoutGrid, MapPin } from 'lucide-react';
+import FiltreLieu, { useCarteLieux, useFiltreLieu } from '../../ui/FiltreLieu/FiltreLieu';
 import { ICONES_MODULES } from '../../../constants/modules';
 
 import bonMaintenanceService from '../../../services/bonMaintenanceService';
@@ -45,7 +46,7 @@ import '../../ui/modals/Modal.css';
 import '../../ui/modals/BonMaintenanceModal.css';
 import './Bonsmaintenance.css';
 import Pagination from '../../commun/Pagination';
-import EtatLecture from '../../commun/EtatLecture';
+import EtatLecture, { ResumeLecture } from '../../commun/EtatLecture';
 import LignesChargement from '../../commun/LignesChargement';
 import {
   AnnonceCopie, BoutonFiltresColonnes, BoutonMenuColonne, BoutonTri, ChampFiltre, choixColonnes, filtrerParColonnes, useFiltresColonnes,
@@ -368,6 +369,10 @@ export default function BonsMaintenance() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
+  // Lieu de l'arborescence (avec ses sous-lieux) : lieu du bon, sinon celui de son équipement
+  const [lieuFilter, setLieuFilter] = useState('');
+  const carteLieux = useCarteLieux();
+  const dansLieu = useFiltreLieu(carteLieux, lieuFilter);
 
   const [sortColumn, setSortColumn] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
@@ -654,9 +659,9 @@ export default function BonsMaintenance() {
         || searchableCols.some((key) => getColumnSearchValue(b, key).toLowerCase().includes(term));
       const matchesEtat = etatFilter === 'all' || String(b.etat) === etatFilter;
       const matchesVue = !vueCourante.filtre || vueCourante.filtre(b);
-      return matchesSearch && matchesEtat && matchesVue;
+      return matchesSearch && matchesEtat && matchesVue && dansLieu(b);
     });
-  }, [bonsAvecSla, searchTerm, etatFilter, columnSettings, vueCourante, fc.filtres, choixCol]);
+  }, [bonsAvecSla, searchTerm, etatFilter, columnSettings, vueCourante, fc.filtres, choixCol, dansLieu]);
 
   const sortedBons = useMemo(() => {
     const extractor = SORTABLE_COLUMNS[sortColumn];
@@ -672,7 +677,7 @@ export default function BonsMaintenance() {
 
   const totalPages = Math.max(1, Math.ceil(sortedBons.length / PAGE_SIZE));
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, etatFilter, sortColumn, sortDirection, vueId, fc.filtres]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, etatFilter, lieuFilter, sortColumn, sortDirection, vueId, fc.filtres]);
   useEffect(() => { if (currentPage > totalPages) setCurrentPage(totalPages); }, [currentPage, totalPages]);
 
   const paginatedBons = useMemo(() => {
@@ -686,7 +691,13 @@ export default function BonsMaintenance() {
       const entries = await Promise.all(
         paginatedBons.map(async (bon) => {
           const needs = await computeBonMaintenanceNeeds(bon.id);
-          return [bon.id, { tooltip: needs.tooltip, stockInsuffisant: needs.commanderNecessaire }];
+          const aPourvoir = needs.commanderNecessaire || needs.demanderNecessaire;
+          const quoi = needs.demanderNecessaire && needs.commanderNecessaire ? t('Articles à demander ou à commander')
+            : needs.demanderNecessaire ? t('Articles à demander') : t('Articles à commander');
+          return [bon.id, {
+            tooltip: aPourvoir ? `${quoi} (stock insuffisant)\n${needs.tooltip}` : needs.tooltip,
+            stockInsuffisant: aPourvoir,
+          }];
         })
       );
       if (!cancelled) setRowInfo(Object.fromEntries(entries));
@@ -916,7 +927,7 @@ export default function BonsMaintenance() {
       ],
     });
   };
-  const handleResetFilters = () => { setSearchTerm(''); setEtatFilter('all'); setVueId('tous'); fc.vider(); };
+  const handleResetFilters = () => { setSearchTerm(''); setEtatFilter('all'); setLieuFilter(''); setVueId('tous'); fc.vider(); };
 
   const handleRowClick = (bon) => {
     setSelectedBon((prev) => (prev?.id === bon.id ? null : bon));
@@ -1347,6 +1358,16 @@ export default function BonsMaintenance() {
           </div>
         </div>
 
+        {(carteLieux?.lieux?.length > 0 || lieuFilter) && (
+          <div className="bons-filter-group fl-groupe">
+            <span className="bons-filter-label">{t("Lieu")}</span>
+            <div className="bons-filter-input-wrap">
+              <MapPin size={16} className="bons-filter-icon" />
+              <FiltreLieu carte={carteLieux} valeur={lieuFilter} onChange={setLieuFilter} className="fl-liste" />
+            </div>
+          </div>
+        )}
+
         <BoutonFiltresColonnes voir={fc.voir} onBasculer={() => fc.setVoir((v) => !v)} nb={fc.nb} />
 
         <button className="bons-filter-reset" onClick={handleResetFilters}>
@@ -1361,6 +1382,11 @@ export default function BonsMaintenance() {
             {etatFilter !== 'all' && ` • ${t(getActiveFilterLabel())}`}
             {searchTerm && ` • "${searchTerm}"`}
           </span>
+          <ResumeLecture
+            elements={filteredBons}
+            reference={(b) => b.num || `#${b.id}`}
+            estActif={(b) => [1, 2, 3].includes(Number(b.etat))}
+          />
         </div>
 
         <div className="bons-export-stack">

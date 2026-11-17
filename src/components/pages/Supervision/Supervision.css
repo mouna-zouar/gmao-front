@@ -265,3 +265,111 @@
 @media (max-width: 640px) {
   .sv-carte__corps.sv-sans-marge { margin-inline: -16px; margin-bottom: -16px; }
 }
+
+/* ==========================================================================
+   STYLE SOBRE DE LA GMAO (commun à Supervision et Plan de renouvellement)
+   Barre haute (onglets/périodes + actions), bande d'indicateurs, panneaux légers
+   ========================================================================== */
+/* Barre haute */
+.rv2-haut {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--g-slate-200, #e2e8f0);
+}
+.rv2-onglets { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.rv2-onglets::-webkit-scrollbar { display: none; }
+.rv2-onglet {
+  position: relative; display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
+  padding: 10px 14px; border: 0; background: transparent; cursor: pointer;
+  font: 600 0.88rem var(--g-police, inherit); color: var(--g-slate-500, #64748b); white-space: nowrap;
+}
+.rv2-onglet::after { content: ''; position: absolute; left: 10px; right: 10px; bottom: -1px; height: 2px; border-radius: 2px 2px 0 0; background: transparent; }
+.rv2-onglet:hover { color: var(--g-slate-900, #0f172a); }
+.rv2-onglet.is-actif { color: var(--g-brand-700, #066d79); }
+.rv2-onglet.is-actif::after { background: var(--g-brand-500, #0794a4); }
+.rv2-haut__droite { display: flex; align-items: center; gap: 12px; padding-bottom: 6px; }
+.rv2-maj { font-size: 0.78rem; color: var(--g-slate-500, #64748b); white-space: nowrap; }
+.rv2-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
+  border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 8px; background: var(--g-blanc, #fff);
+  font: 600 0.8rem var(--g-police, inherit); color: var(--g-slate-700, #334155); cursor: pointer;
+}
+.rv2-btn:hover:not(:disabled) { border-color: var(--g-brand-500, #0794a4); color: var(--g-brand-700, #066d79); }
+.rv2-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* Bande d'indicateurs : 6 cases dans un seul cadre */
+.rv2-kpis {
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
+  background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 12px; overflow: hidden;
+}
+.rv2-kpi {
+  --kpi: var(--g-slate-900, #0f172a);
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px 16px; min-width: 0;
+  border: 0; border-inline-end: 1px solid var(--g-slate-200, #e2e8f0); background: transparent; text-align: start; font: inherit;
+}
+.rv2-kpi:last-child { border-inline-end: 0; }
+button.rv2-kpi { cursor: pointer; }
+button.rv2-kpi:hover { background: var(--g-slate-50, #f8fafc); }
+.rv2-kpi__label { display: inline-flex; align-items: center; gap: 5px; font-size: 0.76rem; font-weight: 600; color: var(--g-slate-500, #64748b); }
+.rv2-kpi b { font-size: 1.4rem; font-weight: 800; line-height: 1.15; color: var(--kpi); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rv2-kpi small { font-size: 0.74rem; color: var(--g-slate-500, #64748b); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.rv2-kpi.is-alerte { --kpi: var(--g-red-600, #dc2626); }
+.rv2-kpi.is-alerte .rv2-kpi__label { color: var(--g-red-600, #dc2626); }
+.rv2-kpi.is-attention { --kpi: var(--g-amber-700, #b45309); }
+.rv2-kpi.is-info { --kpi: var(--g-blue-700, #1d4ed8); }
+
+.rv2-kpi { position: relative; overflow: hidden; }
+.rv2-kpi__total { font-size: 0.95rem; font-weight: 600; color: var(--g-slate-400, #94a3b8); }
+.rv2-kpi.is-ok { --kpi: var(--g-emerald-700, #047857); }
+.rv2-kpi .sv-etincelle { height: 28px; opacity: 0.8; }
+.rv2-kpi:has(.sv-etincelle) { padding-bottom: 30px; }
+
+@media (max-width: 1200px) {
+  .rv2-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .rv2-kpi:nth-child(3n) { border-inline-end: 0; }
+  .rv2-kpi:nth-child(-n+3) { border-bottom: 1px solid var(--g-slate-200, #e2e8f0); }
+}
+@media (max-width: 640px) {
+  .rv2-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rv2-kpi { border-bottom: 1px solid var(--g-slate-200, #e2e8f0); }
+  .rv2-kpi:nth-child(3n) { border-inline-end: 1px solid var(--g-slate-200, #e2e8f0); }
+  .rv2-kpi:nth-child(2n) { border-inline-end: 0; }
+  .rv2-haut__droite { width: 100%; justify-content: space-between; }
+}
+
+/* ---------- Supervision v2 ---------- */
+.sv-page.sv-v2 { gap: 14px; }
+.sv-v2 .sv-grille-panneaux { gap: 14px; }
+.sv-v2 .rv2-haut__droite { flex-wrap: wrap; }
+.sv-v2 .sv-maj { margin: 0; font-size: 0.78rem; color: var(--g-slate-500, #64748b); white-space: nowrap; }
+.sv-v2 .sv-auto { height: 32px; border-radius: 8px; border-color: var(--g-slate-200, #e2e8f0); background: var(--g-blanc, #fff); }
+.sv-v2 .sv-auto select { height: 30px; }
+
+/* Panneaux légers (comme le Plan de renouvellement) */
+.sv-v2 .tb-carte.sv-carte {
+  background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 12px;
+  box-shadow: none; padding: 14px 16px;
+}
+.sv-v2 .sv-carte .tb-carte-tete { margin-bottom: 10px; padding: 0; border: 0; }
+.sv-v2 .sv-carte .tb-carte-tete h3 { font-size: 0.92rem; font-weight: 700; color: var(--g-slate-900, #0f172a); letter-spacing: 0; text-transform: none; }
+.sv-v2 .sv-carte .tb-pastille { background: var(--g-slate-50, #f8fafc); border: 1px solid var(--g-slate-200, #e2e8f0); color: var(--g-slate-600, #475569); font-weight: 600; }
+.sv-v2 .sv-carte__corps.sv-sans-marge { margin: 0 -16px -14px; padding: 0 0 6px; }
+.sv-v2 .sv-table th { background: var(--g-slate-50, #f8fafc); color: var(--g-slate-500, #64748b); font-size: 0.74rem; padding: 10px 16px; }
+.sv-v2 .sv-table td { padding: 10px 16px; }
+.sv-v2 .sv-table tbody tr:hover td { background: var(--g-brand-25, #f3fcfd); }
+.sv-v2 .sv-alertes button { padding: 10px 16px; }
+.sv-v2 .sv-alertes button:hover:not(:disabled) { background: var(--g-brand-25, #f3fcfd); }
+.sv-v2 .sv-classement__piste span { background: var(--g-brand-500, #0794a4); }
+@media (max-width: 640px) {
+  .sv-v2 .sv-carte__corps.sv-sans-marge { margin-inline: -16px; }
+}
+
+/* Bouton « Alertes machines » (même fenêtre que dans les bons de maintenance) */
+.sv-btn-alertes { position: relative; }
+.sv-btn-alertes.is-actif { border-color: var(--g-red-200, #fecaca); color: var(--g-red-700, #b91c1c); background: var(--g-red-50, #fef2f2); }
+.sv-btn-alertes.is-actif:hover:not(:disabled) { border-color: var(--g-red-400, #f87171); color: var(--g-red-700, #b91c1c); }
+.sv-btn-alertes__badge {
+  min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+  display: inline-grid; place-items: center;
+  background: var(--g-danger, #dc2626); color: var(--g-blanc, #fff);
+  font-size: 0.68rem; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1;
+}

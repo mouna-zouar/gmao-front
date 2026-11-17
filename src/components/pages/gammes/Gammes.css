@@ -1,0 +1,84 @@
+/* ============================================================
+   GAMMES D'INTERVENTION — liste, éditeur, choix dans le bon
+   ============================================================ */
+
+.gam-code { font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace; font-size: 13px; color: var(--g-slate-800, #1e293b); }
+.gam-message { margin: 0; padding: 10px 14px; border-radius: 10px; font-size: 14px; }
+.gam-message.is-ok { background: #e0f4ec; color: #0f6b47; }
+.gam-message.is-ko { background: #fce8e9; color: #a3262d; }
+.gam-erreur { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; background: #fce8e9; color: #a3262d; font-size: 14px; }
+.gam-tourne { animation: gamTourne 0.9s linear infinite; }
+@keyframes gamTourne { to { transform: rotate(360deg); } }
+
+/* ── Éditeur ── */
+.gam-form { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 18px; }
+.gam-bloc { display: grid; gap: 10px; }
+.gam-bloc h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; }
+.gam-n { min-width: 22px; padding: 0 7px; border-radius: 999px; background: #e0f5f7; color: #066d79; font-size: 12px; text-align: center; }
+.gam-grille { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.gam-grille .gam-large { grid-column: span 3; }
+@media (max-width: 760px) { .gam-grille { grid-template-columns: 1fr 1fr; } .gam-grille .gam-large { grid-column: span 2; } }
+.gam-grille label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; color: #334155; min-width: 0; }
+.gam-form input, .gam-form select {
+  width: 100%; min-width: 0; font: inherit; font-weight: 400; font-size: 14px; padding: 8px 10px;
+  border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #0f172a;
+}
+.gam-form input:focus, .gam-form select:focus { outline: 2px solid var(--g-brand-500, #0794a4); outline-offset: -1px; border-color: transparent; }
+.gam-form:disabled input, .gam-form:disabled select { background: #f8fafc; color: #334155; }
+
+.gam-etapes { width: 100%; border-collapse: collapse; font-size: 13px; }
+.gam-etapes th { text-align: start; font-size: 12px; font-weight: 600; color: #64748b; padding: 6px; border-bottom: 1px solid #e2e8f0; }
+.gam-etapes td { padding: 5px 6px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.gam-col-n { width: 30px; text-align: center; color: #64748b; font-weight: 600; }
+.gam-col-duree { width: 96px; }
+.gam-col-piece { width: 240px; }
+.gam-col-qte { width: 76px; }
+.gam-col-act { width: 96px; white-space: nowrap; }
+.gam-col-act button {
+  display: inline-grid; place-items: center; width: 26px; height: 26px; margin-inline-end: 2px; border: 1px solid #e2e8f0;
+  border-radius: 6px; background: #fff; color: #475569; cursor: pointer;
+}
+.gam-col-act button:hover:not(:disabled) { border-color: #0794a4; color: #066d79; }
+.gam-col-act button.is-danger:hover:not(:disabled) { border-color: #dc2626; color: #dc2626; }
+.gam-col-act button:disabled { opacity: .4; cursor: default; }
+.gam-ajout {
+  justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px dashed #94a3b8;
+  border-radius: 8px; background: #fff; color: #334155; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.gam-ajout:hover { border-color: #0794a4; color: #066d79; background: #f0fafb; }
+
+.gam-outils { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.gam-outil { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px 4px 10px; border-radius: 999px; background: #eef2ff; color: #3730a3; font-size: 13px; }
+.gam-outil button { display: inline-grid; place-items: center; border: 0; background: none; color: inherit; cursor: pointer; padding: 0; }
+.gam-outils input { width: 220px !important; }
+.gam-vide { color: #94a3b8; }
+.gam-pied-duree { margin-inline-end: auto; font-size: 13px; color: #475569; }
+
+/* ── Choix d'une gamme dans le bon ── */
+.gam-choix { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.gam-choix > li { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 14px; display: grid; gap: 8px; }
+.gam-choix > li.is-choisi { border-color: #0794a4; box-shadow: 0 0 0 3px #e0f5f7; }
+.gam-choix__tete { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.gam-choix__tete strong { font-size: 14px; color: #0f172a; }
+.gam-choix__meta { font-size: 12px; color: #64748b; }
+.gam-choix ol { margin: 0; padding-inline-start: 20px; display: grid; gap: 2px; font-size: 13px; color: #334155; }
+.gam-choix ol small { color: #64748b; }
+.gam-choix__btn { justify-self: end; }
+.gam-aucune { margin: 0; padding: 18px; text-align: center; color: #64748b; font-size: 14px; }
+
+/* ── Bouton « Appliquer une gamme » dans l'onglet Tâches du bon ── */
+.bmd-panel-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bmd-add-btn.bmd-add-btn--clair { background: #fff; color: var(--primary, #0794a4); border: 1px solid #b6e0e5; }
+.bmd-add-btn.bmd-add-btn--clair:hover { background: #e8f6f7; }
+.bmd-gamme-message { margin: -6px 0 12px; padding: 9px 12px; border-radius: 10px; background: #e0f4ec; color: #0f6b47; font-size: 13px; }
+
+/* ── Gamme dans l'étape « Tâches » du formulaire de création du bon ── */
+.gam-creation { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-bottom: 12px; padding: 12px;
+  border: 1px solid #cfe9ec; border-radius: 12px; background: #f3fafb; }
+.gam-creation label { flex: 1; min-width: 240px; display: grid; gap: 4px; font-size: 13px; font-weight: 600; color: #334155; }
+.gam-creation select { font: inherit; font-weight: 400; font-size: 14px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; }
+.gam-creation--appliquee { align-items: center; color: #066d79; font-size: 14px; }
+.gam-creation--appliquee strong { color: #0f172a; }
+.gam-creation__retirer { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 4px; border: 0; background: none;
+  color: #b91c1c; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.gam-creation__retirer:hover { background: #fde8e8; }

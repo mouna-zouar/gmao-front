@@ -76,6 +76,12 @@ const reclamationService = {
     return data;
   },
 
+  /** Annulation par le demandeur (Mes demandes) : { motif, auteurId = le demandeur, auteurNom } */
+  async annulerParDemandeur(id, corps) {
+    const { data } = await api.patch(`/reclamation/${id}/annuler-par-demandeur`, corps);
+    return data;
+  },
+
   /* Check-lists à remplir avant d'envoyer une réclamation */
   async checklist(lotArticleImmobilistationId) {
     const { data } = await api.get('/reclamation/checklist', { params: { lotArticleImmobilistationId } });

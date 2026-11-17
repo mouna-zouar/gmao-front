@@ -337,11 +337,14 @@ export function ListeTaches({ valeur = [], changer, intervenants = [], articles,
           return (
             <>
               <strong>{x.designation}</strong>
-              {(article || x.qte || st) && (
+              {(x.nom || article || x.qte || st) && (
                 <small>
-                  {article && <><Package size={12} aria-hidden="true" /> {article.designation}</>}
-                  {x.qte && <> · {t('Qté {n}', { n: x.qte })}</>}
-                  {st && <> · {nomPrestataire(st)}</>}
+                  {[
+                    x.nom,
+                    article && <><Package size={12} aria-hidden="true" /> {article.designation}</>,
+                    x.qte && t('Qté {n}', { n: x.qte }),
+                    st && nomPrestataire(st),
+                  ].filter(Boolean).map((p, i) => <span key={i}>{i > 0 && ' · '}{p}</span>)}
                 </small>
               )}
             </>

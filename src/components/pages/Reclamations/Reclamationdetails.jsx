@@ -21,7 +21,6 @@ import {
   FilePlus,
   Link as LinkIcon,
   ChevronRight,
-  HelpCircle,
   Ban,
   Package,
   Printer,
@@ -35,7 +34,11 @@ import {
   RotateCcw,
   Inbox,
   ClipboardCheck,
+  MapPin,
+  MessageCircle,
 } from 'lucide-react';
+import { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
+import { cheminLieu, lieuDeLigne } from '../../../services/lieuxCache';
 import reclamationService from '../../../services/Reclamationservice';
 import lectureService from '../../../services/lectureService';
 import EtatLecture from '../../commun/EtatLecture';
@@ -257,14 +260,6 @@ function dateHeure(iso) {
   return d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-const CLE_AIDE = 'rcx-aide-masquee';
-function lireAideMasquee() {
-  try { return window.localStorage.getItem(CLE_AIDE) === '1'; } catch { return false; }
-}
-function ecrireAideMasquee(v) {
-  try { window.localStorage.setItem(CLE_AIDE, v ? '1' : '0'); } catch { /* stockage indisponible */ }
-}
-
 // ============================================================
 // COMPOSANT
 // ============================================================
@@ -284,8 +279,9 @@ export default function ReclamationDetails({
 }) {
   const { reclamation, bons } = normaliser(data);
   const [equipement, setEquipement] = useState(null);
-  const [aideMasquee, setAideMasquee] = useState(lireAideMasquee);
+  const carteLieux = useCarteLieux();
   const [qrOuvert, setQrOuvert] = useState(false);
+  const [onglet, setOnglet] = useState('signalement');
   const [historique, setHistorique] = useState(null);
   const [lecture, setLecture] = useState(null);
   const titreRef = useRef(null);
@@ -328,6 +324,9 @@ export default function ReclamationDetails({
 
   useEffect(() => { if (!loading) titreRef.current?.focus(); }, [loading]);
 
+  // Nouvelle réclamation ouverte : on revient sur le signalement
+  useEffect(() => { setOnglet('signalement'); }, [reclamation?.id]);
+
   if (loading) {
     return (
       <div className="rcx-page">
@@ -365,7 +364,9 @@ export default function ReclamationDetails({
   const groupe = reclamation.groupeNom || null;
   const service = reclamation.serviceNom || reclamation.service?.description || null;
   const nomEquipement = equipement?.designation || null;
-  const titre = nomEquipement || t('Réclamation {num}', { num: reclamation.num || `#${reclamation.id}` });
+  // Lieu dans l'arborescence (choisi, sinon celui de l'équipement)
+  const lieu = cheminLieu(carteLieux, lieuDeLigne(carteLieux, reclamation.lieuId, reclamation.lotArticleImmobilistationId)) || null;
+  const titre = nomEquipement || lieu || t('Réclamation {num}', { num: reclamation.num || `#${reclamation.id}` });
 
   const executer = (a) => {
     if (!a) return;
@@ -389,19 +390,6 @@ export default function ReclamationDetails({
   const criticite = NIVEAU[reclamation.criticite];
   const urgence = NIVEAU[reclamation.urgence];
 
-  const vitaux = [
-    { key: 'etat', icon: FileText, label: t("État"), valeur: etatClair.texte, ton: etatClair.ton },
-    { key: 'criticite', icon: Gauge, label: t("Criticité"), valeur: criticite?.texte || 'Non définie', ton: criticite?.ton || 'neutre' },
-    { key: 'urgence', icon: Flame, label: t("Urgence"), valeur: urgence?.texte || 'Non définie', ton: urgence?.ton || 'neutre' },
-    {
-      key: 'bon',
-      icon: Wrench,
-      label: t("Bon de maintenance"),
-      valeur: bons.length === 0 ? 'Aucun' : (bons[0].num || `#${bons[0].id}`),
-      ton: bons.length === 0 ? 'neutre' : 'action',
-      onClick: bons.length > 0 ? () => onOuvrirBon?.(bons[0]) : null,
-    },
-  ];
 
   const avantPriseEnCharge = reclamation.etat == null || reclamation.etat === ETAT.NOUVEAU || reclamation.etat === ETAT.EN_FILE;
 
@@ -422,6 +410,7 @@ export default function ReclamationDetails({
             { label: t('Date'), valeur: formatDate(reclamation.date) },
             { label: t('Service'), valeur: service },
             { label: t('Équipement'), valeur: nomEquipement },
+            { label: t('Lieu'), valeur: lieu },
             { label: t('Groupe'), valeur: groupe || '—' },
             { label: t('Technicien'), valeur: personnel || t('Personne pour l’instant') },
             { label: t('Criticité'), valeur: t(criticite?.texte || 'Non définie') },
@@ -462,20 +451,158 @@ export default function ReclamationDetails({
 
   // Une seule couleur d'accent : seuls les points d'alerte gardent du rouge ou de l'orange
   const pointTon = (ton) => (ton === 'alerte' ? 'alerte' : ton === 'attention' ? 'attention' : ton === 'ok' ? 'ok' : 'neutre');
-  const infos = [
-    { icon: Building2, label: t("Service"), valeur: service || '—' },
-    { icon: Users, label: t("Groupe"), valeur: groupe || '—' },
-    { icon: User, label: t("Technicien"), valeur: personnel || t("Personne pour l’instant") },
-    { icon: Calendar, label: t("Date"), valeur: formatDate(reclamation.date) },
-    { icon: Package, label: t("Équipement"), valeur: nomEquipement || '—' },
-    reclamation.codePanneCode && { icon: Tag, label: t("Code panne"), valeur: `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}`, large: true },
-  ].filter(Boolean);
-  const fermerAide = () => { setAideMasquee(true); ecrireAideMasquee(true); };
-  const ouvrirAide = () => { setAideMasquee(false); ecrireAideMasquee(false); };
+
+  const tuiles = [
+    { key: 'criticite', icon: Gauge, label: t("Criticité"), valeur: criticite?.texte || 'Non définie', ton: criticite?.ton || 'neutre' },
+    { key: 'urgence', icon: Flame, label: t("Urgence"), valeur: urgence?.texte || 'Non définie', ton: urgence?.ton || 'neutre' },
+    { key: 'technicien', icon: User, label: t("Technicien"), valeur: personnel || t("Personne pour l’instant"), ton: personnel ? 'neutre' : 'attention' },
+    { key: 'bon', icon: Wrench, label: t("Bon de maintenance"), valeur: bons.length === 0 ? 'Aucun' : (bons[0].num || `#${bons[0].id}`), ton: 'neutre', onglet: 'bon' },
+  ];
+  const groupesInfos = [
+    {
+      titre: t("Demande"),
+      lignes: [
+        { icon: Calendar, label: t("Date"), valeur: formatDate(reclamation.date) },
+        { icon: Building2, label: t("Service"), valeur: service || '—' },
+        reclamation.codePanneCode && { icon: Tag, label: t("Code panne"), valeur: `${reclamation.codePanneCode} · ${reclamation.codePanneLibelle || ''}`, large: true },
+      ].filter(Boolean),
+    },
+    {
+      titre: t("Équipement"),
+      lignes: [
+        { icon: Package, label: t("Équipement"), valeur: nomEquipement || '—' },
+        { icon: MapPin, label: t("Lieu"), valeur: lieu || '—' },
+      ],
+    },
+    {
+      titre: t("Affectation"),
+      lignes: [
+        { icon: Users, label: t("Groupe"), valeur: groupe || '—' },
+        { icon: User, label: t("Technicien"), valeur: personnel || t("Personne pour l’instant") },
+      ],
+    },
+  ];
+  const ONGLETS = [
+    { key: 'signalement', icon: FileText, label: t("Signalement") },
+    { key: 'bon', icon: Wrench, label: t("Bon de maintenance"), n: bons.length },
+    { key: 'historique', icon: History, label: t("Historique"), n: historique?.length ?? null },
+    { key: 'chat', icon: MessageCircle, label: t("Discussion"), n: null },
+  ];
+
+  const contenuOnglet = () => {
+    switch (onglet) {
+      case 'bon':
+        return (
+          <>
+            {bons.length > 0 && (
+              <div className="rcz-carte-tete">
+                <span />
+                <button type="button" className="bmz-btn rcz-btn-petit" onClick={onAssocier}>
+                  <LinkIcon size={14} /> {t("Associer un autre bon")}
+                </button>
+              </div>
+            )}
+            {bons.length === 0 ? (
+              <div className="rcz-vide">
+                <p>
+                  {avantPriseEnCharge
+                    ? t("Le bon de maintenance sera créé à la prise en charge de la réclamation.")
+                    : t("Aucun bon de maintenance n’est lié à cette réclamation.")}
+                </p>
+                {reclamation.etat === ETAT.EN_COURS && (
+                  <div className="bmz-maintenant-actions">
+                    <button type="button" className="bmz-btn bmz-btn--plein" onClick={onCreerBon}>
+                      <FilePlus size={15} /> {t("Créer un bon")}
+                    </button>
+                    <button type="button" className="bmz-btn" onClick={onAssocier}>
+                      <LinkIcon size={15} /> {t("Associer un bon existant")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <ul className="rcz-bons-liste">
+                {bons.map((b) => {
+                  const eb = ETAT_BON_EN_CLAIR[b.etat];
+                  return (
+                    <li key={b.id}>
+                      <button type="button" className="rcz-bon" onClick={() => onOuvrirBon?.(b)}>
+                        <Wrench size={16} className="bmz-rubrique-icone" />
+                        <span className="rcz-bon-texte">
+                          <span className="rcz-bon-num">{b.num || t('Bon #{id}', { id: b.id })}</span>
+                          <span className="rcz-bon-titre">{b.titre || t("Ouvrir le bon pour voir son parcours")}</span>
+                        </span>
+                        {eb && <span className={`bmz-etat bmz-point--${pointTon(eb.ton)}`}>{t(eb.texte)}</span>}
+                        <ChevronRight size={15} className="bmz-fleche" />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </>
+        );
+      case 'historique':
+        return historique == null ? (
+          <p className="rch-vide">{t("Chargement…")}</p>
+        ) : historique.length === 0 ? (
+          <p className="rch-vide">{t("Aucune affectation ni changement d’état enregistré pour l’instant.")}</p>
+        ) : (
+          <ol className="rch-liste">
+            {[...historique].reverse().map((h) => {
+              const l = ligneHistorique(h);
+              return (
+                <li key={h.id} className={`rch-item ${l.classe}`}>
+                  <span className="rch-point" aria-hidden="true" />
+                  <span className="rch-texte">
+                    <span className="rch-titre">{t(l.titre)}</span>
+                    {l.detail && <span className="rch-detail">{l.detail}</span>}
+                    {h.commentaire && <span className="rch-commentaire">« {h.commentaire} »</span>}
+                    <span className="rch-meta">{dateHeure(h.date)}{h.auteurNom ? ` · ${h.auteurNom}` : ''}</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+        );
+      case 'chat':
+        return (
+          <div className="rcz-chat-corps rcz-chat-onglet">
+            <BmdChat key={reclamation.id} bonId={reclamation.id} service={chatReclamationService} sujet="reclamation" />
+          </div>
+        );
+      default:
+        return (
+          <>
+            <p className="rcz-description">{reclamation.description || t("Aucune description n’a été saisie.")}</p>
+            {reclamation.etat === ETAT.ANNULEE && (reclamation.motifAnnulation || reclamation.motifRejet) && (
+              <p className="rcz-rejet"><AlertTriangle size={15} /> <span><strong>{t("Motif d’annulation")} :</strong> {reclamation.motifAnnulation || reclamation.motifRejet}</span></p>
+            )}
+            {Array.isArray(reclamation.checklist) && reclamation.checklist.length > 0 && (
+              <details className="rcz-checklist" open>
+                <summary>
+                  <ClipboardCheck size={15} /> {t("Vérifications faites par le demandeur")}
+                  <span className="rcz-checklist-compte">{reclamation.checklist.length}</span>
+                </summary>
+                <ul>
+                  {reclamation.checklist.map((c, i) => (
+                    <li key={i}>
+                      <span>{c.question}</span>
+                      <strong className={`rcz-ck-rep rcz-ck-rep--${String(c.reponse || '').toLowerCase().replace(/\s+/g, '-')}`}>{t(c.reponse || '—')}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </>
+        );
+    }
+  };
 
   return (
-    <div className="rcx-page bmz-page rcz-page">
-      {/* ===== En-tête : retour, identité, actions ===== */}
+    <div className="rcx-page bmz-page bmz-page--onglets bmz-v4 rcz-page">
+      {/* ===== Bande haute : identité de la réclamation + parcours sur une seule ligne ===== */}
+      <div className="bmz-haut">
       <header className="bmz-entete">
         <button type="button" className="bmz-retour" onClick={onBack}
           title={libelleRetour || t("Toutes les réclamations")} aria-label={libelleRetour || t("Toutes les réclamations")}>
@@ -494,55 +621,30 @@ export default function ReclamationDetails({
           </p>
         </div>
         <div className="bmz-actions">
-          <div className="bmz-aide-zone">
-            <button type="button" className="bmz-btn" onClick={aideMasquee ? ouvrirAide : fermerAide} aria-expanded={!aideMasquee}>
-              <HelpCircle size={16} /> <span>{t("Aide")}</span>
-            </button>
-            {!aideMasquee && (
-              <div className="bmz-aide" role="dialog" aria-label={t("Aide")}>
-                <ol>
-                  <li>{t("La ligne du parcours montre où en est la demande.")}</li>
-                  <li>{t("Le bloc « À faire maintenant » vous dit quoi faire, avec un seul bouton.")}</li>
-                  <li>{t("Au milieu, retrouvez le bon de maintenance lié ; à droite, la discussion.")}</li>
-                </ol>
-                <button type="button" className="bmz-btn bmz-btn--plein" onClick={fermerAide}>
-                  <Check size={15} /> {t("J'ai compris")}
-                </button>
-              </div>
-            )}
-          </div>
+          <button type="button" className="bmz-btn" onClick={() => setOnglet('chat')} title={t("Discuter")}>
+            <MessageCircle size={16} /> <span>{t("Discuter")}</span>
+          </button>
           {possibles.affecter && (
-            <button type="button" className="bmz-btn" onClick={() => onAction('affecter')}>
+            <button type="button" className="bmz-btn" onClick={() => onAction('affecter')} title={estAffectee(reclamation) ? t("Réaffecter") : t("Affecter")}>
               <UserCheck size={16} /> <span>{estAffectee(reclamation) ? t("Réaffecter") : t("Affecter")}</span>
             </button>
           )}
-          <button type="button" className="bmz-btn" onClick={onModifier}>
+          <button type="button" className="bmz-btn" onClick={onModifier} title={t("Modifier")}>
             <Edit size={16} /> <span>{t("Modifier")}</span>
           </button>
           {possibles.annuler && (
-            <button type="button" className="bmz-btn" onClick={() => onAction('annuler')}>
+            <button type="button" className="bmz-btn" onClick={() => onAction('annuler')} title={t("Annuler la réclamation")}>
               <XCircle size={16} /> <span>{t("Annuler la réclamation")}</span>
             </button>
           )}
-          <button type="button" className="bmz-btn" onClick={() => setQrOuvert(true)}>
+          <button type="button" className="bmz-btn" onClick={() => setQrOuvert(true)} title={t("QR code")}>
             <QrCode size={16} /> <span>{t("QR code")}</span>
           </button>
-          <button type="button" className="bmz-btn" onClick={imprimerReclamation}>
+          <button type="button" className="bmz-btn" onClick={imprimerReclamation} title={t("Imprimer")}>
             <Printer size={16} /> <span>{t("Imprimer")}</span>
           </button>
         </div>
       </header>
-
-      {qrOuvert && (
-        <ModaleQrCode
-          url={urlReclamation(reclamation.id)}
-          titre={titre}
-          sousTitre={t('Réclamation')}
-          reference={reclamation.num || t('Réclamation #{id}', { id: reclamation.id })}
-          appel={t('Scannez pour suivre la réclamation')}
-          onClose={() => setQrOuvert(false)}
-        />
-      )}
 
       {/* ===== Parcours de la demande ===== */}
       <section className="bmz-parcours" aria-label={t("Parcours de la réclamation")}>
@@ -551,7 +653,7 @@ export default function ReclamationDetails({
             const Icon = e.statut === 'fait' ? Check : e.statut === 'probleme' ? XCircle : e.icon;
             return (
               <li key={e.key} className={`bmz-etape is-${e.statut}`}>
-                <span className="bmz-etape-contenu">
+                <span className="bmz-etape-contenu" title={t(e.detail || e.aide)}>
                   <span className="bmz-etape-point" aria-hidden="true"><Icon size={14} strokeWidth={2.6} /></span>
                   <span className="bmz-etape-nom">{t(e.label)}</span>
                   <span className="bmz-etape-aide">{t(e.detail || e.aide)}</span>
@@ -567,15 +669,27 @@ export default function ReclamationDetails({
               : t('Étape {n} sur {total}', { n: Math.min(indexEtape(reclamation) + 1, ETAPES_DEF.length), total: ETAPES_DEF.length })}
         </span>
       </section>
+      </div>
 
-      {/* ===== Corps : trois colonnes, sans défilement de la page ===== */}
-      <div className="bmz-corps">
+      {qrOuvert && (
+        <ModaleQrCode
+          url={urlReclamation(reclamation.id)}
+          titre={titre}
+          sousTitre={t('Réclamation')}
+          reference={reclamation.num || t('Réclamation #{id}', { id: reclamation.id })}
+          appel={t('Scannez pour suivre la réclamation')}
+          onClose={() => setQrOuvert(false)}
+        />
+      )}
+
+      {/* ===== Plan : informations à gauche, dossier en onglets à droite ===== */}
+      <div className="bmz-plan">
+      <div className="bmz-corps bmz-corps--sans-rapport">
         <div className="bmz-col">
           {action && (
-            <section className={`bmz-carte bmz-maintenant bmz-maintenant--${action.ton}`} aria-label={t("À faire maintenant")}>
+            <section className={`bmz-carte bmz-maintenant bmz-maintenant--${action.ton} rcz-maintenant`} aria-label={t("À faire maintenant")}>
               <p className="bmz-surtitre"><ActionIcon size={15} /> {t("À faire maintenant")}</p>
               <h2 className="bmz-maintenant-titre">{t(action.titre)}</h2>
-              <p className="bmz-maintenant-texte">{t(action.texte)}</p>
               {(action.bouton || action.secondaire) && (
                 <div className="bmz-maintenant-actions">
                   {action.bouton && (
@@ -594,168 +708,81 @@ export default function ReclamationDetails({
             </section>
           )}
 
+          {/* Informations : « En un coup d'œil » (tuiles) puis le détail rangé par thème */}
           <section className="bmz-carte bmz-infos" aria-label={t("Informations générales de la réclamation")}>
-            <h2 className="bmz-carte-titre">{t("Ce qui a été signalé")}</h2>
-            <p className="rcz-description">{reclamation.description || t("Aucune description n’a été saisie.")}</p>
-            {reclamation.etat === ETAT.ANNULEE && (reclamation.motifAnnulation || reclamation.motifRejet) && (
-              <p className="rcz-rejet"><AlertTriangle size={15} /> <span><strong>{t("Motif d’annulation")} :</strong> {reclamation.motifAnnulation || reclamation.motifRejet}</span></p>
-            )}
-            <p className="rcz-lecture">
-              <EtatLecture objet={lecture ?? reclamation} actif={[0, 5, 1].includes(Number(reclamation.etat ?? 0))} />
-            </p>
-            {Array.isArray(reclamation.checklist) && reclamation.checklist.length > 0 && (
-              <details className="rcz-checklist" open>
-                <summary>
-                  <ClipboardCheck size={15} /> {t("Vérifications faites par le demandeur")}
-                  <span className="rcz-checklist-compte">{reclamation.checklist.length}</span>
-                </summary>
-                <ul>
-                  {reclamation.checklist.map((c, i) => (
-                    <li key={i}>
-                      <span>{c.question}</span>
-                      <strong className={`rcz-ck-rep rcz-ck-rep--${String(c.reponse || '').toLowerCase().replace(/\s+/g, '-')}`}>{t(c.reponse || '—')}</strong>
+            <h2 className="bmz-carte-titre">{t("Informations")}</h2>
+
+            <div className="bmz-infos-bloc" aria-label={t("En un coup d'œil")}>
+              <h3 className="bmz-sous-titre">{t("En un coup d'œil")}</h3>
+              <ul className="bmz-tuiles">
+                {tuiles.map((v) => {
+                  const Icon = v.icon;
+                  const contenu = (
+                    <>
+                      <span className="bmz-tuile-label"><Icon size={14} /> {t(v.label)}</span>
+                      <span className={`bmz-tuile-valeur bmz-point--${pointTon(v.ton)}`} title={t(v.valeur)}>{t(v.valeur)}</span>
+                      {v.onglet && <ChevronRight size={14} className="bmz-tuile-fleche" />}
+                    </>
+                  );
+                  return (
+                    <li key={v.key}>
+                      {v.onglet ? (
+                        <button type="button" className="bmz-tuile is-cliquable" onClick={() => setOnglet(v.onglet)}>{contenu}</button>
+                      ) : (
+                        <div className="bmz-tuile">{contenu}</div>
+                      )}
                     </li>
-                  ))}
-                </ul>
-              </details>
-            )}
-            <dl>
-              {infos.map((i) => {
-                const Icon = i.icon;
-                return (
-                  <div key={i.label} className={i.large ? 'rcz-large' : undefined}>
-                    <dt><Icon size={14} /> {i.label}</dt>
-                    <dd title={i.valeur}>{i.valeur}</dd>
-                  </div>
-                );
-              })}
-            </dl>
-          </section>
-        </div>
-
-        <div className="bmz-col">
-          <section className="bmz-carte bmz-vitaux" aria-label={t("En un coup d'œil")}>
-            <h2 className="bmz-carte-titre">{t("En un coup d'œil")}</h2>
-            <ul>
-              {vitaux.map((v) => {
-                const Icon = v.icon;
-                const contenu = (
-                  <>
-                    <Icon size={15} className="bmz-vital-icone" />
-                    <span className="bmz-vital-label">{t(v.label)}</span>
-                    <span className={`bmz-vital-valeur bmz-point--${pointTon(v.ton)}`}>{t(v.valeur)}</span>
-                  </>
-                );
-                return (
-                  <li key={v.key}>
-                    {v.onClick ? (
-                      <button type="button" className="bmz-vital" onClick={v.onClick}>
-                        {contenu}<ChevronRight size={15} className="bmz-fleche" />
-                      </button>
-                    ) : (
-                      <div className="bmz-vital">{contenu}</div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-
-          <section className="bmz-carte rcz-bons" aria-label={t("Bons de maintenance liés")}>
-            <div className="rcz-carte-tete">
-              <h2 className="bmz-carte-titre">{t("Bon de maintenance lié")}</h2>
-              {bons.length > 0 && (
-                <button type="button" className="bmz-btn rcz-btn-petit" onClick={onAssocier}>
-                  <LinkIcon size={14} /> {t("Associer un autre bon")}
-                </button>
-              )}
+                  );
+                })}
+              </ul>
+              <p className="bmz-lecture">
+                <EtatLecture objet={lecture ?? reclamation} actif={[0, 5, 1].includes(Number(reclamation.etat ?? 0))} />
+              </p>
             </div>
-            <div className="bmz-defile">
-              {bons.length === 0 ? (
-                <div className="rcz-vide">
-                  <p>
-                    {avantPriseEnCharge
-                      ? t("Le bon de maintenance sera créé à la prise en charge de la réclamation.")
-                      : t("Aucun bon de maintenance n’est lié à cette réclamation.")}
-                  </p>
-                  {reclamation.etat === ETAT.EN_COURS && (
-                    <div className="bmz-maintenant-actions">
-                      <button type="button" className="bmz-btn bmz-btn--plein" onClick={onCreerBon}>
-                        <FilePlus size={15} /> {t("Créer un bon")}
-                      </button>
-                      <button type="button" className="bmz-btn" onClick={onAssocier}>
-                        <LinkIcon size={15} /> {t("Associer un bon existant")}
-                      </button>
-                    </div>
-                  )}
+
+            <div className="bmz-infos-bloc">
+              <h3 className="bmz-sous-titre">{t("Détails de la réclamation")}</h3>
+              {groupesInfos.map((g) => (
+                <div key={g.titre} className="bmz-info-groupe">
+                  <h4>{g.titre}</h4>
+                  <dl>
+                    {g.lignes.map((i) => {
+                      const Icon = i.icon;
+                      return (
+                        <div key={i.label} className={i.large ? 'rcz-large' : undefined}>
+                          <dt><Icon size={13} /> {i.label}</dt>
+                          <dd title={i.valeur}>{i.valeur}</dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
                 </div>
-              ) : (
-                <ul className="rcz-bons-liste">
-                  {bons.map((b) => {
-                    const eb = ETAT_BON_EN_CLAIR[b.etat];
-                    return (
-                      <li key={b.id}>
-                        <button type="button" className="rcz-bon" onClick={() => onOuvrirBon?.(b)}>
-                          <Wrench size={16} className="bmz-rubrique-icone" />
-                          <span className="rcz-bon-texte">
-                            <span className="rcz-bon-num">{b.num || t('Bon #{id}', { id: b.id })}</span>
-                            <span className="rcz-bon-titre">{b.titre || t("Ouvrir le bon pour voir son parcours")}</span>
-                          </span>
-                          {eb && <span className={`bmz-etat bmz-point--${pointTon(eb.ton)}`}>{t(eb.texte)}</span>}
-                          <ChevronRight size={15} className="bmz-fleche" />
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          </section>
-
-          <section className="bmz-carte rcz-historique" aria-label={t("Historique de la réclamation")}>
-            <h2 className="bmz-carte-titre"><History size={15} /> {t("Historique")}</h2>
-            <div className="bmz-defile">
-              {historique == null ? (
-                <p className="rch-vide">{t("Chargement…")}</p>
-              ) : historique.length === 0 ? (
-                <p className="rch-vide">{t("Aucune affectation ni changement d’état enregistré pour l’instant.")}</p>
-              ) : (
-                <ol className="rch-liste">
-                  {[...historique].reverse().map((h) => {
-                    const l = ligneHistorique(h);
-                    return (
-                      <li key={h.id} className={`rch-item ${l.classe}`}>
-                        <span className="rch-point" aria-hidden="true" />
-                        <span className="rch-texte">
-                          <span className="rch-titre">{t(l.titre)}</span>
-                          {l.detail && <span className="rch-detail">{l.detail}</span>}
-                          {h.commentaire && <span className="rch-commentaire">« {h.commentaire} »</span>}
-                          <span className="rch-meta">{dateHeure(h.date)}{h.auteurNom ? ` · ${h.auteurNom}` : ''}</span>
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ol>
-              )}
+              ))}
             </div>
           </section>
         </div>
+      </div>
 
-        {/* ===== Discussion en direct (demandeur, personne affectée, équipe du bon lié) ===== */}
-        <section className="bmz-col bmz-carte rcz-chat" aria-label={t("Discussion")}>
-          <div className="rcz-carte-tete">
-            <h2 className="bmz-carte-titre">{t("Discussion")}</h2>
-            <span className="rcz-chat-aide">{t("Demandeur, personne affectée et équipe du bon")}</span>
-          </div>
-          <div className="rcz-chat-corps">
-            <BmdChat
-              key={reclamation.id}
-              bonId={reclamation.id}
-              service={chatReclamationService}
-              sujet="reclamation"
-            />
-          </div>
-        </section>
+      {/* ===== Dossier en onglets : Signalement, Bon lié, Historique, Discussion ===== */}
+      <section className="bmz-carte bmz-do" aria-label={t('Dossier')}>
+        <div className="bmz-do-barre" role="tablist" aria-label={t('Dossier')}>
+          {ONGLETS.map((o) => {
+            const Icon = o.icon;
+            const actif = onglet === o.key;
+            return (
+              <button key={o.key} type="button" role="tab" aria-selected={actif}
+                className={`bmz-do-onglet ${actif ? 'is-actif' : ''}`} onClick={() => setOnglet(o.key)}>
+                <Icon size={15} aria-hidden="true" />
+                <span>{o.label}</span>
+                {o.n != null && <span className="bmz-nb">{o.n}</span>}
+              </button>
+            );
+          })}
+        </div>
+        <div className={`bmz-do-contenu ${onglet === 'chat' ? 'rcz-do-chat' : ''}`} role="tabpanel">
+          {contenuOnglet()}
+        </div>
+      </section>
       </div>
     </div>
   );

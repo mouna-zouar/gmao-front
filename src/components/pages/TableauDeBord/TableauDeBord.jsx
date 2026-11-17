@@ -13,6 +13,7 @@ import AccesGmao from './AccesGmao';
 import { t, locale } from '../../../i18n';
 import '../Supervision/Supervision.css';
 import './TableauDeBord.css';
+import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 
 /*
  * Tableau de bord global de la GMAO : l'essentiel de chaque module sur une page, pour une période.
@@ -242,6 +243,8 @@ function SlaParPriorite({ lignes }) {
 export default function TableauDeBord() {
   const navigate = useNavigate();
   const [jours, setJours] = useState(() => lire(CLE_PERIODE, 30, PERIODES));
+  const [lieuId, setLieuId] = useState('');
+  const carteLieux = useCarteLieux();
   const [donnees, setDonnees] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState(null);
@@ -253,7 +256,7 @@ export default function TableauDeBord() {
     enCours.current = true;
     setChargement(true);
     try {
-      const d = await tableauDeBordService.tableau(jours, recalculer);
+      const d = await tableauDeBordService.tableau(jours, recalculer, lieuId || null);
       setDonnees(d);
       setErreur(null);
       setMajLe(Date.now());
@@ -263,7 +266,7 @@ export default function TableauDeBord() {
       enCours.current = false;
       setChargement(false);
     }
-  }, [jours]);
+  }, [jours, lieuId]);
 
   useEffect(() => { charger(); }, [charger]);
   // Rafraîchi toutes les 5 minutes tant que la page est visible
@@ -313,6 +316,7 @@ export default function TableauDeBord() {
           <h1>{t('Tableau de bord de la Gestion de Maintenance Assistée par Ordinateur')}</h1>
         </div>
         <div className="tb-header-actions">
+          <FiltreLieu carte={carteLieux} valeur={lieuId} onChange={setLieuId} className="fl-select" />
           <div className="tb-periodes" role="group" aria-label={t('Période')}>
             {PERIODES.map((p) => (
               <button key={p.cle} type="button" aria-pressed={jours === p.cle}

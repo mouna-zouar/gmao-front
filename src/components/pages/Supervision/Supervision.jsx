@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Activity, BellRing, Cable, Info, LoaderCircle, MonitorDot, Network, RefreshCw, ServerCog, TriangleAlert, Wifi, WifiOff,
+  Activity, BellRing, Cable, Clock, Info, LoaderCircle, MonitorDot, Network, RadioTower, RefreshCw, ServerCog, TriangleAlert, Wifi, WifiOff,
 } from 'lucide-react';
 import supervisionService from '../../../services/supervisionService';
+import alerteMachineService from '../../../services/alerteMachineService';
+import PageModal from '../../ui/modals/PageModal';
+import AlertesMachines from '../AlertesMachines/AlertesMachines';
 import { libelleType } from '../Equipements/EquipementLiaisonAgent';
 import { t, locale } from '../../../i18n';
 import { Pastille, ilYa } from '../../ui/Veille/Veille';
@@ -532,6 +535,15 @@ export default function Supervision() {
   const [erreur, setErreur] = useState(null);
   const [majLe, setMajLe] = useState(null);
   const enCours = useRef(false);
+  // Alertes machines (même fenêtre que dans les bons de maintenance) : badge = alertes à traiter
+  const [alertesOuvert, setAlertesOuvert] = useState(false);
+  const [nbAlertes, setNbAlertes] = useState(0);
+  useEffect(() => {
+    const compter = () => alerteMachineService.compterNouvelles().then(setNbAlertes).catch(() => {});
+    compter();
+    const minuterie = setInterval(compter, 60 * 1000);
+    return () => clearInterval(minuterie);
+  }, [alertesOuvert]);
 
   const charger = useCallback(async () => {
     if (enCours.current) return;
@@ -612,68 +624,80 @@ export default function Supervision() {
   const pret = donnees && Number.isFinite(debut) && Number.isFinite(fin);
   const agentsArretes = (ind.agents || 0) - (ind.agentsEnLigne || 0);
 
-  const barre = (
-    <div className="tb-header-actions">
-      <div className="tb-periodes" role="group" aria-label={t('Période')}>
-        {PERIODES.map((p) => (
-          <button key={p.cle} type="button" aria-pressed={heures === p.cle}
-            onClick={() => { setHeures(p.cle); ecrire(CLE_PERIODE, p.cle); }}>{t(p.label)}</button>
-        ))}
-      </div>
-      <label className="sv-auto">
-        <RefreshCw size={14} aria-hidden="true" />
-        <span className="vl-sr">{t('Rafraîchissement automatique')}</span>
-        <select value={auto} onChange={(e) => { const v = Number(e.target.value); setAuto(v); ecrire(CLE_AUTO, v); }}>
-          {RAFRAICHISSEMENTS.map((r) => <option key={r.cle} value={r.cle}>{t(r.label)}</option>)}
-        </select>
-      </label>
-      <button type="button" className="tb-btn" onClick={charger} disabled={chargement}>
-        {chargement ? <LoaderCircle size={14} className="tb-tourne" aria-hidden="true" /> : <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />}
-        {t('Rafraîchir')}
-      </button>
-    </div>
-  );
+  const kpi = ({ icone: Ic, label, valeur, total, ton, sous, extra, onClick, titre }) => {
+    const Balise = onClick ? 'button' : 'div';
+    return (
+    <Balise {...(onClick ? { type: 'button', onClick, title: titre } : {})} className={`rv2-kpi ${ton ? `is-${ton}` : ''}`}>
+      <span className="rv2-kpi__label"><Ic size={14} aria-hidden="true" /> {label}</span>
+      <b>{valeur}{total != null && <span className="rv2-kpi__total"> / {nombre(total)}</span>}</b>
+      {sous && <small>{sous}</small>}
+      {extra}
+    </Balise>
+    );
+  };
 
   return (
-    <div className="tb-container sv-page">
-      <div className="tb-header">
-        <div className="tb-header-icone"><MonitorDot size={24} strokeWidth={2} aria-hidden="true" /></div>
-        <div className="tb-header-texte">
-          <h1>{t('Supervision')}</h1>
+    <div className="tb-container sv-page sv-v2">
+      <div className="rv2-haut">
+        <nav className="rv2-onglets" role="tablist" aria-label={t('Période')}>
+          {PERIODES.map((p) => (
+            <button key={p.cle} type="button" role="tab" aria-selected={heures === p.cle}
+              className={`rv2-onglet ${heures === p.cle ? 'is-actif' : ''}`}
+              onClick={() => { setHeures(p.cle); ecrire(CLE_PERIODE, p.cle); }}>
+              {p.cle === heures && <Clock size={14} aria-hidden="true" />}{t(p.label)}
+            </button>
+          ))}
+        </nav>
+        <div className="rv2-haut__droite">
+          {majLe && (
+            <span className="sv-maj" title={pret ? `${dateHeureCourte(debut)} → ${dateHeureCourte(fin)}` : undefined}>
+              <span className={`sv-maj__point ${auto ? 'is-live' : ''}`} aria-hidden="true" />
+              {t('Mis à jour à {h}', { h: new Date(majLe).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', second: '2-digit' }) })}
+            </span>
+          )}
+          <label className="sv-auto" title={t('Rafraîchissement automatique')}>
+            <RefreshCw size={14} aria-hidden="true" />
+            <span className="vl-sr">{t('Rafraîchissement automatique')}</span>
+            <select value={auto} onChange={(e) => { const v = Number(e.target.value); setAuto(v); ecrire(CLE_AUTO, v); }}>
+              {RAFRAICHISSEMENTS.map((r) => <option key={r.cle} value={r.cle}>{t(r.label)}</option>)}
+            </select>
+          </label>
+          <button type="button" className={`rv2-btn sv-btn-alertes ${nbAlertes > 0 ? 'is-actif' : ''}`} onClick={() => setAlertesOuvert(true)}
+            title={t('Alertes SNMP, Syslog et coupures réseau')}>
+            <RadioTower size={14} aria-hidden="true" /> {t('Alertes machines')}
+            {nbAlertes > 0 && <span className="sv-btn-alertes__badge" aria-label={t('{n} à traiter', { n: nbAlertes })}>{nbAlertes > 99 ? '99+' : nbAlertes}</span>}
+          </button>
+          <button type="button" className="rv2-btn" onClick={charger} disabled={chargement}>
+            {chargement ? <LoaderCircle size={14} className="tb-tourne" aria-hidden="true" /> : <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />}
+            {t('Rafraîchir')}
+          </button>
         </div>
-        {barre}
       </div>
-      {majLe && (
-        <p className="sv-maj">
-          <span className={`sv-maj__point ${auto ? 'is-live' : ''}`} aria-hidden="true" />
-          {t('Mis à jour à {h}', { h: new Date(majLe).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit', second: '2-digit' }) })}
-          {pret && <> · {dateHeureCourte(debut)} → {dateHeureCourte(fin)}</>}
-        </p>
-      )}
       {erreur && <p className="tb-message tb-message--erreur">{erreur}</p>}
       {!donnees && !erreur && <div className="tb-chargement">{t('Chargement…')}</div>}
 
       {pret && (
         <div className="sv-grille-panneaux">
-          {/* Ligne 1 : indicateurs */}
-          <div className="tb-stats sv-l12">
-            <Indicateur icone={MonitorDot} label={t('Équipements connectés')} valeur={nombre(ind.equipementsConnectes)} ton="marque"
-              sous={t('{ip} en IP · {l} liaison(s) agent', { ip: ind.avecIp, l: ind.liaisons })} />
-            <Indicateur icone={Wifi} label={t('En ligne')} valeur={nombre(ind.enLigne)} total={ind.avecIp}
-              ton={ind.avecIp && ind.enLigne === ind.avecIp ? 'succes' : 'attention'}
-              etat={ind.avecIp && ind.enLigne === ind.avecIp ? t('Tout répond') : t('Partiel')} />
-            <Indicateur icone={WifiOff} label={t('Hors ligne')} valeur={nombre(ind.horsLigne)}
-              ton={ind.horsLigne ? 'danger' : 'succes'} etat={ind.horsLigne ? t('À vérifier') : t('Aucune coupure')} />
-            <Indicateur icone={BellRing} label={t('Alertes ouvertes')} valeur={nombre(ind.alertesOuvertes)}
-              ton={ind.critiquesOuvertes ? 'danger' : ind.alertesOuvertes ? 'orange' : 'succes'}
-              etat={ind.critiquesOuvertes ? t('{n} critique(s)', { n: ind.critiquesOuvertes }) : ind.alertesOuvertes ? t('À traiter') : t('Rien à traiter')}
-              etincelle={<Etincelle valeurs={tranches.map((x) => x.critique + x.alerte + x.info)} couleur="#f97316" />} />
-            <Indicateur icone={ServerCog} label={t('Agents en ligne')} valeur={nombre(ind.agentsEnLigne)} total={ind.agents}
-              ton={!ind.agents ? 'neutre' : agentsArretes ? 'danger' : 'succes'}
-              etat={!ind.agents ? t('Aucun agent') : agentsArretes ? t('{n} arrêté(s)', { n: agentsArretes }) : t('Tous actifs')} />
-            <Indicateur icone={Cable} label={t('Liaisons en défaut')} valeur={nombre(ind.liaisonsProbleme)} total={ind.liaisons}
-              ton={!ind.liaisons ? 'neutre' : ind.liaisonsProbleme ? 'orange' : 'succes'}
-              etat={!ind.liaisons ? t('Aucune liaison') : ind.liaisonsProbleme ? t('À vérifier') : t('Toutes lisent')} />
+          {/* Ligne 1 : bande d'indicateurs */}
+          <div className="rv2-kpis sv-l12">
+            {kpi({ icone: MonitorDot, label: t('Équipements connectés'), valeur: nombre(ind.equipementsConnectes),
+              sous: t('{ip} en IP · {l} liaison(s) agent', { ip: ind.avecIp, l: ind.liaisons }) })}
+            {kpi({ icone: Wifi, label: t('En ligne'), valeur: nombre(ind.enLigne), total: ind.avecIp,
+              ton: ind.avecIp && ind.enLigne === ind.avecIp ? 'ok' : ind.avecIp ? 'attention' : null,
+              sous: ind.avecIp && ind.enLigne === ind.avecIp ? t('Tout répond') : t('Partiel') })}
+            {kpi({ icone: WifiOff, label: t('Hors ligne'), valeur: nombre(ind.horsLigne),
+              ton: ind.horsLigne ? 'alerte' : null, sous: ind.horsLigne ? t('À vérifier') : t('Aucune coupure') })}
+            {kpi({ icone: BellRing, label: t('Alertes ouvertes'), valeur: nombre(ind.alertesOuvertes),
+              ton: ind.critiquesOuvertes ? 'alerte' : ind.alertesOuvertes ? 'attention' : null,
+              sous: ind.critiquesOuvertes ? t('{n} critique(s)', { n: ind.critiquesOuvertes }) : ind.alertesOuvertes ? t('À traiter') : t('Rien à traiter'),
+              onClick: () => setAlertesOuvert(true), titre: t('Voir les alertes machines'),
+              extra: <Etincelle valeurs={tranches.map((x) => x.critique + x.alerte + x.info)} couleur={ind.critiquesOuvertes ? '#dc2626' : '#0794a4'} /> })}
+            {kpi({ icone: ServerCog, label: t('Agents en ligne'), valeur: nombre(ind.agentsEnLigne), total: ind.agents,
+              ton: !ind.agents ? null : agentsArretes ? 'alerte' : 'ok',
+              sous: !ind.agents ? t('Aucun agent') : agentsArretes ? t('{n} arrêté(s)', { n: agentsArretes }) : t('Tous actifs') })}
+            {kpi({ icone: Cable, label: t('Liaisons en défaut'), valeur: nombre(ind.liaisonsProbleme), total: ind.liaisons,
+              ton: !ind.liaisons ? null : ind.liaisonsProbleme ? 'attention' : null,
+              sous: !ind.liaisons ? t('Aucune liaison') : ind.liaisonsProbleme ? t('À vérifier') : t('Toutes lisent') })}
           </div>
 
           {/* Ligne 2 */}
@@ -784,6 +808,18 @@ export default function Supervision() {
           </Panneau>
         </div>
       )}
+
+      <PageModal
+        isOpen={alertesOuvert}
+        onClose={() => { setAlertesOuvert(false); charger(); }}
+        title={t('Alertes machines')}
+        subtitle={t('Warnings envoyés par les machines (SNMP, Syslog) et coupures détectées par la surveillance réseau')}
+        icon={RadioTower}
+        eyebrow={t('Supervision')}
+        size="full"
+      >
+        {alertesOuvert && <AlertesMachines isModal />}
+      </PageModal>
     </div>
   );
 }

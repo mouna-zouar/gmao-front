@@ -118,7 +118,8 @@ const ALL_ITEMS = [
         children: [
             { label: 'Paramètres système', path: '/parametres-systeme', icon: petit(M.parametresSysteme) },
             { label: 'Tables de paramétrage', path: '/tables-parametrage', icon: petit(M.tablesParametrage), motsCles: 'listes valeurs' },
-            { label: 'Référentiel des tâches', path: '/taches', icon: petit(M.referentielTaches), motsCles: 'gammes' },
+            { label: 'Référentiel des tâches', path: '/taches', icon: petit(M.referentielTaches), motsCles: 'tâches types' },
+            { label: 'Gammes d’intervention', path: '/gammes', icon: petit(M.gammes), motsCles: 'gammes procédures modèles job plans' },
             { label: 'Compteurs', path: '/referentiels/compteurs', icon: petit(M.compteurs), motsCles: 'référentiel' },
         ],
     },

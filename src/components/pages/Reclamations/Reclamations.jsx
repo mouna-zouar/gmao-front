@@ -29,7 +29,9 @@ import {
   Lock,
   RotateCcw,
   Power,
+  MapPin,
 } from 'lucide-react';
+import FiltreLieu, { useCarteLieux, useFiltreLieu } from '../../ui/FiltreLieu/FiltreLieu';
 import { useActionsReclamation, actionsPossibles, estAffectee, nomGroupe, nomTechnicien } from './ReclamationActions';
 import { ICONES_MODULES } from '../../../constants/modules';
 import reclamationService from '../../../services/Reclamationservice';
@@ -57,7 +59,7 @@ import { useVueActive } from '../../ui/Listes/stockageVues';
 import { contexteUtilisateur, vuesReclamations } from '../../ui/Listes/vuesMetier';
 import './Reclamations.css';
 import Pagination from '../../commun/Pagination';
-import EtatLecture from '../../commun/EtatLecture';
+import EtatLecture, { ResumeLecture } from '../../commun/EtatLecture';
 import LignesChargement from '../../commun/LignesChargement';
 import {
   AnnonceCopie, BoutonFiltresColonnes, BoutonMenuColonne, BoutonTri, ChampFiltre, choixColonnes, filtrerParColonnes, useFiltresColonnes,
@@ -155,6 +157,10 @@ export default function Reclamations() {
   const [searchTerm, setSearchTerm] = useState('');
   const fc = useFiltresColonnes('reclamations');
   const [etatFilter, setEtatFilter] = useState('all');
+  // Lieu de l'arborescence (avec ses sous-lieux) : lieu de la réclamation, sinon celui de son équipement
+  const [lieuFilter, setLieuFilter] = useState('');
+  const carteLieux = useCarteLieux();
+  const dansLieu = useFiltreLieu(carteLieux, lieuFilter);
 
   // ✅ Tri par défaut : date la plus récente en premier
   const [sortColumn, setSortColumn] = useState('date');
@@ -255,7 +261,7 @@ export default function Reclamations() {
       const matchesEtat = etatFilter === 'all' || String(r.etat) === etatFilter;
       const matchesVue = !vueCourante.filtre || vueCourante.filtre(r);
 
-      return matchesSearch && matchesEtat && matchesVue;
+      return matchesSearch && matchesEtat && matchesVue && dansLieu(r);
     });
 
     const parColonne = filtrerParColonnes(filtered, COLONNES_TEXTE, fc.filtres, choixCol);
@@ -269,13 +275,13 @@ export default function Reclamations() {
       return va - vb;
     });
     return sortDirection === 'desc' ? sorted.reverse() : sorted;
-  }, [reclamations, searchTerm, etatFilter, columnSettings, sortColumn, sortDirection, vueCourante, fc.filtres, choixCol]);
+  }, [reclamations, searchTerm, etatFilter, columnSettings, sortColumn, sortDirection, vueCourante, fc.filtres, choixCol, dansLieu]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReclamations.length / pageSize));
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, etatFilter, sortColumn, sortDirection, vueId, fc.filtres]);
+  }, [searchTerm, etatFilter, lieuFilter, sortColumn, sortDirection, vueId, fc.filtres]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -377,7 +383,7 @@ export default function Reclamations() {
     lecture: {
       cell: (r) => (
         <td key="lecture">
-          <EtatLecture objet={r} compact actif={[0, 5, 1].includes(Number(r.etat ?? 0))} />
+          <EtatLecture objet={r} compact actif={[0, 5, 1].includes(Number(r.etat ?? 0))} responsable={personnelLabel(r) || r.groupeNom || ''} />
         </td>
       ),
     },
@@ -386,6 +392,7 @@ export default function Reclamations() {
   const handleResetFilters = () => {
     setSearchTerm('');
     setEtatFilter('all');
+    setLieuFilter('');
     setVueId('toutes');
     fc.vider();
   };
@@ -863,6 +870,16 @@ export default function Reclamations() {
           </div>
         </div>
 
+        {(carteLieux?.lieux?.length > 0 || lieuFilter) && (
+          <div className="reclamations-filter-group fl-groupe">
+            <span className="reclamations-filter-label">{t("Lieu")}</span>
+            <div className="reclamations-filter-input-wrap">
+              <MapPin size={16} />
+              <FiltreLieu carte={carteLieux} valeur={lieuFilter} onChange={setLieuFilter} className="fl-liste" />
+            </div>
+          </div>
+        )}
+
         <BoutonFiltresColonnes voir={fc.voir} onBasculer={() => fc.setVoir((v) => !v)} nb={fc.nb} />
 
         <button className="reclamations-filter-reset" onClick={handleResetFilters}>
@@ -874,6 +891,12 @@ export default function Reclamations() {
           <span className="reclamations-filter-result">
             {tp('résultat', filteredReclamations.length)}
           </span>
+          <ResumeLecture
+            elements={filteredReclamations}
+            reference={(r) => r.num || `#${r.id}`}
+            responsable={(r) => personnelLabel(r) || r.groupeNom || ''}
+            estActif={(r) => [0, 5, 1].includes(Number(r.etat ?? 0))}
+          />
         </div>
 
         <div className="reclamations-export-stack">
@@ -1085,7 +1108,7 @@ const ELEMENTS_CYCLE = [
   { cle: 'resoudre', label: 'Marquer résolue', aide: 'Le problème est réglé, en attente de clôture', icone: CheckCircle2 },
   { cle: 'cloturer', label: 'Clôturer', aide: 'Ferme définitivement une réclamation résolue', icone: Lock },
   { cle: 'rouvrir', label: 'Rouvrir', aide: 'Résolue mais pas réglée : repasse « En cours » (motif obligatoire)', icone: RotateCcw },
-  { cle: 'annuler', label: 'Annuler', aide: 'Arrête la demande (motif obligatoire)', icone: XCircle },
+  { cle: 'annuler', label: 'Annuler', aide: 'Arrête la demande avant sa prise en charge (motif obligatoire)', icone: XCircle },
 ];
 
 function MenuCycle({ possibles, desactive, onChoisir }) {

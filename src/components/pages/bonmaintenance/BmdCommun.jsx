@@ -338,7 +338,9 @@ export function BmfChoix({ value, onChange, options, nom, effacable = true, gran
             type="button"
             role="radio"
             aria-checked={actif}
-            className={`bmf-choix-btn bmf-ton--${o.ton || 'brand'} ${actif ? 'is-actif' : ''}`}
+            className={`bmf-choix-btn bmf-ton--${o.ton || 'brand'} ${actif ? 'is-actif' : ''} ${o.disabled ? 'is-desactive' : ''}`}
+            disabled={o.disabled}
+            title={o.aide ? t(o.aide) : undefined}
             onClick={() => onChange(actif && effacable ? '' : String(o.value))}
           >
             {Icon ? <Icon size={grand ? 20 : 16} /> : actif && <Check size={15} strokeWidth={3} />}
@@ -489,6 +491,8 @@ export function BmdDataTable({
   emptyMessage = 'Aucun élément pour l\'instant.',
   getSearchText,
   searchPlaceholder = 'Filtrer...',
+  getRowClassName,
+  getRowTitle,
 }) {
   const [filtre, setFiltre] = useState('');
 
@@ -544,10 +548,11 @@ export function BmdDataTable({
               visibles.map((r) => (
                 <tr
                   key={getRowKey(r)}
+                  className={getRowClassName?.(r) || undefined}
                   tabIndex={0}
                   onClick={() => onRowClick?.(r)}
                   onKeyDown={(e) => { if (e.key === 'Enter') onRowClick?.(r); }}
-                  title={t('Voir le détail')}
+                  title={getRowTitle?.(r) || t('Voir le détail')}
                 >
                   {columns.map((c) => {
                     const contenu = c.render ? c.render(r) : r[c.key];

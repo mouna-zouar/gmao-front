@@ -475,22 +475,16 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-ck-info { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; color: #157553; }
 @media (max-width: 800px) { .ps-ck { grid-template-columns: 1fr; } }
 
-/* Familles d'un code panne */
 .ps-cp-familles { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .ps-cp-familles-titre { font-size: 12px; font-weight: 600; color: var(--g-slate-500); margin-inline-end: 4px; }
 .ps-cp-puce { padding: 3px 10px; border: 1px solid var(--g-slate-200); border-radius: 999px; background: var(--g-blanc, #fff); font: inherit; font-size: 12px; font-weight: 600; color: var(--g-slate-600); cursor: pointer; }
 .ps-cp-puce:hover { border-color: var(--g-slate-400); }
 .ps-cp-puce.is-choisie { border-color: var(--ps-accent, #0794a4); background: var(--ps-accent, #0794a4); color: #fff; }
 
-/* ══════════════════════════════════════════════════════════════════════
- * NOUVEAU DESIGN (page de réglages façon shadcn/ui) — couleurs de l'application inchangées.
- * En-tête dans un cadre comme les autres pages, menu groupé, lignes plus fines,
- * contrôles identiques aux fenêtres communes, barre d'enregistrement claire.
- * ══════════════════════════════════════════════════════════════════════ */
+
 .ps-page { padding: 20px 24px 120px; background: transparent; }
 :root { --ps-radius: var(--g-rayon-lg); --ps-radius-sm: var(--g-rayon-md); }
 
-/* ── En-tête ── */
 .ps-entete {
   align-items: center; margin-bottom: 16px; padding: 16px 20px;
   border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg); background: var(--g-blanc); box-shadow: var(--g-ombre-xs);
@@ -729,3 +723,68 @@ label.ps-ligne-titre { cursor: pointer; }
   .ps-tuiles { grid-template-columns: 1fr; }
   .ps-reglage-valeur input[type='number'], .ps-reglage-valeur input[type='time'] { width: 110px; }
 }
+
+/* Familles en arbre : parent (sans famille parente) puis ses fils en retrait */
+.ps-familles-liste.ps-familles-arbre { display: flex; flex-direction: column; gap: 1px; max-height: 420px; }
+.ps-familles-noeud { display: flex; align-items: center; gap: 2px; padding-inline-start: calc(var(--niveau, 0) * 22px); }
+.ps-familles-noeud > label { flex: 1; min-width: 0; }
+.ps-familles-noeud.is-racine > label { font-weight: 700; }
+.ps-familles-noeud.is-racine:not(:first-child) { margin-top: 4px; border-top: 1px solid var(--ps-border); padding-top: 4px; }
+.ps-familles-noeud.is-fils > label { font-size: 0.8rem; border-inline-start: 2px solid var(--ps-border); border-radius: 0 7px 7px 0; }
+.ps-familles-liste label.is-partiel { background: rgba(7, 148, 164, 0.04); }
+.ps-familles-plier {
+  width: 22px; height: 22px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 5px; background: transparent; color: var(--ps-text-mute); cursor: pointer; padding: 0;
+}
+.ps-familles-plier:hover:not(:disabled) { background: var(--ps-bg-soft); color: var(--ps-text); }
+.ps-familles-plier:disabled { cursor: default; opacity: 0.6; }
+.ps-familles-plier--vide { cursor: default; }
+.ps-familles-sous { font-weight: 400; color: var(--ps-text-mute); font-size: 0.76rem; }
+
+/* Parent : case à cocher + nom cliquable qui affiche / cache les fils */
+.ps-familles-ligne {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+  padding: 0 0 0 9px; border-radius: 7px; font-weight: 700;
+}
+.ps-familles-ligne:hover { background: var(--ps-bg-soft); }
+.ps-familles-ligne.is-coche { background: rgba(7, 148, 164, 0.08); }
+.ps-familles-ligne.is-partiel { background: rgba(7, 148, 164, 0.04); }
+.ps-familles-ligne input { accent-color: var(--ps-accent); flex-shrink: 0; }
+.ps-familles-ouvrir {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+  padding: 7px 9px 7px 0; border: 0; background: transparent; cursor: pointer;
+  font: inherit; font-size: 0.82rem; color: var(--ps-text); text-align: start;
+}
+.ps-familles-ouvrir:disabled { cursor: default; }
+.ps-familles-ligne.is-ouvert .ps-familles-nom { color: var(--ps-accent); }
+
+/* Codes panne : pastille parent + bouton qui affiche ses sous-familles */
+.ps-cp-puce-groupe { display: inline-flex; align-items: center; gap: 2px; }
+.ps-cp-puce-groupe.is-fils { margin-inline-start: 4px; }
+.ps-cp-puce--fils { font-size: 0.92em; opacity: 0.95; border-style: dashed; }
+.ps-cp-puce--parent { cursor: default; font-weight: 700; }
+.ps-cp-puce-fils {
+  display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px; border-radius: 999px;
+  border: 1px solid var(--ps-border); background: var(--ps-bg); color: var(--ps-text-mute);
+  font: inherit; font-size: 0.74rem; font-weight: 700; cursor: pointer;
+}
+.ps-cp-puce-fils:hover { color: var(--ps-text); background: var(--ps-bg-soft); }
+.ps-cp-puce-fils.has-choix { color: var(--ps-accent); border-color: var(--ps-accent); }
+
+/* Check-lists : parents puis sous-familles en retrait */
+.ps-ck-familles li.ps-ck-fils { padding-inline-start: calc(var(--niveau, 1) * 16px); }
+.ps-ck-familles li.ps-ck-parent .ps-ck-famille-nom { font-weight: 700; }
+.ps-ck-famille-nom { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.ps-ck-puce { width: 5px; height: 5px; border-radius: 50%; background: var(--ps-text-mute); flex-shrink: 0; margin: 0 4px 0 2px; }
+
+/* Articles d'une famille (lecture seule) sous ses sous-familles */
+.ps-familles-article {
+  display: flex; align-items: center; gap: 7px;
+  padding: 4px 9px; padding-inline-start: calc(var(--niveau, 1) * 22px + 30px);
+  font-size: 0.78rem; color: var(--ps-text-mute);
+}
+.ps-familles-article .ps-familles-nom { color: var(--ps-text); }
+.ps-familles-article svg { flex-shrink: 0; opacity: 0.7; }
+.ps-familles-article.is-info { font-style: italic; }
+.ps-familles-article.is-erreur { color: #b42318; font-style: normal; }
+.ps-familles-code { flex-shrink: 0; font-size: 0.72rem; font-family: ui-monospace, monospace; color: var(--ps-text-mute); }

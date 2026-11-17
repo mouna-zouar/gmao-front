@@ -770,3 +770,13 @@ button.rcx-vital:hover { background: var(--paper); }
 @media (max-width: 1180px) {
   .rcz-chat { grid-column: 1 / -1; min-height: 480px; }
 }
+
+/* ── Page détail au format du bon (bmz-v4) : la discussion occupe tout l'onglet ── */
+.bmz-v4.rcz-page .bmz-do-contenu.rcz-do-chat { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.bmz-v4.rcz-page .rcz-chat-onglet { flex: 1; min-height: 0; }
+.bmz-v4.rcz-page .rcz-maintenant { padding: 10px 14px; margin-bottom: 10px; }
+.bmz-v4.rcz-page .rcz-maintenant .bmz-maintenant-titre { font-size: 15px; margin: 2px 0 8px; }
+.bmz-v4.rcz-page .rcz-description { margin-top: 0; }
+@media (max-width: 1100px) {
+  .bmz-v4.rcz-page .bmz-do-contenu.rcz-do-chat { min-height: 480px; }
+}

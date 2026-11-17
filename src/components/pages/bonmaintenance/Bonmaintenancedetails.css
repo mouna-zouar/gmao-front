@@ -4812,3 +4812,50 @@ button.bmx-vital:hover { background: var(--paper); }
 .bmd-cubix-message button { border: 0; background: transparent; cursor: pointer; color: inherit; display: inline-flex; padding: 2px; }
 .bmd-cubix-message.is-ok { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
 .bmd-cubix-message.is-erreur { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+
+/* Tâche dont l'article est encore à demander / commander : barre rouge à gauche */
+.bmd-table tbody tr.bmd-ligne-manque { box-shadow: inset 4px 0 0 var(--g-red-600, #dc2626); }
+.bmd-table tbody tr.bmd-ligne-manque td { background: var(--g-red-50, #fef2f2); }
+.bmd-table tbody tr.bmd-ligne-manque:hover td { background: var(--g-red-100, #fee2e2); }
+
+/* Remise en service bloquée tant que le contrôle n'est pas fait */
+.bmd-rs-bloque {
+  display: flex; align-items: flex-start; gap: 10px; margin: 0 0 12px; padding: 10px 12px;
+  border: 1px solid #fedf89; border-radius: 10px; background: #fffaeb; color: #93370d; font-size: 0.88rem; line-height: 1.45;
+}
+.bmd-rs-bloque svg { flex-shrink: 0; margin-top: 1px; }
+.bmf-choix-btn.is-desactive, .bmf-choix-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.bmd-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Circuit d'achat (demandes / commandes) ── */
+.bmd-achat { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; }
+.bmd-achat-etapes { display: flex; align-items: center; gap: 0; list-style: none; margin: 0; padding: 0; }
+.bmd-achat-etapes li { display: flex; align-items: center; gap: 6px; color: #94a3b8; }
+.bmd-achat-etapes li + li::before { content: ''; width: 14px; height: 2px; background: #e2e8f0; margin: 0 3px; }
+.bmd-achat-etapes li.is-faite + li::before, .bmd-achat-etapes li.is-actuelle::before { background: #0794a4; }
+.bmd-achat-point { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid #cbd5e1; background: #fff; font-size: 10px; font-weight: 700; }
+.bmd-achat-etapes li.is-faite .bmd-achat-point { background: #0794a4; border-color: #0794a4; color: #fff; }
+.bmd-achat-etapes li.is-actuelle .bmd-achat-point { border-color: #0794a4; color: #0794a4; box-shadow: 0 0 0 3px #e0f5f7; }
+.bmd-achat-label { font-size: 12px; font-weight: 600; color: #066d79; white-space: nowrap; }
+.bmd-achat-suivi-btn { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; padding: 2px 4px;
+  font-size: 12px; color: #64748b; cursor: pointer; border-radius: 4px; }
+.bmd-achat-suivi-btn:hover { background: #f1f5f9; color: #0f172a; }
+.bmd-achat-refus { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #b45309; }
+.bmd-achat-suivi { flex-basis: 100%; list-style: none; margin: 4px 0 0; padding: 0 0 0 10px; border-left: 2px solid #e2e8f0;
+  display: grid; gap: 6px; }
+.bmd-achat-suivi li { display: flex; flex-wrap: wrap; gap: 2px 8px; font-size: 12px; color: #475569; }
+.bmd-achat-suivi strong { color: #0f172a; font-weight: 600; }
+.bmd-achat-suivi em { flex-basis: 100%; font-style: normal; color: #64748b; }
+.bmd-doc-etape.is-ok { border-color: #a7e3c4; color: #15803d; background: #f0fdf4; }
+.bmd-doc-etape.is-ok:hover:not(:disabled) { background: #16a34a; border-color: #16a34a; color: #fff; }
+.bmd-doc-etape.is-refus { border-color: #fecaca; color: #b91c1c; background: #fef2f2; }
+.bmd-doc-etape.is-refus:hover:not(:disabled) { background: #dc2626; border-color: #dc2626; color: #fff; }
+.bmd-achat-champ { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: #334155; }
+.bmd-achat-champ textarea { font: inherit; font-weight: 400; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; resize: vertical; }
+.bmd-achat-champ textarea:focus, .bmd-achat-reception input:focus { outline: 2px solid #0794a4; outline-offset: -1px; border-color: #0794a4; }
+.bmd-achat-reception { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bmd-achat-reception th { text-align: left; font-size: 12px; font-weight: 600; color: #64748b; padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+.bmd-achat-reception td { padding: 8px; border-bottom: 1px solid #f1f5f9; color: #0f172a; }
+.bmd-achat-reception th:not(:first-child), .bmd-achat-reception td:not(:first-child) { width: 110px; }
+.bmd-achat-reception input { width: 90px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }

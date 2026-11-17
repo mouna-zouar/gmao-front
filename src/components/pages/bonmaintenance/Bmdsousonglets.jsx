@@ -21,7 +21,7 @@ import {
   MessageSquare,
   CheckCircle,
   XCircle,
-  Power,
+  Power, ShieldAlert, Stethoscope, ShieldCheck, ListOrdered,
 } from 'lucide-react';
 import {
   BmfFormulaire,
@@ -36,6 +36,7 @@ import {
 } from './BmdCommun';
 
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
+import api from '../../../services/api';
 import bonMaintenanceIntervenantService from '../../../services/bonMaintenanceIntervenantService';
 import bonMaintenanceIntervenantHistoriqueService from '../../../services/Bonmaintenanceintervenanthistoriqueservice';
 import bonMaintenancePieceImmoService from '../../../services/Bonmaintenancepieceimmoservice';
@@ -45,6 +46,7 @@ import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenan
 import personnelService from '../../../services/Personnelservice';
 import AlerteFormation from '../Formations/AlerteFormation';
 import AssistantTaches from './AssistantTaches';
+import ChoixGamme from './ChoixGamme';
 import AssistantIntervenants from '../Formations/AssistantIntervenants';
 import authService from '../../../services/Authservice';
 import './BmdRemise.css';
@@ -78,7 +80,8 @@ import {
   nomIntervenantAffiche,
   libelleActionHistoriqueIntervenant,
 } from './BmdCommun';
-import { t } from '../../../i18n';
+import { t, tp } from '../../../i18n';
+import { Modale } from '../../commun';
 import { TempsPasse, totalTemps, formatTemps, tempsPasse, useMaintenant, TACHE_EN_COURS, INTERVENANT_EN_COURS } from './BmdCommun';
 
 // ------------------------------------------------------------
@@ -104,7 +107,7 @@ function useConfirmModal() {
   return { confirmModal, setConfirmModal, close };
 }
 
-const PanelHeader = ({ titre, count, extra, showForm, onToggle, labelAjout }) => (
+const PanelHeader = ({ titre, count, extra, showForm, onToggle, labelAjout, actions }) => (
   <div className="bmd-panel-header">
     <div className="bmd-panel-title">
       <h3>{t(titre)}</h3>
@@ -113,9 +116,12 @@ const PanelHeader = ({ titre, count, extra, showForm, onToggle, labelAjout }) =>
     </div>
     {/* Formulaire ouvert : pas de second « Annuler » en haut, celui du bas du formulaire suffit */}
     {!showForm && (
-      <button type="button" className="bmd-add-btn" onClick={onToggle}>
-        <Plus size={16} /> {t(labelAjout)}
-      </button>
+      <div className="bmd-panel-actions">
+        {actions}
+        <button type="button" className="bmd-add-btn" onClick={onToggle}>
+          <Plus size={16} /> {t(labelAjout)}
+        </button>
+      </div>
     )}
   </div>
 );
@@ -146,6 +152,34 @@ const emptyDiagnosticForm = {
   lotArticleImmobilistationId: '', bonMaintenancePieceImmoId: '',
   causeProbable: '', gravite: '', dureeEstimeeHeures: '',
 };
+
+// ============================================================
+// Équipement du bon, affiché en lecture seule dans les formulaires des sous-onglets
+// (diagnostic, contrôle, remise en service, tâches, intervenants)
+// ============================================================
+function EquipementDuBon({ id, immobilisations }) {
+  const [liste, setListe] = useState(immobilisations || null);
+  useEffect(() => {
+    if (immobilisations?.length) { setListe(immobilisations); return; }
+    let annule = false;
+    obtenirEquipements().then((l) => { if (!annule) setListe(l || []); }).catch(() => { if (!annule) setListe([]); });
+    return () => { annule = true; };
+  }, [immobilisations]);
+  if (id == null || id === '') return null;
+  const immo = (liste || []).find((i) => String(i.id) === String(id));
+  return (
+    <div className="bmd-equipement-bon" role="note">
+      <span className="bmd-equipement-bon__icone" aria-hidden="true"><Building2 size={16} /></span>
+      <span className="bmd-equipement-bon__texte">
+        <small>{t("Équipement du bon")}</small>
+        <strong>{immo?.designation || (liste ? t('Équipement #{id}', { id }) : t('Chargement…'))}</strong>
+        {immo && [immo.code, immo.marque, immo.modele].filter(Boolean).length > 0 && (
+          <em>{[immo.code, immo.marque, immo.modele].filter(Boolean).join(' · ')}</em>
+        )}
+      </span>
+    </div>
+  );
+}
 
 export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistationId, autoOpenForm = false }) {
   const [diagnostics, setDiagnostics] = useState([]);
@@ -264,7 +298,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
         personnelId: form.personnelId === '' ? null : Number(form.personnelId),
         personnelNom: personnel ? `${personnel.nom} ${personnel.prenom}` : null,
         observations: form.observations.trim() || null,
-        lotArticleImmobilistationId: form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId),
+        lotArticleImmobilistationId: defaultLotArticleImmobilistationId ?? (form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId)),
         bonMaintenancePieceImmoId: form.bonMaintenancePieceImmoId === '' ? null : Number(form.bonMaintenancePieceImmoId),
         causeProbable: form.causeProbable.trim() || null,
         gravite: form.gravite === '' ? null : Number(form.gravite),
@@ -338,7 +372,8 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
 
   // ---------- DÉTAIL ----------
   const selected = diagnostics.find((d) => d.id === selectedId);
-  if (selected) {
+  // Détail : affiché dans une fenêtre, au-dessus du tableau
+  const detailJsx = selected ? (() => {
     const d = selected;
     const immo = findImmo(d.lotArticleImmobilistationId);
 
@@ -383,10 +418,10 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
             },
           ]}
         />
-        {modal}
       </>
     );
-  }
+  })() : null;
+
 
   // ---------- TABLEAU ----------
   const colonnes = [
@@ -416,6 +451,8 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
         labelAjout="Ajouter un diagnostic"
       />
 
+      <Modale ouvert={showForm} onFermer={fermerForm} taille="lg" className="bmd-modale-sous" icone={Stethoscope}
+        titre={editingId ? t("Modifier : diagnostic") : t("Ajouter : diagnostic")}>
       {showForm && (
         <BmfFormulaire
           titre={editingId ? t("Modifier le diagnostic") : t("Nouveau diagnostic")}
@@ -441,21 +478,25 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
               <AlerteFormation personnelId={form.personnelId} bonMaintenanceId={bonMaintenanceId} />
             </BmfChamp>
 
-            <BmfChamp label={t("Équipement examiné")} aide={t("Déjà rempli avec l'équipement du bon")} htmlFor="diag-immo">
-              <SearchableSelect
-                id="diag-immo"
-                name="lotArticleImmobilistationId"
-                value={form.lotArticleImmobilistationId}
-                onChange={(e) => setForm({ ...form, lotArticleImmobilistationId: e.target.value })}
-                options={immobilisations}
-                placeholder={t("Tapez un nom ou un code...")}
-                emptyMessage={t("Aucun équipement ne correspond")}
-                allowEmpty
-                emptyOptionLabel={t("Aucun")}
-                getValue={(i) => i.id}
-                getLabel={(i) => i.designation || `#${i.id}`}
-                getOptionHint={(i) => (i.code ? t('Code {code}', { code: i.code }) : null)}
-              />
+            <BmfChamp label={t("Équipement examiné")} aide={t("Repris automatiquement du bon")} htmlFor="diag-immo">
+              {defaultLotArticleImmobilistationId != null ? (
+                <EquipementDuBon id={defaultLotArticleImmobilistationId} immobilisations={immobilisations} />
+              ) : (
+                <SearchableSelect
+                  id="diag-immo"
+                  name="lotArticleImmobilistationId"
+                  value={form.lotArticleImmobilistationId}
+                  onChange={(e) => setForm({ ...form, lotArticleImmobilistationId: e.target.value })}
+                  options={immobilisations}
+                  placeholder={t("Tapez un nom ou un code...")}
+                  emptyMessage={t("Aucun équipement ne correspond")}
+                  allowEmpty
+                  emptyOptionLabel={t("Aucun")}
+                  getValue={(i) => i.id}
+                  getLabel={(i) => i.designation || `#${i.id}`}
+                  getOptionHint={(i) => (i.code ? t('Code {code}', { code: i.code }) : null)}
+                />
+              )}
               {form.lotArticleImmobilistationId && (
                 <BmfStock verification={checkingImmoQte} quantite={immoQteDisponible} />
               )}
@@ -513,6 +554,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
           <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Enregistrer le diagnostic")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
+      </Modale>
 
       <BmdDataTable
         columns={colonnes}
@@ -523,6 +565,10 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
         searchPlaceholder={t("Filtrer par technicien, cause, équipement...")}
         getSearchText={(d) => [d.personnelNom, d.causeProbable, d.observations, libelleImmo(d.lotArticleImmobilistationId)].join(' ')}
       />
+      <Modale ouvert={!!selected} onFermer={() => setSelectedId(null)} taille="lg" className="bmd-modale-sous bmd-modale-detail"
+        icone={Stethoscope} titre={t("Détail : diagnostic")}>
+        {detailJsx}
+      </Modale>
       {modal}
     </div>
   );
@@ -539,7 +585,7 @@ const emptyTacheForm = {
   besoinArticle: 'false', prestataireArticlesId: '', qte: '',
 };
 
-export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
+export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId = null, autoOpenForm = false }) {
   const [taches, setTaches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -556,6 +602,9 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
   const tempsTotalTaches = totalTemps(taches, TACHE_EN_COURS, maintenantT);
 
   const [tacheQteDisponible, setTacheQteDisponible] = useState(null);
+  // Gamme d'intervention : crée toutes les tâches d'un coup
+  const [choixGamme, setChoixGamme] = useState(false);
+  const [messageGamme, setMessageGamme] = useState(null);
   const [checkingTacheQte, setCheckingTacheQte] = useState(false);
   // Famille de l'équipement sans pièces de dépôt (paramètre « Familles sans pièces de dépôt », ex. logiciels) :
   // l'article et la quantité ne sont pas affichés
@@ -578,8 +627,33 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
     return () => { annule = true; };
   }, [bonMaintenanceId]);
 
+  // Tâches dont l'article manque encore : à demander (demande de fourniture) et/ou à commander
+  const [manques, setManques] = useState({ demander: new Set(), commander: new Set() });
+  const chargerManques = () => api.get('/bon-maintenance/besoins-pieces', { params: { ids: bonMaintenanceId } })
+    .then(({ data }) => {
+      const b = (data || []).find((x) => String(x.bonId) === String(bonMaintenanceId)) || {};
+      setManques({ demander: new Set((b.tachesADemander || []).map(String)), commander: new Set((b.tachesACommander || []).map(String)) });
+    })
+    .catch(() => setManques({ demander: new Set(), commander: new Set() }));
+  useEffect(() => {
+    // Une demande ou une commande créée ailleurs (bouton Demander / Commander) éteint la barre rouge
+    const surEcriture = () => chargerManques();
+    window.addEventListener('gmao:ecriture', surEcriture);
+    return () => window.removeEventListener('gmao:ecriture', surEcriture);
+  }, [bonMaintenanceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const manqueTache = (tache) => {
+    const id = String(tache.id);
+    const d = manques.demander.has(id);
+    const cmd = manques.commander.has(id);
+    if (d && cmd) return t('Article à demander ou à commander (stock insuffisant)');
+    if (d) return t('Article à demander (stock insuffisant)');
+    if (cmd) return t('Article à commander (stock insuffisant)');
+    return null;
+  };
+
   const load = async () => {
     setLoading(true);
+    chargerManques();
     try {
       const data = await bonMaintenanceTacheService.getByBonMaintenance(bonMaintenanceId);
       setTaches(data ?? []);
@@ -732,7 +806,8 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
 
   // ---------- DÉTAIL ----------
   const selected = taches.find((tache) => tache.id === selectedId);
-  if (selected) {
+  // Détail : affiché dans une fenêtre, au-dessus du tableau
+  const detailJsx = selected ? (() => {
     const tache = selected;
     const intervenant = findIntervenant(tache.intervenantId);
     const article = findArticle(tache.prestataireArticlesId);
@@ -809,10 +884,10 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
             },
           ].filter(Boolean)}
         />
-        {modal}
       </>
     );
-  }
+  })() : null;
+
 
   // ---------- TABLEAU ----------
   const tachesTriees = [...taches].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
@@ -873,14 +948,29 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
         showForm={showForm}
         onToggle={() => (showForm ? resetForm() : setShowForm(true))}
         labelAjout="Ajouter une tâche"
+        actions={(
+          <button type="button" className="bmd-add-btn bmd-add-btn--clair" onClick={() => { setMessageGamme(null); setChoixGamme(true); }}>
+            <ListOrdered size={16} /> {t('Appliquer une gamme')}
+          </button>
+        )}
       />
+      {messageGamme && <p className="bmd-gamme-message" role="status">{messageGamme}</p>}
+      <ChoixGamme ouvert={choixGamme} bonMaintenanceId={bonMaintenanceId} onFermer={() => setChoixGamme(false)}
+        onApplique={async (g, n) => {
+          setChoixGamme(false);
+          setMessageGamme(t('Gamme {code} appliquée : {n}', { code: `${g.code} v${g.version}`, n: tp('tâche ajoutée', n) }));
+          await load();
+        }} />
 
+      <Modale ouvert={showForm} onFermer={resetForm} taille="lg" className="bmd-modale-sous" icone={ClipboardList}
+        titre={editingId ? t("Modifier : tâche") : t("Ajouter : tâche")}>
       {showForm && (
         <BmfFormulaire
           titre={editingId ? t("Modifier la tâche") : t("Nouvelle tâche")}
           intro={t("Une tâche, c'est un travail précis à faire sur l'équipement.")}
           onSubmit={handleSubmit}
         >
+          <EquipementDuBon id={defaultLotArticleImmobilistationId} />
           <BmfEtape numero={1} titre={t("La tâche")}>
             {!editingId && (
               <BmfChamp label={t("Assistant")} large>
@@ -1033,16 +1123,23 @@ export function TachesTab({ bonMaintenanceId, autoOpenForm = false }) {
           />
         </BmfFormulaire>
       )}
+      </Modale>
 
       <BmdDataTable
         columns={colonnes}
         rows={tachesTriees}
         loading={loading}
+        getRowClassName={(tache) => (manqueTache(tache) ? 'bmd-ligne-manque' : '')}
+        getRowTitle={(tache) => manqueTache(tache)}
         onRowClick={(tache) => setSelectedId(tache.id)}
         emptyMessage={t("Aucune tâche pour l'instant.")}
         searchPlaceholder={t("Filtrer par désignation, intervenant...")}
         getSearchText={(tache) => [tache.designation, tache.nom, nomIntervenantAffiche(findIntervenant(tache.intervenantId))].join(' ')}
       />
+      <Modale ouvert={!!selected} onFermer={() => setSelectedId(null)} taille="lg" className="bmd-modale-sous bmd-modale-detail"
+        icone={ClipboardList} titre={t("Détail : tâche")}>
+        {detailJsx}
+      </Modale>
       {modal}
     </div>
   );
@@ -1063,7 +1160,7 @@ const typeIntervenant = (i) => {
   return null;
 };
 
-export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebrer, autoOpenForm = false }) {
+export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilistationId = null, onBonMaybeChanged, onCelebrer, autoOpenForm = false }) {
   const [intervenants, setIntervenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -1249,7 +1346,8 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
 
   // ---------- DÉTAIL ----------
   const selected = intervenants.find((i) => i.id === selectedId);
-  if (selected) {
+  // Détail : affiché dans une fenêtre, au-dessus du tableau
+  const detailJsx = selected ? (() => {
     const i = selected;
     const historique = historiqueParIntervenant[i.id] ?? [];
     const total = coutIntervenant(i);
@@ -1344,10 +1442,10 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
             },
           ]}
         />
-        {modal}
       </>
     );
-  }
+  })() : null;
+
 
   // ---------- TABLEAU ----------
   const colonnes = [
@@ -1399,12 +1497,15 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
         labelAjout="Ajouter un intervenant"
       />
 
+      <Modale ouvert={showForm} onFermer={fermerForm} taille="lg" className="bmd-modale-sous" icone={Users}
+        titre={editingId ? t("Modifier : intervenant") : t("Ajouter : intervenant")}>
       {showForm && (
         <BmfFormulaire
           titre={editingId ? t("Modifier l'intervenant") : t("Nouvel intervenant")}
           intro={t("Ajoutez la personne ou l'entreprise qui répare l'équipement.")}
           onSubmit={handleAdd}
         >
+          <EquipementDuBon id={defaultLotArticleImmobilistationId} />
           <BmfEtape numero={1} titre={t("Qui répare ?")} aide={t("Choisissez un technicien de l'équipe, ou un sous-traitant")}>
             {!editingId && (
               <BmfChamp label={t("Assistant")} large>
@@ -1490,6 +1591,7 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
           <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Ajouter l'intervenant")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
+      </Modale>
 
       <BmdDataTable
         columns={colonnes}
@@ -1500,6 +1602,10 @@ export function IntervenantsTab({ bonMaintenanceId, onBonMaybeChanged, onCelebre
         searchPlaceholder={t("Filtrer par nom, commentaire...")}
         getSearchText={(i) => [nomIntervenantAffiche(i), typeIntervenant(i), i.commentaire].join(' ')}
       />
+      <Modale ouvert={!!selected} onFermer={() => setSelectedId(null)} taille="lg" className="bmd-modale-sous bmd-modale-detail"
+        icone={Users} titre={t("Détail : intervenant")}>
+        {detailJsx}
+      </Modale>
       {modal}
     </div>
   );
@@ -1599,7 +1705,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
         valeurAttendue: form.valeurAttendue === '' ? null : Number(form.valeurAttendue),
         conforme: form.conforme === '' ? null : form.conforme === 'true',
         observations: form.observations.trim() || null,
-        lotArticleImmobilistationId: form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId),
+        lotArticleImmobilistationId: defaultLotArticleImmobilistationId ?? (form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId)),
       };
       const idModifie = editingId;
       if (idModifie) {
@@ -1658,7 +1764,8 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
 
   // ---------- DÉTAIL ----------
   const selected = controles.find((c) => c.id === selectedId);
-  if (selected) {
+  // Détail : affiché dans une fenêtre, au-dessus du tableau
+  const detailJsx = selected ? (() => {
     const c = selected;
     const aDesMesures = c.valeurMesuree != null || c.valeurAttendue != null;
     let ecart = null;
@@ -1711,10 +1818,10 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
             },
           ]}
         />
-        {modal}
       </>
     );
-  }
+  })() : null;
+
 
   // ---------- TABLEAU ----------
   const colonnes = [
@@ -1743,6 +1850,8 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
         labelAjout="Ajouter un contrôle"
       />
 
+      <Modale ouvert={showForm} onFermer={fermerForm} taille="lg" className="bmd-modale-sous" icone={ShieldCheck}
+        titre={editingId ? t("Modifier : contrôle") : t("Ajouter : contrôle")}>
       {showForm && (
         <BmfFormulaire
           titre={editingId ? t("Modifier le contrôle") : t("Nouveau contrôle")}
@@ -1799,26 +1908,31 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
                 getOptionHint={(p) => (p.matricule ? t('Matricule {m}', { m: p.matricule }) : null)}
               />
             </BmfChamp>
-            <BmfChamp label={t("Équipement contrôlé")} aide={t("Déjà rempli avec l'équipement du bon")} htmlFor="ctrl-immo">
-              <SearchableSelect
-                id="ctrl-immo"
-                name="lotArticleImmobilistationId"
-                value={form.lotArticleImmobilistationId}
-                onChange={(e) => setForm({ ...form, lotArticleImmobilistationId: e.target.value })}
-                options={immobilisations}
-                placeholder={t("Tapez un nom...")}
-                emptyMessage={t("Aucun équipement ne correspond")}
-                allowEmpty
-                emptyOptionLabel={t("Aucun")}
-                getValue={(i) => i.id}
-                getLabel={(i) => i.designation || `#${i.id}`}
-              />
+            <BmfChamp label={t("Équipement contrôlé")} aide={t("Repris automatiquement du bon")} htmlFor="ctrl-immo">
+              {defaultLotArticleImmobilistationId != null ? (
+                <EquipementDuBon id={defaultLotArticleImmobilistationId} immobilisations={immobilisations} />
+              ) : (
+                <SearchableSelect
+                  id="ctrl-immo"
+                  name="lotArticleImmobilistationId"
+                  value={form.lotArticleImmobilistationId}
+                  onChange={(e) => setForm({ ...form, lotArticleImmobilistationId: e.target.value })}
+                  options={immobilisations}
+                  placeholder={t("Tapez un nom...")}
+                  emptyMessage={t("Aucun équipement ne correspond")}
+                  allowEmpty
+                  emptyOptionLabel={t("Aucun")}
+                  getValue={(i) => i.id}
+                  getLabel={(i) => i.designation || `#${i.id}`}
+                />
+              )}
             </BmfChamp>
           </BmfEtape>
 
           <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Enregistrer le contrôle")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
+      </Modale>
 
       <BmdDataTable
         columns={colonnes}
@@ -1829,6 +1943,10 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
         searchPlaceholder={t("Filtrer par type, contrôleur, résultat...")}
         getSearchText={(c) => [c.typeControle, c.personnelNom, c.resultat, c.observations, libelleImmo(c.lotArticleImmobilistationId)].join(' ')}
       />
+      <Modale ouvert={!!selected} onFermer={() => setSelectedId(null)} taille="lg" className="bmd-modale-sous bmd-modale-detail"
+        icone={ShieldCheck} titre={t("Détail : contrôle")}>
+        {detailJsx}
+      </Modale>
       {modal}
     </div>
   );
@@ -1863,6 +1981,20 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   const [editingId, setEditingId] = useState(null);
   const [demandeEnCours, setDemandeEnCours] = useState(false);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
+  // La remise en service n'est possible qu'après le contrôle de l'équipement (onglet Contrôle)
+  const [controles, setControles] = useState(null); // null = en cours de lecture
+  const chargerControles = () => bonMaintenanceControleEquipementService.getByBonMaintenance(bonMaintenanceId)
+    .then((l) => setControles([...(l ?? [])].sort((x, y) => String(y.dateControle || '').localeCompare(String(x.dateControle || '')))))
+    .catch(() => setControles([]));
+  useEffect(() => {
+    chargerControles();
+    const surEcriture = () => chargerControles();
+    window.addEventListener('gmao:ecriture', surEcriture);
+    return () => window.removeEventListener('gmao:ecriture', surEcriture);
+  }, [bonMaintenanceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const controleFait = (controles?.length ?? 0) > 0;
+  const dernierControleNonConforme = controleFait && controles[0].conforme === false;
+  const messageServeur = (err) => err?.response?.data?.message || err?.response?.data?.error || null;
 
   // Demande en attente : une ligne sans décision (conforme vide) ; la décision vient la compléter
   const demande = decisions.find((d) => d.conforme == null) || null;
@@ -1882,7 +2014,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
       onBonMaybeChanged?.();
     } catch (err) {
       console.error('[GMAO remise en service] Demande :', err);
-      alert(t("La demande de remise en service n'a pas pu être enregistrée."));
+      alert(messageServeur(err) || t("La demande de remise en service n'a pas pu être enregistrée."));
     } finally {
       setDemandeEnCours(false);
     }
@@ -1941,13 +2073,21 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
       alert(t("Merci de préciser si la remise en service est autorisée ou non."));
       return;
     }
+    if (form.conforme === 'true' && !controleFait) {
+      alert(t("Faites d'abord le contrôle de l'équipement (onglet Contrôle) : la remise en service n'est possible qu'après le contrôle."));
+      return;
+    }
+    if (form.conforme === 'true' && dernierControleNonConforme) {
+      alert(t("Le dernier contrôle de l'équipement n'est pas conforme : refaites un contrôle conforme avant d'autoriser la remise en service."));
+      return;
+    }
     setSaving(true);
     try {
       // « Autorisé par » : la personne connectée
       const moi = utilisateurConnecte();
       const payload = {
         bonMaintenanceId,
-        lotArticleImmobilistationId: form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId),
+        lotArticleImmobilistationId: defaultLotArticleImmobilistationId ?? (form.lotArticleImmobilistationId === '' ? null : Number(form.lotArticleImmobilistationId)),
         conforme: form.conforme === 'true',
         autoriseParId: moi.id,
         autoriseParNom: moi.nom,
@@ -1975,7 +2115,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
       onBonMaybeChanged?.(); // une remise en service conforme peut déclencher la clôture automatique
     } catch (err) {
       console.error(err);
-      alert(editingId ? t("Échec de la modification de la décision.") : t("Échec de l'enregistrement de la décision."));
+      alert(messageServeur(err) || (editingId ? t("Échec de la modification de la décision.") : t("Échec de l'enregistrement de la décision.")));
     } finally {
       setSaving(false);
     }
@@ -2022,7 +2162,8 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
 
   // ---------- DÉTAIL ----------
   const selected = decisions.find((d) => d.id === selectedId);
-  if (selected) {
+  // Détail : affiché dans une fenêtre, au-dessus du tableau
+  const detailJsx = selected ? (() => {
     const d = selected;
     return (
       <>
@@ -2073,10 +2214,10 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
             },
           ]}
         />
-        {modal}
       </>
     );
-  }
+  })() : null;
+
 
   // ---------- TABLEAU ----------
   const colonnes = [
@@ -2098,19 +2239,36 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
         labelAjout="Ajouter une décision"
       />
 
+      {!showForm && !loading && controles !== null && !dejaAutorisee && (!controleFait || dernierControleNonConforme) && (
+        <div className="bmd-rs-bloque" role="note">
+          <ShieldAlert size={18} aria-hidden="true" />
+          <span>
+            {!controleFait
+              ? t("Contrôle de l'équipement obligatoire : faites d'abord le contrôle (onglet Contrôle), la remise en service sera possible ensuite.")
+              : t("Le dernier contrôle n'est pas conforme : refaites un contrôle conforme avant d'autoriser la remise en service.")}
+          </span>
+        </div>
+      )}
+
       {!showForm && !loading && (demande ? (
         <div className="bmd-rs-demande">
           <span><Pill tone="amber">{t("Demandée")}</Pill> {[demande.demandeParNom, demande.dateDemande && formatDateTime(demande.dateDemande)].filter(Boolean).join(' · ')}</span>
-          <button type="button" className="bmd-add-btn" onClick={openForm}><Power size={16} /> {t("Faire la remise en service")}</button>
+          <button type="button" className="bmd-add-btn" onClick={openForm} disabled={!controleFait}
+            title={!controleFait ? t("Faites d'abord le contrôle de l'équipement") : undefined}>
+            <Power size={16} /> {t("Faire la remise en service")}
+          </button>
         </div>
       ) : !dejaAutorisee && (
         <div className="bmd-rs-demande">
-          <button type="button" className="bmd-add-btn" onClick={demander} disabled={demandeEnCours}>
+          <button type="button" className="bmd-add-btn" onClick={demander} disabled={demandeEnCours || !controleFait}
+            title={!controleFait ? t("Faites d'abord le contrôle de l'équipement") : undefined}>
             <RotateCw size={16} /> {demandeEnCours ? t("Envoi…") : t("Demander la remise en service")}
           </button>
         </div>
       ))}
 
+      <Modale ouvert={showForm} onFermer={fermerForm} taille="lg" className="bmd-modale-sous" icone={Power}
+        titre={editingId ? t("Modifier : remise en service") : t("Remise en service")}>
       {showForm && (
         <BmfFormulaire
           titre={editingId ? t("Modifier la décision") : t("Remise en service")}
@@ -2126,7 +2284,13 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
                 value={form.conforme}
                 onChange={(v) => setForm({ ...form, conforme: v })}
                 options={[
-                  { value: 'true', label: t("Autorisé"), aide: t("Il est conforme et retourne au service"), icon: Power, ton: 'ok' },
+                  {
+                    value: 'true', label: t("Autorisé"), icon: Power, ton: 'ok',
+                    aide: !controleFait ? t("Impossible : contrôle de l'équipement pas encore fait")
+                      : dernierControleNonConforme ? t("Impossible : le dernier contrôle n'est pas conforme")
+                        : t("Il est conforme et retourne au service"),
+                    disabled: !controleFait || dernierControleNonConforme,
+                  },
                   { value: 'false', label: t("Pas encore"), aide: t("Il reste au service technique"), icon: XCircle, ton: 'alert' },
                 ]}
               />
@@ -2134,20 +2298,24 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
           </BmfEtape>
 
           <BmfEtape numero={2} titre={t("L'équipement")}>
-            <BmfChamp label={t("Équipement concerné")} aide={t("Déjà rempli avec l'équipement du bon")} htmlFor="rs-immo">
-              <SearchableSelect
-                id="rs-immo"
-                name="lotArticleImmobilistationId"
-                value={form.lotArticleImmobilistationId}
-                onChange={(e) => setForm({ ...form, lotArticleImmobilistationId: e.target.value })}
-                options={immobilisations}
-                placeholder={t("Tapez un nom...")}
-                emptyMessage={t("Aucun équipement ne correspond")}
-                allowEmpty
-                emptyOptionLabel={t("Aucun")}
-                getValue={(i) => i.id}
-                getLabel={(i) => i.designation || `#${i.id}`}
-              />
+            <BmfChamp label={t("Équipement concerné")} aide={t("Repris automatiquement du bon")} htmlFor="rs-immo">
+              {defaultLotArticleImmobilistationId != null ? (
+                <EquipementDuBon id={defaultLotArticleImmobilistationId} immobilisations={immobilisations} />
+              ) : (
+                <SearchableSelect
+                  id="rs-immo"
+                  name="lotArticleImmobilistationId"
+                  value={form.lotArticleImmobilistationId}
+                  onChange={(e) => setForm({ ...form, lotArticleImmobilistationId: e.target.value })}
+                  options={immobilisations}
+                  placeholder={t("Tapez un nom...")}
+                  emptyMessage={t("Aucun équipement ne correspond")}
+                  allowEmpty
+                  emptyOptionLabel={t("Aucun")}
+                  getValue={(i) => i.id}
+                  getLabel={(i) => i.designation || `#${i.id}`}
+                />
+              )}
             </BmfChamp>
             <BmfChamp label={t("État de l'équipement après")} large>
               <BmfChoix
@@ -2170,6 +2338,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
           <BmfActions enregistrement={saving} label={editingId ? t("Enregistrer les modifications") : t("Enregistrer la décision")} onAnnuler={fermerForm} />
         </BmfFormulaire>
       )}
+      </Modale>
 
       <BmdDataTable
         columns={colonnes}
@@ -2180,6 +2349,10 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
         searchPlaceholder={t("Filtrer par personne, observation...")}
         getSearchText={(d) => [d.autoriseParNom, d.demandeParNom, d.observations, libelleImmo(d.lotArticleImmobilistationId), d.conforme == null ? 'demandée' : d.conforme ? 'autorisée' : 'refusée'].join(' ')}
       />
+      <Modale ouvert={!!selected} onFermer={() => setSelectedId(null)} taille="lg" className="bmd-modale-sous bmd-modale-detail"
+        icone={Power} titre={t("Détail : remise en service")}>
+        {detailJsx}
+      </Modale>
       {modal}
     </div>
   );

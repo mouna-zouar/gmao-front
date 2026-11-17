@@ -396,3 +396,25 @@
   .md-tourne, .md-carte--mise-en-avant, .md-carte--squelette, .md-segment--courant { animation: none; }
   .md-chevron { transition: none; }
 }
+
+/* Annulation par le demandeur */
+.md-bouton--danger { background: #fff; color: #b42318; border-color: #fda29b; }
+.md-bouton--danger:hover:not(:disabled) { background: #fef3f2; border-color: #b42318; color: #912018; }
+.md-annulation { display: flex; flex-direction: column; gap: 8px; }
+.md-annulation p { margin: 0; color: var(--md-ink-soft, #475467); line-height: 1.5; }
+.md-annulation label { font-weight: 600; font-size: 0.9rem; }
+.md-annulation textarea {
+  width: 100%; box-sizing: border-box; padding: 9px 11px; border: 1px solid var(--md-line, #d0d5dd); border-radius: 8px;
+  font: inherit; resize: vertical;
+}
+.md-annulation textarea:focus { outline: none; border-color: var(--md-brand, #0794a4); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.15); }
+.md-annulation__erreur { display: flex; align-items: center; gap: 6px; color: #b42318 !important; font-size: 0.88rem; }
+
+/* Étape dans le tableau : la pastille porte elle-même sa couleur */
+.md-badge--bleu   { --ton: var(--md-bleu);   --ton-wash: var(--md-bleu-wash); }
+.md-badge--indigo { --ton: var(--md-indigo); --ton-wash: var(--md-indigo-wash); }
+.md-badge--ambre  { --ton: var(--md-ambre);  --ton-wash: var(--md-ambre-wash); }
+.md-badge--orange { --ton: var(--md-orange); --ton-wash: var(--md-orange-wash); }
+.md-badge--vert   { --ton: var(--md-vert);   --ton-wash: var(--md-vert-wash); }
+.md-badge--rouge  { --ton: var(--md-rouge);  --ton-wash: var(--md-rouge-wash); }
+.md-badge--gris   { --ton: var(--md-gris);   --ton-wash: var(--md-gris-wash); }

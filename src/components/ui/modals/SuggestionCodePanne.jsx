@@ -34,7 +34,7 @@ const ton = (c) => (c >= 70 ? 'fort' : c >= 40 ? 'moyen' : 'faible');
 
 const SuggestionCodePanne = ({
   description, lotArticleImmobilistationId, reclamationId,
-  codePanneId, codePanneSource, libelleActuel, onChoisir,
+  codePanneId, codePanneSource, libelleActuel, onChoisir, id = 'rcm-code-panne',
 }) => {
   const [codes, setCodes] = useState([]);
   const [resultat, setResultat] = useState(null);
@@ -100,9 +100,8 @@ const SuggestionCodePanne = ({
     <div className="scp">
       <div className="scp-ligne">
         <div className="rm-field scp-champ">
-          <label htmlFor="rcm-code-panne">Code panne</label>
           <select
-            id="rcm-code-panne"
+            id={id}
             value={codePanneId ?? ''}
             onChange={(e) => onChoisir(e.target.value, e.target.value ? 'MANUEL' : '')}
           >
@@ -118,8 +117,8 @@ const SuggestionCodePanne = ({
               </optgroup>
             ))}
           </select>
-          {codePanneId && codePanneSource && SOURCES[codePanneSource] && (
-            <p className="rm-hint">{SOURCES[codePanneSource]}</p>
+          {codePanneId && codePanneSource && codePanneSource !== 'MANUEL' && SOURCES[codePanneSource] && (
+            <p className="scp-source">{SOURCES[codePanneSource]}</p>
           )}
         </div>
       </div>

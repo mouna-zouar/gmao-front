@@ -4,10 +4,11 @@ import ModaleFormulaire from '../../commun/ModaleFormulaire';
 import personnelService from '../../../services/personnelService';
 import { commePage, obtenirArticles, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import authService from '../../../services/Authservice';
-import serviceService from '../../../services/Serviceservice';
 import parametreService from '../../../services/parametreService';
 import { SOURCES_INFORMATION } from '../../../constants/FicheIntervention';
 import { t } from '../../../i18n';
+import { champLieu } from '../../../services/lieuxCache';
+import ChoixGammeCreation, { etapesEnTaches } from './ChoixGammeCreation';
 import {
   AssistantDiagnostic, ChoixTypeEntretien, ListeCommentaires, ListeIntervenants, ListeTaches, StockEquipement,
 } from './BonMaintenanceSaisie';
@@ -37,7 +38,7 @@ function maintenant() {
 
 const SECTIONS = [
   { cle: 'general', label: 'Général', icone: FileText, description: "Titre, description, niveau d'urgence et type d'entretien" },
-  { cle: 'affectation', label: 'Affectation', icone: MapPin, description: 'Service, équipement et dates' },
+  { cle: 'affectation', label: 'Affectation', icone: MapPin, description: 'Lieu, équipement et dates' },
   { cle: 'diagnostic', label: 'Diagnostic', icone: Brain, description: "Assistant basé sur l'historique des interventions, puis cause, effet et remède" },
   { cle: 'intervenants', label: 'Intervenants', icone: Users, creation: true, description: 'Techniciens et sous-traitants affectés' },
   { cle: 'taches', label: 'Tâches', icone: ClipboardList, creation: true, description: 'Opérations prévues pour cette intervention' },
@@ -63,15 +64,15 @@ function champs(listes) {
       rendu: ({ valeur, changer }) => <ChoixTypeEntretien valeur={valeur} changer={changer} /> },
     { nom: 'arretOblig', label: '', type: 'case', section: 'general', largeur: 'pleine',
       texteCase: "Arrêt obligatoire de l'équipement", aide: "L'équipement sera immobilisé pendant l'intervention." },
-    // ── Affectation : le service limite les équipements proposés, l'équipement choisi remplit le service ──
-    { nom: 'serviceId', label: 'Service', type: 'recherche', section: 'affectation', largeur: 'pleine',
-      chargerOptions: () => serviceService.getAll(0, 200).then((d) => d?.content ?? d ?? []), cleOptions: 'bon-services',
-      optionLabel: (s) => s.description || s.code || `Service #${s.id}`,
-      optionVide: '— Aucun —', libelleVers: 'serviceNom', placeholder: 'Rechercher un service...' },
+    // ── Affectation : le lieu limite les équipements proposés ; le service (non affiché) est déduit du lieu par le serveur ──
+    { nom: 'serviceId', cache: true },
     { nom: 'serviceNom', cache: true, envoyer: false },
+    champLieu({ section: 'affectation', largeur: 'pleine' }),
     { nom: 'lotArticleImmobilistationId', label: 'Équipement', type: 'equipement', section: 'affectation', largeur: 'pleine',
-      service: 'serviceId', serviceLibelle: 'serviceNom',
+      lieu: 'lieuId',
       aide: 'Tapez le nom, la marque, le n° de série ou le code-barre, ou scannez l’étiquette.' },
+    // Gamme choisie à l'étape « Tâches » : trace gardée sur le bon (les tâches arrivent par la liste)
+    { nom: 'gammeId', cache: true, creation: true, transformer: (v) => (v === '' || v == null ? null : Number(v)) },
     { nom: 'stock', label: '', type: 'personnalise', section: 'affectation', largeur: 'pleine', envoyer: false,
       visible: (v) => !!v.lotArticleImmobilistationId,
       rendu: ({ valeurs }) => <StockEquipement equipementId={valeurs.lotArticleImmobilistationId} /> },
@@ -94,8 +95,13 @@ function champs(listes) {
           techniciens={techniciens} personnels={personnels} prestataires={prestataires} chargement={chargement} />
       ) },
     { nom: 'taches', label: '', type: 'personnalise', section: 'taches', largeur: 'pleine', creation: true, envoyer: false, defaut: [],
-      rendu: ({ valeur, changer, valeurs }) => (
-        <ListeTaches valeur={valeur} changer={changer} intervenants={valeurs.intervenants} articles={articles} prestataires={prestataires} chargement={chargement} />
+      rendu: ({ valeur, changer, valeurs, changerChamp }) => (
+        <>
+          <ChoixGammeCreation equipementId={valeurs.lotArticleImmobilistationId} gammeId={valeurs.gammeId}
+            onAppliquer={(g) => { changer([...(valeur || []).filter((x) => !x._gamme), ...etapesEnTaches(g)]); changerChamp('gammeId', String(g.id)); }}
+            onRetirer={() => { changer((valeur || []).filter((x) => !x._gamme)); changerChamp('gammeId', ''); }} />
+          <ListeTaches valeur={valeur} changer={changer} intervenants={valeurs.intervenants} articles={articles} prestataires={prestataires} chargement={chargement} />
+        </>
       ) },
     { nom: 'commentaires', label: '', type: 'personnalise', section: 'commentaires', largeur: 'pleine', creation: true, envoyer: false, defaut: [],
       rendu: ({ valeur, changer }) => <ListeCommentaires valeur={valeur} changer={changer} /> },
@@ -108,7 +114,7 @@ function enfants(v) {
   const sansId = (l) => (l || []).map(({ _id, ...reste }) => reste);
   return {
     taches: sansId(v.taches).map((x) => ({
-      designation: x.designation.trim(), ordre: nombre(x.ordre), dateDebut: date(x.dateDebut), dateFin: date(x.dateFin),
+      designation: x.designation.trim(), nom: x.nom || null, ordre: nombre(x.ordre), dateDebut: date(x.dateDebut), dateFin: date(x.dateFin),
       prestataireArticlesId: nombre(x.prestataireArticlesId), qte: nombre(x.qte), sousTraitantId: nombre(x.sousTraitantId),
     })),
     intervenants: sansId(v.intervenants).map((i) => ({

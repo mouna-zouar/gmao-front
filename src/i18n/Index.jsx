@@ -61,6 +61,14 @@ export function localePdf() {
 
 // Pluriels français de base (les dictionnaires arabe et anglais définissent leurs propres formes)
 const PLURIELS_FR = {
+  "étape": { one: "{n} étape", other: "{n} étapes" },
+  "tâche ajoutée": { one: "{n} tâche ajoutée", other: "{n} tâches ajoutées" },
+  "équipement à ranger": { one: "{n} équipement à ranger", other: "{n} équipements à ranger" },
+  "équipement déplacé": { one: "{n} équipement déplacé.", other: "{n} équipements déplacés." },
+  "équipement rangé": { one: "{n} équipement rangé.", other: "{n} équipements rangés." },
+  "équipement à l’arrêt": { one: "{n} équipement à l’arrêt", other: "{n} équipements à l’arrêt" },
+  "service ajouté": { one: "{n} service ajouté.", other: "{n} services ajoutés." },
+  "sous-ensemble": { one: "{n} sous-ensemble", other: "{n} sous-ensembles" },
   'événement': { one: '{n} événement', other: '{n} événements' },
   personne: { one: '{n} personne', other: '{n} personnes' },
   'amende affichée': { one: '{n} amende affichée', other: '{n} amendes affichées' },

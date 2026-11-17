@@ -1,0 +1,9 @@
+/* Filtre « lieu » dans l'en-tête des écrans (tableau de bord, coûts, disponibilité) */
+.fl-select {
+  height: 36px; max-width: 240px; padding: 0 30px 0 12px; border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 10px;
+  background: var(--g-blanc, #fff); color: var(--g-slate-700, #334155); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.fl-select:focus-visible { outline: 2px solid var(--g-brand-500, #0794a4); outline-offset: 1px; }
+.fl-select.leq-filtre-actif { border-color: var(--g-brand-500, #0794a4); color: var(--g-brand-800, #066d79); background: #e8f6f7; }
+.fl-liste { max-width: 190px; text-overflow: ellipsis; }
+.fl-groupe { flex: 0 0 auto !important; min-width: 0 !important; }

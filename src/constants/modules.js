@@ -2,7 +2,7 @@ import {
     Activity, Boxes, BrainCircuit, CalendarSync, Calculator, CalendarCheck, CalendarDays, CalendarRange, Car, ChartColumn,
     ClipboardList, FolderKanban, Fuel, Gauge, GraduationCap, House, IdCard, LayoutDashboard, ListChecks, MapPin,
     MessageSquareWarning, MonitorDot, Navigation, Receipt, Route, Settings, ShieldAlert, SlidersHorizontal, Table2,
-    Timer, TrendingUp, TriangleAlert, UserCheck, UserCog, UserRound, Wrench,
+    Timer, TrendingUp, TriangleAlert, UserCheck, UserCog, UserRound, Wrench, ListOrdered,
 } from 'lucide-react';
 
 /*
@@ -36,6 +36,7 @@ export const ICONES_MODULES = {
     parametresSysteme: SlidersHorizontal,
     tablesParametrage: Table2,
     referentielTaches: ListChecks,
+    gammes: ListOrdered,
     compteurs: Gauge,
 
     /* Parc auto */

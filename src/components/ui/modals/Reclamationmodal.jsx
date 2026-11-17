@@ -3,10 +3,11 @@ import { AlertCircle, ClipboardCheck, FileText, ThumbsUp, Wrench } from 'lucide-
 import ModaleFormulaire from '../../commun/ModaleFormulaire';
 import SuggestionCodePanne from './SuggestionCodePanne';
 import VerificationsReclamation, { manqueVerifications, problemeRegle, reponsesChecklist } from './VerificationsReclamation';
-import serviceService from '../../../services/Serviceservice';
 import authService from '../../../services/Authservice';
 import parametreService from '../../../services/parametreService';
 import { SOURCES_INFORMATION, optionsTypeEntretien } from '../../../constants/FicheIntervention';
+import { champLieu } from '../../../services/lieuxCache';
+import { t } from '../../../i18n';
 
 /*
  * Fenêtre « Nouvelle réclamation » / « Modifier la réclamation », décrite par ses champs
@@ -32,28 +33,30 @@ const SECTIONS = [
 
 function champs(reclamation) {
   const liste = [
-    // ── Équipement (création) ──
+    // ── Lieu puis équipement (création) : un lieu seul suffit pour un problème sans équipement précis ──
+    champLieu({ creation: true, section: 'equipement', largeur: 'pleine' }),
     {
-      nom: 'lotArticleImmobilistationId', label: 'Équipement', type: 'equipement', requis: true, creation: true,
-      section: 'equipement', largeur: 'pleine', messageRequis: 'Choisis l’équipement concerné pour continuer.', autoFocus: true,
-      service: 'serviceId', serviceLibelle: 'serviceNom',
+      nom: 'lotArticleImmobilistationId', label: 'Équipement', type: 'equipement', creation: true,
+      section: 'equipement', largeur: 'pleine', autoFocus: true,
+      valider: (v, valeurs) => (!v && !valeurs.lieuId ? t('Choisis l’équipement concerné ou, à défaut, le lieu du problème.') : null),
+      lieu: 'lieuId',
       aide: 'Tapez le nom, la marque, le n° de série ou le code-barre, ou scannez l’étiquette. Le bon de maintenance sera créé pour cet équipement à la prise en charge.',
     },
     // ── Vérifications (création) : réponses envoyées en « checklist » ──
     {
       nom: 'checklist', label: '', type: 'personnalise', creation: true, section: 'verifications', largeur: 'pleine', defaut: {},
-      rendu: ({ valeur, changer, valeurs }) => (
-        <VerificationsReclamation equipementId={valeurs.lotArticleImmobilistationId} valeur={valeur} onChange={changer} />
-      ),
-      valider: (v, valeurs) => manqueVerifications(v, valeurs.lotArticleImmobilistationId),
+      rendu: ({ valeur, changer, valeurs }) => (!valeurs.lotArticleImmobilistationId && valeurs.lieuId
+        ? <p className="vr-vide">{t('Pas de vérification : la réclamation porte sur un lieu, sans équipement précis.')}</p>
+        : <VerificationsReclamation equipementId={valeurs.lotArticleImmobilistationId} valeur={valeur} onChange={changer} />),
+      valider: (v, valeurs) => (!valeurs.lotArticleImmobilistationId && valeurs.lieuId ? null : manqueVerifications(v, valeurs.lotArticleImmobilistationId)),
       transformer: (v) => reponsesChecklist(v),
     },
-    // ── Description ──
     { nom: 'description', label: 'Description', type: 'zone', requis: true, section: 'general', largeur: 'pleine', lignes: 4, autoFocus: true, placeholder: 'Décrivez le problème rencontré...' },
     {
       nom: 'codePanneId', label: 'Code panne', type: 'personnalise', section: 'general', largeur: 'pleine',
-      rendu: ({ valeur, valeurs, changerChamp }) => (
+      rendu: ({ valeur, valeurs, changerChamp, id }) => (
         <SuggestionCodePanne
+          id={id}
           description={valeurs.description}
           lotArticleImmobilistationId={valeurs.lotArticleImmobilistationId || reclamation?.lotArticleImmobilistationId}
           reclamationId={reclamation?.id ?? null}
@@ -72,14 +75,8 @@ function champs(reclamation) {
     // Prestataire : vient des paramètres système (non affiché)
     { nom: 'prestataireId', cache: true },
     { nom: 'prestataireNom', cache: true },
-    {
-      nom: 'serviceId', label: 'Service', type: 'recherche', section: 'general',
-      chargerOptions: () => serviceService.getAll(0, 200), cleOptions: 'reclamation-services',
-      optionLabel: (s) => s.description || s.code || `Service #${s.id}`,
-      optionAide: (s) => (s.code && s.description ? `Code : ${s.code}` : null),
-      filtrerOptions: (l, v) => (v.prestataireId ? l.filter((s) => s.prestataireId == null || String(s.prestataireId) === String(v.prestataireId)) : l),
-      viderSiAbsent: true, libelleVers: 'serviceNom', placeholder: 'Rechercher un service...',
-    },
+    // Service : non affiché, déduit du lieu (ou de l'équipement) par le serveur ; gardé tel quel en modification
+    { nom: 'serviceId', cache: true },
     { nom: 'serviceNom', cache: true },
     // ── Classification (avec la description) ──
     { nom: 'criticite', label: 'Criticité', type: 'liste', section: 'general', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
@@ -87,15 +84,6 @@ function champs(reclamation) {
     { nom: 'type', label: 'Type d’entretien', type: 'liste', section: 'general', options: (v) => optionsTypeEntretien(v.type), optionVide: '— Non renseigné —', traduireOptions: true },
     { nom: 'sourceInformation', label: 'Source de l’information', type: 'liste', section: 'general', options: SOURCES_INFORMATION, optionVide: '— Non renseigné —', traduireOptions: true },
   ];
-  // Création : le service se choisit avant l'équipement (la liste des équipements suit ce service)
-  if (!reclamation) {
-    const i = liste.findIndex((c) => c.nom === 'serviceId');
-    const j = liste.findIndex((c) => c.nom === 'lotArticleImmobilistationId');
-    if (i > j && j >= 0) {
-      const [service] = liste.splice(i, 1);
-      liste.splice(j, 0, { ...service, section: 'equipement', largeur: 'pleine' });
-    }
-  }
   return liste;
 }
 

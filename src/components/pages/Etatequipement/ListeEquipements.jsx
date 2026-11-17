@@ -3,15 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight, CircleCheck, CirclePause, CircleX, Gauge, LoaderCircle, Printer, QrCode, RefreshCw, Settings, Wrench, X,
 } from 'lucide-react';
-import { PageListe, Badge, Modale } from '../../commun';
+import { PageListe, Badge } from '../../commun';
 import equipementService from '../../../services/equipementService';
 import etatEquipementService from '../../../services/Etatequipementservice';
 import disponibiliteService from '../../../services/Disponibiliteservice ';
 import risqueService from '../../../services/Risqueservice';
+import serviceService from '../../../services/Serviceservice';
+import { obtenirEquipements } from '../../../store/referentiels';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, CRITICITE_LABELS, criticiteHex } from '../../../constants/Criticite';
 import ScannerQR from '../Equipements/ScannerQR';
 import { imprimerEtiquettes } from '../Equipements/qrEtiquettes';
-import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
+import FiltreFamilleArbre, { filtrerParFamille } from './FiltreFamilleArbre';
 import { t, tp, locale } from '../../../i18n';
 import './ListeEquipements.css';
 
@@ -40,7 +42,7 @@ const joursDepuis = (iso) => {
 };
 const parId = (liste) => Object.fromEntries((liste ?? []).map((x) => [x.lotArticleImmobilistationId, x]));
 
-export default function ListeEquipements() {
+export default function ListeEquipements({ onPreventifs }) {
   const navigate = useNavigate();
   const [etats, setEtats] = useState([]);
   const [dispos, setDispos] = useState({});
@@ -51,12 +53,28 @@ export default function ListeEquipements() {
   const [message, setMessage] = useState(null);
   const [recalcul, setRecalcul] = useState(false);
   const [filtreEtat, setFiltreEtat] = useState('TOUS');
-  const [filtreFamille, setFiltreFamille] = useState('');
+  // null | { type: 'famille' | 'article' | 'aucune', ... } (voir FiltreFamilleArbre)
+  const [filtreFamille, setFiltreFamille] = useState(null);
   const [filtreIp, setFiltreIp] = useState('TOUS');
+  // Service de chaque équipement (LotArticle.ServiceID dans Cubix) et noms des services
+  const [filtreService, setFiltreService] = useState(''); // '' = tous, 'AUCUN' = sans service, sinon l'ID
+  const [serviceDe, setServiceDe] = useState({}); // { lotArticleImmobilistationId: serviceId }
+  const [nomsServices, setNomsServices] = useState({}); // { serviceId: nom }
+  useEffect(() => {
+    let annule = false;
+    Promise.all([
+      obtenirEquipements().catch(() => []),
+      serviceService.getAll(0, 500).then((d) => d?.content ?? d ?? []).catch(() => []),
+    ]).then(([equipements, services]) => {
+      if (annule) return;
+      setServiceDe(Object.fromEntries((equipements || []).filter((e) => e.serviceId != null).map((e) => [String(e.id), String(e.serviceId)])));
+      setNomsServices(Object.fromEntries((services || []).map((s) => [String(s.id), s.description || s.code || t('Service #{id}', { id: s.id })])));
+    });
+    return () => { annule = true; };
+  }, []);
   const [etiquettes, setEtiquettes] = useState(() => new Map());
   const [impression, setImpression] = useState(false);
   const [scanner, setScanner] = useState(false);
-  const [preventifs, setPreventifs] = useState(false);
   const [enregistrement, setEnregistrement] = useState(null);
 
   const charger = useCallback(async () => {
@@ -141,16 +159,21 @@ export default function ListeEquipements() {
     return [...m.values()];
   }, [etats]);
 
-  const familles = useMemo(() => {
+  const serviceId = (e) => serviceDe[String(e.lotArticleImmobilistationId)] ?? null;
+  const nomService = (e) => { const s = serviceId(e); return s == null ? '' : (nomsServices[s] || t('Service #{id}', { id: s })); };
+  // Services présents dans le parc, avec leur nombre d'équipements
+  const services = useMemo(() => {
     const m = new Map();
+    let sans = 0;
     uniques.forEach((e) => {
-      const cle = e.familleId == null ? 'AUCUNE' : String(e.familleId);
-      const f = m.get(cle) || { cle, nom: e.familleId == null ? t('Sans famille') : (e.familleNom || t('Famille #{id}', { id: cle })), n: 0 };
+      const s = serviceDe[String(e.lotArticleImmobilistationId)];
+      if (s == null) { sans += 1; return; }
+      const f = m.get(s) || { id: s, nom: nomsServices[s] || t('Service #{id}', { id: s }), n: 0 };
       f.n += 1;
-      m.set(cle, f);
+      m.set(s, f);
     });
-    return [...m.values()].sort((a, b) => b.n - a.n);
-  }, [uniques]);
+    return { liste: [...m.values()].sort((a, b) => a.nom.localeCompare(b.nom, locale())), sans };
+  }, [uniques, serviceDe, nomsServices]);
 
   const aIp = (e) => !!connexions[e.lotArticleImmobilistationId];
   const horsLigne = (e) => !!connexions[e.lotArticleImmobilistationId]?.horsLigneDepuis;
@@ -159,10 +182,10 @@ export default function ListeEquipements() {
 
   const lignes = uniques
     .filter((e) => filtreEtat === 'TOUS' || e.etatActuel === filtreEtat)
-    .filter((e) => !filtreFamille || (filtreFamille === 'AUCUNE' ? e.familleId == null : String(e.familleId) === filtreFamille))
+    .filter((e) => filtrerParFamille(filtreFamille, e))
+    .filter((e) => !filtreService || (filtreService === 'AUCUN' ? serviceId(e) == null : serviceId(e) === filtreService))
     .filter((e) => filtreIp === 'TOUS' || (filtreIp === 'AVEC' && aIp(e)) || (filtreIp === 'SANS' && !aIp(e)) || (filtreIp === 'HORS_LIGNE' && horsLigne(e)));
 
-  const compte = (cle) => uniques.filter((e) => e.etatActuel === cle).length;
   const total = uniques.length;
 
   const colonnes = useMemo(() => [
@@ -196,6 +219,10 @@ export default function ListeEquipements() {
     {
       cle: 'famille', label: 'Famille', filtre: 'liste', valeur: (e) => e.familleNom || '',
       rendu: (e) => (e.familleNom ? <Badge ton="gris">{e.familleNom}</Badge> : <span className="cl-tiret">—</span>),
+    },
+    {
+      cle: 'service', label: 'Service', filtre: 'liste', valeur: (e) => nomService(e),
+      rendu: (e) => (nomService(e) ? <span className="leq-doux">{nomService(e)}</span> : <span className="cl-tiret">—</span>),
     },
     {
       cle: 'dispo', label: 'Disponibilité', valeur: (e) => dispos[e.lotArticleImmobilistationId]?.tauxDisponibilitePct ?? null,
@@ -239,22 +266,16 @@ export default function ListeEquipements() {
     {
       cle: 'bon', label: 'Dernier bon', filtre: 'texte', visible: false, valeur: (e) => e.bonMaintenanceReferenceNum || '',
     },
-  ], [etiquettes, connexions, dispos, risques, enregistrement]); // eslint-disable-line react-hooks/exhaustive-deps
+  ], [etiquettes, connexions, dispos, risques, enregistrement, serviceDe, nomsServices]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const basculerEtat = (cle) => setFiltreEtat((v) => (v === cle ? 'TOUS' : cle));
 
   return (
     <PageListe
       classe="leq-page"
       icone={Gauge}
       titre={t('Équipements')}
-      stats={[
-        { label: t('Tous les équipements'), valeur: total.toLocaleString(locale()), icone: Gauge, actif: filtreEtat === 'TOUS', onClick: () => setFiltreEtat('TOUS') },
-        ...Object.entries(ETATS).map(([cle, d]) => ({
-          label: t(d.label), valeur: compte(cle).toLocaleString(locale()), ton: d.ton, icone: d.icone,
-          actif: filtreEtat === cle, onClick: () => basculerEtat(cle),
-        })),
-      ]}
+      sansEntete
+      // Ni titre ni pastilles d'état : l'état se filtre dans la colonne « État » du tableau
       colonnes={colonnes}
       lignes={lignes}
       cleLigne="lotArticleImmobilistationId"
@@ -270,15 +291,20 @@ export default function ListeEquipements() {
           aide: etiquettes.size ? undefined : t('Cochez des équipements dans la colonne « Étiquette »'), onClick: imprimer,
         },
         ...(etiquettes.size ? [{ label: t('Vider les étiquettes'), icone: X, classe: 'cl-action--gris', onClick: () => setEtiquettes(new Map()) }] : []),
-        { label: t('Paramètres préventifs'), icone: Settings, classe: 'cl-action--violet', onClick: () => setPreventifs(true) },
+        ...(onPreventifs ? [{ label: t('Paramètres préventifs'), icone: Settings, classe: 'cl-action--violet', onClick: onPreventifs }] : []),
         { label: recalcul ? t('Recalcul en cours') : t('Recalculer tout'), icone: recalcul ? LoaderCircle : RefreshCw, classe: 'cl-action--orange', desactive: recalcul, onClick: recalculerTout },
       ]}
       filtres={(
         <>
-          <select value={filtreFamille} onChange={(ev) => setFiltreFamille(ev.target.value)} aria-label={t('Filtrer par famille')}>
-            <option value="">{t('Toutes les familles')} ({total})</option>
-            {familles.map((f) => <option key={f.cle} value={f.cle}>{f.nom} ({f.n})</option>)}
-          </select>
+          <FiltreFamilleArbre equipements={uniques} valeur={filtreFamille} onChange={setFiltreFamille} />
+          {(services.liste.length > 0 || filtreService) && (
+            <select value={filtreService} onChange={(ev) => setFiltreService(ev.target.value)} aria-label={t('Filtrer par service')}
+              className={filtreService ? 'leq-filtre-actif' : undefined}>
+              <option value="">{t('Tous les services')} ({total})</option>
+              {services.liste.map((s) => <option key={s.id} value={s.id}>{s.nom} ({s.n})</option>)}
+              {services.sans > 0 && <option value="AUCUN">{t('Sans service')} ({services.sans})</option>}
+            </select>
+          )}
           <select value={filtreIp} onChange={(ev) => setFiltreIp(ev.target.value)} aria-label={t('Filtrer par adresse IP')}>
             <option value="TOUS">{t('Adresse IP : toutes')}</option>
             <option value="AVEC">{t('Avec adresse IP')} ({nbIp})</option>
@@ -299,7 +325,14 @@ export default function ListeEquipements() {
       triInitial={{ cle: 'nom', sens: 'asc' }}
       filtresImpression={[
         { label: t('État'), valeur: filtreEtat === 'TOUS' ? '' : t(ETATS[filtreEtat].label) },
-        { label: t('Famille'), valeur: familles.find((f) => f.cle === filtreFamille)?.nom || '' },
+        {
+          label: t('Service'),
+          valeur: !filtreService ? '' : filtreService === 'AUCUN' ? t('Sans service') : (nomsServices[filtreService] || `#${filtreService}`),
+        },
+        {
+          label: filtreFamille?.type === 'article' ? t('Article') : t('Famille'),
+          valeur: !filtreFamille ? '' : filtreFamille.type === 'aucune' ? t('Sans famille') : (filtreFamille.nom || `#${filtreFamille.id}`),
+        },
       ]}
       vide={{
         aucun: t("Aucun état calculé pour le moment — clique sur \"Recalculer tout\" pour initialiser."),
@@ -307,9 +340,6 @@ export default function ListeEquipements() {
       }}
     >
       {scanner && <ScannerQR onClose={() => setScanner(false)} />}
-      <Modale ouvert={preventifs} onFermer={() => setPreventifs(false)} icone={Settings} titre={t('Paramètres préventifs')} taille="xl">
-        {preventifs && <EquipementMaintenanceTypesSettings />}
-      </Modale>
     </PageListe>
   );
 }

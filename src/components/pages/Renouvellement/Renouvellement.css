@@ -152,18 +152,6 @@ th.rv-num { text-align: end; }
 .rv-point { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .rv-legende__note { color: var(--g-texte-discret); }
 .rv-barre__n { fill: var(--g-texte); font: 700 11px var(--g-police); font-variant-numeric: tabular-nums; }
-.rv-repartition { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.rv-repartition button {
-  display: flex; flex-direction: column; gap: 5px; width: calc(100% + 16px); margin-inline: -8px; padding: 7px 8px;
-  border: 0; border-radius: 8px; background: none; cursor: pointer; text-align: start; font-family: var(--g-police);
-}
-.rv-repartition button:hover { background: var(--g-slate-50); }
-.rv-repartition button:focus-visible { outline: 2px solid var(--g-marque); }
-.rv-repartition__tete { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.rv-repartition__tete b { font-size: 0.86rem; font-variant-numeric: tabular-nums; color: var(--g-texte); }
-.rv-repartition__piste { height: 7px; border-radius: 4px; background: var(--g-slate-100); overflow: hidden; }
-.rv-repartition__piste > span { display: block; height: 100%; border-radius: 4px; }
-.rv-repartition small { font-size: 0.72rem; color: var(--g-texte-secondaire); }
 .rv-familles li { padding: 6px 0; }
 .rv-familles li + li { border-top: 1px solid var(--g-slate-100); }
 .rv-familles__ligne { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; }
@@ -197,3 +185,77 @@ th.rv-num { text-align: end; }
 @media (max-width: 640px) {
   .rv-panneau__corps.sv-sans-marge { margin-inline: -16px; margin-bottom: -16px; }
 }
+
+/* ==========================================================================
+   PLAN DE RENOUVELLEMENT — v2 : style sobre
+   Barre haute (onglets + calcul), bande d'indicateurs, panneaux légers
+   ========================================================================== */
+.rv-page.rv-v2 { gap: 14px; }
+
+/* Barre haute et bande d’indicateurs : styles communs dans Supervision.css */
+
+/* Panneaux plus légers */
+.rv-v2 .tb-carte.rv-panneau {
+  background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 12px;
+  box-shadow: none; padding: 14px 16px;
+}
+.rv-v2 .rv-panneau .tb-carte-tete { margin-bottom: 10px; padding: 0; border: 0; }
+.rv-v2 .rv-panneau .tb-carte-tete h3 { font-size: 0.92rem; font-weight: 700; color: var(--g-slate-900, #0f172a); letter-spacing: 0; }
+.rv-v2 .rv-panneau .tb-pastille { background: var(--g-slate-50, #f8fafc); border: 1px solid var(--g-slate-200, #e2e8f0); color: var(--g-slate-600, #475569); font-weight: 600; }
+.rv-v2 .sv-grille-panneaux { gap: 14px; }
+
+/* Classement : en-têtes et lignes plus aérés */
+.rv-v2 .rv-table th { background: var(--g-slate-50, #f8fafc); color: var(--g-slate-500, #64748b); font-size: 0.74rem; padding: 10px 12px; }
+.rv-v2 .rv-table td { padding: 11px 12px; }
+.rv-v2 .rv-table tbody tr:hover td { background: var(--g-slate-50, #f8fafc); }
+
+
+/* ---------- Âge et coût de maintenance : barres + courbe (couleurs de la marque) ---------- */
+.rv-combo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.rv-combo svg { display: block; overflow: visible; }
+
+.rv-combo__resume { list-style: none; margin: 0 0 4px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.rv-combo__resume li {
+  display: flex; flex-direction: column; gap: 2px; padding: 7px 10px; border-radius: 10px; min-width: 0;
+  background: var(--g-marque-clair, #e9f8fa); border-left: 3px solid var(--g-marque, #0794a4);
+}
+.rv-combo__resume span { font-size: var(--g-texte-xs, 0.75rem); color: var(--g-ink-600, #4b6670); }
+.rv-combo__resume b { font-size: 1.05rem; font-weight: 800; color: var(--g-ink-900, #12303a); font-variant-numeric: tabular-nums; }
+.rv-combo__resume small { font-size: var(--g-texte-xs, 0.75rem); font-weight: 500; color: var(--g-ink-400, #7f969d); }
+.rv-combo__resume li.is-danger { background: var(--g-danger-fond, #fef2f2); border-left-color: var(--g-danger, #dc2626); }
+.rv-combo__resume li.is-danger b { color: var(--g-danger-texte, #b91c1c); }
+.rv-combo__resume li.is-attention { background: var(--g-attention-fond, #fffbeb); border-left-color: var(--g-attention, #f59e0b); }
+.rv-combo__resume li.is-attention b { color: var(--g-attention-texte, #b45309); }
+
+.rv-combo__grille { stroke: var(--g-ink-50, #e8eef0); stroke-dasharray: 3 4; }
+.rv-combo__base { stroke: var(--g-ink-100, #d7e3e5); }
+.rv-combo__axe { font-size: 11px; fill: var(--g-ink-400, #7f969d); font-variant-numeric: tabular-nums; }
+.rv-combo__axe--p { fill: var(--g-brand-750, #05606b); }
+.rv-combo__zone { fill: transparent; }
+.rv-combo__col:hover .rv-combo__zone { fill: var(--g-brand-25, #f3fcfd); }
+
+/* Teinte de la marque qui fonce avec l'âge ; rouge au-delà de la durée de vie */
+.rv-combo__barre { transition: filter 0.15s; }
+.rv-combo__col--0 .rv-combo__barre { fill: var(--g-brand-100, #d5f0f3); }
+.rv-combo__col--1 .rv-combo__barre { fill: var(--g-brand-200, #a8e0e6); }
+.rv-combo__col--2 .rv-combo__barre { fill: var(--g-brand-400, #3dbcc9); }
+.rv-combo__col.is-depasse .rv-combo__barre { fill: var(--g-red-300, #fca5a5); }
+.rv-combo__col:hover .rv-combo__barre { filter: brightness(0.94) saturate(1.15); }
+
+.rv-combo__label { font-size: 12px; font-weight: 700; fill: var(--g-ink-900, #12303a); }
+.rv-combo__n { font-size: 11.5px; font-weight: 600; fill: var(--g-ink-650, #45636a); font-variant-numeric: tabular-nums; }
+.rv-combo__age { font-size: 11px; fill: var(--g-ink-400, #7f969d); font-variant-numeric: tabular-nums; }
+.rv-combo__col.is-depasse .rv-combo__label,
+.rv-combo__col.is-depasse .rv-combo__n { fill: var(--g-danger, #dc2626); }
+
+.rv-combo__ligne { fill: none; stroke: var(--g-brand-750, #05606b); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; pointer-events: none; }
+.rv-combo__pt circle { fill: var(--g-blanc, #fff); stroke: var(--g-brand-750, #05606b); stroke-width: 2.5; }
+.rv-combo__pt text { font-size: 11.5px; font-weight: 800; fill: var(--g-brand-750, #05606b); paint-order: stroke; stroke: var(--g-blanc, #fff); stroke-width: 3px; }
+.rv-combo__pt.is-haut circle { stroke: var(--g-danger, #dc2626); }
+.rv-combo__pt.is-haut text { fill: var(--g-danger, #dc2626); }
+
+.rv-combo__leg-barre { display: inline-block; width: 12px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px;
+  background: linear-gradient(90deg, var(--g-brand-100, #d5f0f3), var(--g-brand-400, #3dbcc9)); }
+.rv-combo__leg-ligne { display: inline-block; width: 16px; height: 0; border-top: 2.5px solid var(--g-brand-750, #05606b); margin-right: 6px; vertical-align: 3px; }
+
+

@@ -1,418 +1,317 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import planningService from '../../../services/planningService';
+import Pagination from '../../commun/Pagination';
 import './PlanningBonMaintenance.css';
-import { t, tp, locale } from '../../../i18n';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { t, locale } from '../../../i18n';
+import {
+  CalendarDays, ChevronLeft, ChevronRight, ClipboardList, ListChecks, LoaderCircle, Maximize2, Search, Users, X, ZoomIn, ZoomOut,
+} from 'lucide-react';
 
-const MODE_OPTIONS = [
-  { value: 'BON_MAINTENANCE', label: 'Bons de maintenance' },
-  { value: 'INTERVENANT', label: 'Intervenants' },
-  { value: 'TACHE', label: 'Tâches' },
+/*
+ * Planning des bons — frise de type Gantt.
+ * Une ligne par événement (bon, intervenant ou tâche), une barre sur ses jours, colorée par état,
+ * et un trait vertical pour aujourd'hui. Clic sur une ligne : ouvre le bon.
+ */
+
+const MODES = [
+  { value: 'BON_MAINTENANCE', label: 'Bons de maintenance', icone: ClipboardList },
+  { value: 'INTERVENANT', label: 'Intervenants', icone: Users },
+  { value: 'TACHE', label: 'Tâches', icone: ListChecks },
 ];
 
-const ETAT_LABELS = {
-  1: 'Nouveau',
-  2: 'Suspendu',
-  3: 'En cours',
-  4: 'Effectué',
-  10: 'Annulé',
-};
+const ETATS = [
+  { cle: 1, label: 'Nouveau', classe: 'nouveau' },
+  { cle: 3, label: 'En cours', classe: 'encours' },
+  { cle: 2, label: 'Suspendu', classe: 'suspendu' },
+  { cle: 4, label: 'Effectué', classe: 'effectue' },
+  { cle: 10, label: 'Annulé', classe: 'annule' },
+];
+const ETAT = Object.fromEntries(ETATS.map((e) => [e.cle, e]));
 
-const ETAT_EVENT_CLASS = {
-  1: 'event-etat-nouveau',
-  2: 'event-etat-suspendu',
-  3: 'event-etat-encours',
-  4: 'event-etat-effectue',
-  10: 'event-etat-annule',
-};
+const DUREES = [
+  { cle: 7, label: 'Semaine' },
+  { cle: 14, label: '2 semaines' },
+  { cle: 'mois', label: 'Mois' },
+];
 
-const MAX_VISIBLE_EVENTS = {
-  month: 3,
-  week: 8,
-  day: Infinity,
-};
-
-const formatDateKey = (date) => {
-  if (!date) return '';
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-};
-
-const formatDateLong = (date) =>
-  date.toLocaleDateString(locale(), {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
-// Noms de mois / jours dans la langue courante (ar-TN donne جانفي، فيفري…)
+const JOUR = 24 * 3600 * 1000;
+/* Zoom : multiple de la largeur « ajustée » (toute la période visible sans défilement) */
+const ZOOMS = [1, 1.5, 2, 3, 4, 6, 8];
+/* Largeur approximative d'un libellé (0,74 rem, gras) pour décider s'il tient dans la barre */
+const largeurTexte = (txt) => txt.length * 6.6 + 28;
+const debutJour = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
+const ajouterJours = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const debutSemaine = (d) => { const x = debutJour(d); const j = (x.getDay() + 6) % 7; return ajouterJours(x, -j); }; // lundi
+const cleJour = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const fmt = (d, o) => d.toLocaleDateString(locale(), o);
 const majuscule = (s) => s.charAt(0).toLocaleUpperCase(locale()) + s.slice(1);
-const nomsMois = () => Array.from({ length: 12 }, (_, i) =>
-  majuscule(new Intl.DateTimeFormat(locale(), { month: 'long' }).format(new Date(2000, i, 1))));
-// 2000-01-02 est un dimanche ; format 'short' → DIM / الأحد, 'narrow' → D / ح
-const nomsJours = (format) => Array.from({ length: 7 }, (_, i) =>
-  new Intl.DateTimeFormat(locale(), { weekday: format })
-    .format(new Date(2000, 0, 2 + i))
-    .replace('.', '')
-    .toLocaleUpperCase(locale()));
 
-const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
-const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
-const getStartOfWeek = (date) => {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = d.getDate() - day;
-  return new Date(d.setDate(diff));
-};
+function plage(ancre, duree) {
+  if (duree === 'mois') {
+    const debut = new Date(ancre.getFullYear(), ancre.getMonth(), 1);
+    const fin = new Date(ancre.getFullYear(), ancre.getMonth() + 1, 1);
+    return { debut, fin, nb: Math.round((fin - debut) / JOUR) };
+  }
+  const debut = debutSemaine(ancre);
+  return { debut, fin: ajouterJours(debut, duree), nb: duree };
+}
 
-const PlanningBonMaintenance = ({ onSelectBonMaintenance, onDayClick }) => {
+const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
+  const navigate = useNavigate();
   const [mode, setMode] = useState('BON_MAINTENANCE');
+  const [duree, setDuree] = useState(7);
+  const [ancre, setAncre] = useState(() => new Date());
   const [evenements, setEvenements] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [config, setConfig] = useState(null);
-
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState('month');
-  const [dateFilter, setDateFilter] = useState(formatDateKey(new Date()));
-  const [popover, setPopover] = useState(null);
-
-  useEffect(() => {
-    planningService.findConfig().then(setConfig).catch((err) => {
-      console.warn('Config planning indisponible :', err);
-      setConfig(null);
-    });
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState(null);
+  const [recherche, setRecherche] = useState('');
+  const [etatsMasques, setEtatsMasques] = useState(() => new Set());
+  const [survol, setSurvol] = useState(null);
+  const [zoom, setZoom] = useState(0);
+  const [page, setPage] = useState(0);
+  const [taille, setTaille] = useState(10);
+  const refGantt = useRef(null);
+  const [largeur, setLargeur] = useState(0);
+  useLayoutEffect(() => {
+    const el = refGantt.current;
+    if (!el) return undefined;
+    setLargeur(el.clientWidth);
+    const ro = new ResizeObserver(([e]) => setLargeur(Math.floor(e.contentRect.width)));
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
 
-  useEffect(() => {
-    if (dateFilter) {
-      const parts = dateFilter.split('-');
-      if (parts.length === 3) {
-        const [year, month, day] = parts.map(Number);
-        const newDate = new Date(year, month - 1, day);
-        if (!isNaN(newDate.getTime())) setCurrentDate(newDate);
-      }
-    }
-  }, [dateFilter]);
+  const { debut, fin, nb } = useMemo(() => plage(ancre, duree), [ancre, duree]);
+  const jours = useMemo(() => Array.from({ length: nb }, (_, i) => ajouterJours(debut, i)), [debut, nb]);
 
-  useEffect(() => { setPopover(null); }, [view, mode, currentDate]);
-
-  const calendarDays = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const days = [];
-
-    if (view === 'month') {
-      const daysInMonth = getDaysInMonth(year, month);
-      const firstDay = getFirstDayOfMonth(year, month);
-      const daysInPrevMonth = getDaysInMonth(year, month - 1);
-
-      for (let i = 0; i < firstDay; i++) {
-        const d = new Date(year, month - 1, daysInPrevMonth - firstDay + i + 1);
-        days.push({ date: d, isCurrentMonth: false });
-      }
-      for (let i = 1; i <= daysInMonth; i++) {
-        days.push({ date: new Date(year, month, i), isCurrentMonth: true });
-      }
-      const totalCells = 42;
-      const remaining = totalCells - days.length;
-      for (let i = 1; i <= remaining; i++) {
-        days.push({ date: new Date(year, month + 1, i), isCurrentMonth: false });
-      }
-    } else if (view === 'week') {
-      const start = getStartOfWeek(currentDate);
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(start);
-        d.setDate(d.getDate() + i);
-        days.push({ date: d, isCurrentMonth: d.getMonth() === month });
-      }
-    } else if (view === 'day') {
-      days.push({ date: new Date(currentDate), isCurrentMonth: true });
-    }
-
-    return days;
-  }, [currentDate, view]);
-
-  const load = useCallback(async () => {
-    if (calendarDays.length === 0) return;
-    setLoading(true);
-    setError(null);
+  const charger = useCallback(async () => {
+    setChargement(true);
+    setErreur(null);
     try {
-      const start = new Date(calendarDays[0].date);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(calendarDays[calendarDays.length - 1].date);
-      end.setHours(23, 59, 59, 0);
-
-      const data = await planningService.findEvenements(mode, start, end);
-      setEvenements(data ?? []);
-    } catch (err) {
-      console.error(err);
-      setError(t('Impossible de charger le planning. Vérifie que le serveur est bien lancé.'));
+      const finIncluse = new Date(fin.getTime() - 1000);
+      setEvenements((await planningService.findEvenements(mode, debut, finIncluse)) ?? []);
+    } catch (e) {
+      console.error(e);
+      setErreur(t('Impossible de charger le planning. Vérifie que le serveur est bien lancé.'));
       setEvenements([]);
     } finally {
-      setLoading(false);
+      setChargement(false);
     }
-  }, [mode, calendarDays]);
+  }, [mode, debut, fin]);
+  useEffect(() => { charger(); }, [charger]);
 
-  useEffect(() => { load(); }, [load]);
+  // Lignes : bornées à la période, triées par début
+  const lignes = useMemo(() => evenements
+    .map((ev) => {
+      const d = ev.dateDebut ? new Date(ev.dateDebut) : null;
+      if (!d || Number.isNaN(d.getTime())) return null;
+      let f = ev.dateFin ? new Date(ev.dateFin) : null;
+      if (!f || Number.isNaN(f.getTime()) || f <= d) f = new Date(debutJour(d).getTime() + JOUR); // un jour par défaut
+      return { ...ev, d, f };
+    })
+    .filter((ev) => ev && ev.f > debut && ev.d < fin)
+    .sort((a, b) => a.d - b.d || (a.titre || '').localeCompare(b.titre || '')), [evenements, debut, fin]);
 
-  const getEventsForDate = (date) => {
-    const dateKey = formatDateKey(date);
-    if (!dateKey) return [];
-    return evenements.filter((ev) => {
-      const debut = ev.dateDebut ? new Date(ev.dateDebut) : null;
-      const fin = ev.dateFin ? new Date(ev.dateFin) : debut;
-      if (!debut) return false;
-      const debutKey = formatDateKey(debut);
-      const finKey = formatDateKey(fin || debut);
-      return dateKey >= debutKey && dateKey <= finKey;
-    });
+  const compte = useMemo(() => {
+    const c = {};
+    lignes.forEach((l) => { c[l.etat] = (c[l.etat] || 0) + 1; });
+    return c;
+  }, [lignes]);
+
+  const visibles = useMemo(() => {
+    const q = recherche.trim().toLocaleLowerCase(locale());
+    return lignes.filter((l) => !etatsMasques.has(l.etat) && (!q || (l.titre || `#${l.id}`).toLocaleLowerCase(locale()).includes(q)));
+  }, [lignes, etatsMasques, recherche]);
+
+  // Pagination : 10 lignes par page par défaut ; retour à la première page quand la liste change
+  useEffect(() => { setPage(0); }, [mode, debut, recherche, etatsMasques]);
+  const nbPages = Math.max(1, Math.ceil(visibles.length / taille));
+  const pageCourante = Math.min(page, nbPages - 1);
+  const lignesPage = visibles.slice(pageCourante * taille, (pageCourante + 1) * taille);
+
+  const basculerEtat = (cle) => setEtatsMasques((s) => {
+    const n = new Set(s);
+    if (n.has(cle)) n.delete(cle); else n.add(cle);
+    return n;
+  });
+
+  const deplacer = (sens) => setAncre((a) => {
+    if (duree === 'mois') return new Date(a.getFullYear(), a.getMonth() + sens, 1);
+    return ajouterJours(a, sens * duree);
+  });
+
+  const ouvrir = (ev) => {
+    if (!ev.bonMaintenanceId) return;
+    if (onSelectBonMaintenance) onSelectBonMaintenance(ev.bonMaintenanceId);
+    else navigate(`/bons-maintenance?id=${ev.bonMaintenanceId}`);
   };
 
-  const handlePrev = () => {
-    const newDate = new Date(currentDate);
-    if (view === 'month') newDate.setMonth(newDate.getMonth() - 1);
-    else if (view === 'week') newDate.setDate(newDate.getDate() - 7);
-    else if (view === 'day') newDate.setDate(newDate.getDate() - 1);
-    setCurrentDate(newDate);
-    setDateFilter(formatDateKey(newDate));
+  // Géométrie : colonne des noms + piste (largeur imposée par le zoom, sinon ajustée)
+  const nomPx = largeur && largeur < 900 ? 200 : 320;
+  const ajustePx = largeur ? Math.max(0, largeur - nomPx - 2) / nb : 0;
+  const jourPx = ajustePx * ZOOMS[zoom];
+  const pistePx = jourPx * nb;
+  const zoomPct = Math.round(ZOOMS[zoom] * 100);
+
+  const pos = (date) => Math.max(0, Math.min(100, ((date - debut) / (fin - debut)) * 100));
+  const maintenant = new Date();
+  const posAujourdhui = maintenant >= debut && maintenant < fin ? pos(maintenant) : null;
+  const aujourdhuiCle = cleJour(maintenant);
+
+  // Après un zoom : garder aujourd'hui (ou le début) au centre de la vue
+  useEffect(() => {
+    const el = refGantt.current;
+    if (!el || !largeur) return;
+    const cible = posAujourdhui != null ? (posAujourdhui / 100) * pistePx : 0;
+    el.scrollLeft = Math.max(0, cible - (largeur - nomPx) / 2);
+  }, [zoom, duree]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const titrePeriode = duree === 'mois'
+    ? majuscule(fmt(debut, { month: 'long', year: 'numeric' }))
+    : `${fmt(debut, { day: 'numeric', month: 'short' })} – ${fmt(ajouterJours(fin, -1), { day: 'numeric', month: 'short', year: 'numeric' })}`;
+
+  const dateCourte = (d) => d.toLocaleString(locale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const dureeTexte = (l) => {
+    const j = Math.max(1, Math.round((l.f - l.d) / JOUR));
+    return j > 1 ? t('{n} jours', { n: j }) : t('1 jour');
   };
-
-  const handleNext = () => {
-    const newDate = new Date(currentDate);
-    if (view === 'month') newDate.setMonth(newDate.getMonth() + 1);
-    else if (view === 'week') newDate.setDate(newDate.getDate() + 7);
-    else if (view === 'day') newDate.setDate(newDate.getDate() + 1);
-    setCurrentDate(newDate);
-    setDateFilter(formatDateKey(newDate));
-  };
-
-  const handleToday = () => {
-    const now = new Date();
-    setCurrentDate(now);
-    setDateFilter(formatDateKey(now));
-  };
-
-  const handleDayCellClick = (date) => {
-    if (config?.dayClick && onDayClick) onDayClick(date);
-  };
-
-  const handleEventClick = (e, ev) => {
-    e.stopPropagation();
-    if (onSelectBonMaintenance && ev.bonMaintenanceId) {
-      onSelectBonMaintenance(ev.bonMaintenanceId);
-      setPopover(null);
-    }
-  };
-
-  const handleMoreClick = (e, date, events) => {
-    e.stopPropagation();
-    setPopover({ date, events });
-  };
-
-  const closePopover = () => setPopover(null);
-
-  const monthNames = useMemo(nomsMois, []);
-  const daysOfWeek = useMemo(() => nomsJours('short'), []);
-  const daysOfWeekShort = useMemo(() => nomsJours('narrow'), []);
-
-  const getHeaderText = () => {
-    if (view === 'month') {
-      return `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-    } else if (view === 'week') {
-      const start = getStartOfWeek(currentDate);
-      const end = new Date(start);
-      end.setDate(end.getDate() + 6);
-      return `${start.getDate()} ${monthNames[start.getMonth()]} - ${end.getDate()} ${monthNames[end.getMonth()]} ${currentDate.getFullYear()}`;
-    }
-    return `${currentDate.getDate()} ${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
-  };
-
-  const maxVisible = MAX_VISIBLE_EVENTS[view] ?? 3;
 
   return (
-    <div className="planning-bm-container">
-      <div className="planning-bm-filters-bar">
-        <div className="planning-bm-filter-group">
-          <label>{t('Vue par')}</label>
-          <select value={mode} onChange={(e) => setMode(e.target.value)} className="planning-bm-select">
-            {MODE_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{t(o.label)}</option>
+    <div className="pg-page">
+      {/* Barre haute : modes + période */}
+      <div className="pg-haut">
+        <nav className="pg-onglets" role="tablist" aria-label={t('Vue par')}>
+          {MODES.map((m) => {
+            const I = m.icone;
+            return (
+              <button key={m.value} type="button" role="tab" aria-selected={mode === m.value}
+                className={`pg-onglet ${mode === m.value ? 'is-actif' : ''}`} onClick={() => setMode(m.value)}>
+                <I size={15} aria-hidden="true" /> {t(m.label)}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="pg-haut__droite">
+          <div className="pg-zoom" role="group" aria-label={t('Zoom')}>
+            <button type="button" onClick={() => setZoom((z) => Math.max(0, z - 1))} disabled={zoom === 0}
+              aria-label={t('Zoom arrière')} title={t('Zoom arrière')}><ZoomOut size={15} aria-hidden="true" /></button>
+            <button type="button" className="pg-zoom__val" onClick={() => setZoom(0)} disabled={zoom === 0}
+              title={t('Ajuster à la largeur')}>{zoom === 0 ? <><Maximize2 size={12} aria-hidden="true" /> {t('Ajusté')}</> : `${zoomPct} %`}</button>
+            <button type="button" onClick={() => setZoom((z) => Math.min(ZOOMS.length - 1, z + 1))} disabled={zoom === ZOOMS.length - 1}
+              aria-label={t('Zoom avant')} title={t('Zoom avant')}><ZoomIn size={15} aria-hidden="true" /></button>
+          </div>
+          <div className="pg-segment" role="group" aria-label={t('Durée affichée')}>
+            {DUREES.map((d) => (
+              <button key={d.cle} type="button" aria-pressed={duree === d.cle} onClick={() => setDuree(d.cle)}>{t(d.label)}</button>
             ))}
-          </select>
+          </div>
         </div>
-
-        <div className="planning-bm-filter-group">
-          <label>{t('Date')}</label>
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="planning-bm-date-input"
-          />
-        </div>
-
-        <button type="button" className="planning-bm-today-btn" onClick={handleToday}>
-          {t("Aujourd'hui")}
-        </button>
       </div>
 
-      {error && <div className="planning-bm-error-banner">{error}</div>}
-
-      <div className="planning-bm-calendar-card">
-        <div className="planning-bm-calendar-header">
-          <div className="planning-bm-header-left">
-            <div className="planning-bm-nav-buttons">
-              <button onClick={handlePrev} className="planning-bm-icon-btn" aria-label={t('Précédent')} title={t('Précédent')}>
-                <ChevronLeft size={18} strokeWidth={2.2} className="rtl-miroir" aria-hidden="true" />
-              </button>
-              <button onClick={handleNext} className="planning-bm-icon-btn" aria-label={t('Suivant')} title={t('Suivant')}>
-                <ChevronRight size={18} strokeWidth={2.2} className="rtl-miroir" aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-
-          <div className="planning-bm-header-center">
-            <h2>{getHeaderText()}</h2>
-          </div>
-
-          <div className="planning-bm-header-right">
-            <div className="planning-bm-view-tabs">
-              <button className={`planning-bm-tab ${view === 'month' ? 'active' : ''}`} onClick={() => setView('month')}>{t('Mois')}</button>
-              <button className={`planning-bm-tab ${view === 'week' ? 'active' : ''}`} onClick={() => setView('week')}>{t('Semaine')}</button>
-              <button className={`planning-bm-tab ${view === 'day' ? 'active' : ''}`} onClick={() => setView('day')}>{t('Jour')}</button>
-            </div>
-          </div>
+      {/* Navigation + filtres */}
+      <div className="pg-outils">
+        <div className="pg-nav">
+          <button type="button" className="pg-icone" onClick={() => deplacer(-1)} aria-label={t('Précédent')} title={t('Précédent')}>
+            <ChevronLeft size={17} className="rtl-miroir" aria-hidden="true" />
+          </button>
+          <button type="button" className="pg-icone" onClick={() => deplacer(1)} aria-label={t('Suivant')} title={t('Suivant')}>
+            <ChevronRight size={17} className="rtl-miroir" aria-hidden="true" />
+          </button>
+          <h2 className="pg-titre"><CalendarDays size={17} aria-hidden="true" /> {titrePeriode}</h2>
+          <button type="button" className="pg-btn" onClick={() => setAncre(new Date())}>{t("Aujourd'hui")}</button>
+          <input type="date" className="pg-date" value={cleJour(ancre)} aria-label={t('Aller à la date')}
+            onChange={(e) => { const [a, m, j] = e.target.value.split('-').map(Number); if (a) setAncre(new Date(a, m - 1, j)); }} />
         </div>
+        <div className="pg-filtres">
+          {ETATS.map((e) => (
+            <button key={e.cle} type="button" aria-pressed={!etatsMasques.has(e.cle)}
+              className={`pg-puce pg-puce--${e.classe} ${etatsMasques.has(e.cle) ? 'is-off' : ''}`} onClick={() => basculerEtat(e.cle)}
+              title={etatsMasques.has(e.cle) ? t('Afficher') : t('Masquer')}>
+              <span className="pg-puce__point" aria-hidden="true" />{t(e.label)}<b>{compte[e.cle] || 0}</b>
+            </button>
+          ))}
+          <label className="pg-recherche">
+            <Search size={14} aria-hidden="true" />
+            <input type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder={t('Rechercher…')} aria-label={t('Rechercher')} />
+            {recherche && <button type="button" onClick={() => setRecherche('')} aria-label={t('Effacer')}><X size={13} /></button>}
+          </label>
+        </div>
+      </div>
 
-        <div className={`planning-bm-grid view-${view}`}>
-          {view !== 'day' && (
-            <div className="planning-bm-weekdays">
-              {(view === 'week' ? daysOfWeek : daysOfWeekShort).map((day, i) => (
-                <div key={`${day}-${i}`} className="planning-bm-weekday">{day}</div>
-              ))}
-            </div>
-          )}
+      {erreur && <div className="pg-erreur">{erreur}</div>}
 
-          <div className="planning-bm-days">
-            {loading ? (
-              <div className="planning-bm-loading">{t('Chargement du planning...')}</div>
-            ) : calendarDays.map((item, idx) => {
-              const { date, isCurrentMonth } = item;
-              const allEvents = getEventsForDate(date);
-              const visibleEvents = allEvents.length > maxVisible
-                ? allEvents.slice(0, maxVisible)
-                : allEvents;
-              const hiddenCount = allEvents.length - visibleEvents.length;
-              const isToday = formatDateKey(date) === formatDateKey(new Date());
-              const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-
+      {/* Frise */}
+      <div className="pg-gantt" ref={refGantt}
+        style={{ '--nb-jours': nb, '--pg-nom': `${nomPx}px`, '--pg-largeur': `${nomPx + pistePx}px` }}>
+        <div className="pg-gantt__tete">
+          <div className="pg-gantt__coin">{visibles.length > 1 ? t('{n} éléments', { n: visibles.length }) : t('{n} élément', { n: visibles.length })}</div>
+          <div className="pg-gantt__jours">
+            {jours.map((j) => {
+              const we = j.getDay() === 0 || j.getDay() === 6;
+              const auj = cleJour(j) === aujourdhuiCle;
               return (
-                <div
-                  key={idx}
-                  className={[
-                    'planning-bm-day-cell',
-                    !isCurrentMonth && view === 'month' ? 'other-month' : '',
-                    isToday ? 'is-today' : '',
-                    isWeekend && view !== 'day' ? 'is-weekend' : '',
-                    allEvents.length === 0 ? 'is-empty' : '',
-                    config?.dayClick ? 'clickable' : '',
-                  ].filter(Boolean).join(' ')}
-                  onClick={() => handleDayCellClick(date)}
-                >
-                  <div className="planning-bm-day-header">
-                    <div className="planning-bm-day-title">
-                      <span className="planning-bm-day-number">{date.getDate()}</span>
-                      {view === 'day' && (
-                        <span className="planning-bm-day-name">
-                          {daysOfWeek[date.getDay()]}
-                        </span>
-                      )}
-                    </div>
-                    {allEvents.length > 0 && view !== 'day' && (
-                      <span className="planning-bm-day-count">
-                        {allEvents.length}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="planning-bm-events-container">
-                    <div className="planning-bm-events-list">
-                      {visibleEvents.map((ev) => (
-                        <div
-                          key={`${ev.type}-${ev.id}`}
-                          className={`planning-bm-event-pill ${ETAT_EVENT_CLASS[ev.etat] || 'event-etat-nouveau'}`}
-                          title={`${ev.titre || ''} — ${ETAT_LABELS[ev.etat] ? t(ETAT_LABELS[ev.etat]) : ''}`}
-                          onClick={(e) => handleEventClick(e, ev)}
-                        >
-                          <span className="planning-bm-event-dot" />
-                          <span className="planning-bm-event-title">{ev.titre || `#${ev.id}`}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {hiddenCount > 0 && (
-                      <button
-                        type="button"
-                        className="planning-bm-more-events"
-                        onClick={(e) => handleMoreClick(e, date, allEvents)}
-                      >
-                        {tp('+ autre', hiddenCount)}
-                      </button>
-                    )}
-
-                    {allEvents.length === 0 && view === 'day' && (
-                      <div className="planning-bm-no-events">{t('Aucun événement ce jour.')}</div>
-                    )}
-                  </div>
-
-                  {isToday && <span className="planning-bm-today-badge">{t("Aujourd'hui")}</span>}
+                <div key={cleJour(j)} className={`pg-jour ${we ? 'is-we' : ''} ${auj ? 'is-auj' : ''}`}>
+                  <small>{fmt(j, { weekday: duree === 'mois' ? 'narrow' : 'short' }).replace('.', '')}</small>
+                  <b>{j.getDate()}</b>
                 </div>
               );
             })}
           </div>
         </div>
-      </div>
 
-      {popover && (
-        <div className="planning-bm-popover-backdrop" onClick={closePopover}>
-          <div className="planning-bm-popover" onClick={(e) => e.stopPropagation()}>
-            <div className="planning-bm-popover-header">
-              <div>
-                <div className="planning-bm-popover-date">{formatDateLong(popover.date)}</div>
-                <div className="planning-bm-popover-count">
-                  {tp('événement', popover.events.length)}
+        <div className="pg-gantt__corps">
+          {chargement ? (
+            <div className="pg-vide"><LoaderCircle size={16} className="pg-tourne" /> {t('Chargement du planning...')}</div>
+          ) : visibles.length === 0 ? (
+            <div className="pg-vide">{lignes.length ? t('Aucun élément ne correspond aux filtres.') : t('Rien de planifié sur cette période.')}</div>
+          ) : lignesPage.map((l) => {
+            const e = ETAT[l.etat] || ETAT[1];
+            const g = pos(l.d); const dr = pos(l.f);
+            const coupeG = l.d < debut; const coupeD = l.f > fin;
+            const w = Math.max(dr - g, 100 / nb / 3);
+            const texte = l.titre || `#${l.id}`;
+            const tl = largeurTexte(texte);
+            const dedans = (w / 100) * pistePx >= tl;
+            const aGauche = !dedans && ((g + w) / 100) * pistePx + tl > pistePx && (g / 100) * pistePx > tl;
+            const bulle = `${l.titre || `#${l.id}`}\n${t(e.label)} · ${dureeTexte(l)}\n${dateCourte(l.d)} → ${dateCourte(l.f)}`;
+            return (
+              <div key={`${l.type}-${l.id}`} className={`pg-ligne ${survol === l.id ? 'is-survol' : ''} ${l.bonMaintenanceId ? 'is-cliquable' : ''}`}
+                onMouseEnter={() => setSurvol(l.id)} onMouseLeave={() => setSurvol(null)}
+                onClick={() => ouvrir(l)} role={l.bonMaintenanceId ? 'button' : undefined} tabIndex={l.bonMaintenanceId ? 0 : undefined}
+                onKeyDown={(ev) => ev.key === 'Enter' && ouvrir(l)}>
+                <div className="pg-ligne__nom" title={l.titre}>
+                  <span className={`pg-ligne__etat pg-ligne__etat--${e.classe}`} aria-hidden="true" />
+                  <span className="pg-ligne__titre">{l.titre || `#${l.id}`}</span>
+                  <small>{dureeTexte(l)}</small>
+                </div>
+                <div className="pg-ligne__piste">
+                  {jours.map((j) => (j.getDay() === 0 || j.getDay() === 6) && (
+                    <span key={cleJour(j)} className="pg-ligne__we" style={{ left: `${pos(j)}%`, width: `${100 / nb}%` }} aria-hidden="true" />
+                  ))}
+                  <span className={`pg-barre pg-barre--${e.classe} ${coupeG ? 'is-coupe-g' : ''} ${coupeD ? 'is-coupe-d' : ''}`}
+                    style={{ left: `${g}%`, width: `${w}%` }} title={bulle}>
+                    {dedans && <span className="pg-barre__txt">{texte}</span>}
+                  </span>
+                  {!dedans && (
+                    <span className={`pg-barre-ext pg-barre-ext--${e.classe} ${aGauche ? 'is-gauche' : ''}`} title={bulle}
+                      style={aGauche ? { insetInlineEnd: `calc(${100 - g}% + 6px)` } : { insetInlineStart: `calc(${g + w}% + 6px)` }}>
+                      {texte}
+                    </span>
+                  )}
                 </div>
               </div>
-              <button
-                type="button"
-                className="planning-bm-popover-close"
-                onClick={closePopover}
-                aria-label={t('Fermer')}
-              >
-                <X size={16} strokeWidth={2.2} aria-hidden="true" />
-              </button>
-            </div>
-            <div className="planning-bm-popover-body">
-              {popover.events.map((ev) => (
-                <div
-                  key={`pop-${ev.type}-${ev.id}`}
-                  className={`planning-bm-event-pill ${ETAT_EVENT_CLASS[ev.etat] || 'event-etat-nouveau'}`}
-                  onClick={(e) => handleEventClick(e, ev)}
-                >
-                  <span className="planning-bm-event-dot" />
-                  <span className="planning-bm-event-title">{ev.titre || `#${ev.id}`}</span>
-                  <span className="planning-bm-event-etat">
-                    {ETAT_LABELS[ev.etat] ? t(ETAT_LABELS[ev.etat]) : ''}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+            );
+          })}
+          {posAujourdhui != null && !chargement && visibles.length > 0 && (
+            <div className="pg-auj" style={{ '--pos': posAujourdhui / 100 }} aria-hidden="true" />
+          )}
         </div>
+      </div>
+
+      {!chargement && visibles.length > 0 && (
+        <Pagination page={pageCourante} taille={taille} total={visibles.length}
+          onPage={setPage} onTaille={(v) => { setTaille(v); setPage(0); }} />
       )}
     </div>
   );

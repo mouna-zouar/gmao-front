@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Building2, Check, Loader2, ScanLine, Search, X } from 'lucide-react';
+import { Building2, Check, Loader2, MapPin, ScanLine, Search, X } from 'lucide-react';
+import { carteLieux, cheminLieu } from '../../../services/lieuxCache';
 import equipementService from '../../../services/equipementService';
 import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
 import ScannerQR from '../../pages/Equipements/ScannerQR';
@@ -18,6 +19,7 @@ import './ChampEquipement.css';
  * et utilisée si la recherche serveur est injoignable).
  * serviceId : quand il est donné, la liste ne propose que les équipements de ce service
  *   (filtre retirable dans la liste) ; serviceNom sert à l'afficher.
+ * lieuId : la liste ne propose que les équipements de ce lieu et de ses sous-lieux (prioritaire sur le service).
  * onEquipementChoisi(equipement) : appelé avec l'équipement choisi, serviceId compris
  *   (récupéré auprès du serveur si la liste ne le donnait pas).
  */
@@ -48,6 +50,7 @@ export default function ChampEquipement({
   className = '',
   serviceId = null,
   serviceNom = '',
+  lieuId = null,
   onEquipementChoisi,
   autoFocus = false,
 }) {
@@ -70,7 +73,18 @@ export default function ChampEquipement({
 
   // Filtre « équipements du service » (recherche côté serveur) : actif dès qu'un service est connu, retirable dans la liste
   const [parService, setParService] = useState(true);
-  const filtreService = Boolean(serviceId) && parService;
+  // Filtre « équipements du lieu » : prioritaire sur le service, retirable aussi
+  const [parLieu, setParLieu] = useState(true);
+  const filtreLieu = Boolean(lieuId) && parLieu;
+  useEffect(() => { setParLieu(true); }, [lieuId]);
+  const [nomLieu, setNomLieu] = useState('');
+  useEffect(() => {
+    if (!lieuId) { setNomLieu(''); return undefined; }
+    let actif = true;
+    carteLieux().then((c) => { if (actif) setNomLieu(cheminLieu(c, lieuId)); }).catch(() => {});
+    return () => { actif = false; };
+  }, [lieuId]);
+  const filtreService = Boolean(serviceId) && parService && !filtreLieu;
   useEffect(() => { setParService(true); }, [serviceId]);
   // Service changé par l'utilisateur : un équipement d'un autre service n'est plus valable
   const servicePrecedent = useRef(serviceId);
@@ -123,8 +137,9 @@ export default function ChampEquipement({
   // ─── Recherche serveur (après une courte pause de frappe), éventuellement limitée à une famille ───
   const motifActif = ouvert && motif && motif.toLowerCase() !== libelleChoisi.toLowerCase() ? motif : '';
   const serviceRequete = filtreService && ouvert ? String(serviceId) : '';
-  // Liste ouverte : toujours une demande au serveur (premiers équipements, ou ceux du service / de la famille / du texte)
-  const cleRequete = ouvert ? `${motifActif}|${famille}|${serviceRequete}` : '';
+  const lieuRequete = filtreLieu && ouvert ? String(lieuId) : '';
+  // Liste ouverte : toujours une demande au serveur (premiers équipements, ou ceux du lieu / du service / de la famille / du texte)
+  const cleRequete = ouvert ? `${motifActif}|${famille}|${serviceRequete}|${lieuRequete}` : '';
   const aJour = reponse.motif === cleRequete;
   const resultats = cleRequete && aJour ? reponse.liste : null;
   const horsLigne = Boolean(cleRequete && aJour && reponse.horsLigne);
@@ -134,9 +149,9 @@ export default function ChampEquipement({
     if (!cleRequete) return undefined;
     let annule = false;
     const minuterie = setTimeout(async () => {
-      const demande = { recherche: motifActif, familleId: famille || null, serviceId: serviceRequete || null };
+      const demande = { recherche: motifActif, familleId: famille || null, serviceId: serviceRequete || null, lieuId: lieuRequete || null };
       try {
-        const page = await equipementService.rechercher(motifActif, 0, famille || serviceRequete ? 80 : 25, famille || null, serviceRequete || null);
+        const page = await equipementService.rechercher(motifActif, 0, famille || serviceRequete || lieuRequete ? 80 : 25, famille || null, serviceRequete || null, lieuRequete || null);
         console.info('[GMAO équipements] recherche', demande, '→', page?.totalElements ?? (page?.content ?? []).length, 'résultat(s)',
           (page?.content ?? []).slice(0, 5).map((e) => ({ id: e.id, designation: e.designation, serviceId: e.serviceId })));
         if (!annule) setReponse({ motif: cleRequete, liste: page?.content ?? [], total: page?.totalElements ?? null, horsLigne: false });
@@ -147,7 +162,7 @@ export default function ChampEquipement({
       }
     }, motifActif ? 280 : 0);
     return () => { annule = true; clearTimeout(minuterie); };
-  }, [cleRequete, motifActif, famille, serviceRequete]);
+  }, [cleRequete, motifActif, famille, serviceRequete, lieuRequete]);
 
   const liste = useMemo(() => {
     if (!cleRequete) return optionsLocales.slice(0, 60);
@@ -321,7 +336,22 @@ export default function ChampEquipement({
 
       {ouvert && (
         <div className="cheq-menu">
-          {serviceId && (
+          {lieuId && (
+            <div className="cheq-service">
+              <button type="button" className={`cheq-service-btn ${filtreLieu ? 'is-actif' : ''}`} aria-pressed={filtreLieu}
+                onMouseDown={(e) => { e.preventDefault(); setParLieu((v) => !v); setActif(-1); }}>
+                <MapPin size={14} aria-hidden="true" />
+                <span>{nomLieu ? t('Lieu : {l}', { l: nomLieu }) : t('Équipements du lieu')}</span>
+                {filtreLieu && aJour && !reponse.horsLigne && reponse.total != null && <span className="cheq-service-nb">{reponse.total}</span>}
+              </button>
+              {filtreLieu && (
+                <button type="button" className="cheq-service-tous" onMouseDown={(e) => { e.preventDefault(); setParLieu(false); setActif(-1); }}>
+                  {t('Tous les lieux')}
+                </button>
+              )}
+            </div>
+          )}
+          {serviceId && !filtreLieu && (
             <div className="cheq-service">
               <button type="button" className={`cheq-service-btn ${filtreService ? 'is-actif' : ''}`} aria-pressed={filtreService}
                 onMouseDown={(e) => { e.preventDefault(); setParService((v) => !v); setActif(-1); }}>
@@ -389,7 +419,9 @@ export default function ChampEquipement({
           </ul>
           {!liste.length && !occupe && (
             <p className="cheq-vide">
-              {filtreService
+              {filtreLieu
+                ? t('Aucun équipement de ce lieu ne correspond.')
+                : filtreService
                 ? t('Aucun équipement de ce service ne correspond.')
                 : motifActif ? t('Aucun équipement ne correspond. Appuyez sur Entrée pour chercher ce code.') : t('Tapez un nom ou scannez l’étiquette.')}
             </p>

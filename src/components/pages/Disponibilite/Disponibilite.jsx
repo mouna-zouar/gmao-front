@@ -6,6 +6,7 @@ import { t, tp, locale } from '../../../i18n';
 import { Activity, FileSpreadsheet, Gauge, History, Inbox, LoaderCircle, RefreshCw, Search, TrendingDown, TriangleAlert, Wrench } from 'lucide-react';
 import './Disponibilite.css';
 import PaginationCommune from '../../commun/Pagination';
+import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 
 /* ---------- Config ---------- */
 const ETAT_LABELS = {
@@ -222,6 +223,8 @@ function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille
 /* ---------- Composant principal ---------- */
 export default function Disponibilite() {
   const [periodeKey, setPeriodeKey] = useState('12M');
+  const [lieuId, setLieuId] = useState('');
+  const carteLieux = useCarteLieux();
   const [donnees, setDonnees] = useState([]);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -237,7 +240,7 @@ export default function Disponibilite() {
     setLoading(true);
     setError(null);
     try {
-      const bornes = calculerBornes(periodeKey);
+      const bornes = { ...calculerBornes(periodeKey), lieuId: lieuId || undefined };
       const data = await disponibiliteService.getAll(bornes);
       setDonnees(data ?? []);
     } catch (err) {
@@ -246,7 +249,7 @@ export default function Disponibilite() {
     } finally {
       setLoading(false);
     }
-  }, [periodeKey]);
+  }, [periodeKey, lieuId]);
 
   useEffect(() => { charger(); }, [charger]);
 
@@ -331,6 +334,7 @@ export default function Disponibilite() {
         </div>
 
         <div className="disp-header__actions">
+          <FiltreLieu carte={carteLieux} valeur={lieuId} onChange={setLieuId} className="fl-select" />
           <div className="disp-periode-select">
             {PERIODES.map((p) => (
               <button

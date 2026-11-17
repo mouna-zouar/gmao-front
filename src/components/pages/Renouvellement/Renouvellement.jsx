@@ -10,8 +10,9 @@ import {
   VeilleSegments, VeilleMessage, VeillePagination, Pastille,
 } from '../../ui/Veille/Veille';
 import { Info as InfoIcone } from 'lucide-react';
-import { Vide, Bulle as BulleSv, useLargeur as useLargeurSv } from '../Supervision/Supervision';
-import { Stat, Badge } from '../../commun/TableauBord';
+import { Vide } from '../Supervision/Supervision';
+import Pagination from '../../commun/Pagination';
+import '../../commun/TableauBord.css';
 import '../Supervision/Supervision.css';
 import '../TableauDeBord/TableauDeBord.css';
 import './Renouvellement.css';
@@ -247,165 +248,142 @@ const STATUTS = [
 ];
 const couleurStatut = (r) => STATUTS.find((s) => s.cle === r)?.couleur || '#94a3b8';
 
-/** Nuage de points : % de la durée de vie consommée × maintenance cumulée en % du prix d'achat. */
-function Matrice({ lignes, onChoisir }) {
-  const [ref, w] = useLargeurSv();
-  const [survol, setSurvol] = useState(null);
-  const h = 300; const m = { g: 58, d: 14, h: 14, b: 34 };
-  const iw = Math.max(0, w - m.g - m.d); const ih = h - m.h - m.b;
-  const X = 150; const Y = 120;
-  const points = useMemo(() => lignes
-    .filter((l) => !l.exclu && l.ageAnnees != null && l.ratioCoutPct != null && l.dureeVie > 0)
-    .map((l) => ({ l, vx: Math.min(X, (l.ageAnnees / l.dureeVie) * 100), vy: Math.min(Y, l.ratioCoutPct) }))
-    .sort((a, b) => STATUTS.findIndex((s) => s.cle === b.l.score.recommandation) - STATUTS.findIndex((s) => s.cle === a.l.score.recommandation)),
-  [lignes]);
-  const x = (v) => m.g + (v / X) * iw;
-  const y = (v) => m.h + ih - (v / Y) * ih;
-  const nonPlaces = lignes.filter((l) => !l.exclu).length - points.length;
+/* Tranches de durée de vie consommée (âge / durée de vie) */
+const TRANCHES_AGE = [
+  { cle: 'jeune', label: '< 50 %', min: 0, max: 50 },
+  { cle: 'mi', label: '50 – 75 %', min: 50, max: 75 },
+  { cle: 'fin', label: '75 – 100 %', min: 75, max: 100 },
+  { cle: 'depasse', label: '> 100 %', min: 100, max: Infinity },
+];
+const ORDRE_BARRE = ['REMPLACER', 'PLANIFIER', 'SURVEILLER', 'CONSERVER'];
 
-  const chercher = (e) => {
-    const box = ref.current.getBoundingClientRect();
-    const px = e.clientX - box.left; const py = e.clientY - box.top;
-    let best = null; let dmin = 12 * 12;
-    points.forEach((p) => {
-      const d = (x(p.vx) - px) ** 2 + (y(p.vy) - py) ** 2;
-      if (d < dmin) { dmin = d; best = p; }
-    });
-    setSurvol(best ? { p: best, bulle: {
-      x: px, y: Math.max(0, py - 60), aGauche: px > w * 0.6, titre: best.l.nom,
-      lignes: [
-        { couleur: couleurStatut(best.l.score.recommandation), label: t(RECOS[best.l.score.recommandation]?.label || ''), valeur: t('score {s}', { s: nb(best.l.score.total, 0) }) },
-        { label: t('Âge'), valeur: t('{a} / {d} ans', { a: nb(best.l.ageAnnees, 1), d: best.l.dureeVie }) },
-        { label: t('Maintenance / prix'), valeur: `${nb(best.l.ratioCoutPct, 0)} %` },
-      ],
-    } } : null);
-  };
+/**
+ * Barres + courbe : une colonne par tranche de durée de vie consommée (nombre d'équipements, axe de gauche)
+ * et une courbe du coût de maintenance moyen en % du prix d'achat (axe de droite).
+ * Sous chaque colonne : répartition par recommandation, nombre d'équipements et âge moyen.
+ * Survol d'une colonne : détail complet.
+ */
+const moyenne = (vals) => (vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : null);
+
+function BarresAge({ lignes }) {
+  const [ref, w] = useLargeur();
+  const actifs = lignes.filter((l) => !l.exclu && l.score.recommandation !== 'EXCLU');
+  const places = actifs.filter((x) => x.ageAnnees != null && x.dureeVie > 0);
+  const rangs = TRANCHES_AGE.map((tr, idx) => {
+    const l = places.filter((x) => (x.ageAnnees / x.dureeVie) * 100 >= tr.min && (x.ageAnnees / x.dureeVie) * 100 < tr.max);
+    const parReco = Object.fromEntries(ORDRE_BARRE.map((r) => [r, l.filter((x) => x.score.recommandation === r).length]));
+    return {
+      ...tr, idx, total: l.length, parReco,
+      maint: moyenne(l.map((x) => x.ratioCoutPct).filter((v) => v != null)),
+      age: moyenne(l.map((x) => x.ageAnnees)),
+      cout: l.reduce((a, x) => a + (x.coutRemplacement || 0), 0),
+    };
+  });
+  const sansDate = actifs.length - places.length;
+  const ageParc = moyenne(places.map((x) => x.ageAnnees));
+  const depasses = rangs.find((r) => r.cle === 'depasse')?.total || 0;
+  const maintParc = moyenne(places.map((x) => x.ratioCoutPct).filter((v) => v != null));
+  const jeune = rangs[0].maint; const vieux = rangs[rangs.length - 1].maint;
+  const facteur = jeune > 0 && vieux != null ? vieux / jeune : null;
+
+  const H = 270; const m = { h: 26, b: 70, g: 40, d: 46 };
+  const L = Math.max(0, w - m.g - m.d); const hz = H - m.h - m.b;
+  const maxN = Math.max(1, ...rangs.map((r) => r.total));
+  const pasN = maxN <= 4 ? 1 : Math.ceil(maxN / 4 / 5) * 5 || 1;
+  const hautN = Math.ceil(maxN / pasN) * pasN;
+  const hautP = Math.ceil(Math.max(25, ...rangs.map((r) => r.maint || 0)) / 25) * 25;
+  const pas = L / rangs.length; const lb = Math.min(64, pas * 0.5);
+  const xC = (i) => m.g + pas * i + pas / 2;
+  const yN = (v) => m.h + hz - (v / hautN) * hz;
+  const yP = (v) => m.h + hz - (v / hautP) * hz;
+  const base = m.h + hz;
+  const pts = rangs.map((r, i) => (r.maint != null ? [xC(i), yP(r.maint), r] : null)).filter(Boolean);
+  const aire = pts.length > 1 ? `M${pts[0][0]},${base} ${pts.map(([x, y]) => `L${x},${y}`).join(' ')} L${pts[pts.length - 1][0]},${base} Z` : null;
 
   return (
-    <div className="sv-graph" ref={ref} dir="ltr">
-      {w > 0 && (
-        <svg width={w} height={h} role="img" aria-label={t('Équipements selon leur âge et leur coût de maintenance')}
-          onMouseMove={chercher} onMouseLeave={() => setSurvol(null)}
-          onClick={() => survol && onChoisir(survol.p.l.id)} style={{ cursor: survol ? 'pointer' : 'default' }}>
-          <rect x={x(100)} y={m.h} width={x(X) - x(100)} height={y(60) - m.h} className="rv-zone" />
-          {[0, 25, 50, 75, 100, 125, 150].map((v) => (
-            <g key={`x${v}`}>
-              <line x1={x(v)} x2={x(v)} y1={m.h} y2={m.h + ih} className="sv-grille" />
-              <text x={x(v)} y={h - 18} className="sv-axe" textAnchor="middle">{v} %</text>
-            </g>
-          ))}
-          {[0, 30, 60, 90, 120].map((v) => (
-            <g key={`y${v}`}>
-              <line x1={m.g} x2={w - m.d} y1={y(v)} y2={y(v)} className="sv-grille" />
-              <text x={m.g - 6} y={y(v)} className="sv-axe" textAnchor="end" dominantBaseline="middle">{v} %</text>
-            </g>
-          ))}
-          <line x1={x(100)} x2={x(100)} y1={m.h} y2={m.h + ih} className="rv-repere" />
-          <line x1={m.g} x2={w - m.d} y1={y(60)} y2={y(60)} className="rv-repere" />
-          <text x={w - m.d - 6} y={m.h + 14} className="rv-zone__txt" textAnchor="end">{t('Vieux et coûteux')}</text>
-          <text x={m.g + (iw / 2)} y={h - 3} className="sv-axe" textAnchor="middle">{t('Durée de vie consommée')}</text>
-          <text transform={`translate(10, ${m.h + ih / 2}) rotate(-90)`} className="sv-axe" textAnchor="middle">{t('Maintenance / prix d’achat')}</text>
-          {points.map((p) => (
-            <circle key={p.l.id} cx={x(p.vx)} cy={y(p.vy)} r={survol?.p === p ? 6.5 : 4.5}
-              fill={couleurStatut(p.l.score.recommandation)} stroke="#fff" strokeWidth="1.5"
-              opacity={survol && survol.p !== p ? 0.55 : 1} />
-          ))}
-        </svg>
-      )}
-      <BulleSv bulle={survol?.bulle} />
-      <ul className="sv-legende">
-        {STATUTS.map((s) => (
-          <li key={s.cle}><span className="rv-point" style={{ background: s.couleur }} />{t(RECOS[s.cle].label)}
-            <b>{nb(points.filter((p) => p.l.score.recommandation === s.cle).length)}</b></li>
-        ))}
-        {nonPlaces > 0 && <li className="rv-legende__note">{t('{n} sans date ou sans prix, non placés', { n: nonPlaces })}</li>}
+    <div className="rv-combo" ref={ref}>
+      <ul className="rv-combo__resume">
+        <li><span>{t('Âge moyen')}</span><b>{ageParc != null ? t('{n} ans', { n: nb(ageParc, 1) }) : '—'}</b></li>
+        <li className={depasses ? 'is-danger' : ''}><span>{t('Hors durée de vie')}</span>
+          <b>{nb(depasses)}<small> {places.length ? `(${nb((depasses / places.length) * 100, 0)} %)` : ''}</small></b></li>
+        <li><span>{t('Maintenance moy.')}</span><b>{maintParc != null ? `${nb(maintParc, 0)} %` : '—'}<small> {t('du prix')}</small></b></li>
+        {facteur != null && facteur > 1 && (
+          <li className="is-attention"><span>{t('Fin de vie / jeunes')}</span><b>{t('× {f}', { f: nb(facteur, 1) })}<small> {t('maint.')}</small></b></li>
+        )}
       </ul>
-    </div>
-  );
-}
-
-function Repartition({ lignes, onFiltrer }) {
-  const total = Math.max(1, lignes.length);
-  return (
-    <ul className="rv-repartition">
-      {Object.entries(RECOS).map(([cle, r]) => {
-        const l = lignes.filter((x) => x.score.recommandation === cle);
-        const cout = l.reduce((s, x) => s + (x.coutRemplacement || 0), 0);
-        return (
-          <li key={cle}>
-            <button type="button" onClick={() => onFiltrer(cle)} title={t('Voir dans le classement')}>
-              <span className="rv-repartition__tete">
-                <Pastille ton={r.ton}>{t(r.label)}</Pastille>
-                <b>{nb(l.length)}</b>
-              </span>
-              <span className="rv-repartition__piste"><span style={{ width: `${(l.length / total) * 100}%`, background: couleurStatut(cle) }} /></span>
-              {(cle === 'REMPLACER' || cle === 'PLANIFIER') && <small>{t('{c} de remplacement', { c: dt(cout, true) })}</small>}
-            </button>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function GraphiqueBudget({ resultat, noms }) {
-  const [ref, w] = useLargeurSv();
-  const [bulle, setBulle] = useState(null);
-  const annees = resultat.annees;
-  const h = 230; const m = { g: 58, d: 8, h: 22, b: 24 };
-  const max = Math.max(1, ...annees.map((a) => Math.max(a.depense, a.budget)));
-  const ticks = graduations(max); const yMax = ticks[ticks.length - 1];
-  const iw = Math.max(0, w - m.g - m.d); const ih = h - m.h - m.b;
-  const bande = iw / Math.max(1, annees.length); const lb = Math.min(46, bande * 0.55);
-  const y = (v) => m.h + ih - (v / yMax) * ih;
-  return (
-    <div className="sv-graph" ref={ref} dir="ltr" onMouseLeave={() => setBulle(null)}>
       {w > 0 && (
-        <svg width={w} height={h} role="img" aria-label={t('Remplacements prévus par année avec le budget actuel')}>
-          {ticks.map((v) => (
-            <g key={v}>
-              <line x1={m.g} x2={w - m.d} y1={y(v)} y2={y(v)} className="sv-grille" />
-              <text x={m.g - 6} y={y(v)} className="sv-axe" textAnchor="end" dominantBaseline="middle">{dt(v, true)}</text>
-            </g>
-          ))}
-          {annees.map((a, i) => {
-            const bx = m.g + i * bande + (bande - lb) / 2;
+        <svg width={w} height={H} role="img" aria-label={t('Nombre d’équipements et coût de maintenance moyen par part de durée de vie consommée')}>
+          <defs>
+            <linearGradient id="rvComboAire" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--g-brand-750, #05606b)" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="var(--g-brand-750, #05606b)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {[0, 1, 2, 3, 4].map((k) => {
+            const y = base - (k / 4) * hz;
             return (
-              <g key={a.annee}>
-                <rect x={bx} y={y(a.depense)} width={lb} height={Math.max(a.depense > 0 ? 1 : 0, y(0) - y(a.depense))} rx="4" fill="#0794a4"
-                  opacity={bulle && bulle.i !== i ? 0.5 : 1} />
-                <line x1={bx - 6} x2={bx + lb + 6} y1={y(a.budget)} y2={y(a.budget)} className="rv-budget" />
-                {a.choix.length > 0 && <text x={bx + lb / 2} y={y(a.depense) - 6} className="rv-barre__n" textAnchor="middle">{a.choix.length}</text>}
-                <text x={bx + lb / 2} y={h - 6} className="sv-axe" textAnchor="middle">{a.annee}</text>
-                <rect x={m.g + i * bande} y={m.h} width={bande} height={ih} fill="transparent"
-                  onMouseMove={(e) => {
-                    const box = ref.current.getBoundingClientRect(); const px = e.clientX - box.left;
-                    const top = [...a.choix].sort((p, q) => q.score - p.score).slice(0, 3);
-                    setBulle({ i, x: px, y: Math.max(0, e.clientY - box.top - 50), aGauche: px > w * 0.6, titre: String(a.annee),
-                      lignes: [
-                        { couleur: '#0794a4', label: t('Dépense'), valeur: dt(a.depense, true) },
-                        { label: t('Budget'), valeur: dt(a.budget, true) },
-                        { label: t('Équipements remplacés'), valeur: nb(a.choix.length) },
-                        ...top.map((c) => ({ label: noms.get(c.id)?.nom || `#${c.id}`, valeur: dt(c.cout, true) })),
-                        ...(a.candidatsNonFinances ? [{ label: t('Non financés'), valeur: nb(a.candidatsNonFinances) }] : []),
-                      ] });
-                  }} />
+              <g key={k}>
+                <line x1={m.g} x2={m.g + L} y1={y} y2={y} className={k === 0 ? 'rv-combo__base' : 'rv-combo__grille'} />
+                <text x={m.g - 8} y={y} className="rv-combo__axe" textAnchor="end" dominantBaseline="central">{nb((hautN / 4) * k)}</text>
+                <text x={m.g + L + 8} y={y} className="rv-combo__axe rv-combo__axe--p" dominantBaseline="central">{nb((hautP / 4) * k)} %</text>
               </g>
             );
           })}
-          <line x1={m.g} x2={w - m.d} y1={y(0)} y2={y(0)} className="sv-axe-ligne" />
+          {rangs.map((r, i) => {
+            const y = yN(r.total);
+            const detail = ORDRE_BARRE.filter((reco) => r.parReco[reco] > 0)
+              .map((reco) => `• ${t(RECOS[reco].label)} : ${nb(r.parReco[reco])}`).join('\n');
+            const bulle = [
+              `${t('Durée de vie consommée')} ${r.label}`,
+              t('{n} équipements', { n: nb(r.total) }),
+              r.age != null ? t('Âge moyen : {n} ans', { n: nb(r.age, 1) }) : null,
+              r.maint != null ? t('Maintenance moyenne : {p} % du prix d’achat', { p: nb(r.maint, 0) }) : null,
+              r.cout > 0 ? t('Coût de remplacement : {c}', { c: dt(r.cout, true) }) : null,
+              detail,
+            ].filter(Boolean).join('\n');
+            let x0 = xC(i) - lb / 2;
+            return (
+              <g key={r.cle} className={`rv-combo__col rv-combo__col--${i} ${r.cle === 'depasse' ? 'is-depasse' : ''}`}>
+                <title>{bulle}</title>
+                <rect x={xC(i) - pas / 2} y={m.h} width={pas} height={hz + m.b} className="rv-combo__zone" />
+                <rect x={xC(i) - lb / 2} y={y} width={lb} height={Math.max(0, base - y)} rx="6" className="rv-combo__barre" />
+                {r.total > 0 && ORDRE_BARRE.map((reco) => {
+                  const lw = (r.parReco[reco] / r.total) * lb; if (!lw) return null;
+                  const el = <rect key={reco} x={x0} y={base + 5} width={Math.max(0, lw - 1)} height="5" rx="1.5" style={{ fill: couleurStatut(reco) }} />;
+                  x0 += lw; return el;
+                })}
+                <text x={xC(i)} y={base + 27} textAnchor="middle" className="rv-combo__label">{r.label}</text>
+                <text x={xC(i)} y={base + 44} textAnchor="middle" className="rv-combo__n">{t('{n} équip.', { n: nb(r.total) })}</text>
+                <text x={xC(i)} y={base + 59} textAnchor="middle" className="rv-combo__age">{r.age != null ? t('{n} ans en moy.', { n: nb(r.age, 1) }) : ''}</text>
+              </g>
+            );
+          })}
+          {aire && <path d={aire} fill="url(#rvComboAire)" pointerEvents="none" />}
+          {pts.length > 1 && <polyline points={pts.map(([x, y]) => `${x},${y}`).join(' ')} className="rv-combo__ligne" />}
+          {pts.map(([x, y, r]) => (
+            <g key={r.cle} className={`rv-combo__pt ${r.maint >= 75 ? 'is-haut' : ''}`} pointerEvents="none">
+              <circle cx={x} cy={y} r="5" />
+              <text x={x} y={y - 11} textAnchor="middle">{nb(r.maint, 0)} %</text>
+            </g>
+          ))}
         </svg>
       )}
-      <BulleSv bulle={bulle} />
       <ul className="sv-legende">
-        <li><span className="sv-legende__marque" style={{ background: '#0794a4' }} />{t('Dépense de remplacement')}</li>
-        <li><span className="sv-legende__marque" style={{ background: '#64748b' }} />{t('Budget de l’année')}</li>
-        <li className="rv-legende__note">{t('le chiffre au-dessus d’une barre = équipements remplacés')}</li>
+        <li><span className="rv-combo__leg-barre" />{t('Équipements (axe de gauche)')}</li>
+        <li><span className="rv-combo__leg-ligne" />{t('Maintenance moyenne, % du prix d’achat (axe de droite)')}</li>
+        {ORDRE_BARRE.map((reco) => (
+          <li key={reco}><span className="rv-point" style={{ background: couleurStatut(reco) }} />{t(RECOS[reco].label)}</li>
+        ))}
+        {sansDate > 0 && <li className="rv-legende__note">{t('{n} sans date ou sans durée de vie, non placés', { n: sansDate })}</li>}
       </ul>
     </div>
   );
 }
 
+/**
+ * Jauges par année : part du budget consommée, montant / budget, équipements remplacés et non financés.
+ * Info-bulle : les 3 remplacements les plus importants de l'année.
+ */
 function Familles({ lignes }) {
   const familles = useMemo(() => {
     const m = new Map();
@@ -452,11 +430,10 @@ function Familles({ lignes }) {
 export default function Renouvellement() {
   const navigate = useNavigate();
   const [donnees, setDonnees] = useState(null);
-  const [base, setBase] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [vue, setVue] = useState(() => lireLocal(CLE_ONGLET, 'tableau'));
-  const [focus, setFocus] = useState(null);
+  const [focus] = useState(null); // ouverture d'une ligne précise du classement (plus utilisée par les graphiques)
   const [filtreDemande, setFiltreDemande] = useState(null);
   const refClassement = useRef(null);
 
@@ -466,8 +443,6 @@ export default function Renouvellement() {
       const d = await renouvellementService.tableau(recalculer);
       setDonnees(d);
       setErreur(null);
-      renouvellementService.scenarios([{ nom: t('Budget actuel'), budgetAnnuel: d.parametres.budgetAnnuel, horizon: 5, inflationPct: d.parametres.inflation, seuil: 50 }])
-        .then((r) => setBase(r[0])).catch(() => setBase(null));
     } catch (e) {
       setErreur(e?.response?.data?.message || t('Impossible de charger le plan de renouvellement.'));
     } finally {
@@ -479,78 +454,91 @@ export default function Renouvellement() {
   const choisirVue = (v) => { setVue(v); ecrireLocal(CLE_ONGLET, v); };
   const majLigne = (ligne) => setDonnees((d) => ({ ...d, lignes: d.lignes.map((l) => (l.id === ligne.id ? ligne : l)) }));
   const allerAuClassement = () => setTimeout(() => refClassement.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-  const noms = useMemo(() => new Map((donnees?.lignes || []).map((l) => [l.id, l])), [donnees?.lignes]);
 
   const ind = donnees?.indicateurs || {};
-  const barre = (
-    <div className="tb-header-actions">
-      <div className="tb-periodes" role="group" aria-label={t('Vue')}>
-        {[
-          { cle: 'tableau', label: t('Tableau de bord') },
-          { cle: 'scenarios', label: t('Comparer des budgets') },
-          { cle: 'reglages', label: t('Durées de vie') },
-        ].map((o) => (
-          <button key={o.cle} type="button" aria-pressed={vue === o.cle} onClick={() => choisirVue(o.cle)}>{o.label}</button>
-        ))}
-      </div>
-      <button type="button" className="tb-btn" onClick={() => charger(true)} disabled={chargement}
-        title={t('Relit les coûts, les pannes et les rapports (sinon gardés 10 minutes)')}>
-        {chargement ? <LoaderCircle size={14} className="tb-tourne" /> : <RefreshCw size={14} strokeWidth={2.4} />} {t('Recalculer')}
-      </button>
-    </div>
-  );
+  const VUES = [
+    { cle: 'tableau', label: t('Tableau de bord'), icone: CalendarSync },
+    { cle: 'scenarios', label: t('Comparer des budgets'), icone: Wallet },
+    { cle: 'reglages', label: t('Durées de vie'), icone: CalendarClock },
+  ];
+  // Filtre du classement depuis un indicateur (À remplacer, À planifier)
+  const filtrerClassement = (r) => { if (vue !== 'tableau') choisirVue('tableau'); setFiltreDemande({ r, t: Date.now() }); allerAuClassement(); };
 
   return (
-    <div className="tb-container rv-page">
-      <div className="tb-header">
-        <div className="tb-header-icone"><CalendarSync size={24} strokeWidth={2} aria-hidden="true" /></div>
-        <div className="tb-header-texte">
-          <h1>{t('Plan de renouvellement')}</h1>
-        </div>
-        {barre}
-      </div>
-      {donnees && (
-        <p className="tb-maj">
-          {t('Calculé à {h} · {n} équipements analysés', {
-            h: new Date(donnees.calculeLe).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }), n: nb(ind.parc),
+    <div className="tb-container rv-page rv-v2">
+      {/* Barre haute : vues en onglets, heure du calcul et recalcul */}
+      <div className="rv2-haut">
+        <nav className="rv2-onglets" role="tablist" aria-label={t('Plan de renouvellement')}>
+          {VUES.map((o) => {
+            const I = o.icone;
+            return (
+              <button key={o.cle} type="button" role="tab" aria-selected={vue === o.cle}
+                className={`rv2-onglet ${vue === o.cle ? 'is-actif' : ''}`} onClick={() => choisirVue(o.cle)}>
+                <I size={15} aria-hidden="true" /> {o.label}
+              </button>
+            );
           })}
-        </p>
-      )}
+        </nav>
+        <div className="rv2-haut__droite">
+          {donnees && (
+            <span className="rv2-maj">
+              {t('Calculé à {h} · {n} équipements analysés', {
+                h: new Date(donnees.calculeLe).toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }), n: nb(ind.parc),
+              })}
+            </span>
+          )}
+          <button type="button" className="rv2-btn" onClick={() => charger(true)} disabled={chargement}
+            title={t('Relit les coûts, les pannes et les rapports (sinon gardés 10 minutes)')}>
+            {chargement ? <LoaderCircle size={14} className="tb-tourne" /> : <RefreshCw size={14} strokeWidth={2.4} />} {t('Recalculer')}
+          </button>
+        </div>
+      </div>
       {erreur && <p className="tb-message tb-message--erreur">{erreur}</p>}
       {!donnees && !erreur && <div className="tb-chargement">{t('Analyse du parc…')}</div>}
 
       {donnees && vue === 'tableau' && (
         <div className="sv-grille-panneaux">
-          <div className="tb-stats sv-l12">
-            <Stat featured icone={TriangleAlert} ton={ind.remplacer ? 'rouge' : 'vert'} valeur={nb(ind.remplacer)} label={t('À remplacer')}
-              badge={<Badge ton={ind.remplacer ? 'rouge' : 'vert'}>{ind.remplacer ? t('score ≥ 70') : t('Aucun')}</Badge>} sous={dt(ind.cout_remplacer, true)} />
-            <Stat icone={CalendarClock} ton={ind.planifier ? 'orange' : 'neutre'} valeur={nb(ind.planifier)} label={t('À planifier')}
-              badge={<Badge ton="orange">{t('score ≥ 50')}</Badge>} sous={dt(ind.cout_planifier, true)} />
-            <Stat icone={Wallet} ton="teal" valeur={dt((ind.cout_remplacer || 0) + (ind.cout_planifier || 0), true)} label={t('Budget nécessaire')}
-              sous={t('pour remplacer et planifier')} />
-            <Stat icone={Wrench} ton="neutre" valeur={dt(ind.maintenance12Mois_remplacer, true)} label={t('Maintenance sur 12 mois')}
-              sous={t('dépensée sur les équipements à remplacer')} />
-            <Stat icone={Bot} ton={ind.avisIa ? 'bleu' : 'neutre'} valeur={nb(ind.avisIa)} label={t('Avis de l’IA')}
-              sous={t('rapports qui conseillent un remplacement')} />
-            <Stat icone={FileWarning} ton={ind.sansPrix ? 'ambre' : 'vert'} valeur={nb(ind.sansPrix)} label={t('Données manquantes')}
-              badge={<Badge ton={ind.sansPrix ? 'ambre' : 'vert'}>{ind.sansPrix ? t('À compléter') : t('Complet')}</Badge>}
-              sous={t('sans prix d’achat · {n} sans date de mise en service', { n: nb(ind.sansDate) })} />
+          <div className="rv2-kpis sv-l12">
+            <button type="button" className={`rv2-kpi ${ind.remplacer ? 'is-alerte' : ''}`} onClick={() => filtrerClassement('REMPLACER')}
+              title={t('Score ≥ 70 · voir dans le classement')}>
+              <span className="rv2-kpi__label"><TriangleAlert size={14} aria-hidden="true" /> {t('À remplacer')}</span>
+              <b>{nb(ind.remplacer)}</b>
+              <small>{dt(ind.cout_remplacer, true)}</small>
+            </button>
+            <button type="button" className={`rv2-kpi ${ind.planifier ? 'is-attention' : ''}`} onClick={() => filtrerClassement('PLANIFIER')}
+              title={t('Score ≥ 50 · voir dans le classement')}>
+              <span className="rv2-kpi__label"><CalendarClock size={14} aria-hidden="true" /> {t('À planifier')}</span>
+              <b>{nb(ind.planifier)}</b>
+              <small>{dt(ind.cout_planifier, true)}</small>
+            </button>
+            <div className="rv2-kpi">
+              <span className="rv2-kpi__label"><Wallet size={14} aria-hidden="true" /> {t('Budget nécessaire')}</span>
+              <b>{dt((ind.cout_remplacer || 0) + (ind.cout_planifier || 0), true)}</b>
+              <small>{t('pour remplacer et planifier')}</small>
+            </div>
+            <div className="rv2-kpi">
+              <span className="rv2-kpi__label"><Wrench size={14} aria-hidden="true" /> {t('Maintenance sur 12 mois')}</span>
+              <b>{dt(ind.maintenance12Mois_remplacer, true)}</b>
+              <small>{t('sur les équipements à remplacer')}</small>
+            </div>
+            <div className={`rv2-kpi ${ind.avisIa ? 'is-info' : ''}`}>
+              <span className="rv2-kpi__label"><Bot size={14} aria-hidden="true" /> {t('Avis de l’IA')}</span>
+              <b>{nb(ind.avisIa)}</b>
+              <small>{t('rapports qui conseillent un remplacement')}</small>
+            </div>
+            <div className={`rv2-kpi ${ind.sansPrix ? 'is-attention' : ''}`}>
+              <span className="rv2-kpi__label"><FileWarning size={14} aria-hidden="true" /> {t('Données manquantes')}</span>
+              <b>{nb(ind.sansPrix)}</b>
+              <small>{t('sans prix · {n} sans date', { n: nb(ind.sansDate) })}</small>
+            </div>
           </div>
 
           <Panneau className="sv-l8" titre={t('Âge et coût de maintenance')}
-            aide={t('Chaque point est un équipement : à droite, il a dépassé sa durée de vie ; en haut, sa maintenance a coûté une grande part de son prix. Le coin en haut à droite regroupe les candidats au remplacement. Cliquez sur un point pour voir son détail.')}
+            aide={t('Colonnes : nombre d’équipements par part de leur durée de vie déjà consommée. Courbe : leur coût de maintenance cumulé moyen, en % du prix d’achat. Survolez une colonne pour le détail par recommandation.')}
             meta={t('{n} équipements', { n: nb(ind.parc) })}>
-            <Matrice lignes={donnees.lignes} onChoisir={(id) => { setFocus({ id, t: Date.now() }); allerAuClassement(); }} />
-          </Panneau>
-          <Panneau className="sv-l4" titre={t('Répartition du parc')} aide={t('Cliquez sur une ligne pour filtrer le classement.')}>
-            <Repartition lignes={donnees.lignes} onFiltrer={(r) => { setFiltreDemande({ r, t: Date.now() }); allerAuClassement(); }} />
+            <BarresAge lignes={donnees.lignes} />
           </Panneau>
 
-          <Panneau className="sv-l8" titre={t('Remplacements prévus avec le budget actuel')}
-            aide={t('Simulation sur 5 ans avec le budget annuel des paramètres : les équipements à remplacer et à planifier, par score, tant que le budget de l’année le permet.')}
-            meta={base ? t('{b} par an · {n} remplacés sur 5 ans', { b: dt(base.scenario.budgetAnnuel, true), n: nb(base.remplaces) }) : null}>
-            {base ? <GraphiqueBudget resultat={base} noms={noms} /> : <Vide><LoaderCircle size={16} className="vl-tourne" /> {t('Calcul…')}</Vide>}
-          </Panneau>
           <Panneau className="sv-l4" titre={t('Familles à renouveler')} aide={t('Familles qui comptent le plus d’équipements à remplacer ou à planifier, et le coût de leur remplacement.')}>
             <Familles lignes={donnees.lignes} />
           </Panneau>
@@ -987,6 +975,8 @@ function Reglages({ donnees, onEnregistre }) {
   const [lignes, setLignes] = useState(null);
   const [envoi, setEnvoi] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [page, setPage] = useState(0);
+  const [taille, setTaille] = useState(10);
   useEffect(() => {
     renouvellementService.dureesVie()
       .then((l) => setLignes(l.map((x) => ({ ...x, saisie: x.dureeAnnees ?? '' }))))
@@ -1019,14 +1009,14 @@ function Reglages({ donnees, onEnregistre }) {
           <table className="rv-table rv-table--familles">
             <thead><tr><th>{t('Famille')}</th><th className="rv-num">{t('Équipements')}</th><th>{t('Durée de vie')}</th></tr></thead>
             <tbody>
-              {lignes.map((x, i) => (
+              {lignes.slice(page * taille, (page + 1) * taille).map((x) => (
                 <tr key={x.id}>
                   <td>{x.nom || `#${x.id}`}</td>
                   <td className="rv-num">{nb(x.nombre)}</td>
                   <td>
                     <span className="rv-unite rv-unite--court">
                       <input type="number" min="1" max="50" value={x.saisie} placeholder={String(donnees.parametres.dureeVieDefaut)}
-                        onChange={(e) => setLignes((l) => l.map((y, k) => (k === i ? { ...y, saisie: e.target.value } : y)))}
+                        onChange={(e) => setLignes((l) => l.map((y) => (y.id === x.id ? { ...y, saisie: e.target.value } : y)))}
                         aria-label={t('Durée de vie de {f}', { f: x.nom })} />
                       <span>{t('ans')}</span>
                     </span>
@@ -1035,6 +1025,8 @@ function Reglages({ donnees, onEnregistre }) {
               ))}
             </tbody>
           </table>
+          <Pagination page={Math.min(page, Math.max(0, Math.ceil(lignes.length / taille) - 1))} taille={taille} total={lignes.length}
+            onPage={setPage} onTaille={(v) => { setTaille(v); setPage(0); }} />
           {msg && <p className={msg.ok ? 'rv-ok' : 'rv-erreur'} role="status">{msg.texte}</p>}
           <div className="rv-detail__actions">
             <button type="button" className="vl-btn vl-btn--primaire" onClick={enregistrer} disabled={envoi}>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, cloneElement, Fragment } from 'react';
-import { Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search, Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer, Gauge, Loader2, Plus, Pencil, Power, ClipboardCheck, Trash2, ArrowUp, ArrowDown, Eye, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Save, RotateCcw, Play, CheckCircle2, AlertTriangle, Wrench, Building2, LoaderCircle, Search, Languages, CalendarClock, Activity, CirclePause, Timer, CarFront, Boxes, RefreshCw, Settings2, X, Undo2, Tags, Printer, Gauge, Loader2, Plus, Pencil, Power, ClipboardCheck, Trash2, ArrowUp, ArrowDown, Eye, ArrowLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
 import prestataireService from '../../../services/prestataireService';
@@ -12,6 +12,7 @@ import codePanneService from '../../../services/codePanneService';
 import reclamationService from '../../../services/Reclamationservice';
 import ReglageLangue from '../../../i18n/ReglageLangue';
 import { t, locale } from '../../../i18n';
+import { arbreFamilles, lignesArbre, basculerDansSet } from '../../../utils/arbreFamilles';
 import './ParametresSysteme.css';
 
 /** Pour les paramètres « planif.<code>.heure » : code du traitement exécutable à la main. */
@@ -69,11 +70,23 @@ function ChampPrestataire({ param, valeur, onChange }) {
   );
 }
 
-/** Familles d'articles Cubix à suivre : liste à cocher avec le nombre d'immobilisations de chacune. */
+/** Familles d'articles Cubix à suivre : arbre parent → fils, à cocher, avec le nombre d'immobilisations. */
 function ChampFamilles({ param, valeur, onChange, prestataireId }) {
   const [familles, setFamilles] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [filtre, setFiltre] = useState('');
+  const [ouverts, setOuverts] = useState(() => new Set()); // parents dépliés (aucun au départ)
+  // Articles des familles ouvertes : { [familleId]: 'chargement' | 'erreur' | [{ id, code, designation, nombre }] }
+  const [articlesFamille, setArticlesFamille] = useState({});
+  useEffect(() => { setArticlesFamille({}); }, [prestataireId]);
+  const chargerArticles = (familleId) => {
+    const cle = String(familleId);
+    if (articlesFamille[cle] && articlesFamille[cle] !== 'erreur') return;
+    setArticlesFamille((x) => ({ ...x, [cle]: 'chargement' }));
+    parametreService.getArticlesFamilleCubix(familleId, prestataireId)
+      .then((l) => setArticlesFamille((x) => ({ ...x, [cle]: l })))
+      .catch(() => setArticlesFamille((x) => ({ ...x, [cle]: 'erreur' })));
+  };
   const choisies = useMemo(() => new Set(String(valeur || '').split(',').map((x) => x.trim()).filter(Boolean)), [valeur]);
 
   useEffect(() => {
@@ -85,18 +98,111 @@ function ChampFamilles({ param, valeur, onChange, prestataireId }) {
     return () => { annule = true; };
   }, [prestataireId]);
 
-  const basculer = (id) => {
+  const arbre = useMemo(() => arbreFamilles(familles), [familles]);
+
+  // Cocher un parent coche (ou décoche) aussi tous ses fils
+  const basculer = (noeud) => {
     const n = new Set(choisies);
-    const cle = String(id);
-    if (n.has(cle)) n.delete(cle); else n.add(cle);
+    const tous = noeud.ids.length > 0 && noeud.ids.every((id) => n.has(id));
+    noeud.ids.forEach((id) => (tous ? n.delete(id) : n.add(id)));
     onChange([...n].join(','));
   };
+  const plier = (cle, noeud) => {
+    // En ouvrant une famille qui a ses propres équipements, on charge ses articles
+    if (noeud && !noeud.virtuel && noeud.nombre > 0 && !ouverts.has(cle)) chargerArticles(noeud.id);
+    plierSeul(cle);
+  };
+  const plierSeul = (cle) => setOuverts((avant) => {
+    const n = new Set(avant);
+    if (n.has(cle)) n.delete(cle); else n.add(cle);
+    return n;
+  });
 
-  const liste = (familles || []).filter((f) => !filtre.trim()
-    || `${f.nom || ''} ${f.code || ''}`.toLowerCase().includes(filtre.trim().toLowerCase()));
+  const q = filtre.trim().toLowerCase();
+  const correspond = (n) => !q || `${n.nom || ''} ${n.code || ''}`.toLowerCase().includes(q);
+  // Visible si la famille correspond, si un de ses fils correspond, ou si son parent correspond
+  const visible = (n, parentCorrespond) => parentCorrespond || correspond(n) || n.enfants.some((e) => visible(e, false));
+
   const total = (familles || []).reduce((s, f) => s + f.nombre, 0);
   const totalChoisi = (familles || []).filter((f) => choisies.has(String(f.id))).reduce((s, f) => s + f.nombre, 0);
   const fmt = (n) => n.toLocaleString(locale());
+
+  const rendre = (n, niveau, parentCorrespond, chemin) => {
+    if (chemin.has(n) || !visible(n, parentCorrespond)) return null;
+    const suite = new Set(chemin).add(n);
+    const cle = String(n.id);
+    const nbCoches = n.ids.filter((id) => choisies.has(id)).length;
+    const coche = n.ids.length > 0 && nbCoches === n.ids.length;
+    const partiel = nbCoches > 0 && !coche;
+    const aEnfants = n.enfants.length > 0;
+    const aArticles = !n.virtuel && n.nombre > 0; // la famille a ses propres équipements → ses articles
+    const ouvrable = aEnfants || aArticles;
+    const arts = articlesFamille[cle];
+    const ouvert = q ? (ouverts.has(cle) || aEnfants) : ouverts.has(cle);
+    return (
+      <Fragment key={cle}>
+        <li className={`ps-familles-noeud ${niveau === 0 ? 'is-racine' : 'is-fils'}`} style={{ '--niveau': niveau }}>
+          {ouvrable ? (
+            <button type="button" className="ps-familles-plier" onClick={() => plier(cle, n)}
+              aria-expanded={ouvert} aria-label={ouvert ? t('Replier') : t('Déplier')}>
+              {ouvert ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+          ) : <span className="ps-familles-plier ps-familles-plier--vide" aria-hidden="true" />}
+          {ouvrable ? (
+            // Famille ouvrable : la case coche la famille (et ses fils) ; un clic sur le nom affiche / cache
+            // ses sous-familles puis ses articles
+            <div className={`ps-familles-ligne ${coche ? 'is-coche' : partiel ? 'is-partiel' : ''} ${ouvert ? 'is-ouvert' : ''}`}>
+              <input type="checkbox" checked={coche} disabled={n.ids.length === 0}
+                ref={(el) => { if (el) el.indeterminate = partiel; }}
+                onChange={() => basculer(n)}
+                aria-label={t('Cocher {f} et ses sous-familles', { f: n.nom || t('Sans famille') })} />
+              <button type="button" className="ps-familles-ouvrir" onClick={() => plier(cle, n)}
+                aria-expanded={ouvert} title={ouvert ? t('Cacher le détail') : (aEnfants ? t('Afficher les sous-familles') : t('Afficher les articles'))}>
+                <span className="ps-familles-nom">
+                  {n.nom || t('Sans famille')}
+                  <span className="ps-familles-sous">
+                    {' · '}{aEnfants
+                      ? t('{n} sous-famille(s)', { n: n.enfants.length })
+                      : Array.isArray(arts) ? t('{n} article(s)', { n: arts.length }) : t('articles')}
+                  </span>
+                </span>
+                <span className="ps-familles-n" title={aEnfants ? t('Avec les sous-familles') : undefined}>{fmt(n.total)}</span>
+              </button>
+            </div>
+          ) : (
+            <label className={coche ? 'is-coche' : ''}>
+              <input type="checkbox" checked={coche} disabled={n.ids.length === 0} onChange={() => basculer(n)} />
+              <span className="ps-familles-nom" title={n.code ? `${n.nom || ''} (${n.code})` : n.nom || ''}>{n.nom || t('Sans famille')}</span>
+              <span className="ps-familles-n">{fmt(n.total)}</span>
+            </label>
+          )}
+        </li>
+        {aEnfants && ouvert && n.enfants.map((e) => rendre(e, niveau + 1, parentCorrespond || correspond(n), suite))}
+        {aArticles && ouvert && ouverts.has(cle) && (
+          arts === 'chargement' || arts === undefined ? (
+            <li className="ps-familles-article is-info" style={{ '--niveau': niveau + 1 }}>
+              <LoaderCircle size={13} className="ps-tourne" /> {t('Chargement des articles…')}
+            </li>
+          ) : arts === 'erreur' ? (
+            <li className="ps-familles-article is-info is-erreur" style={{ '--niveau': niveau + 1 }}>
+              <AlertTriangle size={13} /> {t('Impossible de lire les articles dans Cubix.')}
+              <button type="button" className="ps-action" onClick={() => chargerArticles(n.id)}>{t('Réessayer')}</button>
+            </li>
+          ) : arts.length === 0 ? (
+            <li className="ps-familles-article is-info" style={{ '--niveau': niveau + 1 }}>{t('Aucun article.')}</li>
+          ) : arts.map((art) => (
+            <li key={`a-${cle}-${art.id}`} className="ps-familles-article" style={{ '--niveau': niveau + 1 }}
+              title={art.code ? `${art.designation || ''} (${art.code})` : art.designation || ''}>
+              <Boxes size={12} aria-hidden="true" />
+              <span className="ps-familles-nom">{art.designation || `#${art.id}`}</span>
+              {art.code && <span className="ps-familles-code">{art.code}</span>}
+              <span className="ps-familles-n">{fmt(art.nombre)}</span>
+            </li>
+          ))
+        )}
+      </Fragment>
+    );
+  };
 
   return (
     <div className="ps-familles">
@@ -119,16 +225,8 @@ function ChampFamilles({ param, valeur, onChange, prestataireId }) {
       ) : erreur ? (
         <p className="ps-presta-nom ps-presta-nom--introuvable"><AlertTriangle size={13} /> {erreur}</p>
       ) : (
-        <ul className="ps-familles-liste" id={`ps-${param.cle}`}>
-          {liste.map((f) => (
-            <li key={f.id}>
-              <label className={choisies.has(String(f.id)) ? 'is-coche' : ''}>
-                <input type="checkbox" checked={choisies.has(String(f.id))} onChange={() => basculer(f.id)} />
-                <span className="ps-familles-nom">{f.nom || t('Sans famille')}</span>
-                <span className="ps-familles-n">{fmt(f.nombre)}</span>
-              </label>
-            </li>
-          ))}
+        <ul className="ps-familles-liste ps-familles-arbre" id={`ps-${param.cle}`}>
+          {arbre.map((r) => rendre(r, 0, false, new Set()))}
         </ul>
       )}
     </div>
@@ -772,9 +870,7 @@ function ReglesConditionnellesVue() {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Codes panne   (ancien fichier CodesPanneVue.jsx)
-// ═════════════════════════════════════════════════════════════
+
 const VIDE = { id: null, code: '', libelle: '', categorie: '', motsCles: '', familles: '', actif: true };
 
 const messageErreur = (e) => {
@@ -783,10 +879,11 @@ const messageErreur = (e) => {
   return d?.message || d?.error || t('Enregistrement impossible.');
 };
 
-/** Catalogue des codes panne : proposés par l'IA pendant la saisie d'une réclamation. */
-/** Choix des familles d'un code panne, en pastilles (aucune = toutes les familles). valeur : « 7,12 ». */
 function ChoixFamillesCode({ familles, valeur, onChange }) {
   const choisies = new Set(String(valeur || '').split(',').map((x) => x.trim()).filter(Boolean));
+  const arbre = useMemo(() => arbreFamilles(familles), [familles]);
+  const [ouverts, setOuverts] = useState(() => new Set());
+  const plier = basculerDansSet(setOuverts);
   const basculer = (id) => {
     const n = new Set(choisies);
     if (n.has(String(id))) n.delete(String(id)); else n.add(String(id));
@@ -798,12 +895,28 @@ function ChoixFamillesCode({ familles, valeur, onChange }) {
       <button type="button" className={`ps-cp-puce ${choisies.size === 0 ? 'is-choisie' : ''}`} aria-pressed={choisies.size === 0} onClick={() => onChange('')}>
         {t('Toutes les familles')}
       </button>
-      {(familles || []).map((f) => (
-        <button key={f.id} type="button" className={`ps-cp-puce ${choisies.has(String(f.id)) ? 'is-choisie' : ''}`}
-          aria-pressed={choisies.has(String(f.id))} onClick={() => basculer(f.id)}>
-          {f.nom || f.code}
-        </button>
-      ))}
+      {lignesArbre(arbre, ouverts).map(({ noeud: f, niveau, ouvert }) => {
+        const nbFilsChoisis = f.ids.filter((id) => id !== String(f.id) && choisies.has(id)).length;
+        return (
+          <span key={f.id} className={`ps-cp-puce-groupe ${niveau > 0 ? 'is-fils' : ''}`}>
+            {f.virtuel ? (
+              <span className="ps-cp-puce ps-cp-puce--parent">{f.nom || f.code}</span>
+            ) : (
+              <button type="button" className={`ps-cp-puce ${niveau > 0 ? 'ps-cp-puce--fils' : ''} ${choisies.has(String(f.id)) ? 'is-choisie' : ''}`}
+                aria-pressed={choisies.has(String(f.id))} onClick={() => basculer(f.id)}>
+                {f.nom || f.code}
+              </button>
+            )}
+            {f.enfants.length > 0 && (
+              <button type="button" className={`ps-cp-puce-fils ${nbFilsChoisis ? 'has-choix' : ''}`} onClick={() => plier(f.id)}
+                aria-expanded={ouvert} title={ouvert ? t('Cacher les sous-familles') : t('Afficher les sous-familles')}>
+                {ouvert ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                {nbFilsChoisis ? `${nbFilsChoisis}/${f.enfants.length}` : f.enfants.length}
+              </button>
+            )}
+          </span>
+        );
+      })}
     </div>
   );
 }
@@ -1044,8 +1157,15 @@ function ChecklistsReclamationVue({ prestataireId }) {
     return n;
   });
 
-  const liste = (familles || []).filter((f) => !filtre.trim()
-    || `${f.nom || ''} ${f.code || ''}`.toLowerCase().includes(filtre.trim().toLowerCase()));
+  const arbre = useMemo(() => arbreFamilles(familles), [familles]);
+  const [ouverts, setOuverts] = useState(() => new Set());
+  const plier = basculerDansSet(setOuverts);
+  const liste = lignesArbre(arbre, ouverts, filtre);
+  // Un clic sur un parent le choisit et affiche (ou cache) ses sous-familles
+  const cliquerFamille = (f) => {
+    if (!f.virtuel) setChoix(String(f.id));
+    if (f.enfants.length > 0 && (f.virtuel || choix === String(f.id) || !ouverts.has(String(f.id)))) plier(f.id);
+  };
 
   return (
     <div className="ps-mc">
@@ -1071,13 +1191,23 @@ function ChecklistsReclamationVue({ prestataireId }) {
                 </button>
               </li>
               {familles === null && <li className="ps-mc-vide"><Loader2 size={14} className="ps-tourne" /></li>}
-              {liste.map((f) => {
+              {liste.map(({ noeud: f, niveau, ouvert }) => {
                 const c = ecrites[String(f.id)];
                 return (
-                  <li key={f.id}>
-                    <button type="button" className={`ps-ck-famille ${choix === String(f.id) ? 'is-actif' : ''}`} onClick={() => setChoix(String(f.id))}>
-                      <span>{f.nom || f.code || `#${f.id}`}</span>
-                      <small className={c ? 'is-propre' : ''}>{c ? t('{n} question(s)', { n: c.questions.length }) : t('par défaut')}</small>
+                  <li key={f.id} className={niveau > 0 ? 'ps-ck-fils' : 'ps-ck-parent'} style={{ '--niveau': niveau }}>
+                    <button type="button" className={`ps-ck-famille ${choix === String(f.id) ? 'is-actif' : ''}`}
+                      onClick={() => cliquerFamille(f)} aria-expanded={f.enfants.length > 0 ? ouvert : undefined}>
+                      <span className="ps-ck-famille-nom">
+                        {f.enfants.length > 0
+                          ? (ouvert ? <ChevronDown size={13} aria-hidden="true" /> : <ChevronRight size={13} aria-hidden="true" />)
+                          : niveau > 0 ? <span className="ps-ck-puce" aria-hidden="true" /> : null}
+                        {f.nom || f.code || `#${f.id}`}
+                      </span>
+                      <small className={c ? 'is-propre' : ''}>
+                        {f.virtuel
+                          ? t('{n} sous-famille(s)', { n: f.enfants.length })
+                          : c ? t('{n} question(s)', { n: c.questions.length }) : t('par défaut')}
+                      </small>
                     </button>
                   </li>
                 );

@@ -115,3 +115,6 @@
 @media (max-width: 640px) {
   .scp-ligne { grid-template-columns: 1fr; }
 }
+
+/* Provenance du code (IA / mots-clés), sous la liste */
+.scp-source { margin: 4px 0 0; font-size: 12px; color: var(--g-slate-500, #64748b); }

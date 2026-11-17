@@ -5,6 +5,7 @@ import { prioriteLabel } from '../../../constants/Priorite';
 import { ChevronLeft, ChevronRight, CircleDollarSign, FileSpreadsheet, Inbox, LoaderCircle, Package, RefreshCw, Search, TriangleAlert, Truck, Wallet, Wrench } from 'lucide-react';
 import './Cout.css';
 import Pagination from '../../commun/Pagination';
+import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 
 /* ---------- Config ---------- */
 const PERIODES = [
@@ -201,6 +202,8 @@ function exporterExcel({ periodeLabel, bilan, bons, topEquipements }) {
 /* ---------- Composant ---------- */
 export default function Cout() {
   const [periodeKey, setPeriodeKey] = useState('3M');
+  const [lieuId, setLieuId] = useState('');
+  const carteLieux = useCarteLieux();
   const [bons, setBons] = useState([]);
   const [bilan, setBilan] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -214,7 +217,7 @@ export default function Cout() {
     setLoading(true);
     setError(null);
     try {
-      const bornes = calculerBornes(periodeKey);
+      const bornes = { ...calculerBornes(periodeKey), lieuId: lieuId || undefined };
       const [listeBons, bilanData] = await Promise.all([
         coutService.getParPeriode(bornes),
         coutService.getBilan(bornes),
@@ -227,7 +230,7 @@ export default function Cout() {
     } finally {
       setLoading(false);
     }
-  }, [periodeKey]);
+  }, [periodeKey, lieuId]);
 
   useEffect(() => { charger(); }, [charger]);
 
@@ -401,6 +404,7 @@ export default function Cout() {
         </div>
 
         <div className="cout-header__actions">
+          <FiltreLieu carte={carteLieux} valeur={lieuId} onChange={setLieuId} className="fl-select" />
           <div className="cout-periode-select">
             {PERIODES.map((p) => (
               <button
