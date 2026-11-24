@@ -17,10 +17,6 @@ const libelleStatut = (s, demande) => t(s === 'COMMANDE' && demande ? 'Transmis'
 const acceptable = (p) => !p?.cubixNumPiece && ['BROUILLON', 'EN_ATTENTE_VALIDATION', 'VALIDE'].includes(statutDe(p));
 const dateCourte = (d) => (d ? new Date(d).toLocaleDateString() : '—');
 
-/**
- * Liste des demandes de fourniture (type DEMANDE) ou des commandes fournisseur (type COMMANDE) d'un bon.
- * « Accepter » valide la pièce puis l'envoie à Cubix (bon de fourniture / commande fournisseur).
- */
 export default function ListeDocumentsAchat({ ouvert, type, bonMaintenance, onFermer, onChange, enfants }) {
   const demande = type === 'DEMANDE';
   const [documents, setDocuments] = useState([]);

@@ -1,8 +1,6 @@
 import api from './api';
 
-/* Codes panne (catalogue) et suggestion IA pendant la saisie d'une réclamation. */
 const codePanneService = {
-  /** tous : y compris désactivés ; lotArticleImmobilistationId : seulement les codes de la famille de cet équipement */
   async liste(tous = false, lotArticleImmobilistationId = null) {
     const params = {};
     if (tous) params.tous = true;
@@ -19,7 +17,6 @@ const codePanneService = {
   async desactiver(id) {
     await api.delete(`/codes-panne/${id}`);
   },
-  /* { description, lotArticleImmobilistationId, reclamationId } -> { source, codes, piste, semblables, message } */
   async suggestion(demande, signal) {
     const { data } = await api.post('/reclamations/suggestion', demande, { signal });
     return data;

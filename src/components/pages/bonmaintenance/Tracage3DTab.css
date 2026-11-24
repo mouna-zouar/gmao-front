@@ -1,6 +1,3 @@
-/* ============================================================
-   TRAÇAGE — journal vertical (même langage que BmdPage.css)
-   ============================================================ */
 .trx,
 .trx-etat {
   --t-ink: var(--ink, var(--g-ink-900));
@@ -24,7 +21,6 @@
 .trx button { font-family: inherit; }
 .trx :focus-visible { outline: 3px solid var(--t-brand); outline-offset: 2px; }
 
-/* ---------- Tons ---------- */
 .trx-ton--brand  { --c: var(--t-brand-deep); --c-wash: var(--t-brand-wash); }
 .trx-ton--info   { --c: var(--g-info-600); --c-wash: var(--g-info-50); }
 .trx-ton--violet { --c: #6b4fc8; --c-wash: #eeeafb; }
@@ -33,7 +29,6 @@
 .trx-ton--alert  { --c: var(--t-alert); --c-wash: var(--g-alerte-50); }
 .trx-ton--calme  { --c: var(--t-ink-soft); --c-wash: var(--g-ink-50); }
 
-/* ---------- Chargement / vide ---------- */
 .trx-etat {
   display: flex;
   flex-direction: column;
@@ -54,7 +49,6 @@
 .trx-tourne { animation: trx-rotation 0.9s linear infinite; }
 @keyframes trx-rotation { to { transform: rotate(360deg); } }
 
-/* ---------- En-tête ---------- */
 .trx-entete {
   display: flex;
   justify-content: space-between;
@@ -126,7 +120,6 @@
 
 .trx-maj { font-size: 13px; color: var(--t-ink-faint); }
 
-/* ---------- Erreur ---------- */
 .trx-erreur {
   display: flex;
   align-items: center;
@@ -153,7 +146,6 @@
   cursor: pointer;
 }
 
-/* ---------- Filtres ---------- */
 .trx-outils {
   display: flex;
   justify-content: space-between;
@@ -205,7 +197,6 @@
   cursor: pointer;
 }
 
-/* ---------- Journal ---------- */
 .trx-journal { transition: opacity 0.2s ease; }
 .trx-journal.is-actualise { opacity: 0.75; }
 
@@ -233,7 +224,6 @@
   list-style: none;
 }
 
-/* Rail vertical reliant les événements */
 .trx-liste::before {
   content: '';
   position: absolute;
@@ -390,7 +380,6 @@
   word-break: break-word;
 }
 
-/* ---------- Nouvel événement ---------- */
 .trx-nouveau {
   padding: 1px 8px;
   border-radius: 999px;
@@ -415,7 +404,6 @@
   100% { transform: scale(1); }
 }
 
-/* ---------- Attente de la suite ---------- */
 .trx-attente {
   display: flex;
   align-items: center;
@@ -436,7 +424,6 @@
   animation: trx-onde 2s ease-in-out infinite;
 }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .trx-liste { --heure: 44px; --point: 32px; }
   .trx-evt { column-gap: 8px; }
@@ -447,11 +434,6 @@
 }
 
 
-/* ============================================================
-   ANIMATIONS — le journal « respire »
-   ============================================================ */
-
-/* ---- Entrée en cascade (premier affichage, changement de filtre) ---- */
 .trx-journal.is-cascade .trx-jour-titre {
   animation: trx-titre-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: calc(var(--j, 0) * 120ms);
@@ -467,7 +449,6 @@
   animation-delay: calc(140ms + var(--i, 0) * 70ms);
 }
 
-/* Le rail se dessine de haut en bas */
 .trx-journal.is-cascade .trx-liste::before {
   transform-origin: top;
   animation: trx-rail 0.9s cubic-bezier(0.65, 0, 0.35, 1) both;
@@ -494,7 +475,6 @@
   to   { transform: scaleY(1); }
 }
 
-/* ---- Survol : la carte se soulève, la pastille réagit ---- */
 .trx-evt-carte {
   transition: border-color 0.15s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -512,7 +492,6 @@
   box-shadow: 0 0 0 4px var(--t-paper), 0 0 0 7px var(--c-wash);
 }
 
-/* ---- Détails : les lignes apparaissent une à une ---- */
 .trx-evt-details > div {
   animation: trx-ligne-in 0.3s ease-out both;
   animation-delay: calc(var(--d, 0) * 45ms);
@@ -523,10 +502,8 @@
   to   { opacity: 1; transform: none; }
 }
 
-/* ---- Compteurs ---- */
 .trx-chiffre { font-variant-numeric: tabular-nums; }
 
-/* ---- Direct : tracé de moniteur cardiaque ---- */
 .trx-pouls {
   width: 54px;
   height: 18px;
@@ -555,7 +532,6 @@
   to   { stroke-dashoffset: 0; }
 }
 
-/* ---- Actualisation : un reflet traverse l'en-tête ---- */
 .trx-entete { position: relative; overflow: hidden; }
 
 .trx-entete.is-actualise::after {
@@ -572,7 +548,6 @@
   to   { transform: translateX(100%); }
 }
 
-/* L'heure de mise à jour clignote une fois à chaque actualisation */
 .trx-maj { animation: trx-maj 0.9s ease-out; }
 
 @keyframes trx-maj {
@@ -583,7 +558,6 @@
 .trx-rafraichir svg { transition: transform 0.3s ease; }
 .trx-rafraichir:hover:not(:disabled) svg { transform: rotate(90deg); }
 
-/* ---- Filtres : petit rebond au clic ---- */
 .trx-filtre { transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease; }
 .trx-filtre:active { transform: scale(0.95); }
 .trx-filtre.is-actif span { animation: trx-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -593,7 +567,6 @@
   100% { transform: scale(1); }
 }
 
-/* ---- Nouvel événement : arrivée plus marquée ---- */
 .trx-evt.is-nouveau .trx-evt-carte {
   animation: trx-arrivee-vive 2.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -623,7 +596,6 @@
   50% { transform: translateY(-2px); }
 }
 
-/* ---- Attente : le point qui respire ---- */
 .trx-attente-point {
   box-shadow: 0 0 0 0 rgba(31, 157, 116, 0.5);
   animation: trx-respire 2s ease-out infinite;

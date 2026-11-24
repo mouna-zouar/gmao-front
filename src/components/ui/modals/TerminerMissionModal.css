@@ -100,7 +100,6 @@
 .tmm-btn.ghost { background: var(--g-slate-100); color: var(--g-slate-600); }
 .tmm-btn.ghost:hover { background: var(--g-slate-200); }
 
-/* Bouton principal → teal uni */
 .tmm-btn.primary {
   background: var(--g-brand-500);
   color: var(--g-blanc);

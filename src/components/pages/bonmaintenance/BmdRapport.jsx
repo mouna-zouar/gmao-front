@@ -23,18 +23,12 @@ const dateHeure = (v) => (v ? new Date(v).toLocaleString(locale(), { day: '2-dig
 const lignes = (l) => (Array.isArray(l) ? l.join('\n') : '');
 const versListe = (s) => String(s || '').split('\n').map((x) => x.trim()).filter(Boolean);
 
-/**
- * Rapport d'intervention du bon : rédigé par l'IA à la clôture (ou à la demande),
- * relu, corrigé puis validé par une personne. onChange(rapport) prévient la page
- * (fiche imprimée) ; onBonModifie() la fait recharger le bon après validation
- * (effet / cause / remède complétés).
- */
 export default function BmdRapport({ bon, equipementNom, onChange, onBonModifie }) {
   const [rapport, setRapport] = useState(null);
   const [chargement, setChargement] = useState(true);
-  const [action, setAction] = useState(null); // 'generer' | 'enregistrer' | 'valider'
+  const [action, setAction] = useState(null);
   const [erreur, setErreur] = useState(null);
-  const [edition, setEdition] = useState(null); // copie modifiable du contenu
+  const [edition, setEdition] = useState(null);
   const [langue, setLangue] = useState(() => (['fr', 'ar', 'en'].includes(langueActuelle()) ? langueActuelle() : 'fr'));
   const [completerBon, setCompleterBon] = useState(true);
 
@@ -59,7 +53,6 @@ export default function BmdRapport({ bon, equipementNom, onChange, onBonModifie 
 
   useEffect(() => { charger(); }, [charger]);
 
-  // Le brouillon automatique est préparé en arrière-plan à la clôture : on revérifie une fois
   useEffect(() => {
     if (chargement || rapport || bon?.etat !== ETAT_EFFECTUE) return undefined;
     const minuteur = setTimeout(charger, 8000);
@@ -119,7 +112,6 @@ export default function BmdRapport({ bon, equipementNom, onChange, onBonModifie 
   };
   const changer = (e) => setEdition((x) => ({ ...x, [e.target.name]: e.target.value }));
 
-  // Impression du rapport seul (A4) : en-tête du bon, rapport, validation et signatures
   const imprimerRapport = () => {
     if (!rapport) return;
     const r = { ...VIDE, ...(rapport.contenu || {}) };
@@ -171,7 +163,6 @@ export default function BmdRapport({ bon, equipementNom, onChange, onBonModifie 
     });
   };
 
-  // Rien à montrer tant que le bon n'est pas effectué et qu'aucun rapport n'existe
   if (!chargement && !rapport && bon?.etat !== ETAT_EFFECTUE) return null;
 
   const enCours = action != null;

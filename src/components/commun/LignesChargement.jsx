@@ -1,11 +1,5 @@
 import { t } from '../../i18n';
 
-/*
- * Lignes de chargement d'un tableau (barres grises qui scintillent) à la place de « Chargement… » :
- * la page garde sa forme pendant que les données arrivent.
- *   <LignesChargement colonnes={visibleColumns.length + 1} />
- * premiereCase : la 1re colonne est une case à cocher (petit carré au lieu d'une barre).
- */
 const LARGEURS = ['72%', '48%', '86%', '60%', '40%', '78%', '55%'];
 
 export default function LignesChargement({ colonnes = 5, lignes = 6, premiereCase = false }) {

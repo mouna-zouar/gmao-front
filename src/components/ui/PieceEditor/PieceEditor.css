@@ -1,5 +1,3 @@
-/* Éditeur de pièce d'un bon (demande de fourniture, commande fournisseur) — design épuré
- * Une seule couleur d'accent ; orange/rouge réservés au stock insuffisant et aux erreurs. */
 .pe-modale.cm-modale--plein { width: min(1280px, 96vw); height: min(820px, 92vh); }
 .pe-modale .cm-modale__corps { padding: 16px 20px; }
 .pe { display: flex; flex-direction: column; gap: 14px; }
@@ -11,12 +9,10 @@
 .pe-alerte--attention { background: #fffbeb; border-color: #fde68a; color: #92400e; }
 .pe-requis { border-color: #f59e0b !important; }
 
-/* ── Disposition : articles à gauche, la pièce à droite ── */
 .pe--deux { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; height: 100%; }
 .pe-principal { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 0; }
 .pe-cote { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 0; }
 
-/* ── Cartes latérales ── */
 .pe-carte { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
 .pe-carte__titre { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #94a3b8; }
 .pe-numero { margin-top: -6px; font-size: 1.25rem; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; letter-spacing: 0.01em; }
@@ -30,7 +26,6 @@
 .pe-champ textarea { resize: vertical; min-height: 54px; }
 .pe-champ input:focus, .pe-champ select:focus, .pe-champ textarea:focus { outline: none; border-color: var(--g-brand-500, #0794a4); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12); }
 
-/* Totaux */
 .pe-totaux dl { display: flex; flex-direction: column; gap: 6px; margin: 0; }
 .pe-totaux dl div { display: flex; justify-content: space-between; gap: 12px; font-size: 0.84rem; }
 .pe-totaux dt { color: #64748b; }
@@ -41,7 +36,6 @@
 .pe-totaux__ttc small { font-size: 0.75rem; font-weight: 600; color: #94a3b8; }
 .pe-totaux__nb { font-size: 0.76rem; color: #94a3b8; }
 
-/* ── Barre articles : recherche + outils de commande ── */
 .pe-barre-articles { display: flex; gap: 8px; align-items: stretch; }
 .pe-recherche { position: relative; flex: 1; }
 .pe-recherche__icone { position: absolute; inset-inline-start: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
@@ -68,7 +62,6 @@
 .pe-outil svg { color: var(--g-brand-500, #0794a4); }
 .pe-outil:hover { border-color: var(--g-brand-500, #0794a4); color: #0f172a; }
 
-/* ── Tableau des lignes ── */
 .pe-tableau-cadre { border: 1px solid #e2e8f0; border-radius: 12px; overflow: auto; min-height: 0; }
 .pe-tableau { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 .pe-tableau thead th {
@@ -104,21 +97,18 @@
 .pe-vide { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 24px; border: 1px dashed #e2e8f0; border-radius: 12px; color: #94a3b8; text-align: center; }
 .pe-vide p { margin: 0; font-size: 0.86rem; max-width: 420px; }
 
-/* Confirmation intégrée */
 .pe-dialogue {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   padding: 10px 14px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-weight: 600; font-size: 0.86rem;
 }
 .pe-dialogue div { display: flex; gap: 6px; }
 
-/* Succès */
 .pe-succes { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 36px 20px; text-align: center; }
 .pe-succes__icone { color: #059669; }
 .pe-succes h3 { margin: 0; font-size: 1.15rem; color: #0f172a; }
 .pe-succes p { margin: 0; color: #334155; }
 .pe-succes__aide { font-size: 0.84rem; color: #64748b !important; }
 
-/* Mode express : un bloc par fournisseur */
 .pe-express-intro { display: flex; align-items: center; gap: 8px; margin: 0; color: #334155; font-size: 0.86rem; }
 .pe-groupe { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; overflow: hidden; }
 .pe-groupe.is-fait { border-color: #a7f3d0; }
@@ -142,6 +132,5 @@
   .pe-recherche { flex-basis: 100%; }
 }
 
-/* Indication sous un champ (ex. dépôt source repris des articles) */
 .pe-champ__aide { font-size: 0.72rem; color: #0f766e; }
 .pe-champ__aide--alerte { color: #b42318; }

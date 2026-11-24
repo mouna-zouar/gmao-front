@@ -2,7 +2,6 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import assistantService from '../services/assistantService';
 import authService from '../services/Authservice';
 
-/** Personne connectée : auteur des actions faites par l'assistant. */
 function utilisateur() {
   const u = authService.getCurrentUser();
   const id = u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
@@ -22,15 +21,12 @@ function lireConversation() {
   } catch { return []; }
 }
 
-/** Envoie une question avec les 3 derniers échanges (pour les questions de suite). */
 export const poserQuestion = createAsyncThunk('assistant/poserQuestion', async ({ question, langue }, { getState, rejectWithValue }) => {
-  // Équipement choisi dans le panneau : la question porte sur lui
   const equipementId = getState().assistant.equipement?.id ?? null;
   const historique = getState().assistant.messages
     .filter((m) => m.role === 'ia' && m.question).slice(-3)
     .map((m) => ({ question: m.question, reponse: m.reponse || '' }));
   try {
-    // L'agent répond ET peut agir (il se replie seul sur les questions si l'IA ne gère pas les outils)
     return await assistantService.agent(question, langue, historique, utilisateur(), equipementId);
   } catch (e) {
     return rejectWithValue(e?.response?.data?.message || null);
@@ -42,7 +38,6 @@ const assistantSlice = createSlice({
   initialState: { messages: lireConversation(), enCours: false, equipement: null },
   reducers: {
     nouvelleConversation: (state) => { state.messages = []; },
-    /** { id, nom } ou null : équipement sur lequel portent les questions */
     choisirEquipementAssistant: (state, action) => { state.equipement = action.payload || null; },
   },
   extraReducers: (builder) => {
@@ -61,7 +56,6 @@ const assistantSlice = createSlice({
       })
       .addCase(poserQuestion.rejected, (state, action) => {
         state.enCours = false;
-        // message null : le composant affiche « L'assistant est injoignable » dans la langue de l'utilisateur
         state.messages.push({ role: 'ia', question: action.meta.arg.question, message: action.payload || null, injoignable: !action.payload });
       });
   },

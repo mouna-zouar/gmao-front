@@ -3,13 +3,13 @@ import {
   Navigation, Car, MapPin, Route, Gauge, Calendar, Shield,
   ShieldCheck, ShieldAlert, User, Clock, CheckCircle2, XCircle,
   Loader2, AlertTriangle, Activity, RefreshCw, ChevronDown,
-  Wrench, Play, Flag, TrendingUp, Timer, Zap, Target, Circle,
+  Wrench, Play, Flag, TrendingUp, Zap, Target, 
 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
 import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../../store/referentiels';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
-import personnelService from '../../../../services/personnelService';
+import personnelService from '../../../../services/Personnelservice';
 import { t, tp, locale } from '../../../../i18n';
 import './VehiculeTracage.css';
 
@@ -23,7 +23,6 @@ const ETAT_META = {
 const NATURE_LABELS = { 0: 'Temps', 1: 'Cycles', 2: 'Distance' };
 const TYPE_LABELS = { 0: 'Véhicule léger', 1: 'Camion', 2: 'Engin', 3: 'Tracteur', 4: 'Autre' };
 
-// ─── Utilitaires ───
 function destinationLabel(mission, emplacementsMap = {}) {
   const emp = emplacementsMap[mission?.destinationId];
   return emp?.nom || mission?.destination || '';
@@ -77,19 +76,7 @@ function formatDuration(ms) {
   return t('{n} min', { n: m });
 }
 
-function formatElapsed(fromIso) {
-  if (!fromIso) return '—';
-  const start = new Date(fromIso).getTime();
-  if (isNaN(start)) return '—';
-  return formatDuration(Date.now() - start);
-}
 
-function addMinutes(iso, min) {
-  if (!iso || min == null) return null;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  return new Date(d.getTime() + min * 60000).toISOString();
-}
 
 export default function VehiculeTracage({
   isModal = false,
@@ -109,12 +96,10 @@ export default function VehiculeTracage({
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // ─── Suivi live ───
   const [liveProgress, setLiveProgress] = useState(0);
   const [tick, setTick] = useState(0);
   const intervalRef = useRef(null);
 
-  // ─── Chargement véhicules + personnel ───
   useEffect(() => {
     const load = async () => {
       setLoadingVehicules(true);
@@ -144,7 +129,6 @@ export default function VehiculeTracage({
     load();
   }, [refreshKey]);
 
-  // ─── Sélection auto ───
   useEffect(() => {
     if (selectedVehiculeId) return;
     if (initialVehiculeId != null) {
@@ -156,7 +140,6 @@ export default function VehiculeTracage({
     }
   }, [vehicules, selectedVehiculeId, initialVehiculeId]);
 
-  // ─── Chargement missions + conducteur ───
   useEffect(() => {
     if (!selectedVehiculeId) return;
 
@@ -196,7 +179,6 @@ export default function VehiculeTracage({
       .sort((a, b) => new Date(b.dateDepart || 0) - new Date(a.dateDepart || 0))[0];
   }, [missions]);
 
-  // ─── Progression live ───
   useEffect(() => {
     if (!missionEnCours) {
       setLiveProgress(0);
@@ -244,7 +226,6 @@ export default function VehiculeTracage({
     ? (personnelsMap[conducteurActuel.personnelId || conducteurActuel.id] || conducteurActuel)
     : null;
 
-  // ─── Actions ───
   const handleDemarrer = async () => {
     if (!derniereMission || derniereMission.etat !== 0) return;
     try {
@@ -286,7 +267,6 @@ export default function VehiculeTracage({
   return (
     <div className={`vtr-container ${isModal ? 'vtr-container--modal' : ''}`}>
 
-      {/* HEADER */}
       {!isModal ? (
         <div className="vtr-header">
           <div className="vtr-header-left">
@@ -354,19 +334,15 @@ export default function VehiculeTracage({
         </div>
       ) : (
         <>
-          {/* BANDEAU MISSION EN COURS — Version innovante */}
           {missionEnCours && (
             <LiveMissionBanner
               mission={missionEnCours}
-              vehicule={vehicule}
-              conducteur={conducteurLabel}
               progress={liveProgress}
               onTerminer={handleTerminer}
               emplacementsMap={emplacementsMap}
             />
           )}
 
-          {/* BANDEAU MISSION PRÊTE */}
           {!missionEnCours && derniereMission && derniereMission.etat === 0 && (
             <div className="vtr-ready-banner">
               <div className="vtr-ready-left">
@@ -387,7 +363,6 @@ export default function VehiculeTracage({
             </div>
           )}
 
-          {/* CARTE VÉHICULE */}
           <div className="vtr-vehicle-card">
             <div className="vtr-vehicle-main">
               <div className="vtr-vehicle-icon-wrap">
@@ -445,7 +420,6 @@ export default function VehiculeTracage({
             </div>
           </div>
 
-          {/* SUIVI / HISTORIQUE */}
           <div className="vtr-main">
             <div className="vtr-side-card vtr-side-card--full">
               {missionEnCours ? (
@@ -516,7 +490,6 @@ export default function VehiculeTracage({
             </div>
           </div>
 
-          {/* ÉCHÉANCES */}
           <div className="vtr-echeances">
             <EcheanceCard title={t("Assurance")} Icon={Shield} dateDerniere={vehicule.dateDernierAssurance} dateProchaine={vehicule.dateProchainAssurance} />
             <EcheanceCard title={t("Vignette")} Icon={Shield} dateDerniere={vehicule.dateDernierVignette} dateProchaine={vehicule.dateProchainVignette} />
@@ -530,7 +503,6 @@ export default function VehiculeTracage({
             />
           </div>
 
-          {/* CONDUCTEUR */}
           {conducteurLabel && (
             <div className="vtr-driver-card">
               <div className="vtr-driver-avatar">
@@ -557,21 +529,16 @@ export default function VehiculeTracage({
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// BANDEAU MISSION EN COURS — Innovant
-// ═══════════════════════════════════════════════════════════════
-function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer, emplacementsMap = {} }) {
+function LiveMissionBanner({ mission, progress, onTerminer, emplacementsMap = {} }) {
   const pct = Math.min(100, Math.round(progress * 100));
   const missionRef = mission.num || `#${mission.id}`;
 
   return (
     <div className="vtr-live-banner">
-      {/* Décorations */}
       <div className="vtr-live-banner__orb vtr-live-banner__orb--1" />
       <div className="vtr-live-banner__orb vtr-live-banner__orb--2" />
       <div className="vtr-live-banner__grid" />
 
-      {/* Header */}
       <div className="vtr-live-banner__header">
         <div className="vtr-live-banner__header-left">
           <span className="vtr-live-banner__pulse">
@@ -596,9 +563,7 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
         </div>
       </div>
 
-      {/* Route visuelle avec stepper */}
       <div className="vtr-live-banner__route">
-        {/* Départ */}
         <div className="vtr-live-banner__endpoint vtr-live-banner__endpoint--start">
           <span className="vtr-live-banner__endpoint-icon">
             <Flag size={14} strokeWidth={2.5} />
@@ -609,19 +574,16 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
           </span>
         </div>
 
-        {/* Barre de progression */}
         <div className="vtr-live-banner__progress">
           <div className="vtr-live-banner__progress-track">
             <div
               className="vtr-live-banner__progress-fill"
               style={{ width: `${pct}%` }}
             />
-            {/* Traînée lumineuse */}
             <div
               className="vtr-live-banner__progress-trail"
               style={{ width: `${pct}%` }}
             />
-            {/* Voiture */}
             <div
               className="vtr-live-banner__car"
               style={{ left: `${pct}%` }}
@@ -643,7 +605,6 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
           </div>
         </div>
 
-        {/* Arrivée */}
         <div className="vtr-live-banner__endpoint vtr-live-banner__endpoint--end">
           <span className="vtr-live-banner__endpoint-icon">
             <MapPin size={14} strokeWidth={2.5} />
@@ -660,9 +621,6 @@ function LiveMissionBanner({ mission, vehicule, conducteur, progress, onTerminer
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-// PANNEAU SUIVI LIVE — Innovant avec métriques circulaires
-// ═══════════════════════════════════════════════════════════════
 function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTerminer, emplacementsMap = {} }) {
   const pct = Math.min(100, Math.round(progress * 100));
   const etaMin = useMemo(() => {
@@ -684,7 +642,6 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
     return new Date(Date.now() + etaMin * 60000).toISOString();
   }, [etaMin, tick]);
 
-  // Timeline de la mission
   const timeline = useMemo(() => {
     const steps = [];
     const departAt = mission.dateDepart;
@@ -700,7 +657,6 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
       });
     }
 
-    // Point intermédiaire fictif : 50%
     if (progress >= 0.5 && departAt) {
       steps.push({
         label: t("Mi-parcours"),
@@ -735,7 +691,6 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
   return (
     <div className="vtr-live-panel">
 
-      {/* ─── Header ─── */}
       <div className="vtr-live-panel__header">
         <div className="vtr-live-panel__title">
           <span className="vtr-live-panel__dot" />
@@ -746,7 +701,6 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
         </span>
       </div>
 
-      {/* ─── Métriques circulaires ─── */}
       <div className="vtr-live-panel__metrics">
         <CircularMetric
           value={pct}
@@ -771,7 +725,6 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
         />
       </div>
 
-      {/* ─── Timeline mission ─── */}
       <div className="vtr-live-panel__section">
         <div className="vtr-live-panel__section-title">
           <Activity size={14} strokeWidth={2.5} />
@@ -800,7 +753,6 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
         </div>
       </div>
 
-      {/* ─── Briefing ─── */}
       <div className="vtr-live-panel__section">
         <div className="vtr-live-panel__section-title">
           <Zap size={14} strokeWidth={2.5} />
@@ -876,7 +828,6 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
         </div>
       </div>
 
-      {/* ─── Action ─── */}
       <button className="vtr-live-panel__action" onClick={onTerminer}>
         <CheckCircle2 size={16} strokeWidth={2.5} />
         {t("Terminer la mission")}
@@ -885,7 +836,6 @@ function LiveTrackingPanel({ mission, vehicule, conducteur, progress, tick, onTe
   );
 }
 
-// ─── Métrique circulaire SVG ───
 function CircularMetric({ value, max, suffix = '', displayValue, label, color }) {
   const ratio = max > 0 ? Math.min(1, value / max) : 0;
   const radius = 34;
@@ -925,7 +875,6 @@ function CircularMetric({ value, max, suffix = '', displayValue, label, color })
   );
 }
 
-// ─── Carte d'échéance ───
 function EcheanceCard({ title, Icon, dateDerniere, dateProchaine, extra }) {
   const level = alertLevel(dateProchaine);
   const days = daysUntil(dateProchaine);

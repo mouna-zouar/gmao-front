@@ -1,9 +1,5 @@
-/* ==========================================================================
-   PLANNING TECHNICIEN — cartes par technicien (style sobre de la GMAO)
-   ========================================================================== */
 .ptn-page { display: flex; flex-direction: column; gap: 14px; padding: 20px 24px; min-width: 0; font-family: var(--g-police, inherit); }
 
-/* Barre haute */
 .ptn-haut {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   padding-bottom: 12px; border-bottom: 1px solid var(--g-slate-200, #e2e8f0);
@@ -34,7 +30,6 @@
 .ptn-recherche input::-webkit-search-cancel-button { display: none; }
 .ptn-recherche button { display: inline-grid; place-items: center; padding: 2px; border: 0; background: none; color: var(--g-slate-400, #94a3b8); cursor: pointer; }
 
-/* Bande de synthèse (sert de filtre) */
 .ptn-kpis {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
   background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 12px; overflow: hidden;
@@ -56,7 +51,6 @@ button.ptn-kpi:hover { background: var(--g-slate-50, #f8fafc); }
 .ptn-kpi--info { --k: var(--g-brand-700, #066470); }
 .ptn-point { width: 6px; height: 6px; border-radius: 50%; background: var(--k); }
 
-/* Grille de cartes — style fin : traits légers, séparateurs au lieu de cadres */
 .ptn-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 12px; align-items: start; }
 .ptn-carte {
   --s: var(--g-emerald-500, #10b981);
@@ -81,14 +75,12 @@ button.ptn-kpi:hover { background: var(--g-slate-50, #f8fafc); }
 .ptn-statut { flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px; font-size: 0.72rem; font-weight: 600; color: var(--g-slate-500, #64748b); }
 .ptn-statut::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--s); }
 
-/* Couleurs par état d'intervention */
 .ptn-etat--nouveau { --e: var(--g-blue-600, #2563eb); }
 .ptn-etat--encours { --e: var(--g-brand-500, #0794a4); }
 .ptn-etat--termine { --e: var(--g-emerald-600, #059669); }
 .ptn-etat--annule { --e: var(--g-slate-400, #94a3b8); }
 .ptn-etat--autre { --e: var(--g-slate-500, #64748b); }
 
-/* Mini-frise de la journée (trait fin) */
 .ptn-frise { display: flex; flex-direction: column; gap: 2px; margin-top: 2px; }
 .ptn-frise__piste { position: relative; height: 4px; border-radius: 2px; background: var(--g-slate-100, #f1f5f9); }
 .ptn-frise__bloc { position: absolute; top: 0; bottom: 0; border-radius: 2px; background: var(--e); }
@@ -98,7 +90,6 @@ button.ptn-kpi:hover { background: var(--g-slate-50, #f8fafc); }
 .ptn-frise__axe span:first-child { transform: none; }
 .ptn-frise__axe span:last-child { transform: translateX(-100%); }
 
-/* Liste des interventions : lignes séparées par un trait fin */
 .ptn-liste { list-style: none; margin: 0 -16px; padding: 0; display: flex; flex-direction: column; }
 .ptn-liste li + li { border-top: 1px solid var(--g-slate-100, #f1f5f9); }
 .ptn-creneau {

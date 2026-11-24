@@ -1,16 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '../Button';
 import { commePage, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/personnelService';
+import personnelService from '../../../services/Personnelservice';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
 import {
   UserCheck, X, Car, User, Calendar, Loader2,
-  AlertTriangle, Save, Settings2, ShieldCheck, ShieldAlert,
+  AlertTriangle, Save, ShieldCheck, ShieldAlert,
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeConducteurModal.css';
 
-// ─── Options mode d'affectation ───
 const MODE_OPTIONS = [
   { value: 0, label: 'Principal' },
   { value: 1, label: 'Secondaire' },
@@ -25,13 +24,11 @@ const emptyForm = {
   modeAffectation: 0,
 };
 
-// ─── Sections de navigation (remplace les steps) ───
 const NAV_SECTIONS = [
   { id: 'affectation', label: 'Affectation', Icon: Car },
   { id: 'dateMode',    label: 'Date & mode', Icon: Calendar },
 ];
 
-// ─── Utilitaires ───
 function toDateTimeInput(value) {
   if (!value) return '';
   const s = String(value);
@@ -47,7 +44,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState(emptyForm);
 
-  // ✅ REMPLACE currentStep par activeSection
   const [activeSection, setActiveSection] = useState('affectation');
 
   const [vehicules, setVehicules] = useState([]);
@@ -56,11 +52,9 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
   const [personnels, setPersonnels] = useState([]);
   const [loadingPersonnels, setLoadingPersonnels] = useState(false);
 
-  // ─── Éligibilité conducteur / véhicule (selon la catégorie de permis) ───
   const [eligibilite, setEligibilite] = useState(null);
   const [checkingEligibilite, setCheckingEligibilite] = useState(false);
 
-  // ─── Chargement des listes ───
   useEffect(() => {
     if (!isOpen) return;
 
@@ -94,7 +88,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
     fetchPersonnels();
   }, [isOpen]);
 
-  // ─── Pré-remplissage ───
   useEffect(() => {
     if (!isOpen) return;
 
@@ -113,8 +106,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
     }
   }, [isOpen, vehiculeConducteur, isEditing]);
 
-  // ─── Contrôle du permis : dès que véhicule + conducteur sont choisis, on
-  // vérifie si le conducteur détient une catégorie de permis compatible ───
   useEffect(() => {
     if (!isOpen || !formData.vehiculeId || !formData.personnelId) {
       setEligibilite(null);
@@ -142,7 +133,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
     setError(null);
   };
 
-  // ─── Soumission ───
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
@@ -194,13 +184,11 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
   const conducteurLabel = personnels.find((p) => String(p.id) === String(formData.personnelId));
   const modeLabel = MODE_OPTIONS.find((o) => o.value === Number(formData.modeAffectation))?.label ?? '';
 
-  // ─── Badges compteurs par section ───
   const sectionCounts = {
     affectation: [formData.vehiculeId, formData.personnelId].filter(Boolean).length,
     dateMode: [formData.dateAffectation, formData.modeAffectation].filter((v) => v !== '' && v != null).length,
   };
 
-  // ─── Contenu des sections ───
   const renderContent = () => {
     switch (activeSection) {
       case 'affectation':
@@ -276,7 +264,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
               </div>
             </div>
 
-            {/* Contrôle permis / type de véhicule */}
             {formData.vehiculeId && formData.personnelId && (
               <div className={`vcdm-eligibilite ${
                 checkingEligibilite ? 'checking' : eligibilite?.eligible ? 'ok' : eligibilite ? 'ko' : ''
@@ -348,7 +335,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
               </div>
             </div>
 
-            {/* Récapitulatif */}
             <div className="bmm-summary">
               <div className="bmm-summary-row">
                 <span className="bmm-summary-label">Véhicule</span>
@@ -385,7 +371,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
     <div className="modal-overlay" onClick={onClose}>
       <div className="bmm-modal bmm-modal--sm" onClick={(e) => e.stopPropagation()}>
 
-        {/* HEADER */}
         <div className="bmm-header">
           <div className="bmm-header-left">
             <div className="bmm-header-icon-wrap">
@@ -406,10 +391,8 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
           </div>
         </div>
 
-        {/* LAYOUT SPLIT : NAV + CONTENU */}
         <form className="bmm-layout" onSubmit={handleSubmit}>
 
-          {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
             <div className="bmm-nav-title">Sections</div>
             <nav className="bmm-nav-list">
@@ -440,7 +423,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
             </nav>
           </aside>
 
-          {/* CONTENU */}
           <div className="bmm-content">
             {renderContent()}
 
@@ -453,7 +435,6 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
           </div>
         </form>
 
-        {/* FOOTER */}
         <div className="bmm-footer">
           <div className="bmm-footer-left">
             <span className="bmm-footer-step">

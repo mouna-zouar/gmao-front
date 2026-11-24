@@ -56,7 +56,6 @@ export function VeilleKpis({ items, label }) {
   );
 }
 
-/** Choix exclusif (filtre de statut), avec compteur. */
 export function VeilleSegments({ options, valeur, onChange, label }) {
   return (
     <div className="vl-segments" role="group" aria-label={label}>
@@ -85,7 +84,6 @@ export function Pastille({ ton = 'neutre', children, point = true, title }) {
   );
 }
 
-/** Petite barre de progression (0–100). */
 export function Jauge({ valeur, ton = 'marque', label }) {
   const v = Math.max(0, Math.min(100, Number(valeur) || 0));
   return (
@@ -135,9 +133,6 @@ export function Panneau({ icone: Icone, titre, n, aide, ton, actions, children, 
   );
 }
 
-/** Numéros à afficher : 1 … 4 5 [6] 7 8 … 40 */
-
-/** Barre de pagination sous une liste (page commence à 0) : composant commun Pagination. */
 export function VeillePagination(props) {
   return <Pagination {...props} />;
 }

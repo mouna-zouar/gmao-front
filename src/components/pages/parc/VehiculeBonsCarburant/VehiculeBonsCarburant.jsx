@@ -3,16 +3,11 @@ import { Calendar, Car, Coins, Gauge, User } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeBonCarburantService from '../../../../services/vehiculeBonCarburantService';
 import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/personnelService';
+import personnelService from '../../../../services/Personnelservice';
 import VehiculeBonCarburantModal from '../../../ui/modals/VehiculeBonCarburantModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeBonsCarburant.css';
-
-/*
- * Bons carburant : page liste de la bibliothèque commune.
- * La fenêtre reste VehiculeBonCarburantModal (contrôles du kilométrage et du montant).
- */
 
 const formatDate = (iso) => {
   if (!iso) return '—';

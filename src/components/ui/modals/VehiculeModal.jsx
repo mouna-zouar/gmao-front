@@ -1,23 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '../Button';
-import vehiculeService from '../../../services/vehiculeService';
 import { commePage, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../constants/Criticite';
 import authService from '../../../services/Authservice';
 import {
   Car,
   X,
-  Hash,
+  
   Wrench,
   Shield,
   Calendar,
-  Gauge,
+  
   Loader2,
   AlertTriangle,
   Save,
   Bell,
-  Truck,
-  FileText,
+  
+  
   Search,
   ChevronDown,
   Check,
@@ -26,7 +25,6 @@ import { t, locale } from '../../../i18n';
 import './Modal.css';
 import './VehiculeModal.css';
 
-// ─── Options ───
 const TYPE_OPTIONS = [
   { value: 0, label: 'Véhicule léger' },
   { value: 1, label: 'Camion' },
@@ -86,7 +84,6 @@ const emptyForm = {
   notif: 0,
 };
 
-// ─── Sections de navigation (remplace les steps) ───
 const NAV_SECTIONS = [
   { id: 'identification', label: 'Identification', Icon: Car },
   { id: 'affectation',    label: 'Affectation',    Icon: Wrench },
@@ -95,7 +92,6 @@ const NAV_SECTIONS = [
   { id: 'notifications',  label: 'Notifications',  Icon: Bell },
 ];
 
-// ─── Utilitaires ───
 function toDateInput(value) {
   if (!value) return '';
   const s = String(value);
@@ -121,10 +117,6 @@ function toNumOrNull(v) {
   return isNaN(n) ? null : n;
 }
 
-// Le backend attend un LocalDateTime (ex: "2024-01-15T00:00:00").
-// Les <input type="date"> ne renvoient que "2024-01-15", ce qui fait
-// échouer la désérialisation Jackson côté Spring (400 Bad Request)
-// lors de la création/modification. On complète donc l'heure ici.
 function toApiDateTime(dateOnly) {
   if (!dateOnly) return null;
   const s = String(dateOnly);
@@ -132,7 +124,6 @@ function toApiDateTime(dateOnly) {
   return s;
 }
 
-// ─── Select avec recherche intégrée (combobox) ───
 const SearchableSelect = ({
   id,
   name,
@@ -155,7 +146,6 @@ const SearchableSelect = ({
   const selected = options.find((o) => String(getValue(o)) === String(value));
   const selectedLabel = selected ? getLabel(selected) : '';
 
-  // Fermer au clic extérieur
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
@@ -167,7 +157,6 @@ const SearchableSelect = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fermer avec Échap
   useEffect(() => {
     const handleKey = (e) => {
       if (e.key === 'Escape') {
@@ -183,9 +172,7 @@ const SearchableSelect = ({
   const handleFocus = () => {
     if (disabled) return;
     setIsOpen(true);
-    // On pré-remplit la recherche avec le label sélectionné pour permettre l'édition
     setSearch(selectedLabel);
-    // Sélectionner tout le texte pour faciliter la saisie
     setTimeout(() => inputRef.current?.select(), 0);
   };
 
@@ -208,14 +195,12 @@ const SearchableSelect = ({
     inputRef.current?.focus();
   };
 
-  // Filtre
   const term = search.trim().toLowerCase();
   const isSelectedLabel = selected && term === selectedLabel.toLowerCase();
   const filtered = (!term || isSelectedLabel)
     ? options
     : options.filter((o) => getLabel(o).toLowerCase().includes(term));
 
-  // Valeur affichée dans l'input
   const displayValue = isOpen ? search : selectedLabel;
 
   return (
@@ -297,7 +282,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
   const [prestataires, setPrestataires] = useState([]);
   const [loadingPrestataires, setLoadingPrestataires] = useState(false);
 
-  // ─── Chargement des listes ───
   useEffect(() => {
     if (!isOpen) return;
 
@@ -330,7 +314,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
     fetchPrestataires();
   }, [isOpen]);
 
-  // ─── Pré-remplissage ───
   useEffect(() => {
     if (!isOpen) return;
 
@@ -387,7 +370,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
     setError(null);
   };
 
-  // ─── Soumission ───
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
 
@@ -467,7 +449,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
 
   const typeLabel = TYPE_OPTIONS.find((o) => o.value === Number(formData.type))?.label ?? '';
 
-  // ─── Badges compteurs par section ───
   const sectionCounts = {
     identification: [
       formData.matricule,
@@ -500,7 +481,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
     ].filter((v) => v !== '' && v != null).length,
   };
 
-  // ─── Contenu des sections ───
   const renderContent = () => {
     switch (activeSection) {
       case 'identification':
@@ -565,8 +545,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
                   <span className="bmm-km-unit">km</span>
                 </div>
                 {(() => {
-                  // Seule la fiche du véhicule peut corriger le compteur (même à la baisse) ;
-                  // missions et bons de carburant ne peuvent que l'augmenter.
                   const ancien = isEditing ? Number(vehicule?.kilometrage) : NaN;
                   const nouveau = formData.kilometrage === '' ? NaN : Number(formData.kilometrage);
                   const fmt = (v) => v.toLocaleString(locale());
@@ -890,7 +868,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="bmm-modal" onClick={(e) => e.stopPropagation()}>
 
-        {/* HEADER */}
         <div className="bmm-header">
           <div className="bmm-header-left">
             <div className="bmm-header-icon-wrap">
@@ -911,10 +888,8 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
           </div>
         </div>
 
-        {/* LAYOUT SPLIT : NAV + CONTENU */}
         <form className="bmm-layout" onSubmit={handleSubmit}>
 
-          {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
             <div className="bmm-nav-title">Sections</div>
             <nav className="bmm-nav-list">
@@ -945,7 +920,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
             </nav>
           </aside>
 
-          {/* CONTENU */}
           <div className="bmm-content">
             {renderContent()}
 
@@ -958,7 +932,6 @@ const VehiculeModal = ({ isOpen, onClose, onSave, vehicule, isEditing }) => {
           </div>
         </form>
 
-        {/* FOOTER */}
         <div className="bmm-footer">
           <div className="bmm-footer-left">
             <span className="bmm-footer-step">

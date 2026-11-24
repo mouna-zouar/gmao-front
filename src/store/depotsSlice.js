@@ -1,15 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import depotCubixService from '../services/depotCubixService';
 
-/*
- * Dépôts Cubix (liste de référence partagée).
- * Chargés une seule fois puis gardés dans le store : les écrans suivants les reçoivent sans nouvel appel.
- *   dispatch(chargerDepots())                 → la liste (depuis le store si déjà chargée)
- *   dispatch(chargerDepots({ forcer: true })) → recharge depuis le serveur
- *   useAppSelector(selectDepots), selectDepotParId(id)
- */
-
-let enVol = null; // évite deux appels simultanés quand plusieurs écrans s'ouvrent en même temps
+let enVol = null;
 
 export const chargerDepots = createAsyncThunk('depots/charger', async ({ forcer = false } = {}, { getState }) => {
   const etat = getState().depots;
@@ -21,7 +13,7 @@ export const chargerDepots = createAsyncThunk('depots/charger', async ({ forcer 
 
 const depotsSlice = createSlice({
   name: 'depots',
-  initialState: { liste: [], statut: 'vide', erreur: null }, // statut : vide | chargement | pret | erreur
+  initialState: { liste: [], statut: 'vide', erreur: null },
   reducers: {
     viderDepots(state) { state.liste = []; state.statut = 'vide'; state.erreur = null; },
   },

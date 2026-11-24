@@ -3,12 +3,6 @@ import { AlertTriangle, CalendarDays, ChevronLeft, ChevronRight, ClipboardList, 
 import { t, tp, locale } from '../../../i18n';
 import { cleJour, debutJour, estUrgent, joursCouverts, versDate } from './espacePlanning';
 
-/*
- * Colonne de droite de l'espace personnel :
- *  - un mini calendrier du mois avec les travaux à faire (tâches et bons) ;
- *  - « À surveiller » : ce qui est en retard ou dont l'échéance est très proche.
- */
-
 const TONS = { retard: 'alerte', aujourdhui: 'attention', proche: 'attention', 'plus-tard': 'action' };
 
 function BadgeEcheance({ statut }) {
@@ -36,16 +30,11 @@ function LigneTravail({ travail, onOuvrir, compacte = false }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Mini calendrier                                                    */
-/* ------------------------------------------------------------------ */
-
 export function MiniCalendrier({ travaux, onOuvrir }) {
   const aujourdhui = debutJour(new Date());
   const [mois, setMois] = useState(() => new Date(aujourdhui.getFullYear(), aujourdhui.getMonth(), 1));
   const [jourChoisi, setJourChoisi] = useState(aujourdhui);
 
-  // Travaux par jour (un travail sur plusieurs jours apparaît sur chacun)
   const parJour = useMemo(() => {
     const map = new Map();
     travaux.forEach((tr) => joursCouverts(tr).forEach((cle) => {
@@ -55,7 +44,6 @@ export function MiniCalendrier({ travaux, onOuvrir }) {
     return map;
   }, [travaux]);
 
-  // Grille : semaines commençant le lundi, 6 lignes maximum
   const cases = useMemo(() => {
     const premier = new Date(mois);
     const decalage = (premier.getDay() + 6) % 7;
@@ -71,7 +59,7 @@ export function MiniCalendrier({ travaux, onOuvrir }) {
   }, [mois]);
 
   const nomsJours = useMemo(() => {
-    const lundi = new Date(2024, 0, 1); // un lundi
+    const lundi = new Date(2024, 0, 1);
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(lundi);
       d.setDate(lundi.getDate() + i);
@@ -159,10 +147,6 @@ export function MiniCalendrier({ travaux, onOuvrir }) {
     </section>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  En retard / échéance très proche                                   */
-/* ------------------------------------------------------------------ */
 
 export function ASurveiller({ travaux, onOuvrir }) {
   const urgents = travaux.filter((tr) => estUrgent(tr.statut));

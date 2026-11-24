@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import risqueService from '../../../services/Risqueservice';
 import { t, tp, locale } from '../../../i18n';
 import { Inbox, LoaderCircle, Minus, RefreshCw, Search, ShieldAlert, TrendingDown, TrendingUp, TriangleAlert } from 'lucide-react';
 import './Risque.css';
 import PaginationCommune from '../../commun/Pagination';
 
-/* ---------- Config ---------- */
 const NIVEAU_LABELS = {
   CRITIQUE: 'Critique',
   ELEVE: 'Élevé',
@@ -26,11 +25,9 @@ const LIMITES = [
   { key: 100, label: 'Top 100' },
 ];
 
-/* ---------- Pagination ---------- */
 const TAILLES_PAGE = [10, 25, 50, 100];
 const TAILLE_PAGE_DEFAUT = 10;
 
-/* ---------- Utils ---------- */
 function formatDate(iso) {
   if (!iso) return t("Aucune intervention");
   const d = new Date(iso);
@@ -43,13 +40,6 @@ function formatAge(annees) {
   const n = annees.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   return annees >= 2 ? t('{n} ans', { n }) : t('{n} an', { n });
 }
-
-/* ---------- Icônes ---------- */
-const Svg = (props) => (
-  <svg width={props.size || 15} height={props.size || 15} viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2"
-       strokeLinecap="round" strokeLinejoin="round" {...props} />
-);
 
 const IconRefresh = () => (
   <RefreshCw size={15} aria-hidden="true" />
@@ -87,21 +77,11 @@ const IconTrendFlat = () => (
   <Minus size={13} aria-hidden="true" />
 );
 
-const IconChevron = ({ direction = 'right' }) => (
-  <Svg size={14}>
-    {direction === 'left'
-      ? <path d="m15 18-6-6 6-6" />
-      : <path d="m9 18 6-6-6-6" />}
-  </Svg>
-);
 
 const TENDANCE_ICON = { HAUSSE: IconTrendUp, BAISSE: IconTrendDown, STABLE: IconTrendFlat };
 const TENDANCE_LABEL = { HAUSSE: 'En hausse', BAISSE: 'En baisse', STABLE: 'Stable' };
 const TENDANCE_CLASS = { HAUSSE: 'hausse', BAISSE: 'baisse', STABLE: 'stable' };
 
-/* ---------- Pagination : construction des pages ---------- */
-
-/* Pagination : composant commun (même style dans toute la GMAO) */
 function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille }) {
   return (
     <PaginationCommune base={1} page={page} taille={taillePage} total={totalItems}
@@ -109,7 +89,6 @@ function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille
   );
 }
 
-/* ---------- Composant ---------- */
 export default function Risque() {
   const [limite, setLimite] = useState(50);
   const [equipements, setEquipements] = useState([]);
@@ -117,7 +96,6 @@ export default function Risque() {
   const [error, setError] = useState(null);
   const [recherche, setRecherche] = useState('');
 
-  /* ---------- Pagination ---------- */
   const [page, setPage] = useState(1);
   const [taillePage, setTaillePage] = useState(TAILLE_PAGE_DEFAUT);
 
@@ -147,7 +125,6 @@ export default function Risque() {
     );
   }, [equipements, recherche]);
 
-  /* ---------- Pagination ---------- */
   const totalItems = equipementsAffiches.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / taillePage));
   const pageCourante = Math.min(page, totalPages);
@@ -157,12 +134,10 @@ export default function Risque() {
     return equipementsAffiches.slice(debut, debut + taillePage);
   }, [equipementsAffiches, pageCourante, taillePage]);
 
-  // Reset page à 1 quand les filtres changent
   useEffect(() => { setPage(1); }, [recherche]);
   useEffect(() => { setPage(1); }, [limite]);
   useEffect(() => { setPage(1); }, [taillePage]);
 
-  // Borne la page courante si le total baisse
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
@@ -178,7 +153,6 @@ export default function Risque() {
 
   return (
     <div className="risque-page">
-      {/* ---------- Header ---------- */}
       <header className="risque-header">
         <div className="risque-header__text">
           <h1>{t("Risques")}</h1>
@@ -206,7 +180,6 @@ export default function Risque() {
         </div>
       </header>
 
-      {/* ---------- KPIs ---------- */}
       {!loading && equipements.length > 0 && (
         <section className="risque-kpis">
           <div className="risque-kpi risque-kpi--neutre">
@@ -245,7 +218,6 @@ export default function Risque() {
         </section>
       )}
 
-      {/* ---------- Recherche ---------- */}
       <div className="risque-filtres">
         <div className="risque-recherche-wrap">
           <span className="risque-recherche-icon"><IconSearch /></span>
@@ -267,7 +239,6 @@ export default function Risque() {
         )}
       </div>
 
-      {/* ---------- Liste ---------- */}
       {loading ? (
         <p className="risque-empty">{t("Chargement...")}</p>
       ) : error ? (

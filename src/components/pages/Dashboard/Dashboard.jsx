@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import SpotlightCard from '../../ui/SpotlightCard';
+import SpotlightCard from '../../ui/Spotlightcard';
 import './Dashboard.css';
 import { NAV_ITEMS } from '../../../constants/navigation';
 import dashboardBg from '../../../assets/dashboard-bg.jpg';
@@ -20,7 +20,6 @@ export default function Dashboard() {
 
         <div className="dashboard-grid">
           {modules.map((item) => {
-            // Les libellés du menu sont des clés françaises : on les traduit à l'affichage
             const libelle = t(item.label);
             return (
               <SpotlightCard

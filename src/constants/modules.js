@@ -2,22 +2,21 @@ import {
     Activity, Boxes, BrainCircuit, CalendarSync, Calculator, CalendarCheck, CalendarDays, CalendarRange, Car, ChartColumn,
     ClipboardList, FolderKanban, Fuel, Gauge, GraduationCap, House, IdCard, LayoutDashboard, ListChecks, MapPin,
     MessageSquareWarning, MonitorDot, Navigation, Receipt, Route, Settings, ShieldAlert, SlidersHorizontal, Table2,
-    Timer, TrendingUp, TriangleAlert, UserCheck, UserCog, UserRound, Wrench, ListOrdered,
+    Timer, TrendingUp, TriangleAlert, UserCheck, UserCog, UserRound, Wrench, ListOrdered, PackageX, Target, Ruler, Siren,
 } from 'lucide-react';
 
-/*
- * Une icône par module, et une seule : le menu, le titre de la page et les cartes
- * utilisent la même. Pour changer l'icône d'un module, on la change ici.
- */
 export const ICONES_MODULES = {
     accueil: House,
     monEspace: UserRound,
     tableauDeBord: LayoutDashboard,
 
-    /* GMAO */
     reclamations: MessageSquareWarning,
     bonsMaintenance: Wrench,
     tachesBons: ClipboardList,
+    stock: PackageX,
+    indicateurs: Target,
+    metrologie: Ruler,
+    materiovigilance: Siren,
     maintenancePredictive: TrendingUp,
     planningBons: CalendarDays,
     planningIntervenant: CalendarRange,
@@ -39,7 +38,6 @@ export const ICONES_MODULES = {
     gammes: ListOrdered,
     compteurs: Gauge,
 
-    /* Parc auto */
     vehicules: Car,
     conducteurs: UserCheck,
     permis: IdCard,

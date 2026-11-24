@@ -4,11 +4,6 @@ import equipementService from '../../../services/equipementService';
 import alerteMachineService from '../../../services/alerteMachineService';
 import { t, locale } from '../../../i18n';
 
-/*
- * « Connexion réseau » de la fiche équipement : adresse IP, port et protocole,
- * avec un test immédiat « l'équipement répond-il ? ». Base de la surveillance des machines.
- */
-
 const PROTOCOLES = [
   { value: 'PING', label: 'Ping (répond / ne répond pas)', port: '' },
   { value: 'TCP', label: 'Port TCP', port: '' },
@@ -33,12 +28,11 @@ export default function EquipementConnexion({ equipementId, Bloc, Pastille }) {
   const [form, setForm] = useState(vide);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
-  const [test, setTest] = useState(null); // { joignable, tempsMs, message }
+  const [test, setTest] = useState(null);
   const [enTest, setEnTest] = useState(false);
   const [confirmerSuppression, setConfirmerSuppression] = useState(false);
   const [alertes, setAlertes] = useState([]);
 
-  // Dernières alertes reçues de la machine (SNMP, Syslog) ou de la surveillance réseau
   useEffect(() => {
     let annule = false;
     alerteMachineService.parEquipement(equipementId)
@@ -72,7 +66,6 @@ export default function EquipementConnexion({ equipementId, Bloc, Pastille }) {
   const maj = (champ, valeur) => {
     setForm((f) => {
       const suivant = { ...f, [champ]: valeur };
-      // Choisir un protocole propose son port habituel (si le port n'a pas été saisi)
       if (champ === 'protocole') {
         const ancien = PROTOCOLES.find((p) => p.value === f.protocole)?.port || '';
         if (f.port === '' || String(f.port) === ancien) suivant.port = PROTOCOLES.find((p) => p.value === valeur)?.port || '';

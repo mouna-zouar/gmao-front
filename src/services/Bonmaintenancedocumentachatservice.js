@@ -26,7 +26,6 @@ const bonMaintenanceDocumentAchatService = {
     return data;
   },
 
-  /** Transfère la pièce à Cubix (bon de fourniture BF-… / commande CMD-…) ; renvoie { succes, cubixNumPiece, message }. */
   async transfererCubix(pieceId, personnel = {}) {
     try {
       const { data } = await api.post(`/piece-editor/${pieceId}/transferer-cubix`, {
@@ -38,7 +37,6 @@ const bonMaintenanceDocumentAchatService = {
     }
   },
 
-  /** « Accepter » (listes Demandes / Commandes) : valide la pièce puis l'envoie à Cubix. */
   async accepter(pieceId, personnel = {}) {
     try {
       const { data } = await api.post(`/piece-editor/${pieceId}/accepter`, {
@@ -50,13 +48,11 @@ const bonMaintenanceDocumentAchatService = {
     }
   },
 
-  /** Lignes de la pièce avec la quantité déjà reçue (fenêtre de réception). */
   async lignesPiece(pieceId) {
     const { data } = await api.get(`/piece-editor/${pieceId}/lignes`);
     return data;
   },
 
-  /** Circuit d'achat : action = soumettre | valider | refuser | receptionner | cloturer. Renvoie la pièce à jour. */
   async workflow(pieceId, action, corps = {}) {
     const { data } = await api.post(`/piece-editor/${pieceId}/workflow/${action}`, corps);
     return data;

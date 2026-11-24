@@ -1,11 +1,4 @@
-/* ============================================================
-   FicheBonMaintenance.css
-   Aligné sur le design system de CommanderModal.css
-   Palette : teal var(--g-brand-500) / var(--g-brand-600) / var(--g-brand-50)
-   ============================================================ */
-
 :root {
-  /* Palette alignée modal */
   --fbm-accent:        var(--g-brand-500);
   --fbm-accent-dark:   var(--g-brand-600);
   --fbm-accent-light:  var(--g-brand-200);
@@ -21,7 +14,6 @@
   --fbm-text-muted:    var(--g-slate-500);
   --fbm-text-faint:    var(--g-slate-400);
 
-  /* Grays (conservés pour compat) */
   --fbm-gray-50:  var(--g-slate-50);
   --fbm-gray-100: var(--g-slate-100);
   --fbm-gray-200: var(--g-slate-200);
@@ -48,9 +40,6 @@
   --fbm-t-smooth: all 0.3s ease;
 }
 
-/* ============================================================
-   WRAPPER
-   ============================================================ */
 .fiche-employeur-wrapper {
   position: relative;
   width: 100%;
@@ -70,9 +59,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ============================================================
-   HEADER CARD
-   ============================================================ */
 .planning-header-card {
   position: relative;
   background: var(--g-blanc);
@@ -128,9 +114,6 @@
   gap: 10px;
 }
 
-/* ============================================================
-   ACTIONS BAR
-   ============================================================ */
 .actions-bar-card {
   display: flex;
   gap: 6px;
@@ -176,7 +159,6 @@
   pointer-events: none;
 }
 
-/* Variantes alignées modal */
 .action-bar-btn.retour-liste,
 .action-bar-btn.fermer-view {
   color: var(--fbm-text-body);
@@ -213,7 +195,6 @@
   border-color: #fda29b;
 }
 
-/* Workflow buttons (alignés palette modal) */
 .action-bar-btn.fbm-wf-encours {
   color: var(--fbm-accent-dark);
   border-color: var(--fbm-accent-border);
@@ -261,9 +242,6 @@
   margin-left: auto;
 }
 
-/* ============================================================
-   BADGE ÉTAT (pills alignées modal)
-   ============================================================ */
 .fbm-etat-badge {
   display: inline-flex;
   align-items: center;
@@ -302,9 +280,6 @@
   border-color: #fecdca;
 }
 
-/* ============================================================
-   BOUTON FLOTTANT SAVE
-   ============================================================ */
 .save-btn {
   display: flex;
   align-items: center;
@@ -369,9 +344,6 @@
   to   { transform: rotate(360deg); }
 }
 
-/* ============================================================
-   FORM GRID
-   ============================================================ */
 .fiche-form-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
@@ -388,9 +360,6 @@
   cursor: default !important;
 }
 
-/* ============================================================
-   FORM SECTION
-   ============================================================ */
 .form-section {
   position: relative;
   grid-column: span 6;
@@ -411,9 +380,6 @@
   grid-column: span 12;
 }
 
-/* ============================================================
-   SECTION HEADER
-   ============================================================ */
 .section-header {
   display: flex;
   align-items: center;
@@ -473,9 +439,6 @@
   transition: transform 0.3s ease;
 }
 
-/* ============================================================
-   SECTION CONTENT (collapse)
-   ============================================================ */
 .section-content {
   display: grid;
   grid-template-rows: 1fr;
@@ -505,16 +468,12 @@
   transform: rotate(-90deg);
 }
 
-/* Section identité : même palette teal que le reste */
 .rh-identite .section-icon {
   color: var(--fbm-accent);
   background: var(--fbm-accent-soft);
   border-color: var(--fbm-accent-border);
 }
 
-/* ============================================================
-   FORM GROUP ROW
-   ============================================================ */
 .form-group-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -544,9 +503,6 @@
   text-transform: uppercase;
 }
 
-/* ============================================================
-   INPUTS
-   ============================================================ */
 .input-group input,
 .input-group select,
 .input-group textarea {
@@ -635,9 +591,6 @@
   margin: 0;
 }
 
-/* ============================================================
-   CHECKBOX
-   ============================================================ */
 .checkbox-label {
   display: inline-flex;
   align-items: center;
@@ -667,9 +620,6 @@
   flex-shrink: 0;
 }
 
-/* ============================================================
-   TABLE
-   ============================================================ */
 .table-container {
   background: var(--g-blanc);
   border: 1.5px solid var(--fbm-border-color);
@@ -754,9 +704,6 @@
   border-color: #fecdca;
 }
 
-/* ============================================================
-   ADD ROW BUTTON
-   ============================================================ */
 .add-row-btn {
   display: flex;
   align-items: center;
@@ -782,9 +729,6 @@
   border-style: solid;
 }
 
-/* ============================================================
-   MOTIF / ETAT MODAL (aligné modal Commander)
-   ============================================================ */
 .fbm-motif-overlay {
   position: fixed;
   inset: 0;
@@ -915,9 +859,6 @@
   transform: none;
 }
 
-/* ============================================================
-   PENDING NOTICE
-   ============================================================ */
 .fbm-pending-notice {
   padding: 18px 20px;
   background: var(--g-blanc);
@@ -928,9 +869,6 @@
   text-align: center;
 }
 
-/* ============================================================
-   HINTS / WARNINGS
-   ============================================================ */
 .cem-hint {
   margin: 4px 0 0;
   font-size: 12px;
@@ -954,9 +892,6 @@
   gap: 6px;
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 1200px) {
   .form-section { grid-column: span 12; }
 }

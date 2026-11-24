@@ -56,10 +56,6 @@ const bonMaintenanceService = {
     return data;
   },
 
-  /**
-   * Recalcule la priorité (Criticité + urgence + disponibilité d'alternative).
-   * POST /api/bon-maintenance/{id}/recalculer-priorite
-   */
   async recalculerPriorite(id) {
     const { data } = await api.post(`/bon-maintenance/${id}/recalculer-priorite`);
     return data;

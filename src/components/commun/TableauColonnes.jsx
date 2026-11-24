@@ -33,7 +33,6 @@ const nombre = (s) => {
   return Number.isFinite(n) ? n : null;
 };
 
-/* Un filtre de colonne correspond-il à cette ligne ? */
 function correspond(c, l, filtre, estListe) {
   const brut = texteCellule(c, l);
   if (estListe) return brut.trim() === filtre;
@@ -57,27 +56,25 @@ export function filtrerParColonnes(lignes, colonnes, filtres, choix) {
   return lignes.filter((l) => actifs.every((c) => correspond(c, l, filtres[c.cle], Boolean(choix[c.cle]))));
 }
 
-/* Copie : API presse-papiers si disponible (https / localhost), sinon zone de texte cachée */
 export async function copierTexte(texte) {
   try {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(texte);
       return true;
     }
-  } catch { /* repli ci-dessous */ }
+  } catch {}
   const zone = document.createElement('textarea');
   zone.value = texte;
   zone.setAttribute('readonly', '');
   zone.style.cssText = 'position:fixed;top:-1000px;opacity:0';
   document.body.appendChild(zone);
   zone.select();
-  let ok = false;
+  let ok;
   try { ok = document.execCommand('copy'); } catch { ok = false; }
   zone.remove();
   return ok;
 }
 
-/* Champ de recherche placé dans l'en-tête de la colonne, sous son nom */
 export function ChampFiltre({ colonne: c, valeur = '', choix, onChanger, focus = false, onFermer }) {
   const champ = useRef(null);
   useEffect(() => { if (focus) champ.current?.focus(); }, [focus]);
@@ -88,7 +85,6 @@ export function ChampFiltre({ colonne: c, valeur = '', choix, onChanger, focus =
     e.stopPropagation();
     if (e.key === 'Escape') { onChanger(c.cle, ''); onFermer?.(); }
   };
-  /* Quitter un champ vide le referme */
   const quitter = (e) => { if (!e.target.value && !e.currentTarget.contains(e.relatedTarget)) onFermer?.(); };
   return (
     <div className={`cl-filtre-th ${valeur ? 'a-filtre' : ''}`} onClick={arreter} onKeyDown={touche} onBlur={quitter}>
@@ -112,7 +108,6 @@ export function ChampFiltre({ colonne: c, valeur = '', choix, onChanger, focus =
   );
 }
 
-/* Ligne de filtres sous l'en-tête (ancienne présentation, gardée pour compatibilité) */
 export function LigneFiltres({ colonnes, filtres, choix, onChanger, debut = 0 }) {
   return (
     <tr className="cl-ligne-filtres">
@@ -147,7 +142,6 @@ export function LigneFiltres({ colonnes, filtres, choix, onChanger, debut = 0 })
   );
 }
 
-/* Bouton + menu d'une colonne (le menu s'ouvre au-dessus du tableau, hors du cadre défilant) */
 export function BoutonMenuColonne({ colonne, triActif, filtreActif, onTrier, onCopier, onMasquer, onEffacer }) {
   const [ouvert, setOuvert] = useState(false);
   const [pos, setPos] = useState(null);
@@ -223,17 +217,15 @@ export function BoutonMenuColonne({ colonne, triActif, filtreActif, onTrier, onC
   );
 }
 
-/* Hook commun : état des filtres de colonnes, affichage de la ligne, copie avec annonce */
 export function useFiltresColonnes(cleStockage) {
   const cle = cleStockage ? `gmao.liste.${cleStockage}.tousLesFiltres` : null;
   const [filtres, setFiltres] = useState({});
-  /* Par défaut les champs sont cachés : un clic sur le nom d'une colonne ouvre son champ */
   const [voir, setVoir] = useState(() => {
     try { return cle ? localStorage.getItem(cle) === '1' : false; } catch { return false; }
   });
   const [ouvertes, setOuvertes] = useState(() => new Set());
   const [dernier, setDernier] = useState(null);
-  useEffect(() => { if (cle) { try { localStorage.setItem(cle, voir ? '1' : '0'); } catch { /* stockage indisponible */ } } }, [cle, voir]);
+  useEffect(() => { if (cle) { try { localStorage.setItem(cle, voir ? '1' : '0'); } catch {} } }, [cle, voir]);
   const [annonce, setAnnonce] = useState('');
   useEffect(() => { if (!annonce) return undefined; const id = setTimeout(() => setAnnonce(''), 2400); return () => clearTimeout(id); }, [annonce]);
 
@@ -258,7 +250,6 @@ export function useFiltresColonnes(cleStockage) {
   };
 }
 
-/* Bouton « Colonnes » (affiche / cache la ligne de filtres) */
 export function BoutonFiltresColonnes({ voir, onBasculer, nb }) {
   return (
     <button type="button" className={`cl-btn-filtres ${voir ? 'est-actif' : ''}`} onClick={onBasculer}
@@ -269,7 +260,6 @@ export function BoutonFiltresColonnes({ voir, onBasculer, nb }) {
   );
 }
 
-/* Flèche de tri : le tri se fait ici (le clic sur le nom ouvre la recherche) */
 export function BoutonTri({ label, onTrier, children }) {
   return (
     <button type="button" className="cl-tri-btn" onClick={(e) => { e.stopPropagation(); onTrier(); }}

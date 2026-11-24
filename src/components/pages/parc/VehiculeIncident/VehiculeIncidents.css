@@ -68,7 +68,6 @@
   font-weight: 500;
 }
 
-/* Stats : badges clairs en ligne */
 .vin-stats {
   display: flex;
   gap: 8px;
@@ -122,7 +121,6 @@
 .vin-stat.stat-cost .vin-stat-value,
 .vin-stat.stat-cost .vin-stat-label { color: var(--g-violet-700); }
 
-/* Icône d'en-tête = bouton « paramètres des colonnes » */
 .vin-header-icon-btn {
   cursor: pointer;
   font: inherit;
@@ -144,9 +142,6 @@
   outline-offset: 2px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ACTIONS
-   ═══════════════════════════════════════════════════════════ */
 .vin-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -179,7 +174,6 @@
 .vin-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
 .vin-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Bouton principal → teal uni */
 .vin-action-btn.ajouter {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -196,7 +190,6 @@
 .vin-action-btn.supprimer { color: var(--g-rose-600); }
 .vin-action-btn.supprimer:hover:not(.disabled) { background: var(--g-rose-50); border-color: var(--g-rose-200); }
 
-/* Séparateur vertical */
 .vin-actions-sep {
   width: 1px;
   align-self: stretch;
@@ -205,13 +198,11 @@
   margin: 2px 6px;
 }
 
-/* Boutons rapides de changement d'état */
 .vin-action-btn.etat-quick {
   border-width: 1.5px;
   border-style: solid;
 }
 
-/* Ambre — Ouvert */
 .vin-action-btn.etat-quick.color-amber {
   color: var(--g-amber-800);
   background: rgba(245, 158, 11, 0.06);
@@ -223,7 +214,6 @@
   color: var(--g-amber-800);
 }
 
-/* Bleu — En cours */
 .vin-action-btn.etat-quick.color-blue {
   color: var(--g-blue-700);
   background: rgba(29, 78, 216, 0.06);
@@ -235,7 +225,6 @@
   color: var(--g-blue-800);
 }
 
-/* Slate — Clôturé */
 .vin-action-btn.etat-quick.color-slate {
   color: var(--g-slate-600);
   background: rgba(71, 85, 105, 0.06);
@@ -247,9 +236,6 @@
   color: var(--g-slate-700);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   FILTRES
-   ═══════════════════════════════════════════════════════════ */
 .vin-filter-panel {
   display: flex;
   background: var(--g-slate-50);
@@ -280,7 +266,6 @@
   white-space: nowrap;
 }
 
-/* Libellés de filtres → teal */
 .vin-filter-label svg { color: var(--g-brand-500); }
 
 .vin-filter-input-wrap {
@@ -297,7 +282,6 @@
   transition: all 0.15s ease;
 }
 
-/* Focus → teal */
 .vin-filter-input-wrap:focus-within {
   border-color: var(--g-brand-500);
   box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
@@ -339,9 +323,6 @@
   color: var(--g-rose-600);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   EXPORT — couleurs unies
-   ═══════════════════════════════════════════════════════════ */
 .vin-export-stack {
   display: flex;
   gap: 6px;
@@ -373,9 +354,6 @@
 .vin-export-btn.stats { background: var(--g-amber-500); }
 .vin-export-btn.stats:hover { background: var(--g-amber-600); }
 
-/* ═══════════════════════════════════════════════════════════
-   ERREUR
-   ═══════════════════════════════════════════════════════════ */
 .vin-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
@@ -390,9 +368,6 @@
   gap: 10px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   TABLEAU
-   ═══════════════════════════════════════════════════════════ */
 .vin-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -407,7 +382,6 @@
   font-size: 13.5px;
 }
 
-/* En-tête du tableau → teal clair uni */
 .vin-table thead {
   background: var(--g-brand-50);
 }
@@ -439,9 +413,6 @@
 .vin-row.selected td { background: var(--g-brand-50); }
 .vin-row.selected { box-shadow: inset 4px 0 0 var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   TRI DES COLONNES
-   ═══════════════════════════════════════════════════════════ */
 .vin-th-sortable {
   cursor: pointer;
   user-select: none;
@@ -466,12 +437,8 @@
 .vin-th-sortable:hover .vin-sort-icon,
 .vin-sort-icon.active { color: var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   CELLULES
-   ═══════════════════════════════════════════════════════════ */
 .vin-cell-vehicle { display: flex; align-items: center; gap: 10px; }
 
-/* Icône véhicule → teal clair uni */
 .vin-cell-vehicle-icon {
   display: flex;
   align-items: center;
@@ -491,7 +458,6 @@
 
 .vin-cell-driver { display: flex; align-items: center; gap: 10px; }
 
-/* Avatar conducteur → teal uni */
 .vin-cell-driver-avatar {
   display: flex;
   align-items: center;
@@ -541,9 +507,6 @@
 
 .vin-cell-amount svg { color: var(--g-violet-700); }
 
-/* ═══════════════════════════════════════════════════════════
-   GRAVITÉ
-   ═══════════════════════════════════════════════════════════ */
 .vin-gravite {
   display: inline-block;
   padding: 3px 10px;
@@ -559,9 +522,6 @@
 .vin-gravite.gravite-2 { background: var(--g-amber-100); color: var(--g-amber-800); border: 1px solid var(--g-amber-300); }
 .vin-gravite.gravite-3 { background: var(--g-red-100); color: var(--g-red-800); border: 1px solid var(--g-red-300); }
 
-/* ═══════════════════════════════════════════════════════════
-   PASTILLES ÉTAT
-   ═══════════════════════════════════════════════════════════ */
 .vin-pill {
   display: inline-flex;
   align-items: center;
@@ -581,9 +541,6 @@
 .vin-pill.resolved   { background: var(--g-green-100); color: var(--g-green-800); border-color: var(--g-green-300); }
 .vin-pill.closed     { background: var(--g-slate-100); color: var(--g-slate-500); border-color: var(--g-slate-200); }
 
-/* ═══════════════════════════════════════════════════════════
-   EMPTY
-   ═══════════════════════════════════════════════════════════ */
 .vin-table-empty {
   text-align: center;
   padding: 50px 16px;
@@ -601,9 +558,6 @@
 
 .vin-empty-state svg { color: var(--g-slate-300); }
 
-/* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .vin-stats { width: 100%; justify-content: space-between; }
   .vin-stat { flex: 1; min-width: 0; }

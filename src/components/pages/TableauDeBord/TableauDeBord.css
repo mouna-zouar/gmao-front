@@ -1,3 +1,15 @@
-/* Styles déplacés dans la bibliothèque commune : src/components/commun/TableauBord.css
-   (ce fichier reste pour les pages qui l'importent encore : Supervision, Équipements, Renouvellement). */
 @import '../../commun/TableauBord.css';
+
+.tb-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.tb-kpi { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--g-slate-200, #e2e8f0);
+  border-inline-start: 4px solid var(--tb-kpi, var(--g-slate-300, #cbd5e1)); background: var(--g-blanc, #fff); }
+.tb-kpi b { font-size: 1.3rem; line-height: 1.2; color: var(--tb-kpi, var(--g-slate-800, #1e293b)); }
+.tb-kpi span { font-size: 0.78rem; font-weight: 600; color: var(--g-slate-500, #64748b); }
+.tb-kpi--teal { --tb-kpi: var(--g-brand-600, #067d8b); }
+.tb-kpi--bleu { --tb-kpi: var(--g-blue-600, #2563eb); }
+.tb-kpi--violet { --tb-kpi: var(--g-violet-600, #7c3aed); }
+.tb-kpi--orange { --tb-kpi: var(--g-orange-600, #ea580c); }
+.tb-kpi--vert { --tb-kpi: var(--g-emerald-600, #059669); }
+.tb-kpi--ambre { --tb-kpi: var(--g-amber-600, #d97706); }
+.tb-kpi--rouge { --tb-kpi: var(--g-red-600, #dc2626); }
+.tb-kpi--gris { --tb-kpi: var(--g-slate-500, #64748b); }

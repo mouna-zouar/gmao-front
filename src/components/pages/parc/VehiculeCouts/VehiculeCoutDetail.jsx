@@ -1,21 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Car, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
-import { Fenetre } from '../../../ui/modals/VehiculeAmendeModal';
+import { Fenetre } from '../../../ui/modals/Vehiculeamendemodal';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
-import vehiculeCoutService from '../../../../services/vehiculeCoutService';
+import vehiculeCoutService from '../../../../services/Vehiculecoutservice';
 import VehiculeFraisModal from '../../../ui/modals/VehiculeFraisModal';
-import { BarreRepartition, GraphiqueMensuel, ChoixPeriode } from './CoutGraphiques';
+import { BarreRepartition, GraphiqueMensuel, ChoixPeriode } from './Coutgraphiques';
 import { POSTES_DEPENSE, TYPES_FRAIS, couleurPoste, formatDT, ltr, bornesPeriode } from '../../../../constants/Coutlibelles';
 import { t, locale } from '../../../../i18n';
 import './VehiculeCouts.css';
-
-/*
- * Coût d'un véhicule sur une période : chiffres clés, répartition, coût par mois,
- * frais fixes (saisie) et liste de toutes les dépenses comptées.
- *   - VehiculeCoutContenu : le contenu seul (réutilisé partout)
- *   - VehiculeCoutOnglet  : onglet « Coût » de la fiche véhicule, avec son choix de période
- *   - VehiculeCoutDetail  : fenêtre ouverte depuis le tableau « Coût par véhicule »
- */
 
 const date = (iso) => (iso ? new Date(iso).toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—');
 const nombre = (v, d = 0) => Number(v).toLocaleString(locale(), { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -25,7 +17,7 @@ export function VehiculeCoutContenu({ vehiculeId, debut, fin, vehicules, onFrais
   const [frais, setFrais] = useState([]);
   const [erreur, setErreur] = useState('');
   const [version, setVersion] = useState(0);
-  const [fraisOuvert, setFraisOuvert] = useState(null); // null | 'nouveau' | frais
+  const [fraisOuvert, setFraisOuvert] = useState(null);
   const [aSupprimer, setASupprimer] = useState(null);
 
   useEffect(() => {
@@ -83,7 +75,6 @@ export function VehiculeCoutContenu({ vehiculeId, debut, fin, vehicules, onFrais
             <BarreRepartition postes={r.postes} titre={t('Répartition')} />
             <GraphiqueMensuel parMois={detail.parMois} />
 
-            {/* Frais fixes */}
             <section className="vco-section">
               <header className="vco-section-entete">
                 <h3>{t('Frais fixes')}</h3>
@@ -115,7 +106,6 @@ export function VehiculeCoutContenu({ vehiculeId, debut, fin, vehicules, onFrais
               )}
             </section>
 
-            {/* Dépenses comptées */}
             <section className="vco-section">
               <header className="vco-section-entete"><h3>{t('Dépenses de la période')}</h3></header>
               {detail.depenses.length === 0 ? (
@@ -179,7 +169,6 @@ export function VehiculeCoutContenu({ vehiculeId, debut, fin, vehicules, onFrais
   );
 }
 
-/* ─── Fenêtre ouverte depuis le tableau du parc ─── */
 export default function VehiculeCoutDetail({ vehicule, debut, fin, vehicules, onClose, onFraisChange }) {
   const titre = [ltr(vehicule.matricule), vehicule.marque].filter(Boolean).join(' · ');
   return (
@@ -202,12 +191,10 @@ export default function VehiculeCoutDetail({ vehicule, debut, fin, vehicules, on
   );
 }
 
-/* ─── Onglet « Coût » de la fiche d'un véhicule (page Véhicules) ─── */
 export function VehiculeCoutOnglet({ vehicule }) {
   const [periode, setPeriode] = useState(() => ({ cle: 'annee', perso: bornesPeriode('annee') }));
   const bornes = bornesPeriode(periode.cle, periode.perso);
   const valide = bornes?.debut && bornes?.fin && bornes.debut <= bornes.fin;
-  // Le formulaire de frais est prérempli avec ce véhicule
   const vehicules = [{ id: vehicule.id, matricule: vehicule.matricule, marque: vehicule.marque }];
   return (
     <div className="vco-onglet">

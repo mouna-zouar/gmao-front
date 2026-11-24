@@ -8,11 +8,9 @@ import './commun.css';
 export default function Modale({
   ouvert, onFermer, titre, surtitre, sousTitre, icone: Icone, taille = 'lg',
   sections, sectionActive, onSection, pied, infoPied, fermerSurFond = true, className = '', children,
-  etapes = false, // sections affichées en étapes, en haut (assistant « Suivant »), au lieu du menu à gauche
+  etapes = false,
 }) {
   const fenetre = useRef(null);
-  // onFermer est souvent une fonction recréée à chaque rendu : on la garde dans une référence
-  // pour que l'effet ci-dessous ne se relance pas (il redonnerait le focus au premier champ pendant la saisie).
   const fermerRef = useRef(onFermer);
   fermerRef.current = onFermer;
 
@@ -23,7 +21,6 @@ export default function Modale({
     document.addEventListener('keydown', touche);
     const debordement = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    // Focus sur le premier champ (ou la fenêtre) pour le clavier et les lecteurs d'écran
     setTimeout(() => {
       const cible = fenetre.current?.querySelector('[data-autofocus]')
         || fenetre.current?.querySelector('input:not([type=hidden]):not([disabled]), select, textarea');

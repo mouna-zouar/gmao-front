@@ -1,4 +1,3 @@
-import React from 'react';
 import './Workflow.css';
 
 const ICONS = {

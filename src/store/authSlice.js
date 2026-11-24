@@ -1,12 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import authService from '../services/Authservice';
 
-/*
- * Utilisateur connecté (étape 1 du passage à Redux).
- * La session reste enregistrée dans le localStorage par authService (lue aussi par les services) ;
- * ce slice en garde une copie pour que les écrans se mettent à jour à la connexion / déconnexion.
- */
-
 export const connecter = createAsyncThunk('auth/connecter', async ({ login, password }, { rejectWithValue }) => {
   try {
     return await authService.login(login, password);
@@ -28,7 +22,6 @@ const authSlice = createSlice({
       state.user = null;
       state.erreur = null;
     },
-    /** Relit la session du localStorage (ex. modifiée dans un autre onglet). */
     rechargerSession(state) {
       state.user = authService.getSession();
     },
@@ -42,7 +35,6 @@ const authSlice = createSlice({
 
 export const { deconnecter, rechargerSession } = authSlice.actions;
 
-// Sélecteurs
 export const selectUtilisateur = (s) => s.auth.user;
 export const selectEstConnecte = (s) => Boolean(s.auth.user);
 export const selectPrivileges = (s) => s.auth.user?.privileges ?? [];

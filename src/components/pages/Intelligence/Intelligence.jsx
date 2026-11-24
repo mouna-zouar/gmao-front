@@ -9,10 +9,7 @@ import {
   dateCourte, dateHeure, ilYa,
 } from '../../ui/Veille/Veille';
 
-/* ---------- Config ---------- */
 const TOP_RISQUE_LIMITE = 30;
-// Parmi le top risque, combien d'équipements on croise avec le RCA (1 appel réseau
-// par équipement croisé — on borne pour ne pas multiplier les appels sur un gros parc).
 const NB_CROISEMENTS_RCA = 20;
 const ACTIONS_CLOSES = new Set(['TERMINEE', 'VERIFIEE_EFFICACE', 'VERIFIEE_INEFFICACE']);
 
@@ -77,8 +74,6 @@ export default function Intelligence({ isModal = false }) {
 
   useEffect(() => { charger(); }, [charger]);
 
-  // Croisement risque × RCA : parmi les équipements les plus à risque, lesquels ont
-  // aussi une analyse RCA avec au moins une action encore ouverte ?
   useEffect(() => {
     if (risques.length === 0) return undefined;
     let annule = false;
@@ -153,7 +148,6 @@ export default function Intelligence({ isModal = false }) {
         ]}
       />
 
-      {/* ---------- Points chauds : le croisement, mis en avant ---------- */}
       <Panneau
         id="vl-intel-chauds"
         icone={Flame}
@@ -192,7 +186,6 @@ export default function Intelligence({ isModal = false }) {
       </Panneau>
 
       <div className="vl-grille">
-        {/* ---------- Anomalies non traitées ---------- */}
         <Panneau id="vl-intel-anomalies" icone={TriangleAlert} ton="orange" titre={t("Anomalies non traitées")} n={loading ? null : anomalies.length}>
           {anomalies.length === 0 ? chargementOuVide(t("Aucune anomalie non traitée.")) : anomalies.slice(0, 8).map((a) => {
             const sev = SEVERITE[a.severite] || { label: a.severite, ton: 'neutre' };
@@ -213,7 +206,6 @@ export default function Intelligence({ isModal = false }) {
           })}
         </Panneau>
 
-        {/* ---------- Actions CAPA en retard ---------- */}
         <Panneau id="vl-intel-capa" icone={Clock} ton="danger" titre={t("Actions CAPA en retard")} n={loading ? null : actionsEnRetard.length}>
           {actionsEnRetard.length === 0 ? chargementOuVide(t("Aucune action en retard.")) : actionsEnRetard.slice(0, 8).map((a) => (
             <div key={a.id} className="vl-mini" data-ton="danger">
@@ -233,7 +225,6 @@ export default function Intelligence({ isModal = false }) {
           ))}
         </Panneau>
 
-        {/* ---------- Top équipements à risque ---------- */}
         <Panneau id="vl-intel-risques" icone={ShieldAlert} ton="orange" titre={t("Équipements les plus à risque")} n={loading ? null : Math.min(risques.length, 10)}>
           {risques.length === 0 ? chargementOuVide(t("Aucune donnée de risque disponible.")) : risques.slice(0, 10).map((r) => {
             const niv = NIVEAU[r.niveauRisque] || { label: r.niveauRisque, ton: 'neutre' };

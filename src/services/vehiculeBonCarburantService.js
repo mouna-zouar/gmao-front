@@ -12,7 +12,6 @@ const vehiculeBonCarburantService = {
     return data;
   },
 
-  /** Bons de carburant faits pendant une mission. */
   async getByMission(missionId) {
     const { data } = await api.get(`/vehicule-bon-carburant/mission/${missionId}`);
     return Array.isArray(data) ? data : [];

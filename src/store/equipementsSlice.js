@@ -20,7 +20,6 @@ const equipementsSlice = createSlice({
   initialState: { liste: [], statut: 'vide', erreur: null, chargeLe: 0 }, 
   reducers: {
     viderEquipements(state) { state.liste = []; state.statut = 'vide'; state.erreur = null; state.chargeLe = 0; },
-    /** La liste reste affichable mais sera rechargée au prochain chargerEquipements(). */
     perimerEquipements(state) { state.chargeLe = 0; },
   },
   extraReducers: (b) => {

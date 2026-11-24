@@ -2,12 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, Search, X } from 'lucide-react';
 import './ListeRecherche.css';
 
-/*
- * Liste déroulante avec recherche intégrée (combobox).
- * Même contrat qu'un <select> : onChange({ target: { name, value } }).
- *   options, getValue(o), getLabel(o), getOptionHint(o), allowEmpty + emptyOptionLabel, loading, disabled
- * Utilisée par les formulaires dynamiques (type « recherche ») et la fenêtre « Affecter ».
- */
 const ListeRecherche = ({
   id,
   name,

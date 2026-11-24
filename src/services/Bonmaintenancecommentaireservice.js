@@ -3,7 +3,7 @@ import api from './api';
 const bonMaintenanceCommentaireService = {
   async getByBonMaintenance(bonMaintenanceId) {
     const { data } = await api.get(`/bon-maintenance-commentaire/bon-maintenance/${bonMaintenanceId}`);
-    return data; // List<BonMaintenanceCommentaireDTO>
+    return data;
   },
   async create(commentaire) {
     const { data } = await api.post('/bon-maintenance-commentaire', commentaire);

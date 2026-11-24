@@ -5,7 +5,6 @@ import { dureeLisible } from '../../pages/gammes/Gammes';
 import { t, tp } from '../../../i18n';
 import '../../pages/gammes/Gammes.css';
 
-/** Étapes d'une gamme → tâches du formulaire de création (marquées _gamme pour pouvoir les retirer). */
 export function etapesEnTaches(gamme) {
   return (gamme?.etapes ?? []).map((e, i) => ({
     _id: Date.now() + Math.random() + i,
@@ -20,7 +19,6 @@ export function etapesEnTaches(gamme) {
   }));
 }
 
-/* Étape « Tâches » du formulaire de création du bon : choisir une gamme remplit la liste des tâches. */
 export default function ChoixGammeCreation({ equipementId, gammeId, onAppliquer, onRetirer }) {
   const [gammes, setGammes] = useState(null);
   const [choix, setChoix] = useState('');

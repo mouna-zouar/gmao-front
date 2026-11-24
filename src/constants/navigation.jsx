@@ -5,7 +5,6 @@ const grand = (Icone) => <Icone className="nav-icon-svg" strokeWidth={1.75} aria
 const petit = (Icone) => <Icone aria-hidden="true" />;
 
 const ALL_ITEMS = [
-    /* ── Au quotidien ── */
     {
         id: 'dashboard',
         label: 'Accueil',
@@ -45,12 +44,12 @@ const ALL_ITEMS = [
             { label: 'Tableau de bord des bons', path: '/bon-maintenance-dashboard', icon: petit(M.tableauDeBord) },
             { label: 'Bons de maintenance', path: '/bons-maintenance', icon: petit(M.bonsMaintenance), motsCles: 'bon intervention équipements' },
             { label: 'Tâches des bons', path: '/bon-maintenance-taches', icon: petit(M.tachesBons), motsCles: 'kanban' },
+            { label: 'Alertes de stock', path: '/stock-alertes', icon: petit(M.stock), motsCles: 'seuil rupture réapprovisionnement commande pièces magasin cubix' },
             { label: 'Maintenance prédictive', path: '/maintenance-predictive', icon: petit(M.maintenancePredictive) },
             
         ],
     },
 
-    /* ── Planification ── */
     {
         id: 'planning',
         label: 'Planning',
@@ -59,11 +58,11 @@ const ALL_ITEMS = [
         children: [
             { label: 'Planning des bons', path: '/planning-bon-maintenance', icon: petit(M.planningBons), motsCles: 'calendrier' },
             { label: 'Planning technicien', path: '/planning-technicien', icon: petit(M.planningTechnicien) },
+            { label: 'Planning de l’équipe', path: '/planning-equipe', icon: petit(M.planningBons), motsCles: 'glisser déposer semaine affectation techniciens' },
             { label: 'Formations des techniciens', path: '/formations', icon: petit(M.formations), motsCles: 'formation habilitation compétence stage certificat' },
         ],
     },
 
-    /* ── Parc d'équipements ── */
     {
         id: 'equipements',
         label: 'Équipements',
@@ -74,10 +73,11 @@ const ALL_ITEMS = [
             { label: 'Équipements', path: '/equipements', icon: petit(M.equipements), motsCles: 'parc immobilisations état en service en panne hors service famille matériel cubix' },
             { label: 'Plan de renouvellement', path: '/renouvellement', icon: petit(M.renouvellement), motsCles: 'remplacement investissement budget fin de vie vétusté amortissement maximo' },
             { label: 'Supervision', path: '/supervision', icon: petit(M.supervision), motsCles: 'temps réel capteurs sondes réseau en ligne hors ligne agents alertes machines' },
+            { label: 'Métrologie', path: '/metrologie', icon: petit(M.metrologie), motsCles: 'étalonnage vérification contrôle qualité sécurité électrique certificat échéance' },
+            { label: 'Matériovigilance', path: '/materiovigilance', icon: petit(M.materiovigilance), motsCles: 'incident dispositif médical déclaration autorité vigilance' },
         ],
     },
 
-    /* ── Parc connecté ── */
     {
         id: 'supervision',
         label: 'Supervision',
@@ -86,22 +86,6 @@ const ALL_ITEMS = [
         motsCles: 'Tableau de bord temps réel capteurs sondes réseau en ligne hors ligne agents alertes machines',
     },
 
-   /* 
-    {
-        id: 'taches',
-        label: 'Analyse',
-        path: '/intelligence',
-        icon: grand(M.analyse),
-        children: [
-            { label: 'Intelligence', path: '/intelligence', icon: petit(M.intelligence), motsCles: 'ia recommandations' },
-            { label: 'Coût', path: '/cout', icon: petit(M.cout), motsCles: 'dépenses budget' },
-            { label: 'SLA', path: '/sla', icon: petit(M.sla), motsCles: 'délais retard' },
-            { label: 'Disponibilité', path: '/disponibilite', icon: petit(M.disponibilite), motsCles: 'mtbf mttr' },
-            { label: 'Risque', path: '/risque', icon: petit(M.risque), motsCles: 'criticité' },
-        ],
-    },*/
-
-    /* ── Administration ── */
     {
         id: 'parametres',
         label: 'Paramétrages',
@@ -116,7 +100,6 @@ const ALL_ITEMS = [
         ],
     },
 
-    /* ── Parc automobile ── */
     {
         id: 'parc-dashboard',
         label: 'Dashboard Parc',
@@ -163,7 +146,6 @@ const ALL_ITEMS = [
 
 const byId = (ids) => ids.map((id) => ALL_ITEMS.find((i) => i.id === id)).filter(Boolean);
 
-// Deux espaces (GMAO + Parc), rangés par métier à l'intérieur
 export const NAV_SECTIONS = [
     {
         id: 'gmao',
@@ -177,10 +159,8 @@ export const NAV_SECTIONS = [
     },
 ];
 
-// Liste à plat (utilisée par le fil d'Ariane et la page Dashboard)
 export const NAV_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
 
-/** Toutes les pages du menu, à plat : [{ path, label, parent, icon, motsCles }] */
 export const NAV_PAGES = NAV_ITEMS.flatMap((item) =>
     item.children
         ? item.children.map((c) => ({ ...c, parent: item }))

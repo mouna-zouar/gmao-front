@@ -1,10 +1,5 @@
-/* =========================================================
-   SUPERVISION — tableau de bord du parc connecté (façon Grafana, thème clair GMAO)
-   ========================================================= */
-
 .sv-page { gap: 12px; }
 
-/* ---------- Barre d'outils ---------- */
 .sv-outils { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .sv-auto {
   display: inline-flex; align-items: center; gap: 6px;
@@ -29,7 +24,6 @@
 
 .sv-chargement { display: flex; align-items: center; gap: 10px; padding: 48px; justify-content: center; color: var(--g-texte-secondaire); }
 
-/* ---------- Grille de panneaux (12 colonnes) ---------- */
 .sv-grille-panneaux {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -41,7 +35,6 @@
 .sv-l6 { grid-column: span 6; }
 .sv-l4 { grid-column: span 4; }
 
-/* ---------- Panneau ---------- */
 .sv-panneau {
   position: relative;
   display: flex; flex-direction: column;
@@ -84,7 +77,6 @@
   color: var(--g-texte-secondaire); font-size: 0.82rem; text-align: center; line-height: 1.5;
 }
 
-/* ---------- Indicateurs ---------- */
 .sv-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
 .sv-stat {
   position: relative; overflow: hidden;
@@ -109,7 +101,6 @@
 .sv-stat__sous { color: var(--g-texte-secondaire); font-size: 0.74rem; }
 .sv-etincelle { position: absolute; inset-inline: 0; bottom: 0; height: 34px; pointer-events: none; }
 
-/* ---------- Graphiques ---------- */
 .sv-graph { position: relative; width: 100%; }
 .sv-graph svg { display: block; overflow: visible; }
 .sv-grille { stroke: var(--g-slate-100); stroke-width: 1; }
@@ -148,7 +139,6 @@
 .sv-legende__nom { color: var(--g-texte); font-weight: 600; }
 .sv-legende__eq { margin-inline-start: 6px; color: var(--g-texte-secondaire); }
 
-/* ---------- Frise de disponibilité ---------- */
 .sv-frise { position: relative; display: flex; flex-direction: column; gap: 5px; }
 .sv-frise__ligne { display: flex; align-items: center; gap: 6px; }
 .sv-frise__nom {
@@ -172,7 +162,6 @@
 .sv-ok { color: var(--g-emerald-600); flex-shrink: 0; }
 .sv-ko { color: var(--g-red-600); flex-shrink: 0; }
 
-/* ---------- Classement ---------- */
 .sv-classement { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
 .sv-classement button {
   display: grid; grid-template-columns: 1fr auto; gap: 4px 10px;
@@ -188,7 +177,6 @@
 .sv-classement__piste { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: var(--g-slate-100); overflow: hidden; }
 .sv-classement__piste span { display: block; height: 100%; border-radius: 4px; background: var(--g-marque); }
 
-/* ---------- Agents ---------- */
 .sv-agents { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
 .sv-agents li { display: flex; align-items: flex-start; gap: 10px; padding: 9px 0; border-top: 1px solid var(--g-slate-100); }
 .sv-agents li:first-child { border-top: 0; padding-top: 2px; }
@@ -197,7 +185,6 @@
 .sv-agents strong { font-size: 0.82rem; color: var(--g-texte); }
 .sv-agents span { font-size: 0.74rem; color: var(--g-texte-secondaire); }
 
-/* ---------- Table des connexions ---------- */
 .sv-table { width: 100%; border-collapse: collapse; font-size: 0.79rem; }
 .sv-table th {
   position: sticky; top: 0; z-index: 1;
@@ -215,7 +202,6 @@
 .sv-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .sv-discret { color: var(--g-texte-secondaire); font-size: 0.74rem; white-space: nowrap; }
 
-/* ---------- Dernières alertes ---------- */
 .sv-alertes { margin: 0; padding: 0; list-style: none; }
 .sv-alertes li + li { border-top: 1px solid var(--g-slate-100); }
 .sv-alertes button {
@@ -229,7 +215,6 @@
 .sv-alertes__eq { font-size: 0.8rem; font-weight: 600; color: var(--g-texte); }
 .sv-alertes__msg { font-size: 0.76rem; color: var(--g-texte-secondaire); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 
-/* ---------- Écrans moyens et téléphones ---------- */
 @media (max-width: 1280px) {
   .sv-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -249,7 +234,6 @@
   .sv-table th, .sv-table td { padding-inline: 10px; }
 }
 
-/* ═══ Style des tableaux de bord (bons, réclamations, parc) ═══ */
 .sv-page.tb-container { gap: 20px; }
 .sv-page .sv-maj { margin: -8px 0 0; }
 .sv-page .sv-grille-panneaux { gap: 14px; }
@@ -266,11 +250,6 @@
   .sv-carte__corps.sv-sans-marge { margin-inline: -16px; margin-bottom: -16px; }
 }
 
-/* ==========================================================================
-   STYLE SOBRE DE LA GMAO (commun à Supervision et Plan de renouvellement)
-   Barre haute (onglets/périodes + actions), bande d'indicateurs, panneaux légers
-   ========================================================================== */
-/* Barre haute */
 .rv2-haut {
   display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   border-bottom: 1px solid var(--g-slate-200, #e2e8f0);
@@ -296,7 +275,6 @@
 .rv2-btn:hover:not(:disabled) { border-color: var(--g-brand-500, #0794a4); color: var(--g-brand-700, #066d79); }
 .rv2-btn:disabled { opacity: 0.6; cursor: default; }
 
-/* Bande d'indicateurs : 6 cases dans un seul cadre */
 .rv2-kpis {
   display: grid; grid-template-columns: repeat(6, minmax(0, 1fr));
   background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 12px; overflow: hidden;
@@ -336,7 +314,6 @@ button.rv2-kpi:hover { background: var(--g-slate-50, #f8fafc); }
   .rv2-haut__droite { width: 100%; justify-content: space-between; }
 }
 
-/* ---------- Supervision v2 ---------- */
 .sv-page.sv-v2 { gap: 14px; }
 .sv-v2 .sv-grille-panneaux { gap: 14px; }
 .sv-v2 .rv2-haut__droite { flex-wrap: wrap; }
@@ -344,7 +321,6 @@ button.rv2-kpi:hover { background: var(--g-slate-50, #f8fafc); }
 .sv-v2 .sv-auto { height: 32px; border-radius: 8px; border-color: var(--g-slate-200, #e2e8f0); background: var(--g-blanc, #fff); }
 .sv-v2 .sv-auto select { height: 30px; }
 
-/* Panneaux légers (comme le Plan de renouvellement) */
 .sv-v2 .tb-carte.sv-carte {
   background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 12px;
   box-shadow: none; padding: 14px 16px;
@@ -363,7 +339,6 @@ button.rv2-kpi:hover { background: var(--g-slate-50, #f8fafc); }
   .sv-v2 .sv-carte__corps.sv-sans-marge { margin-inline: -16px; }
 }
 
-/* Bouton « Alertes machines » (même fenêtre que dans les bons de maintenance) */
 .sv-btn-alertes { position: relative; }
 .sv-btn-alertes.is-actif { border-color: var(--g-red-200, #fecaca); color: var(--g-red-700, #b91c1c); background: var(--g-red-50, #fef2f2); }
 .sv-btn-alertes.is-actif:hover:not(:disabled) { border-color: var(--g-red-400, #f87171); color: var(--g-red-700, #b91c1c); }

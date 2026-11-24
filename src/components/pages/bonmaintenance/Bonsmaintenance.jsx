@@ -1,26 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
-import { Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw, Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, Search, Filter, RefreshCw, AlertCircle, Calendar, Building2, Loader2, Info, AlertTriangle, Ban, Gauge, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, TriangleAlert, RadioTower, Timer, ArrowUpRight, Wrench, ChevronDown, LayoutGrid, MapPin } from 'lucide-react';
+import { Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw, Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, Search, Filter, RefreshCw, AlertCircle, Calendar, Building2, Loader2, Info, AlertTriangle, Ban, Gauge, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, TriangleAlert, RadioTower, Timer, ArrowUpRight, Wrench, ChevronDown, LayoutGrid, MapPin, ClipboardCheck } from 'lucide-react';
+import { FenetreValidateurs, BoutonsDecision } from './ValidationBon';
 import FiltreLieu, { useCarteLieux, useFiltreLieu } from '../../ui/FiltreLieu/FiltreLieu';
 import { ICONES_MODULES } from '../../../constants/modules';
 
-import bonMaintenanceService from '../../../services/bonMaintenanceService';
-import bonMaintenanceFullService from '../../../services/bonMaintenanceFullService';
-import bonMaintenancePieceService from '../../../services/bonMaintenancePieceService';
+import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
+import bonMaintenanceFullService from '../../../services/Bonmaintenancefullservice';
+import bonMaintenancePieceService from '../../../services/Bonmaintenancepieceservice';
 import { prioriteLabel, prioriteRang, prioriteColor } from '../../../constants/Priorite';
 
-import BonMaintenanceModal from '../../ui/modals/BonMaintenanceModal';
-import BonMaintenanceDetails from './BonMaintenanceDetails';
-import FicheBonMaintenance from '../Fichebonmaintenance/FicheBonMaintenance';
+import BonMaintenanceModal from '../../ui/modals/Bonmaintenancemodal';
+import BonMaintenanceDetails from './Bonmaintenancedetails';
+import FicheBonMaintenance from '../Fichebonmaintenance/Fichebonmaintenance';
 import ListeDocumentsAchat from './ListeDocumentsAchat';
 import PieceEditor from '../../ui/PieceEditor/PieceEditor';
 import PageModal from '../../ui/modals/PageModal';
 import Button from '../../ui/Button';
 
 import Anomalies from '../Anomalies/Anomalies';
-import BlocagesImmobilisation from '../BlocagesImmobilisation/BlocagesImmobilisation';
-import EquipementsEtEtat from '../Equipements/EquipementsEtEtat';
+import BlocagesImmobilisation from '../Blocagesimmobilisation/Blocagesimmobilisation';
+import EquipementsEtEtat from '../Equipements/Equipementsetetat';
 import ChronoEmployes from '../PerformanceEmployes/ChronoEmployes';
 import AlertesMachines from '../AlertesMachines/AlertesMachines';
 import alerteMachineService from '../../../services/alerteMachineService';
@@ -40,9 +41,7 @@ import VuesListe from '../../ui/Listes/VuesListe';
 import { useVueActive } from '../../ui/Listes/stockageVues';
 import CartesListe from '../../ui/Listes/CartesListe';
 import SelectionMultiple, { CaseSelection } from '../../ui/Listes/SelectionMultiple';
-import { bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
-// Styles des fenêtres « Demander / Commander » de cette page (classes modal-overlay et bmm-*),
-// autrefois chargés par l'ancienne fenêtre du bon de maintenance
+import { bonArchive, bonEnRetard, contexteUtilisateur, echeanceBon, vuesBons } from '../../ui/Listes/vuesMetier';
 import '../../ui/modals/Modal.css';
 import '../../ui/modals/BonMaintenanceModal.css';
 import './Bonsmaintenance.css';
@@ -55,7 +54,6 @@ import {
 
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
 
-// Libellé, couleur et icône de chaque état : registre commun (constants/statuts.js)
 const avecStatut = (etat, def) => ({
   ...def,
   label: STATUTS.bon[etat].libelle,
@@ -121,15 +119,6 @@ function formatDate(iso) {
   return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function formatDateTime(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString(locale(), {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
 
 function getAvailableActions(bon) {
   if (!bon) return [];
@@ -148,17 +137,10 @@ function getEtatCount(bons, etatValue) {
 }
 
 
-/*
- * Boutons Demander / Commander et info-bulle des lignes : calculés par le serveur,
- * en UN appel pour tous les bons demandés au même moment (toute la page + le bon sélectionné),
- * au lieu de 2 appels + 1 par article, pour chaque bon.
- */
 let lotBesoins = null;
-// Réponses gardées quelques secondes (la page puis le bon sélectionné ne redemandent rien) ;
-// vidées dès qu'une écriture réussit (demande, commande, tâche…), voir services/api.js.
-const besoinsConnus = new Map(); // bonId → { jusqua, valeur }
+const besoinsConnus = new Map();
 if (typeof window !== 'undefined') window.addEventListener('gmao:ecriture', () => besoinsConnus.clear());
-const besoinsEnCours = new Map(); // bonId → promesse déjà partie (pas de second appel pendant l'attente)
+const besoinsEnCours = new Map();
 function besoinsPieces(bonId) {
   const connu = besoinsConnus.get(bonId);
   if (connu && Date.now() < connu.jusqua) return Promise.resolve(connu.valeur);
@@ -218,9 +200,6 @@ const SORTABLE_COLUMNS = {
 
 const PAGE_SIZE = 10;
 
-/* =========================================================
-   COLONNES TABLEAU (paramétrables)
-   ========================================================= */
 const BON_COLUMNS_DEFAULT = [
   { key: 'num',         label: 'Numéro',      visible: true, searchable: true  },
   { key: 'titre',       label: 'Titre',       visible: true, searchable: true  },
@@ -234,63 +213,48 @@ const BON_COLUMNS_DEFAULT = [
   { key: 'lecture',     label: 'Lu',          visible: true, searchable: false },
 ];
 
-/* =========================================================
-   EXPORT EXCEL — Liste complète des attributs (avec extract)
-   ========================================================= */
 const EXCEL_ALL_FIELDS = [
-  // --- Identification ---
   { key: 'id',                          label: 'ID',                        extract: (b) => b.id ?? '' },
   { key: 'num',                         label: 'Numéro',                    extract: (b) => b.num || '' },
   { key: 'titre',                       label: 'Titre',                     extract: (b) => b.titre || '' },
   { key: 'description',                 label: 'Description',               extract: (b) => b.description || '' },
 
-  // --- État & classification ---
   { key: 'etat',                        label: 'État',                      extract: (b) => etatLabel(b.etat) },
   { key: 'urgence',                     label: 'Urgence',                   extract: (b) => niveauLabel(b.urgence) },
   { key: 'priorite',                    label: 'Priorité (code)',           extract: (b) => b.priorite ?? '' },
   { key: 'prioriteLabel',               label: 'Priorité (libellé)',        extract: (b) => prioriteLabel(b.priorite) },
 
-  // --- Dates ---
   { key: 'date',                        label: 'Date',                      extract: (b) => formatDate(b.date) },
   { key: 'dateCreation',                label: 'Date de création',          extract: (b) => formatDate(b.dateCreation) },
   { key: 'dateDebut',                   label: 'Date de début',             extract: (b) => formatDate(b.dateDebut) },
   { key: 'dateFin',                     label: 'Date de fin',               extract: (b) => formatDate(b.dateFin) },
   { key: 'dateCloture',                 label: 'Date de clôture',           extract: (b) => formatDate(b.dateCloture) },
 
-  // --- Prestataire ---
   { key: 'prestataireId',               label: 'Prestataire ID',            extract: (b) => b.prestataireId ?? b.prestataire?.id ?? '' },
   { key: 'prestataireNom',              label: 'Prestataire',               extract: (b) => b.prestataire?.raisonSociale || b.prestataire?.nom || '' },
   { key: 'prestataireCode',             label: 'Code prestataire',          extract: (b) => b.prestataire?.code || '' },
 
-  // --- Sous-traitant ---
   { key: 'sousTraitantId',              label: 'Sous-traitant ID',          extract: (b) => b.sousTraitantId ?? '' },
   { key: 'sousTraitant',                label: 'Sous-traitant',             extract: (b) => b.sousTraitant || '' },
 
-  // --- Service ---
   { key: 'serviceId',                   label: 'Service ID',                extract: (b) => b.serviceId ?? b.service?.id ?? '' },
   { key: 'serviceNom',                  label: 'Service',                   extract: (b) => b.serviceNom || b.service?.description || b.service?.label || '' },
 
-  // --- Dépôt ---
   { key: 'depotId',                     label: 'Dépôt ID',                  extract: (b) => b.depotId ?? b.depot?.id ?? '' },
   { key: 'depotNom',                    label: 'Dépôt',                     extract: (b) => b.depotNom || b.depot?.codeDepots || b.depot?.libelle || '' },
 
-  // --- Équipement / Immobilisation ---
   { key: 'lotArticleImmobilistationId', label: 'Immobilisation ID',         extract: (b) => b.lotArticleImmobilistationId ?? '' },
 
-  // --- Personnel ---
   { key: 'personnelId',                 label: 'Personnel ID',              extract: (b) => b.personnelId ?? '' },
   { key: 'personnelNom',                label: 'Personnel',                 extract: (b) => b.personnelNom || (b.personnel ? `${b.personnel.nom || ''} ${b.personnel.prenom || ''}`.trim() : '') },
 
-  // --- Création / modification ---
   { key: 'personnelCreationNom',        label: 'Créé par',                  extract: (b) => b.personnelCreationNom || '' },
   { key: 'personnelModificationNom',    label: 'Modifié par',               extract: (b) => b.personnelModificationNom || '' },
 
-  // --- Champs libres ---
   { key: 'motifSuspension',             label: 'Motif suspension',          extract: (b) => b.motifSuspension || '' },
   { key: 'observations',                label: 'Observations',              extract: (b) => b.observations || '' },
   { key: 'commentaire',                 label: 'Commentaire',               extract: (b) => b.commentaire || '' },
 
-  // --- SLA & coût ---
   { key: 'slaReponse',                  label: 'SLA réponse',               extract: (b) => b.sla?.statutReponse || '' },
   { key: 'slaResolution',               label: 'SLA résolution',            extract: (b) => b.sla?.statutResolution || '' },
   { key: 'coutTotal',                   label: 'Coût total',                extract: (b) => b.cout?.coutTotal ?? '' },
@@ -298,10 +262,6 @@ const EXCEL_ALL_FIELDS = [
 
 const EXCEL_COLUMNS_OPTIONS = EXCEL_ALL_FIELDS.map(({ key, label }) => ({ key, label }));
 
-/**
- * Extrait les champs dynamiques non listés (fallback).
- * Permet de capturer les attributs bruts non prévus.
- */
 function collectDynamicFields(bons) {
   const knownKeys = new Set(EXCEL_ALL_FIELDS.map((f) => f.key));
   const skipKeys = new Set([
@@ -350,7 +310,6 @@ function getColumnSearchValue(b, key) {
   }
 }
 
-/* Colonnes pour la recherche par colonne et la copie (texte affiché) */
 const COLONNES_TEXTE = BON_COLUMNS_DEFAULT.map((c) => ({
   cle: c.key,
   label: c.label,
@@ -363,11 +322,7 @@ const COLONNES_TEXTE = BON_COLUMNS_DEFAULT.map((c) => ({
 }));
 const COLONNE_TEXTE = Object.fromEntries(COLONNES_TEXTE.map((c) => [c.cle, c]));
 
-/* =========================================================
-   COMPOSANT PRINCIPAL
-   ========================================================= */
 export default function BonsMaintenance() {
-  const navigate = useNavigate();
 
   const [bons, setBons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -375,7 +330,6 @@ export default function BonsMaintenance() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [etatFilter, setEtatFilter] = useState('all');
-  // Lieu de l'arborescence (avec ses sous-lieux) : lieu du bon, sinon celui de son équipement
   const [lieuFilter, setLieuFilter] = useState('');
   const carteLieux = useCarteLieux();
   const dansLieu = useFiltreLieu(carteLieux, lieuFilter);
@@ -391,8 +345,7 @@ export default function BonsMaintenance() {
   const [demanderOpen, setDemanderOpen] = useState(false);
 
   const [demandesOpen, setDemandesOpen] = useState(false);
-  // Listes des documents d'achat du bon (demandes de fourniture / commandes fournisseur) avec « Accepter »
-  const [listeAchat, setListeAchat] = useState(null); // 'DEMANDE' | 'COMMANDE' | null
+  const [listeAchat, setListeAchat] = useState(null);
   const [demandes, setDemandes] = useState([]);
   const [demandesLoading, setDemandesLoading] = useState(false);
   const [demandeActionLoading, setDemandeActionLoading] = useState(null);
@@ -402,11 +355,9 @@ export default function BonsMaintenance() {
   const [transitioning, setTransitioning] = useState(false);
   const [viewMode, setViewMode] = useState('list');
 
-  // Vues de la liste (« Mes bons en retard », « Urgents de mon service »…) et vues enregistrées
   const [moi] = useState(contexteUtilisateur);
   const [vueId, setVueId] = useVueActive('bons', moi.cle, 'tous');
   const [mesBonIds, setMesBonIds] = useState(null);
-  // « Mes bons » : arrive avec les infos de la liste (voir chargerInfosListe) ; ancien serveur : appels séparés
   const chargerMesBonsSepares = useCallback(() => {
     if (moi.personnelId == null) return;
     const ids = (liste) => new Set((liste || []).map((x) => String(x?.bon?.id ?? x?.id)).filter((x) => x !== 'undefined'));
@@ -414,9 +365,8 @@ export default function BonsMaintenance() {
       .then(({ data }) => setMesBonIds(ids(data)))
       .catch(() => api.get(`/espace-personnel/${moi.personnelId}/bons`)
         .then(({ data }) => setMesBonIds(ids(data)))
-        .catch(() => { /* « Mes bons » se limite alors aux bons créés ou demandés */ }));
+        .catch(() => { }));
   }, [moi.personnelId]);
-  // « Achats à faire » : bons (tous états, effectués compris) dont les tâches ont des articles à demander ou à commander
   const [achatIds, setAchatIds] = useState(null);
   const vuesListe = useMemo(() => vuesBons(moi, mesBonIds, achatIds), [moi, mesBonIds, achatIds]);
   const vueCourante = vuesListe.find((v) => v.id === vueId) || vuesListe[0];
@@ -428,11 +378,9 @@ export default function BonsMaintenance() {
     if (reglages.tri) { setSortColumn(reglages.tri); setSortDirection(reglages.sens || 'asc'); }
   };
 
-  // Lien direct /bons-maintenance?id=12 (QR code d'une fiche, notification) : ouvre ce bon
   const [parametres, setParametres] = useSearchParams();
   const idLien = Number(parametres.get('id')) || null;
 
-  // Lien depuis un tableau de bord : /bons-maintenance?etat=1 ou ?vue=a-traiter — applique le filtre puis nettoie l'adresse
   const etatLien = parametres.get('etat');
   const vueLien = parametres.get('vue');
   useEffect(() => {
@@ -453,7 +401,6 @@ export default function BonsMaintenance() {
     setViewMode('details');
   }, [idLien]);
 
-  // Lien /bons-maintenance?chrono=1 (tableau de bord) : ouvre le chrono des employés
   const chronoLien = parametres.get('chrono') === '1';
   useEffect(() => {
     if (!chronoLien) return;
@@ -466,14 +413,11 @@ export default function BonsMaintenance() {
     if (parametres.has('id')) setParametres({}, { replace: true });
   };
 
-  // Équipements + état des équipements dans une même fenêtre (?vue=equipements&onglet=etat|liste) :
-  // en revenant d'une fiche équipement avec « Retour », la fenêtre se rouvre sur le même onglet.
   const equipementsOpen = parametres.get('vue') === 'equipements';
   const ongletEquipements = parametres.get('onglet') === 'liste' ? 'liste' : 'etat';
   const ouvrirEquipements = (onglet = 'etat') => setParametres({ vue: 'equipements', onglet }, { replace: true });
   const fermerEquipements = useCallback(() => setParametres({}, { replace: true }), [setParametres]);
 
-  // Bons en retard SLA dans une fenêtre (?sla=retard) : lien des notifications « délai SLA dépassé »
   const slaOpen = parametres.get('sla') === 'retard';
   const ouvrirSlaRetards = () => setParametres({ sla: 'retard' }, { replace: true });
   const fermerSlaRetards = useCallback(() => setParametres({}, { replace: true }), [setParametres]);
@@ -490,8 +434,8 @@ export default function BonsMaintenance() {
   const [anomaliesOpen, setAnomaliesOpen] = useState(false);
   const [blocagesOpen, setBlocagesOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
-  // Alertes envoyées par les machines (SNMP / Syslog) : badge = alertes à traiter
   const [alertesMachinesOpen, setAlertesMachinesOpen] = useState(false);
+  const [validateursOpen, setValidateursOpen] = useState(false);
   const [nbAlertesMachines, setNbAlertesMachines] = useState(0);
 
   const [confirmModal, setConfirmModal] = useState({
@@ -507,7 +451,6 @@ export default function BonsMaintenance() {
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [columnSettingsInstanceKey, setColumnSettingsInstanceKey] = useState(0);
 
-  /* --- Export Excel : colonnes sélectionnables --- */
   const [isExcelColumnsModalOpen, setIsExcelColumnsModalOpen] = useState(false);
   const [excelSelectedColumns, setExcelSelectedColumns] = useState([]);
   const [exportingExcel, setExportingExcel] = useState(false);
@@ -528,11 +471,9 @@ export default function BonsMaintenance() {
 
   useEffect(() => { load(); }, []);
 
-  /* ── SLA : bons ouverts dont le délai de réponse ou de résolution est dépassé ── */
   const [slaRetards, setSlaRetards] = useState(null);
   const [slaChargement, setSlaChargement] = useState(false);
   const [slaErreur, setSlaErreur] = useState(null);
-  // Lecture des retards : les mises à jour d'état ont lieu à l'arrivée de la réponse
   const recupererSlaRetards = useCallback(() => slaService.getDepassements()
     .then((data) => { setSlaRetards(Array.isArray(data) ? data : []); setSlaErreur(null); })
     .catch((err) => {
@@ -543,7 +484,6 @@ export default function BonsMaintenance() {
   const chargerSlaRetards = () => { setSlaChargement(true); recupererSlaRetards(); };
   const nbSlaRetards = slaRetards?.length ?? 0;
 
-  /* ── Délai SLA de chaque bon (colonne « Délai ») : temps restant, ou résultat pour un bon effectué ── */
   const [slaParBon, setSlaParBon] = useState({});
   const idsSla = useMemo(
     () => bons.filter((b) => Number(b.etat) !== ETAT.ANNULE).map((b) => b.id).filter((id) => id != null),
@@ -557,10 +497,6 @@ export default function BonsMaintenance() {
     })
     .catch((err) => console.error('Erreur chargement des délais SLA :', err)), [idsSla]);
 
-  /*
-   * Infos de la liste en UN appel : délais SLA des bons, alertes machines, retards SLA (1 fois sur 5)
-   * et « Mes bons » (au premier appel). Puis toutes les 60 s, seulement quand l'onglet est visible.
-   */
   const mesBonsCharges = useRef(false);
   const chargerInfosListe = useCallback(async (avecRetards) => {
     const avecMesBons = !mesBonsCharges.current && moi.personnelId != null;
@@ -577,7 +513,6 @@ export default function BonsMaintenance() {
       if (Array.isArray(data?.depassements)) { setSlaRetards(data.depassements); setSlaErreur(null); }
       if (Array.isArray(data?.mesBonIds)) { setMesBonIds(new Set(data.mesBonIds.map(String))); mesBonsCharges.current = true; }
     } catch {
-      // Ancien serveur : les appels séparés d'avant
       recupererSlaOuverts();
       if (avecRetards) recupererSlaRetards();
       alerteMachineService.compterNouvelles().then(setNbAlertesMachines).catch(() => {});
@@ -615,7 +550,6 @@ export default function BonsMaintenance() {
     }
   };
 
-  // « Demandes » : demandes de fourniture du bon ; les anciennes demandes de pièces restent accessibles depuis la liste
   const openDemandes = async () => {
     if (!selectedBon) return;
     setDemandesError(null);
@@ -677,10 +611,11 @@ export default function BonsMaintenance() {
   }, [selectedBon, actionsRefreshKey]);
 
   const etatStats = useMemo(() => {
+    const visibles = bons.filter((b) => (vueCourante.archives ? bonArchive(b) : !bonArchive(b)));
     const stats = {};
-    Object.values(ETAT).forEach((val) => { stats[val] = getEtatCount(bons, val); });
+    Object.values(ETAT).forEach((val) => { stats[val] = getEtatCount(visibles, val); });
     return stats;
-  }, [bons]);
+  }, [bons, vueCourante]);
 
   const fc = useFiltresColonnes('bons');
   const choixCol = useMemo(() => choixColonnes(COLONNES_TEXTE, bonsAvecSla), [bonsAvecSla]);
@@ -697,7 +632,6 @@ export default function BonsMaintenance() {
     });
   }, [bonsAvecSla, searchTerm, etatFilter, columnSettings, vueCourante, fc.filtres, choixCol, dansLieu]);
 
-  // Tous les bons, effectués compris, en UN appel (regroupé avec celui de la page), au chargement et après une demande / commande
   useEffect(() => {
     const ids = bons.map((b) => b.id);
     if (ids.length === 0) { setAchatIds(new Set()); return undefined; }
@@ -758,11 +692,6 @@ export default function BonsMaintenance() {
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
   };
 
-  const paginationRange = useMemo(() => {
-    const range = [];
-    for (let i = 1; i <= totalPages; i += 1) range.push(i);
-    return range;
-  }, [totalPages]);
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -844,7 +773,6 @@ export default function BonsMaintenance() {
         </td>
       ),
     },
-    // Lu / non lu par un intervenant ; le temps d'attente ne compte que pour un bon encore ouvert
     lecture: {
       cell: (b) => (
         <td key="lecture">
@@ -854,11 +782,7 @@ export default function BonsMaintenance() {
     },
   };
 
-  /* =========================================================
-     EXPORT EXCEL — Modale de sélection
-     ========================================================= */
   const openExcelColumnsModal = () => {
-    // Toutes les colonnes cochées par défaut
     setExcelSelectedColumns(EXCEL_COLUMNS_OPTIONS.map((c) => c.key));
     setIsExcelColumnsModalOpen(true);
   };
@@ -877,9 +801,6 @@ export default function BonsMaintenance() {
     }
   };
 
-  /* =========================================================
-     EXPORT EXCEL — Génération complète
-     ========================================================= */
   const handleExportExcel = async () => {
     if (excelSelectedColumns.length === 0) {
       alert(t("Veuillez sélectionner au moins une colonne."));
@@ -889,7 +810,6 @@ export default function BonsMaintenance() {
     try {
       setExportingExcel(true);
 
-      // 1. Charger les détails complets (tous attributs) de chaque bon
       const details = await Promise.all(
         sortedBons.map(async (b) => {
           try {
@@ -902,13 +822,10 @@ export default function BonsMaintenance() {
         })
       );
 
-      // 2. Récupérer les champs dynamiques (fallback pour capturer les attributs non listés)
       const dynamicFields = collectDynamicFields(details);
 
-      // 3. Construire la liste complète des colonnes disponibles
       const allFields = [...EXCEL_ALL_FIELDS, ...dynamicFields];
 
-      // 4. Filtrer selon les colonnes cochées
       const selectedFields = allFields.filter((f) =>
         excelSelectedColumns.includes(f.key)
       );
@@ -919,11 +836,10 @@ export default function BonsMaintenance() {
         selectedFields.map((f) => {
           const v = f.extract(b);
           if (v === null || v === undefined) return '';
-          return typeof v === 'string' ? t(v) : v; // libellés d'état traduits ; données saisies inchangées
+          return typeof v === 'string' ? t(v) : v;
         })
       );
 
-      // 5. Générer le fichier XLSX
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
 
       const colWidths = headers.map((h, idx) => {
@@ -951,7 +867,6 @@ export default function BonsMaintenance() {
     }
   };
 
-  // Impression : document mis en page avec les colonnes visibles du tableau et l'ordre de tri actuel
   const handleImprimerListe = () => {
     const valeur = (b, key) => {
       switch (key) {
@@ -967,7 +882,7 @@ export default function BonsMaintenance() {
       colonnes: visibleColumns.map((c) => t(c.label)),
       lignes: sortedBons.map((b) => visibleColumns.map((c) => valeur(b, c.key))),
       filtres: [
-        { label: t('Vue'), valeur: vueCourante.filtre ? t(vueCourante.label) : '' },
+        { label: t('Vue'), valeur: vueCourante.sansFiltre ? '' : t(vueCourante.label) },
         { label: t('Recherche'), valeur: searchTerm.trim() },
         { label: t('État'), valeur: etatFilter !== 'all' ? t(etatLabel(Number(etatFilter))) : '' },
         ...COLONNES_TEXTE.filter((c) => fc.actif(c.cle)).map((c) => ({ label: t(c.label), valeur: fc.filtres[c.cle].trim() })),
@@ -982,8 +897,11 @@ export default function BonsMaintenance() {
 
   const openCreate = () => { setSelectedBon(null); setModalOpen(true); };
   const openEdit = () => { if (selectedBon) setViewMode('edit'); };
-  const openCommander = () => { if (selectedBon) setCommanderOpen(true); };
-  const openDemander = () => { if (selectedBon) setDemanderOpen(true); };
+  const bonFige = !!selectedBon && (Number(selectedBon.etat) === 4 || Number(selectedBon.etat) === 10);
+  const raisonFige = !bonFige ? undefined : Number(selectedBon.etat) === 10
+    ? t('Ce bon est annulé : il ne peut plus être modifié.') : t('Ce bon est effectué : il ne peut plus être modifié.');
+  const openCommander = () => { if (selectedBon && !bonFige) setCommanderOpen(true); };
+  const openDemander = () => { if (selectedBon && !bonFige) setDemanderOpen(true); };
 
   const handleSave = async (payload, children) => {
     if (selectedBon) {
@@ -1035,16 +953,13 @@ export default function BonsMaintenance() {
     });
   };
 
-  /* ── Sélection multiple (cases à cocher) pour supprimer plusieurs bons d'un coup ── */
   const [coches, setCoches] = useState(() => new Set());
   const [derniereCoche, setDerniereCoche] = useState(null);
-  // On ne garde que les bons encore présents (après suppression, rechargement…)
   const cochesValides = useMemo(() => bons.filter((b) => coches.has(b.id)).map((b) => b.id), [bons, coches]);
   const basculerCoche = (bon, index, plage) => {
     setCoches((prev) => {
       const suite = new Set(prev);
       const cocher = !prev.has(bon.id);
-      // Maj+clic : coche (ou décoche) toute la plage depuis la dernière case cliquée
       if (plage && derniereCoche != null) {
         const [a, b] = [Math.min(derniereCoche, index), Math.max(derniereCoche, index)];
         paginatedBons.slice(a, b + 1).forEach((x) => (cocher ? suite.add(x.id) : suite.delete(x.id)));
@@ -1064,8 +979,6 @@ export default function BonsMaintenance() {
   const toutCocher = () => setCoches(new Set(sortedBons.map((b) => b.id)));
   const viderCoches = () => { setCoches(new Set()); setDerniereCoche(null); };
 
-  // Confirmation puis suppression d'une liste de bons ; en cas d'échec partiel,
-  // la fenêtre propose de réessayer avec les seuls bons restants.
   const demanderSuppression = (ids, erreur = null) => {
     const apercu = bons.filter((b) => ids.includes(b.id)).slice(0, 5).map((b) => b.num || `#${b.id}`).join(', ');
     setConfirmModal({
@@ -1087,7 +1000,7 @@ export default function BonsMaintenance() {
           const echecs = ids.filter((_, i) => resultats[i].status === 'rejected');
           setBons((prev) => prev.filter((b) => !supprimes.includes(b.id)));
           setSelectedBon((actuel) => (actuel && supprimes.includes(actuel.id) ? null : actuel));
-          setCoches(new Set(echecs)); // les bons non supprimés restent cochés
+          setCoches(new Set(echecs));
           if (echecs.length === 0) {
             closeConfirmModal();
           } else {
@@ -1230,7 +1143,6 @@ export default function BonsMaintenance() {
 
   return (
     <div className="bons-container">
-      {/* HEADER */}
       <div className="bons-header-card">
         <div className="bons-header-title-box">
           <button
@@ -1248,7 +1160,6 @@ export default function BonsMaintenance() {
           </div>
         </div>
 
-        {/* VUES de la liste (Tous, Mes bons, À traiter…), dans l'en-tête à la place des statistiques par état */}
         <div className="bons-header-vues">
           <VuesListe
             liste="bons"
@@ -1263,7 +1174,6 @@ export default function BonsMaintenance() {
           />
         </div>
 
-        {/* Outils de la liste regroupés dans un menu déroulant */}
         <MenuOutilsBons
           nbAlertesMachines={nbAlertesMachines + nbSlaRetards}
           elements={[
@@ -1273,20 +1183,21 @@ export default function BonsMaintenance() {
             { cle: 'alertes', icone: RadioTower, label: t('Alertes machines'), aide: t('Alertes SNMP, Syslog et coupures réseau'), badge: nbAlertesMachines, onClick: () => setAlertesMachinesOpen(true) },
             { cle: 'sla', icone: AlarmClock, label: t('Retards SLA'), aide: t('Bons qui ont dépassé leur délai de réponse ou de résolution'), badge: nbSlaRetards, onClick: ouvrirSlaRetards },
             { cle: 'chrono', icone: Timer, label: t('Chrono des employés'), aide: t('Qui travaille en ce moment, et depuis quand'), onClick: () => setIntelligenceOpen(true) },
+            { cle: 'validation', icone: ClipboardCheck, label: t('Validation des bons'), aide: t('Qui valide les bons effectués'), onClick: () => setValidateursOpen(true) },
           ]}
         />
 
       </div>
 
 
-      {/* ACTIONS */}
       <div className="bons-actions-bar">
         <button className="bons-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} />
           <span>{t("Ajouter")}</span>
         </button>
 
-        <button className={`bons-action-btn modifier ${!selectedBon ? 'disabled' : ''}`} disabled={!selectedBon} onClick={openEdit}>
+        <button className={`bons-action-btn modifier ${!selectedBon || bonFige ? 'disabled' : ''}`} disabled={!selectedBon || bonFige} onClick={openEdit}
+          title={raisonFige}>
           <Edit size={18} />
           <span>{t("Modifier")}</span>
         </button>
@@ -1296,19 +1207,19 @@ export default function BonsMaintenance() {
           <span>{t("Détails")}</span>
         </button>
 
-        {/* Demander, Demandes, Commander, Commandes : regroupés dans le menu « Achats » */}
         <MenuAchatsBons
           actif={!!selectedBon}
-          allume={demanderAllume || commanderAllume}
+          allume={!bonFige && (demanderAllume || commanderAllume)}
           elements={[
-            { cle: 'demander', icone: PackageSearch, label: t('Demander'), actif: demanderAllume, allume: demanderAllume, onClick: openDemander },
+            { cle: 'demander', icone: PackageSearch, label: t('Demander'), actif: demanderAllume && !bonFige, allume: demanderAllume && !bonFige, onClick: openDemander },
             { cle: 'demandes', icone: PackageSearch, label: t('Demandes'), actif: true, onClick: openDemandes },
-            { cle: 'commander', icone: ShoppingCart, label: t('Commander'), actif: commanderAllume, allume: commanderAllume, onClick: openCommander },
+            { cle: 'commander', icone: ShoppingCart, label: t('Commander'), actif: commanderAllume && !bonFige, allume: commanderAllume && !bonFige, onClick: openCommander },
             { cle: 'commandes', icone: ShoppingCart, label: t('Commandes'), actif: true, onClick: openCommandes },
           ]}
         />
 
-        <button className={`bons-action-btn supprimer ${!selectedBon || isDeleting ? 'disabled' : ''}`} disabled={!selectedBon || isDeleting} onClick={handleDelete}>
+        <button className={`bons-action-btn supprimer ${!selectedBon || isDeleting || bonFige ? 'disabled' : ''}`} disabled={!selectedBon || isDeleting || bonFige} onClick={handleDelete}
+          title={raisonFige}>
           <Trash2 size={18} />
           <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
@@ -1349,6 +1260,10 @@ export default function BonsMaintenance() {
           </div>
         )}
 
+        {selectedBon && selectedBon.validationStatut === 'A_VALIDER' && (
+          <BoutonsDecision bon={selectedBon} compact onMaj={(maj) => { if (maj?.id) { setBons((prev) => prev.map((b) => (b.id === maj.id ? maj : b))); setSelectedBon(maj); } setActionsRefreshKey((k) => k + 1); }} />
+        )}
+
         {!selectedBon && (
           <span className="bons-no-selection-message">
             <Info size={16} />
@@ -1358,7 +1273,6 @@ export default function BonsMaintenance() {
       </div>
 
 
-      {/* FILTRES */}
       <div className="bons-filter-panel">
         <div className="bons-filter-group">
           <span className="bons-filter-label">{t("Recherche")}</span>
@@ -1414,7 +1328,7 @@ export default function BonsMaintenance() {
         <div className="bons-filter-info">
           <span className="bons-filter-result">
             {tp('résultat', filteredBons.length)}
-            {vueCourante.filtre && ` • ${t(vueCourante.label)}`}
+            {!vueCourante.sansFiltre && ` • ${t(vueCourante.label)}`}
             {etatFilter !== 'all' && ` • ${t(getActiveFilterLabel())}`}
             {searchTerm && ` • "${searchTerm}"`}
           </span>
@@ -1435,7 +1349,6 @@ export default function BonsMaintenance() {
         </div>
       </div>
 
-      {/* ERREUR */}
       {error && (
         <div className="bons-error-banner">
           <AlertCircle size={18} />
@@ -1443,7 +1356,6 @@ export default function BonsMaintenance() {
         </div>
       )}
 
-      {/* SÉLECTION MULTIPLE */}
       <SelectionMultiple
         nombre={cochesValides.length}
         total={sortedBons.length}
@@ -1454,7 +1366,6 @@ export default function BonsMaintenance() {
         suppressionEnCours={isDeleting}
       />
 
-      {/* TABLE */}
       <div className="bons-table-wrap liste-adaptative__tableau">
         <table className="bons-table">
           <thead>
@@ -1532,7 +1443,6 @@ export default function BonsMaintenance() {
         </table>
       </div>
 
-      {/* CARTES (téléphone) */}
       <CartesListe
         lignes={loading ? [] : paginatedBons.map((b) => {
           const retard = bonEnRetard(b);
@@ -1557,10 +1467,8 @@ export default function BonsMaintenance() {
         vide={loading ? t('Chargement...') : (bons.length === 0 ? t("Aucun bon de maintenance pour l'instant. Ajoute le premier avec le bouton ci-dessus.") : t('Aucun bon ne correspond à ces filtres. Essaye de modifier ta recherche.'))}
       />
 
-      {/* PAGINATION */}
       {!loading && <Pagination base={1} page={currentPage} taille={PAGE_SIZE} total={sortedBons.length} onPage={goToPage} />}
 
-      {/* MODAL CREATION / MODIFICATION */}
       <BonMaintenanceModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -1569,7 +1477,6 @@ export default function BonsMaintenance() {
         isEditing={!!selectedBon}
       />
 
-      {/* DEMANDER / COMMANDER : éditeur de pièce (une pièce, ses lignes, numéro de souche, totaux) */}
       <PieceEditor
         ouvert={demanderOpen}
         type="DEMANDE"
@@ -1585,7 +1492,6 @@ export default function BonsMaintenance() {
         onCree={() => setActionsRefreshKey((k) => k + 1)}
       />
 
-      {/* MODAL DEMANDES */}
       <ListeDocumentsAchat
         ouvert={!!listeAchat}
         type={listeAchat || 'DEMANDE'}
@@ -1787,7 +1693,6 @@ export default function BonsMaintenance() {
         </div>
       )}
 
-      {/* CONFIRM DELETE / ANNULER */}
       <ConfirmModal
         show={confirmModal.show}
         onClose={closeConfirmModal}
@@ -1800,7 +1705,6 @@ export default function BonsMaintenance() {
         confirming={confirmModal.confirming}
       />
 
-      {/* MODAL SUSPENSION */}
       {motifModal.show && (
         <div
           className="modal-overlay confirm-overlay"
@@ -1860,7 +1764,6 @@ export default function BonsMaintenance() {
         </div>
       )}
 
-      {/* MODAL EFFECTUER */}
       {etatModal.show && (
         <div
           className="modal-overlay confirm-overlay"
@@ -1924,7 +1827,6 @@ export default function BonsMaintenance() {
 
       <AnnonceCopie texte={fc.annonce} />
 
-      {/* MODAL PARAMÈTRES DES COLONNES */}
       <ColumnSettingsModal
         key={columnSettingsInstanceKey}
         show={showColumnSettings}
@@ -1935,7 +1837,6 @@ export default function BonsMaintenance() {
         onToggleSearch={toggleColumnSearchability}
       />
 
-      {/* MODALE EXPORT EXCEL — Choix des colonnes */}
       {isExcelColumnsModalOpen && (
         <div
           className="bons-excel-modal-overlay"
@@ -1945,7 +1846,6 @@ export default function BonsMaintenance() {
             className="bons-excel-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* HEADER */}
             <div className="bons-excel-header">
               <div className="bons-excel-header-left">
                 <div className="bons-excel-header-icon">
@@ -1970,7 +1870,6 @@ export default function BonsMaintenance() {
               </button>
             </div>
 
-            {/* BODY */}
             <div className="bons-excel-body">
               <div className="bons-excel-toolbar">
                 <span className="bons-excel-count">
@@ -2009,7 +1908,6 @@ export default function BonsMaintenance() {
               </div>
             </div>
 
-            {/* FOOTER */}
             <div className="bons-excel-footer">
               <small className="bons-excel-footer-info">
                 📊 {sortedBons.length} {t("bon(s) à exporter")}
@@ -2039,7 +1937,6 @@ export default function BonsMaintenance() {
         </div>
       )}
 
-      {/* MODALES PAGES EXTERNES */}
       <PageModal
         isOpen={slaOpen}
         onClose={fermerSlaRetards}
@@ -2123,6 +2020,7 @@ export default function BonsMaintenance() {
       >
         <AlertesMachines isModal />
       </PageModal>
+      {validateursOpen && <FenetreValidateurs onClose={() => setValidateursOpen(false)} />}
     </div>
   );
 }
@@ -2134,7 +2032,6 @@ const formatDateSla = (iso) => {
   return d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
-/** Retard en heures par rapport à une échéance (0 si pas encore atteinte). */
 const heuresDeRetard = (echeance, maintenant) => {
   if (!echeance) return 0;
   const d = new Date(echeance);
@@ -2164,7 +2061,6 @@ function SlaRetards({ bons, chargement, erreur, onRecharger, onOuvrir }) {
   const lignes = useMemo(() => (bons || []).map((b) => {
     const reponse = b.statutReponse === 'DEPASSE';
     const resolution = b.statutResolution === 'DEPASSE';
-    // Retard le plus important des deux délais dépassés
     const retard = Math.max(
       reponse ? heuresDeRetard(b.echeanceReponse, maintenant) : 0,
       resolution ? heuresDeRetard(b.echeanceResolution, maintenant) : 0,
@@ -2292,9 +2188,6 @@ function SlaRetards({ bons, chargement, erreur, onRecharger, onOuvrir }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Menu « Achats » de la barre d'actions : Demander, Demandes, Commander, Commandes
-// ═════════════════════════════════════════════════════════════
 function MenuAchatsBons({ actif, allume, elements }) {
   const [ouvert, setOuvert] = useState(false);
   const zone = useRef(null);
@@ -2336,9 +2229,6 @@ function MenuAchatsBons({ actif, allume, elements }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Menu déroulant « Outils » de l'en-tête (anomalies, blocages, équipements, alertes, chrono)
-// ═════════════════════════════════════════════════════════════
 function MenuOutilsBons({ elements, nbAlertesMachines }) {
   const [ouvert, setOuvert] = useState(false);
   const zone = useRef(null);

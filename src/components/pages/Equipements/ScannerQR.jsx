@@ -6,24 +6,14 @@ import equipementService from '../../../services/equipementService';
 import { t } from '../../../i18n';
 import './Equipements.css';
 
-/*
- * Lecture du QR code d'un équipement avec la caméra, ou saisie du code à la main.
- * Le lecteur intégré du navigateur (BarcodeDetector) est utilisé quand il existe ;
- * sinon jsQR analyse l'image (iPhone, Firefox…).
- * La caméra n'est accessible que sur une adresse https:// (ou localhost).
- *
- * onTrouve(id) : mode « choix » (formulaires) — l'équipement trouvé est rendu à l'appelant
- * au lieu d'ouvrir sa fiche.
- */
 export default function ScannerQR({ onClose, onTrouve, titre, aide }) {
   const navigate = useNavigate();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-  const [etat, setEtat] = useState('demarrage'); // demarrage | lecture | recherche | sans-camera
+  const [etat, setEtat] = useState('demarrage');
   const [erreur, setErreur] = useState('');
   const [saisie, setSaisie] = useState('');
   const traite = useRef(false);
-  // Code refusé : la caméra ne le renvoie pas en boucle au serveur
   const dernierRefus = useRef('');
 
   const ouvrirDepuisCode = async (valeur, { manuel = false } = {}) => {
@@ -87,7 +77,6 @@ export default function ScannerQR({ onClose, onTrouve, titre, aide }) {
               if (code?.data) ouvrirDepuisCode(code.data);
             }
           } catch {
-            /* image illisible : on réessaie à la prochaine */
           }
         }, 300);
       } catch {
@@ -104,7 +93,6 @@ export default function ScannerQR({ onClose, onTrouve, titre, aide }) {
       flux?.getTracks().forEach((p) => p.stop());
       document.removeEventListener('keydown', echap);
     };
-    // ouvrirDepuisCode lit des refs : pas besoin de relancer la caméra
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onClose]);
 

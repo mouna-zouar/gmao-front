@@ -3,7 +3,7 @@ import api from './api';
 const bonMaintenanceIntervenantService = {
   async getByBonMaintenance(bonMaintenanceId) {
     const { data } = await api.get(`/bon-maintenance-intervenant/bon-maintenance/${bonMaintenanceId}`);
-    return data; // List<BonMaintenanceIntervenantDTO>
+    return data;
   },
   async create(intervenant) {
     const { data } = await api.post('/bon-maintenance-intervenant', intervenant);

@@ -7,7 +7,7 @@ const diagnosticAssistantService = {
       description: description || '',
       lotArticleImmobilistationId: lotArticleImmobilistationId || null,
     });
-    return data; // List<DiagnosticSuggestion>
+    return data;
   },
 };
 

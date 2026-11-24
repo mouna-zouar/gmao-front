@@ -1,4 +1,3 @@
-/* Pastille de statut commune (couleurs : constants/statuts.js → TONS) */
 .statut {
   display: inline-flex;
   align-items: center;

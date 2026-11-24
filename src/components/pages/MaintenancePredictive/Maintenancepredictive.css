@@ -1,6 +1,5 @@
 
 .mp-page {
-  /* Palette TEAL (alignée FicheEmploye) */
   --teal-900: var(--g-brand-900);
   --teal-800: var(--g-brand-700);
   --teal-700: var(--g-brand-600);
@@ -49,7 +48,6 @@
   --slate-100: var(--g-slate-100);
   --slate-50: var(--g-slate-50);
 
-  /* Alias compatibilité */
   --primary: var(--teal-600);
   --primary-dark: var(--teal-700);
   --primary-darker: var(--teal-800);
@@ -107,58 +105,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ============================================================
-   HEADER — carte blanche style FicheEmploye
-   ============================================================ */
-.mp-header {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
-  padding: 16px 24px;
-  margin-bottom: 20px;
-  background: var(--g-blanc);
-  border: 1px solid var(--slate-200);
-  border-radius: 16px;
-  color: var(--slate-900);
-  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.03);
-  transition: box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.mp-header:hover {
-  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
-}
-
-.mp-header > div:first-child {
-  min-width: 0;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.mp-header h1 {
-  font-size: 1.45rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  color: var(--slate-900);
-  margin: 0;
-}
-
-.mp-header p {
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--slate-500);
-  margin: 3px 0 0;
-  max-width: 640px;
-}
-
-/* ============================================================
-   BOUTON RECALCULER
-   ============================================================ */
 .mp-refresh-btn {
   display: inline-flex;
   align-items: center;
@@ -191,68 +137,6 @@
   cursor: not-allowed;
 }
 
-/* ============================================================
-   RÉSUMÉ — cartes blanches avec bordure gauche sémantique
-   ============================================================ */
-.mp-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.mp-summary__item {
-  position: relative;
-  background: var(--g-blanc);
-  border: 1px solid var(--slate-200);
-  border-left: 3px solid var(--slate-700);
-  border-radius: 14px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition: box-shadow 0.2s, border-color 0.2s;
-  overflow: hidden;
-}
-
-.mp-summary__item:hover {
-  box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
-}
-
-/* Critique — slate foncé */
-.mp-summary__item--critique {
-  border-left-color: var(--slate-700);
-  background: linear-gradient(180deg, var(--g-blanc) 0%, var(--slate-50) 100%);
-}
-
-/* Élevé — orange */
-.mp-summary__item--eleve {
-  border-left-color: var(--orange-500);
-  background: linear-gradient(180deg, var(--g-blanc) 0%, var(--orange-50) 100%);
-}
-
-.mp-summary__nombre {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--slate-900);
-  letter-spacing: -0.03em;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.mp-summary__item--critique .mp-summary__nombre { color: var(--slate-700); }
-.mp-summary__item--eleve    .mp-summary__nombre { color: var(--orange-700); }
-
-.mp-summary__label {
-  font-size: 0.78rem;
-  color: var(--slate-500);
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-/* ============================================================
-   FILTRES — carte blanche style FicheEmploye
-   ============================================================ */
 .mp-filtres {
   display: flex;
   align-items: center;
@@ -299,6 +183,10 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%230794a4' stroke-width='2' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E");
 }
 
+.mp-filtres .mp-refresh-btn {
+  margin-left: auto;
+}
+
 .mp-filtres-niveau {
   display: inline-flex;
   gap: 4px;
@@ -339,9 +227,6 @@
   color: var(--g-blanc);
 }
 
-/* ============================================================
-   ÉTATS VIDES / ERREURS
-   ============================================================ */
 .mp-empty,
 .mp-error {
   display: flex;
@@ -378,9 +263,6 @@
   content: '⚠️';
 }
 
-/* ============================================================
-   TABLE — style modern-table
-   ============================================================ */
 .mp-table-wrapper {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -431,9 +313,6 @@
   border-bottom: none;
 }
 
-/* ============================================================
-   COLONNE ÉQUIPEMENT
-   ============================================================ */
 .mp-equipement-nom {
   font-weight: 700;
   color: var(--slate-900);
@@ -449,9 +328,6 @@
   font-weight: 500;
 }
 
-/* ============================================================
-   BARRE DE SCORE
-   ============================================================ */
 .mp-score-bar-wrapper {
   display: flex;
   align-items: center;
@@ -481,9 +357,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ============================================================
-   BADGES NIVEAU
-   ============================================================ */
 .mp-badge {
   display: inline-flex;
   align-items: center;
@@ -508,37 +381,30 @@
   flex-shrink: 0;
 }
 
-/* Faible — vert */
 .mp-badge--faible {
   color: var(--success-text);
   background: var(--green-100);
   border-color: var(--success-border);
 }
 
-/* Modéré — ambre */
 .mp-badge--modere {
   color: var(--amber-700);
   background: var(--amber-50);
   border-color: var(--amber-200);
 }
 
-/* Élevé — orange */
 .mp-badge--eleve {
   color: var(--orange-700);
   background: var(--orange-50);
   border-color: var(--orange-200);
 }
 
-/* Critique — slate foncé */
 .mp-badge--critique {
   color: var(--slate-900);
   background: var(--slate-200);
   border-color: var(--slate-400);
 }
 
-/* ============================================================
-   FILL DE BARRE DE SCORE
-   ============================================================ */
 .mp-score-bar__fill.mp-badge--faible {
   background: linear-gradient(90deg, var(--g-emerald-400) 0%, var(--g-emerald-500) 100%);
 }
@@ -555,9 +421,6 @@
   background: linear-gradient(90deg, var(--g-slate-500) 0%, var(--g-slate-700) 100%);
 }
 
-/* ============================================================
-   TENDANCES
-   ============================================================ */
 .mp-tendance {
   display: inline-flex;
   align-items: center;
@@ -588,9 +451,6 @@
   border-color: var(--slate-200);
 }
 
-/* ============================================================
-   GARANTIE
-   ============================================================ */
 .mp-garantie {
   display: inline-flex;
   align-items: center;
@@ -627,9 +487,6 @@
   border-color: var(--success-border);
 }
 
-/* ============================================================
-   PAGINATION — carte blanche style FicheEmploye
-   ============================================================ */
 .mp-pagination {
   display: flex;
   align-items: center;
@@ -697,20 +554,9 @@
   cursor: not-allowed;
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 900px) {
   .mp-page {
     padding: 16px;
-  }
-
-  .mp-header {
-    padding: 18px;
-  }
-
-  .mp-header h1 {
-    font-size: 1.15rem;
   }
 
   .mp-refresh-btn {
@@ -730,9 +576,6 @@
 }
 
 @media (max-width: 640px) {
-  .mp-summary {
-    grid-template-columns: 1fr;
-  }
 
   .mp-filtres {
     flex-direction: column;

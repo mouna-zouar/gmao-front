@@ -1,9 +1,3 @@
-/* =========================================================
-   VEILLE — Anomalies, Blocages, Équipements, Intelligence
-   Un seul style pour les écrans de surveillance.
-   ========================================================= */
-
-/* ---------- Tons (une seule échelle pour les 4 écrans) ---------- */
 [data-ton] { --ton: var(--g-slate-400); --ton-fond: var(--g-slate-100); --ton-texte: var(--g-slate-600); }
 [data-ton="danger"]    { --ton: var(--g-red-600);     --ton-fond: var(--g-red-50);     --ton-texte: var(--g-red-700); }
 [data-ton="orange"]    { --ton: var(--g-orange-500);  --ton-fond: var(--g-orange-50);  --ton-texte: var(--g-orange-700); }
@@ -12,7 +6,6 @@
 [data-ton="info"]      { --ton: var(--g-blue-600);    --ton-fond: var(--g-blue-50);    --ton-texte: var(--g-blue-700); }
 [data-ton="marque"]    { --ton: var(--g-marque);      --ton-fond: var(--g-marque-clair); --ton-texte: var(--g-marque-tres-fonce); }
 
-/* ---------- Page ---------- */
 .vl-page {
   display: flex;
   flex-direction: column;
@@ -51,7 +44,6 @@
 .vl-entete p { margin: 4px 0 0; color: var(--g-texte-secondaire); font-size: 0.875rem; max-width: 70ch; }
 .vl-entete__actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* ---------- Barre d'outils ---------- */
 .vl-barre {
   display: flex;
   align-items: center;
@@ -63,7 +55,6 @@
 .vl-barre__droite { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .vl-barre__note { font-size: 0.78rem; color: var(--g-texte-secondaire); }
 
-/* ---------- Boutons ---------- */
 .vl-btn {
   display: inline-flex; align-items: center; gap: 7px;
   height: 36px; padding: 0 14px;
@@ -87,7 +78,6 @@
 .vl-tourne { animation: vl-tourne 0.9s linear infinite; }
 @keyframes vl-tourne { to { transform: rotate(360deg); } }
 
-/* ---------- Recherche ---------- */
 .vl-recherche { position: relative; min-width: 240px; flex: 1 1 260px; max-width: 420px; }
 .vl-recherche svg { position: absolute; inset-inline-start: 11px; top: 50%; transform: translateY(-50%); color: var(--g-texte-discret); pointer-events: none; }
 .vl-recherche input {
@@ -101,7 +91,6 @@
 }
 .vl-recherche input:focus { outline: none; border-color: var(--g-marque); box-shadow: 0 0 0 3px var(--g-marque-clair); }
 
-/* ---------- Indicateurs ---------- */
 .vl-kpis {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -135,7 +124,6 @@ button.vl-kpi:focus-visible { outline: 2px solid var(--g-marque); outline-offset
 .vl-kpi[data-ton]:not([data-ton="neutre"]):not([data-ton="marque"]) .vl-kpi__valeur { color: var(--ton-texte); }
 .vl-kpi__aide { font-size: 0.72rem; color: var(--g-texte-discret); }
 
-/* ---------- Segments ---------- */
 .vl-segments {
   display: inline-flex; flex-wrap: wrap; gap: 2px;
   padding: 3px;
@@ -163,7 +151,6 @@ button.vl-kpi:focus-visible { outline: 2px solid var(--g-marque); outline-offset
 }
 .vl-segment.is-actif .vl-segment__n { background: var(--g-marque-clair); color: var(--g-marque-tres-fonce); }
 
-/* ---------- Pastille ---------- */
 .vl-pastille {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 3px 9px;
@@ -175,11 +162,9 @@ button.vl-kpi:focus-visible { outline: 2px solid var(--g-marque); outline-offset
 }
 .vl-pastille__point { width: 6px; height: 6px; border-radius: 50%; background: var(--ton); }
 
-/* ---------- Jauge ---------- */
 .vl-jauge { display: block; height: 5px; border-radius: 999px; background: var(--g-slate-100); overflow: hidden; }
 .vl-jauge__rempli { display: block; height: 100%; border-radius: inherit; background: var(--ton); }
 
-/* ---------- Liste en lignes ---------- */
 .vl-liste {
   background: var(--g-surface);
   border: 1px solid var(--g-bordure);
@@ -245,7 +230,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
 
 .vl-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 
-/* ---------- Score rond (risque) ---------- */
 .vl-score {
   display: grid; place-items: center;
   width: 40px; height: 40px;
@@ -262,7 +246,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- Panneaux ---------- */
 .vl-panneau {
   background: var(--g-surface);
   border: 1px solid var(--g-bordure);
@@ -293,7 +276,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
 
 .vl-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
 
-/* Ligne courte (panneaux de l'écran Intelligence) */
 .vl-mini {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px;
@@ -308,7 +290,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
 .vl-mini__sous { font-size: 0.74rem; color: var(--g-texte-secondaire); }
 .vl-mini__fin { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
 
-/* ---------- États vides, messages ---------- */
 .vl-vide {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
   padding: 36px 16px;
@@ -333,7 +314,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
 
 .vl-chargement { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 32px; color: var(--g-texte-secondaire); font-size: 0.85rem; }
 
-/* ---------- Petit écran : les lignes s'empilent ---------- */
 @media (max-width: 760px) {
   .vl-page, .vl-page--fenetre { padding: 16px; }
   .vl-kpis { grid-template-columns: repeat(2, 1fr); }
@@ -350,9 +330,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
   .vl-grille { grid-template-columns: 1fr; }
 }
 
-/* =========================================================
-   ÉQUIPEMENTS — lignes dépliables
-   ========================================================= */
 .vl-eq { --vl-colonnes: 22px minmax(0, 1fr) 140px 120px 170px 116px; }
 .vl-eq > li { list-style: none; }
 .vl-eq__item + .vl-eq__item > .vl-ligne,
@@ -399,7 +376,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
   padding: 14px 18px;
 }
 
-/* Frise de l'historique */
 .vl-eq__frise { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .vl-eq__frise > li {
   position: relative;
@@ -424,17 +400,14 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
   .vl-eq__chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* Adresse IP d'un équipement (ligne de la liste) */
 .vl-eq__ip strong { font-family: var(--g-police-mono); font-weight: 600; font-size: 0.74rem; }
 .vl-eq__ip-point { width: 7px; height: 7px; border-radius: 50%; background: var(--g-slate-300); }
 .vl-eq__ip--en_ligne .vl-eq__ip-point { background: var(--g-emerald-500); }
 .vl-eq__ip--hors_ligne .vl-eq__ip-point { background: var(--g-red-500); }
 
-/* Alertes machines : réclamation déjà créée depuis l'alerte */
 .vl-alerte-recl { border-color: var(--g-emerald-200, #a7f3d0); background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-700, #047857); }
 .vl-alerte-recl:hover:not(:disabled) { border-color: var(--g-emerald-500); background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-700, #047857); }
 
-/* Alertes machines : message reçu brut */
 .vl-alerte-brut {
   margin: 4px 0 0;
   padding: 8px 10px;
@@ -449,7 +422,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
   word-break: break-all;
 }
 
-/* Pagination sous une liste */
 .vl-pagination {
   display: flex;
   align-items: center;
@@ -499,7 +471,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
 }
 [dir='rtl'] .vl-pagination__btn svg { transform: scaleX(-1); }
 
-/* Liste déroulante de filtre (ex. famille d'équipements), même hauteur que la recherche */
 .vl-select { position: relative; flex: 0 1 260px; min-width: 180px; }
 .vl-select select {
   width: 100%; height: 36px;
@@ -521,7 +492,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
   font-size: 0.72rem; font-weight: 600;
 }
 
-/* Agents de terrain (fenêtre Alertes machines) */
 .vl-agents {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -574,3 +544,9 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
 .vl-agent__liaison-nom { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.78rem; font-weight: 700; color: var(--g-texte); }
 .vl-agent__liaison-msg { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.72rem; color: var(--g-texte-2); }
 .vl-agent__plus { font-size: 0.72rem; color: var(--g-texte-2); padding-inline-start: 4px; }
+
+.vl-alerte-statut { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.vl-alerte-bon { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border: 1px solid var(--g-slate-200, #e2e8f0);
+  border-radius: 999px; background: var(--g-slate-50, #f8fafc); color: var(--g-slate-600, #475569); font: inherit; font-size: 11px;
+  font-weight: 600; cursor: pointer; }
+.vl-alerte-bon:hover { border-color: var(--g-slate-300, #cbd5e1); color: var(--g-slate-800, #1e293b); }

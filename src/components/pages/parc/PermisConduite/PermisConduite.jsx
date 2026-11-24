@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Calendar, CheckCircle2, Eye, User, XCircle } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
 import permisConduiteService from '../../../../services/permisConduiteService';
-import personnelService from '../../../../services/personnelService';
+import personnelService from '../../../../services/Personnelservice';
 import PermisConduiteModal from '../../../ui/modals/PermisConduiteModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
@@ -10,12 +10,6 @@ import { imprimerFiche } from '../../../../utils/imprimerListe';
 import PermisCarteDetails from './PermisCarteDetails';
 import './PermisConduite.css';
 
-/*
- * Permis de conduire : page liste de la bibliothèque commune.
- * Gardés tels quels : la fenêtre PermisConduiteModal et la fiche du permis (PermisCarteDetails, ouverte au double-clic).
- */
-
-// Référentiel de secours des catégories (au cas où l'appel API échoue avant chargement)
 const CATEGORIE_LABELS = { A1: 'A1', A: 'A', B: 'B', B_E: 'B+E', C: 'C', C_E: 'C+E', D: 'D', D_E: 'D+E', F: 'F' };
 const POIDS_LOURD = ['C', 'C_E', 'D', 'D_E'];
 const categorieLabel = (code) => CATEGORIE_LABELS[code] ?? code;
@@ -109,7 +103,6 @@ export default function PermisConduite() {
     },
   ], [personnels]);
 
-  /* L'export et l'impression gardent les colonnes détaillées de l'écran d'origine */
   const colonnesExport = useMemo(() => [
     { label: 'Conducteur', texte: (p) => nomPersonne(personnels[p.personnelId]) },
     { label: 'Matricule', texte: (p) => personnels[p.personnelId]?.matricule },
@@ -130,7 +123,6 @@ export default function PermisConduite() {
   const nbExpires = permis.filter((p) => estExpire(p.dateExpiration)).length;
   const nbPoidsLourd = permis.filter((p) => (p.categories ?? []).some((c) => POIDS_LOURD.includes(c))).length;
 
-  /* Impression de la fiche du permis (A4 portrait) */
   const imprimer = (p) => {
     const x = personnels[p.personnelId];
     imprimerFiche({

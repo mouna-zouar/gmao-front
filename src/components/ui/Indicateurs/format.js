@@ -1,6 +1,5 @@
 import { t, locale } from '../../../i18n';
 
-/* ─── Formats ─── */
 export const nf = (n, dec = 0) => Number(n).toLocaleString(locale(), { minimumFractionDigits: dec, maximumFractionDigits: dec });
 
 export function formater(valeur, format = 'nombre') {
@@ -9,7 +8,6 @@ export function formater(valeur, format = 'nombre') {
     case 'pct': return t('{n} %', { n: nf(valeur, valeur < 10 ? 1 : 0) });
     case 'dt': return t('{montant} DT', { montant: nf(valeur, valeur >= 1000 ? 0 : 3) });
     case 'duree': {
-      // valeur en heures
       if (valeur < 1) return t('{n} min', { n: nf(valeur * 60) });
       if (valeur < 48) return t('{n} h', { n: nf(valeur, valeur < 10 ? 1 : 0) });
       return t('{n} j', { n: nf(valeur / 24, 1) });

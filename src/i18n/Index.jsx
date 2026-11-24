@@ -1,7 +1,7 @@
 import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import ar from './ar';
-import en from './en';
-import './rtl.css';
+import ar from './Ar';
+import en from './En';
+import './Rtl.css';
 
 export const LANGUES = {
   fr: { code: 'fr', nom: 'Français', dir: 'ltr', locale: 'fr-FR' },
@@ -21,7 +21,6 @@ function lireLangueStockee() {
   }
 }
 
-// Langue courante accessible partout (y compris dans les fonctions hors composants)
 let langueCourante = typeof window !== 'undefined' ? lireLangueStockee() : 'fr';
 
 function appliquerAuDocument(code) {
@@ -36,7 +35,6 @@ function remplir(texte, vars) {
   return texte.replace(/\{(\w+)\}/g, (m, k) => (vars[k] != null ? String(vars[k]) : m));
 }
 
-/** Traduit une phrase française. Renvoie la phrase d'origine si elle n'a pas de traduction. */
 export function t(texte, vars) {
   if (texte == null || typeof texte !== 'string') return texte;
   const dico = DICTIONNAIRES[langueCourante];
@@ -44,22 +42,17 @@ export function t(texte, vars) {
   return remplir(trad, vars);
 }
 
-/**
- * Comme t(), mais pour les PDF jsPDF : sa police standard n'affiche pas l'arabe,
- * donc on traduit en anglais si l'anglais est choisi, sinon on garde le français.
- */
+
 export function tPdf(texte, vars) {
   if (texte == null || typeof texte !== 'string') return texte;
   const trad = langueCourante === 'en' && typeof en[texte] === 'string' ? en[texte] : texte;
   return remplir(trad, vars);
 }
 
-/** Locale à utiliser dans les PDF (même règle que tPdf). */
 export function localePdf() {
   return langueCourante === 'en' ? LANGUES.en.locale : LANGUES.fr.locale;
 }
 
-// Pluriels français de base (les dictionnaires arabe et anglais définissent leurs propres formes)
 const PLURIELS_FR = {
   "étape": { one: "{n} étape", other: "{n} étapes" },
   "tâche ajoutée": { one: "{n} tâche ajoutée", other: "{n} tâches ajoutées" },
@@ -123,7 +116,6 @@ const PLURIELS_FR = {
   'jour de retard': { one: '{n} j de retard', other: '{n} j de retard' },
 };
 
-/** Pluriel : tp('événement', 3) → « 3 événements ». En arabe : règles 0, 1, 2, 3-10, 11+. */
 export function tp(cle, n, vars = {}) {
   const regles = new Intl.PluralRules(LANGUES[langueCourante].locale);
   const categorie = regles.select(n);
@@ -135,7 +127,6 @@ export function tp(cle, n, vars = {}) {
   return remplir(modele, { n, ...vars });
 }
 
-/** Locale pour toLocaleString / toLocaleDateString. */
 export function locale() {
   return LANGUES[langueCourante].locale;
 }
@@ -148,9 +139,6 @@ export function estRTL() {
   return LANGUES[langueCourante].dir === 'rtl';
 }
 
-// ============================================================
-// CONTEXTE REACT
-// ============================================================
 const LangueContext = createContext({
   langue: 'fr',
   dir: 'ltr',
@@ -171,8 +159,8 @@ export function LangueProvider({ children, langueInitiale }) {
 
   const setLangue = useCallback((code) => {
     if (!LANGUES[code]) return;
-    langueCourante = code; // avant le rendu, pour que t() soit déjà à jour
-    try { window.localStorage.setItem(CLE_STOCKAGE, code); } catch { /* stockage indisponible */ }
+    langueCourante = code;
+    try { window.localStorage.setItem(CLE_STOCKAGE, code); } catch {}
     setLangueState(code);
   }, []);
 
@@ -185,8 +173,6 @@ export function LangueProvider({ children, langueInitiale }) {
     locale,
   }), [langue, setLangue]);
 
-  // La clé force un nouveau rendu de toute l'application au changement de langue
-  // (le changement est rare : c'est un réglage global).
   return (
     <LangueContext.Provider value={valeur}>
       <Fragment key={langue}>{children}</Fragment>
@@ -198,9 +184,6 @@ export function useLangue() {
   return useContext(LangueContext);
 }
 
-// ============================================================
-// SÉLECTEUR À PLACER DANS LES RÉGLAGES / LE MENU DE L'APPLICATION
-// ============================================================
 export function SelecteurLangue({ className = '' }) {
   const { langue, setLangue } = useLangue();
   return (

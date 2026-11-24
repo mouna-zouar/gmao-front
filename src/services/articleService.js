@@ -3,7 +3,7 @@ import api from './api';
 const articleService = {
   async getAll(page = 0, size = 300) {
     const { data } = await api.get('/article', { params: { page, size } });
-    return data; // Page<ArticleSummaryDTO>
+    return data;
   },
 
   async getById(id) {

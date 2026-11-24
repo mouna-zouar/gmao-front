@@ -5,15 +5,6 @@ import { t, locale } from '../../../i18n';
 import { formater, libelleMois, nf } from './format';
 import './Indicateurs.css';
 
-/*
- * Briques des indicateurs de tableau de bord :
- *   <SectionIndicateurs titre sousTitre>…</SectionIndicateurs>
- *   <TuileKpi libelle valeur format precedent sens aide lien ton />
- *   <Classement titre lignes format lien />
- *   <CourbeTendance titre mois series format />
- */
-
-/* ─── Section ─── */
 export function SectionIndicateurs({ titre, sousTitre, chargement, erreur, exportExcel, children }) {
   const [exportEnCours, setExportEnCours] = useState(false);
   const exporter = async () => {
@@ -40,14 +31,8 @@ export function SectionIndicateurs({ titre, sousTitre, chargement, erreur, expor
   );
 }
 
-/* ─── Tuile d'indicateur avec comparaison ─── */
-/**
- * sens : 'baisse' (une baisse est une bonne nouvelle : délais, coûts, incidents),
- *        'hausse' (une hausse est bonne : clôtures, taux de respect), 'neutre'.
- */
 export function TuileKpi({ libelle, valeur, format = 'nombre', precedent, sens = 'neutre', aide, detail, lien, ton, chargement }) {
   const navigate = useNavigate();
-  // Une valeur nulle ou à zéro n'est pas affichée (la tuile disparaît)
   if (!chargement && (valeur == null || Number(valeur) === 0)) return null;
   let comparaison = null;
   if (!chargement && valeur != null && precedent != null) {
@@ -90,10 +75,8 @@ export function GrilleKpi({ children }) {
   return <div className="ind-grille">{children}</div>;
 }
 
-/* ─── Classement (top N) ─── */
 export function Classement({ titre, sousTitre, lignes: toutes, format = 'nombre', vide, lienDe }) {
   const navigate = useNavigate();
-  // Les lignes à zéro ne sont pas affichées ; sans aucune ligne, la carte disparaît
   const lignes = toutes.filter((l) => Number(l.valeur) > 0);
   if (lignes.length === 0) return null;
   const max = Math.max(1, ...lignes.map((l) => l.valeur));
@@ -134,13 +117,11 @@ export function Classement({ titre, sousTitre, lignes: toutes, format = 'nombre'
   );
 }
 
-/* ─── Courbe de tendance sur 12 mois (1 ou 2 séries, même unité, un seul axe) ─── */
-const COULEURS = ['#0794a4', '#6e56cf']; // validées daltonisme (ΔE ≥ 14)
+const COULEURS = ['#0794a4', '#6e56cf'];
 
 export function CourbeTendance({ titre, sousTitre, mois, series, format = 'nombre', large = true }) {
   const id = useId();
   const [survol, setSurvol] = useState(null);
-  // Le dessin suit la largeur réelle de la carte : le texte garde sa taille quelle que soit la largeur
   const boite = useRef(null);
   const [L, setL] = useState(640);
   useEffect(() => {
@@ -158,7 +139,7 @@ export function CourbeTendance({ titre, sousTitre, mois, series, format = 'nombr
   const y = (v) => m.h + (H - m.h - m.b) * (1 - v / max);
   const graduations = [0, max / 2, max];
   const vide = series.every((s) => s.valeurs.every((v) => !v));
-  if (vide) return null; // aucune valeur sur 12 mois : la courbe n'est pas affichée
+  if (vide) return null;
 
   return (
     <div className={`ind-carte ${large ? 'ind-carte--large' : ''}`}>
@@ -237,7 +218,6 @@ export function CourbeTendance({ titre, sousTitre, mois, series, format = 'nombr
   );
 }
 
-/* ─── Lien « voir la liste » en bas d'une carte ─── */
 export function LienListe({ vers, children }) {
   const navigate = useNavigate();
   return (
@@ -246,22 +226,6 @@ export function LienListe({ vers, children }) {
     </button>
   );
 }
-
-// ═════════════════════════════════════════════════════════════
-// Export Excel des indicateurs   (ancien fichier exportExcel.js)
-// ═════════════════════════════════════════════════════════════
-/*
- * Export Excel des indicateurs d'un tableau de bord.
- *   donnees = {
- *     fichier: 'indicateurs-bons',            // nom du fichier (sans extension)
- *     titre: 'Indicateurs — Bons',            // 1re ligne de la feuille « Indicateurs »
- *     periode: '30 derniers jours…',
- *     tuiles: [{ libelle, valeur, precedent, format, detail }],
- *     courbes: [{ titre, mois: ['2026-01', …], series: [{ nom, valeurs }] }],
- *     classements: [{ titre, lignes: [{ libelle, valeur }], format }],
- *   }
- * Les valeurs nulles ou à zéro sont ignorées, comme à l'écran.
- */
 
 const nomFeuille = (titre, pris) => {
   let base = String(titre).replace(/[\\/?*[\]:]/g, ' ').trim().slice(0, 28) || 'Feuille';
@@ -274,7 +238,6 @@ const nomFeuille = (titre, pris) => {
 
 const evolution = (v, p) => (p ? Math.round(((v - p) / Math.abs(p)) * 1000) / 10 : null);
 const arrondi = (v) => (typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
-// Unité de la colonne « Valeur » (les durées sont exportées en heures)
 const UNITES = { duree: 'heures', pct: '%', dt: 'DT', km: 'km', litres: 'L', jours: 'jours' };
 
 async function exporterIndicateursExcel(donnees) {
@@ -283,7 +246,6 @@ async function exporterIndicateursExcel(donnees) {
   const pris = new Set();
   const date = new Date();
 
-  // Feuille 1 : les indicateurs
   const lignes = [
     [donnees.titre || t('Indicateurs')],
     [donnees.periode || ''],
@@ -296,7 +258,6 @@ async function exporterIndicateursExcel(donnees) {
     .forEach((x) => {
       let evo = '';
       if (x.precedent != null) {
-        // Taux : écart en points ; autres valeurs : évolution en %
         evo = x.format === 'pct'
           ? t('{n} pts', { n: `${x.valeur >= x.precedent ? '+' : ''}${nf(x.valeur - x.precedent, 1)}` })
           : (evolution(x.valeur, x.precedent) != null ? t('{n} %', { n: `${x.valeur >= x.precedent ? '+' : ''}${nf(evolution(x.valeur, x.precedent), 1)}` }) : '');
@@ -315,7 +276,6 @@ async function exporterIndicateursExcel(donnees) {
   f1['!cols'] = [{ wch: 38 }, { wch: 14 }, { wch: 9 }, { wch: 18 }, { wch: 18 }, { wch: 14 }, { wch: 40 }];
   XLSX.utils.book_append_sheet(classeur, f1, nomFeuille(t('Indicateurs'), pris));
 
-  // Une feuille par courbe (12 mois)
   (donnees.courbes || []).forEach((c) => {
     if (c.series.every((s) => s.valeurs.every((v) => !v))) return;
     const aoa = [[t('Mois'), ...c.series.map((s) => s.nom)]];
@@ -325,7 +285,6 @@ async function exporterIndicateursExcel(donnees) {
     XLSX.utils.book_append_sheet(classeur, f, nomFeuille(c.titre, pris));
   });
 
-  // Une feuille par classement
   (donnees.classements || []).forEach((c) => {
     const utiles = c.lignes.filter((l) => Number(l.valeur) > 0);
     if (!utiles.length) return;

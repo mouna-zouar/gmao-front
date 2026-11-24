@@ -1,19 +1,13 @@
-// Carte « Langue de l'application » à placer dans les paramètres.
-// Le changement est immédiat (pas de bouton Enregistrer) et mémorisé sur cet ordinateur.
 import { Check, Languages } from 'lucide-react';
 import { LANGUES, t, useLangue } from './index';
-import './ReglageLangue.css';
+import './Reglagelangue.css';
 
-// Aperçu montré sur chaque choix, dans sa propre langue (pour que chacun reconnaisse la sienne)
 const APERCUS = {
   fr: { titre: 'Français', exemple: 'Bon de maintenance · Faire le diagnostic', sens: 'Lecture de gauche à droite' },
   ar: { titre: 'العربية', exemple: 'أمر الصيانة · إجراء التشخيص', sens: 'القراءة من اليمين إلى اليسار' },
   en: { titre: 'English', exemple: 'Work order · Do the diagnosis', sens: 'Reads left to right' },
 };
 
-/**
- * @param {() => boolean} [avantChangement] renvoie false pour annuler (ex. modifications non enregistrées)
- */
 export default function ReglageLangue({ avantChangement }) {
   const { langue, setLangue } = useLangue();
 

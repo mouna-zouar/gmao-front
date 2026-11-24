@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import maintenanceRisqueService from '../../../services/maintenanceRisqueService ';
-import './MaintenancePredictive.css';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import maintenanceRisqueService from '../../../services/maintenanceRisqueService';
+import './Maintenancepredictive.css';
 import { t, tp, locale } from '../../../i18n';
 import Pagination from '../../commun/Pagination';
 
@@ -64,14 +64,12 @@ export default function MaintenancePredictive() {
     charger();
   }, [charger]);
 
-  /* ---------- Filtrage ---------- */
   const risquesFiltres = useMemo(() => {
     return risques
       .filter((r) => filtreNiveau === 'TOUS' || r.niveauRisque === filtreNiveau)
       .filter((r) => !recherche.trim() || (r.designation || '').toLowerCase().includes(recherche.trim().toLowerCase()));
   }, [risques, filtreNiveau, recherche]);
 
-  /* ---------- Pagination ---------- */
   const totalPages = Math.max(1, Math.ceil(risquesFiltres.length / PAGE_SIZE));
 
   useEffect(() => { setCurrentPage(1); }, [filtreNiveau, recherche]);
@@ -84,47 +82,11 @@ export default function MaintenancePredictive() {
     return risquesFiltres.slice(start, start + PAGE_SIZE);
   }, [risquesFiltres, currentPage]);
 
-  const goToPage = (page) => {
-    setCurrentPage(Math.min(Math.max(1, page), totalPages));
-  };
 
-  const paginationRange = useMemo(() => {
-    const range = [];
-    for (let i = 1; i <= totalPages; i += 1) range.push(i);
-    return range;
-  }, [totalPages]);
 
-  const nbCritiques = risques.filter((r) => r.niveauRisque === 'CRITIQUE').length;
-  const nbEleves = risques.filter((r) => r.niveauRisque === 'ELEVE').length;
 
   return (
     <div className="mp-page">
-      <div className="mp-header">
-        <div>
-          <h1>{t('Maintenance prédictive')}</h1>
-        </div>
-        <button className="mp-refresh-btn" onClick={charger} disabled={loading}>
-          {loading ? t('Calcul...') : `🔄 ${t('Recalculer')}`}
-        </button>
-      </div>
-
-      {!loading && risques.length > 0 && (
-        <div className="mp-summary">
-          <div className="mp-summary__item mp-summary__item--critique">
-            <span className="mp-summary__nombre">{nbCritiques}</span>
-            <span className="mp-summary__label">{tp('équipement à risque critique (libellé)', nbCritiques)}</span>
-          </div>
-          <div className="mp-summary__item mp-summary__item--eleve">
-            <span className="mp-summary__nombre">{nbEleves}</span>
-            <span className="mp-summary__label">{t('à risque élevé')}</span>
-          </div>
-          <div className="mp-summary__item">
-            <span className="mp-summary__nombre">{risques.length}</span>
-            <span className="mp-summary__label">{t('équipements analysés')}</span>
-          </div>
-        </div>
-      )}
-
       <div className="mp-filtres">
         <input
           type="text"
@@ -144,6 +106,9 @@ export default function MaintenancePredictive() {
             </button>
           ))}
         </div>
+        <button className="mp-refresh-btn" onClick={charger} disabled={loading}>
+          {loading ? t('Calcul...') : `🔄 ${t('Recalculer')}`}
+        </button>
       </div>
 
       {loading ? (
@@ -214,7 +179,6 @@ export default function MaintenancePredictive() {
             </table>
           </div>
 
-          {/* PAGINATION */}
           <Pagination base={1} page={currentPage} taille={PAGE_SIZE} total={risquesFiltres.length} onPage={setCurrentPage} />
         </>
       )}

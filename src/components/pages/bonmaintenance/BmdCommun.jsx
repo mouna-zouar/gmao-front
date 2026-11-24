@@ -1,22 +1,7 @@
-/*
- * Outils communs du bon de maintenance, regroupés dans un seul fichier :
- *   - constantes, formats et liste de choix avec recherche (ancien Bmdshared.jsx) ;
- *   - briques de formulaire Bmf… (ancien Bmdform.jsx) ;
- *   - tableau, fiche et vue détail (ancien Bmdentityviews.jsx) ;
- *   - animations de fin d'étape, useCelebration (ancien Bmdcelebration.jsx) ;
- *   - temps passé, chronomètre (ancien TempsPasse.jsx).
- * Leurs styles sont dans Bonmaintenancedetails.css.
- */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { ArrowLeft, Check, ChevronDown, ChevronRight, Edit, Inbox, Loader2, Search, Timer, Trash2, X } from 'lucide-react';
 import { locale, t } from '../../../i18n';
-
-// ═════════════════════════════════════════════════════════════
-// Constantes, formats et liste de choix avec recherche   (ancien Bmdshared.jsx)
-// ═════════════════════════════════════════════════════════════
-// Éléments partagés entre BonMaintenanceDetails.jsx et BmdSousOnglets.jsx
-// (déplacés ici pour éviter les imports circulaires)
 
 export const INTERVENANT_ETAT_LABELS = {
   0: 'Nouveau',
@@ -25,7 +10,6 @@ export const INTERVENANT_ETAT_LABELS = {
   10: 'Annulé',
 };
 
-// Valeurs réelles de BonMaintenanceTache.etat
 export const TACHE_ETAT_LABELS = {
   1: 'Nouveau',
   2: 'Suspendu',
@@ -87,7 +71,6 @@ export function warnIfQuantiteInvalide(articles, articleId, qte, libelleQuantite
   }
 }
 
-// Coût total d'un intervenant : valeur du backend si présente, sinon heures × coût unitaire + forfait
 export function coutIntervenant(i) {
   if (i.coutTotal != null) return Number(i.coutTotal);
   if (i.coutUnitaire == null && i.nbrHeure == null && i.forfait == null) return null;
@@ -101,7 +84,6 @@ export function nomIntervenantAffiche(i) {
     : (i.sousTraitant?.raisonSociale || i.intervenantNom || t('Intervenant #{id}', { id: i.id }));
 }
 
-// Le backend journalise « Changement d'état : 0 -> 1 » : on affiche les libellés plutôt que les codes
 export function libelleActionHistoriqueIntervenant(action) {
   const m = /^Changement d'état : (\d+|null) -> (\d+|null)$/.exec(action || '');
   if (!m) return t(action);
@@ -109,9 +91,6 @@ export function libelleActionHistoriqueIntervenant(action) {
   return t("Changement d'état : {de} → {a}", { de: lbl(m[1]), a: lbl(m[2]) });
 }
 
-// ============================================================
-// SEARCHABLE SELECT (combobox avec recherche)
-// ============================================================
 export const SearchableSelect = ({
   id,
   name,
@@ -275,13 +254,6 @@ export const SearchableSelect = ({
   );
 };
 
-// ═════════════════════════════════════════════════════════════
-// Briques de formulaire (Bmf…)   (ancien Bmdform.jsx)
-// ═════════════════════════════════════════════════════════════
-// Briques de formulaire guidées : chaque champ a un libellé clair, une aide en une phrase,
-// et les choix fermés deviennent de gros boutons au lieu de listes déroulantes.
-
-// Formulaire : titre puis les champs (sans texte d'introduction : seulement les attributs)
 // eslint-disable-next-line no-unused-vars
 export function BmfFormulaire({ titre, intro, onSubmit, children }) {
   return (
@@ -296,8 +268,6 @@ export function BmfFormulaire({ titre, intro, onSubmit, children }) {
   );
 }
 
-// Groupe de champs : seulement les attributs (sans numéro, question ni texte d'aide).
-// Le titre reste le nom du groupe pour les lecteurs d'écran.
 // eslint-disable-next-line no-unused-vars
 export function BmfEtape({ numero, titre, aide, children }) {
   return (
@@ -307,8 +277,6 @@ export function BmfEtape({ numero, titre, aide, children }) {
   );
 }
 
-// Un champ : le libellé (étoile si obligatoire) et la saisie ; plus de texte d'aide ni de « facultatif ».
-// Restent : l'information calculée (ex. stock) et le message d'erreur.
 // eslint-disable-next-line no-unused-vars
 export function BmfChamp({ label, aide, requis = false, large = false, alerte, info, children, htmlFor }) {
   return (
@@ -324,8 +292,6 @@ export function BmfChamp({ label, aide, requis = false, large = false, alerte, i
   );
 }
 
-// Choix fermé en pastilles (remplace les <select> Oui/Non, Gravité, État…)
-// options : [{ value, label, ton?, icon? }]
 export function BmfChoix({ value, onChange, options, nom, effacable = true, grand = false }) {
   return (
     <div className={`bmf-choix ${grand ? 'is-grand' : ''}`} role="radiogroup" aria-label={t(nom)}>
@@ -352,7 +318,6 @@ export function BmfChoix({ value, onChange, options, nom, effacable = true, gran
   );
 }
 
-// Champ numérique avec son unité affichée (h, DT, …)
 export function BmfNombre({ id, value, onChange, unite, step = 'any', min, placeholder, onBlur }) {
   return (
     <div className="bmf-nombre">
@@ -409,7 +374,6 @@ export function BmfDate({ id, value, onChange }) {
   );
 }
 
-// Indication de stock disponible sous un champ article
 export function BmfStock({ verification, quantite, demande }) {
   if (verification) {
     return <span className="bmf-stock"><Loader2 size={14} className="bmf-tourne" /> {t('Vérification du stock…')}</span>;
@@ -425,7 +389,6 @@ export function BmfStock({ verification, quantite, demande }) {
   );
 }
 
-// Barre d'actions collée en bas du formulaire
 export function BmfActions({ enregistrement, label, labelEnCours = 'Enregistrement…', onAnnuler }) {
   return (
     <div className="bmf-actions">
@@ -442,15 +405,8 @@ export function BmfActions({ enregistrement, label, labelEnCours = 'Enregistreme
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Tableau, fiche et vue détail (BmdDataTable, BmdDetailView…)   (ancien Bmdentityviews.jsx)
-// ═════════════════════════════════════════════════════════════
-// Composants génériques : tableau cliquable + page de détail (en-tête, infos générales, cadre à onglets)
-
 const estVide = (v) => v === null || v === undefined || v === '';
-// Les valeurs texte (libellés d'état, « Oui », « Interne »…) sont traduites ; les données saisies restent telles quelles
 const tr = (v) => (typeof v === 'string' ? t(v) : v);
-// 'right' devient 'end' pour s'inverser automatiquement en arabe
 const alignement = (a) => (a === 'right' ? 'end' : a === 'left' ? 'start' : a);
 
 export const Pill = ({ tone = 'slate', children }) => (
@@ -463,7 +419,6 @@ export const TexteOuVide = ({ texte, vide = 'Aucune information.' }) => (
     : <p className="bmd-flow-empty"><Inbox size={18} className="empty-icon" /> {t(vide)}</p>
 );
 
-// Grille de champs label / valeur, réutilisable dans les sections
 export function BmdFieldGrid({ fields }) {
   const visibles = fields.filter((f) => !f.hidden);
   return (
@@ -478,10 +433,6 @@ export function BmdFieldGrid({ fields }) {
   );
 }
 
-// ============================================================
-// TABLEAU
-// columns : [{ key, label, render?(row), align?, width? }]
-// ============================================================
 export function BmdDataTable({
   columns,
   rows,
@@ -573,12 +524,6 @@ export function BmdDataTable({
   );
 }
 
-// ============================================================
-// PAGE DE DÉTAIL
-// Partie 1 : en-tête + informations générales
-// Partie 2 : cartes (une carte par section, toutes visibles)
-// sections : [{ key, label, icon?, count?, content, wide? }]
-// ============================================================
 export function BmdDetailView({
   onBack,
   backLabel = 'Retour à la liste',
@@ -599,7 +544,6 @@ export function BmdDetailView({
         {t(backLabel)}
       </button>
 
-      {/* PARTIE 1 — EN-TÊTE + INFORMATIONS GÉNÉRALES */}
       <header className="bmd-detail-header">
         <div className="bmd-detail-header-left">
           {Icon && <div className="bmd-detail-icon"><Icon size={22} /></div>}
@@ -631,7 +575,6 @@ export function BmdDetailView({
         </section>
       )}
 
-      {/* PARTIE 2 — CARTES */}
       {sections.length > 0 && (
         <div className="bmd-detail-cards">
           {sections.map((s) => {
@@ -652,13 +595,6 @@ export function BmdDetailView({
     </div>
   );
 }
-
-// ═════════════════════════════════════════════════════════════
-// Animations de fin d'étape (useCelebration)   (ancien Bmdcelebration.jsx)
-// ═════════════════════════════════════════════════════════════
-// Animations de fin d'étape (intervenant terminé, remise en service, bon clôturé)
-// Usage : const [celebrer, celebrationElement] = useCelebration();
-//         celebrer('intervenant-termine', 'Ahmed Ben Ali');
 
 const CONFIG = {
   'intervenant-termine': { tone: 'teal', titre: 'Intervention terminée' },
@@ -686,7 +622,6 @@ const Ondes = () => (
   </g>
 );
 
-// Tracé ECG qui traverse le cercle puis laisse place à la coche
 const VisuelIntervenant = () => (
   <svg viewBox="0 0 200 140" className="bmdc-svg" aria-hidden="true">
     <Ondes />
@@ -701,7 +636,6 @@ const VisuelIntervenant = () => (
   </svg>
 );
 
-// Symbole « power » qui se dessine puis s'allume
 const VisuelRemiseAutorisee = () => (
   <svg viewBox="0 0 200 140" className="bmdc-svg" aria-hidden="true">
     <Ondes />
@@ -720,7 +654,6 @@ const VisuelRemiseRefusee = () => (
   </svg>
 );
 
-// Tampon qui « tombe » sur la carte
 const VisuelBonCloture = ({ sousTitre }) => (
   <div className="bmdc-stamp-zone">
     <div className="bmdc-dust" />
@@ -776,12 +709,9 @@ export function BmdCelebration({ type, sousTitre, duree = 2900, onDone }) {
     </div>
   );
 
-  // Portail : évite que l'overlay soit coupé par un parent animé (transform)
   return createPortal(contenu, document.body);
 }
 
-// File d'attente : si deux événements arrivent ensemble (intervenant terminé puis bon clôturé),
-// les animations s'enchaînent au lieu de se superposer.
 export function useCelebration() {
   const [file, setFile] = useState([]);
 
@@ -804,29 +734,16 @@ export function useCelebration() {
   return [celebrer, element];
 }
 
-// ═════════════════════════════════════════════════════════════
-// Temps passé (chronomètre des tâches et intervenants)   (ancien TempsPasse.jsx)
-// ═════════════════════════════════════════════════════════════
-/*
- * Temps passé sur une tâche ou par un intervenant d'un bon.
- * Le serveur tient un chronomètre (tempsPasseSecondes + enCoursDepuis) : il tourne tant que l'élément
- * est « en cours » et se met en pause sinon. Pour les éléments plus anciens que ce chronomètre,
- * on retombe sur les dates d'intervention (début → fin, ou début → maintenant s'il est en cours).
- */
-
 export const TACHE_EN_COURS = 3;
 export const INTERVENANT_EN_COURS = 1;
 
-/** { secondes, enCours, estime } ou null si rien ne permet de calculer. */
 export function tempsPasse(o, etatEnCours, maintenant = Date.now()) {
   if (!o) return null;
   const enCours = Number(o.etat) === etatEnCours;
-  // Chronomètre du serveur ; un cumul à 0 sans période en cours vient d'un élément plus ancien que le chronomètre
   if (Number(o.tempsPasseSecondes) > 0 || o.enCoursDepuis) {
     const enPlus = o.enCoursDepuis ? Math.max(0, (maintenant - new Date(o.enCoursDepuis).getTime()) / 1000) : 0;
     return { secondes: (Number(o.tempsPasseSecondes) || 0) + enPlus, enCours: Boolean(o.enCoursDepuis), estime: false };
   }
-  // Repli sur les dates d'intervention
   const zero = o.tempsPasseSecondes != null ? { secondes: 0, enCours: false, estime: false } : null;
   const debut = o.dateDebutIntervention ? new Date(o.dateDebutIntervention).getTime() : null;
   if (!debut || Number.isNaN(debut)) return zero;
@@ -835,7 +752,6 @@ export function tempsPasse(o, etatEnCours, maintenant = Date.now()) {
   return { secondes: (fin - debut) / 1000, enCours: enCours && !o.dateFinIntervention, estime: true };
 }
 
-/** « 2 h 15 min », « 45 min », « 3 j 4 h », « < 1 min » */
 export function formatTemps(secondes) {
   if (secondes == null) return '—';
   const min = Math.floor(secondes / 60);
@@ -849,7 +765,6 @@ export function formatTemps(secondes) {
   return t('{m} min', { m: n(m) });
 }
 
-/** Heure courante, rafraîchie toutes les 30 s seulement si un chronomètre tourne. */
 export function useMaintenant(actif) {
   const [maintenant, setMaintenant] = useState(() => Date.now());
   useEffect(() => {
@@ -861,7 +776,6 @@ export function useMaintenant(actif) {
   return maintenant;
 }
 
-/** Somme des temps passés d'une liste (en secondes) et indicateur « au moins un en cours ». */
 export function totalTemps(liste, etatEnCours, maintenant) {
   let secondes = 0;
   let enCours = false;
@@ -876,7 +790,6 @@ export function totalTemps(liste, etatEnCours, maintenant) {
   return connu ? { secondes, enCours } : null;
 }
 
-/** Pastille « ⏱ 2 h 15 min » ; un point vert indique que le chronomètre tourne. */
 export function TempsPasse({ objet, etatEnCours, maintenant, vide = '—' }) {
   const tp = tempsPasse(objet, etatEnCours, maintenant);
   if (!tp) return vide;

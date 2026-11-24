@@ -1,4 +1,3 @@
-/* Vérifications avant l'envoi d'une réclamation (check-list selon la famille de l'équipement) */
 .vr-vide { display: flex; align-items: center; gap: 8px; margin: 0; padding: 14px; border: 1px dashed #e2e8f0; border-radius: 10px; color: #64748b; font-size: 0.86rem; }
 .vr-lien { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--g-brand-600, #067d8b); cursor: pointer; text-decoration: underline; }
 .vr-famille { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; font-size: 0.82rem; font-weight: 700; color: #475569; }

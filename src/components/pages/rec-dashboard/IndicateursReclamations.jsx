@@ -8,22 +8,14 @@ import {
   JOUR, classement, dans, douzeMois, enMs, heuresEntre, liste, moyenne, periodes, pourcentage, serieMensuelle,
 } from '../../ui/Indicateurs/calculs';
 
-/*
- * Indicateurs avancés du tableau de bord des réclamations :
- * volume, délai de traitement, conversion en bon, rejets, réclamations sans responsable,
- * ancienneté des réclamations ouvertes, tendance 12 mois et classements.
- */
-
-// États (cycle IBM Maximo) : 0 Nouveau, 5 En file, 1 En cours, 3 Résolue, 2 Clôturée, 4 Annulée
 const ACTIVES = [0, 5, 1, 3];
 const CLOTUREE = 2;
-const REJETEE = 4; // Annulée
+const REJETEE = 4;
 
-// Date de fin de traitement : clôture ou annulation, sinon validation, sinon dernière modification
 const dateFin = (r) => r.dateCloture || r.dateAnnulation || r.dateValidation || r.dateModification;
 
 export default function IndicateursReclamations() {
-  const [maintenant] = useState(() => Date.now()); // heure de référence des calculs
+  const [maintenant] = useState(() => Date.now());
   const [recs, setRecs] = useState(null);
   const [erreur, setErreur] = useState(null);
 
@@ -67,7 +59,7 @@ export default function IndicateursReclamations() {
       actives: actives.length,
       ageMoyen: moyenne(ages),
       anciennes: ages.filter((a) => a != null && a > 7).length,
-      sansResponsable: actives.filter((r) => r.personnelAffecteId == null && r.groupeId == null).length,
+      sansResponsable: actives.filter((r) => r.personnelAffecteId == null && r.groupeId == null && !(r.groupePersonnels?.length > 0)).length,
       critiquesOuvertes: actives.filter((r) => Number(r.criticite) === 3).length,
       attenteValidation: recs.filter((r) => r.etat === 3).length,
       mois,
@@ -83,7 +75,6 @@ export default function IndicateursReclamations() {
   const c = k?.cur || {};
   const p = k?.prev || {};
 
-  // Tuiles affichées (et exportées en Excel). Une tuile à 0 ou sans valeur n'est pas affichée.
   const tuiles = [
     {
       libelle: t('Réclamations reçues'),

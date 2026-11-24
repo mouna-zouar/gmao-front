@@ -1,8 +1,6 @@
 import api from './api';
 import authService from './Authservice';
 
-/* Maintenance conditionnelle : bons préventifs créés selon les valeurs des sondes (seuil, tendance, compteur). */
-
 const enTeteAuteur = () => {
   const user = authService.getCurrentUser();
   const nom = user?.userNom || [user?.prenom, user?.nom].filter(Boolean).join(' ') || user?.login || '';
@@ -10,7 +8,6 @@ const enTeteAuteur = () => {
 };
 
 const maintenanceConditionnelleService = {
-  /** Règles d'un équipement, ou toutes (sans equipementId). */
   async regles(equipementId) {
     const { data } = await api.get('/maintenance-conditionnelle/regles', { params: { equipementId: equipementId || undefined } });
     return data ?? [];
@@ -23,19 +20,16 @@ const maintenanceConditionnelleService = {
     return data;
   },
 
-  /** { supprimee: true } si supprimée, false si seulement désactivée (elle a déjà créé des bons). */
   async supprimer(id) {
     const { data } = await api.delete(`/maintenance-conditionnelle/regles/${id}`);
     return data;
   },
 
-  /** Calcule l'état sans rien créer. */
   async tester(id) {
     const { data } = await api.post(`/maintenance-conditionnelle/regles/${id}/tester`);
     return data;
   },
 
-  /** Évalue et crée le bon si la condition est atteinte. */
   async evaluer(id) {
     const { data } = await api.post(`/maintenance-conditionnelle/regles/${id}/evaluer`);
     return data;

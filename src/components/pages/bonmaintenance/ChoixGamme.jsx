@@ -12,7 +12,6 @@ const CORRESPONDANCE = {
   GENERALE: { label: 'Générale', ton: 'gris' },
 };
 
-/* Fenêtre « Appliquer une gamme » : gammes validées qui conviennent à l'équipement du bon. */
 export default function ChoixGamme({ ouvert, bonMaintenanceId, onFermer, onApplique }) {
   const [gammes, setGammes] = useState(null);
   const [erreur, setErreur] = useState('');

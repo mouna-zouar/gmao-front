@@ -48,7 +48,6 @@
   flex-shrink: 0;
 }
 
-/* Icône d'en-tête = bouton « paramètres des colonnes » */
 .prj-header-icon-btn {
   cursor: pointer;
   font: inherit;
@@ -85,7 +84,6 @@
   font-weight: 500;
 }
 
-/* Stats : badges clairs en ligne */
 .prj-stats {
   display: flex;
   gap: 8px;
@@ -130,9 +128,6 @@
 .prj-stat.stat-done .prj-stat-value,
 .prj-stat.stat-done .prj-stat-label { color: var(--g-emerald-700); }
 
-/* ═══════════════════════════════════════════════════════════
-   ACTIONS
-   ═══════════════════════════════════════════════════════════ */
 .prj-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -165,7 +160,6 @@
 .prj-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
 .prj-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Bouton principal → teal uni */
 .prj-action-btn.ajouter {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -183,9 +177,6 @@
 .prj-action-btn.supprimer { color: var(--g-rose-600); }
 .prj-action-btn.supprimer:hover:not(.disabled) { background: var(--g-rose-50); border-color: var(--g-rose-200); }
 
-/* ═══════════════════════════════════════════════════════════
-   FILTRES
-   ═══════════════════════════════════════════════════════════ */
 .prj-filter-panel {
   display: flex;
   background: var(--g-slate-50);
@@ -216,7 +207,6 @@
   white-space: nowrap;
 }
 
-/* Libellés de filtres → teal */
 .prj-filter-label svg { color: var(--g-brand-500); }
 
 .prj-filter-input-wrap {
@@ -233,7 +223,6 @@
   transition: all 0.15s ease;
 }
 
-/* Focus → teal */
 .prj-filter-input-wrap:focus-within {
   border-color: var(--g-brand-500);
   box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
@@ -275,9 +264,6 @@
   color: var(--g-rose-600);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   EXPORT — couleurs unies
-   ═══════════════════════════════════════════════════════════ */
 .prj-export-stack {
   display: flex;
   gap: 6px;
@@ -309,9 +295,6 @@
 .prj-export-btn.stats { background: var(--g-amber-500); }
 .prj-export-btn.stats:hover { background: var(--g-amber-600); }
 
-/* ═══════════════════════════════════════════════════════════
-   ERREUR
-   ═══════════════════════════════════════════════════════════ */
 .prj-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
@@ -326,9 +309,6 @@
   gap: 10px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   TABLEAU
-   ═══════════════════════════════════════════════════════════ */
 .prj-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -343,7 +323,6 @@
   font-size: 13.5px;
 }
 
-/* En-tête du tableau → teal clair uni */
 .prj-table thead {
   background: var(--g-brand-50);
 }
@@ -375,9 +354,6 @@
 .prj-row.selected td { background: var(--g-brand-50); }
 .prj-row.selected { box-shadow: inset 4px 0 0 var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   TRI DES COLONNES
-   ═══════════════════════════════════════════════════════════ */
 .prj-th-sortable {
   cursor: pointer;
   user-select: none;
@@ -402,10 +378,6 @@
 .prj-th-sortable:hover .prj-sort-icon,
 .prj-sort-icon.active { color: var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   CELLULES
-   ═══════════════════════════════════════════════════════════ */
-/* Code → teal mono */
 .prj-cell-code {
   display: inline-flex;
   align-items: center;
@@ -418,7 +390,6 @@
 
 .prj-cell-project { display: flex; align-items: center; gap: 10px; }
 
-/* Icône projet → teal clair uni */
 .prj-cell-project-icon {
   display: flex;
   align-items: center;
@@ -472,7 +443,6 @@
   white-space: nowrap;
 }
 
-/* Badge début → teal clair uni */
 .prj-period-badge.start {
   background: var(--g-brand-50);
   color: var(--g-brand-500);
@@ -486,9 +456,6 @@
 
 .prj-period-sep { color: var(--g-slate-300); font-weight: 700; }
 
-/* ═══════════════════════════════════════════════════════════
-   PASTILLES ÉTAT
-   ═══════════════════════════════════════════════════════════ */
 .prj-pill {
   display: inline-flex;
   align-items: center;
@@ -508,9 +475,6 @@
 .prj-pill.done      { background: var(--g-green-100); color: var(--g-green-800); border-color: var(--g-green-300); }
 .prj-pill.cancelled { background: var(--g-slate-100); color: var(--g-slate-500); border-color: var(--g-slate-200); }
 
-/* ═══════════════════════════════════════════════════════════
-   EMPTY
-   ═══════════════════════════════════════════════════════════ */
 .prj-table-empty {
   text-align: center;
   padding: 50px 16px;
@@ -528,9 +492,6 @@
 
 .prj-empty-state svg { color: var(--g-slate-300); }
 
-/* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .prj-stats { width: 100%; justify-content: space-between; }
   .prj-stat { flex: 1; min-width: 0; }

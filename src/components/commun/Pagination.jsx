@@ -2,18 +2,6 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-r
 import { t, locale } from '../../i18n';
 import './Pagination.css';
 
-/*
- * Barre de pagination unique de la GMAO (même style partout).
- *
- *   <Pagination page={page} taille={25} total={lignes.length} onPage={setPage} onTaille={setTaille} />
- *
- * page      : numéro de la page courante. Par défaut les pages commencent à 0 ; base={1} si l'écran compte à partir de 1.
- * taille    : nombre de lignes par page. onTaille (facultatif) affiche le choix « Par page » (tailles = [10, 25, 50, 100]).
- * total     : nombre total de lignes. Pour une pagination côté serveur sans total connu, passer nbPages.
- * compact   : précédent / « 2 / 5 » / suivant, pour un petit espace (colonne de kanban, carte).
- * masquerSiUnePage : ne rien afficher quand tout tient sur une page.
- * desactive : boutons inactifs (chargement en cours).
- */
 function numerosPages(page, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i);
   const set = new Set([0, total - 1, page - 1, page, page + 1]);
@@ -34,7 +22,7 @@ export default function Pagination({
   page, taille, total, onPage, onTaille, tailles = [10, 25, 50, 100],
   base = 0, nbPages: nbPagesConnu, compact = false, masquerSiUnePage = false, desactive = false, className = '',
 }) {
-  const p = Math.max(0, (Number(page) || base) - base); // page courante, à partir de 0
+  const p = Math.max(0, (Number(page) || base) - base);
   const nbPages = Math.max(1, nbPagesConnu ?? Math.ceil((total || 0) / (taille || 1)));
   if (total === 0 && nbPagesConnu == null) return null;
   if (masquerSiUnePage && nbPages <= 1) return null;

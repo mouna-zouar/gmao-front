@@ -1,6 +1,3 @@
-/* =========================================================
-   PLAN DE RENOUVELLEMENT
-   ========================================================= */
 .rv-page { gap: 14px; }
 .rv-chargement { display: flex; align-items: center; gap: 10px; justify-content: center; padding: 48px; color: var(--g-texte-secondaire); }
 .rv-onglets { display: flex; }
@@ -19,7 +16,6 @@
 .rv-ico:focus-visible, .rv-lien:focus-visible { outline: 2px solid var(--g-marque); outline-offset: 2px; }
 .rv-tourne { transform: rotate(180deg); }
 
-/* Barre de filtres */
 .rv-barre { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
 .rv-filtres { display: flex; gap: 8px; flex-wrap: wrap; flex: 1 1 360px; justify-content: flex-end; }
 .rv-recherche { position: relative; display: flex; align-items: center; flex: 0 1 260px; min-width: 180px; }
@@ -32,7 +28,6 @@
 .rv-legende small { color: var(--g-texte-discret); }
 .rv-legende__aide { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 5px; color: var(--g-texte-secondaire); }
 
-/* Tableau */
 .rv-defile { overflow-x: auto; margin: 0 -16px; }
 .rv-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 .rv-table th { padding: 8px 10px; text-align: start; font-size: 0.72rem; font-weight: 600; color: var(--g-texte-secondaire); background: var(--g-slate-50); border-block: 1px solid var(--g-bordure); white-space: nowrap; }
@@ -55,7 +50,6 @@ th.rv-num { text-align: end; }
 .rv-score strong { width: 26px; text-align: end; font-variant-numeric: tabular-nums; color: var(--g-texte); }
 .rv-ia { display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px; border-radius: 999px; background: #fdeef4; color: #a2365f; font-size: 0.7rem; font-weight: 700; white-space: nowrap; cursor: help; }
 
-/* Détail d'une ligne */
 .rv-detail-ligne > td { padding: 0 !important; background: var(--g-slate-50) !important; }
 .rv-detail { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 20px; padding: 14px 16px 16px; }
 .rv-detail h3 { margin: 0 0 8px; font: 600 0.82rem var(--g-police); color: var(--g-texte); }
@@ -84,7 +78,6 @@ th.rv-num { text-align: end; }
 .rv-unite > span { position: absolute; inset-inline-end: 10px; top: 50%; transform: translateY(-50%); font-size: 0.74rem; font-weight: 600; color: var(--g-texte-discret); pointer-events: none; }
 .rv-unite--court { max-width: 140px; }
 
-/* Scénarios */
 .rv-scenarios { display: flex; flex-direction: column; gap: 14px; }
 .rv-scen-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
 .rv-scen { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--g-bordure); border-top: 3px solid var(--c, var(--g-slate-300)); border-radius: 10px; background: var(--g-surface); }
@@ -138,7 +131,6 @@ th.rv-num { text-align: end; }
   .rv-detail__score li > span:last-child { grid-column: 1 / -1; }
 }
 
-/* ── Style « Supervision » : panneaux du tableau de bord ── */
 .rv-page .rv-carte { border-radius: 10px; }
 .rv-page .rv-carte:hover { border-color: var(--g-bordure-forte); }
 .rv-classement .rv-barre { padding: 10px 14px 0; }
@@ -160,7 +152,6 @@ th.rv-num { text-align: end; }
 .rv-familles__piste > span { height: 100%; }
 .rv-familles__cout { font-size: 0.72rem; color: var(--g-texte-secondaire); font-variant-numeric: tabular-nums; text-align: end; }
 
-/* ═══ Style des tableaux de bord (bons, réclamations, parc) ═══ */
 .rv-page.tb-container { gap: 20px; }
 .rv-page .sv-grille-panneaux { gap: 14px; }
 .rv-page .tb-header-actions .tb-periodes button { padding-inline: 14px; }
@@ -186,15 +177,8 @@ th.rv-num { text-align: end; }
   .rv-panneau__corps.sv-sans-marge { margin-inline: -16px; margin-bottom: -16px; }
 }
 
-/* ==========================================================================
-   PLAN DE RENOUVELLEMENT — v2 : style sobre
-   Barre haute (onglets + calcul), bande d'indicateurs, panneaux légers
-   ========================================================================== */
 .rv-page.rv-v2 { gap: 14px; }
 
-/* Barre haute et bande d’indicateurs : styles communs dans Supervision.css */
-
-/* Panneaux plus légers */
 .rv-v2 .tb-carte.rv-panneau {
   background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 12px;
   box-shadow: none; padding: 14px 16px;
@@ -204,13 +188,11 @@ th.rv-num { text-align: end; }
 .rv-v2 .rv-panneau .tb-pastille { background: var(--g-slate-50, #f8fafc); border: 1px solid var(--g-slate-200, #e2e8f0); color: var(--g-slate-600, #475569); font-weight: 600; }
 .rv-v2 .sv-grille-panneaux { gap: 14px; }
 
-/* Classement : en-têtes et lignes plus aérés */
 .rv-v2 .rv-table th { background: var(--g-slate-50, #f8fafc); color: var(--g-slate-500, #64748b); font-size: 0.74rem; padding: 10px 12px; }
 .rv-v2 .rv-table td { padding: 11px 12px; }
 .rv-v2 .rv-table tbody tr:hover td { background: var(--g-slate-50, #f8fafc); }
 
 
-/* ---------- Âge et coût de maintenance : barres + courbe (couleurs de la marque) ---------- */
 .rv-combo { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .rv-combo svg { display: block; overflow: visible; }
 
@@ -234,7 +216,6 @@ th.rv-num { text-align: end; }
 .rv-combo__zone { fill: transparent; }
 .rv-combo__col:hover .rv-combo__zone { fill: var(--g-brand-25, #f3fcfd); }
 
-/* Teinte de la marque qui fonce avec l'âge ; rouge au-delà de la durée de vie */
 .rv-combo__barre { transition: filter 0.15s; }
 .rv-combo__col--0 .rv-combo__barre { fill: var(--g-brand-100, #d5f0f3); }
 .rv-combo__col--1 .rv-combo__barre { fill: var(--g-brand-200, #a8e0e6); }
@@ -260,7 +241,6 @@ th.rv-num { text-align: end; }
 
 
 
-/* ── Durées de vie par famille ── */
 .rvd-tete { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
 .rvd-tete .rv-titre { margin: 0; }
 .rvd-defaut { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px;

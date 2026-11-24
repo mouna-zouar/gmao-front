@@ -3,13 +3,12 @@ import api from './api';
 const personnelService = {
   async getAll(page = 0, size = 200) {
     const { data } = await api.get('/personnel', { params: { page, size } });
-    return data; // Page<PersonnelSummaryDTO>
+    return data;
   },
 
-  /** Personnel du service maintenance (63) : « Affecté à », intervenants, contrôles des bons. */
   async getMaintenance(page = 0, size = 200) {
     const { data } = await api.get('/personnel/maintenance', { params: { page, size } });
-    return data; // Page<PersonnelSummaryDTO>
+    return data;
   },
 
   async getById(id) {

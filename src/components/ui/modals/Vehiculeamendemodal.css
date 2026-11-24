@@ -1,4 +1,3 @@
-/* Amende véhicule : saisie et paiement (thème var(--g-brand-500)) */
 .vam-fond {
   position: fixed;
   inset: 0;
@@ -117,7 +116,6 @@
   font-weight: 600;
 }
 
-/* Bandeau « conducteur identifié » */
 .vam-identification {
   display: flex;
   align-items: flex-start;
@@ -173,7 +171,6 @@
   .vam-pied { flex-direction: column-reverse; }
   .vam-pied .vam-bouton { justify-content: center; }
 }
-/* ═══════════ Saisie d'une amende : même fenêtre que les autres du Parc (classes vim-*) ═══════════ */
 .vam-superpose { z-index: 1200; }
 .vam-modal { width: 960px; }
 .vam-modal .vam-identification { margin: 0; }

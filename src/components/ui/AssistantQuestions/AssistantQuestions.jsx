@@ -11,13 +11,6 @@ import {
 import { t, langueActuelle } from '../../../i18n';
 import './AssistantQuestions.css';
 
-/*
- * « Demander à l'IA » : questions en langage naturel sur les données de la GMAO
- * (équivalent des conversations avec vos données de Maximo).
- * La réponse est écrite par l'IA ; les tableaux et les liens viennent des données (jamais inventés).
- * La conversation reste ouverte d'une page à l'autre (le panneau vit dans la mise en page).
- */
-
 const SUGGESTIONS_DEFAUT = [
   'Quelles réclamations sont encore ouvertes ?',
   'Quels bons sont en retard ?',
@@ -36,8 +29,6 @@ const LIENS = {
 };
 
 
-/* Texte de l'IA : paragraphes, listes « - », **gras** — sans HTML injecté. */
-/** Questions proposées quand un équipement est choisi */
 const SUGGESTIONS_EQUIPEMENT = [
   'Quel est l’historique de cet équipement ?',
   'Combien de pannes a-t-il eu cette année ?',
@@ -72,7 +63,6 @@ function TexteIa({ texte }) {
   );
 }
 
-/* Tableau d'un outil : chaque ligne avec lien ouvre l'élément. */
 function TableauResultat({ r, onOuvrir }) {
   if (!r.colonnes?.length || !r.lignes?.length) return null;
   const autres = (r.total || 0) - r.lignes.length;
@@ -106,7 +96,6 @@ function TableauResultat({ r, onOuvrir }) {
 
 export default function AssistantQuestions({ ouvert, onFermer, questionInitiale, onQuestionLue }) {
   const navigate = useNavigate();
-  // Conversation dans le store Redux (src/store/assistantSlice.js) : gardée d'une page à l'autre
   const dispatch = useAppDispatch();
   const messages = useAppSelector(selectMessagesAssistant);
   const equipement = useAppSelector(selectEquipementAssistant);
@@ -134,7 +123,6 @@ export default function AssistantQuestions({ ouvert, onFermer, questionInitiale,
     setTimeout(() => saisieRef.current?.focus(), 50);
   };
 
-  // Question tapée dans la barre de l'en-tête : envoyée à l'ouverture
   useEffect(() => {
     if (!ouvert || !questionInitiale || enCours) return;
     onQuestionLue?.();
@@ -169,7 +157,6 @@ export default function AssistantQuestions({ ouvert, onFermer, questionInitiale,
           </button>
         </header>
 
-        {/* Équipement : les questions portent sur lui tant qu'il est choisi */}
         <div className={`aq-equipement ${equipement ? 'is-choisi' : ''}`}>
           {equipement ? (
             <>

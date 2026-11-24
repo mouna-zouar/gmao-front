@@ -46,7 +46,6 @@
 }
 @keyframes parcdash-spin { to { transform: rotate(360deg); } }
 
-/* HEADER — teal foncé uni */
 .parcdash-header {
   display: flex;
   align-items: center;
@@ -104,7 +103,6 @@
   margin-bottom: 16px;
 }
 
-/* KPI CARDS */
 .parcdash-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -130,7 +128,6 @@
 .parcdash-stat-unit { font-size: 0.85rem; font-weight: 600; color: var(--pd-gray-500); }
 .parcdash-stat-label { font-size: 0.74rem; font-weight: 600; color: var(--pd-gray-500); text-transform: uppercase; letter-spacing: 0.03em; }
 
-/* Carte mise en avant → teal foncé uni */
 .parcdash-stat--featured {
   background: var(--g-brand-600);
   color: var(--g-blanc);
@@ -155,7 +152,6 @@
 
 .parcdash-stat--neutral .parcdash-stat-icon { color: var(--pd-primary); }
 
-/* PANELS */
 .parcdash-panels-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -203,7 +199,6 @@
 }
 .parcdash-breakdown-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
 
-/* Couleurs partagées (dots, barres) */
 .color-green  { background: var(--pd-green); }
 .color-red    { background: var(--pd-red); }
 .color-amber  { background: var(--pd-amber); }
@@ -217,7 +212,6 @@
   padding: 24px;
 }
 
-/* TABLE ALERTES */
 .parcdash-table-wrap {
   overflow-x: auto;
   border: 1px solid var(--pd-gray-200);

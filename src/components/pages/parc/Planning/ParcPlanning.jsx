@@ -5,17 +5,12 @@ import parcPlanningService from '../../../../services/parcPlanningService';
 import './ParcPlanning.css';
 import { t, locale } from '../../../../i18n';
 
-// Mêmes libellés que VehiculeMissions.jsx / VehiculeReservations.jsx —
-// gardés en phase avec ces deux pages plutôt que réutilisés directement,
-// pour ne pas créer de dépendance entre pages qui restent indépendantes.
 const MISSION_ETAT_LABELS = { 0: 'Planifiée', 1: 'En cours', 2: 'Terminée', 3: 'Annulée' };
 const MISSION_ETAT_COLOR = { 0: 'blue', 1: 'teal', 2: 'slate', 3: 'red' };
 
 const RESERVATION_ETAT_LABELS = { 0: 'En attente', 1: 'Acceptée', 2: 'Refusée', 3: 'Annulée', 4: 'Terminée' };
 const RESERVATION_ETAT_COLOR = { 0: 'amber', 1: 'blue', 2: 'red', 3: 'red', 4: 'slate' };
 
-// Jours (lundi → dimanche) dans la langue courante : Lun / الاثنين / Mon.
-// 2000-01-03 est un lundi. L'app est remontée à chaque changement de langue.
 const nomsJours = () => Array.from({ length: 7 }, (_, i) => {
   const s = new Intl.DateTimeFormat(locale(), { weekday: 'short' })
     .format(new Date(2000, 0, 3 + i))
@@ -25,7 +20,7 @@ const nomsJours = () => Array.from({ length: 7 }, (_, i) => {
 
 function lundiDeLaSemaine(date) {
   const d = new Date(date);
-  const jour = d.getDay(); // 0 = dimanche
+  const jour = d.getDay();
   const diff = jour === 0 ? -6 : 1 - jour;
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
@@ -42,8 +37,6 @@ function memeJour(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-// Un événement (mission ou réservation) "touche" un jour si son intervalle
-// [dateDebut, dateFin) chevauche [jour 00:00, jour+1 00:00).
 function toucheJour(dateDebutIso, dateFinIso, jour) {
   if (!dateDebutIso) return false;
   const debut = new Date(dateDebutIso);
@@ -102,7 +95,6 @@ export default function ParcPlanning() {
 
   return (
     <div className="parcplan-container">
-      {/* HEADER */}
       <div className="parcplan-header">
         <div className="parcplan-header-icon-wrap"><ICONES_MODULES.planningParc size={24} /></div>
         <div className="parcplan-header-text">
@@ -138,7 +130,6 @@ export default function ParcPlanning() {
         </div>
       </div>
 
-      {/* LÉGENDE DES COULEURS — conditionnelle selon les toggles */}
       {(afficherMissions || afficherReservations) && (
         <div className="parcplan-legend">
           {afficherMissions && (

@@ -50,7 +50,6 @@
   gap: 8px;
 }
 
-/* ═══════════════ Boutons ═══════════════ */
 .vkh-btn {
   display: inline-flex;
   align-items: center;
@@ -72,7 +71,6 @@
 .vkh-btn-ghost:hover:not(:disabled) { background: var(--g-gray-50); }
 .vkh-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-/* ═══════════════ KPI compacts ═══════════════ */
 .vkh-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -107,7 +105,6 @@
 .kpi-delta svg   { color: var(--g-emerald-500); }
 .kpi-sources svg { color: var(--g-violet-500); }
 
-/* ═══════════════ Alertes ═══════════════ */
 .vkh-alert {
   display: flex;
   align-items: center;
@@ -120,7 +117,6 @@
 
 .vkh-alert.error { background: var(--g-red-50); color: var(--g-red-800); border-color: var(--g-red-200); }
 
-/* ═══════════════ Sections ═══════════════ */
 .vkh-section {
   background: var(--vkh-bg);
   border: 1px solid var(--vkh-border);
@@ -148,7 +144,6 @@
   font-weight: 500;
 }
 
-/* ═══════════════ Liste — cartes empilées ═══════════════ */
 .vkh-historique {
   display: flex;
   flex-direction: column;
@@ -171,7 +166,6 @@
   border-left-color: var(--g-teal-700);
 }
 
-/* Bloc date */
 .vkh-hist-date {
   display: flex;
   flex-direction: column;
@@ -207,7 +201,6 @@
   margin-top: 1px;
 }
 
-/* Corps */
 .vkh-hist-body {
   flex: 1;
   display: flex;
@@ -239,7 +232,6 @@
   flex-wrap: wrap;
 }
 
-/* Grille km */
 .vkh-hist-km {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -274,7 +266,6 @@
   text-overflow: ellipsis;
 }
 
-/* Heure exacte */
 .vkh-hist-time {
   display: inline-flex;
   align-items: center;
@@ -283,7 +274,6 @@
   color: var(--vkh-muted);
 }
 
-/* ═══════════════ Tags source / delta / ref ═══════════════ */
 .vkh-source {
   display: inline-flex;
   align-items: center;
@@ -337,7 +327,6 @@
   font-weight: 600;
 }
 
-/* ═══════════════ État vide ═══════════════ */
 .vkh-empty {
   display: flex;
   flex-direction: column;
@@ -349,7 +338,6 @@
 }
 .vkh-empty p { margin: 0; }
 
-/* ═══════════════ Pagination bas ═══════════════ */
 .vkh-pagination {
   display: flex;
   align-items: center;
@@ -374,7 +362,6 @@
   font-weight: 700;
 }
 
-/* ═══════════════ Responsive ═══════════════ */
 @media (max-width: 640px) {
   .vkh-kpis { grid-template-columns: repeat(2, 1fr); }
   .vkh-header { flex-direction: column; align-items: stretch; }

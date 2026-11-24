@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 import slaService from '../../../services/slaService';
 import { prioriteLabel, prioriteRang } from '../../../constants/Priorite';
@@ -7,7 +7,6 @@ import { ClipboardCheck, FileSpreadsheet, Inbox, LoaderCircle, RefreshCw, Search
 import './Sla.css';
 import PaginationCommune from '../../commun/Pagination';
 
-/* ---------- Config ---------- */
 const PRIORITE_HEX = { P1: '#ef4444', P2: '#f97316', P3: '#3b82f6', P4: '#64748b' };
 
 const STATUT_LABELS = {
@@ -36,11 +35,9 @@ const VUES = [
   { key: 'DEPASSEMENTS', label: 'Dépassements en cours' },
 ];
 
-/* ---------- Pagination ---------- */
 const TAILLES_PAGE = [10, 25, 50, 100];
 const TAILLE_PAGE_DEFAUT = 10;
 
-/* ---------- Utils ---------- */
 function calculerBornes(periodeKey) {
   const fin = new Date();
   const debut = new Date(fin);
@@ -68,13 +65,6 @@ function formatTaux(taux) {
   if (taux === null || taux === undefined) return '—';
   return t('{n} %', { n: taux.toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) });
 }
-
-/* ---------- Icônes ---------- */
-const Svg = (props) => (
-  <svg width={props.size || 15} height={props.size || 15} viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2"
-       strokeLinecap="round" strokeLinejoin="round" {...props} />
-);
 
 const IconRefresh = () => (
   <RefreshCw size={15} aria-hidden="true" />
@@ -112,29 +102,19 @@ const IconStopwatch = () => (
   <Timer size={16} aria-hidden="true" />
 );
 
-const IconChevron = ({ direction = 'right' }) => (
-  <Svg size={14}>
-    {direction === 'left'
-      ? <path d="m15 18-6-6 6-6" />
-      : <path d="m9 18 6-6-6-6" />}
-  </Svg>
-);
 
 const IconClipboardCheck = () => (
   <ClipboardCheck size={24} strokeWidth={2} aria-hidden="true" />
 );
 
-/* Icône tableur Excel */
 const IconExcel = () => (
   <FileSpreadsheet size={15} strokeWidth={2} aria-hidden="true" />
 );
 
-/* ---------- Export Excel ---------- */
 function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
   const wb = XLSX.utils.book_new();
   const dateExport = new Date().toLocaleString('fr-FR');
 
-  /* ----- Feuille 1 : Synthèse ----- */
   const syntheseData = [
     ['Rapport SLA', ''],
     ['Vue', vue === 'PERIODE' ? 'Bons de la période' : 'Dépassements en cours'],
@@ -167,7 +147,6 @@ function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
   wsSynthese['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
   XLSX.utils.book_append_sheet(wb, wsSynthese, 'Synthèse');
 
-  /* ----- Feuille 2 : Par priorité (si dispo) ----- */
   if (bilan?.parPriorite?.length) {
     const prioRows = bilan.parPriorite.map((p) => ({
       'Priorité': p.priorite,
@@ -187,7 +166,6 @@ function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
     XLSX.utils.book_append_sheet(wb, wsPrio, 'Par priorité');
   }
 
-  /* ----- Feuille 3 : Bons ----- */
   const bonsRows = bons.map((b) => ({
     'N°': b.num || '',
     'Titre': b.titre || '',
@@ -220,7 +198,6 @@ function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
   ];
   XLSX.utils.book_append_sheet(wb, wsBons, 'Bons');
 
-  /* ----- Nom du fichier ----- */
   const vueSlug = vue === 'DEPASSEMENTS' ? 'depassements' : periodeLabel.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   const date = new Date().toISOString().slice(0, 10);
   const nomFichier = `sla-${vueSlug}-${date}.xlsx`;
@@ -228,9 +205,6 @@ function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
   XLSX.writeFile(wb, nomFichier);
 }
 
-/* ---------- Pagination ---------- */
-
-/* Pagination : composant commun (même style dans toute la GMAO) */
 function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille }) {
   return (
     <PaginationCommune base={1} page={page} taille={taillePage} total={totalItems}
@@ -238,7 +212,6 @@ function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille
   );
 }
 
-/* ---------- Composant principal ---------- */
 export default function Sla() {
   const [vue, setVue] = useState('PERIODE');
   const [periodeKey, setPeriodeKey] = useState('30J');
@@ -249,7 +222,6 @@ export default function Sla() {
   const [error, setError] = useState(null);
   const [recherche, setRecherche] = useState('');
 
-  /* ---------- Pagination ---------- */
   const [page, setPage] = useState(1);
   const [taillePage, setTaillePage] = useState(TAILLE_PAGE_DEFAUT);
 
@@ -289,7 +261,6 @@ export default function Sla() {
       .sort((a, b) => prioriteRang(a.priorite) - prioriteRang(b.priorite));
   }, [bons, recherche]);
 
-  /* ---------- Pagination ---------- */
   const totalItems = bonsAffiches.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / taillePage));
   const pageCourante = Math.min(page, totalPages);
@@ -308,13 +279,11 @@ export default function Sla() {
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
-  /* ---------- Helper pour classer les taux ---------- */
   const getTauxClass = (taux) =>
     taux >= 90 ? 'sla-prio-bar--bon'
     : taux >= 70 ? 'sla-prio-bar--moyen'
     : 'sla-prio-bar--critique';
 
-  /* ---------- Export Excel ---------- */
   const periodeLabel = PERIODES.find((p) => p.key === periodeKey)?.label || periodeKey;
 
   const handleExportExcel = () => {
@@ -326,7 +295,6 @@ export default function Sla() {
         periodeLabel,
         bornes: vue === 'PERIODE' ? calculerBornes(periodeKey) : null,
         bilan,
-        // On exporte TOUS les bons filtrés (pas seulement la page paginée)
         bons: bonsAffiches,
       });
     } catch (err) {
@@ -341,7 +309,6 @@ export default function Sla() {
 
   return (
     <div className="sla-page">
-      {/* ---------- Header ---------- */}
       <header className="sla-header">
         <div className="sla-header__icon-wrap">
           <IconClipboardCheck />
@@ -398,7 +365,6 @@ export default function Sla() {
         </div>
       </header>
 
-      {/* ---------- KPIs ---------- */}
       {vue === 'PERIODE' && !loading && bilan && (
         <section className="sla-kpis">
           <div className={`sla-kpi ${(bilan.tauxRespectReponsePct ?? 100) >= 90 ? 'sla-kpi--bon' : (bilan.tauxRespectReponsePct ?? 100) >= 70 ? 'sla-kpi--moyen' : 'sla-kpi--critique'}`}>
@@ -435,7 +401,6 @@ export default function Sla() {
         </section>
       )}
 
-      {/* ---------- Répartition par priorité — cartes ---------- */}
       {vue === 'PERIODE' && !loading && bilan && bilan.parPriorite?.length > 0 && (
         <section className="sla-priorites">
           <div className="sla-priorites__header">
@@ -502,7 +467,6 @@ export default function Sla() {
         </section>
       )}
 
-      {/* ---------- Recherche ---------- */}
       <div className="sla-filtres">
         <div className="sla-recherche-wrap">
           <span className="sla-recherche-icon"><IconSearch /></span>
@@ -516,7 +480,6 @@ export default function Sla() {
         </div>
       </div>
 
-      {/* ---------- Liste ---------- */}
       {loading ? (
         <p className="sla-empty">{t("Chargement...")}</p>
       ) : error ? (

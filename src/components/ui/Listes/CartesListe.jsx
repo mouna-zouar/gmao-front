@@ -4,12 +4,6 @@ import BadgeStatut from '../BadgeStatut/BadgeStatut';
 import { CaseSelection } from './SelectionMultiple';
 import './VuesListe.css';
 
-/*
- * La liste en cartes, affichée à la place du tableau sur téléphone (≤ 760 px).
- * Le parent garde son tableau, dont le conteneur porte la classe « liste-adaptative__tableau ».
- *
- *   lignes : [{ id, num, titre, statut: { type, valeur }, meta: [{ icone, texte, alerte }], niveau }]
- */
 export default function CartesListe({ lignes, selectionId, onChoisir, onOuvrir, vide, coches, onCocher }) {
   if (!lignes.length) {
     return <div className="cartes-liste"><p className="cartes-liste__vide">{vide}</p></div>;

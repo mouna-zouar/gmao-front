@@ -13,7 +13,7 @@ const anomalieService = {
 
   async analyserMaintenant() {
     const { data } = await api.post('/anomalies/analyser');
-    return data; // nouvelles anomalies détectées par cet appel
+    return data;
   },
 
   async changerStatut(id, statut, personnelId = null, personnelNom = null) {

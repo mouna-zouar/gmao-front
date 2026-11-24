@@ -40,7 +40,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ---------- Header ---------- */
 .bmk-header-card {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -96,7 +95,6 @@
   text-transform: uppercase;
 }
 
-/* ---------- Toolbar ---------- */
 .bmk-toolbar {
   display: flex;
   gap: 12px;
@@ -177,7 +175,6 @@
   border-radius: 14px;
 }
 
-/* ---------- Board ---------- */
 .bmk-board {
   display: grid;
   grid-template-columns: repeat(5, minmax(240px, 1fr));
@@ -267,7 +264,6 @@
   border-radius: 10px;
 }
 
-/* ---------- Cards ---------- */
 .bmk-card {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -357,7 +353,6 @@
 
 .bmk-card-move:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 768px) {
   .bmk-container { padding: 16px; }
   .bmk-header-card { flex-direction: column; align-items: flex-start; padding: 18px; }
@@ -369,7 +364,6 @@
 @media (prefers-reduced-motion: reduce) {
   .bmk-container, .bmk-card, .bmk-column { animation: none !important; transition: none !important; }
 }
-/* ---------- Choix de l'affichage : tableau / kanban ---------- */
 .bmk-vues {
   display: inline-flex;
   gap: 2px;
@@ -417,7 +411,6 @@
 }
 .bmk-filtre-etat:focus { outline: none; border-color: var(--teal-600); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12); }
 
-/* ---------- Tableau ---------- */
 .bmk-table-carte {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);

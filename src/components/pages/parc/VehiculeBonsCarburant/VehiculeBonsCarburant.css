@@ -68,7 +68,6 @@
   font-weight: 500;
 }
 
-/* Stats : badges clairs en ligne */
 .vbc-stats {
   display: flex;
   gap: 8px;
@@ -118,7 +117,6 @@
 .vbc-stat.stat-km .vbc-stat-value,
 .vbc-stat.stat-km .vbc-stat-label { color: var(--g-violet-700); }
 
-/* Icône d'en-tête = bouton « paramètres des colonnes » */
 .vbc-header-icon-btn {
   cursor: pointer;
   font: inherit;
@@ -140,9 +138,6 @@
   outline-offset: 2px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ACTIONS
-   ═══════════════════════════════════════════════════════════ */
 .vbc-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -175,7 +170,6 @@
 .vbc-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
 .vbc-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Bouton principal → teal uni */
 .vbc-action-btn.ajouter {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -193,9 +187,6 @@
 .vbc-action-btn.supprimer { color: var(--g-rose-600); }
 .vbc-action-btn.supprimer:hover:not(.disabled) { background: var(--g-rose-50); border-color: var(--g-rose-200); }
 
-/* ═══════════════════════════════════════════════════════════
-   FILTRES
-   ═══════════════════════════════════════════════════════════ */
 .vbc-filter-panel {
   display: flex;
   background: var(--g-slate-50);
@@ -226,7 +217,6 @@
   white-space: nowrap;
 }
 
-/* Libellés de filtres → teal */
 .vbc-filter-label svg { color: var(--g-brand-500); }
 
 .vbc-filter-input-wrap {
@@ -243,7 +233,6 @@
   transition: all 0.15s ease;
 }
 
-/* Focus → teal */
 .vbc-filter-input-wrap:focus-within {
   border-color: var(--g-brand-500);
   box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
@@ -285,9 +274,6 @@
   color: var(--g-rose-600);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   EXPORT — couleurs unies
-   ═══════════════════════════════════════════════════════════ */
 .vbc-export-stack {
   display: flex;
   gap: 6px;
@@ -319,9 +305,6 @@
 .vbc-export-btn.stats { background: var(--g-amber-500); }
 .vbc-export-btn.stats:hover { background: var(--g-amber-600); }
 
-/* ═══════════════════════════════════════════════════════════
-   ERREUR
-   ═══════════════════════════════════════════════════════════ */
 .vbc-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
@@ -336,9 +319,6 @@
   gap: 10px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   TABLEAU
-   ═══════════════════════════════════════════════════════════ */
 .vbc-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -353,7 +333,6 @@
   font-size: 13.5px;
 }
 
-/* En-tête du tableau → teal clair uni */
 .vbc-table thead {
   background: var(--g-brand-50);
 }
@@ -385,9 +364,6 @@
 .vbc-row.selected td { background: var(--g-brand-50); }
 .vbc-row.selected { box-shadow: inset 4px 0 0 var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   TRI DES COLONNES
-   ═══════════════════════════════════════════════════════════ */
 .vbc-th-sortable {
   cursor: pointer;
   user-select: none;
@@ -412,12 +388,8 @@
 .vbc-th-sortable:hover .vbc-sort-icon,
 .vbc-sort-icon.active { color: var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   CELLULES
-   ═══════════════════════════════════════════════════════════ */
 .vbc-cell-vehicle { display: flex; align-items: center; gap: 10px; }
 
-/* Icône véhicule → teal clair uni */
 .vbc-cell-vehicle-icon {
   display: flex;
   align-items: center;
@@ -437,7 +409,6 @@
 
 .vbc-cell-driver { display: flex; align-items: center; gap: 10px; }
 
-/* Avatar conducteur → teal uni */
 .vbc-cell-driver-avatar {
   display: flex;
   align-items: center;
@@ -466,7 +437,6 @@
 
 .vbc-cell-date svg { color: var(--g-slate-400); }
 
-/* Montant → teal */
 .vbc-cell-amount {
   display: inline-flex;
   align-items: center;
@@ -491,9 +461,6 @@
 
 .vbc-cell-km svg { color: var(--g-slate-400); }
 
-/* ═══════════════════════════════════════════════════════════
-   EMPTY
-   ═══════════════════════════════════════════════════════════ */
 .vbc-table-empty {
   text-align: center;
   padding: 50px 16px;
@@ -511,9 +478,6 @@
 
 .vbc-empty-state svg { color: var(--g-slate-300); }
 
-/* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .vbc-stats { width: 100%; justify-content: space-between; }
   .vbc-stat { flex: 1; min-width: 0; }

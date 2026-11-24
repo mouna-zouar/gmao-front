@@ -33,10 +33,6 @@
 .pmodal--xl   { max-width: 1200px; }
 .pmodal--full { max-width: 1400px; }
 
-/* ============================================================
-   HEADER — même en-tête que les modales (BonMaintenanceModal, VehiculeModal…) :
-   fond turquoise unique, texte blanc, icône translucide, petit libellé au-dessus du titre.
-   ============================================================ */
 .pmodal__header {
   position: relative;
   display: flex;
@@ -98,9 +94,6 @@
   line-height: 1.4;
 }
 
-/* ============================================================
-   BOUTON FERMER
-   ============================================================ */
 .pmodal__close {
   width: 34px;
   height: 34px;
@@ -130,9 +123,6 @@
   outline-offset: 2px;
 }
 
-/* ============================================================
-   BODY
-   ============================================================ */
 .pmodal__body {
   flex: 1;
   overflow-y: auto;
@@ -154,9 +144,6 @@
   background: var(--g-slate-400);
 }
 
-/* ============================================================
-   ANIMATIONS
-   ============================================================ */
 @keyframes pmodalOverlayIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -173,9 +160,6 @@
   }
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 768px) {
   .pmodal-overlay {
     padding: 10px;
@@ -210,9 +194,6 @@
   }
 }
 
-/* ============================================================
-   ACCESSIBILITÉ
-   ============================================================ */
 @media (prefers-reduced-motion: reduce) {
   .pmodal-overlay,
   .pmodal,

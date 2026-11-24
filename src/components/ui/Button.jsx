@@ -1,4 +1,3 @@
-import React from 'react';
 import './Button.css';
 
 export default function Button({ children, type = "button", variant = "primary", onClick, disabled, className = "", icon }) {

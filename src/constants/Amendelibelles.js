@@ -21,12 +21,6 @@ export const IMPUTATIONS = {
   1: 'Retenue sur le conducteur',
 };
 
-/**
- * Immatriculation, n° de mission ou de PV dans une phrase : toujours de gauche à droite,
- * même en arabe (« 123 TU 4567 » ne doit pas devenir « TU 4567 123 »).
- * Caractères d'isolement Unicode : utilisables aussi dans un <option>.
- */
 export const ltr = (s) => (s == null || s === '' ? s : `\u2066${s}\u2069`);
 
-/** Comment le conducteur a été trouvé */
 export const ORIGINE = { SAISIE: 0, MISSION: 1, AFFECTATION: 2 };

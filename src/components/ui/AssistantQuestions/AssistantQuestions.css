@@ -1,5 +1,3 @@
-/* Assistant de questions (« Demander à l'IA ») — panneau latéral */
-
 .aq-voile { position: fixed; inset: 0; z-index: 1190; background: rgba(15, 23, 42, 0.18); }
 .aq-panneau {
   position: fixed; top: 0; bottom: 0; inset-inline-end: 0; z-index: 1200;
@@ -16,7 +14,6 @@
 [dir="rtl"] .aq-panneau { animation-name: aqEntreeRtl; }
 @keyframes aqEntreeRtl { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
 
-/* En-tête */
 .aq-tete { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--g-blanc); border-bottom: 1px solid var(--g-slate-200); }
 .aq-tete__icone {
   display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -33,7 +30,6 @@
 .aq-icone-btn:hover { background: var(--g-slate-100); color: var(--g-slate-900); }
 .aq-icone-btn:focus-visible, .aq-envoyer:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 2px; }
 
-/* Fil de la conversation */
 .aq-fil { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
 .aq-accueil { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 18px 6px; color: var(--g-brand-600); }
 .aq-accueil h3 { margin: 4px 0 0; font-size: 1.05rem; font-weight: 800; color: var(--g-slate-900); }
@@ -73,7 +69,6 @@
 .aq-tourne { animation: aqTour 0.8s linear infinite; color: var(--g-brand-500); }
 @keyframes aqTour { to { transform: rotate(360deg); } }
 
-/* Tableaux de résultats */
 .aq-resultat { margin-top: 12px; border: 1px solid var(--g-slate-200); border-radius: 10px; overflow: hidden; }
 .aq-resultat header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: var(--g-slate-50); border-bottom: 1px solid var(--g-slate-200); }
 .aq-resultat h4 { margin: 0; font-size: 0.78rem; font-weight: 800; color: var(--g-slate-900); }
@@ -95,7 +90,6 @@
 .aq-resultat tr.is-lien:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: -2px; }
 .aq-autres { margin: 0; padding: 6px 10px; font-size: 0.72rem; color: var(--g-slate-500); border-top: 1px solid var(--g-slate-100); }
 
-/* Saisie */
 .aq-saisie {
   display: flex; align-items: flex-end; gap: 8px; margin: 0 16px; padding: 8px 8px 8px 12px;
   background: var(--g-blanc); border: 1.5px solid var(--g-slate-200); border-radius: 12px;
@@ -113,7 +107,6 @@
 .aq-envoyer:disabled { background: var(--g-slate-200); color: var(--g-slate-400); cursor: default; }
 .aq-note { margin: 6px 16px 12px; font-size: 0.68rem; color: var(--g-slate-400); text-align: center; }
 
-/* Barre « Demander à l'IA » au centre de l'en-tête */
 .navbar__ia {
   flex: 0 1 460px; min-width: 0; margin: 0 16px; height: 38px; display: flex; align-items: center; gap: 8px;
   padding: 0 4px 0 12px; border: 1px solid var(--g-slate-200); border-radius: 999px;
@@ -134,7 +127,6 @@
 .navbar__ia-envoyer:hover { background: var(--g-brand-600); }
 .navbar__ia-envoyer svg { width: 16px; height: 16px; }
 
-/* Icône de l'en-tête : seulement quand la barre n'a pas la place */
 .navbar__right .navbar__icon-btn--ia {
   display: none; width: 36px; height: 36px; padding: 0; justify-content: center; align-items: center; flex-shrink: 0;
   color: var(--g-brand-600); background: var(--g-brand-50); border: 1px solid var(--g-brand-100); border-radius: 9px; cursor: pointer;
@@ -147,7 +139,6 @@
 }
 @media (prefers-reduced-motion: reduce) { .aq-panneau { animation: none; } }
 
-/* Actions faites par l'assistant (ex. réclamation créée) */
 .aq-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
 .aq-action {
   display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 12px; text-align: start;
@@ -159,7 +150,6 @@
 .aq-action:disabled { cursor: default; }
 .aq-accueil-agent { margin-top: 6px !important; color: var(--g-brand-700, #0e7490) !important; font-weight: 600; }
 
-/* Équipement choisi : les questions portent sur lui */
 .aq-equipement { padding: 8px 16px; border-bottom: 1px solid var(--g-slate-100); }
 .aq-equipement.is-choisi {
   display: flex; align-items: center; gap: 8px; background: var(--g-brand-50); color: var(--g-brand-700);

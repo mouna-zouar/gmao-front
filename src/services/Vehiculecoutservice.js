@@ -1,14 +1,11 @@
 import api from './api';
 
-/* Coût total par véhicule (/api/vehicule-couts) et frais fixes (/api/vehicule-frais) */
 const vehiculeCoutService = {
-  /** { debut, fin, vehicules: [...], totaux, kmParcourus, coutParKm } — debut/fin : 'YYYY-MM-DD' */
   async parc(debut, fin) {
     const { data } = await api.get('/vehicule-couts', { params: { debut, fin } });
     return data;
   },
 
-  /** { resume, parMois: [{ mois, postes }], depenses: [...] } */
   async vehicule(vehiculeId, debut, fin) {
     const { data } = await api.get(`/vehicule-couts/${vehiculeId}`, { params: { debut, fin } });
     return data;

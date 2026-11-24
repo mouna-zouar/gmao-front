@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Button from '../Button';
 import { commePage, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/personnelService';
+import personnelService from '../../../services/Personnelservice';
 import authService from '../../../services/Authservice';
 import {
   AlertTriangle, X, Car, User, Calendar, Gauge, Coins, Loader2, Save, Check, MapPin, Link2, Search, ShieldAlert, ShieldCheck, Shield, Zap, Ban, Package, Activity, XCircle, Hourglass, AlertCircle, FileText, Hammer, ChevronDown,
@@ -9,8 +9,6 @@ import {
 import './Modal.css';
 import './VehiculeIncidentModal.css';
 
-// Codes alignés sur le backend (voir commentaires sur les champs
-// `type`, `gravite` et `etat` dans VehiculeIncident.java).
 const TYPE_OPTIONS = [
   { value: 1, label: 'Accident',    Icon: AlertTriangle, color: 'red' },
   { value: 2, label: 'Panne',       Icon: Zap,           color: 'amber' },
@@ -31,7 +29,6 @@ const ETAT_OPTIONS = [
   { value: 2, label: 'Clôturé',  Icon: XCircle,   color: 'slate' },
 ];
 
-// ─── Sections de navigation ───
 const NAV_SECTIONS = [
   { id: 'vehicule',    label: 'Véhicule',     Icon: Car },
   { id: 'type',        label: 'Type',         Icon: AlertTriangle },
@@ -67,7 +64,6 @@ function toInputDateTime(iso) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// ─── Select avec recherche intégrée (combobox) ───
 const SearchableSelect = ({
   id,
   name,
@@ -197,7 +193,7 @@ const SearchableSelect = ({
               <button
                 type="button"
                 className={`vim-searchable-option ${!value ? 'is-selected' : ''}`}
-                onClick={() => handleSelect({ [getValue === ((o) => o.id) ? 'id' : 'id']: '' })}
+                onClick={() => handleSelect({ id: '' })}
               >
                 <span className="vim-searchable-option-main">
                   <span className="vim-searchable-option-label">{emptyOptionLabel}</span>
@@ -393,7 +389,6 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
     }).slice(0, 6);
   }, [vehicules, vehiculeSearch]);
 
-  // ─── Badges compteurs par section ───
   const sectionCounts = {
     vehicule:    formData.vehiculeId ? 1 : 0,
     type:        1,
@@ -775,7 +770,6 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
     <div className="modal-overlay" onClick={onClose}>
       <div className="vim-modal" onClick={(e) => e.stopPropagation()}>
 
-        {/* ═══ HEADER GRADIENT TEAL ═══ */}
         <div className="vim-header">
           <div className="vim-header-left">
             <div className="vim-header-icon">
@@ -825,10 +819,8 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
           </div>
         </div>
 
-        {/* ═══ LAYOUT : NAV + CONTENU ═══ */}
         <form className="vim-layout" onSubmit={handleSubmit}>
 
-          {/* NAVIGATION LATÉRALE */}
           <aside className="vim-nav">
             <div className="vim-nav-title">Sections</div>
             <nav className="vim-nav-list">
@@ -859,7 +851,6 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
             </nav>
           </aside>
 
-          {/* CONTENU */}
           <div className="vim-content">
             {renderContent()}
 
@@ -873,7 +864,6 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
 
         </form>
 
-        {/* FOOTER */}
         <div className="vim-footer">
           <div className="vim-footer-left">
             <span className="vim-footer-step">

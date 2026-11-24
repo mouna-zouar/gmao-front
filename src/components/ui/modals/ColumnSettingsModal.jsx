@@ -1,4 +1,3 @@
-import React from 'react';
 import './ColumnSettingsModal.css';
 import Toggle from '../Toggle';
 import { Settings } from 'lucide-react';

@@ -4,8 +4,6 @@ import { ICONES_MODULES } from '../../../constants/modules';
 import { ModaleFormulaire, PageListe } from '../../commun';
 import { t } from '../../../i18n';
 
-/* Référentiel des tâches de maintenance : page liste et fenêtre de la bibliothèque commune. */
-
 const COLONNES = [{ cle: 'nom', label: 'Nom', valeur: (x) => x.nom }];
 const CHAMPS = [
   { nom: 'nom', label: 'Nom', type: 'texte', requis: true, longueurMax: 255, largeur: 'pleine', autoFocus: true, placeholder: 'Ex : Vérification des alarmes' },

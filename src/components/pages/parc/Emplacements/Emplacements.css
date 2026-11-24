@@ -69,7 +69,6 @@
   font-weight: 500;
 }
 
-/* Stats : badges clairs en ligne */
 .emp-stats {
   display: flex;
   gap: 8px;
@@ -111,7 +110,6 @@
 .emp-stat.stat-adresses .emp-stat-value,
 .emp-stat.stat-adresses .emp-stat-label { color: var(--g-blue-700); }
 
-/* Icône d'en-tête = bouton « paramètres des colonnes » */
 .emp-header-icon-btn {
   cursor: pointer;
   font: inherit;
@@ -133,9 +131,6 @@
   outline-offset: 2px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ACTIONS
-   ═══════════════════════════════════════════════════════════ */
 .emp-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -168,7 +163,6 @@
 .emp-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
 .emp-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Bouton principal → teal uni */
 .emp-action-btn.ajouter {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -186,9 +180,6 @@
 .emp-action-btn.supprimer { color: var(--g-rose-600); }
 .emp-action-btn.supprimer:hover:not(.disabled) { background: var(--g-rose-50); border-color: var(--g-rose-200); }
 
-/* ═══════════════════════════════════════════════════════════
-   FILTRES
-   ═══════════════════════════════════════════════════════════ */
 .emp-filter-panel {
   display: flex;
   background: var(--g-slate-50);
@@ -219,7 +210,6 @@
   white-space: nowrap;
 }
 
-/* Libellés de filtres → teal */
 .emp-filter-label svg { color: var(--g-brand-500); }
 
 .emp-filter-input-wrap {
@@ -236,7 +226,6 @@
   transition: all 0.15s ease;
 }
 
-/* Focus → teal */
 .emp-filter-input-wrap:focus-within {
   border-color: var(--g-brand-500);
   box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
@@ -277,9 +266,6 @@
   color: var(--g-rose-600);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   EXPORT — couleurs unies
-   ═══════════════════════════════════════════════════════════ */
 .emp-export-stack {
   display: flex;
   gap: 6px;
@@ -311,9 +297,6 @@
 .emp-export-btn.stats { background: var(--g-amber-500); }
 .emp-export-btn.stats:hover { background: var(--g-amber-600); }
 
-/* ═══════════════════════════════════════════════════════════
-   ERREUR
-   ═══════════════════════════════════════════════════════════ */
 .emp-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
@@ -328,9 +311,6 @@
   gap: 10px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   TABLEAU
-   ═══════════════════════════════════════════════════════════ */
 .emp-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -345,7 +325,6 @@
   font-size: 13.5px;
 }
 
-/* En-tête du tableau → teal clair uni */
 .emp-table thead {
   background: var(--g-brand-50);
 }
@@ -377,9 +356,6 @@
 .emp-row.selected td { background: var(--g-brand-50); }
 .emp-row.selected { box-shadow: inset 4px 0 0 var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   TRI DES COLONNES
-   ═══════════════════════════════════════════════════════════ */
 .emp-th-sortable {
   cursor: pointer;
   user-select: none;
@@ -404,12 +380,8 @@
 .emp-th-sortable:hover .emp-sort-icon,
 .emp-sort-icon.active { color: var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   CELLULES
-   ═══════════════════════════════════════════════════════════ */
 .emp-cell-name { display: flex; align-items: center; gap: 10px; }
 
-/* Icône nom → teal clair uni */
 .emp-cell-name-icon {
   display: flex;
   align-items: center;
@@ -437,9 +409,6 @@
 
 .emp-cell-empty { color: var(--g-slate-300); font-style: italic; }
 
-/* ═══════════════════════════════════════════════════════════
-   EMPTY
-   ═══════════════════════════════════════════════════════════ */
 .emp-table-empty {
   text-align: center;
   padding: 50px 16px;
@@ -457,9 +426,6 @@
 
 .emp-empty-state svg { color: var(--g-slate-300); }
 
-/* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .emp-stats { width: 100%; justify-content: space-between; }
   .emp-stat { flex: 1; min-width: 0; }

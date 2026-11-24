@@ -1,9 +1,3 @@
-// Cycle de vie du véhicule — source unique de vérité côté front.
-// Les codes DOIVENT rester synchronisés avec le commentaire sur le champ
-// `etat` dans Vehicule.java et avec ALLOWED_TRANSITIONS dans
-// VehiculeServiceImpl.java (backend). Si vous changez un code ici,
-// changez-le aussi côté backend.
-
 export const VEHICULE_ETAT = {
   DISPONIBLE: 0,
   RESERVE: 1,
@@ -24,7 +18,6 @@ export const ETAT_VEHICULE_LABELS = {
   6: 'Vendu',
 };
 
-// Couleur utilisée par les badges/pills (voir CSS des pages/modales).
 export const ETAT_VEHICULE_COLOR = {
   0: 'green',
   1: 'blue',
@@ -35,17 +28,14 @@ export const ETAT_VEHICULE_COLOR = {
   6: 'slate',
 };
 
-// Doit être IDENTIQUE à ALLOWED_TRANSITIONS dans VehiculeServiceImpl.java.
-// Sert uniquement à grisér/activer les options côté front (UX) — le
-// backend reste la seule source de vérité et revalide tout de toute façon.
 export const ETAT_VEHICULE_TRANSITIONS = {
-  0: [1, 2, 3, 4, 5, 6], // Disponible →
-  1: [0, 2, 4, 5],        // Réservé →
-  2: [0, 4, 5],           // En mission →
-  3: [0, 4, 5, 6],        // En maintenance →
-  4: [3, 0, 5],           // Immobilisé →
-  5: [0, 3, 6],           // Hors service →
-  6: [],                  // Vendu → (terminal)
+  0: [1, 2, 3, 4, 5, 6],
+  1: [0, 2, 4, 5],
+  2: [0, 4, 5],
+  3: [0, 4, 5, 6],
+  4: [3, 0, 5],
+  5: [0, 3, 6],
+  6: [],
 };
 
 export function etatVehiculeLabel(etat) {

@@ -1,4 +1,3 @@
-/* Onglet « Remise en service » : demande en attente / demander */
 .bmd-rs-demande {
   display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   margin: 0 0 14px; padding: 12px 14px; border-radius: 12px;

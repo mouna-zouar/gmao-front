@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Button from '../Button';
 import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/personnelService';
+import personnelService from '../../../services/Personnelservice';
 import vehiculeMissionService from '../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
 import { CARBURANT_TYPE_OPTIONS, carburantTypeLabel } from '../../../constants/carburantType';
 import { etatVehiculeLabel, isVehiculeDisponiblePourMission } from '../../../constants/Vehiculeetat';
 import { t, locale } from '../../../i18n';
-import vehiculeAmendeService from '../../../services/vehiculeAmendeService';
+import vehiculeAmendeService from '../../../services/Vehiculeamendeservice';
 import authService from '../../../services/Authservice';
 import { TYPES_INFRACTION, STATUTS as STATUTS_AMENDE, ltr } from '../../../constants/Amendelibelles';
 import {
@@ -31,13 +31,13 @@ import {
   Search,
   MapPin,
   ArrowRight,
-  Hash,
+  
   AlertTriangle,
   CheckCircle2,
   Save,
   Loader2,
   ClipboardList,
-  User,
+  
   ShieldCheck,
   ShieldAlert,
   ChevronDown,
@@ -50,7 +50,6 @@ import {
 import './Modal.css';
 import './VehiculeMissionModal.css';
 
-// ─── Fix icônes Leaflet ───
 delete L.Icon.Default.prototype._getIconUrl;
 
 L.Icon.Default.mergeOptions({
@@ -92,7 +91,6 @@ const ETAT_OPTIONS = [
   { value: 3, label: 'Annulée' },
 ];
 
-// ─── Sections de navigation (remplace les steps) ───
 const NAV_SECTIONS = [
   { id: 'general', label: 'Général', Icon: ClipboardList },
   { id: 'vehicule', label: 'Véhicule', Icon: Car },
@@ -103,7 +101,6 @@ const NAV_SECTIONS = [
   { id: 'notes', label: 'Notes', Icon: FileText },
 ];
 
-// ─── Leaflet ───
 function MapClickHandler({ onClick }) {
   useMapEvents({
     click: (e) => {
@@ -123,7 +120,6 @@ function MapRecenter({ center }) {
   return null;
 }
 
-// ─── Utils ───
 function toDateTimeInput(value) {
   if (!value) return '';
   const s = String(value);
@@ -140,7 +136,6 @@ function toNumOrNull(value) {
   return Number.isNaN(number) ? null : number;
 }
 
-// ─── Select avec recherche intégrée (combobox) ───
 const SearchableSelect = ({
   id,
   name,
@@ -306,10 +301,8 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
 
   const [activeSection, setActiveSection] = useState('general');
 
-  // Bons de carburant de la mission : déjà enregistrés (modification) ou à créer avec la mission
   const [bonsMission, setBonsMission] = useState([]);
   const [bonsAAjouter, setBonsAAjouter] = useState([]);
-  // Saisie d'un plein directement dans l'onglet « Carburant » (pas de seconde fenêtre)
   const BON_VIDE = { date: '', montant: '', litres: '', kilometrage: '', typeCarburant: '', station: '' };
   const [formBon, setFormBon] = useState(BON_VIDE);
   const [saisieBonOuverte, setSaisieBonOuverte] = useState(false);
@@ -353,7 +346,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         await vehiculeBonCarburantService.create({ ...bon, missionId: vehiculeMission.id });
         await chargerBonsMission();
       } else {
-        // Mission pas encore créée : le bon sera enregistré avec elle
         setBonsAAjouter((l) => [...l, bon]);
       }
       setSaisieBonOuverte(false);
@@ -383,7 +375,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     if (isEditing) chargerBonsMission(); else setBonsMission([]);
   }, [isOpen, isEditing, chargerBonsMission]);
 
-  // Amendes reçues pendant la mission : déjà enregistrées (modification) ou à créer avec la mission
   const [amendesMission, setAmendesMission] = useState([]);
   const [amendesAAjouter, setAmendesAAjouter] = useState([]);
   const AMENDE_VIDE = { dateInfraction: '', type: '', montant: '', lieu: '', referencePv: '', dateLimitePaiement: '' };
@@ -448,7 +439,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         await vehiculeAmendeService.create({ ...amende, missionId: vehiculeMission.id, personnelCreationId: ctx.userId ?? null });
         await chargerAmendesMission();
       } else {
-        // Mission pas encore créée : l'amende sera enregistrée avec elle
         setAmendesAAjouter((l) => [...l, amende]);
       }
       setSaisieAmendeOuverte(false);
@@ -793,7 +783,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
 
       const enregistree = await onSave(payload);
 
-      // Bons de carburant ajoutés pendant la création : liés à la mission maintenant qu'elle existe
       const missionId = enregistree?.id ?? vehiculeMission?.id ?? null;
       if (bonsAAjouter.length > 0) {
         if (missionId == null) {
@@ -815,7 +804,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
           return;
         }
       }
-      // Amendes ajoutées pendant la création : liées à la mission maintenant qu'elle existe
       if (amendesAAjouter.length > 0) {
         if (missionId == null) {
           setError(t("La mission est enregistrée, mais ses amendes n'ont pas pu y être liées. Ajoutez-les depuis la mission."));
@@ -1308,7 +1296,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               <p>{t('Pleins faits pendant cette mission')}</p>
             </div>
 
-            {/* Résumé */}
             <div className="vmb-resume">
               <div className="vmb-stat">
                 <span className="vmb-stat-label">{t('Pleins')}</span>
@@ -1324,7 +1311,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               </div>
             </div>
 
-            {/* Liste des pleins */}
             {tousBons.length === 0 && !saisieBonOuverte ? (
               <div className="vmb-vide">
                 <span className="vmb-vide-icone"><Fuel size={22} /></span>
@@ -1361,7 +1347,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               </ul>
             )}
 
-            {/* Saisie d'un plein, directement ici */}
             {saisieBonOuverte ? (
               <div className="vmb-saisie">
                 <div className="vmb-saisie-entete">
@@ -1650,7 +1635,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     <div className="modal-overlay" onClick={onClose}>
       <div className="bmm-modal" onClick={(e) => e.stopPropagation()}>
 
-        {/* HEADER */}
         <div className="bmm-header">
           <div className="bmm-header-left">
             <div className="bmm-header-icon-wrap">
@@ -1681,10 +1665,8 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
           </div>
         </div>
 
-        {/* LAYOUT SPLIT : NAV + CONTENU */}
         <form className="bmm-layout" onSubmit={handleSubmit}>
 
-          {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
             <div className="bmm-nav-title">{t('Sections')}</div>
             <nav className="bmm-nav-list">
@@ -1715,7 +1697,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
             </nav>
           </aside>
 
-          {/* CONTENU */}
           <div className="bmm-content">
             {renderContent()}
 
@@ -1728,7 +1709,6 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
           </div>
         </form>
 
-        {/* FOOTER */}
         <div className="bmm-footer">
           <div className="bmm-footer-left">
             <span className="bmm-footer-step">

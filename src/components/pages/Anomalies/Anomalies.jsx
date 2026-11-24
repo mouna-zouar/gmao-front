@@ -7,7 +7,6 @@ import {
   dateCourte, dateHeure, ilYa,
 } from '../../ui/Veille/Veille';
 
-/* ---------- Libellés et couleurs ---------- */
 const SEVERITE = {
   CRITIQUE: { label: 'Critique', ton: 'danger', rang: 3 },
   ELEVEE: { label: 'Élevée', ton: 'orange', rang: 2 },
@@ -23,7 +22,6 @@ const TYPE = {
   SERVICE: { label: 'Service', icone: Users },
 };
 
-/** Combien de fois la normale (7 réclamations pour 1,2 habituellement → × 5,8). */
 function multipleNormale(a) {
   const moyenne = Number(a.moyenneHistorique);
   if (!moyenne || moyenne <= 0) return null;
@@ -96,7 +94,6 @@ export default function Anomalies({ isModal = false }) {
     return c;
   }, [anomalies]);
 
-  // À traiter d'abord, puis les plus graves, puis les plus récentes
   const affichees = useMemo(() => anomalies
     .filter((a) => filtreStatut === 'TOUTES' || a.statut === filtreStatut)
     .filter((a) => !filtreSeverite || a.severite === filtreSeverite)

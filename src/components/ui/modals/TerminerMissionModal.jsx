@@ -2,13 +2,6 @@ import { useState, useEffect } from 'react';
 import { X, Gauge, ArrowRight, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import './TerminerMissionModal.css';
 
-/**
- * Clôture d'une mission : saisie du kilométrage de retour.
- *
- * La validation affichée ici est un confort utilisateur. La règle métier fait
- * autorité côté backend (kmRetour >= kmDepart ET >= Vehicule.kilometrage) :
- * un 409 remonté par l'API est affiché tel quel.
- */
 export default function TerminerMissionModal({
   isOpen,
   onClose,

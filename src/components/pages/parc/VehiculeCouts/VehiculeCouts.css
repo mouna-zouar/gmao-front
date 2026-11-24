@@ -1,10 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   COÛT PAR VÉHICULE — complète VehiculeIncidents.css (vin-*)
-   ═══════════════════════════════════════════════════════════ */
-
 .vco-page { --vco-encre: var(--g-slate-900); --vco-encre-2: var(--g-slate-600); --vco-encre-3: var(--g-slate-500); --vco-trait: var(--g-slate-200); --vco-surface: var(--g-blanc); }
 
-/* ─── Choix de la période ─── */
 .vco-periode {
   display: inline-flex;
   flex-wrap: wrap;
@@ -53,7 +48,6 @@
 }
 .vco-perso-erreur { color: var(--g-red-700); }
 
-/* ─── Synthèse : chiffres clés + répartition ─── */
 .vco-synthese {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
@@ -94,7 +88,6 @@
 .vco-chiffre--principal .vco-chiffre-val { color: var(--g-brand-700); font-size: 1.45rem; }
 .vco-chiffre-nom { font-size: 12.5px; font-weight: 600; color: var(--vco-encre-3, var(--g-slate-500)); }
 
-/* ─── Barre de répartition (parts d'un tout) ─── */
 .vco-repartition { margin: 0; min-width: 0; }
 .vco-graph-titre {
   margin: 0 0 10px;
@@ -107,7 +100,7 @@
 
 .vco-barre {
   display: flex;
-  gap: 2px;                   /* espace de surface entre segments */
+  gap: 2px;
   height: 18px;
   margin-bottom: 14px;
   direction: ltr;
@@ -153,7 +146,6 @@
   border-radius: 3px;
 }
 
-/* Info-bulle commune */
 .vco-bulle {
   position: absolute;
   z-index: 5;
@@ -172,7 +164,6 @@
 }
 .vco-bulle strong { font-weight: 800; margin-inline-end: 4px; }
 
-/* ─── Tableau ─── */
 .vco-table th.vco-num,
 .vco-table td.vco-num { text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .vco-table td.vco-num .vin-cell-sub { display: block; }
@@ -210,7 +201,6 @@
 }
 .vco-table tfoot td.vco-num { text-align: end; }
 
-/* Mini-barre : longueur ∝ coût total, segments par poste */
 .vco-mini {
   display: flex;
   gap: 2px;
@@ -240,7 +230,6 @@
 .vco-exports { margin-inline-start: auto; }
 .vin-export-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
-/* ─── Détail d'un véhicule ─── */
 .vco-detail { display: flex; flex-direction: column; gap: 18px; padding-bottom: 20px; }
 .vco-chargement { display: flex; align-items: center; gap: 8px; color: var(--vco-encre-3, var(--g-slate-500)); }
 .vco-note {
@@ -331,11 +320,9 @@
 .vco-poste { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
 .vco-sous { display: block; font-size: 11.5px; font-weight: 500; color: var(--g-slate-400); }
 
-/* Formulaire de frais */
 .vfr-aide { margin: 0 0 10px; }
 .vfr-un-an { margin-top: 6px; }
 
-/* ─── Écrans étroits ─── */
 @media (max-width: 960px) {
   .vco-synthese { grid-template-columns: 1fr; }
   .vco-detail .vco-chiffres { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -348,14 +335,11 @@
   .vco-frais-info { grid-column: 1 / -1; grid-row: 2; }
 }
 
-/* Formulaire de frais : le bloc « période couverte » respire entre les deux grilles */
 #vfr-formulaire .vam-groupe { margin: 18px 0 16px; }
 
-/* Une immatriculation ne se coupe jamais en deux lignes */
 .vco-page bdi.vin-cell-main,
 .vco-chiffre-val bdi { white-space: nowrap; }
 
-/* ─── Choix de période (composant partagé) ─── */
 .vco-choix-periode {
   display: flex;
   flex-direction: column;
@@ -364,7 +348,6 @@
 }
 .vco-choix-periode .vco-perso { margin: 0; padding: 6px 10px; }
 
-/* ─── Dans la fenêtre « Coût par véhicule » de la page Véhicules ─── */
 .vco-page.vco-page--modale { padding: 16px 24px 24px; background: transparent; min-height: 0; }
 .vco-page--modale .vin-header-card.vco-entete-modale {
   justify-content: flex-end;
@@ -375,7 +358,6 @@
   margin-bottom: 16px;
 }
 
-/* ─── Onglet « Coût » de la fiche véhicule ─── */
 .vco-onglet { display: flex; flex-direction: column; gap: 18px; }
 .vco-onglet-entete {
   display: flex;
@@ -391,7 +373,6 @@
   .vco-choix-periode { align-items: stretch; width: 100%; }
 }
 
-/* ─── Bandeau « Coûts du parc » sous l'en-tête de la page Véhicules ─── */
 .vco-resume {
   margin-bottom: 20px;
   padding: 16px 20px 18px;

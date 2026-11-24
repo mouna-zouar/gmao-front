@@ -3,12 +3,12 @@ import api from './api';
 const etatEquipementService = {
   async getAll() {
     const { data } = await api.get('/etat-equipement');
-    return data; // List<EtatEquipementDTO>
+    return data;
   },
 
   async getHistorique(lotArticleImmobilistationId) {
     const { data } = await api.get(`/etat-equipement/${lotArticleImmobilistationId}/historique`);
-    return data; // List<EtatEquipementTransitionDTO>
+    return data;
   },
 
   async recalculer(lotArticleImmobilistationId) {
@@ -21,10 +21,6 @@ const etatEquipementService = {
     return data;
   },
 
-  /**
-   * Assigne la criticité structurelle (C1-C4) d'un équipement.
-   * PUT /api/etat-equipement/{id}/criticite?criticite=C1
-   */
   async definirCriticite(lotArticleImmobilistationId, criticite) {
     const { data } = await api.put(
       `/etat-equipement/${lotArticleImmobilistationId}/criticite`,

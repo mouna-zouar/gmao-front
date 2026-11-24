@@ -1,15 +1,5 @@
-// ============================================================
-// Familles d'articles Cubix en arbre : famille sans parent = racine (parent),
-// sinon rangée sous sa famille parente (ArticleFamille.ParentFamilleID).
-// Utilisé par Paramètres système et par le filtre « Famille » de la liste des équipements.
-// ============================================================
 import { locale } from '../i18n';
 
-/**
- * Arbre des familles : une famille sans parent est une racine (parent), les autres sont rangées
- * sous leur famille parente (fils). Un parent qui n'a pas d'équipement à lui (absent de la liste
- * Cubix) est ajouté pour regrouper ses fils (« virtuel » : il ne se coche pas pour lui-même).
- */
 export function arbreFamilles(familles) {
   const noeuds = new Map();
   (familles || []).forEach((f) => noeuds.set(String(f.id), { ...f, enfants: [] }));
@@ -25,7 +15,6 @@ export function arbreFamilles(familles) {
     const p = n.parentId != null && String(n.parentId) !== String(n.id) ? noeuds.get(String(n.parentId)) : null;
     if (p) p.enfants.push(n); else racines.push(n);
   });
-  // Famille prise dans une boucle de parents (A → B → A) : remontée à la racine pour ne pas la perdre
   const vus = new Set();
   const marquer = (n) => { if (vus.has(n)) return; vus.add(n); n.enfants.forEach(marquer); };
   racines.forEach(marquer);
@@ -36,7 +25,6 @@ export function arbreFamilles(familles) {
     chemin.add(n);
     trier(n.enfants);
     n.total = n.nombre + n.enfants.reduce((s, e) => s + total(e, chemin), 0);
-    // Identifiants cochables du sous-arbre (la famille elle-même si elle existe dans Cubix + ses fils)
     n.ids = [...(n.virtuel ? [] : [String(n.id)]), ...n.enfants.flatMap((e) => e.ids || [])];
     chemin.delete(n);
     return n.total;
@@ -45,11 +33,6 @@ export function arbreFamilles(familles) {
   return trier(racines);
 }
 
-/**
- * Lignes visibles d'un arbre de familles : les parents, et les fils des parents ouverts.
- * Avec une recherche : les familles qui correspondent, leurs parents et leurs fils.
- * → [{ noeud, niveau, ouvert }]
- */
 export function lignesArbre(arbre, ouverts, recherche = '') {
   const q = recherche.trim().toLowerCase();
   const correspond = (n) => !q || `${n.nom || ''} ${n.code || ''}`.toLowerCase().includes(q);

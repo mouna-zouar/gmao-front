@@ -1,6 +1,5 @@
 import { t, locale } from '../../../i18n';
 
-/* Libellés communs à la page Formations et à « Mon espace ». ton : couleur des badges communs. */
 export const TYPES_FORMATION = {
   INTERNE: { label: 'Interne', ton: 'teal' },
   EXTERNE: { label: 'Externe', ton: 'orange' },
@@ -28,7 +27,6 @@ export const dateFormation = (v) => {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
-/** « 12 mars 2026 → 14 mars 2026 », ou une seule date. */
 export const periodeFormation = (f) => {
   const debut = dateFormation(f.dateDebut);
   const fin = dateFormation(f.dateFin);
@@ -36,7 +34,6 @@ export const periodeFormation = (f) => {
   return debut || fin || '';
 };
 
-/** Familles puis équipements visés, en texte ; « Formation générale » s'il n'y en a aucun. */
 export const libelleCibles = (f) => {
   const noms = [...(f?.familles || []), ...(f?.equipements || [])].map((c) => c.nom || `#${c.id}`);
   return noms.length ? noms.join(', ') : t('Formation générale');

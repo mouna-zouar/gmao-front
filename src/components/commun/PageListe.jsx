@@ -21,14 +21,13 @@ export default function PageListe({
   actions = [], filtres, recherchePlaceholder, cleStockage, nomExport, vide = {}, taillePage = 10,
   selection: selectionControlee, onSelection, avantTableau, children,
   triInitial, colonnesExport, filtresImpression = [], classe,
-  sansEntete = false, // true : pas de bloc titre (icône + titre) ; les pastilles de statistiques restent
+  sansEntete = false, finActions,
 }) {
-  /* Colonnes : visibilité et recherche réglables, gardées dans ce navigateur */
   const cle = cleStockage ? `gmao.liste.${cleStockage}.colonnes` : null;
   const [reglages, setReglages] = useState(() => {
     try { return cle ? JSON.parse(localStorage.getItem(cle) || '{}') : {}; } catch { return {}; }
   });
-  useEffect(() => { if (cle) { try { localStorage.setItem(cle, JSON.stringify(reglages)); } catch { /* stockage indisponible */ } } }, [cle, reglages]);
+  useEffect(() => { if (cle) { try { localStorage.setItem(cle, JSON.stringify(reglages)); } catch {} } }, [cle, reglages]);
   const cols = colonnes.map((c) => ({
     ...c,
     visible: reglages[c.cle]?.visible ?? (c.visible !== false),
@@ -38,7 +37,6 @@ export default function PageListe({
   const [reglageOuvert, setReglageOuvert] = useState(false);
 
   const [recherche, setRecherche] = useState('');
-  /* Recherche par colonne (ligne de filtres sous l'en-tête) */
   const fc = useFiltresColonnes(cleStockage);
   const filtresCol = fc.filtres;
   const changerFiltre = fc.changer;
@@ -106,7 +104,6 @@ export default function PageListe({
     });
   };
 
-  /* Export et impression : colonnes visibles, lignes filtrées */
   const donnees = () => ({
     entetes: (colonnesExport || visibles).map((c) => t(c.label)),
     lignes: filtrees.map((l) => (colonnesExport || visibles).map((c) => texte(c, l) || '—')),
@@ -136,7 +133,6 @@ export default function PageListe({
 
   return (
     <div className={`cl-page ${classe || ''}`.trim()}>
-      {/* En-tête (titre + statistiques) ; sans titre, seules les statistiques restent */}
       {sansEntete ? (
         stats.length > 0 && <div className="cl-entete cl-entete--sans-titre"><PastillesStats stats={stats} /></div>
       ) : (
@@ -152,8 +148,7 @@ export default function PageListe({
         </div>
       )}
 
-      {/* Actions */}
-      {(onAjouter || onModifier || onSupprimer || actions.length > 0) && (
+      {(onAjouter || onModifier || onSupprimer || actions.length > 0 || finActions) && (
         <div className="cl-actions">
           {onAjouter && (
             <button type="button" className="cl-action cl-action--principal" onClick={onAjouter}>
@@ -181,10 +176,10 @@ export default function PageListe({
             );
           })}
           {selection && <span className="cl-actions__sel">{t('1 ligne sélectionnée')}</span>}
+          {finActions && <div className="cl-actions__fin">{finActions}</div>}
         </div>
       )}
 
-      {/* Recherche, filtres, export */}
       <div className="cl-filtres">
         <label className="cl-recherche">
           <Search size={16} aria-hidden="true" />
@@ -209,7 +204,6 @@ export default function PageListe({
       {erreur && <p className="cl-erreur" role="alert"><AlertTriangle size={18} /> {erreur}</p>}
       {avantTableau}
 
-      {/* Tableau */}
       <div className="cl-table-cadre">
         <table className="cl-table">
           <thead>

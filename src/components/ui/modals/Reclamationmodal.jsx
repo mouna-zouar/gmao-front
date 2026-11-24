@@ -9,15 +9,6 @@ import { SOURCES_INFORMATION, optionsTypeEntretien } from '../../../constants/Fi
 import { champLieu } from '../../../services/lieuxCache';
 import { t } from '../../../i18n';
 
-/*
- * Fenêtre « Nouvelle réclamation » / « Modifier la réclamation », décrite par ses champs
- * (affichage, validation et envoi faits par ModaleFormulaire).
- * Création en assistant : Équipement (service puis équipement) → Vérifications → Description (avec la classification).
- *
- * valeursInitiales (création) : { lotArticleImmobilistationId, description, criticite, urgence, type, sourceInformation }
- * — fiche équipement, scan d'un QR code, alerte machine.
- */
-
 const NIVEAUX = [
   { value: 1, label: 'Faible' },
   { value: 2, label: 'Moyenne' },
@@ -33,7 +24,6 @@ const SECTIONS = [
 
 function champs(reclamation) {
   const liste = [
-    // ── Lieu puis équipement (création) : un lieu seul suffit pour un problème sans équipement précis ──
     champLieu({ creation: true, section: 'equipement', largeur: 'pleine' }),
     {
       nom: 'lotArticleImmobilistationId', label: 'Équipement', type: 'equipement', creation: true,
@@ -42,7 +32,6 @@ function champs(reclamation) {
       lieu: 'lieuId',
       aide: 'Tapez le nom, la marque, le n° de série ou le code-barre, ou scannez l’étiquette. Le bon de maintenance sera créé pour cet équipement à la prise en charge.',
     },
-    // ── Vérifications (création) : réponses envoyées en « checklist » ──
     {
       nom: 'checklist', label: '', type: 'personnalise', creation: true, section: 'verifications', largeur: 'pleine', defaut: {},
       rendu: ({ valeur, changer, valeurs }) => (!valeurs.lotArticleImmobilistationId && valeurs.lieuId
@@ -69,16 +58,12 @@ function champs(reclamation) {
       transformer: (v) => (v === '' || v == null ? null : Number(v)),
     },
     { nom: 'codePanneSource', cache: true, transformer: (v, valeurs) => (valeurs.codePanneId ? (v || 'MANUEL') : null) },
-    // Numéro et N° interne : non affichés (attribués par le serveur), gardés tels quels en modification
     { nom: 'num', cache: true },
     { nom: 'n', cache: true },
-    // Prestataire : vient des paramètres système (non affiché)
     { nom: 'prestataireId', cache: true },
     { nom: 'prestataireNom', cache: true },
-    // Service : non affiché, déduit du lieu (ou de l'équipement) par le serveur ; gardé tel quel en modification
     { nom: 'serviceId', cache: true },
     { nom: 'serviceNom', cache: true },
-    // ── Classification (avec la description) ──
     { nom: 'criticite', label: 'Criticité', type: 'liste', section: 'general', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
     { nom: 'urgence', label: 'Urgence', type: 'liste', section: 'general', options: NIVEAUX, optionVide: '— Non renseigné —', traduireOptions: true },
     { nom: 'type', label: 'Type d’entretien', type: 'liste', section: 'general', options: (v) => optionsTypeEntretien(v.type), optionVide: '— Non renseigné —', traduireOptions: true },
@@ -87,7 +72,6 @@ function champs(reclamation) {
   return liste;
 }
 
-/** Qui fait la demande (création) : suivi dans Mon espace → « Mes demandes ». */
 function createur() {
   const u = authService.getCurrentUser();
   const id = u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
@@ -101,7 +85,6 @@ export default function ReclamationModal({ isOpen, onClose, onSave, reclamation,
   const objet = isEditing ? reclamation : null;
   const liste = useMemo(() => champs(objet), [objet]);
 
-  // Prestataire des paramètres système, relu à chaque ouverture
   const [prestataireParametre, setPrestataireParametre] = useState(null);
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -110,7 +93,6 @@ export default function ReclamationModal({ isOpen, onClose, onSave, reclamation,
     return () => { annule = true; };
   }, [isOpen]);
 
-  // Création : service et prestataire de l'utilisateur, puis ce que propose l'appelant
   const initiales = useMemo(() => {
     if (isEditing) return null;
     const ctx = authService.getContexteMetier();
@@ -119,9 +101,7 @@ export default function ReclamationModal({ isOpen, onClose, onSave, reclamation,
 
   const enregistrer = (payload, { creation }) => onSave({
     ...payload,
-    // Création : prestataire imposé par les paramètres système (sinon celui de la session)
     ...(creation && prestataireParametre ? { prestataireId: prestataireParametre, prestataireNom: null } : {}),
-    // L'affectation se fait avec « Affecter » : en modification, le technicien actuel est renvoyé tel quel
     ...(creation ? createur() : {
       personnelAffecteId: reclamation?.personnelAffecteId ?? null,
       personnelAffecteNom: reclamation?.personnelAffecteNom ?? null,

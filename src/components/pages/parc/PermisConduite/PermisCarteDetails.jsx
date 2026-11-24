@@ -3,11 +3,6 @@ import { CreditCard, Pencil, Printer, User, X } from 'lucide-react';
 import { t, locale } from '../../../../i18n';
 import './PermisConduite.css';
 
-/*
- * Fiche du permis de conduire au format tunisien (carte en 3D), sortie de PermisConduite.jsx.
- * Échap ou un clic à côté ferme la fiche.
- */
-
 const CATEGORIE_LABELS = {
   A1: 'A1', A: 'A', B: 'B', B_E: 'B+E', C: 'C', C_E: 'C+E', D: 'D', D_E: 'D+E', F: 'F',
 };
@@ -37,7 +32,6 @@ export default function PermisCarteDetails({ permis, personnel, expire, onFermer
         className="pcd-modal"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Barre d'actions de la popup */}
         <div className="pcd-modal-bar">
           <div className="pcd-modal-bar-left">
             <CreditCard size={16} strokeWidth={2.4} />
@@ -73,13 +67,11 @@ export default function PermisCarteDetails({ permis, personnel, expire, onFermer
           </div>
         </div>
 
-        {/* Scène 3D */}
         <div className="pcd-permis-stage">
           <div className="pcd-permis-3d">
             <div className="pcd-permis">
               <div className="pcd-permis-face">
 
-                {/* ─── EN-TÊTE ─── */}
                 <div className="pcd-permis-header">
                   <div className="pcd-header-fr">
                     <div className="pcd-country-fr">REPUBLIQUE TUNISIENNE</div>
@@ -99,10 +91,8 @@ export default function PermisCarteDetails({ permis, personnel, expire, onFermer
                   </div>
                 </div>
 
-                {/* ─── CORPS ─── */}
                 <div className="pcd-permis-body">
 
-                  {/* Photo */}
                   <div className="pcd-photo-col">
                     <div className="pcd-photo">
                       {personnel ? (
@@ -121,7 +111,6 @@ export default function PermisCarteDetails({ permis, personnel, expire, onFermer
                     </div>
                   </div>
 
-                  {/* Lignes */}
                   <div className="pcd-lines">
 
                     <div className="pcd-line">
@@ -230,13 +219,11 @@ export default function PermisCarteDetails({ permis, personnel, expire, onFermer
                   </div>
                 </div>
 
-                {/* Filigrane */}
                 <div className="pcd-watermark" aria-hidden="true">
                   <div className="pcd-watermark-circle" />
                   <div className="pcd-watermark-shield">🛡</div>
                 </div>
 
-                {/* Reflet */}
                 <div className="pcd-permis-shine" aria-hidden="true" />
               </div>
             </div>

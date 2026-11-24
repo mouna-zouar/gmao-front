@@ -8,8 +8,7 @@ export default function PageModal({
   title,
   subtitle,
   icon,
-  eyebrow, // petit libellé au-dessus du titre, comme dans les modales
-  // L'ancien paramètre « accent » est ignoré : toutes les fenêtres ont la couleur des modales.
+  eyebrow,
   size = 'xl',
   children,
 }) {

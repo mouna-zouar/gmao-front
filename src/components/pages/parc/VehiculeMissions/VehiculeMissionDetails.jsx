@@ -5,7 +5,7 @@ import {
   AlertTriangle, Timer,
 } from 'lucide-react';
 import vehiculeBonCarburantService from '../../../../services/vehiculeBonCarburantService';
-import vehiculeAmendeService from '../../../../services/vehiculeAmendeService';
+import vehiculeAmendeService from '../../../../services/Vehiculeamendeservice';
 import { carburantTypeLabel } from '../../../../constants/carburantType';
 import { TYPES_INFRACTION, STATUTS as STATUTS_AMENDE, ltr } from '../../../../constants/Amendelibelles';
 import { imprimerFiche } from '../../../../utils/imprimerListe';
@@ -13,7 +13,6 @@ import { t, locale } from '../../../../i18n';
 import '../../Reclamations/Reclamationdetails.css';
 import './VehiculeMissionDetails.css';
 
-// 0 = Planifiée, 1 = En cours, 2 = Terminée, 3 = Annulée
 const ETAT_EN_CLAIR = {
   0: { texte: 'Planifiée', ton: 'action' },
   1: { texte: 'En cours', ton: 'attention' },
@@ -43,7 +42,6 @@ function duree(debut, fin) {
 }
 const nomPersonne = (p) => (p ? `${p.nom || ''} ${p.prenom || ''}`.trim() : null);
 
-/** Étapes de la mission : planifiée → démarrée → terminée (ou annulée). */
 function construireParcours(m) {
   const annulee = m.etat === 3;
   const demarree = m.etat >= 1 && m.etat !== 3 || !!m.dateDebutReel;
@@ -62,7 +60,6 @@ function construireParcours(m) {
     },
   ];
   if (annulee) etapes.push({ key: 'annulee', label: 'Annulée', icon: XCircle, statut: 'probleme', detail: m.motifExecution || t('Mission annulée') });
-  // Planifiée seulement : l'étape actuelle est « Démarrée » (à faire)
   if (m.etat === 0) etapes[0].statut = 'fait';
   return etapes;
 }
@@ -204,7 +201,6 @@ export default function VehiculeMissionDetails({
 
   return (
     <div className="rcx-page vmd-page">
-      {/* ===== Barre du haut ===== */}
       <div className="rcx-barre">
         <button type="button" className="rcx-btn rcx-btn--clair" onClick={onBack}>
           <ArrowLeft size={18} className="vmd-retour" /> {t('Toutes les missions')}
@@ -222,7 +218,6 @@ export default function VehiculeMissionDetails({
         </div>
       </div>
 
-      {/* ===== La mission, en clair ===== */}
       <section className="rcx-identite" aria-label={t('Informations générales de la mission')}>
         <div className={`rcx-bracelet rcx-ton--${etat.ton}`}>
           <span className="rcx-bracelet-etat">{t(etat.texte)}</span>
@@ -253,7 +248,6 @@ export default function VehiculeMissionDetails({
 
       <div className="rcx-grille">
         <div className="rcx-col-principale">
-          {/* ===== Parcours ===== */}
           <section className="rcx-parcours" aria-label={t('Parcours de la mission')}>
             <div className="rcx-parcours-entete">
               <h2>{t('Parcours de la mission')}</h2>
@@ -275,7 +269,6 @@ export default function VehiculeMissionDetails({
             </ol>
           </section>
 
-          {/* ===== À faire maintenant ===== */}
           {action && (
             <div className="rcx-duo rcx-duo--seul">
               <section className={`rcx-maintenant rcx-maintenant--${action.ton}`} aria-label={t('À faire maintenant')}>
@@ -296,7 +289,6 @@ export default function VehiculeMissionDetails({
 
           {erreur && <p className="vmd-erreur"><AlertTriangle size={16} /> {erreur}</p>}
 
-          {/* ===== Bons de carburant ===== */}
           <section className="rcx-bons" aria-label={t('Bons de carburant')}>
             <div className="rcx-bons-entete">
               <h2><Fuel size={19} className="vmd-icone-titre" /> {t('Bons de carburant')} <span className="vmd-compte">{bons.length}</span></h2>
@@ -342,7 +334,6 @@ export default function VehiculeMissionDetails({
             )}
           </section>
 
-          {/* ===== Amendes ===== */}
           <section className="rcx-bons" aria-label={t('Amendes')}>
             <div className="rcx-bons-entete">
               <h2><Receipt size={19} className="vmd-icone-titre" /> {t('Amendes')} <span className="vmd-compte">{amendes.length}</span></h2>

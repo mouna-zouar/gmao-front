@@ -5,12 +5,6 @@ import { dateFormation, nomPersonnel } from './formationLibelles';
 import { t } from '../../../i18n';
 import './Formations.css';
 
-/*
- * Assistant de choix des intervenants : techniciens proposés pour l'équipement (du bon ou donné),
- * classés selon les interventions et tâches déjà faites dessus, sur sa famille, et leurs formations.
- * onChoisir(personnelId, personnelNom) ; choisi : identifiant déjà sélectionné (mis en évidence).
- * personnels : liste du personnel, pour retrouver le nom quand l'historique ne l'a pas gardé.
- */
 export default function AssistantIntervenants({ bonMaintenanceId, lotArticleImmobilistationId, onChoisir, choisi, personnels = [] }) {
   const [suggestions, setSuggestions] = useState(null);
   const cle = bonMaintenanceId || lotArticleImmobilistationId ? `${bonMaintenanceId}|${lotArticleImmobilistationId}` : '';

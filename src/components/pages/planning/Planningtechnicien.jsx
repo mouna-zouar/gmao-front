@@ -1,16 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import planningService from '../../../services/planningService';
-import './PlanningTechnicien.css';
+import './Planningtechnicien.css';
 import { t, locale } from '../../../i18n';
 import { ChevronLeft, ChevronRight, Clock, Hash, LoaderCircle, Monitor, Search, X } from 'lucide-react';
 import Pagination from '../../commun/Pagination';
-
-/*
- * Planning technicien — une carte par technicien pour la journée choisie :
- * statut (disponible / en intervention), mini-frise horaire, puis chaque intervention
- * avec l'équipement (immobilisation) bien visible, le bon et l'état.
- */
 
 const ETATS = {
   0: { label: 'Nouveau', classe: 'nouveau' },
@@ -38,7 +32,6 @@ function duree(d, f) {
   return r ? t('{h} h {m}', { h, m: pad(r) }) : t('{h} h', { h });
 }
 
-/* Mini-frise de la journée : plage horaire commune à toutes les cartes (au moins 7 h → 19 h). */
 function Frise({ creneaux, plage, jour }) {
   const [hMin, hMax] = plage;
   const debut = new Date(jour); debut.setHours(hMin, 0, 0, 0);
@@ -92,7 +85,6 @@ export default function PlanningTechnicien() {
   useEffect(() => { charger(); }, [charger]);
   useEffect(() => { setPage(1); }, [jour, recherche, filtreStatut, pageSize]);
 
-  // Créneaux préparés (dates, état), triés par heure
   const donnees = useMemo(() => techniciens.map((tech) => ({
     ...tech,
     lignes: (tech.creneaux ?? []).map((c) => ({
@@ -106,7 +98,6 @@ export default function PlanningTechnicien() {
     interventions: donnees.reduce((s, x) => s + x.lignes.length, 0),
   }), [donnees]);
 
-  // Plage horaire commune : 7 h → 19 h, élargie si une intervention déborde
   const plage = useMemo(() => {
     let a = 7; let b = 19;
     donnees.forEach((x) => x.lignes.forEach((c) => {
@@ -138,7 +129,6 @@ export default function PlanningTechnicien() {
 
   return (
     <div className="ptn-page">
-      {/* Barre haute : journée + recherche */}
       <div className="ptn-haut">
         <div className="ptn-nav">
           <button type="button" className="ptn-icone" onClick={() => changerJour(-1)} aria-label={t('Jour précédent')} title={t('Jour précédent')}>
@@ -160,7 +150,6 @@ export default function PlanningTechnicien() {
         </label>
       </div>
 
-      {/* Bande de synthèse = filtres */}
       <div className="ptn-kpis" role="group" aria-label={t('Filtrer par statut')}>
         <button type="button" className={`ptn-kpi ${filtreStatut === 'tous' ? 'is-actif' : ''}`} onClick={() => setFiltreStatut('tous')}>
           <span>{t('Techniciens')}</span><b>{donnees.length}</b>

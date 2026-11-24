@@ -5,7 +5,7 @@ import {
   MessageSquareWarning, OctagonAlert, RefreshCw, Timer, Wrench,
 } from 'lucide-react';
 import tableauDeBordService from '../../../services/tableauDeBordService';
-import { Badge, Barres, Carte, Liste, PLEIN, Repartition, Stat, Vide } from '../../commun/TableauBord';
+import { Badge, Barres, Carte, Liste, Repartition, Stat, Vide } from '../../commun/TableauBord';
 import { Bulle, useLargeur } from '../Supervision/Supervision';
 import { ilYa } from '../../ui/Veille/Veille';
 import PerformanceEmployes from '../PerformanceEmployes/PerformanceEmployes';
@@ -15,14 +15,6 @@ import '../Supervision/Supervision.css';
 import './TableauDeBord.css';
 import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 
-/*
- * Tableau de bord global de la GMAO : l'essentiel de chaque module sur une page, pour une période.
- * Même style que les autres tableaux de bord (bons, réclamations, parc) : en-tête en carte,
- * cartes d'indicateurs avec icône, cartes de graphiques avec pastille de sous-titre.
- * Chaque indicateur et chaque ligne mène à la page qui permet d'agir.
- */
-
-/* Séries de l'activité : ordre fixe (validé daltonisme), la couleur suit la série. */
 const SERIES = [
   { cle: 'reclamations', label: 'Réclamations reçues', couleur: '#0794a4' },
   { cle: 'bonsCrees', label: 'Bons créés', couleur: '#eb6834' },
@@ -60,9 +52,9 @@ const PARTIES = {
   activite: 'activité', reclamations: 'réclamations', bons: 'bons', sla: 'délais SLA', couts: 'coûts',
   equipements: 'équipements', disponibilite: 'disponibilité', alertes: 'alertes machines',
   conditionnelle: 'maintenance conditionnelle', renouvellement: 'plan de renouvellement', parc: 'parc véhicules',
+  performance: 'indicateurs de performance',
 };
 
-/* Parties retirées de cette page (parc de véhicules, maintenance conditionnelle) : pas de message si elles manquent */
 const MASQUEES = new Set(['parc', 'conditionnelle']);
 
 const PERIODES = [
@@ -73,11 +65,8 @@ const PERIODES = [
 ];
 const CLE_PERIODE = 'gmao.tableau-de-bord.periode';
 
-/* ---------- Formats ---------- */
-
 const nb = (v, d = 0) => (v == null || Number.isNaN(Number(v)) ? '—' : Number(v).toLocaleString(locale(), { maximumFractionDigits: d }));
 const pct = (v) => (v == null ? '—' : `${nb(v, v >= 99.5 && v < 100 ? 1 : 0)} %`);
-/* Isolé de gauche à droite : en arabe, « 12 k DT » ne doit pas devenir « k DT 12 ». */
 const dt = (v, court = false) => {
   if (v == null || Number.isNaN(Number(v))) return '—';
   const n = Number(v);
@@ -98,14 +87,12 @@ const dateCourte = (iso, pas) => {
 };
 const moisCourt = (k) => new Date(`${k}-01T00:00:00`).toLocaleDateString(locale(), { month: 'short' }).replace('.', '');
 
-/** Évolution par rapport à la période précédente : « +12 % » (ou null si rien à comparer). */
 function evolution(actuel, precedent) {
   if (actuel == null || precedent == null || precedent === 0) return null;
   const v = ((actuel - precedent) / precedent) * 100;
   return `⁦${v > 0 ? '+' : ''}${nb(v)} %⁩`;
 }
 
-/* Taux (délais) : vert ≥ 90 %, ambre ≥ 75 %, rouge en dessous. */
 const tonTaux = (v) => (v == null ? 'gris' : v >= 90 ? 'vert' : v >= 75 ? 'ambre' : 'rouge');
 
 function lire(cle, defaut, options) {
@@ -115,7 +102,7 @@ function lire(cle, defaut, options) {
   } catch { return defaut; }
 }
 function ecrire(cle, v) {
-  try { localStorage.setItem(cle, String(v)); } catch { /* stockage indisponible */ }
+  try { localStorage.setItem(cle, String(v)); } catch {}
 }
 
 function graduations(max, n = 4) {
@@ -127,9 +114,6 @@ function graduations(max, n = 4) {
   for (let v = 0; v < max + pas && l.length < 8; v += pas) l.push(Math.round(v * 1e6) / 1e6);
   return l;
 }
-
-/* Briques communes : src/components/commun/TableauBord.jsx */
-/* ---------- Graphique : activité (3 courbes, un seul axe, info-bulle au survol) ---------- */
 
 function GraphiqueActivite({ tranches, pas }) {
   const [ref, w] = useLargeur();
@@ -192,8 +176,6 @@ function GraphiqueActivite({ tranches, pas }) {
   );
 }
 
-/* ---------- Graphique : coûts par mois (colonnes, valeur au-dessus) ---------- */
-
 function GraphiqueCouts({ parMois }) {
   const mois = Object.entries(parMois || {});
   const max = Math.max(1, ...mois.map(([, v]) => v || 0));
@@ -211,7 +193,58 @@ function GraphiqueCouts({ parMois }) {
   );
 }
 
-/* Respect des délais par priorité. */
+const tonPreventif = (v) => (v == null ? 'gris' : v >= 60 ? 'vert' : v >= 40 ? 'ambre' : 'rouge');
+const tonDispo = (v) => (v == null ? 'gris' : v >= 95 ? 'vert' : v >= 85 ? 'ambre' : 'rouge');
+
+function IndicateursPerformance({ rapport }) {
+  const g = rapport.global;
+  const tuiles = [
+    { label: 'Bons', valeur: nb(g.nbBons), ton: 'teal' },
+    { label: 'Préventif / curatif', valeur: pct(g.partPreventifPct), ton: tonPreventif(g.partPreventifPct) },
+    { label: 'Délai d’intervention', valeur: heures(g.delaiInterventionHeures), ton: 'bleu' },
+    { label: 'Délai de résolution', valeur: heures(g.delaiResolutionHeures), ton: 'violet' },
+    { label: 'MTBF', valeur: heures(g.mtbfHeures), ton: 'teal' },
+    { label: 'MTTR', valeur: heures(g.mttrHeures), ton: 'orange' },
+    { label: 'Disponibilité', valeur: pct(g.disponibilitePct), ton: tonDispo(g.disponibilitePct) },
+  ];
+  const services = (rapport.lignes || []).filter((l) => l.nbBons > 0 || l.nbEquipements > 0).slice(0, 5);
+  return (
+    <>
+      <div className="tb-kpis">
+        {tuiles.map((k) => (
+          <div key={k.label} className={`tb-kpi tb-kpi--${k.ton}`}>
+            <b>{k.valeur}</b>
+            <span>{t(k.label)}</span>
+          </div>
+        ))}
+      </div>
+      {services.length > 0 && (
+        <table className="tb-table">
+          <thead>
+            <tr>
+              <th>{t('Service')}</th><th>{t('Bons')}</th><th>{t('Préventif / curatif')}</th>
+              <th>{t('Délai d’intervention')}</th><th>{t('MTBF')}</th><th>{t('MTTR')}</th><th>{t('Disponibilité')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {services.map((l) => (
+              <tr key={l.cle}>
+                <td dir="auto">{t(l.libelle)}</td>
+                <td className="tb-num">{nb(l.nbBons)}</td>
+                <td>{l.partPreventifPct == null ? '—' : <Badge ton={tonPreventif(l.partPreventifPct)}>{pct(l.partPreventifPct)}</Badge>}</td>
+                <td className="tb-num">{heures(l.delaiInterventionHeures)}</td>
+                <td className="tb-num">{heures(l.mtbfHeures)}</td>
+                <td className="tb-num">{heures(l.mttrHeures)}</td>
+                <td>{l.disponibilitePct == null ? '—' : <Badge ton={tonDispo(l.disponibilitePct)}>{pct(l.disponibilitePct)}</Badge>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </>
+  );
+}
+
 function SlaParPriorite({ lignes }) {
   return (
     <table className="tb-table">
@@ -237,8 +270,6 @@ function SlaParPriorite({ lignes }) {
     </table>
   );
 }
-
-/* ---------- Page ---------- */
 
 export default function TableauDeBord() {
   const navigate = useNavigate();
@@ -269,7 +300,6 @@ export default function TableauDeBord() {
   }, [jours, lieuId]);
 
   useEffect(() => { charger(); }, [charger]);
-  // Rafraîchi toutes les 5 minutes tant que la page est visible
   useEffect(() => {
     const id = setInterval(() => { if (!document.hidden) charger(); }, 5 * 60 * 1000);
     return () => clearInterval(id);
@@ -285,6 +315,7 @@ export default function TableauDeBord() {
   const couts = d.couts;
   const eq = d.equipements;
   const dispo = d.disponibilite;
+  const perf = d.performance;
   const al = d.alertes;
   const rv = d.renouvellement;
   const pas = d.periode?.pas;
@@ -295,7 +326,6 @@ export default function TableauDeBord() {
   const evolRec = rec ? evolution(rec.recuesPeriode, rec.recuesPeriodePrecedente) : null;
   const evolCout = couts ? evolution(couts.total, couts.totalPrecedent) : null;
   const indisponibles = useMemo(() => (d.indisponibles || []).filter((k) => !MASQUEES.has(k)).map((k) => t(PARTIES[k] || k)), [d.indisponibles]);
-  /* Compteurs affichés à côté des pages dans « Accès à la GMAO » */
   const compteurs = {
     '/reclamations': rec && { valeur: recOuvertes, ton: rec.nonAffectees ? 'orange' : 'teal' },
     '/bons-maintenance': bons && { valeur: bons.ouverts, ton: sla?.enRetard ? 'rouge' : 'teal' },
@@ -309,7 +339,6 @@ export default function TableauDeBord() {
 
   return (
     <div className="tb-container">
-      {/* En-tête */}
       <div className="tb-header">
         <div className="tb-header-icone"><LayoutDashboard size={24} strokeWidth={2} aria-hidden="true" /></div>
         <div className="tb-header-texte">
@@ -346,7 +375,6 @@ export default function TableauDeBord() {
 
       {donnees && (
         <>
-          {/* ===== Indicateurs clés ===== */}
           <div className="tb-stats">
             <Stat featured lien="/bons-maintenance?vue=a-traiter" icone={Wrench} ton="teal" valeur={nb(bons?.ouverts)} label={t('Bons ouverts')}
               badge={sla ? (sla.enRetard ? <Badge ton="rouge">{t('{n} en retard', { n: sla.enRetard })}</Badge> : <Badge ton="vert">{t('Aucun retard')}</Badge>) : null}
@@ -367,7 +395,15 @@ export default function TableauDeBord() {
               sous={couts ? (evolCout ? t('{e} vs période précédente', { e: evolCout }) : t('{n} bons', { n: nb(couts.bons) })) : null} />
           </div>
 
-          {/* ===== Activité + bons ouverts ===== */}
+          {perf?.global && (
+            <div className="tb-ligne-cartes">
+              <Carte titre={t('Indicateurs de performance')} pastille={libellePeriode}>
+                <IndicateursPerformance rapport={perf} />
+                <p className="tb-note"><Link to="/indicateurs">{t('Voir le détail par service, famille ou équipement')}</Link></p>
+              </Carte>
+            </div>
+          )}
+
           <div className="tb-ligne-cartes tb-ligne-cartes--2-1">
             <Carte titre={t('Activité de maintenance')} pastille={pas === 'MOIS' ? t('par mois') : pas === 'SEMAINE' ? t('par semaine') : t('par jour')}>
               {d.activite ? (d.activite.some((x) => x.reclamations + x.bonsCrees + x.bonsClotures)
@@ -390,7 +426,6 @@ export default function TableauDeBord() {
             </Carte>
           </div>
 
-          {/* ===== À traiter en priorité ===== */}
           <div className="tb-ligne-cartes tb-ligne-cartes--1-1">
             <Carte className="tb-carte--liste" titre={t('Bons en retard (SLA)')}
               pastille={sla ? t('{n} en retard', { n: nb(sla.enRetard) }) : null} pastilleTon={sla?.enRetard ? 'rouge' : null}>
@@ -423,7 +458,6 @@ export default function TableauDeBord() {
             </Carte>
           </div>
 
-          {/* ===== Délais, préventif, état des équipements ===== */}
           <div className="tb-ligne-cartes tb-ligne-cartes--3">
             <Carte titre={t('Délais SLA par priorité')} pastille={sla ? t('{n} bons', { n: nb(sla.bonsAnalyses) }) : null}>
               {sla ? (sla.parPriorite.length ? <SlaParPriorite lignes={sla.parPriorite} /> : <Vide>{t('Aucun bon sur la période.')}</Vide>) : indispo('sla')}
@@ -450,7 +484,6 @@ export default function TableauDeBord() {
             </Carte>
           </div>
 
-          {/* ===== Coûts ===== */}
           <div className="tb-ligne-cartes tb-ligne-cartes--2-1">
             <Carte titre={t('Coûts de maintenance par mois')} pastille={t('12 derniers mois')}>
               {couts ? (
@@ -476,7 +509,6 @@ export default function TableauDeBord() {
             </Carte>
           </div>
 
-          {/* ===== Pannes ===== */}
           <div className="tb-ligne-cartes tb-ligne-cartes--1-1">
             <Carte titre={t('Équipements avec le plus de pannes')} pastille={dispo ? t('{n} pannes', { n: nb(dispo.pannes) }) : null}>
               {dispo ? (dispo.plusDePannes.length
@@ -493,10 +525,8 @@ export default function TableauDeBord() {
             </Carte>
           </div>
 
-          {/* ===== Performance des employés ===== */}
           <PerformanceEmployes jours={jours} onOuvrirChrono={() => navigate('/bons-maintenance?chrono=1')} />
 
-          {/* ===== Bons les plus anciens ===== */}
           <div className="tb-ligne-cartes">
             <Carte className="tb-carte--liste" titre={t('Bons ouverts depuis le plus longtemps')} pastille={bons ? t('{n} au total', { n: nb(bons.ouverts) }) : null}>
               {bons ? (bons.plusAnciens.length ? (

@@ -1,19 +1,6 @@
 import { t } from '../../i18n';
 import './commun.css';
 
-/*
- * Statistiques d'en-tête en pastilles (chiffre + libellé), comme la liste des bons de maintenance.
- * Placées dans l'en-tête d'une page, elles occupent une ligne entière sous le titre.
- *
- *   <PastillesStats stats={[
- *     { label: 'Total', valeur: 12, actif: filtre === 'all', onClick: () => setFiltre('all') },
- *     { label: 'En panne', valeur: 3, ton: 'rouge', icone: CircleX, onClick: … },
- *     { label: 'Coût', valeur: '1 200 DT', couleur: '#7c3aed' },
- *   ]} />
- *
- * ton : teal (défaut), vert, rouge, orange, ambre, bleu, violet, gris — ou couleur : n'importe quelle couleur CSS.
- * Avec onClick, la pastille devient un bouton (filtre) ; actif la remplit de sa couleur.
- */
 export const COULEURS_TONS = {
   teal: '#0794a4',
   vert: '#059669',

@@ -1,4 +1,3 @@
-/* Fenêtres du cycle de vie d'une réclamation (Affecter, Annuler, Rouvrir, Résoudre) */
 .rec-fenetre.confirm-modal-container { max-width: 470px; }
 .rec-fenetre .confirm-modal-input {
   width: 100%;
@@ -42,7 +41,6 @@
 .rcz-historique .bmz-carte-titre { display: flex; align-items: center; gap: 6px; }
 .bmz-col:has(.rcz-historique) .rcz-bons { flex: 0 1 auto; max-height: 45%; }
 
-/* Vérifications faites par le demandeur (page de détail) */
 .rcz-checklist { margin: 0 0 12px; border: 1px solid var(--z-trait, #e2e8f0); border-radius: 10px; }
 .rcz-checklist summary { display: flex; align-items: center; gap: 6px; padding: 8px 10px; cursor: pointer; font-size: 13px; font-weight: 700; color: var(--z-encre, #0f172a); list-style: none; }
 .rcz-checklist summary::-webkit-details-marker { display: none; }
@@ -54,5 +52,12 @@
 .rcz-ck-rep--non { color: #b8323a; }
 .rcz-ck-rep--sans-objet { color: #94a3b8; }
 .rcz-lecture { margin: 0 0 12px; }
-/* Fenêtre « Affecter » (Modale commune) : erreur dans le pied */
 .rec-affecter-modale .cm-modale__pied .rec-affecter-erreur { margin: 0; padding: 6px 10px; }
+
+.rec-groupe-membres { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; }
+.rec-groupe-membres li { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border-radius: 999px;
+  background: var(--g-brand-50, #e9f8fa); border: 1px solid var(--g-brand-100, #c8eef2); color: var(--g-brand-700, #05606b);
+  font-size: 0.8rem; font-weight: 600; }
+.rec-groupe-membres button { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
+.rec-groupe-membres button:hover { background: rgba(5, 96, 107, 0.12); }

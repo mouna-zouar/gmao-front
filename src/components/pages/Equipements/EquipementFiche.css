@@ -1,4 +1,3 @@
-/* Fiche équipement : même présentation que les autres pages (en-tête blanc, indicateurs, onglets) */
 .eqf-page { max-width: none; }
 
 .eqf-entete {
@@ -27,21 +26,18 @@
 @media (max-width: 1180px) { .eqf-grille { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 720px) { .eqf-grille { grid-template-columns: 1fr; } }
 
-/* Lignes « libellé → valeur » */
 .eqf-lignes { margin: 0; display: flex; flex-direction: column; }
 .eqf-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--g-slate-100); }
 .eqf-ligne:last-child { border-bottom: 0; }
 .eqf-ligne dt { color: var(--g-slate-500); font-size: 0.84rem; font-weight: 500; }
 .eqf-ligne dd { margin: 0; color: var(--g-slate-900); font-size: 0.86rem; font-weight: 600; text-align: end; min-width: 0; overflow-wrap: anywhere; }
 
-/* Tableaux des onglets */
 .eqf-table-cadre { overflow-x: auto; border: 1px solid var(--g-slate-200); border-radius: 12px; }
 .eqf-table { width: 100%; border-collapse: collapse; }
 .eqf-table th { padding: 11px 14px; background: var(--g-slate-50); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-brand-700, #0e7490); border-bottom: 1px solid var(--g-slate-200); }
 .eqf-table td { padding: 11px 14px; font-size: 0.86rem; color: var(--g-slate-700); border-bottom: 1px solid var(--g-slate-100); }
 .eqf-table tr:last-child td { border-bottom: 0; }
 
-/* Police et cartes du projet (les variables --eq-* viennent de .eq-theme) */
 .eqf-page { font-family: var(--g-police); font-size: 14px; background: transparent; }
 .eqf-page h1, .eqf-page h2 { font-family: var(--g-police); }
 .eqf-page .eq-bloc { padding: 18px 20px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg, 16px); background: var(--g-blanc); box-shadow: var(--g-ombre-xs, 0 1px 2px rgba(15, 23, 42, 0.05)); }

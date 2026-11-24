@@ -1,9 +1,3 @@
-/* =========================================================
-   TABLEAU DE BORD GLOBAL — même style que les autres tableaux de bord
-   (bons, réclamations, parc) : en-tête en carte, cartes d'indicateurs
-   avec icône, cartes de graphiques avec pastille de sous-titre.
-   ========================================================= */
-
 .tb-container {
   --tb-teal-700: var(--g-brand-600);
   --tb-teal-600: var(--g-brand-500);
@@ -23,7 +17,6 @@
 }
 @keyframes tbFondu { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-/* ── Chargement / erreur ── */
 .tb-chargement { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 60px 24px; color: var(--g-slate-500); font-size: 0.9rem; font-weight: 500; }
 .tb-chargement::before {
   content: ''; width: 28px; height: 28px; border-radius: 50%;
@@ -35,7 +28,6 @@
 .tb-message--erreur { color: var(--g-red-800); background: var(--g-red-100); border: 1px solid var(--g-red-300); }
 .tb-message--attention { color: var(--g-amber-700); background: var(--g-amber-50); border: 1px solid var(--g-amber-200); }
 
-/* ═══════════ EN-TÊTE ═══════════ */
 .tb-header {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   padding: 16px 24px;
@@ -75,7 +67,6 @@
 .tb-tourne { animation: tbTour 0.8s linear infinite; }
 .tb-maj { margin: -8px 0 0; font-size: 0.76rem; color: var(--g-slate-500); }
 
-/* ═══════════ CARTES D'INDICATEURS ═══════════ */
 .tb-section-titre { margin: 4px 0 -6px; font-size: 1rem; font-weight: 800; color: var(--g-slate-900); }
 .tb-section-titre small { display: block; margin-top: 2px; font-size: 0.8rem; font-weight: 500; color: var(--g-slate-500); }
 
@@ -105,7 +96,6 @@ a.tb-stat:focus-visible { outline: 2px solid var(--tb-teal-600); outline-offset:
 .tb-stat--featured .tb-stat-valeur { font-size: 1.85rem; }
 .tb-stat--featured .tb-stat-label { color: var(--g-slate-700); font-weight: 700; }
 
-/* Couleurs des icônes (même code que les autres tableaux de bord) */
 .tb-ton--neutre .tb-stat-icone { background: var(--g-slate-100); color: var(--g-slate-700); }
 .tb-ton--teal   .tb-stat-icone { background: var(--tb-teal-50); color: var(--tb-teal-700); border: 1px solid var(--tb-teal-100); }
 .tb-ton--vert   .tb-stat-icone { background: var(--g-emerald-100); color: var(--g-emerald-700); }
@@ -116,7 +106,6 @@ a.tb-stat:focus-visible { outline: 2px solid var(--tb-teal-600); outline-offset:
 .tb-ton--violet .tb-stat-icone { background: var(--g-violet-100); color: var(--g-violet-700, #6d28d9); }
 .tb-ton--rouge .tb-stat-valeur { color: var(--g-red-700); }
 
-/* ── Badges d'état ── */
 .tb-badge {
   display: inline-flex; align-items: center; gap: 5px;
   padding: 3px 9px; border-radius: 999px; border: 1px solid transparent;
@@ -131,7 +120,6 @@ a.tb-stat:focus-visible { outline: 2px solid var(--tb-teal-600); outline-offset:
 .tb-badge--rouge  { background: var(--g-red-100); color: var(--g-red-700); border-color: var(--g-red-300); }
 .tb-badge--gris   { background: var(--g-slate-100); color: var(--g-slate-600); border-color: var(--g-slate-200); }
 
-/* ═══════════ CARTES DE GRAPHIQUES ═══════════ */
 .tb-ligne-cartes { display: grid; gap: 14px; }
 .tb-ligne-cartes--2-1 { grid-template-columns: 1.4fr 1fr; }
 .tb-ligne-cartes--1-1 { grid-template-columns: 1fr 1fr; }
@@ -172,7 +160,6 @@ a.tb-stat:focus-visible { outline: 2px solid var(--tb-teal-600); outline-offset:
   color: var(--g-slate-400); font-size: 0.84rem; font-style: italic;
 }
 
-/* ── Barres horizontales ── */
 .tb-hbars { display: flex; flex-direction: column; gap: 10px; }
 .tb-hbar {
   display: grid; grid-template-columns: minmax(96px, 34%) 1fr auto; align-items: center; gap: 10px;
@@ -187,7 +174,6 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
 .tb-hbar-valeur { font-size: 0.8rem; font-weight: 800; color: var(--g-slate-900); text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tb-hbar-valeur small { font-weight: 500; color: var(--g-slate-400); margin-inline-start: 4px; }
 
-/* Dégradés (même famille que les autres tableaux de bord) */
 .tb-g--bleu   { background: linear-gradient(90deg, var(--g-blue-400), var(--g-blue-600)); }
 .tb-g--ambre  { background: linear-gradient(90deg, var(--g-amber-300), var(--g-amber-500)); }
 .tb-g--orange { background: linear-gradient(90deg, var(--g-orange-300, #fdba74), var(--g-orange-500)); }
@@ -197,11 +183,9 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
 .tb-g--violet { background: linear-gradient(90deg, var(--g-violet-400, #a78bfa), var(--g-violet-500)); }
 .tb-g--gris   { background: linear-gradient(90deg, var(--g-slate-300), var(--g-slate-400)); }
 
-/* ── Barre empilée (répartition) ── */
 .tb-empile { display: flex; gap: 2px; height: 12px; border-radius: 999px; overflow: hidden; background: var(--g-slate-100); margin-bottom: 14px; }
 .tb-empile > span { height: 100%; min-width: 3px; }
 
-/* ── Barres verticales (coûts par mois) ── */
 .tb-colonnes { display: flex; align-items: flex-end; gap: 8px; height: 210px; padding: 0 4px; }
 .tb-colonne { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 0; }
 .tb-colonne-valeur { height: 14px; margin-bottom: 6px; font-size: 0.66rem; font-weight: 700; color: var(--g-slate-700); white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -213,13 +197,11 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
 .tb-colonne-barre:hover { filter: brightness(1.08); }
 .tb-colonne-label { margin-top: 8px; font-size: 0.68rem; font-weight: 500; color: var(--g-slate-400); white-space: nowrap; }
 
-/* ── Légende ── */
 .tb-legende { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 12px 0 0; padding: 0; list-style: none; font-size: 0.78rem; color: var(--g-slate-500); font-weight: 600; }
 .tb-legende li { display: inline-flex; align-items: center; gap: 6px; }
 .tb-legende b { color: var(--g-slate-900); font-variant-numeric: tabular-nums; }
 .tb-legende i { display: inline-block; width: 12px; height: 4px; border-radius: 2px; }
 
-/* ── Listes d'éléments à traiter ── */
 .tb-liste { list-style: none; margin: -6px -22px 0; padding: 0; }
 .tb-liste li + li { border-top: 1px solid var(--g-slate-100); }
 .tb-liste button {
@@ -233,7 +215,6 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
 .tb-liste-texte strong { font-size: 0.84rem; font-weight: 700; color: var(--g-slate-900); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tb-liste-texte small { font-size: 0.75rem; color: var(--g-slate-500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* ── Tableau SLA ── */
 .tb-table { width: 100%; border-collapse: collapse; }
 .tb-table th {
   padding: 9px 10px; text-align: start; white-space: nowrap;
@@ -251,10 +232,8 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
 .tb-txt--rouge { color: var(--g-red-700); }
 .tb-txt--gris { color: var(--g-slate-400); }
 
-/* ── Graphique en courbes (SVG) ── */
 .tb-carte .sv-graph { margin-top: -4px; }
 
-/* ═══════════ ÉCRANS MOYENS ET TÉLÉPHONES ═══════════ */
 @media (max-width: 1100px) {
   .tb-ligne-cartes--3 { grid-template-columns: 1fr 1fr; }
 }
@@ -280,15 +259,8 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
   .tb-container, .tb-hbar-piste > span { animation: none; transition: none; }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
- * CARTES ET TABLEAUX DE BORD (design, lot 4)
- * Indicateurs comme sur le tableau de bord des réclamations : libellé en haut,
- * grand chiffre dessous, icône à droite ; cartes plus légères (sans trait sous le titre),
- * état « aucune donnée » discret, survol doux. Couleurs inchangées.
- * ══════════════════════════════════════════════════════════════════════ */
 .tb-container { gap: 16px; animation-duration: var(--g-duree-lente); }
 
-/* ── En-tête de page ── */
 .tb-header { padding: 16px 20px; border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-xs); }
 .tb-header-icone { width: 44px; height: 44px; border-radius: var(--g-rayon-md); }
 .tb-header h1 { font-size: 1.375rem; font-weight: 700; }
@@ -299,7 +271,6 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
 .tb-periodes button { font-weight: 600; border-radius: 6px; transition: background var(--g-duree-rapide) var(--g-courbe), color var(--g-duree-rapide) var(--g-courbe); }
 .tb-section-titre { margin-top: 8px; font-weight: 700; }
 
-/* ── Cartes d'indicateurs ── */
 .tb-stats { gap: 12px; }
 .tb-stat {
   display: grid; grid-template-columns: 1fr auto; grid-template-areas: 'texte icone';
@@ -309,7 +280,6 @@ button.tb-hbar:focus-visible { outline: 2px solid var(--tb-teal-600); outline-of
 }
 .tb-stat { grid-template-areas: 'texte icone' 'badge badge'; row-gap: 10px; }
 .tb-stat > div:last-child { grid-area: texte; display: flex; flex-direction: column; min-width: 0; }
-/* Icône en haut à droite, pastille (« 4 en retard ») sur toute la largeur sous le chiffre */
 .tb-stat-haut { display: contents; }
 .tb-stat-haut > .tb-stat-icone { grid-area: icone; }
 .tb-stat-haut > :not(.tb-stat-icone) { grid-area: badge; justify-self: start; }
@@ -324,14 +294,12 @@ a.tb-stat:focus-visible { outline: none; box-shadow: var(--g-anneau); }
 .tb-stat--featured { border-inline-start-width: 3px; }
 .tb-stat--featured .tb-stat-valeur { font-size: 1.875rem; }
 
-/* ── Cartes de graphiques ── */
 .tb-ligne-cartes { gap: 12px; }
 .tb-carte { padding: 18px 20px; border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-xs); }
 .tb-carte-tete { padding-bottom: 0; margin-bottom: 14px; border-bottom: 0; min-height: 26px; }
 .tb-carte-tete h3 { font-size: 0.9375rem; font-weight: 600; }
 .tb-pastille { font-weight: 600; letter-spacing: 0.04em; }
 .tb-badge { font-weight: 600; }
-/* Aucune donnée : discret, sans italique */
 .tb-vide { min-height: 96px; border: 1px dashed var(--g-slate-200); border-radius: var(--g-rayon-md); background: var(--g-slate-50); color: var(--g-slate-500); font-style: normal; font-size: var(--g-texte-sm); }
 .tb-hbar-label { font-weight: 500; }
 .tb-hbar-valeur { font-weight: 700; }

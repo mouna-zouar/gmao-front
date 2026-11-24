@@ -28,7 +28,6 @@ const ETAPES = {
 };
 
 const TERMINEES = new Set(['REPAREE', 'REFUSEE', 'ANNULEE', 'ANNULEE_DEMANDEUR']);
-/** Le demandeur peut annuler tant que la maintenance n'a pas créé de bon (la réparation n'a pas commencé). */
 const peutAnnuler = (d) => (d.etape === 'ENVOYEE' || d.etape === 'PRISE_EN_CHARGE') && !d.bonId;
 
 const FILTRES = [
@@ -44,16 +43,11 @@ function formaterDate(valeur) {
   return d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-/** Rang de l'étape dans le parcours normal ; la pause se situe pendant la réparation. */
-
 function personnelConnecte() {
   const u = authService.getCurrentUser();
   return u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
 }
 
-/* ───────────────────────── Tableau des demandes ───────────────────────── */
-
-// Ordre de tri « Étape » : en cours d'abord, puis réparées, puis refusées / annulées
 const RANG_ETAPE = { EN_PAUSE: 0, EN_REPARATION: 1, PRISE_EN_CHARGE: 2, ENVOYEE: 3, REPAREE: 4, REFUSEE: 5, ANNULEE: 6, ANNULEE_DEMANDEUR: 7 };
 
 function TableauDemandes({ demandes, cible, onOuvrir, onAnnuler }) {
@@ -126,8 +120,6 @@ function TableauDemandes({ demandes, cible, onOuvrir, onAnnuler }) {
   );
 }
 
-/* ───────────────────────── Page ───────────────────────── */
-
 export default function MesDemandes({ integre = false, onCharge, onOuvrir, demandeSignalement = 0 } = {}) {
   const [searchParams] = useSearchParams();
   const demandeCible = Number(searchParams.get('demande')) || null;
@@ -138,11 +130,9 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir, deman
   const [filtre, setFiltre] = useState('en-cours');
   const [modalOuvert, setModalOuvert] = useState(false);
   const [reclamationCreee, setReclamationCreee] = useState(null);
-  // Annulation par le demandeur : { demande, motif, envoi, erreur }
   const [annulation, setAnnulation] = useState(null);
   const refCible = useRef(null);
   const personnelId = personnelConnecte();
-  // « Signaler une panne » cliqué ailleurs (Mon espace → Aujourd'hui) : ouvre le formulaire
   useEffect(() => { if (demandeSignalement > 0) setModalOuvert(true); }, [demandeSignalement]);
 
   const charger = useCallback(async ({ silencieux = false } = {}) => {
@@ -166,14 +156,12 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir, deman
 
   useEffect(() => { charger(); }, [charger]);
 
-  // Revenir sur l'onglet met la liste à jour (la réparation a pu avancer entre-temps)
   useEffect(() => {
     const auRetour = () => { if (document.visibilityState === 'visible') charger({ silencieux: true }); };
     document.addEventListener('visibilitychange', auRetour);
     return () => document.removeEventListener('visibilitychange', auRetour);
   }, [charger]);
 
-  // Ouverte depuis une notification : afficher la demande visée, même si elle est terminée
   useEffect(() => {
     if (!demandeCible || demandes.length === 0) return;
     const cible = demandes.find((d) => d.reclamationId === demandeCible);

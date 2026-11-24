@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Button from '../Button';
 import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/personnelService';
+import personnelService from '../../../services/Personnelservice';
 import projetService from '../../../services/projetService';
 import vehiculeReservationService from '../../../services/vehiculeReservationService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
@@ -10,17 +10,14 @@ import { t, locale } from '../../../i18n';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
 import { CARBURANT_TYPE_OPTIONS, carburantTypeLabel } from '../../../constants/carburantType';
 import {
-  X, Car, User, Calendar, MapPin, Flag, Check, Loader2,
-  AlertTriangle, Save, Search, Clock, Route, FileText,
-  ChevronRight, ChevronDown, Sparkles, Shield, ShieldCheck, ShieldAlert,
+  X, Car, User, Calendar, Check, Loader2,
+  AlertTriangle, Save, Search, Route, FileText,
+  ChevronDown, ShieldCheck, ShieldAlert,
   Fuel, Plus, Trash2,
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeReservationModal.css';
 
-// Codes alignés sur le backend (voir commentaire sur le champ `etat`
-// dans VehiculeReservation.java) :
-// 0 = En attente, 1 = Acceptée, 2 = Refusée, 3 = Annulée, 4 = Terminée
 const ETAT_OPTIONS = [
   { value: 0, label: 'En attente', color: 'amber' },
   { value: 1, label: 'Acceptée', color: 'green' },
@@ -43,7 +40,6 @@ const emptyForm = {
   commentaire: '',
 };
 
-// ─── Sections de navigation ───
 const NAV_SECTIONS = [
   { id: 'vehicule', label: 'Véhicule',      Icon: Car },
   { id: 'periode',  label: 'Période',       Icon: Calendar },
@@ -96,7 +92,6 @@ function projetLabel(p) {
   return p.nom || p.code || t('Projet #{id}', { id: p.id });
 }
 
-// ─── Select avec recherche intégrée (combobox) ───
 const SearchableSelect = ({
   id,
   name,
@@ -289,10 +284,8 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
   const [eligibilite, setEligibilite] = useState(null);
   const [checkingEligibilite, setCheckingEligibilite] = useState(false);
 
-  // Bons de carburant de la réservation : déjà enregistrés (modification) ou à créer avec la réservation
   const [bonsReservation, setBonsReservation] = useState([]);
   const [bonsAAjouter, setBonsAAjouter] = useState([]);
-  // Saisie d'un plein directement dans l'onglet « Carburant » (pas de seconde fenêtre)
   const BON_VIDE = { date: '', montant: '', litres: '', kilometrage: '', typeCarburant: '', station: '' };
   const [formBon, setFormBon] = useState(BON_VIDE);
   const [saisieBonOuverte, setSaisieBonOuverte] = useState(false);
@@ -336,7 +329,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         await vehiculeBonCarburantService.create({ ...bon, reservationId: reservation.id });
         await chargerBonsReservation();
       } else {
-        // Réservation pas encore créée : le bon sera enregistré avec elle
         setBonsAAjouter((l) => [...l, bon]);
       }
       setSaisieBonOuverte(false);
@@ -503,7 +495,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
   useEffect(() => {
     if (!isOpen || !formData.vehiculeId || !formData.conducteurId) {
       setEligibilite(null);
-      setCheckingEligibilite(false); // un contrôle interrompu ne doit pas bloquer le bouton
+      setCheckingEligibilite(false);
       return;
     }
 
@@ -574,7 +566,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
       };
       const enregistree = await onSave(payload);
 
-      // Bons de carburant ajoutés pendant la création : liés à la réservation maintenant qu'elle existe
       const reservationId = enregistree?.id ?? reservation?.id ?? null;
       if (bonsAAjouter.length > 0) {
         if (reservationId == null) {
@@ -605,12 +596,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
     }
   };
 
-  const vehiculeLabel = vehicules.find((v) => String(v.id) === String(formData.vehiculeId));
-  const personnelLabel = personnels.find((p) => String(p.id) === String(formData.personnelId));
-  const conducteurLabel = personnels.find((p) => String(p.id) === String(formData.conducteurId));
-  const sourceLabel = emplacements.find((e) => String(e.id) === String(formData.sourceId));
-  const destinationLabel = emplacements.find((e) => String(e.id) === String(formData.destinationId));
-  const projetLabel_ = projets.find((p) => String(p.id) === String(formData.projetId));
   const duree = durationLabel(formData.dateDebut, formData.dateFin);
   const etatMeta = ETAT_OPTIONS.find((o) => o.value === Number(formData.etat)) ?? ETAT_OPTIONS[0];
 
@@ -990,7 +975,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               <p>{t('Pleins faits pendant cette réservation')}</p>
             </div>
 
-            {/* Résumé */}
             <div className="vmb-resume">
               <div className="vmb-stat">
                 <span className="vmb-stat-label">{t('Pleins')}</span>
@@ -1006,7 +990,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               </div>
             </div>
 
-            {/* Liste des pleins */}
             {tousBons.length === 0 && !saisieBonOuverte ? (
               <div className="vmb-vide">
                 <span className="vmb-vide-icone"><Fuel size={22} /></span>
@@ -1043,7 +1026,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
               </ul>
             )}
 
-            {/* Saisie d'un plein, directement ici */}
             {saisieBonOuverte ? (
               <div className="vmb-saisie">
                 <div className="vmb-saisie-entete">
@@ -1114,7 +1096,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
     <div className="modal-overlay" onClick={onClose}>
       <div className="bmm-modal bmm-modal--xl" onClick={(e) => e.stopPropagation()}>
 
-        {/* HEADER */}
         <div className="bmm-header">
           <div className="bmm-header-left">
             <div className="bmm-header-icon-wrap">
@@ -1138,10 +1119,8 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
           </div>
         </div>
 
-        {/* LAYOUT : NAV + CONTENU */}
         <form className="bmm-layout bmm-layout--with-preview vrm-layout--sans-apercu" onSubmit={handleSubmit}>
 
-          {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
             <div className="bmm-nav-title">{t('Sections')}</div>
             <nav className="bmm-nav-list">
@@ -1172,7 +1151,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
             </nav>
           </aside>
 
-          {/* CONTENU */}
           <div className="bmm-content">
             {renderContent()}
 
@@ -1185,7 +1163,6 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
           </div>
         </form>
 
-        {/* FOOTER */}
         <div className="bmm-footer">
           <div className="bmm-footer-left">
             <span className="bmm-footer-step">

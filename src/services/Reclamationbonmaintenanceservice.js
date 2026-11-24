@@ -15,12 +15,12 @@ const reclamationBonMaintenanceService = {
 
   async getBonMaintenancesByReclamation(reclamationId) {
     const { data } = await api.get(`/reclamation-bon-maintenance/reclamation/${reclamationId}/bon-maintenances`);
-    return data; // List<BonMaintenanceDTO>
+    return data;
   },
 
   async getReclamationsByBonMaintenance(bonMaintenanceId) {
     const { data } = await api.get(`/reclamation-bon-maintenance/bon-maintenance/${bonMaintenanceId}/reclamations`);
-    return data; // List<ReclamationDTO>
+    return data;
   },
 };
 

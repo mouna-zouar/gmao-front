@@ -6,7 +6,7 @@ import {
 import { PageListe, Badge } from '../../commun';
 import equipementService from '../../../services/equipementService';
 import etatEquipementService from '../../../services/Etatequipementservice';
-import disponibiliteService from '../../../services/Disponibiliteservice ';
+import disponibiliteService from '../../../services/Disponibiliteservice';
 import risqueService from '../../../services/Risqueservice';
 import serviceService from '../../../services/Serviceservice';
 import { obtenirEquipements } from '../../../store/referentiels';
@@ -16,12 +16,6 @@ import { imprimerEtiquettes } from '../Equipements/qrEtiquettes';
 import FiltreFamilleArbre, { filtrerParFamille } from './FiltreFamilleArbre';
 import { t, tp, locale } from '../../../i18n';
 import './ListeEquipements.css';
-
-/*
- * Liste des équipements : même présentation que les autres listes (PageListe) —
- * colonnes triables, recherche dans chaque colonne, barre d'actions, export et impression.
- * Double-clic sur une ligne : fiche de l'équipement.
- */
 
 const ETATS = {
   EN_SERVICE: { label: 'En service', ton: 'vert', icone: CircleCheck },
@@ -42,7 +36,7 @@ const joursDepuis = (iso) => {
 };
 const parId = (liste) => Object.fromEntries((liste ?? []).map((x) => [x.lotArticleImmobilistationId, x]));
 
-export default function ListeEquipements({ onPreventifs }) {
+export default function ListeEquipements({ onPreventifs, vues }) {
   const navigate = useNavigate();
   const [etats, setEtats] = useState([]);
   const [dispos, setDispos] = useState({});
@@ -52,14 +46,12 @@ export default function ListeEquipements({ onPreventifs }) {
   const [erreur, setErreur] = useState(null);
   const [message, setMessage] = useState(null);
   const [recalcul, setRecalcul] = useState(false);
-  const [filtreEtat, setFiltreEtat] = useState('TOUS');
-  // null | { type: 'famille' | 'article' | 'aucune', ... } (voir FiltreFamilleArbre)
+  const [filtreEtat] = useState('TOUS');
   const [filtreFamille, setFiltreFamille] = useState(null);
   const [filtreIp, setFiltreIp] = useState('TOUS');
-  // Service de chaque équipement (LotArticle.ServiceID dans Cubix) et noms des services
-  const [filtreService, setFiltreService] = useState(''); // '' = tous, 'AUCUN' = sans service, sinon l'ID
-  const [serviceDe, setServiceDe] = useState({}); // { lotArticleImmobilistationId: serviceId }
-  const [nomsServices, setNomsServices] = useState({}); // { serviceId: nom }
+  const [filtreService, setFiltreService] = useState('');
+  const [serviceDe, setServiceDe] = useState({});
+  const [nomsServices, setNomsServices] = useState({});
   useEffect(() => {
     let annule = false;
     Promise.all([
@@ -88,7 +80,6 @@ export default function ListeEquipements({ onPreventifs }) {
     } finally {
       setChargement(false);
     }
-    // Indicateurs complémentaires : une erreur n'empêche pas la liste de s'afficher
     disponibiliteService.getAll().then((d) => setDispos(parId(d))).catch((e) => console.error('[GMAO équipements] Disponibilité :', e));
     risqueService.getRisques(1000).then((d) => setRisques(parId(d))).catch((e) => console.error('[GMAO équipements] Risques :', e));
     equipementService.listeConnexions().then((d) => setConnexions(parId(d))).catch((e) => console.error('[GMAO équipements] Adresses IP :', e));
@@ -149,7 +140,6 @@ export default function ListeEquipements({ onPreventifs }) {
     }
   };
 
-  /* Un seul état par équipement, le plus récent */
   const uniques = useMemo(() => {
     const m = new Map();
     etats.forEach((e) => {
@@ -161,7 +151,6 @@ export default function ListeEquipements({ onPreventifs }) {
 
   const serviceId = (e) => serviceDe[String(e.lotArticleImmobilistationId)] ?? null;
   const nomService = (e) => { const s = serviceId(e); return s == null ? '' : (nomsServices[s] || t('Service #{id}', { id: s })); };
-  // Services présents dans le parc, avec leur nombre d'équipements
   const services = useMemo(() => {
     const m = new Map();
     let sans = 0;
@@ -271,11 +260,11 @@ export default function ListeEquipements({ onPreventifs }) {
 
   return (
     <PageListe
+      finActions={vues}
       classe="leq-page"
       icone={Gauge}
       titre={t('Équipements')}
       sansEntete
-      // Ni titre ni pastilles d'état : l'état se filtre dans la colonne « État » du tableau
       colonnes={colonnes}
       lignes={lignes}
       cleLigne="lotArticleImmobilistationId"

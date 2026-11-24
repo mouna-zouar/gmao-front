@@ -8,11 +8,6 @@ import './commun.css';
 
 const cacheOptions = new Map();
 
-/*
- * Options d'une liste : options (tableau, ou fonction (valeurs) → tableau) ou chargerOptions(valeurs) → promesse.
- * cleOptions (texte, ou fonction (valeurs) → texte) : quand elle change, la liste est rechargée
- * (ex. dépôts du service choisi : cleOptions: (v) => `depots-${v.serviceId}`).
- */
 function useOptions(champ, valeurs) {
   const cle = typeof champ.cleOptions === 'function' ? champ.cleOptions(valeurs) : (champ.cleOptions || (champ.chargerOptions ? `${champ.nom}` : null));
   const statiques = typeof champ.options === 'function' ? champ.options(valeurs) : (champ.options || []);
@@ -34,7 +29,6 @@ function useOptions(champ, valeurs) {
     return () => { annule = true; };
   }, [cle]); // eslint-disable-line react-hooks/exhaustive-deps
   const brute = champ.chargerOptions ? etat.liste : statiques;
-  // filtrerOptions(liste, valeurs) : ne garder que les options compatibles avec les autres champs
   const liste = champ.filtrerOptions ? champ.filtrerOptions(brute, valeurs) : brute;
   return { liste, chargement: champ.chargerOptions ? etat.chargement : false };
 }
@@ -46,13 +40,10 @@ const labelOption = (champ, o) => {
   return o[champ.optionLabel || 'label'] ?? o.nom ?? o.libelle ?? String(valeurOption(champ, o));
 };
 
-/** Un champ : libellé, saisie selon le type, aide et message d'erreur. */
 export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
   const options = useOptions(champ, valeurs);
   const estListe = champ.type === 'liste' || champ.type === 'recherche';
 
-  // viderSiAbsent : la valeur choisie n'est plus dans la liste (filtrée par un autre champ) → on la vide
-  // libelleVers : recopie le libellé de l'option choisie dans un autre champ (ex. serviceNom)
   const choisie = estListe && valeur !== '' && valeur != null
     ? options.liste.find((o) => String(valeurOption(champ, o)) === String(valeur)) : null;
   useEffect(() => {
@@ -114,7 +105,6 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
       );
       break;
     case 'equipement':
-      // champ.service : nom du champ service — liste limitée à ce service, et service rempli d'après l'équipement choisi
       saisie = (
         <ChampEquipement id={id} name={champ.nom} value={valeur ?? ''} onChange={(e) => changer(e.target.value)} facultatif={!champ.requis} disabled={desactive}
           autoFocus={champ.autoFocus}
@@ -124,13 +114,11 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
           onEquipementChoisi={champ.service ? (e) => {
             if (e?.serviceId == null || String(e.serviceId) === String(valeurs?.[champ.service] ?? '')) return;
             onChange(champ.service, e.serviceId);
-            // libellé recalculé par le champ service (il ne doit pas garder le nom de l'ancien service)
             if (champ.serviceLibelle) onChange(champ.serviceLibelle, '');
           } : undefined} />
       );
       break;
     case 'personnalise':
-      // changerChamp(nom, valeur) : pour un champ personnalisé qui remplit aussi d'autres champs
       saisie = champ.rendu({ valeur, changer, changerChamp: onChange, valeurs, erreur, id });
       break;
     default: {
@@ -161,9 +149,7 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
   );
 }
 
-/** Grille de champs (2 colonnes, 1 sur téléphone). `section` : n'affiche que les champs de cette section. */
 export default function Formulaire({ champs, valeurs, erreurs = {}, onChange, section }) {
-  // cache : valeur gardée et envoyée, mais pas affichée (ex. un libellé recopié par libelleVers)
   const visibles = champs.filter((c) => !c.cache && (!section || (c.section || 'general') === section) && (!c.visible || c.visible(valeurs)));
   return (
     <div className="cf-grille">

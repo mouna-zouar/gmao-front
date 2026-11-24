@@ -5,23 +5,12 @@ import Formulaire from './Formulaire';
 import { useFormulaire, valeursDepuis, validerChamp, versPayload } from './useFormulaire';
 import { t } from '../../i18n';
 
-/*
- * Fenêtre de saisie décrite par ses champs (voir useFormulaire) et ses sections.
- *
- *   etapes                 sections en assistant pas à pas : « Suivant » vérifie l'étape avant d'avancer
- *   creation: true         (champ ou section) seulement à la création
- *   initiales              valeurs proposées à la création (ex. équipement pré-rempli)
- *   validerEtape(cle, v)   message qui empêche de quitter une étape, ou null
- *   confirmerAvantEnvoi(v) { titre, texte, icone, envoyer, abandonner } pour demander confirmation, ou null
- *   onEnregistrer(payload, { creation, valeurs })
- */
 export default function ModaleFormulaire({
   ouvert, onFermer, icone, titres = {}, surtitres = {}, sousTitre, champs, sections, objet, valider,
   onEnregistrer, taille = 'lg', libelleEnregistrer, children,
   etapes = false, initiales, validerEtape, confirmerAvantEnvoi,
 }) {
   const creation = !objet;
-  // Champs et sections réservés à la création retirés en modification
   const champsActifs = useMemo(() => champs.filter((c) => !(c.creation && !creation)), [champs, creation]);
   const listeSections = useMemo(() => {
     const l = (sections?.length ? sections : [{ cle: 'general', label: t('Général') }]).filter((s) => !(s.creation && !creation));
@@ -35,7 +24,6 @@ export default function ModaleFormulaire({
   const [etapeMax, setEtapeMax] = useState(0);
   const [confirmation, setConfirmation] = useState(null);
 
-  // Remplit le formulaire à chaque ouverture (création ou modification)
   useEffect(() => {
     if (!ouvert) return;
     const v = valeursDepuis(champsActifs, objet);
@@ -58,7 +46,6 @@ export default function ModaleFormulaire({
   const plusieurs = listeSections.length > 1;
   const derniere = indexSection === listeSections.length - 1;
 
-  /** Erreurs des champs d'une section (affichées sous les champs) ; vrai si elle est correcte. */
   const sectionValide = (cle) => {
     const erreurs = {};
     champsActifs.filter((c) => (c.section || 'general') === cle).forEach((c) => {
@@ -85,7 +72,6 @@ export default function ModaleFormulaire({
 
   const enregistrer = async (e, confirme = false) => {
     e?.preventDefault?.();
-    // En assistant, « Entrée » avant la dernière étape fait « Suivant »
     if (etapes && creation && !derniere && e?.type === 'submit') { suivant(); return; }
     const erreurs = f.valider();
     if (erreurs) {
@@ -124,7 +110,7 @@ export default function ModaleFormulaire({
     ...s,
     erreur: f.erreursParSection[s.cle],
     accessible: !enAssistant || !creation || i <= etapeMax,
-    fait: enAssistant && i < etapeMax && i !== indexSection, // étapes déjà passées avec « Suivant »
+    fait: enAssistant && i < etapeMax && i !== indexSection,
   }));
   const BoutonEnregistrer = (
     <button type="submit" form="cm-formulaire" className="cm-btn cm-btn--principal" disabled={envoi}

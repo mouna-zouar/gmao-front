@@ -42,7 +42,6 @@ export function Badge({ ton = 'gris', children }) {
   return <span className={`tb-badge tb-badge--${ton}`}>{children}</span>;
 }
 
-/* Carte d'indicateur : icône colorée, grand chiffre, libellé ; cliquable vers la page du module. */
 export function Stat({ lien, icone: Icone, ton = 'neutre', valeur, total, label, badge, sous, featured }) {
   const contenu = (
     <>
@@ -61,7 +60,6 @@ export function Stat({ lien, icone: Icone, ton = 'neutre', valeur, total, label,
   return lien ? <Link to={lien} className={cls}>{contenu}</Link> : <div className={cls}>{contenu}</div>;
 }
 
-/* Barres horizontales (libellé · piste · valeur). */
 export function Barres({ lignes, format = nb }) {
   const max = Math.max(1, ...lignes.map((l) => l.valeur || 0));
   return (
@@ -97,7 +95,6 @@ export function Repartition({ items, label }) {
   );
 }
 
-/* Liste d'éléments à traiter (badge + texte), chaque ligne ouvre l'élément. */
 export function Liste({ lignes }) {
   return (
     <ul className="tb-liste">

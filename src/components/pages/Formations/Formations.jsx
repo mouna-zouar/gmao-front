@@ -13,12 +13,6 @@ import { obtenirEquipements } from '../../../store/referentiels';
 import { t, locale } from '../../../i18n';
 import './Formations.css';
 
-/*
- * Formations des techniciens : une session, plusieurs participants (chacun avec son résultat).
- * Les familles et équipements visés (plusieurs) indiquent sur quels appareils la formation habilite ceux qui l'ont réussie.
- */
-
-// Assistant par étapes, comme la fenêtre de réclamation : frise en haut, une aide par étape
 const SECTIONS = [
   { cle: 'general', label: 'Formation', icone: GraduationCap, description: 'Le sujet de la formation, qui la donne et quand elle a lieu.' },
   { cle: 'cibles', label: 'Équipements visés', icone: Wrench, description: 'Les familles et équipements sur lesquels la formation habilite ceux qui la réussissent. Rien : formation générale.' },
@@ -58,7 +52,6 @@ const initiales = (nom) => {
   return ((mots[0][0] || '') + (mots.length > 1 ? mots[mots.length - 1][0] : '')).toUpperCase();
 };
 
-/** Participants : pile d'avatars (anneau = résultat), nombre, et barre de réussite si réalisée. Noms en info-bulle. */
 function CelluleParticipants({ participants, realisee }) {
   const ps = participants || [];
   if (!ps.length) return <span className="cl-tiret">—</span>;
@@ -90,7 +83,6 @@ function CelluleParticipants({ participants, realisee }) {
   );
 }
 
-/** Équipements visés : le premier nom + « +N », un résumé dessous ; la liste complète en info-bulle. */
 function CelluleCibles({ familles, equipements, nomFamille, nomEquipement }) {
   const fs = familles || [];
   const es = equipements || [];
@@ -140,7 +132,6 @@ export default function Formations() {
   }, []);
   useEffect(() => { charger(); }, [charger]);
 
-  // Noms à jour des équipements et des familles (le nom enregistré peut être un simple code ou « #id »)
   const [equipementsParId, setEquipementsParId] = useState({});
   const [famillesParId, setFamillesParId] = useState({});
   useEffect(() => {
@@ -157,7 +148,6 @@ export default function Formations() {
   };
   const nomFamille = (c) => famillesParId[String(c.id)]?.nom || (c.nom && !/^#\d+$/.test(c.nom) ? c.nom : null) || t('Famille #{id}', { id: c.id });
 
-  /* Techniciens présents dans au moins une formation (filtre) */
   const techniciens = useMemo(() => {
     const m = new Map();
     formations.forEach((f) => (f.participants || []).forEach((p) => m.set(String(p.personnelId), p.personnelNom || `#${p.personnelId}`)));
@@ -189,7 +179,6 @@ export default function Formations() {
       valeur: (f) => [...(f.equipements || []).map(nomEquipement), ...(f.familles || []).map(nomFamille)].join(', ') || t('Formation générale'),
       rendu: (f) => <CelluleCibles familles={f.familles} equipements={f.equipements} nomFamille={nomFamille} nomEquipement={nomEquipement} />,
     },
-    // Organisme et durée sont repris sous l'intitulé : colonnes masquées par défaut (affichables)
     { cle: 'organisme', label: 'Organisme', visible: false, filtre: 'texte', valeur: (f) => f.organisme || '' },
     { cle: 'periode', label: 'Dates', valeur: (f) => f.dateDebut || f.dateFin || '', texte: periodeFormation },
     { cle: 'duree', label: 'Durée', visible: false, valeur: (f) => f.dureeHeures ?? null, texte: (f) => (f.dureeHeures == null ? '' : `${nombre(f.dureeHeures)} h`) },
@@ -216,7 +205,7 @@ export default function Formations() {
       classe="fo-page"
       icone={ICONES_MODULES.formations}
       titre={t('Formations des techniciens')}
-      sansEntete // ni titre ni pastilles : le statut se filtre dans la colonne « Statut » du tableau
+      sansEntete
       colonnes={colonnes}
       lignes={lignes}
       chargement={chargement}

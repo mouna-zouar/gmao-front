@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   AlertTriangle, Clock, CheckCircle2, RefreshCw, ExternalLink, Wrench,
-  ShieldCheck, Activity, History, Calendar, TrendingUp, FileText, CircleDot,
+  ShieldCheck, Activity, History, TrendingUp, FileText, CircleDot,
   Package, ChevronDown, ChevronUp, User, Stethoscope,
 } from 'lucide-react';
 import equipementMaintenanceService, {
@@ -12,16 +12,8 @@ import equipementMaintenanceService, {
 } from '../../../services/equipementMaintenanceService';
 import EquipementMaintenanceBonModal from '../../ui/modals/Equipementmaintenancebonmodal';
 import { t, tp, locale } from '../../../i18n';
-// Réutilise le style du panneau équivalent du Parc automobile (classes vmp-*
-// génériques, sans rien de spécifique au kilométrage).
 import '../parc/vehicules/VehiculeMaintenancePanel.css';
 
-/**
- * Miroir de VehiculeMaintenancePanel.jsx, mais pour la maintenance
- * préventive RÉGLEMENTAIRE d'un équipement médical (calibration, contrôle
- * qualité périodique...), basée sur une périodicité en jours plutôt qu'un
- * compteur kilométrique.
- */
 const fmtDate = (v) => (v ? new Date(v).toLocaleDateString(locale()) : '—');
 const fmtJours = (v) => (v == null ? '—' : t('{n} j', { n: Number(v).toLocaleString(locale()) }));
 
@@ -46,7 +38,6 @@ const ringColor = (statut) => {
   }
 };
 
-/** Anneau SVG de progression (allégé) */
 const ProgressRing = ({ percent, color, size = 72, thickness = 5, children }) => {
   const safePct = Math.max(0, Math.min(100, percent));
   const radius = (size - thickness) / 2;
@@ -73,7 +64,6 @@ const ProgressRing = ({ percent, color, size = 72, thickness = 5, children }) =>
   );
 };
 
-/** @param immobilisation { id, designation, marque, dateExploitation, ... } */
 export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, onBonCree }) {
   const [statuts, setStatuts] = useState([]);
   const [declenchements, setDeclenchements] = useState([]);
@@ -81,7 +71,7 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
   const [error, setError] = useState(null);
   const [bonModalOpen, setBonModalOpen] = useState(false);
   const [flash, setFlash] = useState(null);
-  const [histOpen, setHistOpen] = useState(true); // ← état du bloc historique
+  const [histOpen, setHistOpen] = useState(true);
 
   const load = useCallback(async () => {
     if (!immobilisation?.id) return;
@@ -105,7 +95,7 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
 
   useEffect(() => {
     setFlash(null);
-    setHistOpen(true); // réinitialise l'ouverture au changement d'équipement
+    setHistOpen(true);
   }, [immobilisation?.id]);
 
   const enRetard = statuts.filter((s) => s.statut === 'EN_RETARD');
@@ -124,7 +114,6 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
   return (
     <section className="vmp-panel">
 
-      {/* ═══════════════ HEADER ═══════════════ */}
       <header className="vmp-header">
         <div className="vmp-header-left">
           <Wrench size={20} />
@@ -147,7 +136,6 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
         </div>
       </header>
 
-      {/* ═══════════════ KPI ═══════════════ */}
       {statuts.length > 0 && (
         <div className="vmp-kpis">
           <div className="vmp-kpi kpi-ok">
@@ -173,7 +161,6 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
         </div>
       )}
 
-      {/* ═══════════════ ALERTES ═══════════════ */}
       {flash && (
         <div className="vmp-alert success">
           <CheckCircle2 size={16} />
@@ -204,7 +191,6 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
         </div>
       )}
 
-      {/* ═══════════════ SECTION : SITUATION PAR OPÉRATION ═══════════════ */}
       <div className="vmp-section">
         <div className="vmp-section-head">
           <Activity size={14} />
@@ -276,9 +262,7 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
         )}
       </div>
 
-      {/* ═══════════════ SECTION : HISTORIQUE — BLOC REPLIABLE ═══════════════ */}
       <div className="vmp-section">
-        {/* En-tête cliquable qui ouvre/ferme tout le bloc */}
         <button
           type="button"
           className="vmp-section-head vmp-section-head--clickable"
@@ -293,7 +277,6 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
           </span>
         </button>
 
-        {/* Contenu repliable */}
         {histOpen && (
           <div className="vmp-hist-reveal">
             {declenchements.length === 0 && (
@@ -310,7 +293,6 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
 
                   return (
                     <article key={d.id} className="vmp-hist-card">
-                      {/* Bloc date */}
                       <div className="vmp-hist-date">
                         <span className="vmp-hist-day">
                           {d.dateDeclenchement
@@ -329,7 +311,6 @@ export default function EquipementMaintenancePanel({ immobilisation, onOpenBon, 
                         </span>
                       </div>
 
-                      {/* Contenu */}
                       <div className="vmp-hist-body">
                         <div className="vmp-hist-head">
                           <h4 className="vmp-hist-title">

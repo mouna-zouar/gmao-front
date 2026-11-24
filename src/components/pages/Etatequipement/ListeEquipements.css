@@ -1,4 +1,3 @@
-/* Liste des équipements (PageListe) : cellules propres à cette liste */
 .leq-page .cl-table td { vertical-align: middle; }
 
 .leq-case { display: inline-flex; padding: 6px; cursor: pointer; }
@@ -37,5 +36,4 @@
 .leq-message--erreur { background: var(--g-red-100); color: var(--g-red-700); }
 .leq-message button { margin-inline-start: auto; display: inline-flex; border: 0; background: transparent; color: inherit; cursor: pointer; padding: 4px; border-radius: 6px; }
 
-/* Filtre Service choisi */
 .leq-filtre-actif { border-color: var(--g-teal-600, #0794a4) !important; background: rgba(7, 148, 164, 0.06) !important; font-weight: 600; }

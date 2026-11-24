@@ -13,8 +13,6 @@ const enTetesAuteur = () => {
 };
 
 const equipementService = {
-  // serviceId : équipements de ce service seulement (LotArticle.ServiceID dans Cubix)
-  // lieuId : équipements de ce lieu et de ses sous-lieux (arborescence)
   async rechercher(recherche = '', page = 0, taille = 30, familleId = null, serviceId = null, lieuId = null) {
     const { data } = await api.get('/equipements', {
       params: { recherche: recherche || undefined, familleId: familleId || undefined, serviceId: serviceId || undefined, lieuId: lieuId || undefined, page, taille },
@@ -22,13 +20,11 @@ const equipementService = {
     return data;
   },
 
-  /** Familles d'articles des équipements (lues dans Cubix) : [{ id, nom, nombre }] */
   async familles() {
     const { data } = await api.get('/equipements/familles');
     return data ?? [];
   },
 
-  /** Code lu sur une étiquette (URL de la fiche, identifiant ou code-barre) → identifiant. */
   async resoudreCode(valeur) {
     const { data } = await api.get('/equipements/code', { params: { valeur } });
     return data.id;
@@ -44,7 +40,6 @@ const equipementService = {
     form.append('fichier', fichier);
     if (titre) form.append('titre', titre);
     if (categorie) form.append('categorie', categorie);
-    // Content-Type explicite : sinon axios transformerait le FormData en JSON
     const { data } = await api.post(`/equipements/${id}/documents`, form, {
       headers: { 'Content-Type': 'multipart/form-data', ...enTetesAuteur() },
     });
@@ -55,9 +50,6 @@ const equipementService = {
     await api.delete(`/equipements/documents/${documentId}`);
   },
 
-  // ─── Connexion réseau (adresse IP de l'équipement) ───
-
-  /** { adresseIp, port, protocole, surveillee, commentaire, dernierResultat, … } ou null. */
   async getConnexion(id) {
     const reponse = await api.get(`/equipements/${id}/connexion`);
     return reponse.status === 204 ? null : reponse.data;
@@ -72,25 +64,20 @@ const equipementService = {
     await api.delete(`/equipements/${id}/connexion`);
   },
 
-  /** Teste l'adresse saisie (sans l'enregistrer), ou l'adresse enregistrée si saisie est vide. */
   async testerConnexion(id, saisie = null) {
-    // Toujours un corps JSON (même vide) : sans lui, le serveur refuse la requête (415)
     const { data } = await api.post(`/equipements/${id}/connexion/tester`, saisie || {});
-    return data; // { joignable, tempsMs, methode, message, date }
+    return data;
   },
 
-  /** Toutes les connexions enregistrées. */
   async listeConnexions() {
     const { data } = await api.get('/equipements/connexions');
     return data;
   },
 
-  /** Adresse du fichier, à ouvrir dans un nouvel onglet. */
   urlDocument(documentId) {
     return `${api.defaults.baseURL.replace(/\/$/, '')}/equipements/documents/${documentId}/fichier`;
   },
 
-  /** Adresse encodée dans le QR code : la fiche de l'équipement. */
   urlFiche(id) {
     return `${window.location.origin}/equipement/${id}`;
   },

@@ -1,10 +1,5 @@
 import hierarchieService from './hierarchieService';
 
-/*
- * Carte des lieux partagée par les écrans (formulaires, filtres des listes) :
- * { lieux: [{ id, parentId, type, nom, code }], equipements: { immoId: lieuId } }.
- * Gardée 60 s ; oublierCarte() après une modification de l'arborescence.
- */
 let promesse = null;
 let quand = 0;
 
@@ -18,7 +13,6 @@ export function carteLieux() {
 
 export function oublierCarte() { promesse = null; }
 
-/** Lieux à plat dans l'ordre de l'arbre : [{ ...lieu, niveau, chemin: 'Bât. A › Étage 2 › Bloc' }] */
 export function lieuxAplatis(carte) {
   const lieux = carte?.lieux ?? [];
   const ids = new Set(lieux.map((l) => l.id));
@@ -38,7 +32,6 @@ export function lieuxAplatis(carte) {
   return sortie;
 }
 
-/** Le lieu et tous ses sous-lieux. */
 export function lieuEtSousLieux(carte, lieuId) {
   const r = new Set();
   if (lieuId == null || lieuId === '') return r;
@@ -56,7 +49,6 @@ export function lieuEtSousLieux(carte, lieuId) {
   return r;
 }
 
-/** Lieu d'une ligne (bon, réclamation…) : le lieu enregistré, sinon celui de son équipement. */
 export function lieuDeLigne(carte, lieuId, immoId) {
   if (lieuId != null) return Number(lieuId);
   if (immoId == null || !carte?.equipements) return null;
@@ -64,7 +56,6 @@ export function lieuDeLigne(carte, lieuId, immoId) {
   return l == null ? null : Number(l);
 }
 
-/** Chemin lisible d'un lieu. */
 export function cheminLieu(carte, lieuId) {
   if (lieuId == null) return '';
   const parId = new Map((carte?.lieux ?? []).map((l) => [l.id, l]));
@@ -74,7 +65,6 @@ export function cheminLieu(carte, lieuId) {
   return noms.join(' › ');
 }
 
-/** Champ « Lieu » des formulaires (liste avec recherche, libellé = chemin complet). */
 export const champLieu = (extra = {}) => ({
   nom: 'lieuId', label: 'Lieu', type: 'recherche',
   chargerOptions: async () => lieuxAplatis(await carteLieux()).map((l) => ({ value: l.id, label: l.chemin })),

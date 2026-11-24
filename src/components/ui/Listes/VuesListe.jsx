@@ -4,21 +4,6 @@ import { Bookmark, BookmarkPlus, Check, ChevronDown, X } from 'lucide-react';
 import { t } from '../../../i18n';
 import './VuesListe.css';
 
-/*
- * Vues d'une liste : des raccourcis prêts à l'emploi (« Mes bons en retard », « Urgents de mon service »…)
- * et les vues que l'utilisateur enregistre lui-même (vue de départ + recherche + état + tri).
- *
- *   const [vueId, setVueId] = useVueActive('bons', userKey, 'tous');
- *   <VuesListe liste="bons" userKey={userKey} vues={VUES} items={bons}
- *              vueActive={vueId} reglages={{ recherche, etat, tri, sens }}
- *              onChoisir={(id, reglages) => { setVueId(id); if (reglages) appliquer(reglages); }} />
- *
- * Les vues enregistrées restent dans ce navigateur (localStorage), propres à chaque utilisateur.
- *
- * max (facultatif) : nombre de vues affichées ; les autres (et les vues enregistrées) passent dans un menu « Plus ».
- * La vue active reste toujours visible.
- */
-
 const memesReglages = (a = {}, b = {}) =>
   (a.recherche || '') === (b.recherche || '')
   && String(a.etat ?? 'all') === String(b.etat ?? 'all')
@@ -28,7 +13,7 @@ const memesReglages = (a = {}, b = {}) =>
 export default function VuesListe({ liste, userKey, vues, items, vueActive, reglages, onChoisir, chargement = false, max }) {
   const cle = `gmao-vues-${liste}-${userKey}`;
   const [perso, setPerso] = useState(() => lire(cle, []));
-  const [saisie, setSaisie] = useState(null); // null = fermé, sinon le nom en cours
+  const [saisie, setSaisie] = useState(null);
   const champ = useRef(null);
   const [plusOuvert, setPlusOuvert] = useState(false);
   const zonePlus = useRef(null);
@@ -43,7 +28,6 @@ export default function VuesListe({ liste, userKey, vues, items, vueActive, regl
     return () => { document.removeEventListener('mousedown', dehors); document.removeEventListener('keydown', echap); };
   }, [plusOuvert]);
 
-  // Nombre de lignes par vue (calculé sur toute la liste, pas sur la page affichée)
   const comptes = useMemo(() => {
     const c = {};
     vues.forEach((v) => { c[v.id] = v.filtre ? items.filter(v.filtre).length : items.length; });
@@ -74,7 +58,6 @@ export default function VuesListe({ liste, userKey, vues, items, vueActive, regl
     ecrire(cle, suite);
   };
 
-  // Mode compact (max) : les premières vues, la vue active toujours visible, le reste dans « Plus »
   const compact = Number.isFinite(max) && max > 0;
   let visibles = vues;
   if (compact) {

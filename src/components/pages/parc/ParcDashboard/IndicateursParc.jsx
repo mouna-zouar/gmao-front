@@ -3,8 +3,8 @@ import { commePage, obtenirVehicules } from '../../../../store/referentiels';
 import vehiculeBonCarburantService from '../../../../services/vehiculeBonCarburantService';
 import vehiculeIncidentService from '../../../../services/vehiculeIncidentService';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
-import vehiculeAmendeService from '../../../../services/vehiculeAmendeService';
-import vehiculeCoutService from '../../../../services/vehiculeCoutService';
+import vehiculeAmendeService from '../../../../services/Vehiculeamendeservice';
+import vehiculeCoutService from '../../../../services/Vehiculecoutservice';
 import { t } from '../../../../i18n';
 import {
   Classement, CourbeTendance, GrilleKpi, SectionIndicateurs, TuileKpi,
@@ -13,18 +13,12 @@ import {
   JOUR, classement, dans, douzeMois, enMs, liste, moyenne, periodes, serieMensuelle, somme,
 } from '../../../ui/Indicateurs/calculs';
 
-/*
- * Indicateurs avancés du Dashboard Parc : carburant, kilomètres de mission, incidents,
- * amendes, coûts annuels du parc, tendance 12 mois et classements par véhicule.
- * Chaque source est chargée indépendamment : une source indisponible n'empêche pas les autres.
- */
-
-const AMENDE_A_PAYER = [0, 1]; // À payer, Contestée
+const AMENDE_A_PAYER = [0, 1];
 const NOMS_SOURCES = { carburant: 'Carburant', incidents: 'Incidents', missions: 'Missions', amendes: 'Amendes', couts: 'Coûts' };
 const isoJour = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 export default function IndicateursParc() {
-  const [maintenant] = useState(() => Date.now()); // heure de référence des calculs
+  const [maintenant] = useState(() => Date.now());
   const [src, setSrc] = useState({});
 
   useEffect(() => {
@@ -106,7 +100,6 @@ export default function IndicateursParc() {
   const p = k.prev;
   const erreurs = ['carburant', 'incidents', 'missions', 'amendes', 'couts'].filter((s) => src[`${s}Erreur`]);
 
-  // Tuiles affichées (et exportées en Excel). Une tuile à 0 ou sans valeur n'est pas affichée.
   const tuiles = [
     {
       libelle: t('Dépenses carburant'),

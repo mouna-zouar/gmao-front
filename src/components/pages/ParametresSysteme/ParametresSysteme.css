@@ -1,7 +1,3 @@
-/* ============================================================
-   Paramètres système — rubriques à gauche, réglages en lignes à droite
-   ============================================================ */
-
 :root {
   --ps-accent: var(--g-brand-500);
   --ps-accent-dark: var(--g-brand-600);
@@ -35,7 +31,6 @@
 .ps-tourne { animation: ps-tourne 0.9s linear infinite; }
 @keyframes ps-tourne { to { transform: rotate(360deg); } }
 
-/* ─── En-tête ─── */
 .ps-entete {
   display: flex;
   align-items: center;
@@ -74,7 +69,6 @@
 }
 .ps-recherche input::-webkit-search-cancel-button { display: none; }
 
-/* ─── Bandeau de message ─── */
 .ps-banner {
   display: flex; align-items: center; gap: 10px;
   margin-bottom: 16px; padding: 11px 12px 11px 14px;
@@ -85,7 +79,6 @@
 .ps-banner--success { background: var(--g-emerald-50); color: var(--g-emerald-700); border-color: var(--g-emerald-200); }
 .ps-banner--error { background: var(--g-red-50); color: #b42318; border-color: var(--g-red-200); }
 
-/* ─── Corps : rubriques + contenu ─── */
 .ps-corps {
   display: grid;
   grid-template-columns: 250px minmax(0, 1fr);
@@ -141,7 +134,6 @@
   color: var(--ps-text-mute); font-size: 0.9rem;
 }
 
-/* ─── Rubrique ─── */
 .ps-rubrique + .ps-rubrique { margin-top: 22px; }
 .ps-rubrique-tete { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .ps-rubrique-icone {
@@ -176,7 +168,6 @@
   color: var(--ps-text-mute);
 }
 
-/* ─── Lignes de réglage ─── */
 .ps-ligne {
   position: relative;
   display: grid;
@@ -215,13 +206,11 @@ label.ps-ligne-titre { cursor: pointer; }
   gap: 10px; min-width: 0;
 }
 
-/* Tâches planifiées : activé + heure + exécuter */
 .ps-ligne--tache.is-eteint .ps-ligne-titre { color: var(--ps-text-mute); }
 .ps-tache-reglage { transition: opacity 0.15s; }
 .ps-tache-reglage.is-desactive { opacity: 0.45; }
 .ps-tache-etiquette { font-size: 0.8rem; font-weight: 600; color: var(--ps-text-mute); white-space: nowrap; }
 
-/* ─── Champs ─── */
 .ps-pcard-control { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .ps-ligne--bloc .ps-pcard-control { flex: 1; }
 
@@ -248,7 +237,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-pcard-control input:focus { border-color: var(--ps-accent); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.15); }
 .ps-unit { font-size: 0.78rem; font-weight: 600; color: var(--ps-text-mute); white-space: nowrap; }
 
-/* Interrupteur oui / non */
 .ps-switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
 .ps-switch input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
 .ps-switch-track {
@@ -271,7 +259,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-switch-label { min-width: 28px; font-size: 0.82rem; font-weight: 700; color: var(--ps-text-mute); }
 .ps-switch input:checked ~ .ps-switch-label { color: var(--ps-accent-dark); }
 
-/* Boutons */
 .ps-action {
   display: inline-flex; align-items: center; gap: 6px;
   height: 32px; padding: 0 11px;
@@ -295,7 +282,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-icone-btn:hover { background: var(--g-slate-100); color: var(--ps-text); }
 .ps-icone-btn:focus-visible, .ps-action:focus-visible { outline: 2px solid var(--ps-accent); outline-offset: 2px; }
 
-/* ─── Tableau SLA ─── */
 .ps-sla { overflow-x: auto; }
 .ps-sla table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
 .ps-sla th, .ps-sla td { padding: 12px 18px; text-align: start; vertical-align: middle; }
@@ -320,7 +306,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-prio--p4 { background: #64748b; }
 .ps-sla + .ps-lignes { border-top: 1px solid var(--ps-border); }
 
-/* ─── Prestataire Cubix ─── */
 .ps-presta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 0; }
 .ps-presta-ligne { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .ps-presta-ligne input { width: 110px !important; }
@@ -329,7 +314,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-presta-nom--ok { color: var(--g-emerald-700); font-weight: 700; }
 .ps-presta-nom--introuvable { color: #b42318; font-weight: 700; }
 
-/* ─── Familles suivies ─── */
 .ps-familles { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .ps-familles-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .ps-familles-resume { font-size: 0.86rem; font-weight: 700; color: var(--ps-text); font-variant-numeric: tabular-nums; }
@@ -363,10 +347,8 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-familles-nom { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ps-familles-n { flex-shrink: 0; font-variant-numeric: tabular-nums; color: var(--ps-text-mute); font-weight: 600; }
 
-/* Carte « Langue » (composant commun) dans une rubrique */
 .ps-rubrique .rl-carte { margin-bottom: 0; border-radius: var(--ps-radius); border: 1px solid var(--ps-border); }
 
-/* ─── Barre d'enregistrement ─── */
 .ps-savebar {
   position: fixed;
   inset-inline: 50%; bottom: 20px;
@@ -399,7 +381,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-btn--primary { background: var(--ps-accent); color: var(--g-blanc); }
 .ps-btn--primary:hover:not(:disabled) { background: var(--ps-accent-dark); }
 
-/* ─── Écrans étroits ─── */
 @media (max-width: 960px) {
   .ps-corps { grid-template-columns: minmax(0, 1fr); }
   .ps-nav {
@@ -419,7 +400,6 @@ label.ps-ligne-titre { cursor: pointer; }
   .ps-savebar-actions { justify-content: flex-end; }
 }
 
-/* ── Maintenance conditionnelle (vue d'ensemble) ── */
 .ps-mc-titre { display: flex; align-items: center; gap: 8px; }
 .ps-mc-titre .ps-icone-btn { margin-inline-start: auto; }
 .ps-mc-aide { margin: 0; padding: 12px 18px 0; font-size: 12.5px; color: var(--g-slate-500); max-width: 80ch; }
@@ -441,7 +421,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-mc-ton--neutre { background: var(--g-slate-100); color: var(--g-slate-600); }
 .ps-mc-bon { display: block; margin-top: 4px; font-size: 12px; }
 
-/* Codes panne (catalogue proposé par l'IA dans les réclamations) */
 .ps-cp-barre { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 18px 0; }
 .ps-cp-filtre { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--g-slate-600); cursor: pointer; }
 .ps-cp-erreur { margin: 10px 18px 0; padding: 8px 12px; border-radius: 8px; background: var(--g-amber-50); color: var(--g-amber-700); font-size: 12.5px; }
@@ -454,7 +433,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-cp-input { width: 100%; min-width: 90px; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--g-slate-300); border-radius: 7px; font: 13px var(--g-police); color: var(--g-slate-900); background: var(--g-blanc, #fff); }
 .ps-cp-input:focus { outline: none; border-color: var(--ps-accent); box-shadow: 0 0 0 3px var(--ps-accent-soft); }
 
-/* Check-lists des réclamations */
 .ps-ck { display: grid; grid-template-columns: 260px 1fr; gap: 16px; padding: 12px 18px 18px; }
 .ps-ck-familles { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .ps-ck-familles ul { margin: 0; padding: 0; list-style: none; max-height: 420px; overflow-y: auto; border: 1px solid var(--g-slate-200); border-radius: 10px; }
@@ -497,7 +475,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-recherche input { font-size: 0.875rem; }
 .ps-banner { border-radius: var(--g-rayon-md); font-size: var(--g-texte-sm); }
 
-/* ── Menu de gauche : groupes titrés, élément actif turquoise avec trait ── */
 .ps-corps { grid-template-columns: 236px minmax(0, 1fr); gap: 20px; }
 .ps-nav { top: calc(var(--navbar-height, 64px) + 16px); gap: 0; padding: 8px; border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-xs); max-height: calc(100vh - var(--navbar-height, 64px) - 32px); overflow-y: auto; }
 .ps-nav-groupe { display: flex; flex-direction: column; gap: 1px; }
@@ -516,7 +493,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-nav-item:focus-visible { outline: none; box-shadow: var(--g-anneau); }
 .ps-nav-point { min-width: 20px; height: 20px; border-radius: 999px; font-size: 0.7rem; }
 
-/* ── Rubrique ── */
 .ps-contenu { max-width: 980px; }
 .ps-rubrique-tete { margin-bottom: 14px; padding: 2px 2px 0; }
 .ps-rubrique-icone { width: 40px; height: 40px; border-radius: var(--g-rayon-md); background: var(--g-brand-50); border: 1px solid var(--g-brand-100); color: var(--g-brand-600); }
@@ -525,7 +501,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-carte { border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg); box-shadow: var(--g-ombre-xs); }
 .ps-carte-titre { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--g-slate-500); }
 
-/* ── Lignes de réglage ── */
 .ps-ligne { padding: 14px 20px; gap: 24px; }
 .ps-ligne + .ps-ligne { border-top-color: var(--g-slate-100); }
 .ps-ligne:hover { background: var(--g-slate-50); }
@@ -534,7 +509,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-ligne.is-modifie { background: var(--g-amber-50, #fffbeb); }
 .ps-badge { border-radius: 999px; font-size: 0.65rem; font-weight: 600; }
 
-/* Champs : comme les champs communs (40 px, bordure fine, anneau turquoise) */
 .ps-pcard-control input[type='number'],
 .ps-pcard-control input[type='time'],
 .ps-pcard-control input[type='text'],
@@ -547,14 +521,12 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-pcard-control input[type='number'] { width: 110px; font-variant-numeric: tabular-nums; }
 .ps-unit { font-size: 0.75rem; font-weight: 500; color: var(--g-slate-500); }
 
-/* Interrupteur plus fin (36 × 20) */
 .ps-switch-track { width: 36px; height: 20px; border-radius: 999px; background: var(--g-slate-200); transition: background var(--g-duree) var(--g-courbe); }
 .ps-switch-track::after { top: 2px; left: 2px; width: 16px; height: 16px; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2); transition: transform var(--g-duree) var(--g-courbe); }
 .ps-switch input:checked + .ps-switch-track::after { transform: translateX(16px); }
 .ps-switch input:focus-visible + .ps-switch-track { outline: none; box-shadow: var(--g-anneau); }
 .ps-switch-label { font-size: 0.78rem; font-weight: 600; }
 
-/* Boutons secondaires (Exécuter, Valeurs par défaut…) : comme les boutons communs */
 .ps-action {
   height: 36px; padding: 0 12px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); background: var(--g-blanc);
   color: var(--g-slate-700); font: 600 0.8rem var(--g-police); box-shadow: var(--g-ombre-xs);
@@ -565,12 +537,10 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-action:focus-visible, .ps-icone-btn:focus-visible, .ps-lien:focus-visible { outline: none; box-shadow: var(--g-anneau); }
 .ps-icone-btn { border-radius: var(--g-rayon-md); }
 
-/* Tableau SLA : en-tête comme les listes */
 .ps-sla thead th { background: var(--g-slate-50); border-bottom: 1px solid var(--g-slate-200); font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em; color: var(--g-brand-700); }
 .ps-sla th, .ps-sla td { padding: 10px 20px; }
 .ps-prio { border-radius: 6px; }
 
-/* ── Barre d'enregistrement : claire, comme le pied des fenêtres ── */
 .ps-savebar {
   padding: 10px 10px 10px 16px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg);
   background: var(--g-blanc); color: var(--g-slate-800); box-shadow: var(--g-ombre-lg);
@@ -593,7 +563,6 @@ label.ps-ligne-titre { cursor: pointer; }
   .ps-nav-item.is-actif::before { display: none; }
 }
 
-/* ── Correctifs grand écran : contenu sur toute la largeur, champs alignés ── */
 .ps-contenu { max-width: none; }
 .ps-ligne-aide { max-width: 90ch; font-size: 0.8rem; line-height: 1.5; }
 @media (min-width: 641px) {
@@ -602,18 +571,12 @@ label.ps-ligne-titre { cursor: pointer; }
   .ps-ligne--tache { grid-template-columns: minmax(0, 1fr) auto; }
 }
 
-/* ============================================================
-   Nouvelle présentation : accueil en tuiles + rubrique en plein écran
-   ============================================================ */
-
-/* Couleur de chaque section */
 .ps-ton--indigo  { --ps-ton: #4f46e5; --ps-ton-doux: #eef2ff; --ps-ton-bord: #c7d2fe; }
 .ps-ton--teal    { --ps-ton: var(--g-brand-600, #0e7490); --ps-ton-doux: var(--g-brand-50); --ps-ton-bord: var(--g-brand-100); }
 .ps-ton--ambre   { --ps-ton: #b45309; --ps-ton-doux: #fffbeb; --ps-ton-bord: #fde68a; }
 .ps-ton--violet  { --ps-ton: #7c3aed; --ps-ton-doux: #f5f3ff; --ps-ton-bord: #ddd6fe; }
 .ps-ton--ardoise { --ps-ton: #475569; --ps-ton-doux: #f1f5f9; --ps-ton-bord: #cbd5e1; }
 
-/* Pleine largeur, sans marge autour de la page (seul l'espace bas reste pour la barre Enregistrer) */
 .ps-page { max-width: none; margin: 0; padding: 16px 20px 100px; background: transparent; }
 .ps-entete {
   padding: 18px 22px; background: var(--ps-bg); border: 1px solid var(--ps-border);
@@ -621,7 +584,6 @@ label.ps-ligne-titre { cursor: pointer; }
 }
 .ps-contenu { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
 
-/* ─── Accueil ─── */
 .ps-accueil { display: flex; flex-direction: column; gap: 26px; }
 .ps-section-titre {
   display: flex; align-items: center; gap: 8px; margin: 0 0 12px;
@@ -660,7 +622,6 @@ label.ps-ligne-titre { cursor: pointer; }
   background: var(--ps-amber-soft); color: #b45309; border: 1px solid var(--ps-amber-border); font-size: 0.72rem; font-weight: 800;
 }
 
-/* ─── Rubrique ouverte ─── */
 .ps-detail { display: flex; flex-direction: column; gap: 16px; }
 .ps-detail-tete {
   padding: 14px 20px 18px; background: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 16px;
@@ -683,7 +644,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-detail-texte h2 { margin: 2px 0 0; font-size: 1.25rem; font-weight: 800; color: var(--ps-text); letter-spacing: -0.01em; }
 .ps-detail-texte p { margin: 3px 0 0; font-size: 0.85rem; color: var(--ps-text-mute); }
 
-/* ─── Cartes de réglages (2 colonnes) ─── */
 .ps-grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); gap: 12px; align-items: stretch; }
 .ps-reglage {
   position: relative; display: flex; flex-direction: column; gap: 6px; min-width: 0;
@@ -700,7 +660,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-reglage-valeur { margin-top: auto; padding-top: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ps-reglage-valeur input[type='number'], .ps-reglage-valeur input[type='time'] { width: 140px; }
 .ps-reglage-valeur input[type='text'] { flex: 1; min-width: 200px; }
-/* Interrupteur : à droite du titre, la carte reste basse */
 .ps-reglage--bascule { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 14px; align-items: center; }
 .ps-reglage--bascule .ps-reglage-tete { grid-column: 1; }
 .ps-reglage--bascule .ps-reglage-aide { grid-column: 1; }
@@ -711,7 +670,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-carte--transparente { padding: 0; background: transparent; border: 0; box-shadow: none; }
 .ps-carte--transparente > .ps-carte-titre { margin: 0 0 10px; }
 
-/* ─── Résultats de recherche ─── */
 .ps-resultat { display: flex; flex-direction: column; gap: 10px; }
 .ps-resultat-tete { display: flex; align-items: center; gap: 10px; }
 .ps-resultat-tete .ps-tuile-icone { width: 32px; height: 32px; border-radius: 9px; }
@@ -724,7 +682,6 @@ label.ps-ligne-titre { cursor: pointer; }
   .ps-reglage-valeur input[type='number'], .ps-reglage-valeur input[type='time'] { width: 110px; }
 }
 
-/* Familles en arbre : parent (sans famille parente) puis ses fils en retrait */
 .ps-familles-liste.ps-familles-arbre { display: flex; flex-direction: column; gap: 1px; max-height: 420px; }
 .ps-familles-noeud { display: flex; align-items: center; gap: 2px; padding-inline-start: calc(var(--niveau, 0) * 22px); }
 .ps-familles-noeud > label { flex: 1; min-width: 0; }
@@ -741,7 +698,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-familles-plier--vide { cursor: default; }
 .ps-familles-sous { font-weight: 400; color: var(--ps-text-mute); font-size: 0.76rem; }
 
-/* Parent : case à cocher + nom cliquable qui affiche / cache les fils */
 .ps-familles-ligne {
   flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
   padding: 0 0 0 9px; border-radius: 7px; font-weight: 700;
@@ -758,7 +714,6 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-familles-ouvrir:disabled { cursor: default; }
 .ps-familles-ligne.is-ouvert .ps-familles-nom { color: var(--ps-accent); }
 
-/* Codes panne : pastille parent + bouton qui affiche ses sous-familles */
 .ps-cp-puce-groupe { display: inline-flex; align-items: center; gap: 2px; }
 .ps-cp-puce-groupe.is-fils { margin-inline-start: 4px; }
 .ps-cp-puce--fils { font-size: 0.92em; opacity: 0.95; border-style: dashed; }
@@ -771,13 +726,11 @@ label.ps-ligne-titre { cursor: pointer; }
 .ps-cp-puce-fils:hover { color: var(--ps-text); background: var(--ps-bg-soft); }
 .ps-cp-puce-fils.has-choix { color: var(--ps-accent); border-color: var(--ps-accent); }
 
-/* Check-lists : parents puis sous-familles en retrait */
 .ps-ck-familles li.ps-ck-fils { padding-inline-start: calc(var(--niveau, 1) * 16px); }
 .ps-ck-familles li.ps-ck-parent .ps-ck-famille-nom { font-weight: 700; }
 .ps-ck-famille-nom { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
 .ps-ck-puce { width: 5px; height: 5px; border-radius: 50%; background: var(--ps-text-mute); flex-shrink: 0; margin: 0 4px 0 2px; }
 
-/* Articles d'une famille (lecture seule) sous ses sous-familles */
 .ps-familles-article {
   display: flex; align-items: center; gap: 7px;
   padding: 4px 9px; padding-inline-start: calc(var(--niveau, 1) * 22px + 30px);

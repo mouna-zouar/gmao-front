@@ -2,13 +2,6 @@ import { Eye, EyeOff } from 'lucide-react';
 import { t, locale } from '../../i18n';
 import './EtatLecture.css';
 
-/*
- * « Lu / Non lu » d'une réclamation ou d'un bon, avec le temps mis pour le lire
- * (ou depuis combien de temps il attend). objet : { dateAttenteLecture, dateLecture, luParNom }.
- * compact : pastille courte pour les listes.
- */
-
-/** 45 s · 12 min · 2 h 15 · 3 j 4 h */
 export function dureeLecture(secondes) {
   if (secondes == null || Number.isNaN(secondes)) return '';
   const s = Math.max(0, Math.round(secondes));
@@ -33,7 +26,6 @@ export default function EtatLecture({ objet, compact = false, actif = true, resp
   if (!objet) return null;
   const i = infoLecture(objet);
   const quand = i.date ? new Date(i.date).toLocaleString(locale(), { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
-  // Durée inconnue (date d'affectation absente) : on n'affiche pas « attend depuis » vide
   const duree = i.secondes != null ? dureeLecture(i.secondes) : '';
   const titre = i.lu
     ? (duree ? t('Lu par {qui} le {quand}, {duree} après l’affectation', { qui: i.par || '—', quand, duree }) : t('Lu par {qui} le {quand}', { qui: i.par || '—', quand }))
@@ -60,19 +52,11 @@ export default function EtatLecture({ objet, compact = false, actif = true, resp
   );
 }
 
-/**
- * Résumé de lecture d'une liste : « 12 lus · 3 non lus », les personnes en info-bulle.
- *   elements   : réclamations ou bons ({ dateLecture, luParNom, dateAttenteLecture, … })
- *   reference  : (e) => n° affiché (REC-…, BM-…)
- *   responsable: (e) => à qui il est affecté (facultatif), pour les non lus
- *   estActif   : (e) => true si l'élément est encore à traiter (un élément clos non lu ne compte pas)
- */
 export function ResumeLecture({ elements = [], reference = (e) => e.num || `#${e.id}`, responsable, estActif = () => true }) {
   const lus = elements.filter((e) => e.dateLecture);
   const nonLus = elements.filter((e) => !e.dateLecture && estActif(e));
   if (lus.length === 0 && nonLus.length === 0) return null;
 
-  // Qui a lu : « Ali Ben Salah (5) »
   const parPersonne = new Map();
   lus.forEach((e) => {
     const qui = e.luParNom || t('Inconnu');
@@ -80,7 +64,6 @@ export function ResumeLecture({ elements = [], reference = (e) => e.num || `#${e
   });
   const lignesLus = [...parPersonne.entries()].sort((a, b) => b[1] - a[1]).map(([qui, n]) => `• ${qui} (${n})`);
 
-  // Non lus, du plus ancien au plus récent : « REC-0012 — Ali · attend depuis 2 h »
   const maintenant = Date.now();
   const lignesNonLus = nonLus
     .map((e) => ({ e, i: infoLecture(e, maintenant) }))

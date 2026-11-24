@@ -3,7 +3,6 @@ import { CheckSquare, Trash2, X } from 'lucide-react';
 import { t } from '../../../i18n';
 import './SelectionMultiple.css';
 
-/** Case à cocher accessible, avec état « partiel » (une partie de la page cochée). */
 export function CaseSelection({ coche, partiel = false, disabled = false, onChange, label }) {
   const ref = useRef(null);
   useEffect(() => { if (ref.current) ref.current.indeterminate = partiel; }, [partiel]);
@@ -22,10 +21,6 @@ export function CaseSelection({ coche, partiel = false, disabled = false, onChan
   );
 }
 
-/*
- * Barre affichée dès qu'au moins une ligne est cochée :
- * nombre sélectionné, « Tout sélectionner (N) », « Désélectionner », « Supprimer la sélection ».
- */
 export default function SelectionMultiple({ nombre, total, libelle, onToutSelectionner, onVider, onSupprimer, suppressionEnCours }) {
   if (!nombre) return null;
   return (

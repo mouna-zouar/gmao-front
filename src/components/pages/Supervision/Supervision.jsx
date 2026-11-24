@@ -13,16 +13,7 @@ import { Pastille, ilYa } from '../../ui/Veille/Veille';
 import './Supervision.css';
 import '../TableauDeBord/TableauDeBord.css';
 
-/*
- * « Supervision » : tableau de bord du parc connecté, façon Grafana (thème clair de la GMAO).
- * Une période (1 h → 30 j), un rafraîchissement automatique, et des panneaux :
- * indicateurs, alertes reçues, courbes des sondes, disponibilité réseau, classement, état des connexions.
- * Les graphiques sont dessinés en SVG ; chaque graphique a une info-bulle au survol.
- */
-
-/* Couleurs des séries : ordre fixe, la couleur suit la sonde (jamais son rang). Validé daltonisme. */
 const PALETTE = ['#0794a4', '#eb6834', '#6a5acd', '#eda100', '#e87ba4', '#2a78d6'];
-/* Niveaux d'alerte (couleurs d'état réservées, toujours avec un libellé). */
 const NIVEAUX = [
   { cle: 'critique', label: 'Critique', couleur: '#dc2626', ton: 'danger' },
   { cle: 'alerte', label: 'Alerte', couleur: '#f97316', ton: 'orange' },
@@ -60,9 +51,7 @@ const lire = (cle, defaut, valides) => {
     return valides.some((o) => o.cle === v) && localStorage.getItem(cle) !== null ? v : defaut;
   } catch { return defaut; }
 };
-const ecrire = (cle, v) => { try { localStorage.setItem(cle, String(v)); } catch { /* stockage indisponible */ } };
-
-/* ---------- Outils temps / nombres ---------- */
+const ecrire = (cle, v) => { try { localStorage.setItem(cle, String(v)); } catch {} };
 
 const ms = (iso) => (iso ? new Date(iso).getTime() : NaN);
 const MIN = 60e3;
@@ -89,7 +78,6 @@ function nombre(v, dec = 0) {
   return Number(v).toLocaleString(locale(), { maximumFractionDigits: dec, minimumFractionDigits: 0 });
 }
 
-/** Graduations de l'axe du temps, calées sur l'heure locale. */
 function graduationsTemps(debut, fin, largeur = 9999) {
   const span = fin - debut;
   let pas;
@@ -114,12 +102,10 @@ function graduationsTemps(debut, fin, largeur = 9999) {
   }
   const ticks = [];
   for (let v = d.getTime(); v <= fin && ticks.length < 40; v += pas) ticks.push(v);
-  // Écran étroit : une graduation sur k, pour garder ~60 px entre deux libellés
   const k = Math.max(1, Math.ceil((ticks.length * 60) / Math.max(1, largeur)));
   return { ticks: ticks.filter((_, i) => i % k === 0), format: pas < J ? heure : jour };
 }
 
-/** Graduations « rondes » de l'axe des valeurs. */
 function graduationsValeurs(min, max, n = 4) {
   if (!Number.isFinite(min) || !Number.isFinite(max)) return [0, 1];
   if (min === max) { min -= 1; max += 1; }
@@ -133,7 +119,6 @@ function graduationsValeurs(min, max, n = 4) {
   return l;
 }
 
-/** Largeur réelle d'un conteneur (les graphiques se redessinent quand elle change). */
 export function useLargeur() {
   const ref = useRef(null);
   const [largeur, setLargeur] = useState(0);
@@ -148,9 +133,6 @@ export function useLargeur() {
   return [ref, largeur];
 }
 
-/* ---------- Briques ---------- */
-
-/* Carte au style des tableaux de bord (bons, réclamations, parc) : titre, aide au survol, pastille. */
 export function Panneau({ titre, aide, meta, children, className = '', corpsClass = '' }) {
   return (
     <section className={`tb-carte sv-carte ${className}`}>
@@ -191,7 +173,6 @@ export function Bulle({ bulle }) {
   );
 }
 
-/* Petite courbe dans un indicateur. */
 function Etincelle({ valeurs, couleur }) {
   const [ref, w] = useLargeur();
   const h = 34;
@@ -210,11 +191,9 @@ function Etincelle({ valeurs, couleur }) {
   );
 }
 
-/* Tons de la supervision → couleurs des cartes d'indicateurs des tableaux de bord. */
 const TON_CARTE = { marque: 'teal', succes: 'vert', attention: 'ambre', danger: 'rouge', orange: 'orange', info: 'bleu', neutre: 'neutre' };
 const TON_BADGE = { marque: 'teal', succes: 'vert', attention: 'ambre', danger: 'rouge', orange: 'orange', info: 'bleu', neutre: 'gris' };
 
-/* Carte d'indicateur au style des tableaux de bord : icône colorée, grand chiffre, libellé, badge d'état. */
 export function Indicateur({ icone: Icone, label, valeur, total, ton = 'neutre', etat, sous, etincelle }) {
   return (
     <div className={`tb-stat sv-indicateur tb-ton--${TON_CARTE[ton] || 'neutre'}`}>
@@ -231,8 +210,6 @@ export function Indicateur({ icone: Icone, label, valeur, total, ton = 'neutre',
     </div>
   );
 }
-
-/* ---------- Alertes reçues (barres empilées par niveau) ---------- */
 
 function GraphiqueAlertes({ tranches, debut, fin, pasMinutes }) {
   const [ref, w] = useLargeur();
@@ -314,8 +291,6 @@ function GraphiqueAlertes({ tranches, debut, fin, pasMinutes }) {
   );
 }
 
-/* ---------- Courbes des sondes (un panneau par unité : un seul axe) ---------- */
-
 function GraphiqueCourbes({ series, debut, fin, couleurs }) {
   const [ref, w] = useLargeur();
   const [survol, setSurvol] = useState(null);
@@ -337,7 +312,7 @@ function GraphiqueCourbes({ series, debut, fin, couleurs }) {
   const chemins = series.map((s) => {
     let d = '';
     let precedent = null;
-    const ecart = (fin - debut) / 40; // trou dans les données → la courbe s'interrompt
+    const ecart = (fin - debut) / 40;
     s.points.forEach(([iso, v]) => {
       const tt = ms(iso);
       d += `${precedent == null || tt - precedent > Math.max(ecart, 3 * MIN) ? 'M' : 'L'}${x(tt).toFixed(1)},${y(v).toFixed(1)}`;
@@ -433,8 +408,6 @@ function GraphiqueCourbes({ series, debut, fin, couleurs }) {
   );
 }
 
-/* ---------- Disponibilité réseau (frise d'état) ---------- */
-
 function FriseDisponibilite({ lignes, debut, fin, onOuvrir }) {
   const [ref, w] = useLargeur();
   const [bulle, setBulle] = useState(null);
@@ -500,8 +473,6 @@ function FriseDisponibilite({ lignes, debut, fin, onOuvrir }) {
   );
 }
 
-/* ---------- Classement (barres horizontales) ---------- */
-
 function Classement({ lignes, onOuvrir }) {
   const max = Math.max(1, ...lignes.map((l) => l.nombre));
   return (
@@ -524,8 +495,6 @@ function Classement({ lignes, onOuvrir }) {
   );
 }
 
-/* ---------- Page ---------- */
-
 export default function Supervision() {
   const navigate = useNavigate();
   const [heures, setHeures] = useState(() => lire(CLE_PERIODE, 24, PERIODES));
@@ -535,7 +504,6 @@ export default function Supervision() {
   const [erreur, setErreur] = useState(null);
   const [majLe, setMajLe] = useState(null);
   const enCours = useRef(false);
-  // Alertes machines (même fenêtre que dans les bons de maintenance) : badge = alertes à traiter
   const [alertesOuvert, setAlertesOuvert] = useState(false);
   const [nbAlertes, setNbAlertes] = useState(0);
   useEffect(() => {
@@ -575,7 +543,6 @@ export default function Supervision() {
   const fin = ms(donnees?.periode?.fin);
   const ind = donnees?.indicateurs || {};
 
-  /* Une couleur par sonde, dans l'ordre de leur identifiant : elle ne change pas avec la période. */
   const couleurs = useMemo(() => {
     const ids = [...new Set((donnees?.liaisons || []).map((l) => l.id))].sort((a, b) => a - b);
     const c = {};
@@ -583,7 +550,6 @@ export default function Supervision() {
     return c;
   }, [donnees?.liaisons]);
 
-  /* Un panneau par unité (°C, bar, %…), au plus 6 sondes par panneau. */
   const groupes = useMemo(() => {
     const g = new Map();
     (donnees?.mesures || []).forEach((s) => {
@@ -678,7 +644,6 @@ export default function Supervision() {
 
       {pret && (
         <div className="sv-grille-panneaux">
-          {/* Ligne 1 : bande d'indicateurs */}
           <div className="rv2-kpis sv-l12">
             {kpi({ icone: MonitorDot, label: t('Équipements connectés'), valeur: nombre(ind.equipementsConnectes),
               sous: t('{ip} en IP · {l} liaison(s) agent', { ip: ind.avecIp, l: ind.liaisons }) })}
@@ -700,7 +665,6 @@ export default function Supervision() {
               sous: !ind.liaisons ? t('Aucune liaison') : ind.liaisonsProbleme ? t('À vérifier') : t('Toutes lisent') })}
           </div>
 
-          {/* Ligne 2 */}
           <Panneau className="sv-l8" titre={t('Alertes reçues')}
             aide={t('Alertes des machines (SNMP, Syslog, agents, surveillance réseau) reçues sur la période, par niveau.')}
             meta={t('par tranche de {d}', { d: duree(donnees.periode.pasAlertesMinutes) })}>
@@ -729,7 +693,6 @@ export default function Supervision() {
             ) : <Vide>{t('Aucun agent n’a encore envoyé de signal.')}</Vide>}
           </Panneau>
 
-          {/* Ligne 3 : sondes */}
           {groupes.length ? groupes.map((g) => (
             <Panneau key={g.cle} className={groupes.length === 1 ? 'sv-l12' : 'sv-l6'}
               titre={g.unite ? t('Sondes — {u}', { u: g.unite }) : t('Sondes')}
@@ -746,7 +709,6 @@ export default function Supervision() {
             </Panneau>
           )}
 
-          {/* Ligne 4 */}
           <Panneau className="sv-l8" titre={t('Disponibilité réseau')}
             aide={t('Coupures constatées par la surveillance réseau et les agents, pour les équipements avec une adresse IP. Les moins disponibles en premier.')}
             meta={t('{n} équipement(s)', { n: donnees.disponibilite.length })} corpsClass="sv-defile">
@@ -760,7 +722,6 @@ export default function Supervision() {
               : <Vide>{t('Aucune alerte liée à un équipement.')}</Vide>}
           </Panneau>
 
-          {/* Ligne 5 */}
           <Panneau className="sv-l8" titre={t('État des connexions')} meta={t('{n} connexion(s)', { n: etats.length })} corpsClass="sv-defile sv-sans-marge">
             {etats.length ? (
               <table className="sv-table">

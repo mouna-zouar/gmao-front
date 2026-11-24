@@ -19,20 +19,17 @@
   background: var(--g-blanc);
 }
 
-/* Hover → teal clair uni */
 .pcm-category-card:hover {
   border-color: var(--g-brand-200);
   background: var(--g-brand-50);
 }
 
-/* Carte cochée → teal */
 .pcm-category-card.checked {
   border-color: var(--g-brand-500);
   background: var(--g-brand-50);
   box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
 }
 
-/* Checkbox → teal */
 .pcm-category-card input[type='checkbox'] {
   margin-top: 2px;
   accent-color: var(--g-brand-500);

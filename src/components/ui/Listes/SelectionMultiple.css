@@ -1,5 +1,3 @@
-/* Sélection multiple : cases à cocher + barre d'actions */
-
 .case-selection {
   width: 17px;
   height: 17px;
@@ -10,7 +8,6 @@
 }
 .case-selection:disabled { cursor: not-allowed; opacity: .5; }
 
-/* Colonne des cases dans un tableau */
 th.selection-col,
 td.selection-col {
   width: 44px;
@@ -83,7 +80,6 @@ tr.is-coche td { background: #f0f8f9; }
 .selection-barre__supprimer:disabled { opacity: .6; cursor: progress; }
 .selection-barre :focus-visible { outline: 2px solid var(--g-brand-750); outline-offset: 2px; }
 
-/* Case sur les cartes (téléphone) */
 .carte-ligne__case { display: inline-flex; align-items: center; gap: 8px; }
 
 @media (max-width: 760px) {

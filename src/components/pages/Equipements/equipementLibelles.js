@@ -1,7 +1,5 @@
 import { t, locale } from '../../../i18n';
 
-/* Libellés et formats communs à la liste et à la fiche des équipements. */
-
 export const ETATS_EQUIPEMENT = {
   EN_SERVICE: { label: 'En service', ton: 'ok' },
   EN_PANNE: { label: 'En panne', ton: 'alerte' },
@@ -51,7 +49,6 @@ export const dateCourte = (v) => {
 export const montant = (v) => (v == null ? '—'
   : `${new Intl.NumberFormat(locale(), { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(v)} DT`);
 
-/** Durée en heures, lisible : « 18 h » ou « 12 j » au-delà de 48 h. */
 export const duree = (heures) => {
   if (heures == null) return '—';
   if (heures >= 48) return t('{n} j', { n: Math.round(heures / 24) });
@@ -65,7 +62,6 @@ export const taille = (octets) => {
   return `${(octets / 1024 / 1024).toFixed(1)} Mo`;
 };
 
-/** Garantie en clair : { texte, ton } */
 export function garantieEnClair(g) {
   if (!g || g.statut === 'INCONNUE' || !g.fin) return { texte: t('Garantie non renseignée'), ton: 'neutre' };
   if (g.statut === 'EXPIREE') return { texte: t('Garantie expirée le {date}', { date: dateCourte(g.fin) }), ton: 'neutre' };

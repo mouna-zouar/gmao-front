@@ -96,7 +96,6 @@
   letter-spacing: 0.2px;
 }
 
-/* ─── Nouveau style des champs texte / select / textarea ─── */
 .form-group input,
 .form-group select,
 .form-group textarea,
@@ -193,7 +192,6 @@
   font-size: 0.85rem;
 }
 
-/* Wizard à étapes (progress-indicator) */
 .progress-indicator {
   padding: 16px 28px 12px;
   background: #f8f9fc;
@@ -276,7 +274,6 @@
   }
 }
 
-/* Mini-listes locales dans les étapes de wizard (tâches/intervenants/commentaires/documents) */
 .bmd-notice {
   padding: 20px;
   text-align: center;

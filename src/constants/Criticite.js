@@ -1,8 +1,3 @@
-// Référentiel de criticité des actifs (véhicules, équipements) — source unique de
-// vérité côté front. DOIT rester synchronisé avec softsys.GMAO.models.Criticite
-// (backend) : les valeurs sont les noms exacts de l'enum Java (sérialisés en string
-// par @Enumerated(EnumType.STRING)), pas des codes numériques comme VEHICULE_ETAT.
-
 export const CRITICITE_OPTIONS = [
   { value: 'C1', label: 'C1 – Critique' },
   { value: 'C2', label: 'C2 – Important' },
@@ -17,7 +12,6 @@ export const CRITICITE_LABELS = {
   C4: 'Faible',
 };
 
-// Couleur utilisée par les badges/pills (même convention que ETAT_VEHICULE_COLOR).
 export const CRITICITE_COLOR = {
   C1: 'red',
   C2: 'amber',
@@ -27,15 +21,11 @@ export const CRITICITE_COLOR = {
 
 export const CRITICITE_DEFAUT = 'C3';
 
-// Hex directs (pas de dépendance à des tokens CSS custom non garantis présents
-// sur toutes les pages qui consomment ce référentiel — cf. Etatequipement.css qui
-// ne définit pas de token "amber"). Alignés sur les teintes red/blue/slate déjà
-// utilisées ailleurs dans le projet (--red-500, --blue-500, --slate-500).
 export const CRITICITE_HEX = {
-  C1: '#ef4444', // red-500
-  C2: '#f97316', // orange-500 (tient lieu d'amber, non défini dans les tokens existants)
-  C3: '#3b82f6', // blue-500
-  C4: '#64748b', // slate-500
+  C1: '#ef4444',
+  C2: '#f97316',
+  C3: '#3b82f6',
+  C4: '#64748b',
 };
 
 export function criticiteHex(criticite) {

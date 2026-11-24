@@ -1,7 +1,5 @@
 import api from './api';
 
-// Articles du prestataire (Cubix : PerstataireArticles) dont l'article est de la catégorie 15 (maintenance).
-// Chaque élément : { id (= prestataireArticlesId), articleId, designation, code, qteDisponible, depotId, ... }
 const cache = new Map();
 
 const prestataireArticleService = {
@@ -12,8 +10,6 @@ const prestataireArticleService = {
     return Array.isArray(data) ? data : (data?.content ?? []);
   },
 
-  // Un article du prestataire par son id (= prestataireArticlesId d'une ligne de pièce) :
-  // { id, articleId, designation, code, uniteStock, ... }. Mis en cache pour la session.
   async getById(id) {
     const cle = String(id);
     if (!cache.has(cle)) {
@@ -24,7 +20,6 @@ const prestataireArticleService = {
     return cache.get(cle);
   },
 
-  // Plusieurs ids d'un coup → { [id]: article } (les ids introuvables sont ignorés).
   async getParIds(ids) {
     const uniques = [...new Set((ids || []).filter((v) => v !== null && v !== undefined).map(String))];
     const res = await Promise.all(uniques.map((id) => prestataireArticleService.getById(id).catch(() => null)));

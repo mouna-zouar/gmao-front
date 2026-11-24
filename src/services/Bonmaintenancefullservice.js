@@ -1,8 +1,8 @@
-import bonMaintenanceService from './bonMaintenanceService';
-import bonMaintenanceTacheService from './bonMaintenanceTacheService';
+import bonMaintenanceService from './Bonmaintenanceservice';
+import bonMaintenanceTacheService from './Bonmaintenancetacheservice';
 import bonMaintenanceIntervenantService from './bonMaintenanceIntervenantService';
-import bonMaintenanceCommentaireService from './bonMaintenanceCommentaireService';
-import bonMaintenanceDocumentAchatService from './bonMaintenanceDocumentAchatService';
+import bonMaintenanceCommentaireService from './Bonmaintenancecommentaireservice';
+import bonMaintenanceDocumentAchatService from './Bonmaintenancedocumentachatservice';
 
 const bonMaintenanceFullService = {
 
@@ -83,16 +83,6 @@ const bonMaintenanceFullService = {
     };
   },
 
-  /**
-   * Supprime un BonMaintenance et toutes ses données enfants.
-   *
-   * Ordre :
-   * 1. Documents
-   * 2. Commentaires
-   * 3. Intervenants
-   * 4. Tâches
-   * 5. BonMaintenance
-   */
   async deleteFull(bonMaintenanceId) {
 
   if (!bonMaintenanceId) {
@@ -132,10 +122,6 @@ const bonMaintenanceFullService = {
       .filter((r) => r.status === 'fulfilled')
       .map((r) => r.value);
   };
-
-  // ==========================================
-  // 1. RÉCUPÉRER LES ENFANTS
-  // ==========================================
 
   let taches = [];
   let intervenants = [];
@@ -194,10 +180,6 @@ const bonMaintenanceFullService = {
     });
   }
 
-  // ==========================================
-  // 2. SUPPRIMER LES ENFANTS
-  // ==========================================
-
   const [
     deletedTaches,
     deletedIntervenants,
@@ -229,10 +211,6 @@ const bonMaintenanceFullService = {
       'document'
     )
   ]);
-
-  // ==========================================
-  // 3. SUPPRIMER LE BON
-  // ==========================================
 
   let bonMaintenanceDeleted = null;
 

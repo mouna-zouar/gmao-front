@@ -1,0 +1,20 @@
+.mtr-mesures table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 0.84rem; }
+.mtr-mesures th { padding: 6px; text-align: start; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--g-slate-500, #64748b); border-bottom: 1px solid var(--g-slate-200, #e2e8f0); }
+.mtr-mesures td { padding: 4px 6px; border-bottom: 1px solid var(--g-slate-100, #f1f5f9); }
+.mtr-mesures input { width: 100%; height: 34px; padding: 0 8px; border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 8px; font: inherit; }
+.mtr-mesures input.mtr-court { width: 90px; }
+.mtr-retirer { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border: 0; border-radius: 8px;
+  background: transparent; color: var(--g-slate-500, #64748b); cursor: pointer; }
+.mtr-retirer:hover { background: var(--g-red-50, #fef2f2); color: var(--g-red-700, #b91c1c); }
+.mtr-ok { color: var(--g-emerald-700, #047857); font-weight: 700; }
+.mtr-ko { color: var(--g-red-700, #b91c1c); font-weight: 700; display: inline-flex; align-items: center; gap: 4px; }
+.mtr-certificat { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mtr-certificat a, .mtr-lien { display: inline-flex; align-items: center; gap: 5px; color: var(--g-brand-700, #05606b); font-weight: 600; text-decoration: none; }
+.mtr-certificat a:hover, .mtr-lien:hover { text-decoration: underline; }
+.mtr-erreur { color: var(--g-red-700, #b91c1c); font-size: 0.82rem; }
+.mtr-vide { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 0.88rem; color: var(--g-slate-500, #64748b); }
+.mtr-suivi { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border-radius: 12px;
+  background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); }
+.mtr-suivi li { display: flex; flex-direction: column; gap: 3px; padding: 6px 10px; border-inline-start: 3px solid var(--g-slate-200, #e2e8f0); font-size: 0.8rem; color: var(--g-slate-600, #475569); }
+.mtr-suivi em { color: var(--g-slate-700, #334155); }

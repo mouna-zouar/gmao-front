@@ -32,9 +32,6 @@
   font-family: var(--g-police);
 }
 
-/* ============================================================
-   BARRE DE FILTRES
-   ============================================================ */
 .planning-bm-filters-bar {
   background-color: white;
   padding: 16px 24px;
@@ -74,7 +71,6 @@
 .planning-bm-select {
   min-width: 220px;
 }
-/* Spécifique au sélecteur d'intervenant */
 .planning-bm-select.intervenant-select {
   min-width: 280px;
 }
@@ -111,9 +107,6 @@
   box-shadow: var(--shadow-sm);
 }
 
-/* ============================================================
-   BANNIÈRE D'ERREUR
-   ============================================================ */
 .planning-bm-error-banner {
   background: var(--g-red-50);
   border: 1px solid var(--g-red-200);
@@ -124,9 +117,6 @@
   font-weight: 600;
 }
 
-/* ============================================================
-   CARTE CALENDRIER
-   ============================================================ */
 .planning-bm-calendar-card {
   background-color: white;
   border-radius: var(--radius);
@@ -223,9 +213,6 @@
   background-color: rgba(255,255,255,0.4);
 }
 
-/* ============================================================
-   GRILLE CALENDRIER
-   ============================================================ */
 .planning-bm-grid {
   display: flex;
   flex-direction: column;
@@ -275,9 +262,6 @@
   font-size: 14px;
 }
 
-/* ============================================================
-   CELLULES JOUR
-   ============================================================ */
 .planning-bm-day-cell {
   border-right: 1px solid var(--gray-100);
   border-bottom: 1px solid var(--gray-100);
@@ -343,9 +327,6 @@
   font-weight: 500;
 }
 
-/* ============================================================
-   ÉVÉNEMENTS
-   ============================================================ */
 .planning-bm-events-container {
   display: flex;
   flex-direction: column;
@@ -398,7 +379,6 @@
   text-overflow: ellipsis;
 }
 
-/* ── Couleurs par état (cohérent avec BonsMaintenance) ── */
 .event-etat-nouveau {
   background-color: var(--g-blue-50);
   color: var(--g-blue-600);
@@ -439,9 +419,6 @@
   background-color: var(--g-red-600);
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 768px) {
   .planning-bm-container {
     padding: 16px;

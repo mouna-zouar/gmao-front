@@ -48,7 +48,6 @@
   --slate-100: var(--g-slate-100);
   --slate-50: var(--g-slate-50);
 
-  /* Alias internes */
   --sl-primary-900: var(--teal-800);
   --sl-primary-800: var(--teal-700);
   --sl-primary-700: var(--teal-600);
@@ -123,7 +122,6 @@
   animation: slaFadeUp 0.4s ease-out;
 }
 
-/* ═══════════════════ HEADER — carte blanche ═══════════════════ */
 .sla-header {
   position: relative;
   overflow: hidden;
@@ -191,7 +189,6 @@
   flex-wrap: wrap;
 }
 
-/* Segmented controls (vue + période) */
 .sla-vue-select,
 .sla-periode-select {
   display: flex;
@@ -236,7 +233,6 @@
   color: var(--g-blanc);
 }
 
-/* Bouton rafraîchir */
 .sla-refresh-btn {
   display: inline-flex;
   align-items: center;
@@ -274,7 +270,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ═══════════════════ KPIs ═══════════════════ */
 .sla-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -376,7 +371,6 @@
   line-height: 1.1;
 }
 
-/* ═══════════════════ Répartition par priorité — Cartes ═══════════════════ */
 .sla-priorites {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -421,7 +415,6 @@
   gap: 12px;
 }
 
-/* Carte d'une priorité */
 .sla-prio-card {
   position: relative;
   display: flex;
@@ -440,7 +433,6 @@
   box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
-/* Head : badge priorité + nb bons */
 .sla-prio-card__head {
   display: flex;
   align-items: center;
@@ -481,7 +473,6 @@
   white-space: nowrap;
 }
 
-/* Nom complet de la priorité */
 .sla-prio-card__name {
   font-size: 0.85rem;
   font-weight: 700;
@@ -489,7 +480,6 @@
   letter-spacing: -0.005em;
 }
 
-/* Barres */
 .sla-prio-card__bars {
   display: flex;
   flex-direction: column;
@@ -550,7 +540,6 @@
   background: linear-gradient(90deg, var(--g-red-400), var(--g-red-600));
 }
 
-/* ═══════════════════ Filtres ═══════════════════ */
 .sla-filtres { display: flex; }
 
 .sla-recherche-wrap {
@@ -591,7 +580,6 @@
   box-shadow: var(--sl-ring);
 }
 
-/* ═══════════════════ États vides / erreur ═══════════════════ */
 .sla-empty,
 .sla-error {
   display: flex;
@@ -618,7 +606,6 @@
   font-weight: 600;
 }
 
-/* ═══════════════════ Liste ═══════════════════ */
 .sla-list {
   list-style: none;
   margin: 0;
@@ -771,7 +758,6 @@
   box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.04);
 }
 
-/* ═══════════════════ PAGINATION ═══════════════════ */
 .sla-pagination {
   display: flex;
   align-items: center;
@@ -913,7 +899,6 @@
   box-shadow: var(--sl-ring);
 }
 
-/* ═══════════════════ Responsive ═══════════════════ */
 @media (max-width: 1100px) {
   .sla-kpis { grid-template-columns: repeat(2, 1fr); }
 }
@@ -966,7 +951,6 @@
   .sla-pagination__ellipsis { height: 28px; }
 }
 
-/* ═══════════════════ ACCESSIBILITÉ ═══════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .sla-page,
   .sla-kpi,
@@ -980,7 +964,6 @@
   }
 }
 
-/* ═══════════════════ MODE SOMBRE ═══════════════════ */
 @media (prefers-color-scheme: dark) {
   .sla-page {
     background: #1a2433;
@@ -1080,7 +1063,6 @@
     background: var(--g-navy-750);
   }
 
-  /* Pagination dark */
   .sla-pagination__btn {
     background: var(--sl-surface);
     border-color: var(--sl-border);
@@ -1101,7 +1083,7 @@
     color: var(--sl-text);
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
   }
-}/* ---------- Bouton Export Excel ---------- */
+}
 .sla-export-btn {
   display: inline-flex;
   align-items: center;
@@ -1144,12 +1126,10 @@
 
 .sla-export-btn svg { flex-shrink: 0; }
 
-/* Responsive : pleine largeur avec rafraîchir */
 @media (max-width: 720px) {
   .sla-export-btn { width: 100%; justify-content: center; }
 }
 
-/* Mode sombre */
 @media (prefers-color-scheme: dark) {
   .sla-export-btn {
     background: var(--g-brand-500);

@@ -7,12 +7,6 @@ import authService from '../../../services/Authservice';
 import { t, tp, locale } from '../../../i18n';
 import './BmdChat.css';
 
-/*
- * Chat en direct d'un bon de maintenance.
- * Réservé aux personnes qui travaillent sur le bon : intervenants, contrôleur, responsable
- * de la remise en service, créateur et demandeur (le serveur vérifie).
- */
-
 const LONGUEUR_MAX = 2000;
 const ECART_GROUPE_MS = 5 * 60 * 1000;
 
@@ -49,7 +43,6 @@ const libelleJour = (d) => {
   return d.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 };
 
-/** Ajoute des messages sans doublon (même id), triés par id. */
 const fusionner = (actuels, nouveaux) => {
   if (!nouveaux || nouveaux.length === 0) return actuels;
   const parId = new Map(actuels.map((m) => [m.id, m]));
@@ -66,13 +59,8 @@ function Avatar({ id, nom, enLigne, taille = 'normal' }) {
   );
 }
 
-/**
- * service : client du chat (chat des bons par défaut, chatReclamationService pour une réclamation)
- * sujet   : 'bon' ou 'reclamation' (textes affichés)
- * bonId   : id du bon, ou de la réclamation quand sujet = 'reclamation'
- */
 export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, service = chatBonService, sujet = 'bon' }) {
-  const [statut, setStatut] = useState('chargement'); // chargement | pret | session | acces | reseau
+  const [statut, setStatut] = useState('chargement');
   const [participants, setParticipants] = useState([]);
   const [moi, setMoi] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -81,7 +69,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
   const [enLigne, setEnLigne] = useState(() => new Set());
   const [connecte, setConnecte] = useState(null);
   const [texte, setTexte] = useState('');
-  const [enAttente, setEnAttente] = useState([]); // { cle, contenu, etat: 'envoi' | 'echec' }
+  const [enAttente, setEnAttente] = useState([]);
   const [separateurId, setSeparateurId] = useState(null);
   const [nouveauxEnBas, setNouveauxEnBas] = useState(0);
   const [tentative, setTentative] = useState(0);
@@ -97,15 +85,12 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
   const dernierId = messages.length ? messages[messages.length - 1].id : 0;
   useEffect(() => { dernierIdRef.current = dernierId; }, [dernierId]);
 
-  // Prévient le parent du dernier message (aperçu dans la liste des discussions de Mon espace)
   const dernierMessage = messages.length ? messages[messages.length - 1] : null;
   useEffect(() => {
     if (dernierMessage) onDernierMessage?.(dernierMessage);
   }, [dernierMessage, onDernierMessage]);
 
-  // ---------- Chargement initial + flux temps réel ----------
   useEffect(() => {
-    // Le panneau est recréé pour chaque bon : pas d'état à remettre à zéro ici
     let actif = true;
     let fermerFlux = null;
     collerEnBas.current = true;
@@ -119,7 +104,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
         setPlusAnciens(!!conv.plusAnciens);
         setEnLigne(new Set((conv.participants || []).filter((p) => p.enLigne).map((p) => p.personnelId)));
         dernierLuEnvoye.current = conv.dernierMessageLuId || 0;
-        // Ligne « Nouveaux messages » : seulement s'il y a des messages des autres après le dernier lu
         const premierNonLu = (conv.messages || []).find(
           (m) => m.id > (conv.dernierMessageLuId || 0) && m.personnelId !== conv.moiPersonnelId,
         );
@@ -131,7 +115,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
           onPresence: (ids) => setEnLigne(new Set(ids || [])),
           onConnecte: () => {
             setConnecte(true);
-            // Rattrape ce qui a pu arriver pendant la coupure
             if (dernierIdRef.current) {
               service.getMessagesApres(bonId, dernierIdRef.current)
                 .then((manques) => setMessages((prev) => fusionner(prev, manques)))
@@ -150,7 +133,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
     };
   }, [bonId, tentative, service]);
 
-  // ---------- Marquer comme lu (onglet visible uniquement) ----------
   useEffect(() => {
     if (statut !== 'pret' || !dernierId) return undefined;
     const marquer = () => {
@@ -168,12 +150,10 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
     };
   }, [bonId, dernierId, statut, onNonLusChange, service]);
 
-  // ---------- Défilement ----------
   useLayoutEffect(() => {
     const liste = listeRef.current;
     if (!liste) return;
     if (hauteurAvantAnciens.current != null) {
-      // Messages plus anciens ajoutés en haut : on garde la position de lecture
       liste.scrollTop += liste.scrollHeight - hauteurAvantAnciens.current;
       hauteurAvantAnciens.current = null;
     } else if (collerEnBas.current) {
@@ -218,13 +198,11 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
       setMessages((prev) => fusionner(prev, anciens));
       setPlusAnciens(anciens.length >= 50);
     } catch {
-      /* on laisse le bouton pour réessayer */
     } finally {
       setChargementAnciens(false);
     }
   };
 
-  // ---------- Envoi ----------
   const envoyerContenu = useCallback(async (contenu, cle) => {
     setEnAttente((prev) => [...prev.filter((p) => p.cle !== cle), { cle, contenu, etat: 'envoi' }]);
     collerEnBas.current = true;
@@ -257,7 +235,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
     }
   };
 
-  // Zone de saisie qui grandit avec le texte (jusqu'à ~6 lignes)
   useLayoutEffect(() => {
     const el = saisieRef.current;
     if (!el) return;
@@ -265,7 +242,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
     el.style.height = `${Math.min(el.scrollHeight, 150)}px`;
   }, [texte]);
 
-  // ---------- Mise en forme de la liste ----------
   const parId = useMemo(() => new Map(participants.map((p) => [p.personnelId, p])), [participants]);
 
   const elements = useMemo(() => {
@@ -289,7 +265,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
 
   const nbEnLigne = participants.filter((p) => enLigne.has(p.personnelId)).length;
 
-  // ---------- Affichage ----------
   if (statut === 'chargement') {
     return (
       <div className="bch bch--etat">
@@ -348,7 +323,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
 
   return (
     <div className="bch">
-      {/* ---- Qui est dans la conversation ---- */}
       <header className="bch-entete">
         <div className="bch-entete-ligne">
           <span className="bch-entete-titre">{t('Participants')}</span>
@@ -380,7 +354,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
         </ul>
       </header>
 
-      {/* ---- Messages ---- */}
       <div className="bch-fil-cadre">
         <div
           className="bch-fil"
@@ -469,7 +442,6 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
         )}
       </div>
 
-      {/* ---- Saisie ---- */}
       <form className="bch-saisie" onSubmit={envoyer}>
         <textarea
           ref={saisieRef}

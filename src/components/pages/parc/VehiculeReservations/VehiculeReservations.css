@@ -48,7 +48,6 @@
   flex-shrink: 0;
 }
 
-/* Icône d'en-tête = bouton « paramètres des colonnes » */
 .vrs-header-icon-btn {
   cursor: pointer;
   font: inherit;
@@ -85,7 +84,6 @@
   font-weight: 500;
 }
 
-/* Stats : badges clairs en ligne */
 .vrs-stats {
   display: flex;
   gap: 8px;
@@ -126,7 +124,6 @@
 .vrs-stat.stat-confirmed .vrs-stat-value,
 .vrs-stat.stat-confirmed .vrs-stat-label { color: var(--g-emerald-700); }
 
-/* En cours → teal uni */
 .vrs-stat.stat-running { background: var(--g-brand-50); border-color: var(--g-brand-200); }
 .vrs-stat.stat-running .vrs-stat-value,
 .vrs-stat.stat-running .vrs-stat-label { color: var(--g-brand-600); }
@@ -135,7 +132,6 @@
 .vrs-stat.stat-done .vrs-stat-value,
 .vrs-stat.stat-done .vrs-stat-label { color: var(--g-slate-600); }
 
-/* ACTIONS */
 .vrs-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -168,7 +164,6 @@
 .vrs-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
 .vrs-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Bouton principal → teal uni */
 .vrs-action-btn.ajouter {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -185,7 +180,6 @@
 .vrs-action-btn.supprimer { color: var(--g-rose-600); }
 .vrs-action-btn.supprimer:hover:not(.disabled) { background: var(--g-rose-50); border-color: var(--g-rose-200); }
 
-/* Séparateur vertical entre CRUD et actions rapides d'état */
 .vrs-actions-sep {
   width: 1px;
   align-self: stretch;
@@ -193,7 +187,6 @@
   margin: 2px 4px;
 }
 
-/* Boutons rapides de changement d'état */
 .vrs-action-btn.etat-quick.accept { color: var(--g-green-800); }
 .vrs-action-btn.etat-quick.accept:hover:not(.disabled) { background: var(--g-green-50); border-color: var(--g-green-300); }
 
@@ -206,7 +199,6 @@
 .vrs-action-btn.etat-quick.cancel { color: var(--g-orange-800); }
 .vrs-action-btn.etat-quick.cancel:hover:not(.disabled) { background: var(--g-orange-50); border-color: var(--g-orange-200); }
 
-/* FILTRES */
 .vrs-filter-panel {
   display: flex;
   background: var(--g-slate-50);
@@ -294,7 +286,6 @@
   color: var(--g-rose-600);
 }
 
-/* EXPORT */
 .vrs-export-stack {
   display: flex;
   gap: 6px;
@@ -326,7 +317,6 @@
 .vrs-export-btn.stats { background: var(--g-amber-500); }
 .vrs-export-btn.stats:hover { background: var(--g-amber-600); }
 
-/* ERREUR */
 .vrs-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
@@ -341,7 +331,6 @@
   gap: 10px;
 }
 
-/* TABLEAU */
 .vrs-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -356,7 +345,6 @@
   font-size: 13.5px;
 }
 
-/* En-tête du tableau → teal clair uni */
 .vrs-table thead {
   background: var(--g-brand-50);
 }
@@ -388,7 +376,6 @@
 .vrs-row.selected td { background: var(--g-brand-50); }
 .vrs-row.selected { box-shadow: inset 4px 0 0 var(--g-brand-500); }
 
-/* TRI DES COLONNES */
 .vrs-th-sortable {
   cursor: pointer;
   user-select: none;
@@ -413,7 +400,6 @@
 .vrs-th-sortable:hover .vrs-sort-icon,
 .vrs-sort-icon.active { color: var(--g-brand-500); }
 
-/* CELLULES */
 .vrs-cell-vehicle { display: flex; align-items: center; gap: 10px; }
 
 .vrs-cell-vehicle-icon {
@@ -435,7 +421,6 @@
 
 .vrs-cell-driver { display: flex; align-items: center; gap: 10px; }
 
-/* Avatar conducteur → teal uni */
 .vrs-cell-driver-avatar {
   display: flex;
   align-items: center;
@@ -485,7 +470,6 @@
   font-size: 12.5px;
 }
 
-/* PASTILLES ÉTAT */
 .vrs-pill {
   display: inline-flex;
   align-items: center;
@@ -502,12 +486,10 @@
 
 .vrs-pill.pending { background: var(--g-amber-100); color: var(--g-amber-800); border-color: var(--g-amber-300); }
 .vrs-pill.confirmed { background: var(--g-green-100); color: var(--g-green-800); border-color: var(--g-green-300); }
-/* En cours → teal uni */
 .vrs-pill.running { background: var(--g-brand-50); color: var(--g-brand-600); border-color: var(--g-brand-200); }
 .vrs-pill.done { background: var(--g-slate-100); color: var(--g-slate-600); border-color: var(--g-slate-300); }
 .vrs-pill.cancelled { background: var(--g-red-100); color: var(--g-red-800); border-color: var(--g-red-300); }
 
-/* EMPTY */
 .vrs-table-empty {
   text-align: center;
   padding: 50px 16px;
@@ -525,7 +507,6 @@
 
 .vrs-empty-state svg { color: var(--g-slate-300); }
 
-/* RESPONSIVE */
 @media (max-width: 900px) {
   .vrs-stats { width: 100%; justify-content: space-between; }
   .vrs-stat { flex: 1; min-width: 0; }

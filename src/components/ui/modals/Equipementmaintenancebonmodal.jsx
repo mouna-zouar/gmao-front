@@ -5,14 +5,6 @@ import authService from '../../../services/Authservice';
 import equipementMaintenanceService, { URGENCE_OPTIONS } from '../../../services/equipementMaintenanceService';
 import { t, locale } from '../../../i18n';
 
-/*
- * Demande de maintenance préventive réglementaire d'un équipement médical (calibration,
- * contrôle qualité...), saisie depuis la fiche équipement. Fenêtre décrite par ses champs.
- *
- * immobilisation : { id, designation, marque, modele, dateExploitation }
- * onCreated(resultat) après création — resultat = { bon, declenchement, ... }
- */
-
 function versDateHeure(date) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -24,7 +16,6 @@ const SECTIONS = [
   { cle: 'demande', label: 'Demande', icone: Wrench, description: 'Opération, motif, urgence et date de demande' },
 ];
 
-/** Bon déjà en cours pour le type choisi : on ne peut pas en créer un second. */
 const bonEnCours = (statut) => statut?.statut === 'EN_COURS' && statut?.bonMaintenanceId != null;
 
 function champs(immobilisation, types, statuts, chargement) {
@@ -32,7 +23,6 @@ function champs(immobilisation, types, statuts, chargement) {
   const typeDe = (typeId) => types.find((x) => String(x.id) === String(typeId));
   const nom = immobilisation.designation || `#${immobilisation.id}`;
   return [
-    // ── Équipement : lecture seule ──
     {
       nom: 'fiche', label: '', type: 'personnalise', section: 'equipement', largeur: 'pleine', envoyer: false,
       rendu: () => (
@@ -46,7 +36,6 @@ function champs(immobilisation, types, statuts, chargement) {
         </>
       ),
     },
-    // ── Demande ──
     {
       nom: 'typeId', label: 'Type de maintenance', type: 'liste', section: 'demande', largeur: 'pleine', desactive: chargement,
       optionVide: chargement ? 'Chargement...' : '— Hors référentiel (demande ponctuelle) —',
@@ -104,7 +93,6 @@ export default function EquipementMaintenanceBonModal({ isOpen, onClose, immobil
   const [statuts, setStatuts] = useState([]);
   const [chargement, setChargement] = useState(false);
 
-  // Types de maintenance applicables et situation préventive de l'équipement, à chaque ouverture
   useEffect(() => {
     if (!isOpen || !immobilisation?.id) return undefined;
     let annule = false;

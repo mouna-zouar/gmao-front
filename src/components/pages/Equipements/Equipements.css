@@ -1,9 +1,3 @@
-/* ============================================================
-   ÉQUIPEMENTS — liste, fiche, étiquette QR, scanner
-   Même thème que l'espace personnel (var(--g-brand-500))
-   ============================================================ */
-
-/* .eq-theme : mêmes couleurs pour le scanner ouvert hors de la page (formulaires) */
 .eq-page,
 .eq-theme {
   --eq-brand: var(--g-brand-500);
@@ -93,7 +87,6 @@
 .eq-tourne { animation: eq-tourne 0.9s linear infinite; }
 @keyframes eq-tourne { to { transform: rotate(360deg); } }
 
-/* ---------- Pastille ---------- */
 .eq-pastille {
   display: inline-flex;
   align-items: center;
@@ -105,10 +98,6 @@
   font-weight: 700;
   white-space: nowrap;
 }
-
-/* ============================================================
-   SYSTÈME DE BOUTONS — 4 variantes (aligné sur EtatEquipement.css)
-   ============================================================ */
 
 .eq-btn,
 .eq-bouton {
@@ -152,7 +141,6 @@
 .eq-btn:active:not(:disabled),
 .eq-bouton:active:not(:disabled) { transform: translateY(0) scale(0.98); }
 
-/* --- Primaire (défaut de .eq-bouton) : teal plein --- */
 .eq-btn--primaire,
 .eq-bouton {
   background: var(--eq-brand);
@@ -173,7 +161,6 @@
     0 4px 8px rgba(7, 148, 164, 0.2);
 }
 
-/* --- Secondaire : contour net, fond blanc --- */
 .eq-btn--secondaire,
 .eq-bouton--clair {
   background: var(--eq-surface);
@@ -190,7 +177,6 @@
   box-shadow: var(--eq-shadow-sm);
 }
 
-/* --- Ghost : discret --- */
 .eq-btn--ghost {
   background: transparent;
   color: var(--eq-ink-soft);
@@ -200,7 +186,6 @@
   color: var(--eq-ink);
 }
 
-/* --- Danger : rouge plein --- */
 .eq-btn--danger {
   background: var(--eq-alert);
   color: var(--g-blanc);
@@ -216,7 +201,6 @@
     0 12px 24px -8px rgba(214, 69, 77, 0.6);
 }
 
-/* --- Tailles --- */
 .eq-btn--sm,
 .eq-bouton--petit {
   height: 36px;
@@ -232,14 +216,12 @@
   padding: 0;
 }
 
-/* Alias historique « plein » : identique au primaire */
 .eq-btn--plein,
 .eq-open-button--plein {
   background: var(--eq-brand-deep);
   color: var(--g-blanc);
 }
 
-/* Action principale du bandeau de fiche (Signaler une panne) */
 .eq-bouton--signal {
   height: 48px;
   background: var(--g-blanc);
@@ -257,7 +239,6 @@
   transform: translateY(-1px);
 }
 
-/* Contour « verre » pour boutons sur bandeau coloré */
 .eq-fiche-actions .eq-btn--secondaire,
 .eq-fiche-actions .eq-bouton--clair {
   background: rgba(255, 255, 255, 0.10);
@@ -272,7 +253,6 @@
   color: var(--g-blanc);
 }
 
-/* ---------- Boutons icône ---------- */
 .eq-ico {
   display: inline-flex;
   align-items: center;
@@ -299,7 +279,6 @@
 .eq-ico:active:not(:disabled) { transform: translateY(0) scale(0.96); }
 .eq-ico:disabled { opacity: 0.4; cursor: default; }
 
-/* ---------- Lien ---------- */
 .eq-lien {
   display: inline-flex;
   align-items: center;
@@ -317,7 +296,6 @@
 .eq-lien--alerte { color: var(--eq-alert); }
 .eq-lien--alerte:hover { color: #a3262d; }
 
-/* ---------- Erreur / succès / vide ---------- */
 .eq-erreur {
   margin: 12px 0;
   padding: 10px 14px;
@@ -353,9 +331,6 @@
 .eq-vide--page { min-height: 50vh; justify-content: center; }
 .eq-vide-texte { margin: 0; font-size: 14px; color: var(--eq-ink-faint); }
 
-/* ============================================================
-   LISTE
-   ============================================================ */
 .eq-entete {
   display: flex;
   align-items: flex-end;
@@ -373,7 +348,6 @@
 
 .eq-double { display: flex; flex-direction: column; min-height: 0; }
 
-/* ---------- Onglets ---------- */
 .eq-onglets {
   display: flex;
   gap: 4px;
@@ -434,7 +408,6 @@
 .eq-entete p { margin: 4px 0 0; color: var(--eq-ink-soft); max-width: 60ch; }
 .eq-entete-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-/* ---------- Recherche ---------- */
 .eq-recherche {
   display: flex;
   align-items: center;
@@ -463,7 +436,6 @@
 }
 .eq-page .eq-recherche input:focus-visible { outline: none; }
 
-/* ---------- Liste ---------- */
 .eq-liste {
   margin-top: 16px;
   border: 1px solid var(--eq-line);
@@ -559,7 +531,6 @@
   transform: translateX(2px);
 }
 
-/* ---------- Pagination ---------- */
 .eq-pagination {
   display: flex;
   align-items: center;
@@ -590,9 +561,6 @@
   .eq-ligne-fleche { grid-column: 2; grid-row: 1; }
 }
 
-/* ============================================================
-   FICHE
-   ============================================================ */
 .eq-fiche { padding-top: 0; overflow: hidden; }
 
 .eq-fiche-entete {
@@ -615,7 +583,6 @@
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
 }
 
-/* Bouton Retour : pastille verre */
 .eq-retour {
   display: inline-flex;
   align-items: center;
@@ -712,7 +679,6 @@
   backdrop-filter: blur(6px);
 }
 
-/* Relevé des indicateurs */
 .eq-releve {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -780,7 +746,6 @@
 }
 .eq-bloc-entete h2 svg { color: var(--eq-brand); }
 
-/* Historique timeline */
 .eq-historique {
   list-style: none;
   margin: 0;
@@ -829,7 +794,6 @@
 .eq-panne-corps { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .eq-panne-titre { font-size: 14.5px; line-height: 1.4; unicode-bidi: plaintext; }
 .eq-panne-titre strong { margin-inline-end: 6px; font-variant-numeric: tabular-nums; }
-/* Résumé du rapport d'intervention validé, sous la panne */
 .eq-panne-rapport {
   display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; font-size: 13px; line-height: 1.45;
   color: var(--g-ink-600); text-align: start; unicode-bidi: plaintext;
@@ -846,7 +810,6 @@
 }
 .eq-panne-fleche { margin-top: 2px; color: var(--eq-ink-faint); }
 
-/* Réclamations */
 .eq-reclamations { list-style: none; margin: 0; padding: 0; }
 .eq-reclamations li {
   display: flex;
@@ -861,7 +824,6 @@
 .eq-reclamation-texte span { unicode-bidi: plaintext; }
 .eq-reclamation-texte em { font-style: normal; font-size: 12.5px; color: var(--eq-ink-faint); }
 
-/* Identité / garantie */
 .eq-identite { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .eq-identite div { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
 .eq-identite dt { color: var(--eq-ink-soft); }
@@ -879,7 +841,6 @@
 .eq-garantie-barre span { display: block; height: 100%; border-radius: 999px; background: var(--eq-ton); }
 .eq-garantie p { margin: 0; font-size: 13.5px; font-weight: 600; }
 
-/* Préventif */
 .eq-preventif { list-style: none; margin: 0; padding: 0; }
 .eq-preventif li {
   display: flex;
@@ -893,7 +854,6 @@
 .eq-preventif li > span { display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
 .eq-preventif em { font-style: normal; font-size: 12.5px; color: var(--eq-ink-faint); }
 
-/* Documents */
 .eq-docs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .eq-docs li { display: flex; align-items: center; gap: 4px; }
 
@@ -1007,9 +967,6 @@
   .eq-panne-fleche { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
 }
 
-/* ============================================================
-   MODALES (étiquette QR, scanner)
-   ============================================================ */
 .eq-modale-fond {
   position: fixed;
   inset: 0;
@@ -1071,7 +1028,6 @@
 .eq-etiquette-texte strong { font-size: 16px; line-height: 1.3; }
 .eq-etiquette-texte em { font-style: normal; font-weight: 700; color: var(--eq-brand-deep); }
 
-/* Scanner */
 .eq-scanner-video {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -1119,9 +1075,6 @@
   font-size: 15px;
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 700px) {
   .eq-page { padding: 18px 16px 32px; border-radius: 0; }
   .eq-fiche-entete {
@@ -1150,7 +1103,6 @@
   }
 }
 
-/* ---------- Connexion réseau (adresse IP de l'équipement) ---------- */
 .eq-cnx-ligne { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 10px; }
 .eq-doc-form .eq-cnx-case { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
 .eq-doc-form .eq-cnx-case input { width: 16px; height: 16px; accent-color: var(--g-marque); }
@@ -1175,7 +1127,6 @@
 .eq-cnx-alerte-texte strong { font-size: 13px; font-weight: 600; color: var(--g-slate-800); overflow-wrap: anywhere; }
 .eq-cnx-alerte-texte em { font-style: normal; font-size: 12px; color: var(--g-slate-500); }
 
-/* ── Liaison avec l'agent (machines sans adresse IP) ── */
 .eq-lia-form { gap: 12px; }
 .eq-lia-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
 .eq-lia-aide { display: block; margin-top: 3px; font-size: 11.5px; font-weight: 500; color: var(--g-slate-500); }
@@ -1201,7 +1152,6 @@
 @media (max-width: 520px) { .eq-lia-regle { grid-template-columns: 64px minmax(0, 1fr); } }
 .eq-lia-attention { margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--g-amber-50, #fffbeb); border: 1px solid var(--g-amber-200, #fde68a); color: #92400e; font-size: 12.5px; font-weight: 600; }
 
-/* ── Maintenance conditionnelle ── */
 .eq-mc-form { gap: 12px; }
 .eq-mc-modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .eq-mc-mode {
@@ -1251,6 +1201,7 @@
   .eq-mc-modes { grid-template-columns: 1fr; }
 }
 
-/* Maintenance conditionnelle : règle dans une fenêtre */
 .eq-mc-modale .eq-mc-form { margin: 0; padding: 0; border: 0; background: transparent; font-family: var(--g-police); }
 .eq-mc-modale .eq-mc-mode { justify-content: center; }
+.eq-lia-plus { align-self: flex-start; }
+.eq-lia-supplement { display: flex; flex-direction: column; gap: 12px; padding: 12px; border: 1px dashed var(--g-slate-200); border-radius: 10px; background: var(--g-slate-50); }

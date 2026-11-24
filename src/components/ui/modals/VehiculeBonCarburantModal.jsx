@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
 import { commePage, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/personnelService';
+import personnelService from '../../../services/Personnelservice';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
 import vehiculeMissionService from '../../../services/vehiculeMissionService';
 import {
@@ -13,8 +13,8 @@ import {
   Fuel,
   X,
   Car,
-  User,
-  Calendar,
+  
+  
   Gauge,
   Coins,
   Loader2,
@@ -33,12 +33,10 @@ const emptyForm = {
   litres: '',
   typeCarburant: '',
   station: '',
-  // 'simple' : bon de carburant seul ; 'mission' : plein fait pendant une mission
   typeBon: 'simple',
   missionId: '',
 };
 
-// ─── Sections de navigation ───
 const NAV_SECTIONS = [
   { id: 'identification', label: 'Identification', Icon: Car },
   { id: 'details', label: 'Détails', Icon: Fuel },
@@ -70,7 +68,6 @@ const VehiculeBonCarburantModal = ({
   onSave,
   bonCarburant,
   isEditing,
-  // Création depuis une mission : { missionId, vehiculeId, personnelId } pré-remplis
   valeursInitiales,
 }) => {
   const [formData, setFormData] = useState(emptyForm);
@@ -160,7 +157,6 @@ const VehiculeBonCarburantModal = ({
     }
   }, [isOpen, bonCarburant, isEditing, valeursInitiales]);
 
-  // Missions du véhicule choisi (pour un bon lié à une mission)
   useEffect(() => {
     if (!isOpen || !formData.vehiculeId) {
       setMissions([]);
@@ -176,9 +172,6 @@ const VehiculeBonCarburantModal = ({
     return () => { actif = false; };
   }, [isOpen, formData.vehiculeId]);
 
-  // Consommation déjà enregistrée pour ce bon.
-  // Disponible uniquement en édition : un bon pas encore créé
-  // n'a pas d'historique à comparer.
   useEffect(() => {
     if (!isOpen || !isEditing || !bonCarburant?.id) {
       setConsommation(null);
@@ -191,11 +184,6 @@ const VehiculeBonCarburantModal = ({
       .catch(() => setConsommation(null));
   }, [isOpen, isEditing, bonCarburant?.id]);
 
-  /**
-   * Kilométrage actuel du véhicule sélectionné : plancher de saisie.
-   * Le bon carburant est une source de kilométrage réel, le relevé ne peut
-   * donc pas être inférieur au compteur du véhicule.
-   */
   const kmVehicule = useMemo(() => {
     const veh = vehicules.find(
       (v) => String(v.id) === String(formData.vehiculeId)
@@ -302,7 +290,6 @@ const VehiculeBonCarburantModal = ({
     (p) => String(p.id) === String(formData.personnelId)
   );
 
-  // ─── Badges compteurs par section ───
   const sectionCounts = {
     identification: [
       formData.vehiculeId,
@@ -320,7 +307,6 @@ const VehiculeBonCarburantModal = ({
     ].filter((v) => v !== '' && v != null).length,
   };
 
-  // ─── Contenu des sections ───
   const renderContent = () => {
     switch (activeSection) {
       case 'identification':
@@ -331,7 +317,6 @@ const VehiculeBonCarburantModal = ({
               <p>Véhicule concerné et conducteur</p>
             </div>
 
-            {/* Ouvert depuis une mission : le bon lui est lié d'office */}
             {(valeursInitiales?.missionId || valeursInitiales?.missionEnCreation) ? (
               <p className="vbc-mission-info">
                 <Car size={15} />
@@ -340,7 +325,6 @@ const VehiculeBonCarburantModal = ({
                   : `Ce bon est lié à la mission${valeursInitiales.missionLibelle ? ` ${valeursInitiales.missionLibelle}` : ''}.`}
               </p>
             ) : (
-            /* Bon simple ou lié à une mission */
             <div className="vbc-type" role="radiogroup" aria-label="Type de bon">
               <button
                 type="button"
@@ -699,7 +683,6 @@ const VehiculeBonCarburantModal = ({
               )}
             </div>
 
-            {/* Récapitulatif */}
             <div className="bmm-summary">
               <div className="bmm-summary-row">
                 <span className="bmm-summary-label">
@@ -815,7 +798,6 @@ const VehiculeBonCarburantModal = ({
         className="bmm-modal bmm-modal--sm"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* HEADER */}
         <div className="bmm-header">
           <div className="bmm-header-left">
             <div className="bmm-header-icon-wrap">
@@ -856,12 +838,10 @@ const VehiculeBonCarburantModal = ({
           </div>
         </div>
 
-        {/* LAYOUT SPLIT : NAV + CONTENU */}
         <form
           className="bmm-layout"
           onSubmit={handleSubmit}
         >
-          {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
             <div className="bmm-nav-title">
               Sections
@@ -908,7 +888,6 @@ const VehiculeBonCarburantModal = ({
             </nav>
           </aside>
 
-          {/* CONTENU */}
           <div className="bmm-content">
             {renderContent()}
 
@@ -925,7 +904,6 @@ const VehiculeBonCarburantModal = ({
           </div>
         </form>
 
-        {/* FOOTER */}
         <div className="bmm-footer">
           <div className="bmm-footer-left">
             <span className="bmm-footer-step">

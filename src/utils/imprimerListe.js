@@ -1,38 +1,5 @@
-// ============================================================
-// IMPRESSION — listes et fiches de détail
-//
-// Construit un vrai document imprimable (en-tête avec logo, titre, date,
-// contenu, pied de page numéroté) dans un iframe caché, puis ouvre la boîte
-// d'impression du navigateur. L'utilisateur peut aussi y choisir
-// « Enregistrer en PDF ». Toujours en A4 portrait.
-//
-// Le document suit la langue de l'application (français, arabe de droite à
-// gauche, anglais) : c'est le navigateur qui le dessine, donc l'arabe s'affiche
-// correctement, contrairement aux PDF jsPDF.
-//
-// 1) Une liste :
-//   imprimerListe({
-//     titre: t('Véhicules'),
-//     colonnes: [t('Matricule'), { label: t('Kilométrage'), align: 'end' }],
-//     lignes: [['123 TU 4567', '12 500 km'], …],
-//     filtres: [{ label: t('Recherche'), valeur: 'toyota' }],   // facultatif
-//   });
-//
-// 2) Une fiche de détail :
-//   imprimerFiche({
-//     titre: 'Pompe à perfusion',
-//     reference: 'BM-0012',  statut: 'En cours',               // facultatifs
-//     sections: [
-//       { titre: 'Informations générales', champs: [{ label: 'Service', valeur: 'Bloc' }, …] },
-//       { titre: 'Tâches', colonnes: [...], lignes: [[...], …], vide: 'Aucune tâche' },
-//       { titre: 'Description', texte: '…' },
-//     ],
-//     signatures: ['Technicien', 'Responsable maintenance'],   // facultatif
-//   });
-// ============================================================
 import { t, tp, locale, LANGUES, langueActuelle } from '../i18n';
 
-// Logo résolu par Vite au moment du build ; s'il manque, il est simplement masqué.
 const LOGO_URL = new URL('../assets/logo_SoftSys.png', import.meta.url).href;
 
 const echapper = (v) => String(v ?? '')
@@ -43,7 +10,6 @@ const echapper = (v) => String(v ?? '')
 
 const vide = (v) => v === null || v === undefined || String(v).trim() === '';
 
-// Échappe une chaîne pour la propriété CSS `content: "…"`.
 const chaineCss = (s) => `"${String(s).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 
 function normaliserColonne(c) {
@@ -51,7 +17,6 @@ function normaliserColonne(c) {
   return { label: c ?? '', align: 'start' };
 }
 
-// ---------- Tableau ----------
 function tableauHtml(colonnes, lignes, texteVide) {
   const cols = colonnes.map(normaliserColonne);
   const thead = cols.map((c) => `<th class="al-${c.align}"${c.largeur ? ` style="width:${echapper(c.largeur)}"` : ''}>${echapper(c.label)}</th>`).join('');
@@ -59,13 +24,11 @@ function tableauHtml(colonnes, lignes, texteVide) {
     ? `<tr><td class="vide" colspan="${cols.length || 1}">${echapper(texteVide || t('Aucune donnée à imprimer.'))}</td></tr>`
     : lignes.map((ligne) => `<tr>${cols.map((c, i) => {
       const v = ligne[i];
-      // <bdi> : un matricule « 123 TU 4567 » ou une valeur latine reste dans le bon ordre en arabe
       return `<td class="al-${c.align}"><bdi>${echapper(vide(v) ? '—' : v)}</bdi></td>`;
     }).join('')}</tr>`).join('');
   return `<table class="${cols.length > 6 ? 'serre' : ''}"><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>`;
 }
 
-// ---------- Squelette commun (en-tête, styles, pied de page) ----------
 function documentHtml({ titre, sousTitre, entreteDroite, corps, qr }) {
   const code = langueActuelle();
   const langue = LANGUES[code] || LANGUES.fr;
@@ -176,7 +139,6 @@ function documentHtml({ titre, sousTitre, entreteDroite, corps, qr }) {
 </html>`;
 }
 
-// ---------- Contenus ----------
 function listeHtml({ titre, sousTitre, colonnes, lignes, filtres }) {
   const filtresActifs = (filtres || []).filter((f) => f && !vide(f.valeur));
   const blocFiltres = filtresActifs.length === 0 ? '' : `
@@ -228,7 +190,6 @@ function ficheHtml({ titre, sousTitre, reference, statut, sections, signatures, 
   });
 }
 
-// ---------- Impression via un iframe caché ----------
 export function imprimerHtml(html) {
   const iframe = document.createElement('iframe');
   iframe.setAttribute('aria-hidden', 'true');
@@ -250,11 +211,9 @@ export function imprimerHtml(html) {
     win.addEventListener('afterprint', nettoyer, { once: true });
     win.focus();
     win.print();
-    // Filet de sécurité : certains navigateurs ne déclenchent pas afterprint
     setTimeout(nettoyer, 60000);
   };
 
-  // Attendre les polices et le logo (sans bloquer plus de 2 s si le réseau est lent)
   const pret = Promise.all([
     doc.fonts ? doc.fonts.ready : Promise.resolve(),
     ...Array.from(doc.images).map((img) => (img.complete ? Promise.resolve() : new Promise((ok) => {
@@ -265,25 +224,14 @@ export function imprimerHtml(html) {
   Promise.race([pret, new Promise((ok) => setTimeout(ok, 2000))]).then(lancer);
 }
 
-/**
- * Imprime une liste filtrée (A4 portrait ; police resserrée au-delà de 6 colonnes).
- * @param {{titre:string, sousTitre?:string, colonnes:(string|{label:string, align?:'start'|'center'|'end', largeur?:string})[], lignes:any[][], filtres?:{label:string, valeur:any}[]}} options
- */
 export function imprimerListe({ titre, sousTitre, colonnes, lignes, filtres }) {
   imprimerHtml(listeHtml({ titre, sousTitre, colonnes, lignes: lignes || [], filtres }));
 }
 
-/**
- * Imprime une fiche de détail (A4 portrait).
- * Sections : { titre, champs: [{label, valeur, large?}] } | { titre, colonnes, lignes, vide? } | { titre, texte }.
- * qr (facultatif) : SVG d'un QR code affiché dans l'en-tête (voir utils/qrCode.js).
- * Les champs et textes vides sont omis ; un tableau vide affiche son message `vide`.
- */
 export function imprimerFiche({ titre, sousTitre, reference, statut, sections, signatures, qr }) {
   imprimerHtml(ficheHtml({ titre, sousTitre, reference, statut, sections, signatures, qr }));
 }
 
-// Exposés pour les tests de rendu
 export { listeHtml as _listeHtml, ficheHtml as _ficheHtml };
 
 export default imprimerListe;

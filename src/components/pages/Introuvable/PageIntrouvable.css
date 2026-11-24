@@ -1,0 +1,65 @@
+.pi-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 140px);
+  padding: 24px;
+}
+
+.pi-carte {
+  width: 100%;
+  max-width: 440px;
+  padding: 36px 32px;
+  text-align: center;
+  background: var(--g-blanc);
+  border: 1px solid var(--g-slate-200);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px -18px rgba(15, 23, 42, 0.35);
+}
+
+.pi-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 14px;
+  border-radius: 50%;
+  color: var(--g-brand-600);
+  background: var(--g-brand-100);
+}
+
+.pi-code {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 2px;
+  color: var(--g-slate-300);
+}
+
+.pi-titre {
+  margin: 10px 0 6px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--g-slate-700);
+}
+
+.pi-texte {
+  margin: 0 0 22px;
+  font-size: 14px;
+  color: var(--g-slate-500);
+  word-break: break-all;
+}
+
+.pi-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pi-actions .cm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

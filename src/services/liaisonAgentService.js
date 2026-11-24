@@ -1,8 +1,6 @@
 import api from './api';
 import authService from './Authservice';
 
-/* Liaisons des équipements sans adresse IP avec un agent de terrain (USB, RS232, RS485, Modbus, Zigbee, Bluetooth). */
-
 const enTeteAuteur = () => {
   const user = authService.getCurrentUser();
   const nom = user?.userNom || [user?.prenom, user?.nom].filter(Boolean).join(' ') || user?.login || '';
@@ -26,7 +24,6 @@ const liaisonAgentService = {
     await api.delete(`/liaisons-agent/${liaisonId}`);
   },
 
-  /** Toutes les liaisons (carte des agents), ou celles d'un agent. */
   async liste(agentNom) {
     const { data } = await api.get('/liaisons-agent', { params: { agent: agentNom || undefined } });
     return data ?? [];

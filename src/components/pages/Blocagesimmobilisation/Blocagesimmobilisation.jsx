@@ -7,15 +7,14 @@ import {
   dateCourte, ilYa,
 } from '../../ui/Veille/Veille';
 
-/* ---------- Libellés et couleurs ---------- */
 const STATUT = {
   NOUVELLE: { label: 'Nouveau', ton: 'info' },
   VUE: { label: 'Vu', ton: 'neutre' },
   RESOLU: { label: 'Résolu', ton: 'succes' },
   IGNOREE: { label: 'Ignoré', ton: 'neutre' },
 };
-const SEUIL_LONG = 30; // au-delà, le blocage est considéré comme long
-const JOURS_JAUGE = 60; // la jauge est pleine à 60 jours
+const SEUIL_LONG = 30;
+const JOURS_JAUGE = 60;
 
 const estActif = (b) => b.statut === 'NOUVELLE' || b.statut === 'VUE';
 const tonJours = (b) => {
@@ -91,7 +90,6 @@ export default function BlocagesImmobilisation({ isModal = false }) {
     return c;
   }, [blocages]);
 
-  // Les blocages actifs les plus anciens d'abord
   const affiches = useMemo(() => blocages
     .filter((b) => {
       if (filtre === 'TOUS') return true;

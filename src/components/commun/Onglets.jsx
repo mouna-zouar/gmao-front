@@ -2,12 +2,6 @@ import { useRef } from 'react';
 import { t } from '../../i18n';
 import './Onglets.css';
 
-/*
- * Barre d'onglets commune (fiche équipement, détail d'un bon…).
- *   <Onglets onglets={[{ cle, label, icone, n, ton }]} actif={cle} onChanger={setCle} />
- * n : compteur affiché en pastille (masqué si null) ; ton 'rouge' pour un compteur d'alerte.
- * Flèches gauche / droite pour passer d'un onglet à l'autre au clavier.
- */
 export default function Onglets({ onglets, actif, onChanger, ariaLabel, className = '' }) {
   const barre = useRef(null);
   const clavier = (e, i) => {

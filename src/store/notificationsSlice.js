@@ -24,7 +24,6 @@ const notificationsSlice = createSlice({
   name: 'notifications',
   initialState,
   reducers: {
-    /** À la déconnexion : rien ne doit rester de l'utilisateur précédent. */
     viderNotifications: () => initialState,
   },
   extraReducers: (builder) => {

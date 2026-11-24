@@ -45,7 +45,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ═══════════ HEADER ═══════════ */
 .parcplan-header {
   display: flex;
   align-items: center;
@@ -90,7 +89,6 @@
   font-weight: 500;
 }
 
-/* Navigation semaine */
 .parcplan-nav { display: flex; align-items: center; gap: 6px; }
 
 .parcplan-nav-btn,
@@ -124,7 +122,6 @@
   transform: translateY(0);
 }
 
-/* ═══════════ TOOLBAR ═══════════ */
 .parcplan-toolbar {
   display: flex;
   align-items: center;
@@ -210,7 +207,6 @@
 .color-red   { background: var(--pp-red); }
 .color-slate { background: var(--pp-slate); }
 
-/* ═══════════ LÉGENDE DES COULEURS ═══════════ */
 .parcplan-legend {
   display: flex;
   flex-wrap: wrap;
@@ -303,7 +299,6 @@
 .parcplan-legend-swatch.color-red   { background: var(--g-red-500); }
 .parcplan-legend-swatch.color-slate { background: var(--g-slate-500); }
 
-/* ═══════════ ERROR / LOADING ═══════════ */
 .parcplan-error-banner {
   display: flex;
   align-items: center;
@@ -348,7 +343,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* ═══════════ GRILLE ═══════════ */
 .parcplan-grid-wrap {
   overflow-x: auto;
   border: 1px solid var(--pp-gray-200);
@@ -372,7 +366,6 @@
   min-width: 960px;
 }
 
-/* En-tête */
 .parcplan-grid thead th {
   position: sticky;
   top: 0;
@@ -415,7 +408,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Colonne véhicule */
 .parcplan-col-vehicule {
   text-align: left !important;
   padding: 12px 20px !important;
@@ -445,7 +437,6 @@
   margin-top: 2px;
 }
 
-/* Colonne aujourd'hui */
 .parcplan-col-today {
   background: rgba(7, 148, 164, 0.06) !important;
   position: relative;
@@ -461,7 +452,6 @@
   background: var(--pp-primary);
 }
 
-/* Corps */
 .parcplan-grid tbody tr {
   border-bottom: 1px solid var(--pp-gray-100);
   transition: background 0.15s var(--pp-ease);
@@ -479,7 +469,6 @@
   border-bottom: none;
 }
 
-/* Cellules */
 .parcplan-cell {
   vertical-align: top;
   padding: 8px 8px;
@@ -503,7 +492,6 @@
   gap: 4px;
 }
 
-/* ═══════════ ÉVÉNEMENTS ═══════════ */
 .parcplan-event {
   display: flex;
   align-items: center;
@@ -539,14 +527,12 @@
   filter: brightness(1.05);
 }
 
-/* Couleurs unies */
 .parcplan-event.color-blue  { background: var(--g-blue-500); }
 .parcplan-event.color-teal  { background: var(--g-brand-500); }
 .parcplan-event.color-amber { background: var(--g-amber-500); }
 .parcplan-event.color-red   { background: var(--g-red-500); }
 .parcplan-event.color-slate { background: var(--g-slate-500); }
 
-/* ═══════════ EMPTY / NOTE ═══════════ */
 .parcplan-empty {
   text-align: center;
   padding: 60px 24px;
@@ -570,7 +556,6 @@
   gap: 6px;
 }
 
-/* ═══════════ RESPONSIVE ═══════════ */
 @media (max-width: 900px) {
   .parcplan-container { padding: 18px; }
 
@@ -598,7 +583,6 @@
     min-width: 800px;
   }
 
-  /* Légende en colonne */
   .parcplan-legend {
     flex-direction: column;
     gap: 12px;

@@ -3,19 +3,13 @@ import { AlertTriangle, Ban, Calendar, Car, CheckCircle2, Clock, Coins, Loader2,
 import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeAmendeService from '../../../../services/Vehiculeamendeservice';
 import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/personnelService';
-import VehiculeAmendeModal, { PaiementAmendeModal } from '../../../ui/modals/VehiculeAmendeModal';
+import personnelService from '../../../../services/Personnelservice';
+import VehiculeAmendeModal, { PaiementAmendeModal } from '../../../ui/modals/Vehiculeamendemodal';
 import { ConfirmModal, PageListe } from '../../../commun';
 import { TYPES_INFRACTION, STATUTS, ORIGINE, ltr } from '../../../../constants/Amendelibelles';
 import { t, locale } from '../../../../i18n';
 import '../VehiculeIncident/VehiculeIncidents.css';
 import './Vehiculeamendes.css';
-
-/*
- * Amendes (contraventions) des véhicules : page liste de la bibliothèque commune.
- * Le conducteur responsable est retrouvé d'après la mission en cours à la date de l'infraction.
- * Les fenêtres restent VehiculeAmendeModal (saisie du PV) et PaiementAmendeModal (paiement).
- */
 
 const A_PAYER = 0, CONTESTEE = 1, PAYEE = 2, ANNULEE = 3;
 const STATUT_META = {
@@ -52,19 +46,18 @@ export default function VehiculeAmendes() {
   const [filtreStatut, setFiltreStatut] = useState('all');
   const [filtreType, setFiltreType] = useState('all');
   const [selection, setSelection] = useState(null);
-  const [formulaire, setFormulaire] = useState(null); // null | 'nouvelle' | 'modifier'
+  const [formulaire, setFormulaire] = useState(null);
   const [paiement, setPaiement] = useState(false);
   const [action, setAction] = useState(false);
   const [confirmation, setConfirmation] = useState({ show: false });
 
-  /* Le premier chargement affiche l'indicateur ; ensuite le tableau reste affiché pendant la mise à jour */
   const charger = useCallback(async () => {
     setErreur(null);
     try {
       const [page, veh, pers] = await Promise.all([
         vehiculeAmendeService.getAll(0, 500),
         obtenirVehicules().then(commePage),
-        personnelService.getAll(0, 500).catch(() => ({ content: [] })), // facultatif : sans lui, on affiche l'identifiant
+        personnelService.getAll(0, 500).catch(() => ({ content: [] })),
       ]);
       const liste = page.content ?? [];
       setAmendes(liste);
@@ -180,7 +173,6 @@ export default function VehiculeAmendes() {
     },
   ], [vehicules, conducteurTexte]);
 
-  /* L'export et l'impression gardent les colonnes détaillées de l'écran d'origine */
   const colonnesExport = useMemo(() => [
     { label: 'N°', texte: (a) => a.num },
     { label: 'Véhicule', texte: (a) => vehicules[a.vehiculeId]?.matricule },
@@ -199,7 +191,6 @@ export default function VehiculeAmendes() {
   const lignes = amendes.filter((a) => (filtreStatut === 'all' || (filtreStatut === 'retard' ? a.enRetard : String(a.statut) === filtreStatut))
     && (filtreType === 'all' || String(a.type) === filtreType));
 
-  /* ─── Actions ─── */
   const executer = async (fn, succes) => {
     if (action) return;
     setAction(true);

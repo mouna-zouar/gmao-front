@@ -6,12 +6,6 @@ import { formatTemps } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
 
-/*
- * Section « Performance des employés » du tableau de bord GMAO.
- * Uniquement le travail réalisé sur la période choisie en haut de la page :
- * la durée des interventions terminées et celle des tâches effectuées, par employé.
- */
-
 const nb = (v) => (v == null || Number.isNaN(Number(v)) ? '—' : Number(v).toLocaleString(locale()));
 const duree = (s) => (s ? formatTemps(s) : '—');
 
@@ -23,7 +17,6 @@ const TRIS = [
 ];
 const NB_VISIBLES = 10;
 
-/* Filtre sur toutes les tâches associées à l'employé (sans limite de période) */
 const FILTRES_TACHES = [
   { cle: 'tous', label: 'Tous', garder: () => true },
   { cle: 'finies', label: 'Toutes ses tâches finies', garder: (e) => e.nbTachesAssociees > 0 && !e.nbTachesNonFinies },

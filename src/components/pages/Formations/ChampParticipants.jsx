@@ -6,10 +6,6 @@ import { Badge } from '../../commun';
 import { RESULTATS_FORMATION, nomPersonnel } from './formationLibelles';
 import { t } from '../../../i18n';
 
-/*
- * Participants d'une formation : techniciens du service maintenance, chacun avec son résultat.
- * valeur : [{ personnelId, personnelNom, resultat }]
- */
 export default function ChampParticipants({ id, valeur, changer }) {
   const participants = Array.isArray(valeur) ? valeur : [];
   const [personnels, setPersonnels] = useState([]);

@@ -39,7 +39,6 @@
   75% { transform: translateX(4px); }
 }
 
-/* ═══════════ HEADER — teal foncé uni + texte blanc ═══════════ */
 .bmm-header {
   display: flex;
   align-items: center;
@@ -70,7 +69,6 @@
   z-index: 1;
 }
 
-/* Icône header → translucide sur teal */
 .bmm-header-icon-wrap {
   display: flex;
   align-items: center;
@@ -114,7 +112,6 @@
   z-index: 1;
 }
 
-/* Badge type → teal clair sur bandeau teal */
 .bmm-type-badge {
   display: inline-block;
   padding: 5px 12px;
@@ -153,7 +150,6 @@
   transform: rotate(90deg);
 }
 
-/* ═══════════ LAYOUT SPLIT ═══════════ */
 .bmm-layout {
   flex: 1;
   display: flex;
@@ -161,7 +157,6 @@
   overflow: hidden;
 }
 
-/* ═══════════ NAVIGATION LATÉRALE ═══════════ */
 .bmm-nav {
   width: 220px;
   flex-shrink: 0;
@@ -217,14 +212,12 @@
   width: 100%;
 }
 
-/* Hover → teal clair uni */
 .bmm-nav-item:hover {
   background: var(--g-brand-50) !important;
   border-color: var(--g-brand-100) !important;
   color: var(--g-brand-500) !important;
 }
 
-/* Item actif → teal uni */
 .bmm-nav-item.active {
   background: var(--g-brand-500) !important;
   color: var(--g-blanc) !important;
@@ -257,7 +250,6 @@
   text-overflow: ellipsis;
 }
 
-/* Compteur → teal */
 .bmm-nav-item-count {
   display: inline-flex;
   align-items: center;
@@ -277,7 +269,6 @@
   color: var(--g-blanc) !important;
 }
 
-/* ═══════════ CONTENU ═══════════ */
 .bmm-content {
   flex: 1;
   overflow-y: scroll;
@@ -307,7 +298,6 @@
   border-color: var(--g-brand-50);
 }
 
-/* ═══════════ PANE ═══════════ */
 .bmm-content-pane {
   animation: bmmSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -332,7 +322,6 @@
   color: var(--g-slate-500);
 }
 
-/* ═══════════ GRILLE & CHAMPS ═══════════ */
 .bmm-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -394,7 +383,6 @@
   cursor: not-allowed;
 }
 
-/* ═══════════ HINTS ═══════════ */
 .bmm-hint {
   margin: 4px 0 0;
   font-size: 0.72rem;
@@ -403,7 +391,6 @@
   line-height: 1.4;
 }
 
-/* ═══════════ KM CARDS ═══════════ */
 .bmm-km-grid {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -488,7 +475,6 @@
   text-align: center;
 }
 
-/* ═══════════ SOUS-SECTIONS (échéances) ═══════════ */
 .bmm-subsection {
   margin-top: 20px;
   padding: 16px 18px;
@@ -520,7 +506,6 @@
   background: var(--g-brand-500) !important;
 }
 
-/* ═══════════ INFO / ERREUR ═══════════ */
 .bmm-info {
   display: flex;
   align-items: center;
@@ -550,7 +535,6 @@
   animation: bmmShake 0.35s ease;
 }
 
-/* ═══════════ FOOTER ═══════════ */
 .bmm-footer {
   display: flex;
   align-items: center;
@@ -584,7 +568,6 @@
   gap: 8px;
 }
 
-/* ═══════════ SEARCHABLE SELECT (combobox) ═══════════ */
 .bmm-searchable {
   position: relative;
   width: 100%;
@@ -764,7 +747,6 @@
   font-style: italic;
 }
 
-/* ═══════════ RESPONSIVE ═══════════ */
 @media (max-width: 900px) {
   .bmm-modal { width: 100%; }
 
@@ -819,10 +801,6 @@
   .bmm-footer-right { width: 100%; }
   .bmm-footer-right > button { flex: 1; }
 }
-
-/* ═══════════════════════════════════════════════════════════
-   OVERRIDE FINAL — Header TEAL forcé (spécificité maximale)
-   ═══════════════════════════════════════════════════════════ */
 
 .bmm-modal .bmm-header,
 .modal-overlay .bmm-modal .bmm-header,

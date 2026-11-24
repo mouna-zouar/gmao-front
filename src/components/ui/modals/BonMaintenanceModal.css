@@ -43,7 +43,6 @@
   75% { transform: translateX(4px); }
 }
 
-/* ─────────── HEADER ─────────── */
 .bmm-header {
   display: flex;
   align-items: center;
@@ -149,7 +148,6 @@ color: var(--g-blanc);
   transform: rotate(90deg);
 }
 
-/* ─────────── LAYOUT SPLIT ─────────── */
 .bmm-layout {
   flex: 1;
   display: flex;
@@ -157,7 +155,6 @@ color: var(--g-blanc);
   overflow: hidden;
 }
 
-/* ─────────── NAVIGATION LATÉRALE ─────────── */
 .bmm-nav {
   width: 220px;
   flex-shrink: 0;
@@ -281,7 +278,6 @@ color: var(--g-blanc);
   scrollbar-color: var(--g-slate-400) var(--g-slate-100);
 }
 
-/* Ascenseur WebKit */
 .bmm-content::-webkit-scrollbar {
   width: 10px;
 }
@@ -304,7 +300,6 @@ color: var(--g-blanc);
   border-color: var(--g-teal-50);
 }
 
-/* ─────────── PANE ─────────── */
 .bmm-content-pane {
   animation: bmmSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -329,7 +324,6 @@ color: var(--g-blanc);
   color: var(--g-slate-500);
 }
 
-/* ─────────── GRILLE & CHAMPS ─────────── */
 .bmm-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -391,7 +385,6 @@ color: var(--g-blanc);
   cursor: not-allowed;
 }
 
-/* ─────────── HINTS ─────────── */
 .bmm-hint {
   margin: 2px 0 0;
   font-size: 0.72rem;
@@ -399,7 +392,6 @@ color: var(--g-blanc);
   font-style: italic;
 }
 
-/* ─────────── ALERTES ─────────── */
 .bmm-alert {
   display: flex;
   align-items: center;
@@ -417,7 +409,6 @@ color: var(--g-blanc);
   color: var(--g-red-700);
 }
 
-/* ─────────── TOGGLE CARD ─────────── */
 .bmm-toggle-card {
   display: flex;
   align-items: center;
@@ -463,7 +454,6 @@ color: var(--g-blanc);
 .bmm-toggle-title { font-size: 0.88rem; font-weight: 700; color: var(--g-slate-900); }
 .bmm-toggle-desc { font-size: 0.76rem; color: var(--g-slate-500); }
 
-/* ─────────── NOTICE ─────────── */
 .bmm-notice {
   display: flex;
   align-items: center;
@@ -477,7 +467,6 @@ color: var(--g-blanc);
   font-weight: 600;
 }
 
-/* ─────────── FORMULAIRE INLINE ─────────── */
 .bmm-inline-form {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -542,7 +531,6 @@ color: var(--g-blanc);
   box-shadow: 0 8px 20px -6px rgba(15, 118, 110, 0.5);
 }
 
-/* ─────────── LISTE ─────────── */
 .bmm-list {
   list-style: none;
   margin: 0;
@@ -637,7 +625,6 @@ color: var(--g-blanc);
   transform: scale(1.05);
 }
 
-/* ─────────── EMPTY ─────────── */
 .bmm-empty {
   display: flex;
   flex-direction: column;
@@ -654,7 +641,6 @@ color: var(--g-blanc);
 .bmm-empty svg { color: var(--g-slate-300); }
 .bmm-empty p { margin: 0; font-size: 0.85rem; font-weight: 600; }
 
-/* ─────────── ASSISTANT ─────────── */
 .bmm-assistant {
   padding: 14px;
   background: linear-gradient(135deg, var(--g-teal-50) 0%, var(--g-cyan-50) 100%);
@@ -727,7 +713,6 @@ color: var(--g-blanc);
   font-style: italic;
 }
 
-/* ─────────── SUGGESTIONS ─────────── */
 .bmm-suggestion-list {
   list-style: none;
   margin: 10px 0 0;
@@ -808,7 +793,6 @@ color: var(--g-blanc);
 
 .bmm-suggestion-line strong { color: var(--g-slate-900); font-weight: 700; }
 
-/* ─────────── ERREUR ─────────── */
 .bmm-error {
   display: flex;
   align-items: center;
@@ -824,7 +808,6 @@ color: var(--g-blanc);
   animation: bmmShake 0.35s ease;
 }
 
-/* ─────────── FOOTER ─────────── */
 .bmm-footer {
   display: flex;
   align-items: center;
@@ -858,7 +841,6 @@ color: var(--g-blanc);
   gap: 8px;
 }
 
-/* ─────────── RESPONSIVE ─────────── */
 @media (max-width: 900px) {
   .bmm-modal { width: 100%; }
 
@@ -922,7 +904,7 @@ color: var(--g-blanc);
   }
   .bmm-footer-right { width: 100%; }
   .bmm-footer-right > button { flex: 1; }
-}/* ═══════════ SEARCHABLE SELECT (combobox) ═══════════ */
+}
 .bmm-searchable {
   position: relative;
   width: 100%;
@@ -1020,7 +1002,6 @@ color: var(--g-blanc);
   transform: rotate(180deg);
 }
 
-/* Menu déroulant */
 .bmm-searchable-menu {
   position: absolute;
   top: calc(100% + 6px);
@@ -1128,7 +1109,6 @@ color: var(--g-blanc);
   font-style: italic;
 }
 
-/* ─── Version compacte (formulaires inline) ─── */
 .bmm-searchable--compact .bmm-searchable-input-wrap {
   height: 38px;
   padding: 0 8px 0 10px;
@@ -1147,7 +1127,6 @@ color: var(--g-blanc);
 .bmm-searchable--compact .bmm-searchable-menu {
   z-index: 70;
 }
-/* Étape Tâches : aucun sous-traitant sur le bon → raccourci vers l'étape Intervenants */
 .bmm-st-vide {
   display: inline-flex;
   align-items: center;
@@ -1168,10 +1147,6 @@ color: var(--g-blanc);
 .bmm-st-vide:hover { border-color: var(--g-brand-500); background: var(--g-brand-75); }
 .bmm-st-vide:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 2px; }
 
-/* ─────────── CORRECTIF AFFICHAGE : les champs restent dans la fenêtre ───────────
-   Dans une grille, un enfant ne rétrécit pas sous la largeur « naturelle » de son contenu
-   (min-width: auto) : les champs date/heure et les listes avec recherche débordaient à droite
-   et étaient coupés. On autorise les colonnes à rétrécir et les champs à prendre 100 %. */
 .bmm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .bmm-inline-form { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .bmm-content { min-width: 0; }
@@ -1199,16 +1174,13 @@ color: var(--g-blanc);
 }
 .bmm-content-pane .bmd-searchable-input { width: 100%; }
 
-/* Écrans moyens : formulaire des tâches et intervenants sur 2 colonnes */
 @media (max-width: 1100px) {
   .bmm-inline-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-/* Les champs date + heure ont besoin de place : ils prennent 2 colonnes du formulaire en ligne */
 .bmm-inline-field:has(> input[type="datetime-local"]),
 .bmm-inline-field:has(> input[type="date"]) { grid-column: span 2; }
 
-/* ─────────── TYPE D'ENTRETIEN (cases de la fiche ENR-MMT 10) ─────────── */
 .bmm-types { margin: 0; padding: 0; border: 0; min-width: 0; }
 .bmm-types legend { padding: 0; margin-bottom: 6px; font-size: 0.8rem; font-weight: 700; color: var(--g-slate-700); }
 .bmm-types__options { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }

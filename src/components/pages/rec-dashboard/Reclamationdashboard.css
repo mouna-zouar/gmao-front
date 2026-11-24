@@ -49,7 +49,6 @@
   --slate-100: var(--g-slate-100);
   --slate-50: var(--g-slate-50);
 
-  /* Alias internes */
   --rd-surface: var(--g-blanc);
   --rd-bg: var(--slate-50);
   --rd-bg-soft: var(--slate-50);
@@ -91,7 +90,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── États de chargement / erreur ── */
 .reclamation-dashboard-loading,
 .reclamation-dashboard-error {
   text-align: center;
@@ -125,7 +123,6 @@
   font-weight: 600;
 }
 
-/* ═══════════════════ HEADER — carte blanche ═══════════════════ */
 .reclamation-dashboard-header {
   position: relative;
   overflow: hidden;
@@ -203,7 +200,6 @@
   transform: translateY(-1px);
 }
 
-/* ═══════════════════ GRILLE STATS ═══════════════════ */
 .reclamation-dashboard-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -234,7 +230,6 @@
 }
 .reclamation-dashboard-stat-card:active { cursor: grabbing; }
 
-/* Poignée drag */
 .reclamation-dashboard-stat-drag-handle {
   position: absolute;
   top: 8px;
@@ -257,7 +252,6 @@
   color: var(--slate-700);
 }
 
-/* Icône */
 .reclamation-dashboard-stat-icon {
   display: inline-flex;
   align-items: center;
@@ -268,7 +262,6 @@
   flex-shrink: 0;
 }
 
-/* Contenu */
 .reclamation-dashboard-stat-body { min-width: 0; }
 .reclamation-dashboard-stat-value {
   font-size: 1.65rem;
@@ -287,7 +280,6 @@
   letter-spacing: 0.005em;
 }
 
-/* Déclinaisons couleurs icônes */
 .reclamation-dashboard-stat--neutral .reclamation-dashboard-stat-icon { background: var(--slate-100); color: var(--slate-700); }
 .reclamation-dashboard-stat--ouverte .reclamation-dashboard-stat-icon { background: var(--blue-100);  color: var(--g-blue-700); }
 .reclamation-dashboard-stat--encours .reclamation-dashboard-stat-icon { background: var(--amber-50);  color: var(--amber-700); }
@@ -296,7 +288,6 @@
 .reclamation-dashboard-stat--attente .reclamation-dashboard-stat-icon { background: var(--teal-50);   color: var(--teal-700); }
 .reclamation-dashboard-stat--rejetee .reclamation-dashboard-stat-icon { background: var(--slate-100); color: var(--slate-500); }
 
-/* ═══ Carte Featured (Total) — accent teal ═══ */
 .reclamation-dashboard-stat-card--featured {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -321,7 +312,6 @@
   .reclamation-dashboard-stat-card--featured { grid-column: span 2; }
 }
 
-/* États drag */
 .reclamation-dashboard-stat-card.is-dragging {
   opacity: 0.4;
   cursor: grabbing;
@@ -333,7 +323,6 @@
   box-shadow: var(--rd-ring);
 }
 
-/* ═══════════════════ GRAPHIQUES ═══════════════════ */
 .reclamation-dashboard-charts-row {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
@@ -380,7 +369,6 @@
   border: 1px solid var(--teal-100);
 }
 
-/* Bar chart vertical */
 .reclamation-dashboard-bar-chart {
   display: flex;
   align-items: flex-end;
@@ -422,7 +410,6 @@
   white-space: nowrap;
 }
 
-/* Barres horizontales (niveau) */
 .reclamation-dashboard-niveau-section + .reclamation-dashboard-niveau-section {
   margin-top: 20px;
   padding-top: 16px;
@@ -476,7 +463,6 @@
   transition: width 0.3s var(--rd-ease);
 }
 
-/* Barres — palette sobre */
 .reclamation-dashboard-hbar-fill--niveau1 { background: linear-gradient(90deg, var(--g-blue-400), var(--g-blue-600)); }
 .reclamation-dashboard-hbar-fill--niveau2 { background: linear-gradient(90deg, var(--g-amber-300), var(--g-amber-500)); }
 .reclamation-dashboard-hbar-fill--niveau3 { background: linear-gradient(90deg, var(--g-red-400), var(--g-red-600)); }
@@ -489,7 +475,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ═══════════════════ TABLEAU RÉCENT ═══════════════════ */
 .reclamation-dashboard-empty {
   color: var(--slate-400);
   font-style: italic;
@@ -541,7 +526,6 @@
   white-space: nowrap;
 }
 
-/* Badges — sobres */
 .reclamation-dashboard-niveau-badge {
   display: inline-flex;
   align-items: center;
@@ -577,7 +561,6 @@
 .reclamation-dashboard-etat-badge--3 { background: var(--teal-100);  color: var(--teal-800);  border-color: var(--teal-200); }
 .reclamation-dashboard-etat-badge--4 { background: var(--slate-100); color: var(--slate-500); border-color: var(--slate-200); }
 
-/* ═══════════════════ GRAPHIQUES DRAGGABLES ═══════════════════ */
 .reclamation-dashboard-chart-drag-wrap {
   position: relative;
   cursor: grab;
@@ -622,7 +605,6 @@
 }
 .reclamation-dashboard-chart-drag-wrap .reclamation-dashboard-chart-head { padding-right: 32px; }
 
-/* ═══════════════════ RESPONSIVE ═══════════════════ */
 @media (max-width: 768px) {
   .reclamation-dashboard-container { padding: 16px; gap: 16px; }
   .reclamation-dashboard-header { padding: 16px 18px; flex-wrap: wrap; }
@@ -655,7 +637,6 @@
   .reclamation-dashboard-stat-label { font-size: 0.7rem; }
 }
 
-/* ═══════════════════ ACCESSIBILITÉ ═══════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .reclamation-dashboard-container,
   .reclamation-dashboard-stat-card,
@@ -669,7 +650,6 @@
   }
 }
 
-/* ═══════════════════ MODE SOMBRE ═══════════════════ */
 @media (prefers-color-scheme: dark) {
   .reclamation-dashboard-container {
     background: #1a2433;
@@ -717,7 +697,6 @@
     color: var(--teal-400);
   }
 }
-/* Carte cliquable : ouvre la liste filtrée sur cet état */
 .reclamation-dashboard-stat-card.est-cliquable { cursor: pointer; }
 .reclamation-dashboard-stat-card.est-cliquable:hover { border-color: var(--g-brand-200); box-shadow: 0 8px 20px -12px rgba(15, 23, 42, .3); }
 .reclamation-dashboard-stat-card.est-cliquable:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(7, 148, 164, .3); }

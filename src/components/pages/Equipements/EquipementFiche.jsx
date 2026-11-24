@@ -30,13 +30,6 @@ import './EquipementFiche.css';
 import { useAppDispatch } from '../../../store/hooks';
 import { choisirEquipementAssistant } from '../../../store/assistantSlice';
 
-/*
- * Fiche d'un équipement : son état, ses indicateurs (disponibilité, MTBF, MTTR, coût des
- * réparations), sa garantie, l'historique de ses pannes, ses réclamations, sa maintenance
- * préventive et ses documents. C'est aussi la page qu'ouvre le QR code de son étiquette :
- * « Signaler une panne » y est donc l'action principale.
- */
-
 function Pastille({ ton = 'neutre', children }) {
   return <span className={`eq-pastille eq-ton--${ton}`}>{children}</span>;
 }
@@ -53,7 +46,6 @@ function Bloc({ titre, icone: Icone, action, children }) {
   );
 }
 
-/* ---------- Étiquette QR ---------- */
 function ModaleEtiquette({ identite, onClose }) {
   const [svg, setSvg] = useState('');
   useEffect(() => { qrSvg(identite.id).then(setSvg); }, [identite.id]);
@@ -71,7 +63,6 @@ function ModaleEtiquette({ identite, onClose }) {
           <button type="button" className="eq-ico" onClick={onClose} aria-label={t('Fermer')}><X size={18} /></button>
         </header>
         <div className="eq-etiquette-apercu">
-          {/* SVG produit par la bibliothèque qrcode à partir de l'adresse de la fiche */}
           <div className="eq-etiquette-qr" dangerouslySetInnerHTML={{ __html: svg }} />
           <div className="eq-etiquette-texte">
             <strong>{identite.designation}</strong>
@@ -97,7 +88,6 @@ function ModaleEtiquette({ identite, onClose }) {
   );
 }
 
-/* ---------- Documents ---------- */
 function Documents({ equipementId, documents, onChange }) {
   const [ouvert, setOuvert] = useState(false);
   const [fichier, setFichier] = useState(null);
@@ -213,8 +203,6 @@ function Documents({ equipementId, documents, onChange }) {
   );
 }
 
-/* ---------- Page ---------- */
-// Tons des libellés de la fiche → couleurs des badges communs
 const BADGE = { ok: 'vert', alerte: 'rouge', attention: 'ambre', info: 'bleu', action: 'teal', neutre: 'gris' };
 
 function Ligne({ label, children, mono }) {
@@ -231,14 +219,12 @@ export default function EquipementFiche() {
   const navigate = useNavigate();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
-  // « Retour » : page précédente de l'application ; ouverte directement (QR code scanné), on va à la liste.
   const retour = () => {
-    // location.key vaut 'default' quand la fiche est la première page ouverte (lien, QR code)
     if (location.key !== 'default') navigate(-1);
     else navigate('/equipements');
   };
   const [fiche, setFiche] = useState(null);
-  const [statut, setStatut] = useState('chargement'); // chargement | pret | introuvable | erreur
+  const [statut, setStatut] = useState('chargement');
   const [etiquette, setEtiquette] = useState(false);
   const [signaler, setSignaler] = useState(false);
   const dispatch = useAppDispatch();
@@ -247,7 +233,6 @@ export default function EquipementFiche() {
   const [nomService, setNomService] = useState(null);
   const [transitions, setTransitions] = useState(null);
   const [position, setPosition] = useState(null);
-  // Heure de référence pour l'âge de l'appareil et la garantie (fixée au chargement de la page)
   const [maintenant] = useState(() => Date.now());
   const connecte = !!(authService.getCurrentUser() && authService.getSessionId());
   const onglet = params.get('onglet') || 'infos';
@@ -261,7 +246,6 @@ export default function EquipementFiche() {
 
   useEffect(() => { charger(); }, [charger]);
 
-  // Rapports d'intervention validés (IA) : leur résumé s'affiche sous chaque panne
   const [rapports, setRapports] = useState({});
   const idEquipementRapports = fiche?.identite?.id;
   useEffect(() => {
@@ -273,7 +257,6 @@ export default function EquipementFiche() {
     return () => { annule = true; };
   }, [idEquipementRapports, connecte]);
 
-  // Nom du service (la fiche ne donne que son numéro)
   const idService = fiche?.identite?.serviceId;
   useEffect(() => {
     if (idService == null || !connecte) return;
@@ -285,7 +268,6 @@ export default function EquipementFiche() {
       .catch((e) => console.error('[GMAO équipements] Services :', e));
   }, [idService, connecte]);
 
-  // Historique des changements d'état : chargé à l'ouverture de l'onglet
   useEffect(() => {
     if (onglet !== 'etats' || idEquipementRapports == null || transitions || !connecte) return;
     etatEquipementService.getHistorique(idEquipementRapports)
@@ -295,7 +277,6 @@ export default function EquipementFiche() {
 
   const fermerEtiquette = useCallback(() => setEtiquette(false), []);
 
-  // Stable d'un rendu à l'autre : le formulaire de réclamation ne doit pas se réinitialiser pendant la saisie
   const idEquipement = fiche?.identite?.id;
   const nomEquipement = fiche?.identite?.designation;
   const valeursReclamation = useMemo(() => (idEquipement == null ? null : {
@@ -362,7 +343,6 @@ export default function EquipementFiche() {
   ];
   const ongletActif = onglets.some((o) => o.cle === onglet) ? onglet : 'infos';
 
-  // Assistant IA centré sur cet équipement
   const demanderIa = () => {
     dispatch(choisirEquipementAssistant({ id: Number(identite.id ?? id), nom: identite.designation || `#${id}` }));
     window.dispatchEvent(new Event('gmao:assistant'));
@@ -374,7 +354,6 @@ export default function EquipementFiche() {
 
   return (
     <main className="cl-page eq-theme eqf-page">
-      {/* ---- En-tête ---- */}
       <header className="eqf-entete">
         <div className="eqf-entete__gauche">
           <span className="cl-entete__icone"><Boxes size={24} strokeWidth={2} aria-hidden="true" /></span>
@@ -425,7 +404,6 @@ export default function EquipementFiche() {
         <p className="eq-avertissement">{t('La liste des équipements est injoignable : marque, modèle, garantie et prix d’achat ne sont pas affichés.')}</p>
       )}
 
-      {/* ---- Indicateurs ---- */}
       <section className="eqf-stats" aria-label={t('Indicateurs')}>
         <Stat icone={Activity} ton={taux == null ? 'neutre' : taux >= 95 ? 'vert' : taux >= 80 ? 'ambre' : 'rouge'}
           valeur={taux == null ? '—' : `${nf(taux)} %`} label={t('Disponibilité sur 12 mois')}
@@ -614,7 +592,6 @@ export default function EquipementFiche() {
           </Bloc>
         )}
 
-        {/* ---- Connexion réseau, agent et maintenance conditionnelle : réservés aux utilisateurs connectés ---- */}
         {ongletActif === 'supervision' && (
           <div className="eqf-groupe">
             <EquipementConnexion equipementId={identite.id} Bloc={Bloc} Pastille={Pastille} />

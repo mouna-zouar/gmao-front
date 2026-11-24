@@ -1,9 +1,3 @@
-/*
- * Mêmes couleurs de statut sur les écrans qui ont leurs propres classes
- * (planning, tâches, fiche bon, circuit, tableau de bord des réclamations).
- * Valeurs : constants/statuts.js → TONS. Seules les couleurs changent, pas la mise en page.
- * Le préfixe « html body » passe devant les feuilles propres à chaque écran.
- */
 :root {
   --ton-info-texte: var(--g-info-600);      --ton-info-fond: var(--g-info-50);      --ton-info-bord: #c4d5f5;      --ton-info: var(--g-info-600);
   --ton-action-texte: var(--g-brand-750);    --ton-action-fond: var(--g-brand-75);    --ton-action-bord: #b4e0e5;    --ton-action: var(--g-brand-500);
@@ -13,7 +7,6 @@
   --ton-neutre-texte: var(--g-ink-600);    --ton-neutre-fond: var(--g-ink-50);    --ton-neutre-bord: #d0dcdf;    --ton-neutre: var(--g-ink-400);
 }
 
-/* Planning (bons, par intervenant) */
 html body .event-etat-nouveau  { background: var(--ton-info-fond);      color: var(--ton-info-texte); }
 html body .event-etat-suspendu { background: var(--ton-attention-fond); color: var(--ton-attention-texte); }
 html body .event-etat-encours  { background: var(--ton-action-fond);    color: var(--ton-action-texte); }
@@ -25,21 +18,18 @@ html body .event-etat-encours  :is(.planning-bm-event-dot, .planning-bm-event-co
 html body .event-etat-effectue :is(.planning-bm-event-dot, .planning-bm-event-color-bar) { background: var(--ton-ok); }
 html body .event-etat-annule   :is(.planning-bm-event-dot, .planning-bm-event-color-bar) { background: var(--ton-neutre); }
 
-/* Tâches des bons (colonnes) */
 html body .bmk-column--nouveau  { --col-color: var(--ton-info);      --col-bg: var(--ton-info-fond); }
 html body .bmk-column--suspendu { --col-color: var(--ton-attention); --col-bg: var(--ton-attention-fond); }
 html body .bmk-column--encours  { --col-color: var(--ton-action);    --col-bg: var(--ton-action-fond); }
 html body .bmk-column--termine  { --col-color: var(--ton-ok);        --col-bg: var(--ton-ok-fond); }
 html body .bmk-column--annule   { --col-color: var(--ton-neutre);    --col-bg: var(--ton-neutre-fond); }
 
-/* Fiche bon de maintenance */
 html body .fbm-badge--nouveau  { background: var(--ton-info-fond);      color: var(--ton-info-texte);      border-color: var(--ton-info-bord); }
 html body .fbm-badge--suspendu { background: var(--ton-attention-fond); color: var(--ton-attention-texte); border-color: var(--ton-attention-bord); }
 html body .fbm-badge--encours  { background: var(--ton-action-fond);    color: var(--ton-action-texte);    border-color: var(--ton-action-bord); }
 html body .fbm-badge--effectue { background: var(--ton-ok-fond);        color: var(--ton-ok-texte);        border-color: var(--ton-ok-bord); }
 html body .fbm-badge--annule   { background: var(--ton-neutre-fond);    color: var(--ton-neutre-texte);    border-color: var(--ton-neutre-bord); }
 
-/* Circuit (légende) */
 html body .wf-legend-dot--bon-nouveau   { background: var(--ton-info); }
 html body .wf-legend-dot--bon-suspendu  { background: var(--ton-attention); }
 html body .wf-legend-dot--bon-encours   { background: var(--ton-action); }
@@ -51,7 +41,6 @@ html body .wf-legend-dot--rec-cloturee  { background: var(--ton-ok); }
 html body .wf-legend-dot--rec-attente   { background: var(--ton-attention); }
 html body .wf-legend-dot--rec-rejetee   { background: var(--ton-neutre); }
 
-/* Tableau de bord des réclamations (icônes des chiffres) */
 html body .reclamation-dashboard-stat--ouverte  .reclamation-dashboard-stat-icon { background: var(--ton-info-fond);      color: var(--ton-info-texte); }
 html body .reclamation-dashboard-stat--encours  .reclamation-dashboard-stat-icon { background: var(--ton-action-fond);    color: var(--ton-action-texte); }
 html body .reclamation-dashboard-stat--cloturee .reclamation-dashboard-stat-icon { background: var(--ton-ok-fond);        color: var(--ton-ok-texte); }

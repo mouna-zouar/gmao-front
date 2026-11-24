@@ -1,4 +1,3 @@
-/* Barre de pagination unique de la GMAO (composant commun Pagination) */
 .cp-pagination {
   display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
   gap: 10px 16px;
@@ -34,7 +33,6 @@
 .cp-pagination__vide { min-width: 1px; }
 [dir='rtl'] .cp-pagination__btn svg { transform: scaleX(-1); }
 
-/* Version compacte : précédent / « 2 / 5 » / suivant */
 .cp-pagination--compact {
   justify-content: center; gap: 8px;
   margin-top: 8px; padding: 4px; border: 0; background: transparent;

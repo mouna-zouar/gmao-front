@@ -3,7 +3,7 @@ import { AlertTriangle, Car, CheckCircle2, Clock, ExternalLink, Eye, Loader2, Ma
 import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/personnelService';
+import personnelService from '../../../../services/Personnelservice';
 import VehiculeMissionModal from '../../../ui/modals/VehiculeMissionModal';
 import TerminerMissionModal from '../../../ui/modals/TerminerMissionModal';
 import PageModal from '../../../ui/modals/PageModal';
@@ -12,12 +12,6 @@ import VehiculeTracage from './VehiculeTracage';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeMissions.css';
-
-/*
- * Missions véhicules : page liste de la bibliothèque commune.
- * Gardés tels quels : la fenêtre VehiculeMissionModal (kilométrage, bons de carburant liés),
- * la clôture TerminerMissionModal, le traçage et la vue détaillée VehiculeMissionDetails.
- */
 
 const ETAT_LABELS = { 0: 'Planifiée', 1: 'En cours', 2: 'Terminée', 3: 'Annulée' };
 const ETAT_META = {
@@ -145,7 +139,6 @@ export default function VehiculeMissions() {
     },
   ], [vehicules, conducteurDe, destination]);
 
-  /* L'export et l'impression gardent les colonnes détaillées de l'écran d'origine */
   const colonnesExport = useMemo(() => [
     { label: 'N°', texte: (m) => m.num || m.numero },
     { label: 'Véhicule', texte: (m) => vehicules[m.vehiculeId]?.nom },
@@ -174,13 +167,11 @@ export default function VehiculeMissions() {
       setErreurAction(err.response?.data?.message || t('Échec du démarrage de la mission.'));
     }
   };
-  /* Appelé par TerminerMissionModal ; les erreurs 409 remontent à la fenêtre */
   const confirmerTerminer = async (kmRetour, motif) => {
     await vehiculeMissionService.terminer(selection.id, kmRetour, motif);
     await charger();
     setDetailsVersion((v) => v + 1);
   };
-  /* Renvoie la mission enregistrée : la fenêtre s'en sert pour lier les bons de carburant ajoutés à la création */
   const enregistrer = async (payload) => {
     const enregistree = selection
       ? await vehiculeMissionService.update(selection.id, payload)

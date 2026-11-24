@@ -110,12 +110,6 @@ const vehiculeReservationService = {
     return data;
   },
 
-  /**
-   * Vérification en temps réel des conflits de réservation pour un
-   * véhicule sur une période donnée. `dateDebut`/`dateFin` au format
-   * "YYYY-MM-DDTHH:mm". `excludeId` : réservation à ignorer (édition).
-   * Renvoie un tableau (vide = pas de conflit).
-   */
   async checkConflicts(vehiculeId, dateDebut, dateFin, excludeId) {
     if (!vehiculeId || !dateDebut || !dateFin) return [];
     const { data } = await api.get('/vehicule-reservations/conflicts', {

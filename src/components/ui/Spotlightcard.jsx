@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import './SpotlightCard.css';
+import './Spotlightcard.css';
 
 export default function SpotlightCard({ children, className = '', spotlightColor = 'rgba(255, 255, 255, 0.25)' }) {
   const divRef = useRef(null);

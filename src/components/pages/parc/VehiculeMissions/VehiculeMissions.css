@@ -65,7 +65,6 @@
   margin: 3px 0 0;
 }
 
-/* Stats rapides : badges clairs en ligne */
 .vms-stats {
   display: flex;
   gap: 8px;
@@ -123,7 +122,6 @@
 .vms-stat.stat-done .vms-stat-value,
 .vms-stat.stat-done .vms-stat-label { color: var(--g-emerald-700); }
 
-/* Icône d'en-tête = bouton « paramètres des colonnes » */
 .vms-header-icon-btn {
   cursor: pointer;
   font: inherit;
@@ -145,7 +143,6 @@
   outline-offset: 2px;
 }
 
-/* ─────────── BARRE D'ACTIONS ─────────── */
 .vms-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -184,7 +181,6 @@
   cursor: not-allowed;
 }
 
-/* Ajouter (bouton principal teal uni) */
 .vms-action-btn.ajouter {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -196,14 +192,12 @@
   box-shadow: 0 10px 22px -6px rgba(7, 148, 164, 0.6);
 }
 
-/* Modifier */
 .vms-action-btn.modifier { color: var(--g-orange-600); }
 .vms-action-btn.modifier:hover:not(.disabled) {
   background: var(--g-orange-50);
   border-color: var(--g-orange-200);
 }
 
-/* Traçage */
 .vms-action-btn.details { color: var(--g-teal-700); }
 .vms-action-btn.details:hover:not(.disabled) {
   background: var(--g-teal-50);
@@ -216,28 +210,24 @@
   border-color: var(--g-brand-200);
 }
 
-/* Démarrer */
 .vms-action-btn.demarrer { color: var(--g-sky-600); }
 .vms-action-btn.demarrer:hover:not(.disabled) {
   background: var(--g-sky-50);
   border-color: var(--g-sky-200);
 }
 
-/* Terminer */
 .vms-action-btn.terminer { color: var(--g-violet-600); }
 .vms-action-btn.terminer:hover:not(.disabled) {
   background: var(--g-violet-50);
   border-color: var(--g-violet-200);
 }
 
-/* Supprimer */
 .vms-action-btn.supprimer { color: var(--g-rose-600); }
 .vms-action-btn.supprimer:hover:not(.disabled) {
   background: var(--g-rose-50);
   border-color: var(--g-rose-200);
 }
 
-/* ─────────── FILTRES ─────────── */
 .vms-filter-panel {
   display: flex;
   background: var(--g-slate-50);
@@ -329,7 +319,6 @@
   color: var(--g-rose-600);
 }
 
-/* ─────────── EXPORT ─────────── */
 .vms-export-stack {
   display: flex;
   gap: 6px;
@@ -367,7 +356,6 @@
 .vms-export-btn.stats { background: var(--g-amber-500); }
 .vms-export-btn.stats:hover { background: var(--g-amber-600); }
 
-/* ─────────── BANDEAU ERREUR ─────────── */
 .vms-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
@@ -382,7 +370,6 @@
   gap: 10px;
 }
 
-/* ─────────── TABLEAU ─────────── */
 .vms-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -397,7 +384,6 @@
   font-size: 13.5px;
 }
 
-/* En-tête du tableau → teal clair uni */
 .vms-table thead {
   background: var(--g-brand-50);
 }
@@ -429,7 +415,6 @@
 .vms-row.selected td { background: var(--g-brand-50); }
 .vms-row.selected { box-shadow: inset 4px 0 0 var(--g-brand-500); }
 
-/* ─────────── TRI DES COLONNES ─────────── */
 .vms-th-sortable {
   cursor: pointer;
   user-select: none;
@@ -454,7 +439,6 @@
 .vms-th-sortable:hover .vms-sort-icon,
 .vms-sort-icon.active { color: var(--g-brand-500); }
 
-/* ─────────── CELLULES ─────────── */
 .vms-cell-num {
   font-weight: 800;
   color: var(--g-brand-500);
@@ -550,7 +534,6 @@
   transform: translateY(-1px);
 }
 
-/* ─────────── PASTILLES ÉTAT ─────────── */
 .vms-pill {
   display: inline-flex;
   align-items: center;
@@ -591,7 +574,6 @@
   border-color: var(--g-red-300);
 }
 
-/* ─────────── EMPTY STATE ─────────── */
 .vms-table-empty {
   text-align: center;
   padding: 50px 16px;
@@ -609,7 +591,6 @@
 
 .vms-empty-state svg { color: var(--g-slate-300); }
 
-/* ─────────── ANIMATIONS ─────────── */
 @keyframes vmsSpin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
@@ -619,7 +600,6 @@
   animation: vmsSpin 1s linear infinite;
 }
 
-/* ─────────── RESPONSIVE ─────────── */
 @media (max-width: 900px) {
   .vms-stats {
     width: 100%;

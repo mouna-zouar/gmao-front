@@ -7,10 +7,7 @@ const auteur = () => {
   return nom ? { 'X-Personnel-Nom': encodeURIComponent(nom) } : {};
 };
 
-/* Hiérarchie des lieux (site → bâtiment → étage → service → local) et des équipements. */
 const hierarchieService = {
-  /** { lieux: [{ id, parentId, type, nom, nbDirects, nbEquipements, nbArretes, bonsOuverts, nbBons, cout }], sansLieu, total } */
-  /** { lieux: [{ id, parentId, type, nom, code }], equipements: { immoId: lieuId } } */
   async carte() {
     const { data } = await api.get('/hierarchie/carte');
     return data;
@@ -21,13 +18,11 @@ const hierarchieService = {
     return data;
   },
 
-  /** lieuId null = équipements sans lieu */
   async equipements(lieuId, sousLieux = true) {
     const { data } = await api.get('/hierarchie/equipements', { params: { lieuId: lieuId ?? undefined, sousLieux } });
     return data;
   },
 
-  /** { chemin: [{ id, type, nom }], parent, sousEnsembles, degrade, parentArrete, lieuChoisi } */
   async position(immoId) {
     const { data } = await api.get(`/hierarchie/equipements/${immoId}`);
     return data;
@@ -38,7 +33,6 @@ const hierarchieService = {
     return data;
   },
 
-  /** lieuId null = revenir au lieu par défaut (équipement principal ou service) */
   async affecter(equipements, lieuId) {
     const { data } = await api.post('/hierarchie/affecter', { equipements, lieuId }, { headers: auteur() });
     return data;

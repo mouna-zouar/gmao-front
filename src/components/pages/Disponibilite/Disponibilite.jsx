@@ -1,14 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-import disponibiliteService from '../../../services/Disponibiliteservice ';
+import disponibiliteService from '../../../services/Disponibiliteservice';
 import { criticiteHex, criticiteLabel } from '../../../constants/Criticite';
-import { t, tp, locale } from '../../../i18n';
+import { t, locale } from '../../../i18n';
 import { Activity, FileSpreadsheet, Gauge, History, Inbox, LoaderCircle, RefreshCw, Search, TrendingDown, TriangleAlert, Wrench } from 'lucide-react';
 import './Disponibilite.css';
 import PaginationCommune from '../../commun/Pagination';
 import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 
-/* ---------- Config ---------- */
 const ETAT_LABELS = {
   EN_SERVICE: 'En service',
   EN_PANNE: 'En panne',
@@ -25,11 +24,9 @@ const PERIODES = [
 
 const SEUIL_BON = 95;
 const SEUIL_MOYEN = 80;
-/* ---------- Pagination ---------- */
 const TAILLES_PAGE = [10, 25, 50, 100];
 const TAILLE_PAGE_DEFAUT = 10;
 
-/* ---------- Utils ---------- */
 function calculerBornes(periodeKey) {
   const fin = new Date();
   const debut = new Date(fin);
@@ -55,13 +52,6 @@ function formatTaux(taux) {
   if (taux === null || taux === undefined) return '—';
   return `${taux.toFixed(1)} %`;
 }
-
-/* ---------- Icônes ---------- */
-const Svg = (props) => (
-  <svg width={props.size || 15} height={props.size || 15} viewBox="0 0 24 24"
-       fill="none" stroke="currentColor" strokeWidth="2"
-       strokeLinecap="round" strokeLinejoin="round" {...props} />
-);
 
 const IconRefresh = () => (
   <RefreshCw size={15} aria-hidden="true" />
@@ -103,20 +93,11 @@ const IconActivity = () => (
   <Activity size={24} strokeWidth={2} aria-hidden="true" />
 );
 
-const IconChevron = ({ direction = 'right' }) => (
-  <Svg size={14}>
-    {direction === 'left'
-      ? <path d="m15 18-6-6 6-6" />
-      : <path d="m9 18 6-6-6-6" />}
-  </Svg>
-);
 
-/* Icône tableur Excel */
 const IconExcel = () => (
   <FileSpreadsheet size={15} strokeWidth={2} aria-hidden="true" />
 );
 
-/* ---------- Export Excel ---------- */
 function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
   const wb = XLSX.utils.book_new();
 
@@ -124,7 +105,6 @@ function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
   const dateFin = new Date(bornes.dateFin).toLocaleDateString('fr-FR');
   const dateExport = new Date().toLocaleString('fr-FR');
 
-  /* ----- Feuille 1 : Synthèse ----- */
   const syntheseData = [
     ['Rapport de disponibilité', ''],
     ['Période', periodeLabel],
@@ -146,7 +126,6 @@ function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
   wsSynthese['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
   XLSX.utils.book_append_sheet(wb, wsSynthese, 'Synthèse');
 
-  /* ----- Feuille 2 : Détail parc ----- */
   const lignes = donnees.map((d) => {
     const niveau = tauxNiveau(d.tauxDisponibilitePct);
     const niveauLabel =
@@ -170,19 +149,18 @@ function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
 
   const wsDetail = XLSX.utils.json_to_sheet(lignes);
   wsDetail['!cols'] = [
-    { wch: 38 },  // Équipement
-    { wch: 16 },  // État
-    { wch: 12 },  // Criticité
-    { wch: 16 },  // Dispo %
-    { wch: 12 },  // Niveau
-    { wch: 10 },  // Pannes
-    { wch: 12 },  // MTBF
-    { wch: 12 },  // MTTR
-    { wch: 20 },  // Temps dispo
-    { wch: 22 },  // Temps indispo
+    { wch: 38 },
+    { wch: 16 },
+    { wch: 12 },
+    { wch: 16 },
+    { wch: 12 },
+    { wch: 10 },
+    { wch: 12 },
+    { wch: 12 },
+    { wch: 20 },
+    { wch: 22 },
   ];
 
-  // Ligne de totaux / moyennes
   const avecTaux = donnees.filter((d) => d.tauxDisponibilitePct != null);
   const totalRow = {
     'Équipement': 'TOTAL / MOYENNE',
@@ -202,7 +180,6 @@ function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
 
   XLSX.utils.book_append_sheet(wb, wsDetail, 'Détail parc');
 
-  /* ----- Nom du fichier ----- */
   const cleanLabel = periodeLabel.replace(/[^a-z0-9]+/gi, '-').toLowerCase();
   const date = new Date().toISOString().slice(0, 10);
   const nomFichier = `disponibilite-${cleanLabel}-${date}.xlsx`;
@@ -210,9 +187,6 @@ function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
   XLSX.writeFile(wb, nomFichier);
 }
 
-/* ---------- Pagination ---------- */
-
-/* Pagination : composant commun (même style dans toute la GMAO) */
 function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille }) {
   return (
     <PaginationCommune base={1} page={page} taille={taillePage} total={totalItems}
@@ -220,7 +194,6 @@ function Pagination({ page, totalItems, taillePage, onChangePage, onChangeTaille
   );
 }
 
-/* ---------- Composant principal ---------- */
 export default function Disponibilite() {
   const [periodeKey, setPeriodeKey] = useState('12M');
   const [lieuId, setLieuId] = useState('');
@@ -232,7 +205,6 @@ export default function Disponibilite() {
   const [recherche, setRecherche] = useState('');
   const [ligneOuverte, setLigneOuverte] = useState(null);
 
-  /* ---------- Pagination ---------- */
   const [page, setPage] = useState(1);
   const [taillePage, setTaillePage] = useState(TAILLE_PAGE_DEFAUT);
 
@@ -257,7 +229,6 @@ export default function Disponibilite() {
     (d) => !recherche.trim() || (d.cibleNom || '').toLowerCase().includes(recherche.trim().toLowerCase())
   );
 
-  /* ---------- Pagination ---------- */
   const totalItems = donneesAffichees.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / taillePage));
   const pageCourante = Math.min(page, totalPages);
@@ -296,7 +267,6 @@ export default function Disponibilite() {
     return { tauxMoyen, totalPannes, mtbfMoyen, mttrMoyen, nbCritiques };
   }, [donnees]);
 
-  /* ---------- Export Excel ---------- */
   const periodeLabel = PERIODES.find((p) => p.key === periodeKey)?.label || periodeKey;
 
   const handleExportExcel = () => {
@@ -306,7 +276,7 @@ export default function Disponibilite() {
       exporterExcel({
         periodeLabel,
         bornes: calculerBornes(periodeKey),
-        donnees,       // on exporte TOUT le parc (pas seulement la page filtrée)
+        donnees,
         kpis,
       });
     } catch (err) {
@@ -321,7 +291,6 @@ export default function Disponibilite() {
 
   return (
     <div className="disp-page">
-      {/* ---------- Header ---------- */}
       <header className="disp-header">
         <div className="disp-header__icon-wrap">
           <IconActivity />
@@ -365,7 +334,6 @@ export default function Disponibilite() {
         </div>
       </header>
 
-      {/* ---------- KPIs ---------- */}
       {!loading && donnees.length > 0 && (
         <section className="disp-kpis">
           <div className={`disp-kpi disp-kpi--${tauxNiveau(kpis.tauxMoyen)}`}>
@@ -410,7 +378,6 @@ export default function Disponibilite() {
         </section>
       )}
 
-      {/* ---------- Recherche ---------- */}
       <div className="disp-filtres">
         <div className="disp-recherche-wrap">
           <span className="disp-recherche-icon"><IconSearch /></span>
@@ -424,7 +391,6 @@ export default function Disponibilite() {
         </div>
       </div>
 
-      {/* ---------- Liste ---------- */}
       {loading ? (
         <p className="disp-empty">{t("Chargement...")}</p>
       ) : error ? (

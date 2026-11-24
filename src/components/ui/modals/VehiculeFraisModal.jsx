@@ -6,17 +6,8 @@ import authService from '../../../services/Authservice';
 import { t, locale } from '../../../i18n';
 import { TYPES_FRAIS, ltr } from '../../../constants/Coutlibelles';
 
-/*
- * Saisie d'un frais fixe : assurance, vignette, visite technique ou autre (fenêtre décrite par ses champs).
- * La période couverte (facultative) permet de répartir le montant : une assurance annuelle
- * ne pèse que pour les mois de la période regardée.
- *
- * vehicules : liste donnée par la page appelante (sinon GET /api/vehicule) · vehiculeIdInitial : véhicule proposé à la création.
- */
-
 const aujourdhui = () => new Date().toISOString().slice(0, 10);
 
-/** 2026-03-01 → 2027-02-28 : un an moins un jour */
 const unAnApres = (iso) => {
   if (!iso) return '';
   const d = new Date(`${iso}T00:00:00Z`);
@@ -34,7 +25,6 @@ const SECTIONS = [
   { cle: 'references', label: 'Références', icone: FileText, description: 'Fournisseur, numéro de pièce et commentaire.' },
 ];
 
-/** Début et fin : les deux ou aucun, et la fin après le début. */
 const validerPeriode = (cote) => (v, valeurs) => {
   const { periodeDebut: debut, periodeFin: fin } = valeurs;
   if (!!debut !== !!fin) return (cote === 'debut' ? !debut : !fin) ? t('Indiquez le début et la fin, ou laissez les deux vides.') : null;
@@ -56,7 +46,6 @@ function champs(vehicules) {
     { nom: 'montant', label: 'Montant', unite: 'DT', type: 'montant', requis: true, section: 'general', messageRequis: t('Indiquez un montant positif.'),
       valider: (v) => (Number(String(v).replace(',', '.')) > 0 ? null : t('Indiquez un montant positif.')) },
     { nom: 'dateFrais', label: 'Payé le', type: 'date', requis: true, section: 'general', defaut: aujourdhui(), messageRequis: t('Indiquez la date du paiement.') },
-    // ── Période couverte ──
     { nom: 'periodeDebut', label: 'Du', type: 'date', section: 'periode', valider: validerPeriode('debut') },
     { nom: 'periodeFin', label: 'Au', type: 'date', section: 'periode', valider: validerPeriode('fin') },
     {
@@ -74,7 +63,6 @@ function champs(vehicules) {
         </div>
       ),
     },
-    // ── Références ──
     { nom: 'fournisseur', label: 'Assureur, centre, fournisseur', section: 'references' },
     { nom: 'reference', label: 'N° de police, quittance ou facture', section: 'references' },
     { nom: 'commentaire', label: 'Commentaire', type: 'zone', lignes: 2, section: 'references', largeur: 'pleine' },

@@ -2,11 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import ConfirmModal from './ConfirmModal';
 import { t } from '../../../i18n';
 
-/*
- * Confirmation après la création d'une réclamation (même fenêtre partout).
- * reclamation : la réponse du serveur ({ id, num, bonMaintenanceId }) ; null = fermée.
- * lienBon : propose « Voir le bon » quand un bon a été créé (false dans Mon espace).
- */
 export default function ReclamationCreeeModal({ reclamation, onClose, lienBon = true }) {
   const navigate = useNavigate();
   if (!reclamation) return null;

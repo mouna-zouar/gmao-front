@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import planningService from '../../../services/planningService';
-import personnelService from '../../../services/personnelService';
+import personnelService from '../../../services/Personnelservice';
 import './PlanningParIntervenant.css';
 import { t, locale } from '../../../i18n';
 
@@ -36,11 +36,9 @@ const formatDateKey = (date) => {
 
 const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
-// Noms de mois / jours dans la langue courante (ar-TN donne جانفي، فيفري…)
 const majuscule = (s) => s.charAt(0).toLocaleUpperCase(locale()) + s.slice(1);
 const nomsMois = () => Array.from({ length: 12 }, (_, i) =>
   majuscule(new Intl.DateTimeFormat(locale(), { month: 'long' }).format(new Date(2000, i, 1))));
-// 2000-01-02 est un dimanche
 const nomsJoursCourts = () => Array.from({ length: 7 }, (_, i) =>
   new Intl.DateTimeFormat(locale(), { weekday: 'short' })
     .format(new Date(2000, 0, 2 + i))
@@ -67,10 +65,8 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
   const [view, setView] = useState('month');
   const [dateFilter, setDateFilter] = useState(formatDateKey(new Date()));
 
-  // Charger la config et la liste des intervenants
   useEffect(() => {
     planningService.findConfig().then(setConfig).catch(() => setConfig(null));
-    // Seulement le personnel du service maintenance (63), trié par nom
     personnelService.getMaintenance(0, 200)
       .then((res) => {
         const personnels = res.content || [];
@@ -88,7 +84,6 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
       .catch(console.error);
   }, []);
 
-  // Synchroniser le champ date avec currentDate
   useEffect(() => {
     if (dateFilter) {
       const parts = dateFilter.split('-');
@@ -100,7 +95,6 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
     }
   }, [dateFilter]);
 
-  // Générer les jours du calendrier
   const calendarDays = useMemo(() => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -134,7 +128,6 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
     return days;
   }, [currentDate, view]);
 
-  // Charger les événements lorsque l'intervenant, le mode ou la plage change
   const load = useCallback(async () => {
     if (!selectedIntervenantId) {
       setEvenements([]);
@@ -144,7 +137,6 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
     setLoading(true);
     setError(null);
 
-    // Récupérer l'originalId depuis l'ID préfixé
     const selected = intervenants.find(i => i.id === selectedIntervenantId);
     if (!selected) {
       setEvenements([]);

@@ -60,7 +60,6 @@
   animation: coutFadeUp 0.4s ease-out;
 }
 
-/* ═══════════════════ HEADER ═══════════════════ */
 .cout-header {
   position: relative;
   overflow: hidden;
@@ -197,7 +196,6 @@
   cursor: not-allowed;
 }
 
-/* ---------- Bouton Export Excel ---------- */
 .cout-export-btn {
   display: inline-flex;
   align-items: center;
@@ -247,7 +245,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ═══════════════════ KPIs ═══════════════════ */
 .cout-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -350,7 +347,6 @@
   line-height: 1.15;
 }
 
-/* ═══════════════════ Panneaux ═══════════════════ */
 .cout-panels {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -381,7 +377,6 @@
   border-bottom: 1px solid var(--slate-100);
 }
 
-/* ═══════════════════ GRAPHIQUE ═══════════════════ */
 .cout-chart {
   width: 100%;
   padding: 4px 0 0;
@@ -458,7 +453,6 @@
   margin: 0;
 }
 
-/* ═══════════════════ Top équipements ═══════════════════ */
 .cout-top-list {
   list-style: none;
   margin: 0;
@@ -514,7 +508,6 @@
   color: var(--slate-500);
 }
 
-/* ═══════════════════ Toolbar ═══════════════════ */
 .cout-toolbar {
   display: flex;
   align-items: center;
@@ -544,7 +537,6 @@
   white-space: nowrap;
 }
 
-/* ═══════════════════ Recherche ═══════════════════ */
 .cout-filtres { display: flex; }
 
 .cout-recherche-wrap {
@@ -585,7 +577,6 @@
   box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
 }
 
-/* ═══════════════════ États vides / erreur ═══════════════════ */
 .cout-empty,
 .cout-error {
   display: flex;
@@ -612,7 +603,6 @@
   font-weight: 600;
 }
 
-/* ═══════════════════ Liste des bons ═══════════════════ */
 .cout-list {
   list-style: none;
   margin: 0;
@@ -746,7 +736,6 @@
   white-space: nowrap;
 }
 
-/* ═══════════════════ Pagination ═══════════════════ */
 .cout-pagination {
   display: flex;
   align-items: center;
@@ -826,7 +815,6 @@
   user-select: none;
 }
 
-/* ═══════════════════ Pagination — Top équipements ═══════════════════ */
 .cout-equip-pagination {
   display: flex;
   align-items: center;
@@ -866,7 +854,6 @@
   font-size: 0.75rem;
 }
 
-/* ═══════════════════ Responsive ═══════════════════ */
 @media (max-width: 1100px) {
   .cout-kpis { grid-template-columns: repeat(2, 1fr); }
   .cout-panels { grid-template-columns: 1fr; }
@@ -926,7 +913,6 @@
   .cout-card__total { font-size: 0.95rem; }
 }
 
-/* ═══════════════════ MODE SOMBRE ═══════════════════ */
 @media (prefers-color-scheme: dark) {
   .cout-page {
     background: #1a2433;

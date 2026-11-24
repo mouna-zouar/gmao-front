@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   CheckCircle2, Bookmark, Navigation, Wrench, Ban, XCircle, Tag, Loader2,
   AlertTriangle, Settings, Truck, ShieldCheck, HardHat, AlertOctagon,
-  ChevronLeft, ChevronRight, ArrowLeft, Printer, FileText, Gauge,
-  Info, Activity, History as HistoryIcon, Wallet, ChartColumn, Download, Search, SquarePen, Trash2 } from 'lucide-react';
+  ArrowLeft, Printer, FileText, Gauge,
+  Info, History as HistoryIcon, Wallet, ChartColumn, Download, Search, SquarePen, Trash2 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
 import { PastillesStats } from '../../../commun';
 import vehiculeService from '../../../../services/vehiculeService';
@@ -18,13 +18,13 @@ import ColumnSettingsModal from '../../../ui/modals/ColumnSettingsModal';
 import PageModal from '../../../ui/modals/PageModal';
 import VehiculeCouts from '../VehiculeCouts/VehiculeCouts';
 import { VehiculeCoutOnglet } from '../VehiculeCouts/VehiculeCoutDetail';
-import CoutsParcResume from '../VehiculeCouts/CoutsParcResume';
+import CoutsParcResume from '../VehiculeCouts/Coutsparcresume';
 import {
   ETAT_VEHICULE_LABELS,
   etatVehiculeLabel,
   etatVehiculeColor,
   allowedNextEtats,
-} from '../../../../constants/vehiculeEtat';
+} from '../../../../constants/Vehiculeetat';
 import { criticiteLabel, criticiteColor } from '../../../../constants/Criticite';
 import { t, tp, locale } from '../../../../i18n';
 import { imprimerListe, imprimerFiche } from '../../../../utils/imprimerListe';
@@ -55,29 +55,6 @@ const ETAT_TARGET_ICON = {
   6: Tag,
 };
 
-const getPageNumbers = (current, total) => {
-  const pages = [];
-
-  if (total <= 7) {
-    for (let i = 1; i <= total; i += 1) pages.push(i);
-    return pages;
-  }
-
-  pages.push(1);
-
-  const start = Math.max(2, current - 1);
-  const end = Math.min(total - 1, current + 1);
-
-  if (start > 2) pages.push('...');
-
-  for (let i = start; i <= end; i += 1) pages.push(i);
-
-  if (end < total - 1) pages.push('...');
-
-  pages.push(total);
-
-  return pages;
-};
 
 const VEHICULE_COLUMNS_DEFAULT = [
   { key: 'matricule',   label: 'Matricule',   visible: true,  searchable: true  },
@@ -94,9 +71,7 @@ export default function VehiculesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  // Fenêtre « Coût par véhicule » (tout le parc)
   const [coutsOpen, setCoutsOpen] = useState(false);
-  // Recharge le bandeau des coûts après la fenêtre (des frais ont pu être saisis)
   const [coutsVersion, setCoutsVersion] = useState(0);
   const fermerCouts = () => { setCoutsOpen(false); setCoutsVersion((v) => v + 1); };
 
@@ -199,10 +174,6 @@ export default function VehiculesPage() {
     setShowColumnSettings(true);
   };
 
-  const isColVisible = (key) => {
-    const col = columnSettings.find((c) => c.key === key);
-    return col ? col.visible : true;
-  };
 
   const toggleColumnVisibility = (key) => {
     setColumnSettings((prev) =>
@@ -223,7 +194,6 @@ export default function VehiculesPage() {
       case 'numChassis':  return v.numChassis || '';
       case 'type':        return typeLabel(v.type);
       case 'kilometrage': return v.kilometrage != null ? String(v.kilometrage) : '';
-      // libellé français + traduit : la recherche marche dans les deux langues
       case 'etat':        return `${etatVehiculeLabel(v.etat)} ${t(etatVehiculeLabel(v.etat))}`;
       case 'criticite':   return v.criticite
         ? `${v.criticite} ${criticiteLabel(v.criticite)} ${t(criticiteLabel(v.criticite))}`
@@ -369,7 +339,6 @@ export default function VehiculesPage() {
     });
   };
 
-  // Données du tableau filtré, partagées par l'export CSV et l'impression
   const donneesTableau = () => {
     const entetes = ['Matricule', 'Marque', 'N° Châssis', 'Type', 'Kilométrage', 'État'].map((e) => t(e));
     const lignes = filteredVehicules.map((v) => [
@@ -401,7 +370,6 @@ export default function VehiculesPage() {
     URL.revokeObjectURL(url);
   };
 
-  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
   const handleImprimerListe = () => {
     const { entetes, lignes } = donneesTableau();
     imprimerListe({
@@ -415,7 +383,6 @@ export default function VehiculesPage() {
     });
   };
 
-  // Impression de la fiche du véhicule (A4 portrait) : infos, maintenance préventive, derniers relevés
   const STATUT_MAINTENANCE = { OK: 'À jour', A_VENIR: 'À venir', ATTEINT: 'Atteint', EN_RETARD: 'En retard', EN_COURS: 'En cours' };
   const SOURCE_RELEVE = {
     MISSION: 'Mission', BON_CARBURANT: 'Bon carburant', SAISIE_ADMINISTRATEUR: 'Saisie manuelle', CORRECTION_VEHICULE: 'Correction (fiche véhicule)',
@@ -824,7 +791,6 @@ export default function VehiculesPage() {
                   role="tabpanel"
                   id="vd-tabpanel-cout"
                 >
-                  {/* Carburant, entretien, incidents, amendes et frais fixes de ce véhicule */}
                   <VehiculeCoutOnglet vehicule={selectedVehicule} />
                 </div>
               )}
@@ -871,7 +837,6 @@ export default function VehiculesPage() {
             <h2>{t("Véhicules")}</h2>
           </div>
         </div>
-        {/* Statistiques du parc : pastilles dans l'en-tête */}
         <PastillesStats
           ariaLabel={t('Véhicules par état')}
           stats={[
@@ -883,7 +848,6 @@ export default function VehiculesPage() {
         />
       </div>
 
-      {/* Coûts du parc (année en cours) : carburant, entretien, incidents, amendes, frais fixes */}
       <CoutsParcResume version={coutsVersion} onOuvrir={() => setCoutsOpen(true)} />
 
       <div className="vehicules-actions-bar">

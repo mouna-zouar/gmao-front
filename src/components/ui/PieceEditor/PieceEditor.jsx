@@ -3,24 +3,14 @@ import { AlertTriangle, ArrowLeft, CheckCircle2, Download, FileText, Loader2, Pa
 import { Modale } from '../../commun';
 import api from '../../../services/api';
 import authService from '../../../services/Authservice';
-import bonMaintenanceCommandeService from '../../../services/bonMaintenanceCommandeService';
+import bonMaintenanceCommandeService from '../../../services/Bonmaintenancecommandeservice';
 import { obtenirArticles, obtenirPrestataires } from '../../../store/referentiels';
 import { useAppDispatch } from '../../../store/hooks';
 import { chargerDepots } from '../../../store/depotsSlice';
 import serviceService from '../../../services/Serviceservice';
-import pieceLigneService from '../../../services/pieceLigneService';
+import pieceLigneService from '../../../services/PieceLigneService';
 import { t, locale } from '../../../i18n';
 import './PieceEditor.css';
-
-/*
- * Éditeur de pièce d'un bon de maintenance, sur le modèle du PieceEditor de Cubix :
- *   entête (type, numéro de souche, date, dépôt, fournisseur, note),
- *   recherche d'articles, lignes (Disponible, Qté, Unité, PU, Remise, TVA, Montant, ✕), totaux,
- *   puis création d'UNE pièce avec toutes ses lignes, rattachée au bon (POST /api/piece-editor).
- *
- * type : 'DEMANDE' (demande de fourniture, .D_Fourniture) ou 'COMMANDE' (commande fournisseur).
- * Les lignes sont pré-remplies avec ce qui reste à demander / à commander pour le bon.
- */
 
 const TYPES = {
   DEMANDE: { titre: 'Demande de fourniture', icone: Package, aide: 'Pièces à sortir du magasin pour ce bon' },
@@ -34,7 +24,6 @@ const aujourdhui = () => new Date().toISOString().slice(0, 10);
 let compteurLigne = 0;
 const nouvelleCle = () => `l${++compteurLigne}`;
 
-/** Ligne de pièce à partir d'un article Cubix (comme NewPieceLigne). */
 function ligneDepuisArticle(type, article, extra = {}) {
   return {
     cle: nouvelleCle(),
@@ -42,7 +31,7 @@ function ligneDepuisArticle(type, article, extra = {}) {
     designation: article.designation || t('Article #{id}', { id: article.id ?? article.prestataireArticlesId }),
     code: article.code || '',
     disponible: article.qteDisponible ?? null,
-    depotId: article.depotId ?? null, // dépôt où l'article est stocké (dépôt source d'une demande)
+    depotId: article.depotId ?? null,
     qte: 1,
     unite: article.uniteStock || '',
     prixUnitaire: article.prixAchat ?? 0,
@@ -60,8 +49,11 @@ const montantLigne = (l) => {
   return { brut: nz(l.prixUnitaire) * nz(l.qte), net, tva: net * nz(l.tva) / 100 };
 };
 
-export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, onFermer, onCree }) {
-  const def = TYPES[type] || TYPES.DEMANDE;
+export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, lignesInitiales, onFermer, onCree }) {
+  const reappro = !bonMaintenance?.id;
+  const def = reappro && type === 'COMMANDE'
+    ? { ...TYPES.COMMANDE, aide: 'Articles sous leur seuil de stock à racheter' }
+    : (TYPES[type] || TYPES.DEMANDE);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [articles, setArticles] = useState([]);
@@ -69,7 +61,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
   const [fournisseurs, setFournisseurs] = useState([]);
   const [services, setServices] = useState([]);
   const [besoins, setBesoins] = useState([]);
-  // Mêmes attributs que l'API Cubix (GMAOApiController) : date, dépôt, service, dépôt destinataire / fournisseur
   const [entete, setEntete] = useState({ date: aujourdhui(), depotId: '', depotDestinationId: '', serviceId: '', cibleId: '', note: '' });
   const [numero, setNumero] = useState(null);
   const [lignes, setLignes] = useState([]);
@@ -77,16 +68,17 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
   const [suggestionsOuvertes, setSuggestionsOuvertes] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [resultat, setResultat] = useState(null);
-  // Commande : mode express (une commande par fournisseur) et petite confirmation intégrée
   const [express, setExpress] = useState(null);
   const [dialogue, setDialogue] = useState(null);
   const rechercheRef = useRef(null);
+  const reapproPreRempli = useRef(false);
   const dispatch = useAppDispatch();
 
-  // ─── Chargement : articles, dépôts, fournisseurs, besoins du bon ───
   useEffect(() => {
-    if (!ouvert || !bonMaintenance?.id) return undefined;
+    if (!ouvert || (!bonMaintenance?.id && type !== 'COMMANDE')) return undefined;
     let annule = false;
+    reapproPreRempli.current = false;
+    if (!bonMaintenance?.id) setLignes([]);
     setChargement(true);
     setErreur(null);
     setResultat(null);
@@ -94,13 +86,13 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     setDialogue(null);
     setRecherche('');
     let depotMemorise = '';
-    try { depotMemorise = localStorage.getItem(CLE_DEPOT) || ''; } catch { /* stockage indisponible */ }
+    try { depotMemorise = localStorage.getItem(CLE_DEPOT) || ''; } catch {}
     (async () => {
       try {
         const [arts, deps, besoinsBon, presta, servs] = await Promise.all([
           obtenirArticles().catch(() => []),
           dispatch(chargerDepots()).unwrap().catch(() => []),
-          (type === 'COMMANDE'
+          !bonMaintenance?.id ? Promise.resolve([]) : (type === 'COMMANDE'
             ? bonMaintenanceCommandeService.getArticlesDisponibles(bonMaintenance.id)
             : bonMaintenanceCommandeService.getArticlesADemander(bonMaintenance.id)).catch(() => []),
           type === 'COMMANDE' ? obtenirPrestataires().catch(() => []) : Promise.resolve([]),
@@ -116,7 +108,7 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
         const depotDefaut = listeDepots.some((d) => String(d.id) === depotMemorise) ? depotMemorise
           : String(listeDepots.find((d) => d.estPrincipal)?.id ?? listeDepots[0]?.id ?? '');
         const cibleDefaut = type === 'COMMANDE' ? String((besoinsBon ?? []).find((b) => b.sousTraitantId)?.sousTraitantId ?? '') : '';
-        const serviceBon = bonMaintenance.serviceId ?? bonMaintenance.service?.id ?? '';
+        const serviceBon = bonMaintenance?.serviceId ?? bonMaintenance?.service?.id ?? '';
         setEntete({ date: aujourdhui(), depotId: depotDefaut, depotDestinationId: '', serviceId: serviceBon ? String(serviceBon) : '', cibleId: cibleDefaut, note: '' });
       } catch {
         if (!annule) setErreur(t('Impossible de préparer la pièce. Vérifie que le serveur est bien lancé.'));
@@ -129,7 +121,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
 
   const articleParId = useMemo(() => Object.fromEntries(articles.map((a) => [a.id, a])), [articles]);
 
-  // Lignes pré-remplies avec les besoins du bon (pour une commande : ceux du fournisseur choisi)
   useEffect(() => {
     if (chargement) return;
     const retenus = type === 'COMMANDE'
@@ -143,11 +134,22 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
         besoin: true,
         tache: b.designation,
       })),
-      ...avant.filter((l) => !l.besoin), // les articles ajoutés à la main restent
+      ...avant.filter((l) => !l.besoin),
     ]);
   }, [chargement, besoins, entete.cibleId, type, articleParId]);
 
-  // Stock disponible des lignes qui ne l'ont pas encore
+  useEffect(() => {
+    if (!reappro || chargement || reapproPreRempli.current) return;
+    reapproPreRempli.current = true;
+    const depotsArticles = [...new Set((lignesInitiales || []).map((li) => li.depotId).filter((d) => d != null).map(String))];
+    if (depotsArticles.length === 1 && depots.some((d) => String(d.id) === depotsArticles[0])) {
+      setEntete((e) => ({ ...e, depotId: depotsArticles[0] }));
+    }
+    setLignes((lignesInitiales || []).map((li) => ligneDepuisArticle(type,
+      articleParId[li.prestataireArticlesId] || { prestataireArticlesId: li.prestataireArticlesId, designation: li.designation, prixAchat: li.prixAchat, tva: li.tva, uniteStock: li.unite },
+      { qte: li.qte, reappro: true })));
+  }, [reappro, chargement, lignesInitiales, articleParId, type, depots]);
+
   useEffect(() => {
     const manquants = lignes.filter((l) => l.disponible == null && !l.dispoCharge);
     if (manquants.length === 0) return;
@@ -159,7 +161,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     });
   }, [lignes]);
 
-  // Numéro de souche proposé (comme GetNewNum), recalculé si la date change
   useEffect(() => {
     if (!ouvert || chargement) return undefined;
     let annule = false;
@@ -169,8 +170,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     return () => { annule = true; };
   }, [ouvert, chargement, type, entete.date]);
 
-  // Demande de fourniture : le dépôt source est celui où les articles sont stockés.
-  // Recalculé quand la liste des articles change ; un choix manuel reste possible ensuite.
   const depotsDesArticles = useMemo(() => [...new Set(
     lignes.map((l) => (l.depotId != null ? String(l.depotId) : null)).filter(Boolean),
   )], [lignes]);
@@ -182,7 +181,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     setEntete((e) => (String(e.depotId) === depotArticle ? e : {
       ...e,
       depotId: depotArticle,
-      // le dépôt destinataire ne peut pas être le même que le dépôt source
       depotDestinationId: String(e.depotDestinationId) === depotArticle ? '' : e.depotDestinationId,
     }));
   }, [type, cleDepotsArticles, depots]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -191,12 +189,11 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
 
   const changerEntete = (champ, valeur) => {
     setEntete((e) => ({ ...e, [champ]: valeur }));
-    if (champ === 'depotId') { try { localStorage.setItem(CLE_DEPOT, valeur); } catch { /* stockage indisponible */ } }
+    if (champ === 'depotId') { try { localStorage.setItem(CLE_DEPOT, valeur); } catch {} }
   };
   const changerLigne = (cle, champ, valeur) => setLignes((ls) => ls.map((l) => (l.cle === cle ? { ...l, [champ]: valeur } : l)));
   const retirerLigne = (cle) => setLignes((ls) => ls.filter((l) => l.cle !== cle));
 
-  // Recherche d'articles (comme GetArticlesJson : 10 résultats)
   const suggestions = useMemo(() => {
     const q = recherche.trim().toLowerCase();
     if (q.length < 1) return [];
@@ -223,9 +220,8 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
   if (type === 'COMMANDE' && !entete.cibleId) problemes.push(t('Choisissez le fournisseur.'));
   if (lignes.some((l) => nz(l.qte) <= 0)) problemes.push(t('Chaque quantité doit être supérieure à zéro.'));
 
-  /** Corps de la requête de création (une pièce = un fournisseur + ses lignes). */
   const charge = (lignesPiece, cibleId) => ({
-    bonMaintenanceId: bonMaintenance.id,
+    bonMaintenanceId: bonMaintenance?.id ?? null,
     type,
     cibleId: cibleId ? Number(cibleId) : null,
     depotId: entete.depotId ? Number(entete.depotId) : null,
@@ -247,8 +243,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     })),
   });
 
-  // ─── Commande : calculer la pièce depuis le stock (comme CalculerPiece type 1 « Qté du vecteur ») ───
-  // Articles dont le stock est sous le seuil : quantité proposée = seuil − stock disponible.
   const articlesSousSeuil = useMemo(() => articles
     .filter((a) => nz(a.seuil) > 0 && nz(a.qteDisponible) < nz(a.seuil))
     .map((a) => ligneDepuisArticle(type, a, { qte: Math.round((nz(a.seuil) - nz(a.qteDisponible)) * 1000) / 1000 })), [articles, type]);
@@ -262,7 +256,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     else setDialogue({ texte: t('Remplacer les {n} ligne(s) actuelles par les {m} article(s) sous leur seuil de stock ?', { n: lignes.length, m: articlesSousSeuil.length }), onOk: remplacer });
   };
 
-  // ─── Commande : mode express (comme PieceExpress : une commande par fournisseur) ───
   const nomCible = (id) => {
     if (!id) return null;
     const f = fournisseurs.find((x) => String(x.id) === String(id));
@@ -270,7 +263,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     return f ? (f.raisonSociale || f.nom || f.nomPrenom) : (b?.sousTraitantNom || t('Prestataire #{id}', { id }));
   };
   const passerExpress = () => {
-    // Toutes les lignes à commander pour le bon (tous fournisseurs) + les lignes ajoutées à la main
     const lignesBesoins = besoins.map((b) => ligneDepuisArticle(type, articleParId[b.prestataireArticlesId] || { prestataireArticlesId: b.prestataireArticlesId, designation: b.designation }, {
       qte: b.qteRestante ?? 1, bonMaintenanceTacheId: b.bonMaintenanceTacheId ?? null, sousTraitantId: b.sousTraitantId ?? null, besoin: true,
     }));
@@ -292,7 +284,7 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     try {
       const { data } = await api.post('/piece-editor', charge(g.lignes, g.cibleId));
       changerGroupe(g.cle, { statut: 'fait', resultat: data });
-      obtenirArticles({ forcer: true }).catch(() => {}); // le stock a pu bouger
+      obtenirArticles({ forcer: true }).catch(() => {});
       onCree?.(data);
     } catch (e) {
       changerGroupe(g.cle, { statut: 'erreur', erreur: e?.response?.data?.message || t('La pièce n’a pas pu être créée.') });
@@ -300,7 +292,7 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
   };
   const creerTout = async () => {
     for (const g of express || []) {
-      if (g.cibleId && g.statut !== 'fait') await creerGroupe(g); // eslint-disable-line no-await-in-loop
+      if (g.cibleId && g.statut !== 'fait') await creerGroupe(g);
     }
   };
 
@@ -311,7 +303,7 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     try {
       const { data } = await api.post('/piece-editor', charge(lignes, entete.cibleId));
       setResultat(data);
-      obtenirArticles({ forcer: true }).catch(() => {}); // le stock a pu bouger
+      obtenirArticles({ forcer: true }).catch(() => {});
       onCree?.(data);
     } catch (e) {
       setErreur(e?.response?.data?.message || t('La pièce n’a pas pu être créée.'));
@@ -326,7 +318,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
     const ids = new Set(besoins.map((b) => String(b.sousTraitantId)).filter((x) => x && x !== 'null'));
     const prioritaires = fournisseurs.filter((f) => ids.has(String(f.id)));
     const autres = fournisseurs.filter((f) => !ids.has(String(f.id)));
-    // Sous-traitants du bon absents de la liste : on les ajoute quand même
     besoins.forEach((b) => {
       if (b.sousTraitantId && !fournisseurs.some((f) => String(f.id) === String(b.sousTraitantId))
         && !prioritaires.some((f) => String(f.id) === String(b.sousTraitantId))) {
@@ -342,7 +333,7 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
       onFermer={() => { if (!envoi) onFermer(); }}
       taille="plein"
       icone={Icone}
-      surtitre={t('Bon {num}', { num: bonMaintenance?.num || `#${bonMaintenance?.id}` })}
+      surtitre={reappro ? t('Réapprovisionnement du stock') : t('Bon {num}', { num: bonMaintenance?.num || `#${bonMaintenance?.id}` })}
       titre={t(def.titre)}
       sousTitre={t(def.aide)}
       fermerSurFond={!envoi}
@@ -420,18 +411,18 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
           <CheckCircle2 size={40} className="pe-succes__icone" />
           <h3>{t('{type} {num} créée', { type: t(resultat.description), num: resultat.numPiece })}</h3>
           <p>{t('{n} article(s) · HT {ht} DT · TVA {tva} DT · TTC {ttc} DT', { n: resultat.nbLignes, ht: nombre(resultat.tht), tva: nombre(resultat.ttva), ttc: nombre(resultat.ttc) })}</p>
-          <p className="pe-succes__aide">{t('La pièce est rattachée au bon : retrouvez-la dans « Documents d’achat ».')}</p>
+          <p className="pe-succes__aide">{reappro
+            ? t('Retrouvez-la dans « Alertes de stock », rubrique « Commandes de réapprovisionnement ».')
+            : t('La pièce est rattachée au bon : retrouvez-la dans « Documents d’achat ».')}</p>
           {(resultat.avertissements || []).map((a) => (
             <p key={a} className="pe-alerte pe-alerte--attention"><AlertTriangle size={15} /> {a}</p>
           ))}
         </div>
       ) : (
         <div className="pe pe--deux">
-          {/* ═════ Colonne principale : les articles ═════ */}
           <div className="pe-principal">
             {erreur && <p className="pe-alerte"><AlertTriangle size={15} /> {erreur}</p>}
 
-            {/* Confirmation intégrée */}
             {dialogue && (
               <div className="pe-dialogue" role="alertdialog">
                 <span>{dialogue.texte}</span>
@@ -442,7 +433,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
               </div>
             )}
 
-            {/* Recherche d'articles (+ pour une commande : calculer depuis le stock, mode express) */}
             <div className="pe-barre-articles">
               <div className="pe-recherche">
                 <Search size={16} className="pe-recherche__icone" />
@@ -487,7 +477,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
               )}
             </div>
 
-            {/* Lignes de la pièce : tableau */}
             {lignes.length === 0 ? (
               <div className="pe-vide">
                 <Package size={22} />
@@ -526,7 +515,7 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
                               <span className="pe-article__nom">{l.designation}</span>
                               <span className="pe-article__sous">
                                 {l.code && <span>{l.code}</span>}
-                                <span className={`pe-origine ${l.besoin ? 'is-besoin' : ''}`}>{l.besoin ? t('besoin du bon') : t('ajouté')}</span>
+                                <span className={`pe-origine ${l.besoin || l.reappro ? 'is-besoin' : ''}`}>{l.besoin ? t('besoin du bon') : l.reappro ? t('stock bas') : t('ajouté')}</span>
                               </span>
                             </div>
                           </td>
@@ -567,7 +556,6 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
             )}
           </div>
 
-          {/* ═════ Colonne latérale : la pièce et ses totaux ═════ */}
           <aside className="pe-cote">
             <section className="pe-carte">
               <span className="pe-carte__titre">{t('N° de pièce')}</span>

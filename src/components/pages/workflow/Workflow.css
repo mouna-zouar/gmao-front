@@ -39,7 +39,6 @@
   align-items: stretch;
 }
 
-/* ── Étape ── */
 .wf-step {
   display: flex;
   align-items: flex-start;
@@ -82,7 +81,6 @@
   line-height: 1.4;
 }
 
-/* Teintes */
 .wf-step--teal .wf-step-icon { background: var(--g-teal-50); color: var(--g-teal-700); }
 .wf-step--teal { border-color: var(--g-teal-200); }
 
@@ -98,7 +96,6 @@
 .wf-step--muted .wf-step-icon { background: var(--g-slate-50); color: var(--g-slate-400); }
 .wf-step--muted { border-style: dashed; }
 
-/* ── Flèche verticale ── */
 .wf-arrow {
   display: flex;
   flex-direction: column;
@@ -134,7 +131,6 @@
   max-width: 320px;
 }
 
-/* ── Étapes parallèles côte à côte ── */
 .wf-parallel {
   display: flex;
   gap: 14px;
@@ -149,7 +145,6 @@
   flex: 1;
 }
 
-/* ── Embranchement (Oui/Non) ── */
 .wf-branch {
   display: flex;
   gap: 20px;
@@ -168,7 +163,6 @@
   width: 100%;
 }
 
-/* ── Mini-embranchement à l'intérieur d'une étape (Valider/Rejeter) ── */
 .wf-mini-branches {
   display: flex;
   gap: 10px;
@@ -200,7 +194,6 @@
   color: var(--g-red-600);
 }
 
-/* ── Note d'avertissement dans une étape ── */
 .wf-note {
   margin: 8px 0 0;
   font-size: 0.76rem;
@@ -224,7 +217,6 @@
   border-color: var(--g-slate-200);
 }
 
-/* ── Processus intelligents en arrière-plan ── */
 .wf-background {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -274,7 +266,6 @@
   line-height: 1.4;
 }
 
-/* ── Légende ── */
 .wf-legend {
   margin-top: 28px;
   background: var(--g-slate-50);
@@ -323,7 +314,6 @@
 .wf-legend-dot--bon-effectue { background: var(--g-teal-700); }
 .wf-legend-dot--bon-annule { background: var(--g-red-600); }
 
-/* ── Responsive ── */
 @media (max-width: 640px) {
   .wf-parallel,
   .wf-branch {

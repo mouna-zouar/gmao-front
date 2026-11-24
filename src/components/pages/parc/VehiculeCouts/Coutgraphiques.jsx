@@ -2,15 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { t, locale } from '../../../../i18n';
 import { POSTES, PERIODES, montantPoste, formatDT, bornesPeriode } from '../../../../constants/Coutlibelles';
 
-/*
- * Graphiques du coût par véhicule. Chaque couleur suit son poste (voir constants/Coutlibelles.js) ;
- * les montants sont toujours écrits (légende, info-bulle, tableau) : la couleur seule ne
- * porte jamais l'information.
- */
-
 const pourcent = (part, total) => (total > 0 ? Math.round((part / total) * 1000) / 10 : 0);
-
-/* ─────────── Répartition d'un total en une barre (parts d'un tout) ─────────── */
 
 export function BarreRepartition({ postes, titre }) {
   const total = postes?.total || 0;
@@ -58,8 +50,6 @@ export function BarreRepartition({ postes, titre }) {
   );
 }
 
-/* ─────────── Mini-barre d'une ligne du tableau (longueur ∝ coût total) ─────────── */
-
 export function MiniBarre({ postes, max }) {
   const total = postes?.total || 0;
   if (!total || !max) return <span className="vco-mini vco-mini--vide" aria-hidden="true" />;
@@ -73,12 +63,9 @@ export function MiniBarre({ postes, max }) {
   );
 }
 
-/* ─────────── Coût par mois : colonnes empilées par poste ─────────── */
-
 const MOIS_COURTS = (m) => new Date(`${m}-01T00:00:00`).toLocaleDateString(locale(), { month: 'short' });
 const MOIS_LONGS = (m) => new Date(`${m}-01T00:00:00`).toLocaleDateString(locale(), { month: 'long', year: 'numeric' });
 
-/** Graduations « rondes » de 0 au maximum (1, 2 ou 5 × 10^n). */
 function graduations(max, voulues = 4) {
   if (max <= 0) return [0];
   const brut = max / voulues;
@@ -113,7 +100,6 @@ export function GraphiqueMensuel({ parMois }) {
   const pasX = mois.length ? zoneL / mois.length : zoneL;
   const largeurBarre = Math.min(36, Math.max(6, pasX * 0.6));
   const y = (v) => hautMarge + zoneH - (v / haut) * zoneH;
-  // Une étiquette de mois sur deux quand la place manque
   const saut = pasX < 34 ? 2 : 1;
   const courant = survol != null ? mois[survol] : null;
 
@@ -140,9 +126,8 @@ export function GraphiqueMensuel({ parMois }) {
                 {segments.map((s, k) => {
                   const y0 = y(cumul), y1 = y(cumul + s.v);
                   cumul += s.v;
-                  const hauteur = Math.max(0, y0 - y1 - (k < segments.length - 1 ? 2 : 0)); // 2 px entre segments
+                  const hauteur = Math.max(0, y0 - y1 - (k < segments.length - 1 ? 2 : 0));
                   const dernier = k === segments.length - 1;
-                  // Haut de la colonne arrondi (4 px, moins si le segment est plus fin)
                   const r = Math.min(4, (y0 - y1) / 2, largeurBarre / 2);
                   const xg = cx - largeurBarre / 2, xd = cx + largeurBarre / 2;
                   return dernier ? (
@@ -155,7 +140,6 @@ export function GraphiqueMensuel({ parMois }) {
                 {i % saut === 0 && (
                   <text x={cx} y={H - 8} textAnchor="middle" className="vco-graduation">{MOIS_COURTS(m.mois)}</text>
                 )}
-                {/* Zone de survol plus large que la barre */}
                 <rect x={gauche + pasX * i} y={hautMarge} width={pasX} height={zoneH + basMarge} fill="transparent"
                   onMouseEnter={() => setSurvol(i)} />
               </g>
@@ -184,16 +168,12 @@ export function GraphiqueMensuel({ parMois }) {
   );
 }
 
-/* ─────────── Choix de la période (boutons + dates personnalisées) ───────────
-   valeur = { cle: 'annee' | '12mois' | 'precedente' | 'perso', perso: { debut, fin } } */
-
 export function ChoixPeriode({ valeur, onChange }) {
   const { cle, perso } = valeur;
   const bornes = bornesPeriode(cle, perso);
   const persoValide = cle !== 'perso' || (perso?.debut && perso?.fin && perso.debut <= perso.fin);
   const choisir = (nouvelle) => {
     if (nouvelle === cle) return;
-    // « Personnalisée » part des dates affichées
     onChange({ cle: nouvelle, perso: nouvelle === 'perso' ? bornes : perso });
   };
   return (

@@ -6,11 +6,6 @@ import { formatTemps, useMaintenant } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
 
-/*
- * Chrono des employés : qui travaille en ce moment, sur quel bon, et depuis combien de temps.
- * Les temps tournent à l'écran ; la liste est rechargée depuis le serveur toutes les minutes.
- */
-
 const RAFRAICHIR_MS = 60 * 1000;
 
 const ms = (d) => (d ? new Date(d).getTime() : null);
@@ -22,7 +17,7 @@ export default function ChronoEmployes({ onOuvrirBon }) {
   const [donnees, setDonnees] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
-  const [filtre, setFiltre] = useState('tous'); // tous | enCours | enPause
+  const [filtre, setFiltre] = useState('tous');
   const [recherche, setRecherche] = useState('');
 
   const charger = useCallback(async () => {

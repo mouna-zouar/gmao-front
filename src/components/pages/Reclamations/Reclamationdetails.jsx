@@ -1,10 +1,9 @@
-// Page de détail d'une réclamation — même langage visuel que le « parcours de réparation » du bon
 import { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Edit,
   Megaphone,
-  ShieldQuestion,
+  
   Wrench,
   CheckCircle,
   XCircle,
@@ -31,7 +30,7 @@ import {
   History,
   PlayCircle,
   Lock,
-  RotateCcw,
+  
   Inbox,
   ClipboardCheck,
   MapPin,
@@ -42,7 +41,7 @@ import { cheminLieu, lieuDeLigne } from '../../../services/lieuxCache';
 import reclamationService from '../../../services/Reclamationservice';
 import lectureService from '../../../services/lectureService';
 import EtatLecture from '../../commun/EtatLecture';
-import { ETAT_REC, actionsPossibles, estAffectee, nomTechnicien, TYPES_HISTORIQUE } from './ReclamationActions';
+import { ETAT_REC, actionsPossibles, estAffectee, membresGroupe, reclamationVerrouillee, nomTechnicien, TYPES_HISTORIQUE } from './ReclamationActions';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import { t, tp, locale } from '../../../i18n';
 import { imprimerFiche } from '../../../utils/imprimerListe';
@@ -51,9 +50,8 @@ import ModaleQrCode from '../../ui/QrCode/ModaleQrCode';
 import BmdChat from '../bonmaintenance/BmdChat';
 import { chatReclamationService } from '../../../services/chatBonService';
 import '../bonmaintenance/BmdEpure.css';
-import './ReclamationDetails.css';
+import './Reclamationdetails.css';
 
-// États de la réclamation (cycle IBM Maximo, identiques à Reclamations.jsx)
 const ETAT = ETAT_REC;
 
 const ETAT_EN_CLAIR = {
@@ -95,7 +93,6 @@ function joursDepuis(iso) {
   return tp('il y a jours', j);
 }
 
-// Le endpoint « getWithBonMaintenance » peut renvoyer plusieurs formes : on les accepte toutes
 function normaliser(data) {
   if (!data) return { reclamation: null, bons: [] };
   const reclamation = data.reclamation ?? data;
@@ -110,9 +107,6 @@ function normaliser(data) {
   return { reclamation, bons: bons.filter(Boolean) };
 }
 
-// ------------------------------------------------------------
-// Parcours (modèle Maximo) : Nouveau → En file → En cours → Résolue → Clôturée
-// ------------------------------------------------------------
 const ETAPES_DEF = [
   { key: 'nouveau', label: 'Nouveau', aide: 'Le problème a été signalé', icon: Megaphone },
   { key: 'file', label: 'En file', aide: 'Affectée à un groupe ou un technicien', icon: UserCheck },
@@ -121,7 +115,6 @@ const ETAPES_DEF = [
   { key: 'cloturee', label: 'Clôturée', aide: 'La demande est fermée', icon: Lock },
 ];
 
-/** Index de l'étape en cours selon l'état ; pour une réclamation annulée, l'étape où elle s'est arrêtée. */
 function indexEtape(r) {
   switch (r.etat ?? ETAT.NOUVEAU) {
     case ETAT.NOUVEAU: return 0;
@@ -129,7 +122,7 @@ function indexEtape(r) {
     case ETAT.EN_COURS: return 2;
     case ETAT.RESOLUE: return 3;
     case ETAT.CLOTUREE: return 4;
-    default: // annulée : première étape non atteinte
+    default:
       if (r.dateResolution) return 4;
       if (r.datePriseEnCharge) return 3;
       if (r.dateAffectation || estAffectee(r)) return 2;
@@ -233,7 +226,6 @@ function prochaineAction(reclamation, bons) {
   }
 }
 
-/* Une ligne de l'historique, en clair */
 function ligneHistorique(h) {
   const titre = TYPES_HISTORIQUE[h.type] || h.type;
   const qui = (g, p) => [g, p].filter(Boolean).join(' · ');
@@ -260,9 +252,6 @@ function dateHeure(iso) {
   return d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-// ============================================================
-// COMPOSANT
-// ============================================================
 export default function ReclamationDetails({
   data,
   loading = false,
@@ -271,14 +260,13 @@ export default function ReclamationDetails({
   onModifier,
   onValider,
   onRejeter,
-  onAction, // cycle de vie : (nom) => …  nom = affecter | prendre | resoudre | cloturer | rouvrir | annuler
+  onAction,
   onCreerBon,
   onAssocier,
   onOuvrirBon,
-  libelleRetour, // texte du bouton retour (ex. « Retour à mon espace »)
+  libelleRetour,
 }) {
   const { reclamation, bons } = normaliser(data);
-  // Détail reçu en un seul appel (/reclamation/{id}/resume) : historique, équipement et « lu » inclus
   const resume = data?.__resume ?? null;
   const [equipement, setEquipement] = useState(null);
   const carteLieux = useCarteLieux();
@@ -288,8 +276,6 @@ export default function ReclamationDetails({
   const [lecture, setLecture] = useState(null);
   const titreRef = useRef(null);
 
-  // Ouverture : marque la réclamation « lue » si c'est son technicien (le serveur décide)
-  // Sans résumé (autre page appelante) : lecture puis historique, chacun une seule fois
   useEffect(() => {
     const id = reclamation?.id;
     if (resume) { setLecture(resume.lecture); return undefined; }
@@ -300,14 +286,12 @@ export default function ReclamationDetails({
       .then((l) => {
         if (annule) return;
         setLecture(l);
-        // Première lecture : elle vient d'être ajoutée à l'historique
         if (l?.nouvelle) reclamationService.historique(id).then((h) => { if (!annule) setHistorique(Array.isArray(h) ? h : []); }).catch(() => {});
       })
-      .catch(() => { /* serveur pas à jour : on garde l'état reçu avec la réclamation */ });
+      .catch(() => { });
     return () => { annule = true; };
-  }, [reclamation?.id, reclamation?.personnelAffecteId, resume]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reclamation?.id, reclamation?.personnelAffecteId, resume]);
 
-  // Historique des affectations et des états : rechargé à chaque modification de la réclamation
   useEffect(() => {
     const id = reclamation?.id;
     if (resume) { setHistorique(Array.isArray(resume.historique) ? resume.historique : []); return undefined; }
@@ -317,7 +301,7 @@ export default function ReclamationDetails({
       .then((h) => { if (!annule) setHistorique(Array.isArray(h) ? h : []); })
       .catch(() => { if (!annule) setHistorique([]); });
     return () => { annule = true; };
-  }, [reclamation?.id, reclamation?.etat, reclamation?.dateModification, resume]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reclamation?.id, reclamation?.etat, reclamation?.dateModification, resume]);
 
   useEffect(() => {
     const id = reclamation?.lotArticleImmobilistationId;
@@ -331,11 +315,10 @@ export default function ReclamationDetails({
       .then((e) => { if (!annule) setEquipement(e); })
       .catch(() => { if (!annule) setEquipement(null); });
     return () => { annule = true; };
-  }, [reclamation?.lotArticleImmobilistationId, resume]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reclamation?.lotArticleImmobilistationId, resume]);
 
   useEffect(() => { if (!loading) titreRef.current?.focus(); }, [loading]);
 
-  // Nouvelle réclamation ouverte : on revient sur le signalement
   useEffect(() => { setOnglet('signalement'); }, [reclamation?.id]);
 
   if (loading) {
@@ -365,7 +348,6 @@ export default function ReclamationDetails({
 
   const etatClair = ETAT_EN_CLAIR[reclamation.etat] || { texte: t("Inconnu"), ton: 'neutre' };
   const etapes = construireParcours(reclamation, bons);
-  // La barre remplie va jusqu'à l'étape en cours
   const progression = reclamation.etat === ETAT.CLOTUREE ? 1 : Math.min(indexEtape(reclamation), ETAPES_DEF.length - 1) / (ETAPES_DEF.length - 1);
   const possibles = onAction ? actionsPossibles(reclamation) : {};
   const action = prochaineAction(reclamation, bons);
@@ -375,7 +357,6 @@ export default function ReclamationDetails({
   const groupe = reclamation.groupeNom || null;
   const service = reclamation.serviceNom || reclamation.service?.description || null;
   const nomEquipement = equipement?.designation || null;
-  // Lieu dans l'arborescence (choisi, sinon celui de l'équipement)
   const lieu = cheminLieu(carteLieux, lieuDeLigne(carteLieux, reclamation.lieuId, reclamation.lotArticleImmobilistationId)) || null;
   const titre = nomEquipement || lieu || t('Réclamation {num}', { num: reclamation.num || `#${reclamation.id}` });
 
@@ -404,9 +385,7 @@ export default function ReclamationDetails({
 
   const avantPriseEnCharge = reclamation.etat == null || reclamation.etat === ETAT.NOUVEAU || reclamation.etat === ETAT.EN_FILE;
 
-  // Impression de la fiche de la réclamation (A4 portrait)
   const imprimerReclamation = async () => {
-    // QR code dans l'en-tête : scanné, il rouvre cette réclamation dans la GMAO
     const qr = await qrSvg(urlReclamation(reclamation.id)).catch(() => null);
     imprimerFiche({
       qr,
@@ -460,13 +439,15 @@ export default function ReclamationDetails({
     });
   };
 
-  // Une seule couleur d'accent : seuls les points d'alerte gardent du rouge ou de l'orange
   const pointTon = (ton) => (ton === 'alerte' ? 'alerte' : ton === 'attention' ? 'attention' : ton === 'ok' ? 'ok' : 'neutre');
 
+  const verrouillee = reclamationVerrouillee(reclamation);
   const tuiles = [
     { key: 'criticite', icon: Gauge, label: t("Criticité"), valeur: criticite?.texte || 'Non définie', ton: criticite?.ton || 'neutre' },
     { key: 'urgence', icon: Flame, label: t("Urgence"), valeur: urgence?.texte || 'Non définie', ton: urgence?.ton || 'neutre' },
-    { key: 'technicien', icon: User, label: t("Technicien"), valeur: personnel || t("Personne pour l’instant"), ton: personnel ? 'neutre' : 'attention' },
+    { key: 'technicien', icon: personnel || !groupe ? User : Users, label: personnel || !groupe ? t("Technicien") : t("Groupe"),
+      valeur: personnel || (membresGroupe(reclamation).length > 1 ? t('{n} personnes', { n: membresGroupe(reclamation).length }) : groupe) || t("Personne pour l’instant"),
+      ton: personnel || groupe ? 'neutre' : 'attention' },
     { key: 'bon', icon: Wrench, label: t("Bon de maintenance"), valeur: bons.length === 0 ? 'Aucun' : (bons[0].num || `#${bons[0].id}`), ton: 'neutre', onglet: 'bon' },
   ];
   const groupesInfos = [
@@ -482,14 +463,28 @@ export default function ReclamationDetails({
       titre: t("Équipement"),
       lignes: [
         { icon: Package, label: t("Équipement"), valeur: nomEquipement || '—' },
-        { icon: MapPin, label: t("Lieu"), valeur: lieu || '—' },
+        { icon: MapPin, label: t("Lieu"), valeur: lieu || '—', large: true },
       ],
     },
     {
       titre: t("Affectation"),
       lignes: [
-        { icon: Users, label: t("Groupe"), valeur: groupe || '—' },
-        { icon: User, label: t("Technicien"), valeur: personnel || t("Personne pour l’instant") },
+        { icon: User, label: t("Technicien"), valeur: personnel || t("Personne pour l’instant"), large: true,
+          rendu: personnel ? (
+            <span className="rcz-affecte">
+              <span className="rcz-puce rcz-puce--tech"><User size={12} aria-hidden="true" /> {personnel}</span>
+              {reclamation.dateAffectation && <small>{t('Affectée le {date}', { date: dateHeure(reclamation.dateAffectation) })}</small>}
+            </span>
+          ) : <span className="rcz-vide-txt">{t("Personne pour l’instant")}</span> },
+        { icon: Users, label: membresGroupe(reclamation).length > 0 ? t('Groupe ({n})', { n: membresGroupe(reclamation).length }) : t("Groupe"),
+          valeur: groupe || '—', large: true,
+          rendu: membresGroupe(reclamation).length > 0 ? (
+            <ul className="rcz-puces">
+              {membresGroupe(reclamation).map((m) => (
+                <li key={m.id} className="rcz-puce"><User size={12} aria-hidden="true" /> {m.nom || `#${m.id}`}</li>
+              ))}
+            </ul>
+          ) : groupe ? <span className="rcz-puce">{groupe}</span> : <span className="rcz-vide-txt">—</span> },
       ],
     },
   ];
@@ -505,7 +500,7 @@ export default function ReclamationDetails({
       case 'bon':
         return (
           <>
-            {bons.length > 0 && (
+            {bons.length > 0 && !verrouillee && (
               <div className="rcz-carte-tete">
                 <span />
                 <button type="button" className="bmz-btn rcz-btn-petit" onClick={onAssocier}>
@@ -612,7 +607,6 @@ export default function ReclamationDetails({
 
   return (
     <div className="rcx-page bmz-page bmz-page--onglets bmz-v4 rcz-page">
-      {/* ===== Bande haute : identité de la réclamation + parcours sur une seule ligne ===== */}
       <div className="bmz-haut">
       <header className="bmz-entete">
         <button type="button" className="bmz-retour" onClick={onBack}
@@ -623,6 +617,11 @@ export default function ReclamationDetails({
           <div className="bmz-identite-haut">
             <span className="bmz-num">{reclamation.num || t('Réclamation #{id}', { id: reclamation.id })}</span>
             <span className={`bmz-etat bmz-point--${pointTon(etatClair.ton)}`}>{t(etatClair.texte)}</span>
+            {verrouillee && (
+              <span className="bmz-lecture-seule" title={t('Cette réclamation est résolue, clôturée ou annulée : elle ne peut plus être modifiée.')}>
+                <Lock size={12} aria-hidden="true" /> {t('Lecture seule')}
+              </span>
+            )}
           </div>
           <h1 className="bmz-titre" tabIndex={-1} ref={titreRef}>{titre}</h1>
           <p className="bmz-resume">
@@ -640,9 +639,11 @@ export default function ReclamationDetails({
               <UserCheck size={16} /> <span>{estAffectee(reclamation) ? t("Réaffecter") : t("Affecter")}</span>
             </button>
           )}
-          <button type="button" className="bmz-btn" onClick={onModifier} title={t("Modifier")}>
-            <Edit size={16} /> <span>{t("Modifier")}</span>
-          </button>
+          {!verrouillee && (
+            <button type="button" className="bmz-btn" onClick={onModifier} title={t("Modifier")}>
+              <Edit size={16} /> <span>{t("Modifier")}</span>
+            </button>
+          )}
           {possibles.annuler && (
             <button type="button" className="bmz-btn" onClick={() => onAction('annuler')} title={t("Annuler la réclamation")}>
               <XCircle size={16} /> <span>{t("Annuler la réclamation")}</span>
@@ -657,7 +658,6 @@ export default function ReclamationDetails({
         </div>
       </header>
 
-      {/* ===== Parcours de la demande ===== */}
       <section className="bmz-parcours" aria-label={t("Parcours de la réclamation")}>
         <ol className="bmz-ligne" style={{ '--bmz-p': progression, '--bmz-nb': ETAPES_DEF.length }}>
           {etapes.map((e) => {
@@ -693,7 +693,6 @@ export default function ReclamationDetails({
         />
       )}
 
-      {/* ===== Plan : informations à gauche, dossier en onglets à droite ===== */}
       <div className="bmz-plan">
       <div className="bmz-corps bmz-corps--sans-rapport">
         <div className="bmz-col">
@@ -719,7 +718,6 @@ export default function ReclamationDetails({
             </section>
           )}
 
-          {/* Informations : « En un coup d'œil » (tuiles) puis le détail rangé par thème */}
           <section className="bmz-carte bmz-infos" aria-label={t("Informations générales de la réclamation")}>
             <h2 className="bmz-carte-titre">{t("Informations")}</h2>
 
@@ -762,7 +760,7 @@ export default function ReclamationDetails({
                       return (
                         <div key={i.label} className={i.large ? 'rcz-large' : undefined}>
                           <dt><Icon size={13} /> {i.label}</dt>
-                          <dd title={i.valeur}>{i.valeur}</dd>
+                          <dd title={typeof i.valeur === 'string' ? i.valeur : undefined}>{i.rendu ?? i.valeur}</dd>
                         </div>
                       );
                     })}
@@ -774,7 +772,6 @@ export default function ReclamationDetails({
         </div>
       </div>
 
-      {/* ===== Dossier en onglets : Signalement, Bon lié, Historique, Discussion ===== */}
       <section className="bmz-carte bmz-do" aria-label={t('Dossier')}>
         <div className="bmz-do-barre" role="tablist" aria-label={t('Dossier')}>
           {ONGLETS.map((o) => {

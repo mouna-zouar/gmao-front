@@ -1,20 +1,20 @@
-import React, { useState, useMemo, useCallback } from 'react';
-import personnelService from '../../../services/personnelService';
+import { useState, useMemo, useCallback } from 'react';
+import personnelService from '../../../services/Personnelservice';
 import prestataireService from '../../../services/prestataireService';
-import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
-import pieceService from '../../../services/pieceService';
-import pieceLigneService from '../../../services/pieceLigneService';
-import calendrierService from '../../../services/calendrierService';
+import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
+import pieceService from '../../../services/Pieceservice';
+import pieceLigneService from '../../../services/PieceLigneService';
+import calendrierService from '../../../services/Calendrierservice';
 import serviceService from '../../../services/Serviceservice';
 import cliniqueService from '../../../services/cliniqueService';
 import prestataireDepotService from '../../../services/Prestatairedepotservice';
-import depotQteService from '../../../services/depotQteService';
-import depotQteLotService from '../../../services/depotQteLotService';
+import depotQteService from '../../../services/Depotqteservice';
+import depotQteLotService from '../../../services/Depotqtelotservice';
 import articleStockDepotService from '../../../services/articleStockDepotService';
 import cliniqueStockDepotService from '../../../services/cliniqueStockDepotService';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import { Archive, Banknote, Building2, Calendar, Columns3, Database, Eye, FileText, Hospital, Search, Settings, Tag, UserCheck, Warehouse, X } from 'lucide-react';
-import './ReferentielConsultation.css';
+import './Referentielconsultation.css';
 import Pagination from '../../commun/Pagination';
 
 function formatDate(iso) {

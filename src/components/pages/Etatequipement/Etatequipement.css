@@ -1,6 +1,3 @@
-/* Page « Équipements » au style des tableaux de bord (bons, réclamations, parc) */
-
-/* Boutons de l'en-tête : même look que « Réinitialiser l'ordre » / « Rafraîchir » */
 .eq-page .tb-header-actions .vl-btn {
   height: auto; padding: 9px 16px; border-radius: 8px;
   border: 1px solid var(--g-slate-200); background: var(--g-blanc); color: var(--g-brand-600);
@@ -8,14 +5,12 @@
 }
 .eq-page .tb-header-actions .vl-btn:hover:not(:disabled) { background: var(--g-brand-50); border-color: var(--g-brand-100); color: var(--g-brand-600); }
 
-/* Cartes d'état : cliquables, filtre actif mis en avant */
 .eq-stat { font-family: var(--g-police); text-align: start; cursor: pointer; }
 .eq-stat:hover { border-color: var(--g-slate-300); box-shadow: 0 4px 12px -2px rgba(15, 23, 42, 0.06); transform: translateY(-1px); }
 .eq-stat:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 2px; }
 .eq-stat[aria-pressed="true"] { border-color: var(--g-brand-500); box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12); }
 .eq-stats { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
 
-/* Liste dans une carte : la liste et la pagination prennent toute la largeur */
 .eq-liste-carte { gap: 14px; }
 .eq-liste-carte .tb-carte-tete { margin-bottom: 2px; }
 .eq-liste-carte > .vl-liste {
@@ -32,5 +27,4 @@
   .eq-liste-carte > .vl-pagination { margin: -14px -16px -16px; }
 }
 
-/* Pastilles d'état dans une fenêtre (pas d'en-tête de page) */
 .eq-pastilles-modal { border-top: 0; padding-top: 0; margin-bottom: 12px; }

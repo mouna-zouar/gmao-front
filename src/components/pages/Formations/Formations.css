@@ -1,9 +1,7 @@
-/* Formations des techniciens */
 .fo-intitule { color: var(--g-slate-900); font-weight: 700; }
 .fo-cellule-participants { display: inline-flex; align-items: center; gap: 8px; }
 .fo-cellule-participants b { font-size: 0.9rem; color: var(--g-slate-800); }
 
-/* Champ « Participants » de la fenêtre */
 .fo-participants { display: flex; flex-direction: column; gap: 12px; }
 .fo-participants__vide { display: flex; align-items: center; gap: 8px; margin: 0; padding: 18px; border: 1.5px dashed var(--g-slate-200); border-radius: 12px; color: var(--g-slate-500); font-weight: 600; font-size: 0.86rem; justify-content: center; }
 .fo-participants__tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
@@ -22,13 +20,11 @@
 .fo-participants__retirer { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 0; border-radius: 8px; background: transparent; color: var(--g-slate-400); cursor: pointer; }
 .fo-participants__retirer:hover { background: var(--g-red-100); color: var(--g-red-700); }
 
-/* Avertissement sous le choix d'un technicien */
 .fo-alerte { display: flex; align-items: center; gap: 7px; margin: 6px 0 0; padding: 7px 10px; border-radius: 9px; font-size: 0.8rem; font-weight: 600; line-height: 1.35; }
 .fo-alerte svg { flex-shrink: 0; }
 .fo-alerte--ok { background: var(--g-emerald-100); color: var(--g-emerald-700); }
 .fo-alerte--non { background: var(--g-amber-50, #fffbeb); color: var(--g-amber-800, #92400e); border: 1px solid var(--g-amber-200, #fde68a); }
 
-/* Mon espace : mes formations */
 .fo-mes { overflow-x: auto; background: var(--g-blanc); border: 1px solid var(--g-slate-200); border-radius: 14px; }
 .fo-mes-table { width: 100%; border-collapse: collapse; }
 .fo-mes-table th { padding: 11px 14px; background: var(--g-slate-50); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--g-brand-700, #0e7490); border-bottom: 1px solid var(--g-slate-200); text-align: center; white-space: nowrap; }
@@ -37,7 +33,6 @@
 .fo-mes-table td strong { display: block; color: var(--g-slate-900); }
 .fo-mes-table td small { display: block; margin-top: 2px; color: var(--g-slate-500); font-size: 0.76rem; }
 
-/* Familles et équipements visés (choix multiple) */
 .fo-cibles { display: flex; flex-direction: column; gap: 8px; }
 .fo-cibles__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .fo-cibles__liste li { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 10px; border-radius: 999px; background: var(--g-brand-50); border: 1px solid var(--g-brand-100); color: var(--g-brand-700, #0e7490); font-size: 0.8rem; font-weight: 600; }
@@ -46,11 +41,9 @@
 .fo-cellule-cibles { display: inline-flex; flex-wrap: wrap; gap: 4px; justify-content: center; max-width: 280px; }
 .fo-general { color: var(--g-slate-500); font-size: 0.84rem; }
 
-/* Assistant : intervenants suggérés */
 .fo-assistant { margin: 0 0 4px; padding: 10px 12px; border-radius: 12px; background: var(--g-brand-50); border: 1px solid var(--g-brand-100); }
 .fo-assistant h4 { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 0.8rem; font-weight: 700; color: var(--g-brand-700, #0e7490); }
 .fo-assistant ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 6px; max-height: 260px; overflow-y: auto; }
-/* Une ligne compacte : nom + raisons à gauche, score + bouton à droite */
 .fo-assistant li {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "tete bouton" "raisons bouton";
   align-items: center; column-gap: 10px; row-gap: 3px;
@@ -70,7 +63,6 @@
 .fo-assistant__choisir:hover:not(:disabled) { background: var(--g-brand-500); color: var(--g-blanc); }
 .fo-assistant__choisir:disabled { border-color: transparent; background: var(--g-brand-500); color: var(--g-blanc); cursor: default; }
 .fo-assistant__vide { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 0.8rem; color: var(--g-slate-500); }
-/* Choix de plusieurs équipements (liste à cocher) */
 .fo-multi { display: flex; flex-direction: column; border: 1px solid var(--g-slate-200); border-radius: 12px; background: var(--g-blanc); overflow: hidden; }
 .fo-multi__filtres { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; border-bottom: 1px solid var(--g-slate-100); background: var(--g-slate-50); }
 .fo-multi__recherche { flex: 1 1 200px; display: flex; align-items: center; gap: 6px; padding: 0 10px; height: 38px; border: 1px solid var(--g-slate-200); border-radius: 10px; background: var(--g-blanc); color: var(--g-slate-400); }
@@ -90,14 +82,10 @@
 .fo-alerte--attente { background: var(--g-sky-50, #f0f9ff); color: var(--g-sky-800, #075985); border: 1px solid var(--g-sky-200, #bae6fd); align-items: flex-start; }
 .fo-alerte__ligne { display: block; }
 
-/* ============================================================
-   Tableau des formations : cellules plus lisibles
-   ============================================================ */
 .fo-page td { vertical-align: middle; }
 .fo-intitule-bloc { display: flex; flex-direction: column; gap: 2px; text-align: start; min-width: 180px; }
 .fo-intitule-bloc small { font-size: 0.76rem; color: var(--g-slate-500); }
 
-/* Participants : pastilles avec initiales, couleur du résultat */
 .fo-pers { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 200px; text-align: start; }
 .fo-pers__liste { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
 .fo-pers__chip {
@@ -123,7 +111,6 @@
 .fo-pers__bilan { font-size: 0.72rem; font-weight: 700; color: var(--g-amber-700, #b45309); }
 .fo-pers__bilan.is-ok { color: var(--g-emerald-700, #047857); }
 
-/* Familles et équipements : un nom lisible par ligne (+ code / marque) */
 .fo-cibles-cell { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; text-align: start; min-width: 160px; max-width: 280px; }
 .fo-cibles-cell li { display: flex; flex-direction: column; padding-inline-start: 8px; border-inline-start: 3px solid var(--g-slate-200); line-height: 1.25; }
 .fo-cibles-cell--famille li { border-inline-start-color: var(--g-brand-300, #7dd3dc); }
@@ -132,7 +119,6 @@
 .fo-cibles-cell li small { font-size: 0.72rem; color: var(--g-slate-500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fo-cibles-cell li.fo-cibles-cell__plus { border: 0; padding: 0; font-size: 0.74rem; font-weight: 700; color: var(--g-slate-500); }
 
-/* Tout le contenu du tableau centré, comme les autres colonnes */
 .fo-page td { text-align: center; }
 .fo-intitule-bloc { align-items: center; text-align: center; margin: 0 auto; }
 .fo-pers { align-items: center; text-align: center; margin: 0 auto; }
@@ -142,10 +128,6 @@
 .fo-cibles-cell--famille .fo-cibles-cell__nom { color: var(--g-brand-700, #0e7490); }
 .fo-cibles-cell--equipement .fo-cibles-cell__nom { color: var(--g-blue-700, #1d4ed8); }
 
-/* ============================================================
-   Tableau des formations — v2 : cellules compactes
-   ============================================================ */
-/* Participants : pile d'avatars + nombre + barre de réussite */
 .fo-part { display: inline-flex; align-items: center; gap: 10px; cursor: help; }
 .fo-part:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 3px; border-radius: 8px; }
 .fo-part__pile { display: inline-flex; align-items: center; }
@@ -168,7 +150,6 @@
 .fo-part__barre { width: 54px; height: 5px; border-radius: 3px; background: var(--g-slate-100); overflow: hidden; }
 .fo-part__barre span { display: block; height: 100%; background: var(--g-emerald-500, #10b981); border-radius: 3px; }
 
-/* Équipements visés : premier nom + « +N » + résumé */
 .fo-cib { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: 240px; cursor: help; text-align: start; }
 .fo-cib:focus-visible { outline: 2px solid var(--g-brand-500); outline-offset: 3px; border-radius: 6px; }
 .fo-cib__ligne { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }

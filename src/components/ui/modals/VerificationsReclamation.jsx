@@ -3,12 +3,6 @@ import { Loader2 } from 'lucide-react';
 import reclamationService from '../../../services/Reclamationservice';
 import './VerificationsReclamation.css';
 
-/*
- * Champ « Vérifications » de la fenêtre de réclamation (champ personnalisé du formulaire dynamique).
- * valeur : { equipementId, checklist, reponses: { 0: 'OUI', …, finale: 'NON' }, chargement, erreur }
- * Les questions dépendent de la famille de l'équipement choisi : rechargées quand il change.
- */
-
 const REPONSES = [
   { valeur: 'OUI', label: 'Oui' },
   { valeur: 'NON', label: 'Non' },
@@ -18,7 +12,6 @@ const LIBELLE = { OUI: 'Oui', NON: 'Non', NA: 'Sans objet' };
 
 const nbReponses = (v) => (v?.checklist?.questions ?? []).filter((_, i) => v.reponses?.[i]).length + (v?.reponses?.finale ? 1 : 0);
 
-/** Message qui empêche de continuer, ou null (si les questions n'ont pas pu être chargées, on laisse passer). */
 export function manqueVerifications(v, equipementId) {
   if (!equipementId) return 'Choisis d’abord l’équipement concerné.';
   if (v?.erreur && String(v.equipementId) === String(equipementId)) return null;
@@ -29,7 +22,6 @@ export function manqueVerifications(v, equipementId) {
   return null;
 }
 
-/** Réponses envoyées au serveur : [{ question, reponse }], ou null. */
 export function reponsesChecklist(v) {
   if (!v?.checklist) return null;
   return [
@@ -38,7 +30,6 @@ export function reponsesChecklist(v) {
   ];
 }
 
-/** Le demandeur dit que le problème a disparu après les vérifications. */
 export const problemeRegle = (v) => v?.reponses?.finale === 'NON';
 
 function Choix({ question, valeur, options, onChoisir }) {
@@ -58,7 +49,6 @@ function Choix({ question, valeur, options, onChoisir }) {
 export default function VerificationsReclamation({ equipementId, valeur, onChange }) {
   const v = valeur || {};
 
-  // Questions de la famille de l'équipement (les réponses repartent de zéro quand il change)
   useEffect(() => {
     if (!equipementId || String(v.equipementId) === String(equipementId)) return undefined;
     let annule = false;

@@ -28,7 +28,6 @@
 }
 .bmz-page h1, .bmz-page h2, .bmz-page h3 { font-family: inherit; color: var(--z-encre); }
 
-/* ---------- Boutons ---------- */
 .bmz-btn {
   position: relative;
   display: inline-flex; align-items: center; gap: 6px;
@@ -49,7 +48,6 @@
   display: inline-flex; align-items: center; justify-content: center;
 }
 
-/* ---------- En-tête ---------- */
 .bmz-entete {
   display: flex; align-items: center; gap: 14px;
   padding: 12px 16px; border-radius: 14px;
@@ -76,7 +74,6 @@
 .bmz-resume { margin: 2px 0 0; font-size: 13px; color: var(--z-doux); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bmz-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 
-/* Point de couleur devant un état (seule touche de couleur, et seulement si utile) */
 [class*="bmz-point--"]::before {
   content: ''; width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; background: var(--z-pale);
 }
@@ -86,7 +83,6 @@
 .bmz-point--alerte::before { background: var(--z-alerte); }
 .bmz-point--alerte { color: var(--z-alerte) !important; }
 
-/* Aide : petite bulle, sans pousser la page */
 .bmz-aide-zone { position: relative; }
 .bmz-aide {
   position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; width: 320px;
@@ -96,7 +92,6 @@
 }
 .bmz-aide ol { margin: 0 0 12px; padding-inline-start: 18px; display: grid; gap: 4px; }
 
-/* ---------- Parcours ---------- */
 .bmz-parcours {
   position: relative;
   padding: 14px 16px 10px; border-radius: 14px;
@@ -140,7 +135,6 @@
 .bmz-etape.is-probleme .bmz-etape-nom { color: var(--z-encre); }
 .bmz-etape.is-probleme .bmz-etape-aide { color: var(--z-alerte); font-weight: 600; }
 
-/* ---------- Corps en trois colonnes ---------- */
 .bmz-corps {
   flex: 1; min-height: 0;
   display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px;
@@ -150,7 +144,6 @@
 .bmz-page .bmz-carte-titre { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: var(--z-doux); text-transform: uppercase; letter-spacing: 0.05em; }
 .bmz-defile { flex: 1; min-height: 0; overflow-y: auto; }
 
-/* À faire maintenant : carte claire, trait d'accent à gauche */
 .bmz-maintenant { border-inline-start: 4px solid var(--z-accent); }
 .bmz-maintenant--alerte { border-inline-start-color: var(--z-alerte); }
 .bmz-maintenant--fini { border-inline-start-color: var(--z-ok); }
@@ -162,18 +155,15 @@
 .bmz-maintenant-texte { margin: 0 0 12px; font-size: 13.5px; color: var(--z-doux); }
 .bmz-maintenant-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* Informations : grille clé / valeur */
 .bmz-infos { flex: 1; min-height: 0; overflow-y: auto; }
 .bmz-infos dl { margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
 .bmz-infos div { min-width: 0; }
 .bmz-infos dt { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--z-pale); }
 .bmz-infos dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; color: var(--z-encre); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Bon : « En un coup d'œil » et le détail réunis dans la carte Informations */
 .bmz-infos-bloc + .bmz-infos-bloc { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--z-trait); }
 .bmz-page .bmz-sous-titre { margin: 0 0 6px; font-size: 11px; font-weight: 700; color: var(--z-pale); text-transform: uppercase; letter-spacing: 0.06em; }
 
-/* En un coup d'œil */
 .bmz-vitaux ul, .bmz-dossier ul { margin: 0; padding: 0; list-style: none; }
 .bmz-vital {
   width: 100%; display: flex; align-items: center; gap: 10px;
@@ -188,11 +178,9 @@ button.bmz-vital:hover { background: var(--z-fond); }
 .bmz-vital-valeur { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--z-encre); text-align: end; }
 .bmz-fleche { color: var(--z-pale); flex-shrink: 0; }
 
-/* Rapport IA (après la clôture) : défile dans sa propre zone */
 .bmz-rapport:empty { display: none; }
 .bmz-rapport .bmr { margin: 0; }
 
-/* Dossier : liste compacte des rubriques */
 .bmz-dossier { display: flex; flex-direction: column; }
 .bmz-groupe + .bmz-groupe { margin-top: 10px; }
 .bmz-page .bmz-groupe h3 { margin: 0 0 2px; padding: 0 4px; font-size: 11px; font-weight: 700; color: var(--z-pale); text-transform: uppercase; letter-spacing: 0.06em; }
@@ -208,7 +196,6 @@ button.bmz-vital:hover { background: var(--z-fond); }
 .bmz-nb { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: var(--z-fond); border: 1px solid var(--z-trait); font-size: 12px; font-weight: 700; color: var(--z-doux); text-align: center; }
 .bmz-nb--alerte { background: var(--z-alerte); border-color: var(--z-alerte); color: #fff; }
 
-/* ---------- Écrans moyens et petits : la page défile normalement ---------- */
 @media (max-width: 1180px) {
   .bmz-page { height: auto; min-height: 0; overflow: visible; padding: 14px 16px 24px !important; }
   .bmz-corps { grid-template-columns: 1fr 1fr; }
@@ -229,12 +216,6 @@ button.bmz-vital:hover { background: var(--z-fond); }
 .bmz-page .bmz-titre:focus { outline: none; }
 
 
-/* ============================================================
-   Informations : « En un coup d'œil » en tuiles + détails rangés par thème
-   Dossier : groupes en accordéon (bouton déroulant)
-   ============================================================ */
-
-/* Tuiles « coup d'œil » : 2 colonnes, étiquette en haut, valeur en dessous */
 .bmz-tuiles { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .bmz-tuiles li { min-width: 0; }
 .bmz-tuiles li:last-child:nth-child(odd) { grid-column: 1 / -1; }
@@ -255,12 +236,10 @@ button.bmz-tuile.is-cliquable:hover { border-color: var(--z-accent); background:
 .bmz-tuile-fleche { position: absolute; top: 10px; inset-inline-end: 8px; color: var(--z-pale); opacity: 0; transition: opacity 0.15s ease; }
 button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(--z-accent); }
 
-/* Détails du bon : un petit titre par thème, 2 colonnes dedans */
 .bmz-info-groupe + .bmz-info-groupe { margin-top: 10px; }
 .bmz-page .bmz-info-groupe h4 { margin: 0 0 4px; font-size: 12px; font-weight: 700; color: var(--z-doux); }
 .bmz-infos .bmz-info-groupe dl { padding-inline-start: 10px; border-inline-start: 2px solid var(--z-trait); }
 
-/* Dossier : un bouton déroulant par groupe */
 .bmz-groupe { border: 1px solid var(--z-trait); border-radius: 10px; background: var(--z-carte); overflow: hidden; }
 .bmz-groupe + .bmz-groupe { margin-top: 8px; }
 .bmz-groupe-btn {
@@ -276,7 +255,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-groupe-chevron { color: var(--z-pale); flex-shrink: 0; transition: transform 0.2s ease; }
 .bmz-groupe.is-ouvert .bmz-groupe-chevron { transform: rotate(180deg); color: var(--z-accent); }
 
-/* Ouverture fluide, sans mesurer la hauteur */
 .bmz-groupe-corps { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.2s ease; }
 .bmz-groupe.is-ouvert .bmz-groupe-corps { grid-template-rows: 1fr; }
 .bmz-groupe-corps > ul { min-height: 0; overflow: hidden; margin: 0; padding: 0 6px; list-style: none; }
@@ -309,12 +287,9 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-groupe-plat ul { margin: 0; padding: 0; list-style: none; }
 @media (prefers-reduced-motion: reduce) { .bmz-dossier-corps { transition: none; } }.bmz-lecture { margin: 10px 0 0; }
 
-/* Sans le bloc « À faire maintenant », la 1re colonne ne contient que le rapport (après clôture) :
-   tant qu'il est vide, la colonne disparaît et la page passe sur deux colonnes. */
 .bmz-col:has(> .bmz-rapport:empty:only-child) { display: none; }
 .bmz-corps:has(> .bmz-col:first-child > .bmz-rapport:empty:only-child) { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
 
-/* ── Réclamation d'origine : vérifications (question → réponse) ── */
 .bmz-verifs { margin: 0; padding: 0 0 0 10px; list-style: none; border-inline-start: 2px solid var(--z-trait); }
 [dir="rtl"] .bmz-verifs { padding: 0 10px 0 0; }
 .bmz-verifs li { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12.5px; }
@@ -325,14 +300,11 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-verif-r--non { background: var(--g-red-50, #fef2f2); color: var(--g-red-700, #b91c1c); }
 .bmz-verif-r--na { background: var(--g-slate-100); color: var(--g-slate-600); }
 
-/* ── Page sans défilement (grand écran) : l'ancienne hauteur minimale 100vh ne s'applique pas ici ── */
 .bmz-page.bmd-container { min-height: 0; }
 .bmz-infos { overflow-y: auto; }
-/* Tuiles « coup d'œil » sur trois colonnes : moins de hauteur */
 .bmz-tuiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .bmz-tuiles li:last-child:nth-child(odd) { grid-column: auto; }
 .bmz-tuiles li:last-child:nth-child(3n+2) { grid-column: span 2; }
-/* Réclamation d'origine dans sa colonne */
 .bmz-reclamations { gap: 0; }
 .bmz-reclamations .bmz-infos-bloc + .bmz-infos-bloc { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--z-trait); }
 .bmz-reclamations dl { margin: 0; display: grid; grid-template-columns: 1fr; gap: 8px; padding-inline-start: 10px; border-inline-start: 2px solid var(--z-trait); }
@@ -350,12 +322,10 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
   .bmz-tuiles li:last-child:nth-child(3n+2) { grid-column: auto; }
 }
 @media (min-width: 1181px) {
-  /* Détails du bon sur trois colonnes, attributs de la réclamation sur deux */
   .bmz-infos dl { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 14px; }
   .bmz-reclamations dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bmz-reclamations dl > div:first-child { grid-column: 1 / -1; }
 }
-/* Écrans peu hauts : le parcours garde le nom des étapes, sans la ligne d'aide */
 @media (min-width: 1181px) and (max-height: 920px) {
   .bmz-page { gap: 10px; padding-top: 10px !important; padding-bottom: 12px !important; }
   .bmz-page .bmz-etape-aide { display: none; }
@@ -363,7 +333,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
   .bmz-infos-bloc + .bmz-infos-bloc { margin-top: 10px; padding-top: 10px; }
   .bmz-info-groupe + .bmz-info-groupe { margin-top: 8px; }
 }
-/* Écrans portables (≈ 768 px de haut) : tout se resserre encore un peu */
 @media (min-width: 1181px) and (max-height: 800px) {
   .bmz-page .bmz-titre { font-size: 20px; }
   .bmz-tuile { padding: 6px 10px; gap: 1px; }
@@ -377,7 +346,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
   .bmz-page .bmz-info-groupe h4 { margin-bottom: 2px; }
 }
 
-/* Sans la colonne du rapport (déplacé dans le Dossier) : Informations + Dossier, ou + Réclamation */
 .bmz-corps.bmz-corps--sans-rapport { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
 @media (min-width: 1181px) {
   .bmz-corps.bmz-corps--sans-rapport:has(> .bmz-reclamations) { grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr) minmax(0, 1fr); }
@@ -386,17 +354,12 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
   .bmz-corps.bmz-corps--sans-rapport { grid-template-columns: 1fr; }
 }
 
-/* ============================================================
-   Dossier en onglets (sous les informations, pleine largeur)
-   La page défile normalement : plus de hauteur fixe.
-   ============================================================ */
 .bmz-page.bmz-page--onglets { height: auto; min-height: 0; overflow: visible; }
 .bmz-page--onglets .bmz-corps { flex: 0 0 auto; }
 .bmz-page--onglets .bmz-corps.bmz-corps--sans-rapport { grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 1000px) {
   .bmz-page--onglets .bmz-corps.bmz-corps--sans-rapport:has(> .bmz-reclamations) { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
 }
-/* Informations : affichées en entier, sans barre de défilement */
 .bmz-page--onglets .bmz-infos { flex: 0 0 auto; max-height: none; overflow: visible; }
 .bmz-page--onglets .bmz-reclamations { max-height: 440px; overflow-y: auto; }
 .bmz-page--onglets .bmz-defile { overflow: visible; }
@@ -430,13 +393,11 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
   .bmz-do-contenu { padding: 12px; }
 }
 
-/* ---------- Carte Informations compacte (fiche en onglets) ---------- */
 .bmz-page--onglets .bmz-infos { padding: 10px 14px; }
 .bmz-page--onglets .bmz-infos .bmz-carte-titre { margin-bottom: 6px; font-size: 12px; }
 .bmz-page--onglets .bmz-infos .bmz-sous-titre { margin-bottom: 4px; font-size: 10.5px; }
 .bmz-page--onglets .bmz-infos-bloc + .bmz-infos-bloc { margin-top: 8px; padding-top: 8px; }
 
-/* « En un coup d'œil » : tuiles sur une seule ligne quand la place le permet */
 .bmz-page--onglets .bmz-tuiles { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
 .bmz-page--onglets .bmz-tuiles li:last-child:nth-child(odd) { grid-column: auto; }
 .bmz-page--onglets .bmz-tuile { padding: 5px 9px; gap: 0; }
@@ -444,7 +405,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-page--onglets .bmz-tuile-valeur { font-size: 13px; }
 .bmz-page--onglets .bmz-lecture { margin: 4px 0 0; font-size: 12px; }
 
-/* Détails du bon : les groupes côte à côte, valeurs sur plusieurs colonnes */
 .bmz-page--onglets .bmz-infos-bloc:has(.bmz-info-groupe) {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 8px 18px;
 }
@@ -455,7 +415,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-page--onglets .bmz-infos dt { font-size: 11px; }
 .bmz-page--onglets .bmz-infos dd { margin-top: 0; font-size: 12.5px; }
 
-/* ---------- Parcours du bon plus petit (fiche en onglets) ---------- */
 .bmz-page--onglets .bmz-parcours { padding: 8px 12px 6px; border-radius: 12px; }
 .bmz-page--onglets .bmz-parcours-compte { top: 6px; right: 12px; font-size: 11px; }
 .bmz-page--onglets .bmz-ligne { --point: 20px; }
@@ -468,7 +427,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-page--onglets .bmz-etape-nom { font-size: 11.5px; }
 .bmz-page--onglets .bmz-etape-aide { display: none; }
 
-/* ---------- Cartes Informations et Réclamation plus grandes ---------- */
 .bmz-page--onglets .bmz-infos,
 .bmz-page--onglets .bmz-reclamations { padding: 16px 20px; }
 .bmz-page--onglets .bmz-reclamations { max-height: none; overflow: visible; }
@@ -489,19 +447,12 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-page--onglets .bmz-reclamations dd { font-size: 14.5px; }
 .bmz-page--onglets .bmz-defile { font-size: 14px; }
 
-/* ==========================================================================
-   FICHE DU BON — v4 : tout tient dans l'écran, seules les zones défilent
-   ┌ retour · identité ········· parcours ········· actions ┐
-   ├ Informations / Réclamation │ Dossier en onglets          │
-   └────────────────────────────┴─────────────────────────────┘
-   ========================================================================== */
 .bmz-page.bmz-v4 {
   height: calc(100dvh - var(--bmz-haut-barre, 64px)); min-height: 520px; overflow: hidden;
   display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 12px !important;
   background: var(--z-fond) !important;
 }
 
-/* ---------- Bande haute sur une ligne ---------- */
 .bmz-v4 .bmz-haut {
   flex: 0 0 auto; display: grid; align-items: center; gap: 14px;
   grid-template-columns: auto minmax(200px, 1fr) minmax(320px, 1.25fr) auto;
@@ -524,7 +475,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-page.bmz-v4 .bmz-titre { margin: 1px 0 0; font-size: 18px; font-weight: 800; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bmz-v4 .bmz-resume { margin: 1px 0 0; font-size: 12px; color: var(--z-doux); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* Parcours : mini, sans cadre, au centre de la bande */
 .bmz-page.bmz-v4 .bmz-parcours { padding: 0; border: 0; background: none; border-radius: 0; }
 .bmz-v4 .bmz-parcours-compte { display: none; }
 .bmz-v4 .bmz-ligne { --point: 18px; }
@@ -535,7 +485,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-v4 .bmz-etape-nom { font-size: 10.5px; white-space: nowrap; }
 .bmz-v4 .bmz-etape-aide { display: none; }
 
-/* Actions : icônes seules (le libellé reste lisible par les lecteurs d'écran et en info-bulle) */
 .bmz-v4 .bmz-actions { display: flex; gap: 4px; flex-wrap: nowrap; }
 .bmz-v4 .bmz-actions .bmz-btn {
   position: relative; width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 10px;
@@ -545,10 +494,8 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 }
 .bmz-v4 .bmz-actions .bmz-btn .bmz-pastille { position: absolute; top: -5px; right: -5px; }
 
-/* ---------- Plan : colonne d'informations + dossier ---------- */
 .bmz-v4 .bmz-plan { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(320px, 400px) minmax(0, 1fr); gap: 10px; }
 
-/* Colonne de gauche : défile seule */
 .bmz-page.bmz-v4 .bmz-corps,
 .bmz-page.bmz-v4 .bmz-corps.bmz-corps--sans-rapport {
   display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto;
@@ -560,7 +507,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 }
 .bmz-page.bmz-v4 .bmz-carte-titre { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; font-size: 11.5px; letter-spacing: 0.06em; }
 
-/* Informations, pensées pour une colonne étroite */
 .bmz-page.bmz-v4 .bmz-infos-bloc + .bmz-infos-bloc { margin-top: 10px; padding-top: 10px; }
 .bmz-page.bmz-v4 .bmz-tuiles { grid-template-columns: 1fr 1fr; gap: 6px; }
 .bmz-page.bmz-v4 .bmz-tuiles li:last-child:nth-child(odd) { grid-column: 1 / -1; }
@@ -578,7 +524,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-page.bmz-v4 .bmz-reclamations dd { font-size: 13.5px; }
 .bmz-page.bmz-v4 .bmz-defile { overflow: visible; font-size: 13.5px; }
 
-/* Dossier : barre d'onglets en « pilules » + contenu qui défile seul */
 .bmz-page.bmz-v4 .bmz-do { display: flex; flex-direction: column; min-height: 0; padding: 0; border-radius: 14px; overflow: hidden; }
 .bmz-v4 .bmz-do-barre {
   position: static; flex: 0 0 auto; gap: 2px; padding: 6px; border-radius: 0;
@@ -594,7 +539,6 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmz-v4 .bmz-do-sep { margin: 6px 4px; }
 .bmz-v4 .bmz-do-contenu { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px; scrollbar-width: thin; }
 
-/* ---------- Écrans plus petits : la page défile normalement ---------- */
 @media (max-width: 1280px) {
   .bmz-v4 .bmz-haut { grid-template-columns: auto minmax(0, 1fr) auto; }
   .bmz-v4 .bmz-parcours { order: 5; grid-column: 1 / -1; }
@@ -610,17 +554,14 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
   .bmz-v4 .bmz-actions { grid-column: 1 / -1; order: 4; flex-wrap: wrap; }
 }
 
-/* v4 : tous les onglets visibles, sur deux lignes si besoin (pas de défilement horizontal) */
 .bmz-v4 .bmz-do-barre { flex-wrap: wrap; overflow: visible; row-gap: 4px; }
 .bmz-v4 .bmz-do-onglet { padding: 6px 10px; font-size: 12.5px; gap: 6px; }
 .bmz-v4 .bmz-do-onglet .bmz-nb { min-width: 18px; padding: 0 5px; font-size: 10.5px; }
 
-/* Sous-onglets du Dossier : ajout, modification et détail ouverts dans une fenêtre */
 .bmd-modale-detail .bmd-detail-back { display: none; }
 .bmd-modale-detail .bmd-detail { padding: 0; }
 .bmd-modale-sous .bmf-formulaire, .bmd-modale-sous .bmf-form { margin: 0; border: 0; box-shadow: none; padding: 0; background: transparent; }
 
-/* Équipement du bon (lecture seule) dans les formulaires des sous-onglets */
 .bmd-equipement-bon {
   display: flex; align-items: center; gap: 10px; margin: 0 0 12px; padding: 9px 12px;
   border: 1px solid #e2e8f0; border-radius: 10px; background: #f8fafc;
@@ -634,3 +575,9 @@ button.bmz-tuile.is-cliquable:hover .bmz-tuile-fleche { opacity: 1; color: var(-
 .bmd-equipement-bon__texte strong { font-size: 14px; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .bmd-equipement-bon__texte em { font-style: normal; font-size: 12px; color: #64748b; }
 .bmf-champ .bmd-equipement-bon { margin: 0; }
+
+.bmz-verrou { border: 0; margin: 0; padding: 0; min-width: 0; }
+.bmz-verrou:disabled button, .bmz-verrou:disabled input, .bmz-verrou:disabled select, .bmz-verrou:disabled textarea { cursor: not-allowed; }
+.bmz-verrou:disabled :is(button, input, select, textarea) { opacity: 0.6; }
+.bmz-lecture-seule { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px;
+  background: var(--g-slate-100, #f1f5f9); color: var(--g-slate-600, #475569); font-size: 0.72rem; font-weight: 600; }

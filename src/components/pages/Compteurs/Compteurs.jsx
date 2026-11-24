@@ -1,10 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import compteurService from '../../../services/compteurService';
+import compteurService from '../../../services/Compteurservice';
 import { ICONES_MODULES } from '../../../constants/modules';
 import { ModaleFormulaire, PageListe } from '../../commun';
 import { t } from '../../../i18n';
-
-/* Compteurs (heures, cycles, distance…) : page liste et fenêtre de la bibliothèque commune. */
 
 const NATURES = [
   { value: 0, label: 'Temps' },

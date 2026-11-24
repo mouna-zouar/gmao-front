@@ -7,7 +7,6 @@ const auteur = () => {
   return nom ? { 'X-Personnel-Nom': encodeURIComponent(nom) } : {};
 };
 
-/* Gammes d'intervention : modèles de tâches réutilisables, appliqués à un bon en un clic. */
 const gammeService = {
   async lister() {
     const { data } = await api.get('/gammes');
@@ -19,13 +18,11 @@ const gammeService = {
     return data;
   },
 
-  /** Gammes validées qui conviennent à l'équipement du bon (correspondance : MODELE, FAMILLE, GENERALE). */
   async proposees(bonId) {
     const { data } = await api.get('/gammes/proposees', { params: { bonId } });
     return data ?? [];
   },
 
-  /** Gammes validées pour un équipement (formulaire de création du bon) ; sans équipement : gammes générales. */
   async proposeesPourEquipement(immoId) {
     const { data } = await api.get('/gammes/proposees', { params: { immoId: immoId || undefined } });
     return data ?? [];
@@ -41,7 +38,6 @@ const gammeService = {
     return data;
   },
 
-  /** action : valider | nouvelle-version | dupliquer | archiver */
   async action(id, action) {
     const { data } = await api.post(`/gammes/${id}/${action}`, {}, { headers: auteur() });
     return data;
@@ -51,7 +47,6 @@ const gammeService = {
     await api.delete(`/gammes/${id}`);
   },
 
-  /** → { taches: n } */
   async appliquer(bonId, gammeId) {
     const u = authService.getCurrentUser() || {};
     const { data } = await api.post('/gammes/appliquer', {

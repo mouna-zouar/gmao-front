@@ -3,17 +3,11 @@ import { Activity, AlertTriangle, Ban, Calendar, Car, CheckCheck, CheckCircle2, 
 import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeReservationService from '../../../../services/vehiculeReservationService';
 import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/personnelService';
+import personnelService from '../../../../services/Personnelservice';
 import VehiculeReservationModal from '../../../ui/modals/VehiculeReservationModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeReservations.css';
-
-/*
- * Réservations véhicule : page liste de la bibliothèque commune.
- * La fenêtre reste VehiculeReservationModal (conflits de réservation, trajet, projet).
- * Codes d'état (VehiculeReservation.java) : 0 En attente, 1 Acceptée, 2 Refusée, 3 Annulée, 4 Terminée.
- */
 
 const ETAT_LABELS = { 0: 'En attente', 1: 'Acceptée', 2: 'Refusée', 3: 'Annulée', 4: 'Terminée' };
 const ETAT_META = {
@@ -23,7 +17,6 @@ const ETAT_META = {
   3: { classe: 'cancelled', Icone: XCircle },
   4: { classe: 'done', Icone: Activity },
 };
-/* Changements d'état rapides : actifs seulement depuis les états `depuis` */
 const ETAT_ACTIONS = [
   { vers: 1, label: 'Accepter', icone: CheckCircle2, classe: 'cl-action--vert', depuis: [0] },
   { vers: 2, label: 'Refuser', icone: XCircle, classe: 'cl-action--rouge', depuis: [0] },
@@ -60,7 +53,6 @@ export default function VehiculeReservations() {
       ]);
       const liste = page.content ?? [];
       setReservations(liste);
-      // La ligne sélectionnée suit la liste rechargée (son état a pu changer)
       setSelection((s) => (s ? liste.find((r) => r.id === s.id) || null : null));
       setVehicules(Object.fromEntries((veh.content ?? []).map((v) => [v.id, v])));
       setPersonnels(Object.fromEntries((pers.content ?? []).map((p) => [p.id, p])));

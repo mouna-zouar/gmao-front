@@ -5,20 +5,6 @@ import { arbreFamilles, lignesArbre, basculerDansSet } from '../../../utils/arbr
 import { t, locale } from '../../../i18n';
 import './FiltreFamilleArbre.css';
 
-/*
- * Filtre « Famille » de la liste des équipements, présenté comme dans Paramètres système :
- *   familles parentes → (clic) sous-familles → (clic) articles.
- * Un clic sur le nom choisit le filtre ; la flèche affiche / cache le contenu.
- *
- * equipements : [{ lotArticleImmobilistationId, familleId, familleNom }]
- * valeur / onChange :
- *   null                                   toutes les familles
- *   { type: 'aucune' }                     équipements sans famille
- *   { type: 'famille', id, nom, familles } la famille et ses sous-familles (familles : Set d'ID texte)
- *   { type: 'article', id, nom, immobilisations } un article (immobilisations : Set d'ID texte)
- */
-
-/** L'équipement passe-t-il le filtre famille / article ? */
 export function filtrerParFamille(valeur, e) {
   if (!valeur) return true;
   if (valeur.type === 'aucune') return e.familleId == null;
@@ -29,15 +15,14 @@ export function filtrerParFamille(valeur, e) {
 
 export default function FiltreFamilleArbre({ equipements, valeur, onChange }) {
   const [ouvert, setOuvert] = useState(false);
-  const [famillesCubix, setFamillesCubix] = useState(null); // null = pas encore lues
+  const [famillesCubix, setFamillesCubix] = useState(null);
   const [erreurCubix, setErreurCubix] = useState(false);
   const [recherche, setRecherche] = useState('');
   const [ouverts, setOuverts] = useState(() => new Set());
-  const [articles, setArticles] = useState({}); // { familleId: 'chargement' | 'erreur' | [...] }
+  const [articles, setArticles] = useState({});
   const plier = basculerDansSet(setOuverts);
   const racine = useRef(null);
 
-  // Familles Cubix (avec leur parent) : lues à la première ouverture du filtre
   useEffect(() => {
     if (!ouvert || famillesCubix !== null) return;
     parametreService.getFamillesCubix()
@@ -45,7 +30,6 @@ export default function FiltreFamilleArbre({ equipements, valeur, onChange }) {
       .catch(() => { setFamillesCubix([]); setErreurCubix(true); });
   }, [ouvert, famillesCubix]);
 
-  // Fermeture : clic à l'extérieur ou Échap
   useEffect(() => {
     if (!ouvert) return undefined;
     const dehors = (ev) => { if (racine.current && !racine.current.contains(ev.target)) setOuvert(false); };
@@ -55,7 +39,6 @@ export default function FiltreFamilleArbre({ equipements, valeur, onChange }) {
     return () => { document.removeEventListener('mousedown', dehors); document.removeEventListener('keydown', echap); };
   }, [ouvert]);
 
-  // Nombre d'équipements de la liste par famille, et équipements sans famille
   const { parFamille, sansFamille, idsListe } = useMemo(() => {
     const m = new Map();
     let sans = 0;
@@ -69,13 +52,11 @@ export default function FiltreFamilleArbre({ equipements, valeur, onChange }) {
     return { parFamille: m, sansFamille: sans, idsListe: new Set((equipements || []).map((e) => String(e.lotArticleImmobilistationId))) };
   }, [equipements]);
 
-  // Arbre : hiérarchie lue dans Cubix, nombres = équipements de la liste ; les familles vides sont cachées
   const arbre = useMemo(() => {
     const cubix = famillesCubix || [];
     const connues = new Set(cubix.map((f) => String(f.id)));
     const toutes = [
       ...cubix.map((f) => ({ ...f, nombre: parFamille.get(String(f.id))?.n || 0 })),
-      // Familles des équipements que Cubix n'a pas renvoyées : à la racine
       ...[...parFamille.entries()].filter(([cle]) => !connues.has(cle))
         .map(([, f]) => ({ id: f.id, nom: f.nom, nombre: f.n, parentId: null })),
     ];
@@ -90,7 +71,6 @@ export default function FiltreFamilleArbre({ equipements, valeur, onChange }) {
     parametreService.getArticlesFamilleCubix(familleId)
       .then((l) => setArticles((x) => ({
         ...x,
-        // Seulement les articles qui ont des équipements dans la liste, avec ce nombre-là
         [cle]: l.map((a) => ({ ...a, dansListe: a.immobilisations.filter((id) => idsListe.has(id)).length }))
           .filter((a) => a.dansListe > 0),
       })))
@@ -181,7 +161,6 @@ export default function FiltreFamilleArbre({ equipements, valeur, onChange }) {
                     <span className="ffa-n">{fmt(n.total)}</span>
                   </button>
                 </li>,
-                // Articles de la famille, sous ses sous-familles
                 aArticles && deplie && ouverts.has(cle) && (
                   arts === 'chargement' || arts === undefined ? (
                     <li key={`a-${cle}`} className="ffa-info" style={{ '--niveau': niveau + 1 }}>

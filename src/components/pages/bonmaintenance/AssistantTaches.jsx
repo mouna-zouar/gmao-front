@@ -6,11 +6,6 @@ import { formatTemps } from './BmdCommun';
 import { t } from '../../../i18n';
 import '../Formations/Formations.css';
 
-/*
- * Assistant des tâches : tâches déjà faites sur l'équipement du bon et sur sa famille (autres bons),
- * les plus fréquentes d'abord. « Utiliser » reprend la désignation, la précision et l'article habituel.
- * onUtiliser(suggestion) ; utilisee : désignation déjà reprise (mise en évidence) ; articles : pour afficher le nom de l'article.
- */
 export default function AssistantTaches({ bonMaintenanceId, onUtiliser, utilisee, articles = [], sansArticle = false }) {
   const [suggestions, setSuggestions] = useState(null);
 

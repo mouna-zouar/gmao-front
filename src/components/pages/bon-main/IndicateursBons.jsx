@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import bonMaintenanceService from '../../../services/bonMaintenanceService';
+import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import slaService from '../../../services/slaService';
 import { t } from '../../../i18n';
 import { prioriteLabel } from '../../../constants/Priorite';
@@ -10,12 +10,6 @@ import {
   JOUR, classement, dans, douzeMois, enMs, heuresEntre, liste, moyenne, periodes, pourcentage, serieMensuelle, somme,
 } from '../../ui/Indicateurs/calculs';
 
-/*
- * Indicateurs avancés du tableau de bord des bons :
- * 30 derniers jours comparés aux 30 jours précédents, délais (prise en charge, résolution),
- * taux de clôture, stock de bons ouverts, SLA, coûts, tendance 12 mois et classements.
- */
-
 const OUVERTS = [1, 2, 3];
 const EFFECTUE = 4;
 
@@ -24,7 +18,7 @@ const nomEquipement = (b) => b.lotArticleImmobilistation?.designation
   || (b.lotArticleImmobilistationId ? t('Équipement #{id}', { id: b.lotArticleImmobilistationId }) : null);
 
 export default function IndicateursBons() {
-  const [maintenant] = useState(() => Date.now()); // heure de référence des calculs
+  const [maintenant] = useState(() => Date.now());
   const [bons, setBons] = useState(null);
   const [bilan, setBilan] = useState(null);
   const [retardsSla, setRetardsSla] = useState(null);
@@ -92,7 +86,6 @@ export default function IndicateursBons() {
   const c = k?.cur || {};
   const p = k?.prev || {};
 
-  // Tuiles affichées (et exportées en Excel). Une tuile à 0 ou sans valeur n'est pas affichée.
   const tuiles = [
     {
       libelle: t('Bons créés'),

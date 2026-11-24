@@ -1,6 +1,3 @@
-// Référentiel de priorité d'intervention — DOIT rester synchronisé avec
-// softsys.GMAO.models.Priorite (backend). Valeurs = noms exacts de l'enum Java.
-
 export const PRIORITE_LABELS = {
   P1: 'Immédiate',
   P2: 'Urgente',
@@ -8,7 +5,6 @@ export const PRIORITE_LABELS = {
   P4: 'Planifiable',
 };
 
-// Ordre de gravité, du plus urgent au moins urgent — utilisé pour le tri de colonne.
 export const PRIORITE_RANG = { P1: 0, P2: 1, P3: 2, P4: 3 };
 
 export const PRIORITE_COLOR = {
@@ -24,7 +20,7 @@ export function prioriteLabel(priorite) {
 }
 
 export function prioriteRang(priorite) {
-  if (!priorite) return 99; // non calculée -> en dernier au tri croissant
+  if (!priorite) return 99;
   return PRIORITE_RANG[priorite] ?? 99;
 }
 

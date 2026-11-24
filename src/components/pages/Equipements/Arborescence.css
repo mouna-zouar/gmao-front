@@ -1,8 +1,3 @@
-/* ============================================================
-   ARBORESCENCE — lieux et équipements (onglet de la page Équipements)
-   Utilise les variables --eq-* de Equipements.css
-   ============================================================ */
-
 .arb { display: grid; gap: 12px; }
 .arb-chargement { display: grid; place-items: center; padding: 60px 0; color: var(--eq-ink-faint); }
 .arb-message { margin: 0; padding: 10px 14px; border-radius: var(--eq-r-sm); font-size: 14px; }
@@ -12,7 +7,6 @@
 .arb-grille { display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }
 @media (max-width: 1000px) { .arb-grille { grid-template-columns: 1fr; } .arb-arbre { position: static; max-height: 360px; } }
 
-/* ── Arbre ── */
 .arb-arbre {
   background: var(--eq-surface); border: 1px solid var(--eq-line); border-radius: var(--eq-r-md);
   box-shadow: var(--eq-shadow-xs); padding: 10px; display: grid; gap: 6px; position: sticky; top: 12px;
@@ -70,7 +64,6 @@
   background: none; font: inherit; font-size: 14px; cursor: pointer; gap: 7px; color: var(--eq-ink-soft);
 }
 
-/* ── Détail ── */
 .arb-detail {
   background: var(--eq-surface); border: 1px solid var(--eq-line); border-radius: var(--eq-r-md);
   box-shadow: var(--eq-shadow-xs); padding: 18px 20px; display: grid; gap: 14px; min-width: 0;
@@ -114,7 +107,6 @@
 .arb-eq-lieu { color: var(--eq-ink-soft); }
 .arb-eq-lieu small { display: block; font-size: 11px; color: var(--eq-ink-faint); }
 
-/* ── Fenêtres ── */
 .arb-form { display: grid; gap: 12px; }
 .arb-form label { display: grid; gap: 5px; font-size: 13px; font-weight: 600; color: #334155; }
 .arb-form input, .arb-form select {
@@ -133,7 +125,6 @@
 .arb-ajout__nom span { font-size: 12px; color: #7a9399; }
 .arb-vide { display: grid; place-items: center; padding: 20px; color: #7a9399; }
 
-/* ── Bloc Position de la fiche ── */
 .arb-fil { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 2px; }
 .arb-fil span { display: inline-flex; align-items: center; gap: 2px; }
 .arb-fil svg { color: var(--eq-ink-faint); }
@@ -145,7 +136,7 @@
 .arb-pos-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; }
 .arb-pos-actions .eq-lien { display: inline-flex; align-items: center; gap: 5px; }
 
-/* Onglets Liste / Arborescence de la page Équipements */
 .leq-vues { padding: 24px 24px 0; }
+.leq-vues .co-onglets { justify-content: flex-end; }
 .leq-vues + .cl-page { padding-top: 16px; }
 .arb-page { background: transparent; }

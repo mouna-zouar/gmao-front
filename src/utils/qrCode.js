@@ -1,31 +1,18 @@
 import QRCode from 'qrcode';
 import { t } from '../i18n';
 
-/*
- * QR codes de la GMAO. Chaque QR code contient une adresse de l'application : scanné avec
- * l'appareil photo d'un téléphone, il ouvre directement la page concernée.
- * Attention : l'adresse est celle du navigateur au moment de l'impression ; imprimez depuis
- * l'adresse que les téléphones utiliseront (pas « localhost »).
- */
-
 const origine = () => window.location.origin;
 
 export const urlEquipement = (id) => `${origine()}/equipement/${id}`;
 export const urlBon = (id) => `${origine()}/bons-maintenance?id=${id}`;
 export const urlReclamation = (id) => `${origine()}/reclamations?id=${id}`;
 
-/** SVG du QR code d'une adresse (correction M : reste lisible un peu abîmé). */
 export function qrSvg(texte) {
   return QRCode.toString(texte, { type: 'svg', errorCorrectionLevel: 'M', margin: 1 });
 }
 
 const echapper = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-/**
- * Imprime des étiquettes QR : planche A4 de 3 × 7 (63,5 × 38,1 mm, type Avery L7160),
- * ou une seule étiquette centrée.
- * items : [{ url, titre, sousTitre?, reference?, appel? }]
- */
 export async function imprimerEtiquettesQr(items) {
   const svgs = await Promise.all(items.map((e) => qrSvg(e.url)));
   const seule = items.length === 1;

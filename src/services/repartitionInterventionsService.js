@@ -7,7 +7,7 @@ const repartitionInterventionsService = {
       dateDebut: dateDebut || null,
       dateFin: dateFin || null,
     });
-    return data; // List<SuggestionTechnicien>
+    return data;
   },
 };
 

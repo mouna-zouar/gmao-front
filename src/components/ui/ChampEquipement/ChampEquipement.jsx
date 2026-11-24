@@ -3,26 +3,11 @@ import { createPortal } from 'react-dom';
 import { Building2, Check, Loader2, MapPin, ScanLine, Search, X } from 'lucide-react';
 import { carteLieux, cheminLieu } from '../../../services/lieuxCache';
 import equipementService from '../../../services/equipementService';
-import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
+import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import ScannerQR from '../../pages/Equipements/ScannerQR';
 import { t } from '../../../i18n';
 import './ChampEquipement.css';
 
-/*
- * Choix de l'équipement (immobilisation) dans un formulaire :
- *  - recherche par nom, marque, modèle, n° de série ou code-barre (côté serveur, sur tout le parc) ;
- *  - bouton « Scanner » : caméra (QR code de l'étiquette ou code-barre) ;
- *  - douchette : le code tapé puis « Entrée » choisit directement l'équipement.
- *
- * Même contrat qu'un <select> : onChange({ target: { name, value: '12' } }).
- * optionsLocales : liste déjà chargée par le formulaire (affichée tant que rien n'est tapé,
- * et utilisée si la recherche serveur est injoignable).
- * serviceId : quand il est donné, la liste ne propose que les équipements de ce service
- *   (filtre retirable dans la liste) ; serviceNom sert à l'afficher.
- * lieuId : la liste ne propose que les équipements de ce lieu et de ses sous-lieux (prioritaire sur le service).
- * onEquipementChoisi(equipement) : appelé avec l'équipement choisi, serviceId compris
- *   (récupéré auprès du serveur si la liste ne le donnait pas).
- */
 const memeId = (a, b) => a != null && b != null && String(a) === String(b);
 
 const libelle = (e) => e?.designation || e?.libelle || e?.code || (e?.id != null ? `${t('Équipement')} n° ${e.id}` : '');
@@ -60,20 +45,16 @@ export default function ChampEquipement({
 
   const [ouvert, setOuvert] = useState(false);
   const [saisie, setSaisie] = useState('');
-  // Dernière réponse du serveur, rangée avec le texte cherché : { motif, liste, horsLigne }
   const [reponse, setReponse] = useState({ motif: '', liste: null, horsLigne: false });
   const [actif, setActif] = useState(-1);
   const [message, setMessage] = useState('');
   const [resolution, setResolution] = useState(false);
   const [scanner, setScanner] = useState(false);
-  const [choisi, setChoisi] = useState(null); // dernier équipement choisi (pour son libellé)
-  // Filtre par famille d'article (liste chargée à la première ouverture)
+  const [choisi, setChoisi] = useState(null);
   const [famille, setFamille] = useState('');
   const [familles, setFamilles] = useState(null);
 
-  // Filtre « équipements du service » (recherche côté serveur) : actif dès qu'un service est connu, retirable dans la liste
   const [parService, setParService] = useState(true);
-  // Filtre « équipements du lieu » : prioritaire sur le service, retirable aussi
   const [parLieu, setParLieu] = useState(true);
   const filtreLieu = Boolean(lieuId) && parLieu;
   useEffect(() => { setParLieu(true); }, [lieuId]);
@@ -86,7 +67,6 @@ export default function ChampEquipement({
   }, [lieuId]);
   const filtreService = Boolean(serviceId) && parService && !filtreLieu;
   useEffect(() => { setParService(true); }, [serviceId]);
-  // Service changé par l'utilisateur : un équipement d'un autre service n'est plus valable
   const servicePrecedent = useRef(serviceId);
   useEffect(() => {
     const avant = servicePrecedent.current;
@@ -105,7 +85,6 @@ export default function ChampEquipement({
 
   const valeur = value == null ? '' : String(value);
 
-  // ─── Libellé de l'équipement choisi ───
   const motif = saisie.trim();
 
   const connu = useMemo(() => {
@@ -134,11 +113,9 @@ export default function ChampEquipement({
       .catch(() => setFamilles([]));
   }, [ouvert, familles]);
 
-  // ─── Recherche serveur (après une courte pause de frappe), éventuellement limitée à une famille ───
   const motifActif = ouvert && motif && motif.toLowerCase() !== libelleChoisi.toLowerCase() ? motif : '';
   const serviceRequete = filtreService && ouvert ? String(serviceId) : '';
   const lieuRequete = filtreLieu && ouvert ? String(lieuId) : '';
-  // Liste ouverte : toujours une demande au serveur (premiers équipements, ou ceux du lieu / du service / de la famille / du texte)
   const cleRequete = ouvert ? `${motifActif}|${famille}|${serviceRequete}|${lieuRequete}` : '';
   const aJour = reponse.motif === cleRequete;
   const resultats = cleRequete && aJour ? reponse.liste : null;
@@ -157,7 +134,6 @@ export default function ChampEquipement({
         if (!annule) setReponse({ motif: cleRequete, liste: page?.content ?? [], total: page?.totalElements ?? null, horsLigne: false });
       } catch (err) {
         console.error('[GMAO équipements] recherche impossible', demande, '→', err?.response?.status ?? '', err?.response?.data ?? err?.message ?? err);
-        // serveur ou source des équipements injoignable : la liste déjà chargée sert de repli
         if (!annule) setReponse({ motif: cleRequete, liste: null, total: null, horsLigne: true });
       }
     }, motifActif ? 280 : 0);
@@ -167,7 +143,6 @@ export default function ChampEquipement({
   const liste = useMemo(() => {
     if (!cleRequete) return optionsLocales.slice(0, 60);
     if (resultats) return resultats;
-    // serveur injoignable (ou réponse en attente) : filtre de la liste déjà chargée
     const m = motifActif.toLowerCase();
     return optionsLocales
       .filter((o) => !famille || String(o.articleFamilleId ?? o.familleId) === famille)
@@ -179,7 +154,6 @@ export default function ChampEquipement({
   const totalService = serviceRequete && aJour && !reponse.horsLigne ? reponse.total : null;
 
 
-  // ─── Fermeture au clic extérieur ───
   useEffect(() => {
     if (!ouvert) return undefined;
     const dehors = (e) => {
@@ -192,7 +166,6 @@ export default function ChampEquipement({
     return () => document.removeEventListener('mousedown', dehors);
   }, [ouvert]);
 
-  // ─── Choix ───
   const choisir = useCallback((equipement) => {
     setChoisi(equipement);
     setMessage('');
@@ -202,7 +175,6 @@ export default function ChampEquipement({
     console.info('[GMAO équipements] choisi', { id: equipement.id, designation: equipement.designation, serviceId: equipement.serviceId });
     if (!onEquipementChoisi) return;
     if (equipement.serviceId !== undefined) { onEquipementChoisi(equipement); return; }
-    // Résultat de la recherche sur tout le parc : le service vient de la fiche résumée
     lotArticleImmobilistationService.getById(equipement.id)
       .then((e) => onEquipementChoisi({ ...equipement, ...(e || {}) }))
       .catch((err) => {
@@ -211,7 +183,6 @@ export default function ChampEquipement({
       });
   }, [name, onChange, onEquipementChoisi]);
 
-  /** Identifiant trouvé par un code (caméra ou douchette) : on récupère son nom puis on le choisit. */
   const choisirParId = useCallback(async (idEquipement) => {
     const deja = optionsLocales.find((o) => String(o.id) === String(idEquipement))
       || reponse.liste?.find((o) => String(o.id) === String(idEquipement));
@@ -256,11 +227,9 @@ export default function ChampEquipement({
   const trouveParScanner = useCallback(async (idEquipement) => {
     setScanner(false);
     await choisirParId(idEquipement);
-    // le focus revient sur le bouton (sur le champ, il rouvrirait la liste avec l'ancien texte)
     boutonScanner.current?.focus();
   }, [choisirParId]);
 
-  // ─── Clavier ───
   const auClavier = (e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -270,7 +239,6 @@ export default function ChampEquipement({
       e.preventDefault();
       setActif((i) => Math.max(i - 1, 0));
     } else if (e.key === 'Enter') {
-      // Ne jamais soumettre le formulaire depuis ce champ
       e.preventDefault();
       if (liste[actif]) choisir(liste[actif]);
       else if (motifActif) resoudreSaisie();

@@ -23,9 +23,6 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>,
 )
 
-// ═════════════════════════════════════════════════════════════
-// Application : page de connexion seule, sinon mise en page + routes   (ancien fichier App.jsx)
-// ═════════════════════════════════════════════════════════════
 function App() {
   const location = useLocation();
   const isLoginPage = location.pathname === '/login';

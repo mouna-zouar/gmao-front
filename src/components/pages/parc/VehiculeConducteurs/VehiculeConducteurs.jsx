@@ -3,16 +3,11 @@ import { Calendar, Car, Settings2, User } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
 import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/personnelService';
+import personnelService from '../../../../services/Personnelservice';
 import VehiculeConducteurModal from '../../../ui/modals/VehiculeConducteurModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeConducteurs.css';
-
-/*
- * Affectations véhicule / conducteur : page liste de la bibliothèque commune.
- * La fenêtre reste VehiculeConducteurModal (contrôle du permis du conducteur selon la catégorie du véhicule).
- */
 
 const MODES = { 0: 'Principal', 1: 'Secondaire', 2: 'Temporaire', 3: 'Remplacement' };
 const CLASSES_MODE = { 0: 'principal', 1: 'secondary', 2: 'temporary', 3: 'replacement' };

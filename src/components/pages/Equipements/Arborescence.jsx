@@ -13,11 +13,6 @@ import { ETATS_EQUIPEMENT, montant } from './equipementLibelles';
 import { t, tp } from '../../../i18n';
 import './Arborescence.css';
 
-/*
- * Hiérarchie des lieux et des équipements (onglet « Arborescence » de la page Équipements)
- * et bloc « Position » de la fiche équipement.
- */
-
 export const TYPES_LIEU = {
   SITE: { label: 'Site', icone: Hospital },
   BATIMENT: { label: 'Bâtiment', icone: Building2 },
@@ -29,7 +24,6 @@ const TYPE_ENFANT = { SITE: 'BATIMENT', BATIMENT: 'ETAGE', ETAGE: 'SERVICE', SER
 
 const messageErreur = (err, defaut) => err?.response?.data?.message || defaut;
 
-/** Lieux à plat dans l'ordre de l'arbre, avec leur profondeur. */
 function aplatir(lieux) {
   const enfants = new Map();
   lieux.forEach((l) => {
@@ -76,8 +70,6 @@ function PastilleEtat({ etat }) {
   return <span className={`eq-pastille eq-ton--${d.ton}`}>{t(d.label)}</span>;
 }
 
-/* ───────── Choix d'un lieu (déplacer un lieu ou des équipements) ───────── */
-
 function ChoixLieu({ ouvert, titre, lieux, exclus = new Set(), avecRacine, libelleRacine, onChoisir, onFermer, occupe }) {
   const [choix, setChoix] = useState(undefined);
   const [filtre, setFiltre] = useState('');
@@ -118,8 +110,6 @@ function ChoixLieu({ ouvert, titre, lieux, exclus = new Set(), avecRacine, libel
     </Modale>
   );
 }
-
-/* ───────── Formulaire d'un lieu ───────── */
 
 function FormLieu({ ouvert, initial, onEnregistrer, onFermer, occupe, services }) {
   const [form, setForm] = useState(initial);
@@ -163,8 +153,6 @@ function FormLieu({ ouvert, initial, onEnregistrer, onFermer, occupe, services }
     </Modale>
   );
 }
-
-/* ───────── Ajout d'équipements à un lieu ───────── */
 
 function AjoutEquipements({ ouvert, lieu, onAjouter, onFermer, occupe }) {
   const [recherche, setRecherche] = useState('');
@@ -217,15 +205,13 @@ function AjoutEquipements({ ouvert, lieu, onAjouter, onFermer, occupe }) {
   );
 }
 
-/* ───────── Onglet « Arborescence » ───────── */
-
 export default function Arborescence() {
   const navigate = useNavigate();
   const [arbre, setArbre] = useState(null);
   const [erreur, setErreur] = useState('');
   const [message, setMessage] = useState(null);
   const [ouverts, setOuverts] = useState(() => new Set());
-  const [selection, setSelection] = useState(undefined); // id du lieu, null = sans lieu
+  const [selection, setSelection] = useState(undefined);
   const [sousLieux, setSousLieux] = useState(true);
   const [equipements, setEquipements] = useState([]);
   const [chargementEq, setChargementEq] = useState(false);
@@ -233,7 +219,7 @@ export default function Arborescence() {
   const [filtre, setFiltre] = useState('');
   const [occupe, setOccupe] = useState(false);
   const [formLieu, setFormLieu] = useState(null);
-  const [deplacement, setDeplacement] = useState(null); // { type: 'lieu' | 'equipements', ids }
+  const [deplacement, setDeplacement] = useState(null);
   const [ajout, setAjout] = useState(false);
   const [aDesactiver, setADesactiver] = useState(null);
   const [services, setServices] = useState([]);
@@ -323,7 +309,6 @@ export default function Arborescence() {
     if (ok) { setDeplacement(null); if (cible != null) setOuverts((o) => new Set(o).add(cible)); }
   };
 
-  // Glisser-déposer : un lieu ou des équipements sur un lieu de l'arbre
   const deposer = (e, cibleId) => {
     e.preventDefault();
     setSurvol(null);
@@ -398,7 +383,6 @@ export default function Arborescence() {
       {message && <p className={`arb-message ${message.ok ? 'is-ok' : 'is-ko'}`} role="status">{message.texte}</p>}
 
       <div className="arb-grille">
-        {/* ── Arbre des lieux ── */}
         <div className="arb-arbre" role="region" aria-label={t('Lieux')}>
           <div className="arb-arbre__entete">
             <label className="arb-filtre">
@@ -427,7 +411,6 @@ export default function Arborescence() {
           </button>
         </div>
 
-        {/* ── Détail du lieu choisi ── */}
         <section className="arb-detail">
           <header className="arb-detail__entete">
             <div>
@@ -575,8 +558,6 @@ export default function Arborescence() {
     </div>
   );
 }
-
-/* ───────── Bloc « Position » de la fiche équipement ───────── */
 
 export function PositionEquipement({ equipementId, peutModifier = true, onChange }) {
   const navigate = useNavigate();

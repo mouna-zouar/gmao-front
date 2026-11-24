@@ -11,13 +11,6 @@ import { CATEGORIES_DOCUMENT } from '../Equipements/equipementLibelles';
 import { t, locale } from '../../../i18n';
 import './RecapImmobilisation.css';
 
-/*
- * Récapitulatif complet de l'immobilisation (équipement) d'un bon, ouvert depuis le détail du bon, sans le quitter :
- * identité et achat (prix, fournisseur, mise en service), garantie, disponibilité, coûts détaillés,
- * maintenance préventive, tous les bons de maintenance, l'historique des états, les réclamations et les documents.
- * Données : GET /equipements/{id}/fiche et GET /etat-equipement/{id}/historique.
- */
-
 const ETATS = {
   EN_SERVICE: { label: 'En service', ton: 'ok' },
   EN_PANNE: { label: 'En panne', ton: 'alerte' },
@@ -59,7 +52,6 @@ const age = (iso) => {
 const taille = (o) => (o == null ? '' : o < 1024 * 1024 ? `${nb(o / 1024)} Ko` : `${nb(o / 1024 / 1024, 1)} Mo`);
 const libelleEtat = (e) => (ETATS[e] ? t(ETATS[e].label) : (e || '—'));
 
-/* Petite étiquette neutre ; seul le point indique un état (vert / orange / rouge) */
 function Etat({ ton = 'neutre', children }) {
   return <span className={`rim-etat rim-point--${ton}`}>{children}</span>;
 }
@@ -203,7 +195,6 @@ export default function RecapImmobilisation({ lotArticleImmobilistationId, bonCo
           {erreur && <p className="rim-erreur"><AlertTriangle size={16} /> {erreur}</p>}
           {!fiche && !erreur && <div className="rim-chargement"><Loader2 size={20} className="rim-tourne" /> {t('Chargement…')}</div>}
 
-          {/* ===== Résumé ===== */}
           {fiche && onglet === 'resume' && (
             <>
               {!id.complet && (
@@ -302,7 +293,6 @@ export default function RecapImmobilisation({ lotArticleImmobilistationId, bonCo
             </>
           )}
 
-          {/* ===== Coûts ===== */}
           {fiche && onglet === 'couts' && (
             <>
               <div className="rim-tuiles">
@@ -376,7 +366,6 @@ export default function RecapImmobilisation({ lotArticleImmobilistationId, bonCo
             </>
           )}
 
-          {/* ===== Bons de maintenance ===== */}
           {fiche && onglet === 'bons' && (
             <section className="rim-carte">
               <h3>{t('Tous les bons de maintenance')}</h3>
@@ -417,7 +406,6 @@ export default function RecapImmobilisation({ lotArticleImmobilistationId, bonCo
             </section>
           )}
 
-          {/* ===== Historique des états ===== */}
           {fiche && onglet === 'historique' && (
             <section className="rim-carte">
               <h3>{t('Historique des états de l’équipement')}</h3>
@@ -452,7 +440,6 @@ export default function RecapImmobilisation({ lotArticleImmobilistationId, bonCo
             </section>
           )}
 
-          {/* ===== Réclamations ===== */}
           {fiche && onglet === 'reclamations' && (
             <section className="rim-carte">
               <h3>{t('Toutes les réclamations')}</h3>
@@ -478,7 +465,6 @@ export default function RecapImmobilisation({ lotArticleImmobilistationId, bonCo
             </section>
           )}
 
-          {/* ===== Documents ===== */}
           {fiche && onglet === 'documents' && (
             <section className="rim-carte">
               <h3>{t('Documents de l’équipement')}</h3>

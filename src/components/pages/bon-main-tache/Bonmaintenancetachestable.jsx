@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import bonMaintenanceTacheService from '../../../services/bonMaintenanceTacheService';
-import bonMaintenanceService from '../../../services/bonMaintenanceService';
+import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
+import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import { t, locale } from '../../../i18n';
@@ -8,7 +8,6 @@ import {  Search, SquareKanban, Table2, TriangleAlert } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
 import './Bonmaintenancetachestable.css';
 
-// Colonnes du kanban, dans l'ordre d'affichage
 const COLONNES = [
   { etat: 1, label: 'Nouveau', cls: 'nouveau' },
   { etat: 2, label: 'Suspendu', cls: 'suspendu' },
@@ -17,13 +16,12 @@ const COLONNES = [
   { etat: 10, label: 'Annulé', cls: 'annule' },
 ];
 
-// Affichage choisi (tableau ou kanban), mémorisé pour ce navigateur
 const CLE_VUE = 'bmk-vue';
 function lireVue() {
   try { return window.localStorage.getItem(CLE_VUE) === 'tableau' ? 'tableau' : 'kanban'; } catch { return 'kanban'; }
 }
 function ecrireVue(v) {
-  try { window.localStorage.setItem(CLE_VUE, v); } catch { /* stockage indisponible */ }
+  try { window.localStorage.setItem(CLE_VUE, v); } catch {}
 }
 
 const IconeKanban = () => (
@@ -33,7 +31,6 @@ const IconeTableau = () => (
   <Table2 size={16} strokeWidth={2} aria-hidden="true" />
 );
 
-// Tri du tableau
 const TRIS = {
   bon: (a, b) => String(a.bon).localeCompare(String(b.bon), undefined, { numeric: true }) || (a.t.ordre ?? 0) - (b.t.ordre ?? 0),
   designation: (a, b) => String(a.t.designation || '').localeCompare(String(b.t.designation || '')),
@@ -77,7 +74,6 @@ export default function BonMaintenanceTachesKanban() {
     show: false, title: '', message: '', confirmText: t("Confirmer"), onConfirm: null, error: null, confirming: false,
   });
 
-  // Chargement à l'ouverture (loading vaut déjà true au départ)
   useEffect(() => {
     let actif = true;
     Promise.all([
@@ -99,7 +95,6 @@ export default function BonMaintenanceTachesKanban() {
     return () => { actif = false; };
   }, []);
 
-  // ---------- Changement d'état (optimiste, avec retour arrière si refus) ----------
   const appliquerEtat = async (tache, nouvelEtat, { onError } = {}) => {
     const ancienneTache = tache;
     setSavingId(tache.id);
@@ -148,7 +143,6 @@ export default function BonMaintenanceTachesKanban() {
     appliquerEtat(tache, nouvelEtat);
   };
 
-  // ---------- Drag & drop ----------
   const handleDragStart = (e, tache) => {
     setDraggingId(tache.id);
     e.dataTransfer.effectAllowed = 'move';
@@ -175,7 +169,6 @@ export default function BonMaintenanceTachesKanban() {
     deplacerTache(tache, etat);
   };
 
-  // ---------- Recherche ----------
   const filteredTaches = useMemo(() => {
     const terme = searchTerm.trim().toLowerCase();
     if (!terme) return taches;
@@ -204,7 +197,6 @@ export default function BonMaintenanceTachesKanban() {
     return bon ? (bon.num || bon.titre || t('Bon #{id}', { id: bon.id })) : t('Bon #{id}', { id: tache.bonMaintenanceId });
   };
 
-  // Lignes du tableau : filtre d'état + tri par colonne
   const lignesTableau = useMemo(() => {
     const lignes = filteredTaches
       .filter((tache) => filtreEtat === 'tous' || tache.etat === Number(filtreEtat))
@@ -272,7 +264,6 @@ export default function BonMaintenanceTachesKanban() {
         )}
         <button className="bmk-reset" onClick={() => { setSearchTerm(''); setFiltreEtat('tous'); }}>{t("Réinitialiser")}</button>
 
-        {/* Choix de l'affichage */}
         <div className="bmk-vues" role="group" aria-label={t("Affichage")}>
           <button type="button" className={`bmk-vue ${vue === 'tableau' ? 'is-active' : ''}`} aria-pressed={vue === 'tableau'} onClick={() => changerVue('tableau')}>
             <IconeTableau /> {t('Tableau')}
@@ -372,7 +363,6 @@ export default function BonMaintenanceTachesKanban() {
                           <div className="bmk-card-footer">
                             {tache.qte != null ? <span className="bmk-card-qte">{t('Qté')} {tache.qte}</span> : <span />}
 
-                            {/* Alternative au glisser-déposer (tactile / clavier) */}
                             {selectEtat(tache)}
                           </div>
                         </article>

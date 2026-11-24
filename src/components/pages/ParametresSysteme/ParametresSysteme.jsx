@@ -4,18 +4,17 @@ import { ICONES_MODULES } from '../../../constants/modules';
 import parametreService from '../../../services/parametreService';
 import prestataireService from '../../../services/prestataireService';
 import authService from '../../../services/Authservice';
-import EquipementMaintenanceTypesSettings from '../Etatequipement/EquipementMaintenanceTypesSettings';
+import EquipementMaintenanceTypesSettings from '../Etatequipement/Equipementmaintenancetypessettings';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import maintenanceConditionnelleService from '../../../services/maintenanceConditionnelleService';
 import { ETATS_REGLE, MODES, fmt } from '../Equipements/EquipementMaintenanceConditionnelle';
 import codePanneService from '../../../services/codePanneService';
 import reclamationService from '../../../services/Reclamationservice';
-import ReglageLangue from '../../../i18n/ReglageLangue';
+import ReglageLangue from '../../../i18n/Reglagelangue';
 import { t, locale } from '../../../i18n';
 import { arbreFamilles, lignesArbre, basculerDansSet } from '../../../utils/arbreFamilles';
 import './ParametresSysteme.css';
 
-/** Pour les paramètres « planif.<code>.heure » : code du traitement exécutable à la main. */
 function codeTache(cle) {
   const m = /^planif\.([a-z_]+)\.heure$/.exec(cle);
   return m ? m[1] : null;
@@ -23,7 +22,6 @@ function codeTache(cle) {
 
 const nomPrestataire = (p) => (p ? (p.raisonSociale || `${p.nom || ''} ${p.prenom || ''}`.trim() || null) : null);
 
-/** ID d'un prestataire Cubix : saisie de l'ID, nom affiché dessous, raccourci « Ma clinique ». */
 function ChampPrestataire({ param, valeur, onChange }) {
   const id = Number(valeur) || 0;
   const [etat, setEtat] = useState({ statut: 'vide' });
@@ -70,13 +68,11 @@ function ChampPrestataire({ param, valeur, onChange }) {
   );
 }
 
-/** Familles d'articles Cubix à suivre : arbre parent → fils, à cocher, avec le nombre d'immobilisations. */
 function ChampFamilles({ param, valeur, onChange, prestataireId }) {
   const [familles, setFamilles] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [filtre, setFiltre] = useState('');
-  const [ouverts, setOuverts] = useState(() => new Set()); // parents dépliés (aucun au départ)
-  // Articles des familles ouvertes : { [familleId]: 'chargement' | 'erreur' | [{ id, code, designation, nombre }] }
+  const [ouverts, setOuverts] = useState(() => new Set());
   const [articlesFamille, setArticlesFamille] = useState({});
   useEffect(() => { setArticlesFamille({}); }, [prestataireId]);
   const chargerArticles = (familleId) => {
@@ -100,7 +96,6 @@ function ChampFamilles({ param, valeur, onChange, prestataireId }) {
 
   const arbre = useMemo(() => arbreFamilles(familles), [familles]);
 
-  // Cocher un parent coche (ou décoche) aussi tous ses fils
   const basculer = (noeud) => {
     const n = new Set(choisies);
     const tous = noeud.ids.length > 0 && noeud.ids.every((id) => n.has(id));
@@ -108,7 +103,6 @@ function ChampFamilles({ param, valeur, onChange, prestataireId }) {
     onChange([...n].join(','));
   };
   const plier = (cle, noeud) => {
-    // En ouvrant une famille qui a ses propres équipements, on charge ses articles
     if (noeud && !noeud.virtuel && noeud.nombre > 0 && !ouverts.has(cle)) chargerArticles(noeud.id);
     plierSeul(cle);
   };
@@ -120,7 +114,6 @@ function ChampFamilles({ param, valeur, onChange, prestataireId }) {
 
   const q = filtre.trim().toLowerCase();
   const correspond = (n) => !q || `${n.nom || ''} ${n.code || ''}`.toLowerCase().includes(q);
-  // Visible si la famille correspond, si un de ses fils correspond, ou si son parent correspond
   const visible = (n, parentCorrespond) => parentCorrespond || correspond(n) || n.enfants.some((e) => visible(e, false));
 
   const total = (familles || []).reduce((s, f) => s + f.nombre, 0);
@@ -135,7 +128,7 @@ function ChampFamilles({ param, valeur, onChange, prestataireId }) {
     const coche = n.ids.length > 0 && nbCoches === n.ids.length;
     const partiel = nbCoches > 0 && !coche;
     const aEnfants = n.enfants.length > 0;
-    const aArticles = !n.virtuel && n.nombre > 0; // la famille a ses propres équipements → ses articles
+    const aArticles = !n.virtuel && n.nombre > 0;
     const ouvrable = aEnfants || aArticles;
     const arts = articlesFamille[cle];
     const ouvert = q ? (ouverts.has(cle) || aEnfants) : ouverts.has(cle);
@@ -149,8 +142,6 @@ function ChampFamilles({ param, valeur, onChange, prestataireId }) {
             </button>
           ) : <span className="ps-familles-plier ps-familles-plier--vide" aria-hidden="true" />}
           {ouvrable ? (
-            // Famille ouvrable : la case coche la famille (et ses fils) ; un clic sur le nom affiche / cache
-            // ses sous-familles puis ses articles
             <div className={`ps-familles-ligne ${coche ? 'is-coche' : partiel ? 'is-partiel' : ''} ${ouvert ? 'is-ouvert' : ''}`}>
               <input type="checkbox" checked={coche} disabled={n.ids.length === 0}
                 ref={(el) => { if (el) el.indeterminate = partiel; }}
@@ -282,13 +273,6 @@ function ChampValeur({ param, valeur, onChange, draft }) {
   }
 }
 
-/* ────────────────────────────────────────────────────────────
- * Structure de la page : un accueil en tuiles (une tuile par rubrique, rangées par section) ;
- * un clic ouvre la rubrique en plein écran (?r=<rubrique>, le bouton Retour du navigateur revient à l'accueil).
- * Chaque réglage est une carte « libellé + explication + valeur ».
- * ──────────────────────────────────────────────────────────── */
-
-/** Rubriques connues (nom du groupe côté serveur → présentation). Les groupes inconnus s'ajoutent à la fin. */
 const RUBRIQUES = [
   { id: 'general', section: 'Application', titre: 'Général', aide: 'Langue de l’application sur cet ordinateur.', Icone: Languages },
   { id: 'planif', section: 'Automatisation', groupe: 'Planification des traitements', titre: 'Traitements automatiques', aide: 'Quand les analyses et les alertes tournent toutes seules.', Icone: CalendarClock },
@@ -307,18 +291,14 @@ const RUBRIQUES = [
 
 const CLE_RUBRIQUE = 'gmao.parametres.rubrique';
 
-/** Groupes du menu de gauche, dans cet ordre ; les rubriques inconnues vont dans « Autres réglages ». */
 const SECTIONS_MENU = ['Application', 'Automatisation', 'Réclamations', 'Cubix', 'Autres réglages'];
-/** Couleur des tuiles de chaque section */
 const TON_SECTION = { Application: 'indigo', Automatisation: 'teal', Réclamations: 'ambre', Cubix: 'violet', 'Autres réglages': 'ardoise' };
 
-/** « planif.anomalies.heure » → { code: 'anomalies', champ: 'heure' } */
 function partiesTache(cle) {
   const m = /^planif\.([a-z_]+)\.(actif|heure|intervalle)$/.exec(cle);
   return m ? { code: m[1], champ: m[2] } : null;
 }
 
-/** « P1 Immédiate — délai de réponse » → « P1 Immédiate » */
 const avantTiret = (texte) => String(texte || '').split(' — ')[0];
 
 const correspondRecherche = (p, mots) => {
@@ -335,7 +315,6 @@ export default function ParametresSysteme() {
   const [runningCode, setRunningCode] = useState(null);
   const [message, setMessage] = useState(null);
   const [recherche, setRecherche] = useState('');
-  // Rubrique ouverte dans l'URL (?r=sla) : null = accueil en tuiles
   const [searchParams, setSearchParams] = useSearchParams();
   const rubrique = searchParams.get('r');
 
@@ -343,7 +322,7 @@ export default function ParametresSysteme() {
     setRecherche('');
     setSearchParams(id ? { r: id } : {});
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    try { if (id) localStorage.setItem(CLE_RUBRIQUE, id); } catch { /* stockage indisponible */ }
+    try { if (id) localStorage.setItem(CLE_RUBRIQUE, id); } catch {}
   };
 
   const apply = (list) => {
@@ -368,7 +347,6 @@ export default function ParametresSysteme() {
   const estModifie = (p) => draft[p.cle] !== p.valeur;
   const dirtyKeys = useMemo(() => params.filter(estModifie).map((p) => p.cle), [params, draft]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Paramètres de chaque rubrique (la maintenance préventive reprend ses deux réglages de planification)
   const parRubrique = useMemo(() => {
     const m = new Map(RUBRIQUES.map((r) => [r.id, []]));
     const inconnues = new Map();
@@ -438,8 +416,6 @@ export default function ParametresSysteme() {
     }
   };
 
-  /* ─── Morceaux d'affichage ─── */
-
   const BoutonDefaut = ({ liste }) => {
     const auDefaut = liste.every((p) => draft[p.cle] === p.valeurDefaut);
     if (auDefaut) return null;
@@ -458,7 +434,6 @@ export default function ParametresSysteme() {
 
   const Badge = ({ liste }) => (liste.some(estModifie) ? <span className="ps-badge">{t('modifié')}</span> : null);
 
-  /** Ligne d'un réglage simple. */
   const ligneParametre = (p) => {
     const bloc = p.type === 'FAMILLES';
     const large = bloc || p.type === 'PRESTATAIRE' || p.type === 'TEXTE';
@@ -478,7 +453,6 @@ export default function ParametresSysteme() {
     );
   };
 
-  /** Traitements planifiés : « activé + heure (ou fréquence) + Exécuter » sur une seule ligne. */
   const lignesTaches = (items) => {
     const taches = new Map();
     const reste = [];
@@ -537,7 +511,6 @@ export default function ParametresSysteme() {
     );
   };
 
-  /** SLA : tableau priorité × (réponse, résolution). */
   const tableauSla = (items) => {
     const lignes = new Map();
     const reste = [];
@@ -625,18 +598,15 @@ export default function ParametresSysteme() {
     return <div className="ps-grille">{r.items.map(ligneParametre)}</div>;
   };
 
-  /* ─── Recherche dans tous les réglages ─── */
   const mots = recherche.trim().toLowerCase().split(/\s+/).filter(Boolean);
   const resultats = mots.length === 0 ? [] : rubriques
     .filter((r) => r.id !== 'general')
     .map((r) => ({ ...r, trouves: r.items.filter((p) => correspondRecherche(p, mots)) }))
     .filter((r) => r.trouves.length > 0)
-    // la préventive reprend des réglages de planification : pas de doublon dans les résultats
     .filter((r, i, tab) => r.id !== 'preventif' || !tab.some((x) => x.id === 'planif'));
 
   const nbModifies = (r) => r.items.filter(estModifie).length;
 
-  /** Petite ligne d'état sous le titre de chaque tuile */
   const resumeTuile = (r) => {
     if (r.id === 'general') return t('Langue de l’application');
     if (r.id === 'codes_panne' || r.id === 'checklists') return t('Liste à gérer');
@@ -788,10 +758,6 @@ export default function ParametresSysteme() {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Règles de maintenance conditionnelle   (ancien fichier ReglesConditionnellesVue.jsx)
-// ═════════════════════════════════════════════════════════════
-/** Vue d'ensemble des règles de maintenance conditionnelle (elles se créent dans la fiche de chaque équipement). */
 function ReglesConditionnellesVue() {
   const navigate = useNavigate();
   const [regles, setRegles] = useState(null);
@@ -936,7 +902,7 @@ function CodesPanneVue({ prestataireId }) {
     return ids.map((id) => familles.find((f) => String(f.id) === id)?.nom || `#${id}`).join(', ');
   };
   const [codes, setCodes] = useState(null);
-  const [edition, setEdition] = useState(null); // VIDE (nouveau) ou une copie du code modifié
+  const [edition, setEdition] = useState(null);
   const [occupe, setOccupe] = useState(false);
   const [erreur, setErreur] = useState('');
   const [inactifs, setInactifs] = useState(false);
@@ -1088,16 +1054,9 @@ function CodesPanneVue({ prestataireId }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Check-lists des réclamations
-// ═════════════════════════════════════════════════════════════
-/**
- * Vérifications que le demandeur fait avant d'envoyer une réclamation (« Avez-vous redémarré l'appareil ? »…),
- * par famille d'équipement. Une famille sans check-list reprend la check-list par défaut.
- */
 function ChecklistsReclamationVue({ prestataireId }) {
   const [familles, setFamilles] = useState(null);
-  const [ecrites, setEcrites] = useState(null); // { defaut: {...}, '12': {...} }
+  const [ecrites, setEcrites] = useState(null);
   const [choix, setChoix] = useState('defaut');
   const [questions, setQuestions] = useState([]);
   const [filtre, setFiltre] = useState('');
@@ -1124,14 +1083,12 @@ function ChecklistsReclamationVue({ prestataireId }) {
   const propre = ecrites?.[choix];
   const nomFamille = choix === 'defaut' ? null : (familles || []).find((f) => String(f.id) === choix)?.nom || propre?.familleNom || null;
 
-  // Quand on change de famille : ses questions, ou celles par défaut pour partir de quelque chose
   useEffect(() => {
     if (!ecrites) return;
     setQuestions([...(ecrites[choix]?.questions ?? ecrites.defaut?.questions ?? [])]);
     setInfo('');
   }, [choix, ecrites]);
 
-  // Modifiée par rapport aux questions affichées au départ (celles de la famille, sinon celles par défaut)
   const modifie = JSON.stringify(questions.map((q) => q.trim()).filter(Boolean))
     !== JSON.stringify(propre?.questions ?? ecrites?.defaut?.questions ?? []);
 
@@ -1161,7 +1118,6 @@ function ChecklistsReclamationVue({ prestataireId }) {
   const [ouverts, setOuverts] = useState(() => new Set());
   const plier = basculerDansSet(setOuverts);
   const liste = lignesArbre(arbre, ouverts, filtre);
-  // Un clic sur un parent le choisit et affiche (ou cache) ses sous-familles
   const cliquerFamille = (f) => {
     if (!f.virtuel) setChoix(String(f.id));
     if (f.enfants.length > 0 && (f.virtuel || choix === String(f.id) || !ouverts.has(String(f.id)))) plier(f.id);

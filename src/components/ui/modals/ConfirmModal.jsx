@@ -1,4 +1,3 @@
-import React from 'react';
 import { Check, Info, TriangleAlert } from 'lucide-react';
 import './ConfirmModal.css';
 
@@ -31,7 +30,7 @@ const ConfirmModal = ({
                 return (
                     <Info className="modal-confirm-icon info" aria-hidden="true" />
                 );
-            default: // warning
+            default:
                 return (
                     <TriangleAlert className="modal-confirm-icon warning" aria-hidden="true" />
                 );

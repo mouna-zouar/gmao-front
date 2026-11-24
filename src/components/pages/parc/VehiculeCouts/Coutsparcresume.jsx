@@ -1,16 +1,11 @@
 import { useEffect, useState } from 'react';
 import { ChevronRight, Loader2, Wallet } from 'lucide-react';
-import vehiculeCoutService from '../../../../services/vehiculeCoutService';
-import { BarreRepartition } from './CoutGraphiques';
+import vehiculeCoutService from '../../../../services/Vehiculecoutservice';
+import { BarreRepartition } from './Coutgraphiques';
 import { formatDT, bornesPeriode } from '../../../../constants/Coutlibelles';
 import { t, locale } from '../../../../i18n';
 import './VehiculeCouts.css';
 
-/*
- * Bandeau « Coûts du parc » de la page Véhicules (sous l'en-tête) : année en cours,
- * coût total, coût moyen au km, km parcourus, véhicule le plus coûteux et répartition.
- * `version` : à incrémenter pour recharger (après une saisie de frais, par exemple).
- */
 export default function CoutsParcResume({ version = 0, onOuvrir }) {
   const [donnees, setDonnees] = useState(null);
   const [erreur, setErreur] = useState(false);

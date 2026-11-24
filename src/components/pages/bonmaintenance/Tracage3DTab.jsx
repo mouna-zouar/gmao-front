@@ -1,5 +1,3 @@
-// Traçage du bon : journal vertical, regroupé par jour, mis à jour en direct.
-// Même langage visuel que la page « parcours de réparation ».
 import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
 import {
   Loader2, Inbox, User, ChevronDown, Clock, RefreshCw, WifiOff,
@@ -17,13 +15,9 @@ import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenan
 import { t, tp, locale } from '../../../i18n';
 import './Tracage3DTab.css';
 
-// ============================================================
-// CONFIG
-// ============================================================
 const POLL_INTERVAL_MS = 8000;
 const MAX_RETRIES = 3;
 
-// Chaque type d'événement : une icône, un ton, et une famille pour les filtres
 const TYPE_STYLES = {
   reclamation:  { label: 'Réclamation',       icon: Megaphone,     ton: 'now',   famille: 'debut' },
   bon:          { label: 'Bon créé',          icon: ClipboardList, ton: 'brand', famille: 'debut' },
@@ -47,9 +41,6 @@ const INTERVENANT_ETAT_LABELS = { 0: 'Nouveau', 1: 'En cours', 2: 'Terminé', 10
 const ETAT_IMMO_LABELS = { 1: 'Fonctionnel avec problème', 2: 'En panne', 3: 'À changer', 4: 'Hors service' };
 const GRAVITE_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
 
-// ============================================================
-// HELPERS
-// ============================================================
 function formatDateTime(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -103,10 +94,6 @@ function dureeLisible(ms) {
   return tp('jour', Math.round(h / 24));
 }
 
-// ============================================================
-// CONSTRUCTION DES ÉTAPES
-// Les détails vides ne sont pas affichés : on n'ajoute que ce qui est renseigné.
-// ============================================================
 function details(entries) {
   return entries.filter(([, v]) => v != null && v !== '' && v !== '—');
 }
@@ -255,7 +242,6 @@ function construireEtapes({ bon, reclamations, historique, diagnostics, taches, 
     }));
 }
 
-// Nombre qui monte de 0 à sa valeur (≈ 0,8 s), sauf si l'utilisateur réduit les animations
 function useCompteur(cible) {
   const [valeur, setValeur] = useState(0);
   const precedent = useRef(0);
@@ -282,7 +268,6 @@ function useCompteur(cible) {
   return valeur;
 }
 
-// Petit tracé de moniteur cardiaque qui défile tant que le direct est actif
 const PoulsDirect = ({ actif }) => (
   <svg className={`trx-pouls ${actif ? 'is-actif' : ''}`} viewBox="0 0 120 24" aria-hidden="true">
     <path
@@ -292,9 +277,6 @@ const PoulsDirect = ({ actif }) => (
   </svg>
 );
 
-// ============================================================
-// COMPOSANT PRINCIPAL
-// ============================================================
 export default function TracageTab({ bon, reclamations: reclamationsProp = [] }) {
   const [loading, setLoading] = useState(true);
   const [raw, setRaw] = useState(null);
@@ -306,7 +288,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
   const [refreshing, setRefreshing] = useState(false);
   const [famille, setFamille] = useState('tout');
   const [ordreRecent, setOrdreRecent] = useState(false);
-  // Entrée en cascade : seulement au premier affichage et quand on change de filtre
   const [cascade, setCascade] = useState(true);
   const [pulsation, setPulsation] = useState(0);
 
@@ -314,7 +295,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
   const previousHashRef = useRef(new Set());
   const retryCountRef = useRef(0);
 
-  // ---------- Chargement ----------
   const fetchAll = useCallback(async (silent = false) => {
     if (!bon?.id) return;
     if (!silent) setRefreshing(true);
@@ -360,7 +340,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
     fetchAll(false);
   }, [bon?.id, fetchAll]);
 
-  // ---------- Mise à jour en direct ----------
   useEffect(() => {
     if (!isLive || !bon?.id) return undefined;
     const interval = setInterval(() => fetchAll(true), POLL_INTERVAL_MS);
@@ -379,7 +358,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [bon?.id, fetchAll]);
 
-  // ---------- Étapes ----------
   const etapes = useMemo(() => (raw ? construireEtapes({ bon, ...raw }) : []), [bon, raw]);
 
   const compteParFamille = useMemo(() => {
@@ -393,7 +371,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
     return ordreRecent ? [...f].reverse() : f;
   }, [etapes, famille, ordreRecent]);
 
-  // Regroupement par jour
   const jours = useMemo(() => {
     const groupes = [];
     visibles.forEach((e) => {
@@ -416,7 +393,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
     };
   }, [etapes]);
 
-  // ---------- Nouvelles étapes : on les ouvre et on les montre ----------
   useEffect(() => {
     if (etapes.length === 0) return undefined;
     const currentHashes = new Set(etapes.map((e) => e.id));
@@ -446,7 +422,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
     return () => clearTimeout(tache);
   }, [famille, ordreRecent]);
 
-  // Une petite pulsation à chaque actualisation réussie
   useEffect(() => { if (lastUpdate) setPulsation((n) => n + 1); }, [lastUpdate]);
 
   const nbEvenements = useCompteur(resume?.total ?? 0);
@@ -465,7 +440,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
     setOuverts((prev) => (prev.size >= visibles.length ? new Set() : new Set(visibles.map((e) => e.id))));
   };
 
-  // ---------- Rendu ----------
   if (loading) {
     return (
       <div className="trx-etat">
@@ -486,7 +460,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
 
   return (
     <div className="trx">
-      {/* ===== Résumé en une phrase + direct ===== */}
       <section className={`trx-entete ${refreshing ? 'is-actualise' : ''}`}>
         <p className="trx-phrase">
           <strong className="trx-chiffre">{tp('événement', nbEvenements)}</strong>
@@ -531,7 +504,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
         </div>
       )}
 
-      {/* ===== Filtres ===== */}
       <div className="trx-outils">
         <div className="trx-filtres" role="tablist" aria-label={t("Filtrer le journal")}>
           {FAMILLES.filter((f) => f.key === 'tout' || compteParFamille[f.key]).map((f) => (
@@ -558,7 +530,6 @@ export default function TracageTab({ bon, reclamations: reclamationsProp = [] })
         </div>
       </div>
 
-      {/* ===== Journal ===== */}
       <div
         className={`trx-journal ${refreshing ? 'is-actualise' : ''} ${cascade ? 'is-cascade' : ''}`}
         ref={listeRef}

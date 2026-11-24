@@ -1,7 +1,3 @@
-/* ═════════════════════════════════════════════════════════════
-   Rapport d’intervention (ancien BmdRapport.css)
-   ═════════════════════════════════════════════════════════════ */
-/* Rapport d'intervention (IA) dans le détail du bon — variables de .bmx-page (BmdPage.css) */
 .bmr {
   margin: 0 0 24px;
   padding: 22px 24px;
@@ -80,12 +76,6 @@
   .bmr-actions .bmx-btn { flex: 1 1 auto; justify-content: center; }
 }
 
-/* ═════════════════════════════════════════════════════════════
-   Animations de fin d'étape (ancien Bmdcelebration.css)
-   ═════════════════════════════════════════════════════════════ */
-/* ============================================================
-   ANIMATIONS DE FIN D'ÉTAPE
-   ============================================================ */
 .bmdc-overlay {
   --bmdc-c: var(--g-brand-500);
   --bmdc-soft: rgba(7, 148, 164, 0.12);
@@ -150,7 +140,6 @@
   stroke-linejoin: round;
 }
 
-/* Tracés « dessinés » : pathLength=1 → dasharray 1 */
 .bmdc-ecg,
 .bmdc-ring,
 .bmdc-check,
@@ -163,7 +152,6 @@
 
 @keyframes bmdc-dessin { to { stroke-dashoffset: 0; } }
 
-/* ---- Intervenant : ECG → coche ---- */
 .bmdc-ecg {
   stroke-width: 3.5;
   animation:
@@ -185,7 +173,6 @@
   animation: bmdc-dessin 0.38s cubic-bezier(0.65, 0, 0.35, 1) 1.3s forwards;
 }
 
-/* Ondes qui partent du cercle une fois terminé */
 .bmdc-ripples circle {
   stroke-width: 2;
   opacity: 0;
@@ -200,7 +187,6 @@
   100% { opacity: 0;    transform: scale(1.55); }
 }
 
-/* Étincelles radiales (pas de confettis) */
 .bmdc-sparks line {
   stroke-width: 3;
   opacity: 0;
@@ -215,7 +201,6 @@
   100% { opacity: 0; transform: translateY(-8px) scaleY(1); }
 }
 
-/* ---- Remise en service : power qui s'allume ---- */
 .bmdc-card--remise-autorisee .bmdc-ring { animation-delay: 0.1s; }
 
 .bmdc-ring--glow {
@@ -244,7 +229,6 @@
 .bmdc-card--remise-autorisee .bmdc-ripples circle:nth-child(2) { animation-delay: 1.5s; }
 .bmdc-card--remise-autorisee .bmdc-sparks line { animation-delay: 1.25s; }
 
-/* ---- Remise refusée : croix + secousse ---- */
 .bmdc-card--remise-refusee {
   animation:
     bmdc-entree 0.45s cubic-bezier(0.34, 1.45, 0.64, 1),
@@ -268,7 +252,6 @@
   80% { transform: translateX(3px); }
 }
 
-/* ---- Bon clôturé : tampon ---- */
 .bmdc-card--bon-cloture {
   animation:
     bmdc-entree 0.45s cubic-bezier(0.34, 1.45, 0.64, 1),
@@ -338,7 +321,6 @@
   100% { opacity: 0;   transform: scale(1.35); }
 }
 
-/* ---- Textes ---- */
 .bmdc-titre {
   margin: 4px 0 0;
   font-size: 17px;
@@ -363,7 +345,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Barre de temps restant avant fermeture automatique */
 .bmdc-progress {
   height: 3px;
   margin: 16px -24px -18px;
@@ -383,7 +364,6 @@
   to   { transform: scaleX(0); }
 }
 
-/* ---- Accessibilité : mouvements réduits ---- */
 @media (prefers-reduced-motion: reduce) {
   .bmdc-overlay *,
   .bmdc-card {
@@ -395,7 +375,6 @@
 }
 
 :root {
-  /* Palette TEAL unifiée */
   --primary: var(--g-brand-500);
   --primary-dark: var(--g-brand-600);
   --primary-darker: var(--g-brand-900);
@@ -439,9 +418,6 @@
   --transition-smooth: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ============================================================
-   BASE
-   ============================================================ */
 .bmd-container *,
 .bmd-container *::before,
 .bmd-container *::after { box-sizing: border-box; }
@@ -666,9 +642,6 @@
   .bmd-sla-panel__grid { grid-template-columns: 1fr; }
 }
 
-/* ============================================================
-   BOUTON + PANNEAU COÛT
-   ============================================================ */
 .bmd-cout-btn {
   display: inline-flex;
   align-items: center;
@@ -895,7 +868,6 @@
 .bmd-capa-statut--efficace { background: var(--success-light); color: var(--g-emerald-700); }
 .bmd-capa-statut--inefficace { background: var(--danger-light); color: var(--g-red-700); }
 
-/* ---------- Formulaire de création ---------- */
 .bmd-rca-form {
   display: flex;
   flex-direction: column;
@@ -1024,9 +996,6 @@
   .bmd-rca-form__action-row { grid-template-columns: 1fr; }
 }
 
-/* ============================================================
-   BADGES
-   ============================================================ */
 .bmd-badge-etat {
   display: inline-flex;
   align-items: center;
@@ -1064,9 +1033,6 @@
 .bmd-urgence-badge.priorite-color-blue  { background: var(--g-blue-50); color: var(--g-blue-700); border-color: var(--g-blue-100); }
 .bmd-urgence-badge.priorite-color-slate { background: var(--gray-100); color: var(--gray-500); border-color: var(--gray-200); }
 
-/* ============================================================
-   META STRIP
-   ============================================================ */
 .bmd-meta-strip {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -1104,9 +1070,6 @@
   color: var(--gray-900);
 }
 
-/* ============================================================
-   TABS — Segmented Control
-   ============================================================ */
 .bmd-tabs {
   display: flex;
   align-items: stretch;
@@ -1177,7 +1140,6 @@
     0 2px 8px rgba(15, 23, 42, 0.04);
 }
 
-/* Numéro actif → teal plein */
 .bmd-tab.active .bmd-tab-num {
   background: var(--primary);
   color: var(--g-blanc);
@@ -1187,9 +1149,6 @@
 .bmd-tab.active:hover { color: var(--gray-900); }
 .bmd-tab.active:hover .bmd-tab-num { background: var(--primary-dark); }
 
-/* ============================================================
-   PANEL
-   ============================================================ */
 .bmd-panel {
   background: transparent;
   border: none;
@@ -1199,9 +1158,6 @@
   animation: bmdFadeIn 0.25s ease-out;
 }
 
-/* ============================================================
-   PANEL HEADER
-   ============================================================ */
 .bmd-panel-header {
   display: flex;
   justify-content: space-between;
@@ -1248,7 +1204,6 @@
   border-radius: 999px;
 }
 
-/* Bouton principal → teal uni */
 .bmd-add-btn {
   display: inline-flex;
   align-items: center;
@@ -1272,9 +1227,6 @@
   box-shadow: 0 10px 22px -6px rgba(7, 148, 164, 0.6);
 }
 
-/* ============================================================
-   FORMULAIRES
-   ============================================================ */
 .bmd-inline-form {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -1321,9 +1273,6 @@
 .bmd-inline-form textarea { resize: vertical; min-height: 76px; }
 .bmd-inline-form button[type="submit"] { grid-column: 1 / -1; }
 
-/* ============================================================
-   LISTES
-   ============================================================ */
 .bmd-empty {
   text-align: center;
   padding: 56px 24px;
@@ -1411,9 +1360,6 @@
   flex-shrink: 0;
 }
 
-/* ============================================================
-   BOUTONS D'ACTION
-   ============================================================ */
 .bmd-delete-btn,
 .bmd-edit-btn,
 .bmd-history-toggle {
@@ -1440,9 +1386,6 @@
 .bmd-history-toggle { color: var(--info); background: var(--info-light); border-color: var(--g-blue-200); }
 .bmd-history-toggle:hover { background: #c7ddff; transform: translateY(-1px); }
 
-/* ============================================================
-   HISTORIQUE
-   ============================================================ */
 .bmd-history-panel {
   margin-top: 14px;
   padding-top: 14px;
@@ -1479,9 +1422,6 @@
 .bmd-history-date { color: var(--gray-500); font-size: 11.5px; white-space: nowrap; }
 .bmd-history-author { color: var(--primary); font-weight: 600; font-size: 12px; white-space: nowrap; }
 
-/* ============================================================
-   COMMENTAIRES
-   ============================================================ */
 .bmd-comment-form {
   display: flex;
   gap: 12px;
@@ -1530,9 +1470,6 @@
   line-height: 1.6;
 }
 
-/* ============================================================
-   INTERVENTIONS
-   ============================================================ */
 .bmd-intervention-item {
   background: var(--g-blanc);
   border: 1px solid var(--gray-200);
@@ -1612,9 +1549,6 @@
   color: var(--gray-500);
 }
 
-/* ============================================================
-   FLOW
-   ============================================================ */
 .bmd-flow-title {
   display: flex;
   align-items: center;
@@ -1643,7 +1577,6 @@
   box-shadow: var(--shadow-xs);
 }
 
-/* Barre d'accent → teal uni */
 .bmd-flow-step::before {
   content: '';
   position: absolute;
@@ -1812,9 +1745,6 @@
 
 .bmd-flow-connector .connector-arrow { color: var(--gray-300); }
 
-/* ============================================================
-   DETAIL ROWS
-   ============================================================ */
 .detail-row {
   display: flex;
   gap: 14px;
@@ -1841,9 +1771,6 @@
 .detail-value.text-danger { color: var(--danger); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
 .detail-value.text-warning { color: var(--warning); font-weight: 600; }
 
-/* ============================================================
-   PRIORITÉ
-   ============================================================ */
 .priorite-badge {
   display: inline-block;
   padding: 4px 10px;
@@ -1857,9 +1784,6 @@
 .priorite-badge.priorite-2 { background: var(--warning-light); color: var(--g-amber-700); border-color: var(--g-amber-200); }
 .priorite-badge.priorite-3 { background: var(--danger-light); color: var(--g-red-700); border-color: var(--g-red-200); }
 
-/* ============================================================
-   TIMELINE
-   ============================================================ */
 .bmd-timeline {
   position: relative;
   padding-left: 24px;
@@ -1934,9 +1858,6 @@
   margin-top: 6px;
 }
 
-/* ============================================================
-   STATUT INTERVENTION
-   ============================================================ */
 .intervention-statut {
   font-size: 11.5px;
   font-weight: 600;
@@ -1953,9 +1874,6 @@
 .intervention-statut.statut-2          { background: var(--success-light); color: var(--g-emerald-700); border-color: var(--g-emerald-200); }
 .intervention-statut.statut-10         { background: var(--gray-100); color: var(--gray-500); border-color: var(--gray-200); }
 
-/* ============================================================
-   RÉCLAMATIONS
-   ============================================================ */
 .bmd-reclamation-item {
   background: var(--g-blanc);
   border: 1px solid var(--gray-200);
@@ -2005,18 +1923,12 @@
   padding: 3px 0;
 }
 
-/* ============================================================
-   UTILITAIRES
-   ============================================================ */
 .text-success { color: var(--success); }
 .text-danger { color: var(--danger); }
 .text-warning { color: var(--warning); }
 .text-primary { color: var(--primary); }
 .text-gray { color: var(--gray-500); }
 
-/* ============================================================
-   BOUTON IMPRIMER
-   ============================================================ */
 .bmd-print-btn {
   display: inline-flex;
   align-items: center;
@@ -2041,9 +1953,6 @@
   box-shadow: var(--shadow-md);
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 1024px) {
   .bmd-tabs { padding: 3px; gap: 2px; }
   .bmd-tab { padding: 7px 12px; font-size: 12px; }
@@ -2135,9 +2044,6 @@
   .bmd-tab-label { font-size: 11px; }
 }
 
-/* ============================================================
-   ICON BUTTON
-   ============================================================ */
 .bmd-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -2163,9 +2069,6 @@
 .bmd-icon-btn .spin { animation: bmd-spin 0.8s linear infinite; }
 @keyframes bmd-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-/* ============================================================
-   SEARCHABLE SELECT (combobox)
-   ============================================================ */
 .bmd-searchable {
   position: relative;
   width: 100%;
@@ -2364,7 +2267,6 @@
   font-style: italic;
 }
 
-/* ─── Version compacte ─── */
 .bmd-searchable--compact .bmd-searchable-input-wrap {
   height: 40px;
   padding: 0 8px 0 10px;
@@ -2424,7 +2326,6 @@
   border-radius: 999px;
 }
 
-/* ---- Axe 1 : Timeline ---- */
 .bmd-tracage__timeline {
   position: relative;
   padding-left: 20px;
@@ -2526,7 +2427,6 @@
   margin-top: 4px;
 }
 
-/* ---- Axe 2 : Acteurs ---- */
 .bmd-tracage__acteurs {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -2595,7 +2495,6 @@
   white-space: nowrap;
 }
 
-/* ---- Axe 3 : Impact ---- */
 .bmd-tracage__impact-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -2640,7 +2539,6 @@
   line-height: 1.2;
 }
 
-/* ---- Responsive Traçage ---- */
 @media (max-width: 640px) {
   .bmd-tracage {
     gap: 20px;
@@ -2728,7 +2626,6 @@
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
 }
 
-/* Badge du panneau de détail */
 .bmd-3d__detail-badge {
   display: inline-flex;
   align-items: center;
@@ -2743,10 +2640,9 @@
 }
 
 .bmd-3d__detail-dot {
-  display: none; /* plus utilisé */
+  display: none;
 }
 
-/* Marqueur de légende : cercle avec dégradé */
 .bmd-3d__legend-dot {
   display: inline-block;
   width: 12px;
@@ -2755,7 +2651,6 @@
   flex-shrink: 0;
 }
 
-/* Temps passé sur une tâche / par un intervenant */
 .bmd-temps { display: inline-flex; align-items: center; gap: 5px; font-weight: 600; color: #334155; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .bmd-temps svg { color: #94a3b8; }
 .bmd-temps.is-en-cours { color: #066d79; }
@@ -2764,19 +2659,11 @@
 .bmd-temps-total { margin-inline-end: 6px; }
 @media (prefers-reduced-motion: reduce) { .bmd-temps.is-en-cours svg { animation: none; } }
 
-/* Documents d'achat : bouton Imprimer (format des rapports Cubix) */
 .bmd-doc-actions { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .bmd-doc-imprimer { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font: inherit; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; }
 .bmd-doc-imprimer:hover:not(:disabled) { border-color: #0794a4; color: #066d79; }
 .bmd-doc-imprimer:disabled { opacity: 0.6; cursor: wait; }
 
-/* ═════════════════════════════════════════════════════════════
-   Formulaires des rubriques (ancien Bmdform.css)
-   ═════════════════════════════════════════════════════════════ */
-/* ============================================================
-   FORMULAIRES GUIDÉS (onglets du bon de maintenance)
-   Mêmes couleurs que BmdPage.css, valeurs de secours incluses
-   ============================================================ */
 .bmf-form {
   --f-ink: var(--ink, var(--g-ink-900));
   --f-ink-soft: var(--ink-soft, var(--g-ink-600));
@@ -2824,7 +2711,6 @@
 
 .bmf-etapes { padding: 8px 24px 0; }
 
-/* ---------- Étapes ---------- */
 .bmf-etape {
   margin: 0;
   padding: 18px 0 20px;
@@ -2875,7 +2761,6 @@
   padding-left: 42px;
 }
 
-/* ---------- Champ ---------- */
 .bmf-champ { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 .bmf-champ.is-large { grid-column: 1 / -1; }
 
@@ -2911,7 +2796,6 @@
 .bmf-info { color: var(--f-brand-deep); font-weight: 600; }
 .bmf-alerte { color: var(--f-alert); font-weight: 700; }
 
-/* ---------- Entrées texte, date, nombre ---------- */
 .bmf-input,
 .bmf-nombre input {
   width: 100%;
@@ -2968,7 +2852,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   pointer-events: none;
 }
 
-/* ---------- Choix en pastilles ---------- */
 .bmf-choix {
   display: flex;
   flex-wrap: wrap;
@@ -3011,7 +2894,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 .bmf-ton--info  { --c: var(--g-info-600); }
 .bmf-ton--calme { --c: var(--f-ink-soft); }
 
-/* Grandes cartes de choix (décision importante : conforme ? autorisée ?) */
 .bmf-choix.is-grand {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -3047,7 +2929,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 
 .bmf-choix.is-grand .bmf-choix-btn.is-actif small { color: var(--f-ink-soft); }
 
-/* ---------- Stock ---------- */
 .bmf-stock {
   display: inline-flex;
   align-items: center;
@@ -3064,7 +2945,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 .bmf-stock.is-ok { background: var(--g-succes-50); color: #17785a; }
 .bmf-stock.is-manque { background: var(--g-alerte-50); color: var(--f-alert); }
 
-/* ---------- Listes avec recherche dans les formulaires ---------- */
 .bmf-form .bmd-searchable-input-wrap {
   height: 50px;
   padding: 0 12px 0 16px;
@@ -3090,7 +2970,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   border-radius: 12px;
 }
 
-/* ---------- Actions ---------- */
 .bmf-actions {
   position: sticky;
   bottom: 0;
@@ -3141,7 +3020,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 .bmf-tourne { animation: bmf-rotation 0.9s linear infinite; }
 @keyframes bmf-rotation { to { transform: rotate(360deg); } }
 
-/* ---------- Formulaires simples restants (commentaires, documents) ---------- */
 .bmx-tiroir .bmd-comment-form textarea,
 .bmx-tiroir .bmd-inline-form input,
 .bmx-tiroir .bmd-inline-form select,
@@ -3162,7 +3040,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   box-shadow: 0 0 0 4px var(--g-brand-75);
 }
 
-/* ---------- Responsive ---------- */
 @media (max-width: 640px) {
   .bmf-form-entete,
   .bmf-etapes { padding-left: 16px; padding-right: 16px; }
@@ -3176,13 +3053,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   .bmf-form { animation: none; }
 }
 
-/* ═════════════════════════════════════════════════════════════
-   Tableaux, fiches et vues détail (ancien Bmdentityviews.css)
-   ═════════════════════════════════════════════════════════════ */
-/* ============================================================
-   TABLEAU DES SOUS-ENTITÉS (diagnostics, tâches, intervenants…)
-   Utilise les variables définies dans BonMaintenanceDetails.css
-   ============================================================ */
 .bmd-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--gray-200);
@@ -3310,9 +3180,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   white-space: nowrap;
 }
 
-/* ============================================================
-   PILLS
-   ============================================================ */
 .bmd-pill {
   display: inline-flex;
   align-items: center;
@@ -3332,9 +3199,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 .bmd-pill--green { background: var(--success-light); color: var(--g-emerald-700); border-color: var(--g-emerald-200); }
 .bmd-pill--teal  { background: var(--primary-soft); color: var(--primary-darker); border-color: var(--primary-light); }
 
-/* ============================================================
-   PAGE DE DÉTAIL
-   ============================================================ */
 .bmd-detail {
   display: flex;
   flex-direction: column;
@@ -3365,7 +3229,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   border-color: var(--primary-light);
 }
 
-/* ---- Partie 1 : en-tête ---- */
 .bmd-detail-header {
   display: flex;
   justify-content: space-between;
@@ -3440,7 +3303,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   border-color: var(--gray-200);
 }
 
-/* ---- Informations générales ---- */
 .bmd-detail-infos {
   padding: 20px 22px;
   background: var(--g-blanc);
@@ -3491,7 +3353,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   word-break: break-word;
 }
 
-/* ---- Partie 2 : cartes de détail ---- */
 .bmd-detail-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -3572,7 +3433,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   min-width: 140px;
 }
 
-/* ---- Responsive ---- */
 @media (max-width: 640px) {
   .bmd-detail-header,
   .bmd-detail-infos { padding: 16px; }
@@ -3583,10 +3443,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   .bmd-table-search { max-width: none; }
 }
 
-/* ============================================================
-   PAGE DU BON — PARTIE 2 : RUBRIQUES EN CARTES
-   (remplace la barre d'onglets .bmd-tabs)
-   ============================================================ */
 .bmd-section-label {
   margin: 0 0 12px;
   font-size: 11px;
@@ -3697,7 +3553,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 .bmd-card:hover .bmd-card-arrow,
 .bmd-card.active .bmd-card-arrow { color: var(--primary); transform: translateX(2px); }
 
-/* Contenu de la carte sélectionnée */
 .bmd-panel--carte {
   scroll-margin-top: 16px;
   padding-top: 4px;
@@ -3721,13 +3576,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   .bmd-cards { grid-template-columns: 1fr; }
 }
 
-/* ═════════════════════════════════════════════════════════════
-   Page du détail : parcours, panneau latéral (ancien BmdPage.css)
-   ═════════════════════════════════════════════════════════════ */
-/* ============================================================
-   BON DE MAINTENANCE — NOUVELLE PAGE « PARCOURS DE RÉPARATION »
-   Chargé après BonMaintenanceDetails.css
-   ============================================================ */
 @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap');
 
 .bmx-page {
@@ -3778,7 +3626,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   outline-offset: 2px;
 }
 
-/* ---------- Boutons ---------- */
 .bmx-btn {
   display: inline-flex;
   align-items: center;
@@ -3826,7 +3673,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 }
 .bmx-btn--sur-fonce:hover { border-color: var(--g-blanc); background: rgba(255, 255, 255, 0.08); }
 
-/* ---------- Tons communs ---------- */
 .bmx-ton--ok        { --ton: var(--done);  --ton-wash: var(--done-wash); }
 .bmx-ton--attention { --ton: var(--g-attention-700);      --ton-wash: var(--now-wash); }
 .bmx-ton--action    { --ton: var(--brand-deep); --ton-wash: var(--brand-wash); }
@@ -3849,7 +3695,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   white-space: nowrap;
 }
 
-/* ---------- Barre du haut ---------- */
 .bmx-barre {
   display: flex;
   justify-content: space-between;
@@ -3859,12 +3704,8 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   margin-bottom: 28px;
 }
 
-/* ============================================================
-   PARTIE 1 — IDENTITÉ DU BON
-   ============================================================ */
 .bmx-identite { margin-bottom: 28px; max-width: 920px; }
 
-/* Bracelet : comme celui d'un patient, il identifie l'équipement */
 .bmx-bracelet {
   position: relative;
   display: inline-flex;
@@ -3945,7 +3786,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   color: var(--ink);
 }
 
-/* ---------- Aide de première visite ---------- */
 .bmx-aide {
   display: flex;
   align-items: center;
@@ -3969,9 +3809,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 
 .bmx-aide li { margin: 2px 0; }
 
-/* ============================================================
-   PARTIE 2 — LE PARCOURS (élément principal)
-   ============================================================ */
 .bmx-parcours {
   padding: 24px 26px 28px;
   margin-bottom: 20px;
@@ -4007,7 +3844,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   list-style: none;
 }
 
-/* Rail de fond + remplissage selon l'avancement */
 .bmx-ligne::before,
 .bmx-ligne::after {
   content: '';
@@ -4072,7 +3908,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   max-width: 16ch;
 }
 
-/* Étape faite */
 .bmx-station.is-fait .bmx-station-point {
   background: var(--brand);
   border-color: var(--brand);
@@ -4080,7 +3915,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
 }
 .bmx-station.is-fait .bmx-station-nom { color: var(--ink); }
 
-/* Étape actuelle : le seul mouvement continu de la page */
 .bmx-station.is-actuel .bmx-station-point,
 .bmx-station.is-probleme .bmx-station-point {
   width: calc(var(--point) + 8px);
@@ -4113,9 +3947,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   100% { box-shadow: 0 0 0 3px var(--now), 0 0 0 18px rgba(232, 150, 46, 0); }
 }
 
-/* ============================================================
-   À FAIRE MAINTENANT + EN UN COUP D'ŒIL
-   ============================================================ */
 .bmx-duo {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
@@ -4132,7 +3963,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   overflow: hidden;
 }
 
-/* Courbe discrète en fond, comme un tracé de moniteur */
 .bmx-maintenant::after {
   content: '';
   position: absolute;
@@ -4195,7 +4025,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   gap: 10px;
 }
 
-/* Coup d'œil */
 .bmx-vitaux {
   padding: 22px 20px 14px;
   border-radius: var(--radius-xl);
@@ -4268,9 +4097,6 @@ button.bmx-vital:hover { background: var(--paper); }
 .bmx-vital-recalc:hover:not(:disabled) { border-color: var(--brand); color: var(--brand-deep); }
 .bmx-vital-recalc:disabled { cursor: wait; opacity: 0.7; }
 
-/* ============================================================
-   TOUT LE DOSSIER
-   ============================================================ */
 .bmx-dossier-titre { margin: 0 0 16px; font-size: 22px; font-weight: 700; }
 
 .bmx-groupes {
@@ -4344,9 +4170,6 @@ button.bmx-vital:hover { background: var(--paper); }
 .bmx-rubrique-fleche { color: var(--ink-faint); flex-shrink: 0; }
 .bmx-rubrique:hover .bmx-rubrique-fleche { color: var(--brand); }
 
-/* ============================================================
-   PANNEAU LATÉRAL
-   ============================================================ */
 .bmx-tiroir-fond {
   position: fixed;
   inset: 0;
@@ -4371,7 +4194,6 @@ button.bmx-vital:hover { background: var(--paper); }
   outline: none;
 }
 
-/* Réparation en deux étapes : 1. intervenants, 2. tâches */
 .bmx-rep { display: flex; flex-direction: column; gap: 18px; }
 .bmx-rep-etapes { display: flex; align-items: center; gap: 0; margin: 0; padding: 6px; list-style: none; border: 1.5px solid var(--line); border-radius: var(--radius-l); background: var(--surface); }
 .bmx-rep-etape { display: flex; align-items: center; flex: 1; min-width: 0; }
@@ -4437,7 +4259,6 @@ button.bmx-vital:hover { background: var(--paper); }
   overscroll-behavior: contain;
 }
 
-/* ---------- Délais ---------- */
 .bmx-delais { display: flex; flex-direction: column; gap: 14px; }
 
 .bmx-delai {
@@ -4484,7 +4305,6 @@ button.bmx-vital:hover { background: var(--paper); }
 
 .bmx-delai-chiffres { margin: 0; color: var(--ink-soft); font-size: 14px; }
 
-/* ---------- Coût ---------- */
 .bmx-cout {
   padding: 24px;
   border-radius: var(--radius-l);
@@ -4532,10 +4352,8 @@ button.bmx-vital:hover { background: var(--paper); }
 
 .bmx-cout-puce { width: 12px; height: 12px; border-radius: 4px; flex-shrink: 0; }
 
-/* ---------- RCA dans le panneau ---------- */
 .bmx-rca .bmd-rca-panel { margin-bottom: 0; border-radius: var(--radius-l); }
 
-/* ---------- États vides, chargement, erreur ---------- */
 .bmx-vide {
   margin: 0;
   padding: 22px;
@@ -4564,12 +4382,9 @@ button.bmx-vital:hover { background: var(--paper); }
 .bmx-tourne { animation: bmx-rotation 0.9s linear infinite; }
 @keyframes bmx-rotation { to { transform: rotate(360deg); } }
 
-/* Les onglets internes héritent de la nouvelle typographie */
 .bmx-tiroir .bmd-panel-header { border-bottom-color: var(--line); }
-/* Bouton « Ajouter … » placé à gauche, avant le titre */
 .bmx-tiroir .bmd-panel-header { justify-content: flex-start; }
 .bmx-tiroir .bmd-panel-header .bmd-add-btn { order: -1; }
-/* Boutons des formulaires (Ajouter / Enregistrer puis Annuler) et « Publier » des commentaires, à gauche aussi */
 .bmx-tiroir .bmf-actions { flex-direction: row-reverse; justify-content: flex-end; }
 .bmx-tiroir .bmd-comment-form { flex-direction: column; align-items: flex-start; }
 .bmx-tiroir .bmd-comment-form textarea { width: 100%; }
@@ -4581,9 +4396,6 @@ button.bmx-vital:hover { background: var(--paper); }
 .bmx-tiroir .bmd-detail-infos,
 .bmx-tiroir .bmd-detail-card { border-radius: var(--radius-l); }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 1100px) {
   .bmx-groupes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -4595,7 +4407,6 @@ button.bmx-vital:hover { background: var(--paper); }
 @media (max-width: 760px) {
   .bmx-page { padding: 16px 16px 32px; border-radius: 0; }
 
-  /* Le parcours devient vertical */
   .bmx-ligne {
     grid-template-columns: 1fr;
     gap: 6px;
@@ -4648,14 +4459,12 @@ button.bmx-vital:hover { background: var(--paper); }
   .bmx-ligne::after { transition: none; }
 }
 
-/* ---------- Bouton « Imprimer la fiche » ---------- */
 .bmx-btn:disabled { opacity: 0.6; cursor: progress; }
 .bmx-spin { animation: bmx-tourne 0.9s linear infinite; }
 @keyframes bmx-tourne { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .bmx-spin { animation: none; } }
 .bmx-barre-droite { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-/* ---------- Chat en direct : badges des messages non lus ---------- */
 .bmx-rubrique-nb--alerte {
   background: var(--alert);
   color: var(--g-blanc);
@@ -4676,9 +4485,6 @@ button.bmx-vital:hover { background: var(--paper); }
   text-align: center;
 }
 
-/* ============================================================
-   VERSION COMPACTE : moins d'espace vide sur grand écran
-   ============================================================ */
 @media (min-width: 761px) {
   .bmx-page { padding: 16px 22px 28px; }
   .bmx-page .bmx-barre { margin-bottom: 14px; }
@@ -4707,30 +4513,22 @@ button.bmx-vital:hover { background: var(--paper); }
   .bmx-page .bmx-rubrique { min-height: 52px; padding: 8px 12px; }
 }
 
-/* ══════════ Rubrique ouverte en fenêtre au centre (autrefois panneau latéral) ══════════ */
-/* Le contenu garde les couleurs et styles de la page (.bmx-page) sans sa mise en page. */
 .bmx-tiroir.bmx-tiroir--modale {
   display: block; width: auto; height: auto; min-height: 0; padding: 0;
   border-radius: 0; box-shadow: none; animation: none; background: transparent;
 }
 .bmx-modale .cm-modale__corps { min-height: min(60vh, 520px); background: var(--g-slate-50); }
-/* Formulaires des rubriques : seulement les attributs (sans étapes numérotées ni textes) */
 .bmf-etape--simple { margin: 0; padding: 0; border: 0; }
 .bmf-etape--simple + .bmf-etape--simple { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--g-slate-200); }
 .bmf-etoile { margin-inline-start: 2px; color: var(--g-red-500, #ef4444); font-weight: 700; }
 .bmf-etape--simple .bmf-etape-champs { padding-left: 0; padding-inline-start: 0; }
 .bmf-label { justify-content: flex-start; gap: 2px; }
 
-/* ══════════════════════════════════════════════════════════════════════
- * Contenu des fenêtres de rubrique au style des fenêtres communes (comme la réclamation) :
- * police, champs de 40 px, choix, boutons et barre d'actions identiques à ModaleFormulaire.
- * ══════════════════════════════════════════════════════════════════════ */
 .cm-modale.bmx-modale .cm-modale__corps { background: var(--g-blanc); }
 .cm-modale.bmx-modale .bmx-tiroir--modale { font-family: var(--g-police); font-size: 0.875rem; line-height: 1.5; color: var(--g-slate-700); }
 .cm-modale.bmx-modale .bmx-tiroir--modale :is(h1, h2, h3, h4) { font-family: var(--g-police); letter-spacing: -0.01em; color: var(--g-slate-900); }
 .cm-modale.bmx-modale .bmx-tiroir--modale :focus-visible { outline: none; box-shadow: var(--g-anneau); }
 
-/* En-tête de la liste (« Diagnostics 0 » + bouton Ajouter / Annuler) */
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmd-panel-header { padding-bottom: 14px; margin-bottom: 16px; border-bottom: 1px solid var(--g-slate-200); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmd-panel-title h3 { font-size: 1.02rem; font-weight: 700; }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmd-add-btn {
@@ -4740,7 +4538,6 @@ button.bmx-vital:hover { background: var(--paper); }
 }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmd-add-btn:hover { background: var(--g-brand-600); }
 
-/* Carte du formulaire */
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-form { padding: 20px; border: 1px solid var(--g-slate-200); border-radius: var(--g-rayon-lg); background: var(--g-blanc); box-shadow: none; }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-form-entete { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--g-slate-100); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-form-entete h3 { margin: 0; font-size: 1.02rem; font-weight: 700; }
@@ -4748,7 +4545,6 @@ button.bmx-vital:hover { background: var(--paper); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-champ { gap: 6px; }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-label { font-size: var(--g-texte-sm); font-weight: 600; color: var(--g-slate-700); margin: 0; }
 
-/* Champs : comme les champs communs */
 .cm-modale.bmx-modale .bmx-tiroir--modale :is(.bmf-input, .bmf-nombre input) {
   height: 40px; min-height: 0; padding: 0 12px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); background: var(--g-blanc);
   font: 400 0.875rem var(--g-police); color: var(--g-slate-900); box-shadow: var(--g-ombre-xs);
@@ -4768,7 +4564,6 @@ button.bmx-vital:hover { background: var(--paper); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmd-searchable-input { font: 400 0.875rem var(--g-police); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmd-searchable-menu { border-radius: var(--g-rayon-md); box-shadow: var(--g-ombre-md); border-color: var(--g-slate-200); }
 
-/* Choix : boutons rectangulaires comme les cartes de choix communes ; choisi = turquoise clair */
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix { gap: 8px; }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix-btn {
   min-height: 38px; padding: 0 14px; border: 1px solid var(--g-slate-300); border-radius: var(--g-rayon-md); background: var(--g-blanc);
@@ -4778,10 +4573,8 @@ button.bmx-vital:hover { background: var(--paper); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix-btn.is-actif { border-color: var(--g-brand-500); background: var(--g-brand-50); color: var(--g-brand-800); box-shadow: inset 0 0 0 1px var(--g-brand-500); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix.is-grand .bmf-choix-btn { min-height: 0; padding: 12px 14px; align-items: flex-start; }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix.is-grand .bmf-choix-btn span { font-weight: 600; }
-/* « Ne fonctionne pas », « Pas encore » choisis : rouge clair */
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-choix-btn.bmf-ton--alert.is-actif { border-color: var(--g-red-500, #ef4444); background: var(--g-red-50); color: var(--g-red-700); box-shadow: inset 0 0 0 1px var(--g-red-500, #ef4444); }
 
-/* Barre d'actions : comme le pied des fenêtres communes (Annuler en lien, bouton principal turquoise) */
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-actions {
   position: static; justify-content: flex-end; gap: 10px; margin: 18px -20px -20px; padding: 12px 20px;
   border-top: 1px solid var(--g-slate-200); border-radius: 0 0 var(--g-rayon-lg) var(--g-rayon-lg); background: var(--g-slate-50); box-shadow: none;
@@ -4797,7 +4590,6 @@ button.bmx-vital:hover { background: var(--paper); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-alerte { font-size: 0.75rem; font-weight: 500; color: var(--g-red-600); }
 .cm-modale.bmx-modale .bmx-tiroir--modale .bmf-stock { font-size: 0.75rem; }
 
-/* Transfert des documents d'achat vers Cubix */
 .bmd-doc-cubix { border-color: #99e4ec; color: #066d79; background: #f0fbfc; }
 .bmd-doc-cubix:hover:not(:disabled) { background: #0794a4; border-color: #0794a4; color: #fff; }
 .bmd-cubix-badge {
@@ -4813,12 +4605,10 @@ button.bmx-vital:hover { background: var(--paper); }
 .bmd-cubix-message.is-ok { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
 .bmd-cubix-message.is-erreur { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
 
-/* Tâche dont l'article est encore à demander / commander : barre rouge à gauche */
 .bmd-table tbody tr.bmd-ligne-manque { box-shadow: inset 4px 0 0 var(--g-red-600, #dc2626); }
 .bmd-table tbody tr.bmd-ligne-manque td { background: var(--g-red-50, #fef2f2); }
 .bmd-table tbody tr.bmd-ligne-manque:hover td { background: var(--g-red-100, #fee2e2); }
 
-/* Remise en service bloquée tant que le contrôle n'est pas fait */
 .bmd-rs-bloque {
   display: flex; align-items: flex-start; gap: 10px; margin: 0 0 12px; padding: 10px 12px;
   border: 1px solid #fedf89; border-radius: 10px; background: #fffaeb; color: #93370d; font-size: 0.88rem; line-height: 1.45;
@@ -4827,7 +4617,6 @@ button.bmx-vital:hover { background: var(--paper); }
 .bmf-choix-btn.is-desactive, .bmf-choix-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .bmd-add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Circuit d'achat (demandes / commandes) ── */
 .bmd-achat { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; }
 .bmd-achat-etapes { display: flex; align-items: center; gap: 0; list-style: none; margin: 0; padding: 0; }
 .bmd-achat-etapes li { display: flex; align-items: center; gap: 6px; color: #94a3b8; }

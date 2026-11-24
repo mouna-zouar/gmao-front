@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
 import vehiculeService from '../../../services/vehiculeService';
 import authService from '../../../services/Authservice';
@@ -9,7 +9,7 @@ import {
   Wrench, X, Car, Gauge, Calendar, AlertTriangle, Loader2, Save, Info,
 } from 'lucide-react';
 import './Modal.css';
-import './VehiculeMaintenanceBonModal.css';
+import './Vehiculemaintenancebonmodal.css';
 
 const NAV_SECTIONS = [
   { id: 'vehicule', label: 'Véhicule', Icon: Car },
@@ -25,17 +25,6 @@ function toInputDateTime(date) {
 
 const fmtKm = (v) => (v == null ? '—' : `${Number(v).toLocaleString('fr-FR')} km`);
 
-/**
- * Demande de maintenance saisie depuis la fiche véhicule.
- *
- * Véhicule, immatriculation et kilométrage sont préremplis et non modifiables :
- * ce sont des données du parc, pas des saisies. Le kilométrage affiché vient du
- * compteur (table dédiée), et le serveur le relit de toute façon au moment de
- * créer le bon — l'affichage n'est ici qu'une information pour le demandeur.
- *
- * @param vehicule    véhicule sélectionné dans la fiche
- * @param onCreated   callback(resultat) après création — resultat = { bon, declenchement, ... }
- */
 export default function VehiculeMaintenanceBonModal({ isOpen, onClose, vehicule, onCreated }) {
   const [activeSection, setActiveSection] = useState('vehicule');
 
@@ -57,7 +46,6 @@ export default function VehiculeMaintenanceBonModal({ isOpen, onClose, vehicule,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ─── Préremplissage à l'ouverture ───
   useEffect(() => {
     if (!isOpen || !vehicule?.id) return;
 
@@ -99,8 +87,6 @@ export default function VehiculeMaintenanceBonModal({ isOpen, onClose, vehicule,
         const c = await vehiculeService.getCompteur(vehicule.id);
         if (!annule) setCompteur(c);
       } catch (err) {
-        // Le compteur n'est qu'un affichage : en cas d'échec on retombe sur le
-        // cache porté par le véhicule, sans bloquer la demande.
         if (!annule) setCompteur(null);
         console.error('Erreur lecture compteur :', err);
       } finally {
@@ -113,7 +99,6 @@ export default function VehiculeMaintenanceBonModal({ isOpen, onClose, vehicule,
 
   const kilometrage = compteur?.kilometrage ?? vehicule?.kilometrage ?? null;
 
-  /** Situation préventive du type choisi : indique si un seuil est déjà atteint. */
   const statutTypeChoisi = useMemo(
     () => statuts.find((s) => String(s.typeId) === String(formData.typeId)) ?? null,
     [statuts, formData.typeId]
@@ -161,7 +146,6 @@ export default function VehiculeMaintenanceBonModal({ isOpen, onClose, vehicule,
       onCreated?.(resultat);
       onClose();
     } catch (err) {
-      // 409 = un bon est déjà ouvert pour ce type, 400 = saisie invalide.
       setError(err.response?.data?.message || "Échec de la création du bon de maintenance.");
       console.error(err);
     } finally {

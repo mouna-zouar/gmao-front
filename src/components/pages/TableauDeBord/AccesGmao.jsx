@@ -6,13 +6,6 @@ import { ICONES_MODULES as M } from '../../../constants/modules';
 import { t } from '../../../i18n';
 import './AccesGmao.css';
 
-/*
- * Accès à toute la GMAO depuis le tableau de bord.
- * Les modules viennent du menu (NAV_SECTIONS « gmao ») : une page ajoutée au menu apparaît ici.
- * On ajoute les pages d'analyse qui n'ont pas de place dans le menu.
- * Chaque page peut porter un compteur en direct (fourni par le tableau de bord).
- */
-
 const icone = (I) => <I aria-hidden="true" />;
 
 const ANALYSES = {
@@ -25,6 +18,7 @@ const ANALYSES = {
     { label: 'Coût', path: '/cout', icon: icone(M.cout), motsCles: 'dépenses budget' },
     { label: 'SLA', path: '/sla', icon: icone(M.sla), motsCles: 'délais retard' },
     { label: 'Disponibilité', path: '/disponibilite', icon: icone(M.disponibilite), motsCles: 'mtbf mttr' },
+    { label: 'Indicateurs de performance', path: '/indicateurs', icon: icone(M.indicateurs), motsCles: 'kpi atb préventif curatif délai mtbf mttr disponibilité export' },
     { label: 'Risque', path: '/risque', icon: icone(M.risque), motsCles: 'criticité' },
     { label: 'Anomalies', path: '/anomalies', icon: icone(Zap), motsCles: 'pic réclamations détection' },
     { label: 'Blocages', path: '/blocages-immobilisation', icon: icone(ShieldOff), motsCles: 'immobilisation arrêt' },
@@ -50,13 +44,10 @@ function lireOuvert() {
   try { return localStorage.getItem(CLE_OUVERT) !== '0'; } catch { return true; }
 }
 
-/**
- * compteurs : { '/chemin': { valeur, ton } } — ton : 'rouge' | 'orange' | 'ambre' | 'teal' | 'gris'
- */
 export default function AccesGmao({ compteurs = {} }) {
   const [recherche, setRecherche] = useState('');
   const [ouvert, setOuvert] = useState(lireOuvert);
-  useEffect(() => { try { localStorage.setItem(CLE_OUVERT, ouvert ? '1' : '0'); } catch { /* stockage indisponible */ } }, [ouvert]);
+  useEffect(() => { try { localStorage.setItem(CLE_OUVERT, ouvert ? '1' : '0'); } catch {} }, [ouvert]);
   const modules = useMemo(modulesGmao, []);
 
   const mots = sansAccents(recherche).split(/\s+/).filter(Boolean);

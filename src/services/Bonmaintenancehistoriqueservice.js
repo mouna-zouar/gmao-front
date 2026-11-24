@@ -6,7 +6,6 @@ const bonMaintenanceHistoriqueService = {
     return data;
   },
 
-  // alias utilisé par BonMaintenanceDetails.jsx
   async getByBonMaintenance(bonMaintenanceId) {
     return bonMaintenanceHistoriqueService.findByBonMaintenanceId(bonMaintenanceId);
   },

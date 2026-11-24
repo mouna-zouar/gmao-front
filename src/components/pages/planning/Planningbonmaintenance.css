@@ -1,6 +1,3 @@
-/* ==========================================================================
-   PLANNING DES BONS — frise de type Gantt (style sobre de la GMAO)
-   ========================================================================== */
 .pg-page {
   --pg-ligne: 44px;
   display: flex; flex-direction: column; gap: 14px;
@@ -8,7 +5,6 @@
   font-family: var(--g-police, inherit);
 }
 
-/* Barre haute : modes (onglets) + durée */
 .pg-haut {
   display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap;
   border-bottom: 1px solid var(--g-slate-200, #e2e8f0);
@@ -25,7 +21,6 @@
 .pg-onglet.is-actif::after { background: var(--g-brand-500, #0794a4); }
 .pg-haut__droite { display: flex; align-items: center; gap: 10px; padding-bottom: 6px; flex-wrap: wrap; }
 
-/* Zoom */
 .pg-zoom { display: inline-flex; align-items: center; border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 9px; background: var(--g-blanc, #fff); overflow: hidden; }
 .pg-zoom button {
   display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; min-width: 34px; padding: 0 8px;
@@ -46,7 +41,6 @@
 .pg-segment button:hover { color: var(--g-slate-900, #0f172a); }
 .pg-segment button[aria-pressed="true"] { background: var(--g-blanc, #fff); color: var(--g-brand-700, #066470); box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08); }
 
-/* Navigation + filtres */
 .pg-outils { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .pg-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .pg-icone {
@@ -93,14 +87,12 @@
 
 .pg-erreur { padding: 10px 14px; border-radius: 10px; background: var(--g-red-50, #fef2f2); color: var(--g-red-700, #b91c1c); font-size: 0.84rem; }
 
-/* Couleurs par état */
 .pg-puce--nouveau, .pg-barre--nouveau, .pg-barre-ext--nouveau, .pg-ligne__etat--nouveau { --pg-c: var(--g-blue-600, #2563eb); --pg-f: var(--g-blue-50, #eff6ff); }
 .pg-puce--encours, .pg-barre--encours, .pg-barre-ext--encours, .pg-ligne__etat--encours { --pg-c: var(--g-brand-500, #0794a4); --pg-f: var(--g-brand-50, #e9f8fa); }
 .pg-puce--suspendu, .pg-barre--suspendu, .pg-barre-ext--suspendu, .pg-ligne__etat--suspendu { --pg-c: var(--g-amber-500, #f59e0b); --pg-f: var(--g-amber-50, #fffbeb); }
 .pg-puce--effectue, .pg-barre--effectue, .pg-barre-ext--effectue, .pg-ligne__etat--effectue { --pg-c: var(--g-emerald-500, #10b981); --pg-f: var(--g-emerald-50, #ecfdf5); }
 .pg-puce--annule, .pg-barre--annule, .pg-barre-ext--annule, .pg-ligne__etat--annule { --pg-c: var(--g-slate-400, #94a3b8); --pg-f: var(--g-slate-100, #f1f5f9); }
 
-/* ---------- Frise ---------- */
 .pg-gantt {
   position: relative; overflow: auto; max-height: calc(100vh - 250px); min-height: 280px;
   background: var(--g-blanc, #fff); border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 12px;
@@ -154,9 +146,7 @@
   background: var(--pg-f); border: 1px solid var(--pg-c); border-inline-start-width: 4px; border-radius: 7px;
   color: var(--g-slate-800, #1e293b); transition: box-shadow 0.15s, transform 0.15s;
 }
-/* Le libellé reste dans la barre ; coupé avec « … » s il est trop long (titre complet au survol) */
 .pg-barre__txt { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
-/* Libellé à côté de la barre quand elle est trop courte pour l'afficher en entier */
 .pg-barre-ext {
   position: absolute; top: 50%; transform: translateY(-50%); z-index: 1;
   font-size: 0.74rem; font-weight: 600; white-space: nowrap; color: var(--pg-c);
@@ -168,7 +158,6 @@
 .pg-barre--annule .pg-barre__txt { text-decoration: line-through; color: var(--g-slate-500, #64748b); }
 .pg-ligne.is-survol .pg-barre { box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.25); }
 
-/* Trait « aujourd'hui » */
 .pg-auj {
   position: absolute; top: 0; bottom: 0; z-index: 1; pointer-events: none;
   inset-inline-start: calc(var(--pg-nom) + (100% - var(--pg-nom)) * var(--pos, 0));

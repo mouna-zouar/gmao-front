@@ -1,13 +1,7 @@
 import { t, tp } from '../../../i18n';
 
-/*
- * Travaux à faire de l'espace personnel : tâches et bons sur lesquels la personne travaille,
- * avec leur échéance. Utilisé par le mini calendrier, la liste « À surveiller » et le kanban.
- */
-
 export const JOUR_MS = 24 * 60 * 60 * 1000;
 
-/** Colonnes du kanban des tâches (BonMaintenanceTache.etat), dans l'ordre d'affichage. */
 export const COLONNES_KANBAN = [
   { etat: 1, label: 'À faire', ton: 'info' },
   { etat: 3, label: 'En cours', ton: 'action' },
@@ -16,10 +10,8 @@ export const COLONNES_KANBAN = [
   { etat: 10, label: 'Annulé', ton: 'neutre' },
 ];
 
-/** Une échéance à 2 jours ou moins est « très proche ». */
 export const JOURS_PROCHE = 2;
 
-// États actifs (ni terminés, ni annulés)
 const TACHE_ACTIVE = [1, 2, 3];
 const BON_ACTIF = [1, 2, 3];
 const ROLES_TERRAIN = ['INTERVENANT', 'DIAGNOSTIQUEUR', 'CONTROLEUR', 'REMISE_EN_SERVICE'];
@@ -41,14 +33,9 @@ export const cleJour = (d) => {
   return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`;
 };
 
-/** Écart en jours calendaires entre aujourd'hui et une date (négatif = passé). */
 export const joursAvant = (date, maintenant = new Date()) =>
   Math.round((debutJour(date) - debutJour(maintenant)) / JOUR_MS);
 
-/**
- * Situation d'une échéance : { niveau: 'retard' | 'aujourdhui' | 'proche' | 'plus-tard', jours, texte }
- * ou null s'il n'y a pas d'échéance.
- */
 export function statutEcheance(echeance, maintenant = new Date()) {
   const d = versDate(echeance);
   if (!d) return null;
@@ -64,7 +51,6 @@ export const estUrgent = (statut) => !!statut && statut.niveau !== 'plus-tard';
 
 const ORDRE_NIVEAU = { retard: 0, aujourdhui: 1, proche: 2, 'plus-tard': 3 };
 
-/** Tri : en retard d'abord, puis échéance la plus proche, puis sans échéance. */
 export function comparerEcheances(a, b) {
   const na = a.statut ? ORDRE_NIVEAU[a.statut.niveau] : 9;
   const nb = b.statut ? ORDRE_NIVEAU[b.statut.niveau] : 9;
@@ -74,13 +60,8 @@ export function comparerEcheances(a, b) {
   return da - db || String(a.cle).localeCompare(String(b.cle));
 }
 
-/** Référence courte d'un bon : « BM-0041 ». */
 export const refBon = (bon, bonId) => bon?.num || (bonId != null ? `#${bonId}` : '');
 
-/**
- * Liste des travaux à faire, triée par urgence.
- * Chaque élément : { cle, type: 'tache' | 'bon', titre, sousTitre, debut, fin, echeance, statut, source, bon }
- */
 export function construireTravaux({ bons = [], taches = [] }, maintenant = new Date()) {
   const bonsParId = new Map(bons.map((b) => [b.id, b]));
   const travaux = [];
@@ -125,7 +106,6 @@ export function construireTravaux({ bons = [], taches = [] }, maintenant = new D
   return travaux.sort(comparerEcheances);
 }
 
-/** Jours (clés) couverts par un travail : du début à la fin, limité à 62 jours. */
 export function joursCouverts(travail) {
   const debut = versDate(travail.debut) || versDate(travail.fin);
   if (!debut) return [];

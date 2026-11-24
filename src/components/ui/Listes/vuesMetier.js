@@ -1,17 +1,10 @@
 import {
-  ShoppingCart,
+  ShoppingCart, ClipboardCheck, Archive,
   AlarmClock, CalendarCheck, CircleUserRound, Flame, Hourglass, Inbox, ListTodo, OctagonAlert, UserCheck, UserX, Users,
 } from 'lucide-react';
 import { ACTIFS } from '../../../constants/statuts';
 import authService from '../../../services/Authservice';
 
-/*
- * Vues prêtes à l'emploi des listes Bons et Réclamations.
- * Chaque vue est un filtre sur les lignes déjà chargées : rien de plus n'est demandé au serveur,
- * sauf la liste des bons où l'utilisateur intervient (pour « Mes bons »).
- */
-
-/** Qui est connecté : identifiants utiles aux vues « Mes… » et « … de mon service ». */
 export function contexteUtilisateur() {
   const user = authService.getCurrentUser?.() || null;
   const ctx = authService.getContexteMetier?.() || {};
@@ -32,16 +25,14 @@ const enDate = (v) => {
   return Number.isNaN(d.getTime()) ? null : d;
 };
 
-/** Date à laquelle le bon devait être fini : fin d'intervention prévue, sinon date du bon. */
 export const echeanceBon = (b) => enDate(b.dateFinIntervention) || enDate(b.date);
 export const bonActif = (b) => ACTIFS.bon.includes(Number(b.etat));
+export const bonArchive = (b) => b.validationStatut === 'VALIDE';
 export const bonEnRetard = (b) => {
   const e = echeanceBon(b);
   return bonActif(b) && e != null && e < debutDuJour();
 };
 
-/** Vues de la liste des bons. `mesBonIds` : Set des bons où l'utilisateur a un rôle (ou null). */
-/** achatIds : bons dont les tâches ont des articles à demander ou à commander (calculé par le serveur). */
 export function vuesBons({ personnelId, serviceId }, mesBonIds, achatIds) {
   const estAMoi = (b) => (mesBonIds?.has(String(b.id)))
     || memeId(b.personnelCreationId, personnelId)
@@ -50,6 +41,8 @@ export function vuesBons({ personnelId, serviceId }, mesBonIds, achatIds) {
   const vues = [
     { id: 'tous', label: 'Tous', icone: Inbox },
     { id: 'a-traiter', label: 'À traiter', icone: ListTodo, aide: 'Nouveaux, suspendus et en cours', filtre: bonActif },
+    { id: 'a-valider', label: 'À valider', icone: ClipboardCheck, ton: 'attention', aide: 'Bons effectués qui attendent la validation du manager', filtre: (b) => b.validationStatut === 'A_VALIDER' },
+    { id: 'archives', label: 'Archivés', icone: Archive, aide: 'Bons validés par le manager et archivés', filtre: bonArchive, archives: true },
   ];
   if (personnelId != null) {
     vues.push(
@@ -77,27 +70,28 @@ export function vuesBons({ personnelId, serviceId }, mesBonIds, achatIds) {
       return d != null && d.getMonth() === maintenant.getMonth() && d.getFullYear() === maintenant.getFullYear();
     },
   });
-  return vues;
+  return vues.map((v) => (v.archives ? v : {
+    ...v, sansFiltre: !v.filtre, filtre: v.filtre ? (b) => !bonArchive(b) && v.filtre(b) : (b) => !bonArchive(b),
+  }));
 }
 
 export const reclamationActive = (r) => ACTIFS.reclamation.includes(Number(r.etat));
-/** Nouvelle, en file ou en cours (pas encore résolue). */
 export const reclamationATraiter = (r) => [0, 5, 1].includes(Number(r.etat ?? 0));
 
-/** Vues de la liste des réclamations. */
 export function vuesReclamations({ personnelId, serviceId }) {
   const vues = [
     { id: 'toutes', label: 'Toutes', icone: Inbox },
     { id: 'a-traiter', label: 'À traiter', icone: ListTodo, aide: 'Nouvelles, en file et en cours', filtre: (r) => reclamationATraiter(r) },
     {
       id: 'non-affectees', label: 'Non affectées', icone: UserX, ton: 'attention', aide: 'À traiter, sans groupe ni technicien',
-      filtre: (r) => reclamationATraiter(r) && r.groupeId == null && r.personnelAffecteId == null,
+      filtre: (r) => reclamationATraiter(r) && r.groupeId == null && r.personnelAffecteId == null && !(r.groupePersonnels?.length > 0),
     },
   ];
   if (personnelId != null) {
     vues.push(
       { id: 'mes-reclamations', label: 'Mes réclamations', icone: CircleUserRound, aide: 'Réclamations que j\'ai créées', filtre: (r) => memeId(r.personnelCreationId, personnelId) },
-      { id: 'affectees', label: 'Affectées à moi', icone: UserCheck, filtre: (r) => memeId(r.personnelAffecteId, personnelId) && reclamationATraiter(r) },
+      { id: 'affectees', label: 'Affectées à moi', icone: UserCheck, aide: 'À moi ou à un groupe dont je fais partie',
+        filtre: (r) => (memeId(r.personnelAffecteId, personnelId) || (r.groupePersonnels || []).some((m) => memeId(m.id, personnelId))) && reclamationATraiter(r) },
       { id: 'a-valider', label: 'À clôturer', icone: Hourglass, ton: 'attention', aide: 'Mes réclamations résolues qui attendent la clôture', filtre: (r) => Number(r.etat) === 3 && memeId(r.personnelCreationId, personnelId) },
     );
   }

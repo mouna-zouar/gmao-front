@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../constants/Authcontext';
 import logo from '../../../assets/logo_SoftSys.png';
@@ -14,8 +14,6 @@ export default function Login() {
   const { login: doLogin } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  // Page à rouvrir après la connexion (ex. fiche d'un équipement ouverte par son QR code).
-  // Seulement un chemin interne : pas d'adresse externe ni « //site ».
   const retour = params.get('retour');
   const destination = retour && retour.startsWith('/') && !retour.startsWith('//') ? retour : '/';
 

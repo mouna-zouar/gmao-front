@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import bonMaintenanceService from '../../../services/bonMaintenanceService';
-import personnelService from '../../../services/personnelService';
+import { useState, useEffect, useCallback } from 'react';
+import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
+import personnelService from '../../../services/Personnelservice';
 import { obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
-import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
+import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../services/lotArticleService';
 import serviceService from '../../../services/Serviceservice';
 import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
-import { t, locale } from '../../../i18n';
+import { t } from '../../../i18n';
 import { optionsTypeEntretien } from '../../../constants/FicheIntervention';
 import { ArrowLeft, Ban, Check, ChevronDown, CircleCheck, CirclePause, FileText, Play, SquarePen, Wrench, X } from 'lucide-react';
-import './FicheBonMaintenance.css';
+import './Fichebonmaintenance.css';
 
 const ETAT_OPTIONS = [
   { value: 1, label: 'Nouveau' },
@@ -40,12 +40,6 @@ const NIVEAU_OPTIONS = [
 ];
 
 
-function formatDateTime(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
 
 function toDateTimeLocalInput(iso) {
   if (!iso) return '';
@@ -55,14 +49,6 @@ function toDateTimeLocalInput(iso) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-async function loadByBonMaintenance(service, bonMaintenanceId) {
-  const candidates = ['getByBonMaintenance', 'getByBonMaintenanceId', 'findByBonMaintenanceId', 'findByBonMaintenance'];
-  const methodName = candidates.find((name) => typeof service[name] === 'function');
-  if (!methodName) {
-    throw new Error("Aucune méthode de récupération par bon de maintenance trouvée sur ce service (attendu : getByBonMaintenance, getByBonMaintenanceId, findByBonMaintenanceId ou findByBonMaintenance).");
-  }
-  return service[methodName](bonMaintenanceId);
-}
 
 function personnelLabel(p) {
   return `${p.nom || ''} ${p.prenom || ''}`.trim() || `#${p.id}`;
@@ -111,7 +97,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
   const [motifModal, setMotifModal] = useState({ show: false, motif: '' });
   const [etatModal, setEtatModal] = useState({ show: false, etat: '' });
 
-  // Quantité disponible de l'article lié à l'immobilisation sélectionnée (section Informations générales)
   const [immoQteDisponible, setImmoQteDisponible] = useState(null);
   const [checkingImmoQte, setCheckingImmoQte] = useState(false);
 
@@ -121,7 +106,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
 
   const toggleSection = (key) => setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
-  const currentBonId = bon?.id ?? bonMaintenanceId ?? null;
 
   useEffect(() => {
     obtenirPrestataires().then(setPrestataires).catch(() => setPrestataires([]));
@@ -131,7 +115,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     prestataireDepotService.getAll(0, 200).then((p) => setDepots(p.content ?? [])).catch(() => setDepots([]));
   }, []);
 
-  // Quand le service change, on récupère la liste des dépôts qui lui sont réellement associés
   useEffect(() => {
     if (!formData.serviceId) {
       setDepotIdsDuService(null);
@@ -148,8 +131,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     ? depots
     : depots.filter((d) => depotIdsDuService.includes(d.id));
 
-  // Services filtrés par le prestataire choisi (Service.PrestataireID).
-  // Un service sans prestataire reste proposé partout.
   const servicesDisponibles = !formData.prestataireId
     ? services
     : services.filter((s) => s.prestataireId == null || String(s.prestataireId) === String(formData.prestataireId));
@@ -201,7 +182,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     setFormData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
-  // ─── Quantité disponible de l'article lié à l'immobilisation choisie ───
   useEffect(() => {
     if (!formData.lotArticleImmobilistationId) {
       setImmoQteDisponible(null);
@@ -266,8 +246,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       }
       setBon(saved);
       setIsEditMode(false);
-      if (isNew && onClose) {
-      }
     } catch (err) {
       console.error('Erreur enregistrement bon de maintenance :', err);
       setConfirmModal({

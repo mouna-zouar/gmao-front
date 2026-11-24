@@ -1,8 +1,6 @@
 import api from './api';
 import authService from './Authservice';
 
-/* Plan de renouvellement du parc : classement des équipements à remplacer et scénarios de budget. */
-
 const enTeteAuteur = () => {
   const user = authService.getCurrentUser();
   const nom = user?.userNom || [user?.prenom, user?.nom].filter(Boolean).join(' ') || user?.login || '';
@@ -20,7 +18,6 @@ const renouvellementService = {
     return data ?? [];
   },
 
-  /** { coutRemplacement, anneeForcee, exclu, commentaire } : tout vide = retour au calcul automatique. */
   async ajuster(equipementId, ajustement) {
     const { data } = await api.put(`/renouvellement/equipements/${equipementId}/ajustement`, ajustement, { headers: enTeteAuteur() });
     return data;

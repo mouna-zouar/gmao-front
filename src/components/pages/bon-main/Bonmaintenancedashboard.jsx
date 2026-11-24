@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import bonMaintenanceService from '../../../services/bonMaintenanceService';
-import { t, tp, locale } from '../../../i18n';
-import './BonMaintenanceDashboard.css';
+import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
+import { t, locale } from '../../../i18n';
+import './Bonmaintenancedashboard.css';
 import IndicateursBons from './IndicateursBons';
 import { CircleCheck, CircleDot, CirclePause, Clock, Coins, FileText, GripVertical, RefreshCw, TriangleAlert } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
@@ -17,7 +17,6 @@ const MOIS_LABELS = {
 const STATS_STORAGE_KEY = 'bon-maintenance-dashboard.cards.order.v1';
 const CHARTS_STORAGE_KEY = 'bon-maintenance-dashboard.charts.order.v1';
 
-// Mois court : libellés maison en français, noms du calendrier local sinon (جانفي / Jan…)
 function formatMoisLabel(cle) {
   const [aaaa, mm] = cle.split('-');
   if (locale() === 'fr-FR') return MOIS_LABELS[mm] || cle;
@@ -33,7 +32,6 @@ function formatDate(iso) {
   return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-/* ─── Icônes SVG réutilisables ─── */
 const ICONS = {
   total: <FileText size={22} strokeWidth={2} aria-hidden="true" />,
   nouveau: <CircleDot size={22} strokeWidth={2} aria-hidden="true" />,
@@ -46,7 +44,6 @@ const ICONS = {
   grip: <GripVertical size={14} strokeWidth={2} aria-hidden="true" />,
 };
 
-/* ─── Définition des cartes de stats ─── */
 const CARD_DEFS = [
   { id: 'total',    label: 'Total bons',                    field: 'totalBons',                  colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.total,    featured: true, lien: '/bons-maintenance?vue=tous' },
   { id: 'nouveau',  label: 'Nouveaux',                      field: 'parEtat.1',                  colorClass: 'bon-maintenance-dashboard-stat--nouveau',  icon: ICONS.nouveau, lien: '/bons-maintenance?etat=1' },
@@ -58,13 +55,11 @@ const CARD_DEFS = [
   { id: 'delai',    label: 'Délai moyen résolution',        field: 'delaiMoyenResolutionJours',  colorClass: 'bon-maintenance-dashboard-stat--neutral',  icon: ICONS.delai,    unit: 'j',    decimals: 1 },
 ];
 
-/* ─── Définition des cartes de graphiques ─── */
 const CHART_DEFS = [
   { id: 'mois',  label: 'Bons créés par mois' },
   { id: 'etats', label: 'Par état / urgence' },
 ];
 
-/* ─── Helpers localStorage ─── */
 function loadOrder(storageKey, defaults) {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -80,16 +75,14 @@ function loadOrder(storageKey, defaults) {
   }
 }
 function saveOrder(storageKey, order) {
-  try { localStorage.setItem(storageKey, JSON.stringify(order)); } catch { /* ignore */ }
+  try { localStorage.setItem(storageKey, JSON.stringify(order)); } catch {}
 }
 
-/* ─── Accès valeur imbriquée ─── */
 function getFieldValue(data, field) {
   if (!data || !field) return undefined;
   return field.split('.').reduce((acc, key) => (acc == null ? undefined : acc[key]), data);
 }
 
-/* ─── Carte de stat draggable ─── */
 function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, onOuvrir }) {
   let displayValue = value ?? '—';
 
@@ -97,7 +90,6 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
     const n = Number(value).toLocaleString(locale(), def.decimals != null
       ? { minimumFractionDigits: def.decimals, maximumFractionDigits: def.decimals }
       : undefined);
-    // Unités traduites : DT / د.ت / TND et j / يوم / d
     displayValue = def.unit === 'DT' ? t('{montant} DT', { montant: n }) : t('{n} j', { n });
   }
 
@@ -127,7 +119,6 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
   );
 }
 
-/* ─── Wrapper draggable pour les graphiques ─── */
 function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, children }) {
   return (
     <div
@@ -180,11 +171,10 @@ export default function BonMaintenanceDashboard() {
   useEffect(() => { saveOrder(STATS_STORAGE_KEY, order); }, [order]);
   useEffect(() => { saveOrder(CHARTS_STORAGE_KEY, chartOrder); }, [chartOrder]);
 
-  /* ─── Drag & drop : cartes de stats ─── */
   const handleDragStart = (id) => (e) => {
     setDraggedId(id);
     e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', `stat:${id}`); } catch { /* ignore */ }
+    try { e.dataTransfer.setData('text/plain', `stat:${id}`); } catch {}
   };
   const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
   const handleDragEnter = (id) => () => {
@@ -206,11 +196,10 @@ export default function BonMaintenanceDashboard() {
     setDragOverId(null);
   };
 
-  /* ─── Drag & drop : cartes de graphiques ─── */
   const handleChartDragStart = (id) => (e) => {
     setDraggedChartId(id);
     e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', `chart:${id}`); } catch { /* ignore */ }
+    try { e.dataTransfer.setData('text/plain', `chart:${id}`); } catch {}
   };
   const handleChartDragEnter = (id) => () => {
     if (id !== draggedChartId) setDragOverChartId(id);
@@ -350,7 +339,6 @@ export default function BonMaintenanceDashboard() {
 
   return (
     <div className="bon-maintenance-dashboard-container">
-      {/* Header */}
       <div className="bon-maintenance-dashboard-header">
         <div className="bon-maintenance-dashboard-header-icon-wrap">
           <ICONES_MODULES.tableauDeBord size={24} strokeWidth={2} aria-hidden="true" />
@@ -370,13 +358,12 @@ export default function BonMaintenanceDashboard() {
         </button>
       </div>
 
-      {/* Cartes de stats */}
       <div className="bon-maintenance-dashboard-stats-grid">
         {order.map((id) => {
           const def = cardsById[id];
           if (!def) return null;
           const rawValue = getFieldValue(data, def.field);
-          if (rawValue == null || Number(rawValue) === 0) return null; // valeur à 0 : carte masquée
+          if (rawValue == null || Number(rawValue) === 0) return null;
           return (
             <StatCard
               key={id}
@@ -394,10 +381,8 @@ export default function BonMaintenanceDashboard() {
         })}
       </div>
 
-      {/* Indicateurs de performance (30 j vs 30 j précédents, SLA, coûts, classements) */}
       <IndicateursBons />
 
-      {/* Graphiques */}
       <div className="bon-maintenance-dashboard-charts-row">
         {chartOrder.map((id) => (
           <DraggableChart
@@ -414,7 +399,6 @@ export default function BonMaintenanceDashboard() {
         ))}
       </div>
 
-      {/* Bons récents */}
       <div className="bon-maintenance-dashboard-recent-card">
         <div className="bon-maintenance-dashboard-chart-head">
           <h3>{t("Bons de maintenance récents")}</h3>

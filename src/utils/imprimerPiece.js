@@ -1,26 +1,3 @@
-// ============================================================
-// Impression d'une pièce d'achat GMAO : demande de fourniture ou commande fournisseur.
-// Inspirée du rapport Cubix « GetDetailImprime » (logo + société, bulle N°/date),
-// avec une mise en page propre à chaque type :
-//
-//   DEMANDE  : dépôt source → dépôt destinataire, service, bon de maintenance,
-//              colonnes Qté demandée / Qté livrée / Observation (à remplir au magasin),
-//              signatures Demandeur / Responsable maintenance / Magasinier.
-//   COMMANDE : fournisseur + adresse de livraison, prix, remise, TVA, totaux,
-//              montant en toutes lettres, signatures Établi par / Direction / Fournisseur.
-//
-//   imprimerPiece({
-//     type: 'COMMANDE' | 'DEMANDE',
-//     entete: { nom, adresse, ville, codePostal, matriculeFiscal, telephone },
-//     titre, numero, date, saisiePar,
-//     cubixNumPiece, dateLivraison, objet, note, devise,
-//     reference: { bonNum, bonTitre, demandeur, equipement },
-//     depot, depotDestination, cible: { nom, adresse, codePostal, ville, telephone, matriculeFiscal },
-//     service,
-//     lignes: [{ code, designation, unite, qte, qteEmballage, prixUnitaire, remise, tva, montantHT, gratuit, details }],
-//     totaux: { tht, tremise, ttva, timbre, ttc },   // facultatif : recalculés à partir des lignes sinon
-//   });
-// ============================================================
 import { imprimerHtml } from './imprimerListe';
 
 const LOGO_URL = new URL('../assets/logo_SoftSys.png', import.meta.url).href;
@@ -52,7 +29,6 @@ const montant = (v) => {
   return n === null ? '' : n.toLocaleString('fr-FR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 };
 
-// ------------------------------------------------------------ Montant en lettres
 const UNITES = ['zéro', 'un', 'deux', 'trois', 'quatre', 'cinq', 'six', 'sept', 'huit', 'neuf', 'dix',
   'onze', 'douze', 'treize', 'quatorze', 'quinze', 'seize'];
 const DIZAINES = { 2: 'vingt', 3: 'trente', 4: 'quarante', 5: 'cinquante', 6: 'soixante' };
@@ -105,7 +81,6 @@ function montantEnLettres(valeur, devise) {
   return `${entierEnLettres(entier)} ${devise}${millimes ? ` (${montant(n)})` : ''}`;
 }
 
-// ------------------------------------------------------------ Blocs
 function blocTiers(libelle, t) {
   if (!t || !t.nom) return '';
   const ville = [t.codePostal, t.ville].filter(Boolean).join(' ');
@@ -144,7 +119,6 @@ function calculerTotaux(lignes) {
   return { tht, tremise, ttva, timbre: 0, ttc: tht + ttva };
 }
 
-// ------------------------------------------------------------ Document
 function pieceHtml(o) {
   const {
     type, entete = {}, titre, numero, date, saisiePar, cubixNumPiece, dateLivraison, objet, note, devise,
@@ -160,7 +134,6 @@ function pieceHtml(o) {
   if (tot && !(o.totaux && num(o.totaux.ttc))) tot.ttc = tot.tht + tot.ttva + (num(tot.timbre) ?? 0);
   const symbole = devise && devise.trim() ? devise.trim() : 'DT';
 
-  // Colonnes du tableau
   const cols = [
     { titre: 'N°', classe: 'c-num', val: (l, i) => i + 1 },
     afficherCode && { titre: 'Code', classe: 'c-code', val: (l) => e(l.code) },

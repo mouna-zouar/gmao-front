@@ -3,16 +3,11 @@ import { Activity, AlertTriangle, Calendar, Car, Coins, User, XCircle } from 'lu
 import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeIncidentService from '../../../../services/vehiculeIncidentService';
 import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/personnelService';
+import personnelService from '../../../../services/Personnelservice';
 import VehiculeIncidentModal from '../../../ui/modals/VehiculeIncidentModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeIncidents.css';
-
-/*
- * Incidents véhicule : page liste de la bibliothèque commune.
- * La fenêtre reste VehiculeIncidentModal (kilométrage, emplacement, lien GMAO).
- */
 
 const TYPE_LABELS = { 1: 'Accident', 2: 'Panne', 3: 'Vol', 4: 'Dégradation', 5: 'Autre' };
 const GRAVITE_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Grave' };
@@ -147,7 +142,6 @@ export default function VehiculeIncidents() {
   const basculer = (v) => setFiltreEtat((f) => (f === v ? 'all' : v));
   const coutTotal = incidents.reduce((s, i) => s + (Number(i.cout) || 0), 0);
 
-  /* Passage rapide vers un autre état, proposé quand un incident est sélectionné */
   const actions = selection
     ? Object.keys(ETAT_META).map(Number).filter((k) => k !== Number(selection.etat)).map((cible) => ({
       label: etatLabel(cible),

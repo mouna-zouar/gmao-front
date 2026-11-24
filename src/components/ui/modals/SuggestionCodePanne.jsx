@@ -1,13 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Sparkles, Loader2, Check, History, ExternalLink, Clock, Lightbulb, RefreshCw } from 'lucide-react';
 import codePanneService from '../../../services/codePanneService';
 import './SuggestionCodePanne.css';
 
-/*
- * Sous la description d'une réclamation : le code panne (liste) + ce que propose l'IA
- * pendant la saisie (codes probables) et les pannes semblables déjà résolues.
- * La suggestion part 1,2 s après la dernière frappe, dès 12 caractères.
- */
 const MIN_CARACTERES = 12;
 const DELAI_MS = 1200;
 
@@ -43,7 +38,6 @@ const SuggestionCodePanne = ({
   const [relance, setRelance] = useState(0);
   const derniereDemande = useRef('');
 
-  // Codes de la famille de l'équipement choisi (et ceux valables pour toutes les familles)
   useEffect(() => {
     let annule = false;
     codePanneService.liste(false, lotArticleImmobilistationId || null)

@@ -65,7 +65,6 @@
   font-weight: 500;
 }
 
-/* Stats : badges clairs en ligne */
 .vcd-stats {
   display: flex;
   gap: 8px;
@@ -115,7 +114,6 @@
 .vcd-stat.stat-inactive .vcd-stat-value,
 .vcd-stat.stat-inactive .vcd-stat-label { color: var(--g-slate-500); }
 
-/* Icône d'en-tête = bouton « paramètres des colonnes » */
 .vcd-header-icon-btn {
   cursor: pointer;
   font: inherit;
@@ -137,9 +135,6 @@
   outline-offset: 2px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   ACTIONS
-   ═══════════════════════════════════════════════════════════ */
 .vcd-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -172,7 +167,6 @@
 .vcd-action-btn:hover:not(.disabled) { transform: translateY(-1px); }
 .vcd-action-btn.disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Bouton principal → teal uni */
 .vcd-action-btn.ajouter {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -190,9 +184,6 @@
 .vcd-action-btn.supprimer { color: var(--g-rose-600); }
 .vcd-action-btn.supprimer:hover:not(.disabled) { background: var(--g-rose-50); border-color: var(--g-rose-200); }
 
-/* ═══════════════════════════════════════════════════════════
-   FILTRES
-   ═══════════════════════════════════════════════════════════ */
 .vcd-filter-panel {
   display: flex;
   background: var(--g-slate-50);
@@ -223,7 +214,6 @@
   white-space: nowrap;
 }
 
-/* Libellés de filtres → teal */
 .vcd-filter-label svg { color: var(--g-brand-500); }
 
 .vcd-filter-input-wrap {
@@ -240,7 +230,6 @@
   transition: all 0.15s ease;
 }
 
-/* Focus → teal */
 .vcd-filter-input-wrap:focus-within {
   border-color: var(--g-brand-500);
   box-shadow: 0 0 0 4px rgba(7, 148, 164, 0.15);
@@ -282,9 +271,6 @@
   color: var(--g-rose-600);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   EXPORT — couleurs unies
-   ═══════════════════════════════════════════════════════════ */
 .vcd-export-stack {
   display: flex;
   gap: 6px;
@@ -316,9 +302,6 @@
 .vcd-export-btn.stats { background: var(--g-amber-500); }
 .vcd-export-btn.stats:hover { background: var(--g-amber-600); }
 
-/* ═══════════════════════════════════════════════════════════
-   ERREUR
-   ═══════════════════════════════════════════════════════════ */
 .vcd-error-banner {
   margin-bottom: 16px;
   padding: 12px 16px;
@@ -333,9 +316,6 @@
   gap: 10px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   TABLEAU
-   ═══════════════════════════════════════════════════════════ */
 .vcd-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -350,7 +330,6 @@
   font-size: 13.5px;
 }
 
-/* En-tête du tableau → teal clair uni */
 .vcd-table thead {
   background: var(--g-brand-50);
 }
@@ -382,9 +361,6 @@
 .vcd-row.selected td { background: var(--g-brand-50); }
 .vcd-row.selected { box-shadow: inset 4px 0 0 var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   TRI DES COLONNES
-   ═══════════════════════════════════════════════════════════ */
 .vcd-th-sortable {
   cursor: pointer;
   user-select: none;
@@ -409,12 +385,8 @@
 .vcd-th-sortable:hover .vcd-sort-icon,
 .vcd-sort-icon.active { color: var(--g-brand-500); }
 
-/* ═══════════════════════════════════════════════════════════
-   CELLULES
-   ═══════════════════════════════════════════════════════════ */
 .vcd-cell-vehicle { display: flex; align-items: center; gap: 10px; }
 
-/* Icône véhicule → teal clair uni */
 .vcd-cell-vehicle-icon {
   display: flex;
   align-items: center;
@@ -434,7 +406,6 @@
 
 .vcd-cell-driver { display: flex; align-items: center; gap: 10px; }
 
-/* Avatar conducteur → teal uni */
 .vcd-cell-driver-avatar {
   display: flex;
   align-items: center;
@@ -451,7 +422,6 @@
 
 .vcd-cell-empty { color: var(--g-slate-300); font-style: italic; }
 
-/* Période */
 .vcd-cell-period {
   display: flex;
   align-items: center;
@@ -486,9 +456,6 @@
 
 .vcd-period-sep { color: var(--g-slate-300); font-weight: 700; }
 
-/* ═══════════════════════════════════════════════════════════
-   PASTILLES
-   ═══════════════════════════════════════════════════════════ */
 .vcd-pill {
   display: inline-flex;
   align-items: center;
@@ -506,7 +473,6 @@
 .vcd-pill.yes { background: var(--g-green-100); color: var(--g-green-800); border-color: var(--g-green-300); }
 .vcd-pill.no  { background: var(--g-slate-100); color: var(--g-slate-500); border-color: var(--g-slate-200); }
 
-/* Pastilles Mode d'affectation */
 .vcd-pill.principal {
   background: var(--g-amber-100);
   color: var(--g-amber-800);
@@ -531,9 +497,6 @@
   border-color: var(--g-pink-300);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   BADGE DATE — teal clair uni
-   ═══════════════════════════════════════════════════════════ */
 .vcd-date-badge {
   display: inline-flex;
   align-items: center;
@@ -548,9 +511,6 @@
   white-space: nowrap;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   MODE BADGE DANS LE MODAL — teal
-   ═══════════════════════════════════════════════════════════ */
 .vcdm-mode-badge {
   display: inline-block;
   padding: 5px 12px;
@@ -563,9 +523,6 @@
   color: var(--g-brand-500);
 }
 
-/* ═══════════════════════════════════════════════════════════
-   EMPTY STATE
-   ═══════════════════════════════════════════════════════════ */
 .vcd-table-empty {
   text-align: center;
   padding: 50px 16px;
@@ -583,15 +540,9 @@
 
 .vcd-empty-state svg { color: var(--g-slate-300); }
 
-/* ═══════════════════════════════════════════════════════════
-   SPIN
-   ═══════════════════════════════════════════════════════════ */
 @keyframes vcdSpin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
 .vcd-spin { animation: vcdSpin 1s linear infinite; }
 
-/* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
   .vcd-stats { width: 100%; justify-content: space-between; }
   .vcd-stat { flex: 1; min-width: 0; }

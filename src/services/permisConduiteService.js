@@ -44,10 +44,6 @@ const permisConduiteService = {
     return data;
   },
 
-  /**
-   * Référentiel des catégories de permis tunisiennes (A1, A, B, B+E, C, C+E, D, D+E, F)
-   * avec leurs libellés officiels, servi par le backend pour rester la source unique de vérité.
-   */
   async getCategories() {
     const { data } = await api.get('/permis-conduite/categories');
     return data;

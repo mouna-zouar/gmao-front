@@ -1,13 +1,13 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { AlertCircle, Calendar, Car, Check, CheckCircle2, ChevronRight, Coins, FileText, Loader2, MapPin, Receipt, Save, Search, User, UserCheck, UserX, X } from 'lucide-react';
 import Button from '../Button';
-import vehiculeAmendeService from '../../../services/vehiculeAmendeService';
+import vehiculeAmendeService from '../../../services/Vehiculeamendeservice';
 import authService from '../../../services/Authservice';
 import { t, locale } from '../../../i18n';
 import { TYPES_INFRACTION, IMPUTATIONS, ORIGINE, ltr } from '../../../constants/Amendelibelles';
 import './Modal.css';
 import './VehiculeIncidentModal.css';
-import './VehiculeAmendeModal.css';
+import './Vehiculeamendemodal.css';
 
 const vide = {
   vehiculeId: '', dateInfraction: '', type: '', lieu: '', referencePv: '',
@@ -15,7 +15,6 @@ const vide = {
   conducteurId: '', missionId: '', origineConducteur: '', imputation: '0', commentaire: '',
 };
 
-// 2026-10-12T15:30:00 → 2026-10-12T15:30 (champ datetime-local)
 const versChampDateHeure = (v) => (v ? String(v).slice(0, 16) : '');
 const versChampDate = (v) => (v ? String(v).slice(0, 10) : '');
 const maintenantLocal = () => {
@@ -24,10 +23,8 @@ const maintenantLocal = () => {
   return d.toISOString().slice(0, 16);
 };
 
-// Fenêtres ouvertes les unes sur les autres : Échap ne ferme que celle du dessus
 const pileFenetres = [];
 
-// Sections de la fenêtre de saisie (même navigation que les autres fenêtres du Parc)
 const SECTIONS_AMENDE = [
   { id: 'infraction', label: 'Infraction', Icone: Receipt },
   { id: 'conducteur', label: 'Conducteur', Icone: User },
@@ -38,7 +35,6 @@ const SECTION_DU_CHAMP = {
   montant: 'paiement', dateLimitePaiement: 'paiement',
 };
 
-/** Échap ferme seulement la fenêtre du dessus (fenêtres ouvertes les unes sur les autres). */
 function useEchap(onClose) {
   const fermer = useRef(onClose);
   useEffect(() => { fermer.current = onClose; });
@@ -48,7 +44,6 @@ function useEchap(onClose) {
     const echap = (e) => {
       if (e.key === 'Escape' && pileFenetres.at(-1) === jeton) { e.stopPropagation(); fermer.current(); }
     };
-    // Phase de capture : passe avant les fenêtres plein écran (PageModal) qui écoutent aussi Échap
     document.addEventListener('keydown', echap, true);
     return () => {
       pileFenetres.splice(pileFenetres.indexOf(jeton), 1);
@@ -67,15 +62,11 @@ function dateHeure(v) {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-/* ───────────────────────── Fenêtre commune ─────────────────────────
-   Réutilisée par les fenêtres du Parc (amendes, frais et coûts des véhicules). */
-
 
 export function Fenetre({ titre, sousTitre, Icone, onClose, children, pied, largeur = 760 }) {
   const idTitre = useId();
   const boite = useRef(null);
   useEchap(onClose);
-  // Focus au premier champ une seule fois, à l'ouverture
   useEffect(() => { boite.current?.querySelector('input, select, textarea, button')?.focus(); }, []);
 
   return (
@@ -106,11 +97,8 @@ export function Champ({ id, label, requis, aide, erreur, children, large }) {
   );
 }
 
-/* ───────────────────────── Saisie / modification ───────────────────────── */
-
 export default function VehiculeAmendeModal({ isOpen, onClose, onSave, amende, vehicules = [], personnels = [] }) {
   if (!isOpen) return null;
-  // Remonter le formulaire à chaque ouverture : il repart des valeurs de l'amende
   return <FormulaireAmende key={amende?.id ?? 'nouvelle'} onClose={onClose} onSave={onSave} amende={amende} vehicules={vehicules} personnels={personnels} />;
 }
 
@@ -138,7 +126,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
   const [rechercheVehicule, setRechercheVehicule] = useState('');
   useEchap(onClose);
 
-  // Recherche du conducteur : { etat: 'attente' | 'recherche' | 'fait' | 'erreur', resultat }
   const [identification, setIdentification] = useState(() => (amende ? {
     etat: 'fait',
     resultat: {
@@ -146,7 +133,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
       missionId: amende.missionId, missionNum: amende.missionNum,
     },
   } : { etat: 'attente', resultat: null }));
-  // Le conducteur choisi à la main n'est plus remplacé par la recherche automatique
   const manuelInitial = enModification && amende.origineConducteur === ORIGINE.SAISIE;
   const choixManuel = useRef(manuelInitial);
   const [manuel, setManuel] = useState(manuelInitial);
@@ -166,7 +152,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
   );
   const personnelParId = useMemo(() => Object.fromEntries(personnels.map((p) => [String(p.id), p])), [personnels]);
 
-  // Véhicule + date connus → on cherche qui conduisait (mission en cours, sinon dernier affecté)
   const cleRecherche = form.vehiculeId && form.dateInfraction ? `${form.vehiculeId}|${form.dateInfraction}` : '';
   const derniereCle = useRef(enModification ? `${amende.vehiculeId}|${versChampDateHeure(amende.dateInfraction)}` : '');
   useEffect(() => {
@@ -202,7 +187,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
     setForm((f) => ({
       ...f,
       conducteurId: valeur,
-      // Revenir au conducteur proposé rétablit le lien avec la mission
       missionId: estPropose ? (r.missionId ?? '') : '',
       origineConducteur: estPropose ? r.origine : ORIGINE.SAISIE,
     }));
@@ -271,7 +255,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
   const conducteurChoisi = personnelParId[form.conducteurId];
   const vehiculeChoisi = vehicules.find((v) => String(v.id) === String(form.vehiculeId));
 
-  // Liste de véhicules à cartes, comme les autres fenêtres du Parc (le véhicule choisi reste visible)
   const vehiculesAffiches = useMemo(() => {
     const q = rechercheVehicule.trim().toLowerCase();
     const liste = vehiculesTries.filter((v) => !q || `${v.matricule || ''} ${v.marque || ''} ${v.modele || ''}`.toLowerCase().includes(q)).slice(0, 6);
@@ -437,7 +420,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
     <div className="modal-overlay vam-superpose" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="vim-modal vam-modal" role="dialog" aria-modal="true" aria-labelledby="vam-titre">
 
-        {/* ═══ EN-TÊTE (même style que les autres fenêtres du Parc) ═══ */}
         <div className="vim-header">
           <div className="vim-header-left">
             <div className="vim-header-icon"><Receipt size={22} strokeWidth={2.2} /></div>
@@ -470,7 +452,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
           </div>
         </div>
 
-        {/* ═══ SECTIONS + CONTENU ═══ */}
         <form id="vam-formulaire" className="vim-layout" onSubmit={enregistrer} noValidate>
           <aside className="vim-nav">
             <div className="vim-nav-title">{t('Sections')}</div>
@@ -499,7 +480,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
           </div>
         </form>
 
-        {/* ═══ PIED ═══ */}
         <div className="vim-footer">
           <div className="vim-footer-left">
             <span className="vim-footer-step">{indexSection + 1} / {SECTIONS_AMENDE.length}</span>
@@ -522,8 +502,6 @@ function FormulaireAmende({ onClose, onSave, amende, vehicules, personnels }) {
     </div>
   );
 }
-
-/* ───────────────────────── Paiement ───────────────────────── */
 
 export function PaiementAmendeModal({ amende, vehicule, onClose, onPayer }) {
   const [datePaiement, setDatePaiement] = useState(() => new Date().toISOString().slice(0, 10));

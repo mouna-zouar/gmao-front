@@ -17,7 +17,6 @@ import '../Supervision/Supervision.css';
 import '../TableauDeBord/TableauDeBord.css';
 import './Renouvellement.css';
 
-/* Carte au style des tableaux de bord (titre, pastille, aide au survol). */
 function Panneau({ titre, aide, meta, className = '', corpsClass = '', children }) {
   return (
     <section className={`tb-carte rv-panneau ${className}`}>
@@ -38,15 +37,6 @@ function Panneau({ titre, aide, meta, className = '', corpsClass = '', children 
   );
 }
 
-/*
- * « Plan de renouvellement » (équivalent de Maximo Asset Investment Planning) :
- *  - Classement : score de renouvellement sur 100 (âge, coût de maintenance / prix, pannes, criticité, avis de l'IA),
- *    recommandation, année conseillée et coût de remplacement, ajustables à la main ;
- *  - Scénarios : budgets annuels comparés sur plusieurs années (ce qui est remplacé, ce qui reste à risque) ;
- *  - Réglages : durée de vie par famille d'équipements.
- */
-
-/* Parts du score : ordre et couleurs fixes (palette catégorielle validée). */
 const PARTS = [
   { cle: 'age', label: 'Âge', couleur: '#0794a4' },
   { cle: 'cout', label: 'Coût', couleur: '#eb6834' },
@@ -68,12 +58,11 @@ const CLE_SCENARIOS = 'gmao.renouvellement.scenarios';
 const CLE_ONGLET = 'gmao.renouvellement.onglet';
 
 const lireLocal = (cle, defaut) => { try { const v = localStorage.getItem(cle); return v ? JSON.parse(v) : defaut; } catch { return defaut; } };
-const ecrireLocal = (cle, v) => { try { localStorage.setItem(cle, JSON.stringify(v)); } catch { /* stockage indisponible */ } };
+const ecrireLocal = (cle, v) => { try { localStorage.setItem(cle, JSON.stringify(v)); } catch {} };
 
 const dt = (v, court = false) => {
   if (v == null || Number.isNaN(Number(v))) return '—';
   const n = Number(v);
-  // Isolé de gauche à droite : en arabe, « 693 k DT » ne doit pas s'afficher « k DT 693 »
   if (court && Math.abs(n) >= 1e6) return `\u2066${(n / 1e6).toLocaleString(locale(), { maximumFractionDigits: 2 })} M DT\u2069`;
   if (court && Math.abs(n) >= 1000) return `\u2066${(n / 1000).toLocaleString(locale(), { maximumFractionDigits: 1 })} k DT\u2069`;
   return `\u2066${n.toLocaleString(locale(), { maximumFractionDigits: 0 })} DT\u2069`;
@@ -93,7 +82,6 @@ function useLargeur() {
   return [ref, l];
 }
 
-/* ---------- Barre du score, en 5 parts ---------- */
 function BarreScore({ score }) {
   return (
     <div className="rv-score" title={PARTS.map((p) => `${t(p.label)} : ${nb(score[p.cle], 1)}`).join(' · ')}>
@@ -107,7 +95,6 @@ function BarreScore({ score }) {
   );
 }
 
-/* ---------- Graphiques des scénarios (SVG, info-bulle au survol) ---------- */
 function Bulle({ b }) {
   if (!b) return null;
   return (
@@ -239,7 +226,6 @@ function GraphiqueRisque({ resultats }) {
   );
 }
 
-/* ---------- Tableau de bord (style Supervision) ---------- */
 const STATUTS = [
   { cle: 'REMPLACER', couleur: '#dc2626' },
   { cle: 'PLANIFIER', couleur: '#f97316' },
@@ -248,7 +234,6 @@ const STATUTS = [
 ];
 const couleurStatut = (r) => STATUTS.find((s) => s.cle === r)?.couleur || '#94a3b8';
 
-/* Tranches de durée de vie consommée (âge / durée de vie) */
 const TRANCHES_AGE = [
   { cle: 'jeune', label: '< 50 %', min: 0, max: 50 },
   { cle: 'mi', label: '50 – 75 %', min: 50, max: 75 },
@@ -257,12 +242,6 @@ const TRANCHES_AGE = [
 ];
 const ORDRE_BARRE = ['REMPLACER', 'PLANIFIER', 'SURVEILLER', 'CONSERVER'];
 
-/**
- * Barres + courbe : une colonne par tranche de durée de vie consommée (nombre d'équipements, axe de gauche)
- * et une courbe du coût de maintenance moyen en % du prix d'achat (axe de droite).
- * Sous chaque colonne : répartition par recommandation, nombre d'équipements et âge moyen.
- * Survol d'une colonne : détail complet.
- */
 const moyenne = (vals) => (vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : null);
 
 function BarresAge({ lignes }) {
@@ -380,10 +359,6 @@ function BarresAge({ lignes }) {
   );
 }
 
-/**
- * Jauges par année : part du budget consommée, montant / budget, équipements remplacés et non financés.
- * Info-bulle : les 3 remplacements les plus importants de l'année.
- */
 function Familles({ lignes }) {
   const familles = useMemo(() => {
     const m = new Map();
@@ -426,14 +401,13 @@ function Familles({ lignes }) {
   );
 }
 
-/* ---------- Page ---------- */
 export default function Renouvellement() {
   const navigate = useNavigate();
   const [donnees, setDonnees] = useState(null);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [vue, setVue] = useState(() => lireLocal(CLE_ONGLET, 'tableau'));
-  const [focus] = useState(null); // ouverture d'une ligne précise du classement (plus utilisée par les graphiques)
+  const [focus] = useState(null);
   const [filtreDemande, setFiltreDemande] = useState(null);
   const refClassement = useRef(null);
 
@@ -461,12 +435,10 @@ export default function Renouvellement() {
     { cle: 'scenarios', label: t('Comparer des budgets'), icone: Wallet },
     { cle: 'reglages', label: t('Durées de vie'), icone: CalendarClock },
   ];
-  // Filtre du classement depuis un indicateur (À remplacer, À planifier)
   const filtrerClassement = (r) => { if (vue !== 'tableau') choisirVue('tableau'); setFiltreDemande({ r, t: Date.now() }); allerAuClassement(); };
 
   return (
     <div className="tb-container rv-page rv-v2">
-      {/* Barre haute : vues en onglets, heure du calcul et recalcul */}
       <div className="rv2-haut">
         <nav className="rv2-onglets" role="tablist" aria-label={t('Plan de renouvellement')}>
           {VUES.map((o) => {
@@ -557,7 +529,6 @@ export default function Renouvellement() {
   );
 }
 
-/* ---------- Classement ---------- */
 function Classement({ donnees, onMaj, onOuvrir, focus, filtreDemande }) {
   const [filtre, setFiltre] = useState('TOUS');
   const [famille, setFamille] = useState('');
@@ -582,7 +553,6 @@ function Classement({ donnees, onMaj, onOuvrir, focus, filtreDemande }) {
   useEffect(() => { setPage(0); }, [filtre, famille, recherche]);
   const visibles = lignes.slice(page * taille, page * taille + taille);
 
-  // Demandes venues des panneaux : filtre d'une recommandation, ou un point cliqué dans la matrice
   useEffect(() => {
     if (!filtreDemande) return;
     setFamille(''); setRecherche(''); setFiltre(filtreDemande.r);
@@ -791,7 +761,6 @@ function Detail({ l, onMaj, anneeCourante }) {
   );
 }
 
-/* ---------- Scénarios ---------- */
 function Scenarios({ donnees, onOuvrir }) {
   const budget = donnees.parametres.budgetAnnuel || 100000;
   const inflation = donnees.parametres.inflation ?? 3;
@@ -970,7 +939,6 @@ function Legende({ resultats }) {
   );
 }
 
-/* ---------- Durées de vie par famille ---------- */
 const FILTRES_DUREE = [
   { cle: 'toutes', label: 'Toutes' },
   { cle: 'perso', label: 'Personnalisées' },
@@ -991,7 +959,6 @@ function Reglages({ donnees, onEnregistre }) {
     renouvellementService.dureesVie().then((l) => setLignes(versLignes(l))).catch(() => setLignes([]));
   }, []);
 
-  // Âge du parc par famille (équipements analysés) : âge moyen et nombre déjà au-delà de la durée de vie
   const agesParFamille = useMemo(() => {
     const m = new Map();
     (donnees.lignes || []).forEach((l) => {

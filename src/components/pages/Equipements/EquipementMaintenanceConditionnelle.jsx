@@ -8,14 +8,6 @@ import maintenanceConditionnelleService from '../../../services/maintenanceCondi
 import liaisonAgentService from '../../../services/liaisonAgentService';
 import { t, locale } from '../../../i18n';
 
-/*
- * « Maintenance conditionnelle » dans la fiche d'un équipement : un bon préventif est créé selon l'état réel
- * de la machine, lu par une sonde de l'agent (RS485 ou Zigbee), et non selon le calendrier.
- *   SEUIL    : la moyenne sur N heures dépasse (ou passe sous) une valeur ;
- *   TENDANCE : la valeur monte (ou baisse) chaque jour depuis N jours ;
- *   COMPTEUR : la valeur a augmenté de X depuis la dernière intervention (heures de fonctionnement…).
- */
-
 export const MODES = [
   { value: 'SEUIL', icone: Gauge, label: 'Seuil', aide: 'La moyenne sur quelques heures dépasse une valeur (une pointe isolée ne compte pas).' },
   { value: 'TENDANCE', icone: TrendingUp, label: 'Tendance', aide: 'La valeur monte (ou baisse) chaque jour depuis plusieurs jours : une dérive lente.' },
@@ -62,10 +54,10 @@ export const fmt = (v, max = 2) => (v == null ? '—' : Number(v).toLocaleString
 const dateHeure = (iso) => (iso
   ? new Date(iso).toLocaleString(locale(), { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
   : '');
-const nomSonde = (l) => `${l.libelle || l.type}${l.type ? ` (${l.type === 'ZIGBEE' ? 'Zigbee' : 'RS485'})` : ''}`;
+const NOMS_SONDES = { ZIGBEE: 'Zigbee', RS485: 'RS485', MQTT: 'MQTT', BACNET: 'BACnet', OPCUA: 'OPC UA' };
+const nomSonde = (l) => `${l.libelle || l.type}${l.type ? ` (${NOMS_SONDES[l.type] || l.type})` : ''}`;
 const uniteSonde = (l) => (l?.unite || (l?.type === 'ZIGBEE' ? '°C' : ''));
 
-/** Phrase qui dit ce que fera la règle (aperçu du formulaire). */
 function phrase(f, unite) {
   const u = unite ? ` ${unite}` : '';
   if (f.mode === 'SEUIL') {
@@ -94,7 +86,7 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState('');
   const [aSupprimer, setASupprimer] = useState(null);
-  const [tests, setTests] = useState({}); // id -> { enCours, resultat }
+  const [tests, setTests] = useState({});
   const [voirHistorique, setVoirHistorique] = useState(false);
 
   const charger = () => {
@@ -105,11 +97,11 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
       maintenanceConditionnelleService.declenchements(equipementId).catch(() => []),
     ]).then(([r, l, h]) => {
       setRegles(r);
-      setSondes(l.filter((x) => x.type === 'RS485' || x.type === 'ZIGBEE'));
+      setSondes(l.filter((x) => Object.keys(NOMS_SONDES).includes(x.type)));
       setHistorique(h);
     }).finally(() => setChargement(false));
   };
-  useEffect(charger, [equipementId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(charger, [equipementId]);
 
   const sondeChoisie = useMemo(() => sondes.find((s) => String(s.id) === String(form?.liaisonId)), [sondes, form?.liaisonId]);
   const unite = uniteSonde(sondeChoisie);
@@ -201,7 +193,7 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
         ))}
         {champ(`${t('Sonde')} *`, (
           <select value={form.liaisonId} onChange={(e) => maj('liaisonId', e.target.value)}>
-            <option value="">{sondes.length ? t('— Choisir —') : t('Aucune sonde RS485 ou Zigbee sur cet équipement')}</option>
+            <option value="">{sondes.length ? t('— Choisir —') : t('Aucune sonde de mesure sur cet équipement')}</option>
             {sondes.map((s) => (
               <option key={s.id} value={s.id}>
                 {nomSonde(s)}{s.derniereValeur != null ? ` — ${fmt(s.derniereValeur)} ${uniteSonde(s)}` : ''}

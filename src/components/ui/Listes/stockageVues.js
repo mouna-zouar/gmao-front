@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-/* Lecture et écriture prudentes dans localStorage (navigation privée, stockage plein…) */
 export const lire = (cle, defaut) => {
   try {
     const v = localStorage.getItem(cle);
@@ -10,10 +9,9 @@ export const lire = (cle, defaut) => {
   }
 };
 export const ecrire = (cle, valeur) => {
-  try { localStorage.setItem(cle, JSON.stringify(valeur)); } catch { /* stockage indisponible */ }
+  try { localStorage.setItem(cle, JSON.stringify(valeur)); } catch {}
 };
 
-/** Vue choisie d'une liste, mémorisée d'une visite à l'autre. */
 export function useVueActive(liste, userKey, defaut) {
   const cle = `gmao-vue-active-${liste}-${userKey}`;
   const [vue, setVue] = useState(() => lire(cle, defaut));

@@ -34,7 +34,6 @@ background: linear-gradient(
   font-size: 1rem;
 }
 
-/* Icon grid */
 .referentiel-icon-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -150,7 +149,6 @@ background: linear-gradient(
   color: var(--g-red-600);
 }
 
-/* Detail reveal */
 .referentiel-detail-reveal {
   max-height: 0;
   overflow: hidden;
@@ -168,7 +166,6 @@ background: linear-gradient(
   animation: refFadeIn 0.3s ease-out;
 }
 
-/* Actions bar */
 .referentiel-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--g-slate-200);
@@ -233,7 +230,6 @@ background: linear-gradient(
   color: var(--g-slate-800);
 }
 
-/* Filter panel */
 .referentiel-filter-panel {
   display: flex;
   align-items: center;
@@ -323,7 +319,6 @@ background: linear-gradient(
   color: var(--g-slate-800);
 }
 
-/* Table */
 .referentiel-table-section {
   background: var(--g-blanc);
   border-radius: 14px;
@@ -377,7 +372,6 @@ background: linear-gradient(
   font-weight: 600;
 }
 
-/* Pagination */
 .referentiel-pagination {
   display: flex;
   align-items: center;

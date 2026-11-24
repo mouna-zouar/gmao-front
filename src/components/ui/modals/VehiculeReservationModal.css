@@ -17,7 +17,6 @@
   font-family: var(--g-police);
 }
 
-/* Variantes de largeur */
 .bmm-modal--sm { width: 780px; }
 .bmm-modal--xl { width: 1180px; }
 
@@ -50,7 +49,6 @@
   50% { opacity: 0.5; }
 }
 
-/* ═══════════ HEADER ═══════════ */
 .bmm-header {
   display: flex;
   align-items: center;
@@ -176,7 +174,6 @@
   transform: rotate(90deg);
 }
 
-/* ═══════════ LAYOUT SPLIT ═══════════ */
 .bmm-layout {
   flex: 1;
   display: flex;
@@ -184,13 +181,11 @@
   overflow: hidden;
 }
 
-/* Layout avec aperçu : nav + contenu + preview */
 .bmm-layout--with-preview {
   display: grid;
   grid-template-columns: 200px 1fr 340px;
 }
 
-/* ═══════════ NAVIGATION LATÉRALE ═══════════ */
 .bmm-nav {
   flex-shrink: 0;
   background: linear-gradient(180deg, var(--g-slate-50) 0%, var(--g-slate-100) 100%);
@@ -311,7 +306,6 @@
   color: var(--g-blanc);
 }
 
-/* ═══════════ CONTENU ═══════════ */
 .bmm-content {
   flex: 1;
   overflow-y: scroll;
@@ -340,7 +334,6 @@
   border-color: var(--g-teal-50);
 }
 
-/* ═══════════ PANE ═══════════ */
 .bmm-content-pane {
   animation: bmmSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -365,7 +358,6 @@
   color: var(--g-slate-500);
 }
 
-/* ═══════════ GRILLE & CHAMPS ═══════════ */
 .bmm-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -425,7 +417,6 @@
   cursor: not-allowed;
 }
 
-/* ═══════════ HINTS ═══════════ */
 .bmm-hint {
   margin: 4px 0 0;
   font-size: 0.72rem;
@@ -434,7 +425,6 @@
   line-height: 1.4;
 }
 
-/* ═══════════ ERREUR ═══════════ */
 .bmm-error {
   display: flex;
   align-items: center;
@@ -450,7 +440,6 @@
   animation: bmmShake 0.35s ease;
 }
 
-/* ═══════════ FOOTER ═══════════ */
 .bmm-footer {
   display: flex;
   align-items: center;
@@ -483,10 +472,6 @@
   align-items: center;
   gap: 8px;
 }
-
-/* ═══════════════════════════════════════════════════════════
-   APERÇU (colonne droite)
-   ═══════════════════════════════════════════════════════════ */
 
 .vrm-preview-wrap {
   background: linear-gradient(180deg, var(--g-slate-100) 0%, #fafbff 100%);
@@ -547,7 +532,6 @@
   margin-bottom: 8px;
 }
 
-/* Carte véhicule */
 .vrm-preview-vehicule {
   display: flex;
   align-items: center;
@@ -586,7 +570,6 @@ background: linear-gradient(
   margin-top: 1px;
 }
 
-/* Timeline aperçu */
 .vrm-preview-timeline {
   display: flex;
   flex-direction: column;
@@ -655,7 +638,6 @@ background: linear-gradient(
   box-shadow: 0 3px 8px -2px rgba(27, 100, 143, 0.4);
 }
 
-/* Personnes */
 .vrm-preview-person {
   display: flex;
   align-items: center;
@@ -689,7 +671,6 @@ background: linear-gradient(
   margin-top: 1px;
 }
 
-/* Statut */
 .vrm-preview-etat {
   display: inline-flex;
   align-items: center;
@@ -708,7 +689,6 @@ background: linear-gradient(
 .vrm-preview-etat.chip-slate { background: var(--g-slate-100); color: var(--g-slate-600); }
 .vrm-preview-etat.chip-red   { background: var(--g-red-100); color: var(--g-red-800); }
 
-/* Récapitulatif */
 .vrm-preview-summary {
   background: var(--g-blanc);
   border: 1.5px dashed var(--g-slate-200);
@@ -743,10 +723,6 @@ background: linear-gradient(
   text-align: right;
   word-break: break-word;
 }
-
-/* ═══════════════════════════════════════════════════════════
-   SPÉCIFIQUE RÉSERVATION — Véhicules cards / Timeline / Chips
-   ═══════════════════════════════════════════════════════════ */
 
 .vrm-search {
   display: flex;
@@ -895,7 +871,6 @@ background: linear-gradient(
   animation: bmmPop 0.3s ease;
 }
 
-/* ─── Timeline période ─── */
 .vrm-timeline {
   display: flex;
   align-items: center;
@@ -950,7 +925,6 @@ background: linear-gradient(
   box-shadow: 0 4px 10px -3px rgba(15, 118, 110, 0.4);
 }
 
-/* Bandeau de détection de conflit de réservation (vérification live) */
 .vrm-conflict-banner {
   margin-top: 16px;
   border-radius: 12px;
@@ -1027,7 +1001,6 @@ background: linear-gradient(
   box-shadow: 0 0 0 4px rgba(27, 100, 143, 0.12);
 }
 
-/* ─── Chips d'état ─── */
 .vrm-etat-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1067,11 +1040,6 @@ background: linear-gradient(
   font-weight: 800;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   RESPONSIVE
-   ═══════════════════════════════════════════════════════════ */
-
-/* Tablette large : on enlève l'aperçu */
 @media (max-width: 1100px) {
   .bmm-layout--with-preview {
     grid-template-columns: 200px 1fr;
@@ -1082,7 +1050,6 @@ background: linear-gradient(
   }
 }
 
-/* Tablette : nav horizontale */
 @media (max-width: 900px) {
   .bmm-modal,
   .bmm-modal--sm,
@@ -1127,7 +1094,6 @@ background: linear-gradient(
 
   .bmm-grid { grid-template-columns: 1fr; }
 
-  /* Aperçu repasse en dessous sur très petit écran */
   .vrm-preview-wrap {
     display: block;
     border-left: none;
@@ -1136,7 +1102,6 @@ background: linear-gradient(
   }
 }
 
-/* Mobile */
 @media (max-width: 620px) {
   .bmm-header {
     padding: 16px 18px;
@@ -1183,7 +1148,6 @@ background: linear-gradient(
   .bmm-footer-right { width: 100%; }
   .bmm-footer-right > button { flex: 1; }
 }
-/* ─────────── Contrôle éligibilité permis / véhicule ─────────── */
 .vrm-eligibilite.ok {
   background: var(--g-emerald-50);
   border-color: var(--g-green-300);
@@ -1195,7 +1159,6 @@ background: linear-gradient(
   border-color: var(--g-red-200);
   color: var(--g-red-700);
 }
-/* ═══════════ SEARCHABLE SELECT (combobox) ═══════════ */
 .vrm-searchable {
   position: relative;
   width: 100%;
@@ -1400,7 +1363,6 @@ background: linear-gradient(
   font-style: italic;
 }
 
-/* ─── Onglet « Carburant » de la réservation ─── */
 .vmb-resume { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
 .vmb-stat { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; border: 1px solid var(--g-ink-100); border-radius: 14px; background: var(--g-blanc); }
 .vmb-stat-label { font-size: 11.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--g-ink-400); }
@@ -1457,6 +1419,5 @@ background: linear-gradient(
   .vmb-saisie-grille { grid-template-columns: 1fr; }
 }
 
-/* Sans panneau « Aperçu » : navigation + contenu sur toute la largeur */
 .bmm-layout--with-preview.vrm-layout--sans-apercu { grid-template-columns: 200px 1fr; }
 .vrm-layout--sans-apercu .vrm-preview-wrap { display: none; }

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Dashboard from '../components/pages/Dashboard/Dashboard';
 import CompteurList from '../components/pages/Compteurs/Compteurs';
@@ -7,19 +6,25 @@ import Reclamations from '../components/pages/Reclamations/Reclamations';
 import BonsMaintenance  from '../components/pages/bonmaintenance/Bonsmaintenance';
 import Referentielconsultation from '../components/pages/Referentiel/Referentielconsultation';
 import Fichebonmaintenance from '../components/pages/Fichebonmaintenance/Fichebonmaintenance';
-import Planningbonmaintenance from '../components/pages/Planning/Planningbonmaintenance';
+import Planningbonmaintenance from '../components/pages/planning/Planningbonmaintenance';
 import PlanningParIntervenant from '../components/pages/planning/PlanningParIntervenant';
-import PlanningTechnicien from '../components/pages/planning/PlanningTechnicien';
-import Maintenancetaches from '../components/pages/taches/maintenancetaches';
+import PlanningTechnicien from '../components/pages/planning/Planningtechnicien';
+import PlanningEquipe from '../components/pages/planning/PlanningEquipe';
+import StockAlertes from '../components/pages/stock/StockAlertes';
+import IndicateursPerformance from '../components/pages/Indicateurs/IndicateursPerformance';
+import Metrologie from '../components/pages/Metrologie/Metrologie';
+import Materiovigilance from '../components/pages/Metrologie/Materiovigilance';
+import PageIntrouvable from '../components/pages/Introuvable/PageIntrouvable';
+import Maintenancetaches from '../components/pages/taches/Maintenancetaches';
 import Gammes from '../components/pages/gammes/Gammes';
 import Reclamationdashboard from '../components/pages/rec-dashboard/Reclamationdashboard';
 import Bonmaintenancedashboard from '../components/pages/bon-main/Bonmaintenancedashboard';
 import Bonmaintenancetachestable from '../components/pages/bon-main-tache/Bonmaintenancetachestable';
 import Workflow from '../components/pages/workflow/Workflow';
-import Login from '../components/pages/Login/Login';
+import Login from '../components/pages/login/Login';
 import Anomalies from '../components/pages/Anomalies/Anomalies';
-import MaintenancePredictive from '../components/pages/MaintenancePredictive/MaintenancePredictive';
-import BlocagesImmobilisation from '../components/pages/BlocagesImmobilisation/BlocagesImmobilisation';
+import MaintenancePredictive from '../components/pages/MaintenancePredictive/Maintenancepredictive';
+import BlocagesImmobilisation from '../components/pages/Blocagesimmobilisation/Blocagesimmobilisation';
 import Disponibilite from '../components/pages/Disponibilite/Disponibilite';
 import Sla from '../components/pages/Sla/Sla';
 import VehiculesPage from '../components/pages/parc/vehicules/VehiculesPage';
@@ -43,7 +48,7 @@ import Renouvellement from '../components/pages/Renouvellement/Renouvellement';
 import TableauDeBord from '../components/pages/TableauDeBord/TableauDeBord';
 import ParametresSysteme from '../components/pages/ParametresSysteme/ParametresSysteme';
 import EspacePersonnel from '../components/pages/EspacePersonnel/EspacePersonnel';
-import EtatEquipement from '../components/pages/EtatEquipement/EtatEquipement';
+import EtatEquipement from '../components/pages/Etatequipement/Etatequipement';
 import EquipementFiche from '../components/pages/Equipements/EquipementFiche';
 import VehiculeAmendes from '../components/pages/parc/Vehiculeamendes/Vehiculeamendes';
 import VehiculeCouts from '../components/pages/parc/VehiculeCouts/VehiculeCouts';
@@ -52,7 +57,6 @@ import VehiculeCouts from '../components/pages/parc/VehiculeCouts/VehiculeCouts'
 
 
 
-// Ancien lien des notifications « Votre demande … » : le suivi est maintenant un onglet de Mon espace
 const VersMesDemandes = () => {
     const params = new URLSearchParams(useLocation().search);
     params.set('onglet', 'demandes');
@@ -86,6 +90,11 @@ const AppRoutes = () => {
             <Route path="/workflow" element={<Workflow />} />
             <Route path="/planning-par-intervenant" element={<PlanningParIntervenant />} />
             <Route path="/planning-technicien" element={<PlanningTechnicien />} />
+            <Route path="/planning-equipe" element={<PlanningEquipe />} />
+            <Route path="/stock-alertes" element={<StockAlertes />} />
+            <Route path="/indicateurs" element={<IndicateursPerformance />} />
+            <Route path="/metrologie" element={<Metrologie />} />
+            <Route path="/materiovigilance" element={<Materiovigilance />} />
             <Route path="/anomalies" element={<Anomalies />} />
             <Route path="/maintenance-predictive" element={<MaintenancePredictive />} />
             <Route path="/blocages-immobilisation" element={<BlocagesImmobilisation />} />
@@ -114,6 +123,8 @@ const AppRoutes = () => {
             <Route path="/risque" element={<Risque />} />
             <Route path="/projets" element={<Projets />} />
             <Route path="/emplacements" element={<Emplacements />} />
+
+            <Route path="*" element={<PageIntrouvable />} />
 
         </Routes>
     );

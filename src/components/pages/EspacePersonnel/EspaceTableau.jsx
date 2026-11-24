@@ -2,18 +2,12 @@ import { useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from 'lucide-react';
 import { t, locale } from '../../../i18n';
 
-/*
- * Tableau simple de Mon espace (bons de maintenance, demandes) :
- * recherche, tri au clic sur l'en-tête, clic sur une ligne pour l'ouvrir.
- *
- * colonnes : [{ cle, label, valeur?(ligne) (tri / recherche), rendu?(ligne), largeur?, align?, triable? }]
- */
 export default function EspaceTableau({
   colonnes, lignes, cleLigne = (l) => l.id, onOuvrir, triInitial, vide, recherchePlaceholder,
   ligneClasse, outils,
 }) {
   const [recherche, setRecherche] = useState('');
-  const [tri, setTri] = useState(triInitial || null); // { cle, sens: 'asc' | 'desc' }
+  const [tri, setTri] = useState(triInitial || null);
 
   const visibles = useMemo(() => {
     const q = recherche.trim().toLowerCase();

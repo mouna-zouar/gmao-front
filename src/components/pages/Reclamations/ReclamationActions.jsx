@@ -1,46 +1,44 @@
-// Cycle de vie d'une réclamation, sur le modèle des demandes de service IBM Maximo :
-// Nouveau → En file (affectée à un groupe / un technicien) → En cours (prise en charge, bon créé)
-// → Résolue → Clôturée ; Annulée à tout moment avant la clôture, avec un motif obligatoire.
 import { useEffect, useState } from 'react';
-import { Loader2, UserCheck, XCircle, RotateCcw, CheckCircle2 } from 'lucide-react';
+import { Loader2, UserCheck, XCircle, RotateCcw, CheckCircle2, X, User, Users } from 'lucide-react';
 import reclamationService from '../../../services/Reclamationservice';
-import personnelService from '../../../services/personnelService';
+import personnelService from '../../../services/Personnelservice';
 import AlerteFormation from '../Formations/AlerteFormation';
 import AssistantIntervenants from '../Formations/AssistantIntervenants';
-import serviceService from '../../../services/Serviceservice';
 import authService from '../../../services/Authservice';
 import SearchableSelect from '../../commun/ListeRecherche';
 import Modale from '../../commun/Modale';
+import Onglets from '../../commun/Onglets';
 import { t } from '../../../i18n';
 import './ReclamationActions.css';
 
 export const ETAT_REC = { NOUVEAU: 0, EN_COURS: 1, CLOTUREE: 2, RESOLUE: 3, ANNULEE: 4, EN_FILE: 5 };
 
-/** Actions possibles selon l'état de la réclamation. */
+export const reclamationVerrouillee = (r) => [ETAT_REC.RESOLUE, ETAT_REC.CLOTUREE, ETAT_REC.ANNULEE].includes(Number(r?.etat));
+
 export function actionsPossibles(reclamation) {
   if (!reclamation) return {};
   const e = reclamation.etat ?? ETAT_REC.NOUVEAU;
   const active = e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE || e === ETAT_REC.EN_COURS;
   return {
-    affecter: true, // on peut toujours (ré)affecter un technicien, quel que soit l'état
+    affecter: !reclamationVerrouillee(reclamation),
     prendre: e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE,
     resoudre: active,
     cloturer: e === ETAT_REC.RESOLUE,
     rouvrir: e === ETAT_REC.RESOLUE,
-    // Annulation seulement avant la prise en charge : une réclamation en cours ne s'annule plus
     annuler: e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE,
   };
 }
 
-export const estAffectee = (r) => r?.groupeId != null || r?.personnelAffecteId != null;
+export const membresGroupe = (r) => (Array.isArray(r?.groupePersonnels) ? r.groupePersonnels : []);
+
+export const estAffectee = (r) => r?.groupeId != null || r?.personnelAffecteId != null || membresGroupe(r).length > 0;
 
 export const nomTechnicien = (r) => (r?.personnelAffecte
   ? `${r.personnelAffecte.nom ?? ''} ${r.personnelAffecte.prenom ?? ''}`.trim()
-  : (r?.personnelAffecteNom || ''));
+  : '') || r?.personnelAffecteNom || '';
 
 export const nomGroupe = (r) => r?.groupeNom || '';
 
-/** Qui fait l'action : l'utilisateur connecté. */
 function auteur() {
   const u = authService.getCurrentUser();
   const id = u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
@@ -52,12 +50,15 @@ function auteur() {
 
 const nomPersonnel = (p) => `${p.nom || ''} ${p.prenom || ''}`.trim() + (p.matricule ? ` (${p.matricule})` : '');
 
-/* ---------- Fenêtre « Affecter / Réaffecter » : groupe (service) + technicien ---------- */
+const nomCourt = (p) => `${p.nom || ''} ${p.prenom || ''}`.trim() || `#${p.id}`;
+const cleGroupe = (membres) => membres.map((m) => String(m.id)).sort().join(',');
+
 function FenetreAffecter({ reclamation, onClose, onValider }) {
-  const [groupeId, setGroupeId] = useState(reclamation.groupeId != null ? String(reclamation.groupeId) : '');
+  const [membres, setMembres] = useState(membresGroupe(reclamation));
+  const [ajout, setAjout] = useState('');
   const [technicienId, setTechnicienId] = useState(reclamation.personnelAffecteId != null ? String(reclamation.personnelAffecteId) : '');
+  const [mode, setMode] = useState(membresGroupe(reclamation).length > 0 && reclamation.personnelAffecteId == null ? 'GROUPE' : 'TECHNICIEN');
   const [commentaire, setCommentaire] = useState('');
-  const [groupes, setGroupes] = useState([]);
   const [techniciens, setTechniciens] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [envoi, setEnvoi] = useState(false);
@@ -66,30 +67,37 @@ function FenetreAffecter({ reclamation, onClose, onValider }) {
 
   useEffect(() => {
     let annule = false;
-    Promise.allSettled([serviceService.getAll(0, 200), personnelService.getMaintenance(0, 200)]).then(([g, p]) => {
-      if (annule) return;
-      setGroupes(g.status === 'fulfilled' ? (g.value?.content ?? []) : []);
-      setTechniciens(p.status === 'fulfilled' ? (p.value?.content ?? []) : []);
-      setChargement(false);
-    });
+    personnelService.getMaintenance(0, 200)
+      .then((p) => { if (!annule) setTechniciens(p?.content ?? []); })
+      .catch(() => { if (!annule) setTechniciens([]); })
+      .finally(() => { if (!annule) setChargement(false); });
     return () => { annule = true; };
   }, []);
 
-  const inchange = String(reclamation.groupeId ?? '') === groupeId && String(reclamation.personnelAffecteId ?? '') === technicienId;
-  const vide = !groupeId && !technicienId;
+  const groupeChoisi = mode === 'GROUPE' ? membres : [];
+  const technicienChoisi = mode === 'TECHNICIEN' ? technicienId : '';
+  const inchange = cleGroupe(groupeChoisi) === cleGroupe(membresGroupe(reclamation))
+    && String(reclamation.personnelAffecteId ?? '') === technicienChoisi
+    && (groupeChoisi.length > 0 || reclamation.groupeId == null);
+  const vide = mode === 'GROUPE' ? membres.length === 0 : !technicienId;
+  const ajouterMembre = (id) => {
+    const p = techniciens.find((x) => String(x.id) === String(id));
+    if (p && !membres.some((m) => String(m.id) === String(p.id))) setMembres((l) => [...l, { id: Number(p.id), nom: nomCourt(p) }]);
+    setAjout('');
+  };
 
   const valider = async () => {
     if (vide || inchange || envoi) return;
     setEnvoi(true);
     setErreur(null);
-    const groupe = groupes.find((g) => String(g.id) === groupeId);
-    const technicien = techniciens.find((p) => String(p.id) === technicienId);
+    const technicien = techniciens.find((p) => String(p.id) === technicienChoisi);
     try {
       await onValider({
-        groupeId: groupeId ? Number(groupeId) : null,
-        groupeNom: groupe ? (groupe.description || groupe.code || null) : (groupeId ? reclamation.groupeNom : null),
-        personnelAffecteId: technicienId ? Number(technicienId) : null,
-        personnelAffecteNom: technicien ? `${technicien.nom || ''} ${technicien.prenom || ''}`.trim() : (technicienId ? reclamation.personnelAffecteNom : null),
+        groupeId: null,
+        groupeNom: null,
+        groupePersonnels: groupeChoisi,
+        personnelAffecteId: technicienChoisi ? Number(technicienChoisi) : null,
+        personnelAffecteNom: technicien ? `${technicien.nom || ''} ${technicien.prenom || ''}`.trim() : (technicienChoisi ? reclamation.personnelAffecteNom : null),
         motif: commentaire.trim() || null,
       });
     } catch (err) {
@@ -120,46 +128,68 @@ function FenetreAffecter({ reclamation, onClose, onValider }) {
     >
       <div className="cf-grille">
         <div className="cf-champ cf-champ--pleine">
-          <label htmlFor="rec-groupe" className="cf-label">{t('Groupe responsable')}</label>
-          <SearchableSelect
-            id="rec-groupe"
-            name="groupeId"
-            value={groupeId}
-            onChange={(e) => setGroupeId(e.target.value)}
-            options={groupes}
-            loading={chargement}
-            placeholder={t('Rechercher un service...')}
-            emptyMessage={t('Aucun service ne correspond')}
-            allowEmpty
-            emptyOptionLabel={t('— Aucun groupe —')}
-            getValue={(s) => s.id}
-            getLabel={(s) => s.description || s.code || `Service #${s.id}`}
-            getOptionHint={(s) => (s.code && s.description ? `Code : ${s.code}` : null)}
-          />
+          <Onglets actif={mode} onChanger={setMode} ariaLabel={t('Affecter à')} className="rec-affecter-mode"
+            onglets={[
+              { cle: 'TECHNICIEN', label: t('Technicien'), icone: User },
+              { cle: 'GROUPE', label: t('Groupe'), icone: Users },
+            ]} />
         </div>
-        <div className="cf-champ cf-champ--pleine">
-          <label htmlFor="rec-technicien" className="cf-label">{t('Technicien')}</label>
-          <SearchableSelect
-            id="rec-technicien"
-            name="personnelAffecteId"
-            value={technicienId}
-            onChange={(e) => setTechnicienId(e.target.value)}
-            options={techniciens}
-            loading={chargement}
-            placeholder={t('Rechercher un technicien...')}
-            emptyMessage={t('Aucun personnel ne correspond')}
-            allowEmpty
-            emptyOptionLabel={t('— Aucun technicien —')}
-            getValue={(p) => p.id}
-            getLabel={nomPersonnel}
-            getOptionHint={(p) => (p.fonction || null)}
-          />
-          <AlerteFormation personnelId={technicienId} lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} />
-        </div>
-        <div className="cf-champ cf-champ--pleine">
-          <AssistantIntervenants lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} choisi={technicienId} personnels={techniciens}
-            onChoisir={(id) => setTechnicienId(String(id))} />
-        </div>
+        {mode === 'GROUPE' && (
+          <div className="cf-champ cf-champ--pleine">
+            <label htmlFor="rec-groupe" className="cf-label">{t('Groupe')}</label>
+            <SearchableSelect
+              id="rec-groupe"
+              name="groupePersonnels"
+              value={ajout}
+              onChange={(e) => ajouterMembre(e.target.value)}
+              options={techniciens.filter((p) => !membres.some((m) => String(m.id) === String(p.id)))}
+              loading={chargement}
+              placeholder={t('Ajouter un personnel de maintenance...')}
+              emptyMessage={t('Aucun personnel ne correspond')}
+              getValue={(p) => p.id}
+              getLabel={nomPersonnel}
+              getOptionHint={(p) => (p.fonction || null)}
+            />
+            {membres.length > 0 && (
+              <ul className="rec-groupe-membres">
+                {membres.map((m) => (
+                  <li key={m.id}>
+                    <span>{m.nom}</span>
+                    <button type="button" onClick={() => setMembres((l) => l.filter((x) => x.id !== m.id))}
+                      aria-label={t('Retirer {nom}', { nom: m.nom })} title={t('Retirer {nom}', { nom: m.nom })}>
+                      <X size={13} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+        {mode === 'TECHNICIEN' && (
+          <>
+            <div className="cf-champ cf-champ--pleine">
+              <label htmlFor="rec-technicien" className="cf-label">{t('Technicien')}</label>
+              <SearchableSelect
+                id="rec-technicien"
+                name="personnelAffecteId"
+                value={technicienId}
+                onChange={(e) => setTechnicienId(e.target.value)}
+                options={techniciens}
+                loading={chargement}
+                placeholder={t('Rechercher un technicien...')}
+                emptyMessage={t('Aucun personnel ne correspond')}
+                getValue={(p) => p.id}
+                getLabel={nomPersonnel}
+                getOptionHint={(p) => (p.fonction || null)}
+              />
+              <AlerteFormation personnelId={technicienId} lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} />
+            </div>
+            <div className="cf-champ cf-champ--pleine">
+              <AssistantIntervenants lotArticleImmobilistationId={reclamation.lotArticleImmobilistationId} choisi={technicienId} personnels={techniciens}
+                onChoisir={(id) => setTechnicienId(String(id))} />
+            </div>
+          </>
+        )}
         <div className="cf-champ cf-champ--pleine">
           <label htmlFor="rec-affecter-commentaire" className="cf-label">{t('Commentaire')}</label>
           <textarea
@@ -174,7 +204,6 @@ function FenetreAffecter({ reclamation, onClose, onValider }) {
   );
 }
 
-/* ---------- Fenêtre motif / commentaire (annuler, rouvrir, résoudre) ---------- */
 const FENETRES_MOTIF = {
   annuler: {
     Icone: XCircle, ton: 'danger', titre: 'Annuler la réclamation', bouton: 'Annuler la réclamation',
@@ -242,14 +271,8 @@ function FenetreMotif({ type, onClose, onValider }) {
   );
 }
 
-/**
- * Actions du cycle de vie, partagées par la liste, la page de détail et Mon espace.
- *   const { lancer, fenetres, enCours } = useActionsReclamation(apresAction);
- *   lancer('affecter' | 'prendre' | 'resoudre' | 'cloturer' | 'rouvrir' | 'annuler', reclamation)
- * apresAction(resultat, nomAction) est appelée après chaque action réussie.
- */
 export function useActionsReclamation(apresAction) {
-  const [fenetre, setFenetre] = useState(null); // { type, reclamation }
+  const [fenetre, setFenetre] = useState(null);
   const [enCours, setEnCours] = useState(false);
 
   const executer = async (nom, reclamation, corps = {}) => {
@@ -267,7 +290,6 @@ export function useActionsReclamation(apresAction) {
     return resultat;
   };
 
-  // Actions directes (sans fenêtre) : une erreur est affichée en alerte
   const directe = async (nom, reclamation) => {
     if (enCours) return;
     setEnCours(true);
@@ -298,7 +320,6 @@ export function useActionsReclamation(apresAction) {
   return { lancer, fenetres, enCours };
 }
 
-/* ---------- Historique des affectations et des changements d'état ---------- */
 export const TYPES_HISTORIQUE = {
   CREATION: 'Réclamation créée',
   AFFECTATION: 'Affectée',

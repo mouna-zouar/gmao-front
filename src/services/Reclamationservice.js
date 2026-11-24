@@ -45,7 +45,6 @@ const reclamationService = {
     return data;
   },
 
-  /* Cycle de vie (modèle IBM Maximo) : corps { groupeId, groupeNom, personnelAffecteId, personnelAffecteNom, motif, auteurId, auteurNom } */
   async affecter(id, corps) {
     const { data } = await api.patch(`/reclamation/${id}/affecter`, corps);
     return data;
@@ -76,16 +75,14 @@ const reclamationService = {
     return data;
   },
 
-  /** Annulation par le demandeur (Mes demandes) : { motif, auteurId = le demandeur, auteurNom } */
   async annulerParDemandeur(id, corps) {
     const { data } = await api.patch(`/reclamation/${id}/annuler-par-demandeur`, corps);
     return data;
   },
 
-  /* Check-lists à remplir avant d'envoyer une réclamation */
   async checklist(lotArticleImmobilistationId) {
     const { data } = await api.get('/reclamation/checklist', { params: { lotArticleImmobilistationId } });
-    return data; // { famille, familleId, familleNom, parDefaut, questions: [...], questionFinale }
+    return data;
   },
 
   async checklists() {
@@ -93,13 +90,11 @@ const reclamationService = {
     return data;
   },
 
-  /** famille : id de la famille ou « defaut » ; questions vides = revenir aux questions par défaut */
   async enregistrerChecklist(famille, familleNom, questions) {
     const { data } = await api.put(`/reclamation/checklists/${famille}`, { familleNom, questions });
     return data;
   },
 
-  /** Historique des affectations et des changements d'état. */
   async historique(id) {
     const { data } = await api.get(`/reclamation/${id}/historique`);
     return data;

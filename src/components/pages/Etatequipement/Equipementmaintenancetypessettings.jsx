@@ -28,16 +28,10 @@ import { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 import gammeService from '../../../services/gammeService';
 import { dureeLisible } from '../gammes/Gammes';
 import { cheminLieu, lieuxAplatis } from '../../../services/lieuxCache';
-// Réutilise le style du panneau équivalent du Parc automobile (classes mtp-*
-// génériques, sans rien de spécifique au kilométrage).
 import '../parc/vehicules/VehiculeMaintenanceTypesSettings.css';
-// Réutilise les styles du combobox « bmd-searchable » déjà utilisé pour
-// rechercher une immobilisation ailleurs dans l'appli (BonMaintenanceDetails).
 import '../bonmaintenance/Bonmaintenancedetails.css';
-// Overrides spécifiques à ce panneau (ex. ascenseur de secours sur la modale).
-import './EquipementMaintenanceTypesSettings.css';
+import './Equipementmaintenancetypessettings.css';
 
-// ─── Sélection de plusieurs équipements : recherche + cases à cocher ───
 const normaliser = (v) => String(v ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 function SelectionEquipements({ id, valeurs, onChange, options, loading = false, disabled = false }) {
@@ -62,7 +56,6 @@ function SelectionEquipements({ id, valeurs, onChange, options, loading = false,
 
   return (
     <div className={`emt-multi ${disabled ? 'is-disabled' : ''}`}>
-      {/* Équipements déjà choisis */}
       <div className="emt-multi__choisis" aria-live="polite">
         {choisis.size === 0 ? (
           <span className="emt-multi__aucun">{t('Aucun équipement choisi : le type s’applique à tous les équipements.')}</span>
@@ -125,12 +118,6 @@ function SelectionEquipements({ id, valeurs, onChange, options, loading = false,
   );
 }
 
-/**
- * Miroir de VehiculeMaintenanceTypesSettings.jsx, mais pour le référentiel
- * des maintenances préventives RÉGLEMENTAIRES des équipements médicaux
- * (calibration, contrôle qualité périodique...), piloté par une périodicité
- * en JOURS plutôt qu'un seuil kilométrique.
- */
 const emptyForm = {
   code: '',
   libelle: '',
@@ -144,7 +131,6 @@ const emptyForm = {
   lotArticleImmobilistationIds: [],
 };
 
-// Format des nombres selon la langue choisie
 const nf = { format: (v) => new Intl.NumberFormat(locale()).format(v) };
 
 const URGENCE = {
@@ -180,7 +166,6 @@ export default function EquipementMaintenanceTypesSettings() {
 
   const [immobilisations, setImmobilisations] = useState([]);
   const carteLieux = useCarteLieux();
-  // Gammes d'intervention : la dernière version de chaque gamme (validée, sinon la plus récente)
   const [gammes, setGammes] = useState([]);
   useEffect(() => { gammeService.lister().then(setGammes).catch(() => setGammes([])); }, []);
   const gammesParOrigine = useMemo(() => {
@@ -229,7 +214,6 @@ export default function EquipementMaintenanceTypesSettings() {
 
   useEffect(() => {
     let active = true;
-    // Assez large pour cocher des équipements dans tout le parc (la recherche se fait dans la liste)
     obtenirEquipements().then(commePage)
       .then((page) => {
         if (!active) return;
@@ -265,7 +249,6 @@ export default function EquipementMaintenanceTypesSettings() {
       actif: tache.actif ?? true,
       lieuId: tache.lieuId != null ? String(tache.lieuId) : '',
       gammeId: tache.gammeId != null ? String(tache.gammeId) : '',
-      // Plusieurs équipements possibles ; l'ancien champ unique sert pour les types existants
       lotArticleImmobilistationIds: (tache.lotArticleImmobilistationIds?.length
         ? tache.lotArticleImmobilistationIds
         : (tache.lotArticleImmobilistationId != null ? [tache.lotArticleImmobilistationId] : [])).map(String),

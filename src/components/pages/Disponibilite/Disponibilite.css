@@ -1,7 +1,6 @@
 
 
 .disp-page {
-  /* Palette TEAL (alignée FicheEmploye) */
   --teal-900: var(--g-brand-900);
   --teal-800: var(--g-brand-700);
   --teal-700: var(--g-brand-600);
@@ -50,7 +49,6 @@
   --slate-100: var(--g-slate-100);
   --slate-50: var(--g-slate-50);
 
-  /* Alias internes */
   --di-primary-900: var(--teal-800);
   --di-primary-800: var(--teal-700);
   --di-primary-700: var(--teal-600);
@@ -125,7 +123,6 @@
   animation: dispFadeUp 0.4s ease-out;
 }
 
-/* ═══════════════════ HEADER — carte blanche ═══════════════════ */
 .disp-header {
   position: relative;
   overflow: hidden;
@@ -193,7 +190,6 @@
   flex-wrap: wrap;
 }
 
-/* Segmented control période */
 .disp-periode-select {
   display: flex;
   background: var(--slate-50);
@@ -233,7 +229,6 @@
   color: var(--g-blanc);
 }
 
-/* Bouton rafraîchir */
 .disp-refresh-btn {
   display: inline-flex;
   align-items: center;
@@ -271,7 +266,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ═══════════════════ KPIs ═══════════════════ */
 .disp-kpis {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -316,7 +310,6 @@
   transform: scale(1.06);
 }
 
-/* KPI Bon */
 .disp-kpi--bon { --kpi-accent: var(--green-600); }
 .disp-kpi--bon .disp-kpi__icon {
   background: var(--green-100);
@@ -325,7 +318,6 @@
 }
 .disp-kpi--bon .disp-kpi__valeur { color: var(--g-emerald-700); }
 
-/* KPI Moyen */
 .disp-kpi--moyen { --kpi-accent: var(--orange-500); }
 .disp-kpi--moyen .disp-kpi__icon {
   background: var(--orange-50);
@@ -334,7 +326,6 @@
 }
 .disp-kpi--moyen .disp-kpi__valeur { color: var(--orange-700); }
 
-/* KPI Critique */
 .disp-kpi--critique { --kpi-accent: var(--red-600); }
 .disp-kpi--critique .disp-kpi__icon {
   background: var(--red-100);
@@ -343,7 +334,6 @@
 }
 .disp-kpi--critique .disp-kpi__valeur { color: var(--g-red-700); }
 
-/* KPI Neutre / Inconnu */
 .disp-kpi--inconnu,
 .disp-kpi--neutre { --kpi-accent: var(--teal-600); }
 .disp-kpi--inconnu .disp-kpi__icon,
@@ -379,7 +369,6 @@
   line-height: 1.1;
 }
 
-/* ═══════════════════ Filtres ═══════════════════ */
 .disp-filtres { display: flex; }
 
 .disp-recherche-wrap {
@@ -420,7 +409,6 @@
   box-shadow: var(--di-ring);
 }
 
-/* ═══════════════════ États vides / erreur ═══════════════════ */
 .disp-empty,
 .disp-error {
   display: flex;
@@ -447,7 +435,6 @@
   font-weight: 600;
 }
 
-/* ═══════════════════ Liste ═══════════════════ */
 .disp-list {
   list-style: none;
   margin: 0;
@@ -584,7 +571,6 @@
 .disp-taux-valeur--critique { color: var(--g-red-700); }
 .disp-taux-valeur--inconnu  { color: var(--slate-500); }
 
-/* ═══════════════════ Détail (expand) ═══════════════════ */
 .disp-detail {
   padding: 16px 20px 20px;
   border-top: 1px solid var(--slate-100);
@@ -632,7 +618,6 @@
   line-height: 1.5;
 }
 
-/* ═══════════════════ PAGINATION ═══════════════════ */
 .disp-pagination {
   display: flex;
   align-items: center;
@@ -775,7 +760,6 @@
   box-shadow: var(--di-ring);
 }
 
-/* ═══════════════════ Responsive ═══════════════════ */
 @media (max-width: 1200px) {
   .disp-kpis { grid-template-columns: repeat(3, 1fr); }
 }
@@ -831,7 +815,6 @@
   .disp-pagination__ellipsis { height: 28px; }
 }
 
-/* ═══════════════════ ACCESSIBILITÉ ═══════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .disp-page,
   .disp-kpi,
@@ -844,7 +827,6 @@
   }
 }
 
-/* ═══════════════════ MODE SOMBRE ═══════════════════ */
 @media (prefers-color-scheme: dark) {
   .disp-page {
     background: #1a2433;
@@ -928,7 +910,6 @@
 
   .disp-barre { background: var(--di-bg-muted); }
 
-  /* Pagination dark */
   .disp-pagination__btn {
     background: var(--di-surface);
     border-color: var(--di-border);
@@ -949,7 +930,7 @@
     color: var(--di-text);
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='m6 9 6 6 6-6'/></svg>");
   }
-}/* ---------- Bouton Export Excel ---------- */
+}
 .disp-export-btn {
   display: inline-flex;
   align-items: center;
@@ -992,12 +973,10 @@
 
 .disp-export-btn svg { flex-shrink: 0; }
 
-/* Responsive : mêmes règles que refresh */
 @media (max-width: 720px) {
   .disp-export-btn { width: 100%; justify-content: center; }
 }
 
-/* Mode sombre */
 @media (prefers-color-scheme: dark) {
   .disp-export-btn {
     background: var(--g-brand-500);

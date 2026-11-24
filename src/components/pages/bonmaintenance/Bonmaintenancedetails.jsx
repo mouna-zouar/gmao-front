@@ -11,17 +11,17 @@ import {
   Calendar,
   Activity,
   ChevronRight,
-  Plus,
+  
   Edit,
   Trash2,
   Search,
-  Filter,
+  
   Loader2,
-  Info,
-  Play,
+  
+  
   Pause,
   RotateCcw,
-  Download,
+  
   Printer,
   Send,
   CloudCheck,
@@ -32,18 +32,18 @@ import {
   Users,
   ClipboardList,
   FileCheck,
-  RotateCw,
+  
   Circle,
-  Link,
-  Unlink,
-  ExternalLink,
+  
+  
+  
   Workflow,
   Inbox,
   X,
   Check,
-  Euro,
-  TrendingUp,
-  Target,
+  
+  
+  
   ShieldCheck,
   Wrench,
   Stethoscope,
@@ -63,13 +63,14 @@ import {
   ScanSearch,
   MapPin,
   ListOrdered,
+  Lock,
+  BellOff,
 } from 'lucide-react';
 import { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 import { cheminLieu, lieuDeLigne } from '../../../services/lieuxCache';
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
 import { prioriteLabel, prioriteColor } from '../../../constants/Priorite';
 import bonMaintenanceIntervenantService from '../../../services/bonMaintenanceIntervenantService';
-import bonMaintenanceIntervenantHistoriqueService from '../../../services/Bonmaintenanceintervenanthistoriqueservice';
 import bonMaintenanceCommentaireService from '../../../services/Bonmaintenancecommentaireservice';
 import chatBonService from '../../../services/chatBonService';
 import BmdChat from './BmdChat';
@@ -77,7 +78,6 @@ import { qrSvg, urlBon } from '../../../utils/qrCode';
 import ModaleQrCode from '../../ui/QrCode/ModaleQrCode';
 import bonMaintenanceDocumentAchatService from '../../../services/Bonmaintenancedocumentachatservice';
 import PieceEditor from '../../ui/PieceEditor/PieceEditor';
-import bonMaintenancePieceImmoService from '../../../services/Bonmaintenancepieceimmoservice';
 import bonMaintenanceHistoriqueService from '../../../services/Bonmaintenancehistoriqueservice';
 import bonMaintenanceDiagnosticService from '../../../services/Bonmaintenancediagnosticservice';
 import bonMaintenanceControleEquipementService from '../../../services/bonMaintenanceControleEquipementService';
@@ -91,7 +91,6 @@ import coutService from '../../../services/coutService';
 import rcaCapaService from '../../../services/rcaCapaService';
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
 import reclamationServiceComplet from '../../../services/Reclamationservice';
-import personnelService from '../../../services/Personnelservice';
 import prestataireService from '../../../services/prestataireService';
 import { obtenirPrestataires } from '../../../store/referentiels';
 import { precharger } from '../../../services/api';
@@ -100,8 +99,6 @@ import depotCubixService from '../../../services/depotCubixService';
 import authService from '../../../services/Authservice';
 import { imprimerPiece } from '../../../utils/imprimerPiece';
 import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationCubixService';
-//import lotArticleService from '../../../services/lotArticleService';
-//import pieceLigneService from '../../../services/PieceLigneService';
 import articleService from '../../../services/articleService';
 import prestataireArticleService from '../../../services/prestataireArticleService';
 import pieceService from '../../../services/Pieceservice';
@@ -109,6 +106,7 @@ import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import Tracage3DTab from './Tracage3DTab';
 import BmdRapport from './BmdRapport';
+import { BandeauValidation, BoutonsDecision } from './ValidationBon';
 import bonMaintenanceRapportService from '../../../services/bonMaintenanceRapportService';
 import { libelleTypeEntretien, libelleSourceInformation } from '../../../constants/FicheIntervention';
 import { useCelebration } from './BmdCommun';
@@ -121,7 +119,7 @@ import {
   IntervenantsTab,
   ControleEquipementTab,
   RemiseEnServiceTab,
-} from './BmdSousOnglets';
+} from './Bmdsousonglets';
 import {
   SearchableSelect,
   INTERVENANT_ETAT_LABELS,
@@ -181,27 +179,8 @@ function getEtatIcon(etat) {
   return ETAT_ICONS[etat] || Circle;
 }
 
-const SLA_STATUT_LABELS = {
-  RESPECTE: 'Respecté',
-  DEPASSE: 'Dépassé',
-  EN_COURS: 'En cours',
-  NON_APPLICABLE: 'N/A',
-};
 
-const SLA_STATUT_CLASS = {
-  RESPECTE: 'bmd-sla-statut--respecte',
-  DEPASSE: 'bmd-sla-statut--depasse',
-  EN_COURS: 'bmd-sla-statut--encours',
-  NON_APPLICABLE: 'bmd-sla-statut--na',
-};
 
-function slaGlobalClass(sla) {
-  if (!sla) return 'bmd-sla-btn--na';
-  if (sla.statutReponse === 'DEPASSE' || sla.statutResolution === 'DEPASSE') return 'bmd-sla-btn--depasse';
-  if (sla.statutReponse === 'NON_APPLICABLE' && sla.statutResolution === 'NON_APPLICABLE') return 'bmd-sla-btn--na';
-  if (sla.statutReponse === 'EN_COURS' || sla.statutResolution === 'EN_COURS') return 'bmd-sla-btn--encours';
-  return 'bmd-sla-btn--respecte';
-}
 
 function formatDureeHeures(heures) {
   if (heures === null || heures === undefined) return '—';
@@ -238,27 +217,14 @@ function nouvelleActionVide() {
   return { type: 'CORRECTIVE', description: '', responsable: '', dateEcheance: '' };
 }
 
-function rcaGlobalClass(analyses) {
-  if (!analyses) return 'bmd-rca-btn--na';
-  if (analyses.length === 0) return 'bmd-rca-btn--na';
-  const actions = analyses.flatMap((a) => a.actions || []);
-  if (actions.some((a) => a.enRetard)) return 'bmd-rca-btn--retard';
-  if (actions.length > 0 && actions.every((a) => a.statut === 'TERMINEE' || a.statut === 'VERIFIEE_EFFICACE' || a.statut === 'VERIFIEE_INEFFICACE')) {
-    return 'bmd-rca-btn--ok';
-  }
-  return 'bmd-rca-btn--encours';
-}
 
-// ============================================================
-// PARCOURS DE RÉPARATION — construction des étapes et de la prochaine action
-// ============================================================
+const RUBRIQUES_VERROUILLEES = new Set(['diagnostic', 'reparation', 'taches', 'intervenants', 'controle', 'remiseEnService', 'commentaires']);
+
 const ETAPES_DEF = [
-  { key: 'signale', label: 'Signalé', aide: 'La panne a été déclarée', icon: Flag, rubrique: 'historique' }, // « Vue d'ensemble » retirée : l'étape ouvre l'historique
+  { key: 'signale', label: 'Signalé', aide: 'La panne a été déclarée', icon: Flag, rubrique: 'historique' },
   { key: 'diagnostic', label: 'Diagnostic', aide: 'On cherche la cause', icon: Stethoscope, rubrique: 'diagnostic' },
   { key: 'reparation', label: 'Réparation', aide: 'Les techniciens réparent', icon: Wrench, rubrique: 'reparation' },
   { key: 'controle', label: 'Contrôle', aide: 'On vérifie que tout marche', icon: ShieldCheck, rubrique: 'controle' },
-  // Étape retirée : la remise en service se fait depuis la liste des réclamations
-  // { key: 'remise', label: 'Remise en service', aide: "L'équipement retourne au service", icon: Power, rubrique: 'remiseEnService' },
   { key: 'cloture', label: 'Clôturé', aide: 'Le dossier est fermé', icon: CheckCircle, rubrique: 'historique' },
 ];
 
@@ -300,7 +266,6 @@ function construireParcours({ bon, nbDiagnostics, intervenants, controle, remise
   return { etapes, indexActuel, cloture };
 }
 
-// Plus affichée depuis le retrait du bloc « À faire maintenant » ; gardée si on veut la remettre.
 // eslint-disable-next-line no-unused-vars
 function prochaineAction({ bon, parcours, intervenants }) {
   if (bon.etat === ETAT.ANNULE) {
@@ -394,7 +359,6 @@ function joursDepuis(iso) {
   return tp('il y a jours', j);
 }
 
-// Traduction des statuts SLA en langage simple
 function slaEnClair(sla) {
   if (!sla || (sla.statutReponse === 'NON_APPLICABLE' && sla.statutResolution === 'NON_APPLICABLE')) {
     return { ton: 'neutre', texte: t("Pas de délai fixé") };
@@ -424,7 +388,6 @@ const ETAT_EN_CLAIR = {
   10: { texte: 'Annulé', ton: 'neutre' },
 };
 
-// Rubriques regroupées par intention, ouvertes dans le panneau latéral
 const GROUPES_RUBRIQUES = [
   {
     titre: 'Comprendre',
@@ -467,7 +430,6 @@ const GROUPES_RUBRIQUES = [
   },
 ];
 
-// Onglets du Dossier (même ordre que les groupes), affichés en barre sous les informations
 const ONGLETS_DOSSIER = GROUPES_RUBRIQUES.flatMap((g, i) => g.rubriques
   .filter((r) => !r.masque)
   .map((r, j) => ({ ...r, groupe: g.titre, debutGroupe: i > 0 && j === 0 })));
@@ -479,12 +441,9 @@ const TITRES_TIROIR = {
   rca: { label: 'Cause racine', icon: Search },
 };
 GROUPES_RUBRIQUES.forEach((g) => g.rubriques.forEach((r) => { TITRES_TIROIR[r.key] = r; }));
-// Étape « Réparation » du parcours : les tâches et les intervenants ouverts ensemble, côte à côte
 TITRES_TIROIR.reparation = { label: 'Réparation', aide: 'Étape 1 : les intervenants · Étape 2 : les tâches', icon: Wrench };
 
 
-// Fenêtre d'une rubrique (diagnostic, tâches, contrôle…) : fenêtre commune au centre, comme les autres
-// fenêtres de l'application (autrefois un panneau latéral). Le contenu garde les styles de la page.
 function Tiroir({ rubrique, onClose, children }) {
   if (!rubrique) return null;
   const def = TITRES_TIROIR[rubrique] || { label: rubrique };
@@ -495,7 +454,6 @@ function Tiroir({ rubrique, onClose, children }) {
   );
 }
 
-// Réparation en deux étapes : 1. les intervenants, 2. les tâches (une seule affichée à la fois)
 const ETAPES_REPARATION = [
   { key: 'intervenants', label: 'Intervenants', aide: 'Qui répare', icon: Users },
   { key: 'taches', label: 'Tâches', aide: 'Les travaux à faire', icon: ClipboardList },
@@ -540,7 +498,6 @@ function ReparationEtapes({ intervenants, taches }) {
   );
 }
 
-/** Précharge en un appel les lectures faites à l'ouverture du détail (voir /api/bon-maintenance/{id}/resume). */
 function prechargerBon(id) {
   if (!id) return null;
   const b = `/bon-maintenance/${id}`;
@@ -561,34 +518,27 @@ function prechargerBon(id) {
   ]);
 }
 
-// ============================================================
-// COMPOSANT PRINCIPAL
-// ============================================================
 export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
-  // Tout ce que l'écran lit à l'ouverture arrive en un seul appel (au lieu d'une quinzaine en même temps)
   useMemo(() => prechargerBon(bonMaintenance?.id), [bonMaintenance?.id]);
   const [bon, setBon] = useState(bonMaintenance);
   const [loading, setLoading] = useState(!bonMaintenance);
   const [error, setError] = useState(null);
-  const [tiroir, setTiroir] = useState(null); // { key, form }
-  // Dossier en onglets : rubrique affichée (le rapport par défaut), ouverte avec son formulaire ou non
+  const [tiroir, setTiroir] = useState(null);
   const [ongletDossier, setOngletDossier] = useState({ key: 'rapport', form: false, version: 0 });
   const refOnglets = useRef(null);
   const [celebrer, celebrationElement] = useCelebration();
   const [impressionEnCours, setImpressionEnCours] = useState(false);
   const [nonLusChat, setNonLusChat] = useState(0);
   const [qrOuvert, setQrOuvert] = useState(false);
-  // Demander (demande de fourniture) / Commander (commande fournisseur) depuis le détail du bon
-  const [editeurPiece, setEditeurPiece] = useState(null); // 'DEMANDE' | 'COMMANDE'
+  const [editeurPiece, setEditeurPiece] = useState(null);
   const [versionDocuments, setVersionDocuments] = useState(0);
-  // Rapport d'intervention (IA) : repris dans la fiche imprimée
   const [rapportIa, setRapportIa] = useState(null);
   useEffect(() => {
     if (!bon?.id) return undefined;
     let annule = false;
     bonMaintenanceRapportService.get(bon.id)
       .then((r) => { if (!annule) setRapportIa(r); })
-      .catch(() => { /* pas de rapport : la fiche s'imprime sans */ });
+      .catch(() => { });
     return () => { annule = true; };
   }, [bon?.id]);
   const fermerQr = useCallback(() => setQrOuvert(false), []);
@@ -600,15 +550,12 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [reclamations, setReclamations] = useState([]);
   const [loadingReclamations, setLoadingReclamations] = useState(false);
   const [equipement, setEquipement] = useState(null);
-  // Lieu du bon dans l'arborescence (enregistré, sinon celui de l'équipement)
   const carteLieux = useCarteLieux();
   const lieuBon = cheminLieu(carteLieux, lieuDeLigne(carteLieux, bon?.lieuId, bon?.lotArticleImmobilistationId));
   const [dernierControle, setDernierControle] = useState(null);
   const [derniereRemiseEnService, setDerniereRemiseEnService] = useState(null);
   const [intervenantsFlow, setIntervenantsFlow] = useState([]);
 
-  // Ouverture : marque le bon « lu » si c'est un de ses intervenants (le serveur décide).
-  // Refait quand les intervenants changent (un nouvel intervenant repasse le bon « non lu »).
   const [lectureBon, setLectureBon] = useState(null);
   const nbIntervenants = intervenantsFlow.length;
   const [loadingIntervenantsFlow, setLoadingIntervenantsFlow] = useState(false);
@@ -618,14 +565,13 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const [resumePret, setResumePret] = useState(false);
   const [slaInfo, setSlaInfo] = useState(null);
   const [coutInfo, setCoutInfo] = useState(null);
-  // Attend le résumé (intervenants connus) pour n'appeler « lu » qu'une fois à l'ouverture
   useEffect(() => {
     const id = bonMaintenance?.id;
     if (id == null || !resumePret) return undefined;
     let annule = false;
     lectureService.bon(id)
       .then((l) => { if (!annule) setLectureBon(l); })
-      .catch(() => { /* serveur pas à jour : rien à afficher de plus */ });
+      .catch(() => { });
     return () => { annule = true; };
   }, [bonMaintenance?.id, nbIntervenants, resumePret]);
 
@@ -678,12 +624,10 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     coutService.getPourBon(bon.id).then(setCoutInfo).catch(() => setCoutInfo(null));
   }, [bon?.id]);
 
-  // Les délais suivent la priorité (calculée automatiquement) et l'avancement du bon
   const prioriteBon = bon?.priorite;
   const etatBon = bon?.etat;
   useEffect(() => { chargerSlaEtCout(); }, [chargerSlaEtCout, prioriteBon, etatBon]);
 
-  // Messages non lus du chat (badge) ; silencieux si le chat n'est pas accessible
   const idBonChat = bon?.id;
   const chargerNonLusChat = useCallback(() => {
     if (!idBonChat) return;
@@ -711,7 +655,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
 
   useEffect(() => { chargerRca(); }, [chargerRca]);
 
-  // Résumé utilisé par le parcours et les compteurs : rechargé à la fermeture du panneau
   const chargerResume = useCallback(async () => {
     const id = bonMaintenance?.id;
     if (!id) return;
@@ -845,7 +788,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       });
   }, [bon?.lotArticleImmobilistationId]);
 
-  // Recharge le bon après une action qui peut déclencher sa clôture automatique
   const rafraichirBon = useCallback(async () => {
     if (!bonMaintenance?.id) return;
     try {
@@ -864,7 +806,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
 
   const ouvrir = (key, form = false) => {
     if (CLES_ONGLETS.has(key)) {
-      // En quittant un onglet, on rafraîchit ce qu'il a pu modifier (comme à la fermeture du panneau)
       if (ongletDossier.key !== key) { chargerResume(); chargerSlaEtCout(); chargerNonLusChat(); }
       setOngletDossier((o) => ({ key, form, version: o.version + 1 }));
       setTimeout(() => refOnglets.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 30);
@@ -921,7 +862,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const sla = slaEnClair(slaInfo);
   const rca = rcaEnClair(rcaAnalyses);
   const nbFaites = parcours.etapes.filter((e) => e.statut === 'fait').length;
-  // La barre remplie va jusqu'à l'étape en cours
   const progression = parcours.cloture ? 100 : Math.round((Math.min(nbFaites, ETAPES_DEF.length - 1) / (ETAPES_DEF.length - 1)) * 100);
 
   const compteurs = {
@@ -937,8 +877,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   const nomEquipement = equipement?.designation || bon.titre || 'Équipement non renseigné';
   const urgenceTexte = bon.urgence ? ['Faible', 'Moyenne', 'Élevée'][bon.urgence - 1] : 'Non définie';
 
-  // ---------- Impression de la fiche complète du bon (A4 portrait) ----------
-  // Les listes (diagnostics, tâches…) sont rechargées au moment d'imprimer pour être à jour.
   const imprimerBon = async () => {
     if (impressionEnCours) return;
     setImpressionEnCours(true);
@@ -962,7 +900,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         return i ? nomIntervenantAffiche(i) : (intervenantId != null ? `#${intervenantId}` : '');
       };
 
-      // QR code dans l'en-tête : scanné, il rouvre ce bon dans la GMAO
       const qr = await qrSvg(urlBon(id)).catch(() => null);
       imprimerFiche({
         qr,
@@ -1092,8 +1029,14 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     { key: 'rca', icon: Search, label: t("Cause racine"), valeur: loadingRca ? '…' : rca.texte, ton: rca.ton, rubrique: 'rca' },
   ];
 
-  // ---------- Contenu du panneau latéral ----------
-  const contenuTiroir = () => (tiroir ? contenuRubrique(tiroir.key, tiroir.form) : null);
+  const annule = bon.etat === ETAT.ANNULE;
+  const verrouille = bon.etat === ETAT.EFFECTUE || annule;
+  const achatsBloques = verrouille;
+  const enLectureSeule = (cle) => (verrouille && RUBRIQUES_VERROUILLEES.has(cle))
+    || (cle === 'rapport' && (annule || bon.validationStatut === 'VALIDE'));
+  const contenuTiroir = () => (tiroir ? (
+    <fieldset className="bmz-verrou" disabled={enLectureSeule(tiroir.key)}>{contenuRubrique(tiroir.key, tiroir.form)}</fieldset>
+  ) : null);
   const contenuRubrique = (cle, auto) => {
     switch (cle) {
       case 'flow':
@@ -1344,7 +1287,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
     }
   };
 
-  // Détails du bon, rangés par thème : Demande / Équipement / Intervention
   const GROUPES_INFOS = [
     {
       titre: t("Demande"),
@@ -1371,14 +1313,11 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       ],
     },
   ];
-  // Une seule couleur d'accent : seuls les points d'alerte (retard, problème) gardent du rouge ou de l'orange
   const pointTon = (ton) => (['alerte', 'prio-red'].includes(ton) ? 'alerte' : ['attention', 'prio-amber'].includes(ton) ? 'attention' : ton === 'ok' ? 'ok' : 'neutre');
 
   return (
     <div className="bmd-container bmx-page bmz-page bmz-page--onglets bmz-v4">
-      {/* ===== Bande haute : identité du bon + parcours sur une seule ligne ===== */}
       <div className="bmz-haut">
-      {/* ===== En-tête : retour, identité du bon, actions ===== */}
       <header className="bmz-entete">
         <button type="button" className="bmz-retour" onClick={onBack} title={t("Tous les bons")} aria-label={t("Tous les bons")}>
           <ArrowLeft size={18} />
@@ -1387,6 +1326,18 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
           <div className="bmz-identite-haut">
             <span className="bmz-num">{bon.num || t('Bon #{id}', { id: bon.id })}</span>
             <span className={`bmz-etat bmz-point--${pointTon(etatClair.ton)}`}>{t(etatClair.texte)}</span>
+            {(bon.etat === ETAT.EN_COURS || bon.etat === ETAT.SUSPENDU) && bon.lotArticleImmobilistationId && (
+              <span className="bmz-lecture-seule" title={t('Mode maintenance : les alertes de cet équipement (agent, réseau) arrivent sans notification jusqu’à la fin du bon.')}>
+                <BellOff size={12} aria-hidden="true" /> {t('Alertes en sourdine')}
+              </span>
+            )}
+            {verrouille && (
+              <span className="bmz-lecture-seule" title={annule ? t('Ce bon est annulé : il ne peut plus être modifié.')
+                : bon.validationStatut === 'VALIDE'
+                  ? t('Ce bon est validé et archivé : il ne peut plus être modifié.') : t('Ce bon est effectué : il ne peut plus être modifié.')}>
+                <Lock size={12} aria-hidden="true" /> {bon.validationStatut === 'VALIDE' ? t('Archivé') : t('Lecture seule')}
+              </span>
+            )}
           </div>
           <h1 className="bmz-titre">{nomEquipement}</h1>
           <p className="bmz-resume">
@@ -1397,6 +1348,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
           </p>
         </div>
         <div className="bmz-actions">
+          {bon.validationStatut === 'A_VALIDER' && <BoutonsDecision bon={bon} onMaj={() => rafraichirBon()} compact />}
           <button type="button" className="bmz-btn" onClick={() => ouvrir('chat')}>
             <MessageCircle size={16} /> <span>{t('Discuter')}</span>
             {nonLusChat > 0 && <span className="bmz-pastille" aria-label={tp('message non lu', nonLusChat)}>{nonLusChat}</span>}
@@ -1407,10 +1359,12 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
               <ScanSearch size={16} /> <span>{t('Récap équipement')}</span>
             </button>
           )}
-          <button type="button" className="bmz-btn" onClick={() => setEditeurPiece('DEMANDE')} title={t('Demande de fourniture')}>
+          <button type="button" className="bmz-btn" onClick={() => setEditeurPiece('DEMANDE')} disabled={achatsBloques}
+            title={achatsBloques ? (annule ? t('Ce bon est annulé : il ne peut plus être modifié.') : t('Ce bon est effectué : plus de demande ni de commande possible.')) : t('Demande de fourniture')}>
             <PackageSearch size={16} /> <span>{t('Demander')}</span>
           </button>
-          <button type="button" className="bmz-btn" onClick={() => setEditeurPiece('COMMANDE')} title={t('Commande fournisseur')}>
+          <button type="button" className="bmz-btn" onClick={() => setEditeurPiece('COMMANDE')} disabled={achatsBloques}
+            title={achatsBloques ? (annule ? t('Ce bon est annulé : il ne peut plus être modifié.') : t('Ce bon est effectué : plus de demande ni de commande possible.')) : t('Commande fournisseur')}>
             <ShoppingCart size={16} /> <span>{t('Commander')}</span>
           </button>
           <button type="button" className="bmz-btn" onClick={() => setQrOuvert(true)}>
@@ -1423,7 +1377,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
         </div>
       </header>
 
-      {/* ===== Parcours de la réparation ===== */}
       <section className="bmz-parcours" aria-label={t("Parcours de la réparation")}>
         <ol className="bmz-ligne" style={{ '--bmz-p': progression / 100, '--bmz-nb': ETAPES_DEF.length }}>
           {parcours.etapes.map((etape) => {
@@ -1447,14 +1400,12 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
 
       </div>
 
-      {/* ===== Plan : informations à gauche, dossier en onglets à droite ===== */}
+      <BandeauValidation bon={bon} />
+
       <div className="bmz-plan">
-      {/* ===== Corps : trois colonnes, sans défilement de la page ===== */}
-      {/* Le rapport d'intervention est dans le Dossier (rubrique « Rapport d'intervention ») */}
       <div className="bmz-corps bmz-corps--sans-rapport">
 
         <div className="bmz-col">
-          {/* Informations : « En un coup d'œil » (tuiles) puis le détail rangé par thème */}
           <section className="bmz-carte bmz-infos" aria-label={t("Informations générales du bon")}>
             <h2 className="bmz-carte-titre">{t("Informations")}</h2>
 
@@ -1512,7 +1463,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
           </section>
         </div>
 
-        {/* Réclamation d'origine : sa propre colonne, pour que la page tienne sans défiler */}
         {reclamations.length > 0 && (
           <section className="bmz-col bmz-carte bmz-reclamations" aria-label={t('Réclamation')}>
             <h2 className="bmz-carte-titre">{reclamations.length > 1 ? t('Réclamations') : t('Réclamation')}</h2>
@@ -1524,7 +1474,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
 
       </div>
 
-      {/* ===== Dossier en onglets : Rapport, Traçage, Historique, Diagnostic, Tâches… ===== */}
       <section className="bmz-carte bmz-do" ref={refOnglets} aria-label={t('Dossier')}>
         <div className="bmz-do-barre" role="tablist" aria-label={t('Dossier')}>
           {ONGLETS_DOSSIER.map((r) => {
@@ -1554,7 +1503,9 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
           })}
         </div>
         <div className="bmz-do-contenu" role="tabpanel" key={`${ongletDossier.key}-${ongletDossier.version}`}>
-          {contenuRubrique(ongletDossier.key, ongletDossier.form)}
+          <fieldset className="bmz-verrou" disabled={enLectureSeule(ongletDossier.key)}>
+            {contenuRubrique(ongletDossier.key, ongletDossier.form)}
+          </fieldset>
         </div>
       </section>
       </div>
@@ -1590,9 +1541,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   );
 }
 
-// ============================================================
-// PANNEAUX DÉLAIS ET COÛT (dans le panneau latéral)
-// ============================================================
 function PanneauDelais({ sla }) {
   if (!sla || (sla.statutReponse === 'NON_APPLICABLE' && sla.statutResolution === 'NON_APPLICABLE')) {
     return (
@@ -1732,9 +1680,6 @@ function InfosReclamation({ reclamation: r }) {
   );
 }
 
-// ============================================================
-// ONGLET FLOW
-// ============================================================
 function FlowTab({
   bon,
   reclamation,
@@ -2240,360 +2185,12 @@ function FlowTab({
   );
 }
 
-// ============================================================
-// ONGLET TRAÇAGE 3D
-// ============================================================
-function TracageTab({ bon, historique: historiqueProp, reclamations, slaInfo, coutInfo }) {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState({
-    historique: historiqueProp ?? [],
-    intervenants: [],
-    taches: [],
-    diagnostics: [],
-    controles: [],
-    remises: [],
-    documents: [],
-    sla: slaInfo,
-    cout: coutInfo,
-  });
 
-  useEffect(() => {
-    if (!bon?.id) {
-      setLoading(false);
-      return;
-    }
-    let cancelled = false;
 
-    const loadAll = async () => {
-      setLoading(true);
-      try {
-        const [
-          historique,
-          intervenants,
-          taches,
-          diagnostics,
-          controles,
-          remises,
-          documents,
-          sla,
-          cout,
-        ] = await Promise.all([
-          bonMaintenanceHistoriqueService.findByBonMaintenanceId(bon.id).catch(() => []),
-          bonMaintenanceIntervenantService.getByBonMaintenance(bon.id).catch(() => []),
-          bonMaintenanceTacheService.getByBonMaintenance(bon.id).catch(() => []),
-          bonMaintenanceDiagnosticService.getByBonMaintenance(bon.id).catch(() => []),
-          bonMaintenanceControleEquipementService.getByBonMaintenance(bon.id).catch(() => []),
-          bonMaintenanceRemiseEnServiceService.getByBonMaintenance(bon.id).catch(() => []),
-          bonMaintenanceDocumentAchatService.findByBonMaintenanceId(bon.id).catch(() => []),
-          slaService.getPourBon(bon.id).catch(() => null),
-          coutService.getPourBon(bon.id).catch(() => null),
-        ]);
 
-        if (!cancelled) {
-          setData({
-            historique: historique ?? [],
-            intervenants: intervenants ?? [],
-            taches: taches ?? [],
-            diagnostics: diagnostics ?? [],
-            controles: controles ?? [],
-            remises: remises ?? [],
-            documents: documents ?? [],
-            sla: sla ?? slaInfo,
-            cout: cout ?? coutInfo,
-          });
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
 
-    loadAll();
-    return () => { cancelled = true; };
-  }, [bon?.id]);
-
-  const axeTemps = buildAxeTemps(data);
-  const axeActeurs = buildAxeActeurs(data);
-  const axeImpact = buildAxeImpact(data, bon);
-
-  if (loading) {
-    return (
-      <div className="bmd-empty">
-        <Loader2 size={24} className="spinner" />
-        {t("Chargement du traçage...")}
-      </div>
-    );
-  }
-
-  return (
-    <div className="bmd-tracage">
-      {/* AXE 1 : TEMPS */}
-      <section className="bmd-tracage__axe">
-        <header className="bmd-tracage__axe-header">
-          <Clock size={20} />
-          <h3>{t("Axe 1 — Chronologie")}</h3>
-          <span className="bmd-tracage__count">{axeTemps.length} {t("étape(s)")}</span>
-        </header>
-
-        {axeTemps.length === 0 ? (
-          <p className="bmd-flow-empty">
-            <Inbox size={20} className="empty-icon" /> {t("Aucun événement enregistré pour ce bon.")}
-          </p>
-        ) : (
-          <div className="bmd-tracage__timeline">
-            {axeTemps.map((etape, i) => (
-              <div key={i} className={`bmd-tracage__step is-${etape.statut}`}>
-                <div className="bmd-tracage__step-dot" />
-                <div className="bmd-tracage__step-content">
-                  <div className="bmd-tracage__step-header">
-                    <span className="bmd-tracage__step-label">{t(etape.label)}</span>
-                    <span className="bmd-tracage__step-date">{etape.date}</span>
-                  </div>
-                  {etape.description && (
-                    <p className="bmd-tracage__step-desc">{t(etape.description)}</p>
-                  )}
-                  {etape.acteur && (
-                    <span className="bmd-tracage__step-acteur">
-                      <User size={12} /> {etape.acteur}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* AXE 2 : ACTEURS */}
-      <section className="bmd-tracage__axe">
-        <header className="bmd-tracage__axe-header">
-          <Users size={20} />
-          <h3>{t("Axe 2 — Acteurs")}</h3>
-          <span className="bmd-tracage__count">{axeActeurs.length} {t("acteur(s)")}</span>
-        </header>
-
-        {axeActeurs.length === 0 ? (
-          <p className="bmd-flow-empty">
-            <Inbox size={20} className="empty-icon" /> {t("Aucun acteur identifié.")}
-          </p>
-        ) : (
-          <div className="bmd-tracage__acteurs">
-            {axeActeurs.map((acteur, i) => (
-              <div key={i} className="bmd-tracage__acteur-card">
-                <div className="bmd-tracage__acteur-avatar">
-                  {acteur.type === 'interne' ? <User size={20} /> : <Users size={20} />}
-                </div>
-                <div className="bmd-tracage__acteur-info">
-                  <span className="bmd-tracage__acteur-nom">{acteur.nom}</span>
-                  <span className="bmd-tracage__acteur-role">{acteur.role}</span>
-                </div>
-                <div className="bmd-tracage__acteur-stats">
-                  <span>{acteur.nbActions} {t("action(s)")}</span>
-                  {acteur.heures != null && <span>{acteur.heures}{t("h")}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* AXE 3 : IMPACT */}
-      <section className="bmd-tracage__axe">
-        <header className="bmd-tracage__axe-header">
-          <Target size={20} />
-          <h3>{t("Axe 3 — Impact")}</h3>
-        </header>
-
-        <div className="bmd-tracage__impact-grid">
-          <ImpactCard
-            icon={Euro}
-            label={t("Coût total")}
-            value={axeImpact.coutTotal}
-            color="slate"
-          />
-          <ImpactCard
-            icon={Clock}
-            label={t("SLA réponse")}
-            value={axeImpact.slaReponse}
-            color={axeImpact.slaReponseColor}
-          />
-          <ImpactCard
-            icon={Clock}
-            label={t("SLA résolution")}
-            value={axeImpact.slaResolution}
-            color={axeImpact.slaResolutionColor}
-          />
-          <ImpactCard
-            icon={ShieldCheck}
-            label={t("Conformité")}
-            value={axeImpact.conformite}
-            color={axeImpact.conformiteColor}
-          />
-          <ImpactCard
-            icon={TrendingUp}
-            label={t("Durée totale")}
-            value={axeImpact.dureeTotale}
-            color="teal"
-          />
-        </div>
-      </section>
-    </div>
-  );
-}
-
-// ---------- HELPERS TRAÇAGE ----------
-
-function buildAxeTemps({ historique, intervenants, taches, diagnostics, controles, remises }) {
-  const events = [];
-
-  historique.forEach((h) => events.push({
-    date: h.date,
-    label: h.action || 'Événement',
-    description: h.description || '',
-    acteur: h.personnelCreationNom,
-    statut: 'info',
-  }));
-
-  diagnostics.forEach((d) => events.push({
-    date: d.dateDiagnostic,
-    label: t("Diagnostic enregistré"),
-    description: d.observations || d.causeProbable || '',
-    acteur: d.personnelNom,
-    statut: 'info',
-  }));
-
-  taches.forEach((tache) => events.push({
-    date: tache.dateDebut || tache.dateDebutIntervention,
-    label: t('Tâche : {nom}', { nom: tache.designation || `#${tache.id}` }),
-    description: tache.etat != null ? t('État : {etat}', { etat: t(TACHE_ETAT_LABELS[tache.etat] || String(tache.etat)) }) : '',
-    acteur: tache.intervenantNom,
-    statut: tache.etat === 4 ? 'success' : tache.etat === 10 ? 'danger' : 'info',
-  }));
-
-  intervenants.forEach((i) => events.push({
-    date: i.dateDebutIntervention,
-    label: t('Intervention — {nom}', { nom: i.personnel ? `${i.personnel.nom} ${i.personnel.prenom}` : (i.sousTraitant?.raisonSociale || i.intervenantNom || `#${i.id}`) }),
-    description: i.commentaire || (i.nbrHeure != null ? `${i.nbrHeure}h` : ''),
-    acteur: i.intervenantNom,
-    statut: i.etat === 2 ? 'success' : 'info',
-  }));
-
-  controles.forEach((c) => events.push({
-    date: c.dateControle,
-    label: t('Contrôle — {type}', { type: t(c.typeControle || 'Équipement') }),
-    description: c.observations || c.resultat || '',
-    acteur: c.personnelNom,
-    statut: c.conforme ? 'success' : 'danger',
-  }));
-
-  remises.forEach((r) => events.push({
-    date: r.date,
-    label: r.conforme ? 'Remise en service autorisée' : 'Remise en service refusée',
-    description: r.observations || '',
-    acteur: r.autoriseParNom,
-    statut: r.conforme ? 'success' : 'danger',
-  }));
-
-  return events
-    .filter((e) => e.date)
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .map((e) => ({ ...e, date: formatDateTime(e.date) }));
-}
-
-function buildAxeActeurs({ intervenants, controles, diagnostics, historique }) {
-  const map = new Map();
-
-  const add = (nom, role, heures = null) => {
-    if (!nom) return;
-    const key = `${nom}::${role}`;
-    const existing = map.get(key) || { nom, role, nbActions: 0, heures: 0 };
-    existing.nbActions += 1;
-    if (heures != null) existing.heures += Number(heures) || 0;
-    map.set(key, existing);
-  };
-
-  intervenants.forEach((i) => add(
-    i.personnel
-      ? `${i.personnel.nom} ${i.personnel.prenom}`
-      : (i.sousTraitant?.raisonSociale || i.intervenantNom),
-    i.personnelId ? 'Technicien interne' : 'Sous-traitant',
-    i.nbrHeure
-  ));
-  controles.forEach((c) => add(c.personnelNom, 'Contrôleur'));
-  diagnostics.forEach((d) => add(d.personnelNom, 'Diagnostiqueur'));
-  historique.forEach((h) => add(h.personnelCreationNom, 'Acteur système'));
-
-  return Array.from(map.values()).map((a) => ({
-    ...a,
-    type: a.role === 'Sous-traitant' ? 'externe' : 'interne',
-    heures: a.heures > 0 ? a.heures.toFixed(1) : null,
-  }));
-}
-
-function buildAxeImpact({ sla, cout, controles, remises }, bon) {
-  const coutTotal = cout?.coutTotal != null
-    ? t('{montant} DT', { montant: cout.coutTotal.toLocaleString(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) })
-    : '—';
-
-  const slaReponse = SLA_STATUT_LABELS[sla?.statutReponse] || 'N/A';
-  const slaReponseColor =
-    sla?.statutReponse === 'RESPECTE' ? 'success'
-    : sla?.statutReponse === 'DEPASSE' ? 'danger'
-    : sla?.statutReponse === 'EN_COURS' ? 'warning'
-    : 'slate';
-
-  const slaResolution = SLA_STATUT_LABELS[sla?.statutResolution] || 'N/A';
-  const slaResolutionColor =
-    sla?.statutResolution === 'RESPECTE' ? 'success'
-    : sla?.statutResolution === 'DEPASSE' ? 'danger'
-    : sla?.statutResolution === 'EN_COURS' ? 'warning'
-    : 'slate';
-
-  const dernierControle = controles[0];
-  const conformite = dernierControle
-    ? (dernierControle.conforme ? 'Conforme' : 'Non conforme')
-    : (remises[0] ? (remises[0].conforme ? 'Autorisée' : 'Refusée') : '—');
-  const conformiteColor = (dernierControle?.conforme || remises[0]?.conforme)
-    ? 'success'
-    : (dernierControle || remises[0]) ? 'danger' : 'slate';
-
-  let dureeTotale = '—';
-  if (bon?.date) {
-    const debut = new Date(bon.date).getTime();
-    const fin = bon.dateCloture ? new Date(bon.dateCloture).getTime() : Date.now();
-    const heures = (fin - debut) / 3600000;
-    if (!isNaN(heures) && heures >= 0) {
-      dureeTotale = heures < 48 ? t('{n} h', { n: heures.toFixed(1) }) : t('{n} j', { n: (heures / 24).toFixed(1) });
-    }
-  }
-
-  return {
-    coutTotal,
-    slaReponse,
-    slaReponseColor,
-    slaResolution,
-    slaResolutionColor,
-    conformite,
-    conformiteColor,
-    dureeTotale,
-  };
-}
-
-function ImpactCard({ icon: Icon, label, value, color }) {
-  return (
-    <div className={`bmd-tracage__impact-card is-${color}`}>
-      <Icon size={18} />
-      <span className="bmd-tracage__impact-label">{label}</span>
-      <span className="bmd-tracage__impact-value">{value}</span>
-    </div>
-  );
-}
-
-// ============================================================
-// ONGLET DOCUMENTS
-// ============================================================
 const TYPES_PIECE = { '.COMMANDE_FOURNISSEUR': 'Commande fournisseur', '.D_Fourniture': 'Demande de fourniture' };
 
-/** En-tête société des impressions : Paramètres > En-tête des impressions, sinon le prestataire de la session Cubix. */
 async function enteteImpression() {
   const params = await parametreService.getAll().catch(() => []);
   const v = (cle) => (params || []).find((p) => p.cle === cle)?.valeur?.trim() || '';
@@ -2613,7 +2210,6 @@ async function enteteImpression() {
   };
 }
 
-// Circuit d'achat des demandes et commandes (7 étapes)
 const CIRCUIT_ACHAT = [
   { cle: 'BROUILLON', label: 'Brouillon' },
   { cle: 'EN_ATTENTE_VALIDATION', label: 'En attente de validation' },
@@ -2687,15 +2283,14 @@ function DocumentsTab({ bonMaintenanceId, bon }) {
   const [transfertId, setTransfertId] = useState(null);
   const [messageCubix, setMessageCubix] = useState(null);
   const [actionId, setActionId] = useState(null);
-  const [refus, setRefus] = useState(null);         // { doc, motif }
-  const [reception, setReception] = useState(null); // { doc, lignes, saisies, chargement }
+  const [refus, setRefus] = useState(null);
+  const [reception, setReception] = useState(null);
 
   const auteur = () => {
     const u = authService.getCurrentUser() || {};
     return { personnelId: u.personnelId ?? u.userId ?? null, personnelNom: u.userNom || u.login || null };
   };
 
-  // Étape du circuit d'achat ; renvoie true si elle a réussi
   const actionCircuit = async (d, action, corps = {}) => {
     setActionId(d.id);
     setMessageCubix(null);
@@ -2731,12 +2326,10 @@ function DocumentsTab({ bonMaintenanceId, bon }) {
     const receptions = reception.lignes.map((l) => ({ ligneId: l.id, qteRecue: reception.saisies[l.id] }));
     if (await actionCircuit(reception.doc, 'receptionner', { receptions })) setReception(null);
   };
-  // Articles des lignes de pièce (PerstataireArticles), indexés par prestataireArticlesId
   const [articlesLignes, setArticlesLignes] = useState({});
   const articleDeLigne = (l) => articlesLignes[String(l.prestataireArticlesId)]
     || articles.find((a) => String(a.id) === String(l.prestataireArticlesId));
 
-  // Transfert à Cubix / MEDSYS : demande → bon de fourniture BF-…, commande → commande CMD-…
   const transfererCubix = (d) => {
     const piece = d.piece || {};
     const commande = piece.codePieceType === '.COMMANDE_FOURNISSEUR';
@@ -2763,7 +2356,6 @@ function DocumentsTab({ bonMaintenanceId, bon }) {
     });
   };
 
-  // Impression au format des rapports Cubix (demande de fourniture, commande fournisseur)
   const imprimerDocument = async (d) => {
     const piece = d.piece || {};
     setImpressionId(d.id);
@@ -3061,16 +2653,12 @@ function DocumentsTab({ bonMaintenanceId, bon }) {
   );
 }
 
-// ============================================================
-// ONGLET COMMENTAIRES
-// ============================================================
 function CommentairesTab({ bonMaintenanceId }) {
   const [commentaires, setCommentaires] = useState([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [saving, setSaving] = useState(false);
   const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
-  // Modification sur place : un seul commentaire à la fois
   const [editionId, setEditionId] = useState(null);
   const [texteEdition, setTexteEdition] = useState('');
   const [savingEdition, setSavingEdition] = useState(false);
@@ -3120,7 +2708,6 @@ function CommentairesTab({ bonMaintenanceId }) {
     if (!texte) return;
     setSavingEdition(true);
     try {
-      // Le serveur remplace l'enregistrement : on renvoie le commentaire complet (auteur conservé)
       const maj = await bonMaintenanceCommentaireService.update(c.id, { ...c, commentaire: texte });
       setCommentaires((prev) => prev.map((x) => (x.id === c.id ? { ...x, ...(maj || {}), commentaire: texte } : x)));
       annulerEdition();
@@ -3228,9 +2815,6 @@ function CommentairesTab({ bonMaintenanceId }) {
   );
 }
 
-// ============================================================
-// ONGLET HISTORIQUE
-// ============================================================
 function HistoriqueTab({ bonMaintenanceId }) {
   const [historique, setHistorique] = useState([]);
   const [loading, setLoading] = useState(true);

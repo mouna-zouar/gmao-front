@@ -4,11 +4,6 @@ import { imprimerEtiquettesQr, qrSvg } from '../../../utils/qrCode';
 import { t } from '../../../i18n';
 import './ModaleQrCode.css';
 
-/*
- * Fenêtre « QR code » d'un bon de maintenance ou d'une réclamation : aperçu de l'étiquette,
- * impression, copie du lien. Le QR code ouvre la page dans l'application.
- * Props : url, titre, sousTitre, reference, appel (phrase sous le QR code), onClose
- */
 export default function ModaleQrCode({ url, titre, sousTitre, reference, appel, onClose }) {
   const [svg, setSvg] = useState('');
   const [copie, setCopie] = useState(false);
@@ -27,7 +22,6 @@ export default function ModaleQrCode({ url, titre, sousTitre, reference, appel, 
       setCopie(true);
       setTimeout(() => setCopie(false), 2000);
     } catch {
-      /* presse-papiers indisponible (adresse non https) : le lien reste affiché */
     }
   };
 
@@ -42,7 +36,6 @@ export default function ModaleQrCode({ url, titre, sousTitre, reference, appel, 
         </header>
 
         <div className="qrm-apercu">
-          {/* SVG produit par la bibliothèque qrcode à partir de l'adresse de la page */}
           <div className="qrm-qr" dangerouslySetInnerHTML={{ __html: svg }} />
           <div className="qrm-texte">
             <strong>{titre}</strong>

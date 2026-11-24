@@ -1,27 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { t } from '../../i18n';
 
-/*
- * Formulaires décrits par une liste de champs (même description pour l'affichage, la validation et l'envoi).
- *
- *   const CHAMPS = [
- *     { nom: 'nom', label: 'Nom', type: 'texte', requis: true, longueurMax: 120, section: 'general' },
- *     { nom: 'villeId', label: 'Ville', type: 'liste', chargerOptions: () => villeService.liste(), optionValeur: 'id', optionLabel: 'nom' },
- *   ];
- *
- * Types : texte · email · tel · nombre · montant · zone (texte long) · liste · recherche (liste avec recherche) · date · dateheure · case · equipement · personnalise
- * Listes : options (ou options(valeurs)) · chargerOptions(valeurs) · cleOptions (ou cleOptions(valeurs) : recharge quand elle change)
- *          · filtrerOptions(liste, valeurs) · viderSiAbsent · libelleVers (recopie le libellé choisi dans un autre champ)
- * Personnalisé : rendu({ valeur, changer, changerChamp, valeurs, erreur, id }) · cache (gardé et envoyé, pas affiché)
- * Fenêtre : creation (champ seulement à la création ; voir ModaleFormulaire)
- * Règles : requis · min · max · longueurMax · motif (RegExp) · valider(valeur, valeurs) → message ou null
- * Affichage : largeur 'pleine' | 'demi' (défaut) · aide · placeholder · icone · visible(valeurs) · desactive(valeurs)
- * Envoi : versPayload convertit (texte vide → null, nombres, listes numériques) ; transformer(valeur, valeurs) pour un cas particulier.
- */
-
 const vide = (v) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '');
 
-/** Valeurs de départ du formulaire à partir d'un objet existant (modification) ou des valeurs par défaut (création). */
 export function valeursDepuis(champs, objet) {
   const v = {};
   champs.forEach((c) => {
@@ -38,7 +19,6 @@ export function valeursDepuis(champs, objet) {
   return v;
 }
 
-/** Message d'erreur d'un champ, ou null. */
 export function validerChamp(c, valeur, valeurs) {
   if (c.visible && !c.visible(valeurs)) return null;
   if (c.requis && (vide(valeur) || (c.type === 'case' && c.requis === 'coche' && !valeur))) {
@@ -59,7 +39,6 @@ export function validerChamp(c, valeur, valeurs) {
   return null;
 }
 
-/** Objet envoyé au serveur : conversions faites, champs masqués ignorés. */
 export function versPayload(champs, valeurs) {
   const p = {};
   champs.forEach((c) => {
@@ -78,10 +57,6 @@ export function versPayload(champs, valeurs) {
   return p;
 }
 
-/**
- * État d'un formulaire décrit par ses champs.
- * → { valeurs, erreurs, changer(nom, valeur), definir(valeurs), valider() → bool, sale, erreursParSection }
- */
 export function useFormulaire(champs, initiales) {
   const [valeurs, setValeurs] = useState(() => initiales || valeursDepuis(champs, null));
   const [erreurs, setErreurs] = useState({});

@@ -11,8 +11,6 @@ import ListeRecherche from '../../commun/ListeRecherche';
 import { t } from '../../../i18n';
 import './Gammes.css';
 
-/* Gammes d'intervention : procédures types (étapes, durées, pièces) appliquées à un bon en un clic. */
-
 export const TYPES_GAMME = { PREVENTIF: 'Préventive', CURATIF: 'Curative', REGLEMENTAIRE: 'Contrôle réglementaire' };
 export const STATUTS_GAMME = {
   BROUILLON: { label: 'Brouillon', ton: 'ambre' },
@@ -55,8 +53,6 @@ const versFormulaire = (g) => ({
   })),
   outillage: g?.outillage ?? [],
 });
-
-/* ───────── Fenêtre d'édition ───────── */
 
 function EditeurGamme({ ouvert, gamme, familles, articles, onFermer, onEnregistre }) {
   const [form, setForm] = useState(() => versFormulaire(gamme));
@@ -216,8 +212,6 @@ function EditeurGamme({ ouvert, gamme, familles, articles, onFermer, onEnregistr
   );
 }
 
-/* ───────── Page ───────── */
-
 export default function Gammes() {
   const [gammes, setGammes] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -276,12 +270,8 @@ export default function Gammes() {
 
   return (
     <PageListe
-      icone={ICONES_MODULES.gammes}
       titre={t('Gammes d’intervention')}
-      stats={[
-        { label: t('Validées'), valeur: gammes.filter((g) => g.statut === 'VALIDEE').length },
-        { label: t('Brouillons'), valeur: gammes.filter((g) => g.statut === 'BROUILLON').length },
-      ]}
+      sansEntete
       colonnes={colonnes}
       lignes={lignes}
       chargement={chargement}

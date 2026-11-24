@@ -51,7 +51,6 @@
   gap: 8px;
 }
 
-/* ═══════════════ Boutons ═══════════════ */
 .vmp-btn {
   display: inline-flex;
   align-items: center;
@@ -82,7 +81,6 @@
 .vmp-spin { animation: vmp-spin 1s linear infinite; }
 @keyframes vmp-spin { to { transform: rotate(360deg); } }
 
-/* ═══════════════ KPI compacts ═══════════════ */
 .vmp-kpis {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -115,7 +113,6 @@
 .kpi-late svg { color: var(--g-amber-600); }
 .kpi-total svg { color: var(--g-indigo-500); }
 
-/* ═══════════════ Alertes ═══════════════ */
 .vmp-alert {
   display: flex;
   align-items: center;
@@ -145,7 +142,6 @@
 }
 .vmp-link:hover { text-decoration: underline; }
 
-/* ═══════════════ Sections ═══════════════ */
 .vmp-section {
   background: var(--vmp-bg);
   border: 1px solid var(--vmp-border);
@@ -163,7 +159,6 @@
   color: var(--vmp-text);
 }
 
-/* En-tête cliquable (pour le bloc historique) */
 .vmp-section-head--clickable {
   width: 100%;
   background: none;
@@ -207,7 +202,6 @@
   font-weight: 500;
 }
 
-/* Contenu repliable du bloc historique */
 .vmp-hist-reveal {
   animation: vmp-slide-down .2s ease-out;
 }
@@ -217,7 +211,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ═══════════════ Cartes opérations ═══════════════ */
 .vmp-ops-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -262,7 +255,6 @@
 .vmp-badge-en-retard { background: var(--g-red-50); color: var(--g-red-800); }
 .vmp-badge-en-cours  { background: var(--g-indigo-50); color: var(--g-indigo-800); }
 
-/* Anneau de progression */
 .vmp-ring { position: relative; flex-shrink: 0; }
 .vmp-ring-inner {
   position: absolute;
@@ -300,7 +292,6 @@
 
 .vmp-op-foot .is-late { color: var(--g-red-600); font-weight: 600; }
 
-/* ═══════════════ Historique — cartes ═══════════════ */
 .vmp-historique {
   display: flex;
   flex-direction: column;
@@ -323,7 +314,6 @@
   border-left-color: var(--g-teal-700);
 }
 
-/* Bloc date compact */
 .vmp-hist-date {
   display: flex;
   flex-direction: column;
@@ -359,7 +349,6 @@
   margin-top: 1px;
 }
 
-/* Corps de la carte */
 .vmp-hist-body {
   flex: 1;
   display: flex;
@@ -391,7 +380,6 @@
   flex-wrap: wrap;
 }
 
-/* Grille des km */
 .vmp-hist-km {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -444,7 +432,6 @@
   align-self: flex-start;
 }
 
-/* ═══════════════ Tags origine / état ═══════════════ */
 .vmp-origine {
   padding: 1px 8px;
   border-radius: 8px;
@@ -470,7 +457,6 @@
   border-radius: 6px;
 }
 
-/* ═══════════════ État vide ═══════════════ */
 .vmp-empty {
   display: flex;
   flex-direction: column;
@@ -482,7 +468,6 @@
 }
 .vmp-empty p { margin: 0; }
 
-/* ═══════════════ Responsive ═══════════════ */
 @media (max-width: 640px) {
   .vmp-kpis { grid-template-columns: repeat(2, 1fr); }
   .vmp-header { flex-direction: column; align-items: stretch; }

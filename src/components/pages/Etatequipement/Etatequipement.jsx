@@ -1,15 +1,15 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import jsPDF from 'jspdf';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import equipementService from '../../../services/equipementService';
 import ScannerQR from '../Equipements/ScannerQR';
 import { imprimerEtiquettes } from '../Equipements/qrEtiquettes';
 import etatEquipementService from '../../../services/Etatequipementservice';
-import disponibiliteService from '../../../services/Disponibiliteservice ';
+import disponibiliteService from '../../../services/Disponibiliteservice';
 import risqueService from '../../../services/Risqueservice';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../constants/Criticite';
 import EquipementMaintenancePanel from './Equipementmaintenancepanel';
-import EquipementMaintenanceTypesSettings from './EquipementMaintenanceTypesSettings';
+import EquipementMaintenanceTypesSettings from './Equipementmaintenancetypessettings';
 import ListeEquipements from './ListeEquipements';
 import Arborescence from '../Equipements/Arborescence';
 import '../Equipements/Equipements.css';
@@ -21,11 +21,9 @@ import { PastillesStats } from '../../commun';
 import { ArrowRight, ChevronDown, List, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
 import { VeillePage, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
 
-/* ---------- Risque ---------- */
 const RISQUE_NIVEAU_LABELS = { CRITIQUE: 'Critique', ELEVE: 'Élevé', MODERE: 'Modéré', FAIBLE: 'Faible' };
 const RISQUE_TENDANCE_LABELS = { HAUSSE: 'En hausse', BAISSE: 'En baisse', STABLE: 'Stable' };
 
-/* ---------- Disponibilité ---------- */
 const DISPO_SEUIL_BON = 95;
 const DISPO_SEUIL_MOYEN = 80;
 
@@ -45,7 +43,6 @@ function formatDureeHeures(heures) {
   return t('{n} j', { n: (heures / 24).toFixed(1) });
 }
 
-/* ---------- Config ---------- */
 const ETAT_LABELS = {
   EN_SERVICE: 'En service',
   EN_PANNE: 'En panne',
@@ -53,12 +50,10 @@ const ETAT_LABELS = {
   HORS_SERVICE: 'Hors service',
 };
 const ETATS = ['EN_SERVICE', 'EN_PANNE', 'EN_REPARATION', 'HORS_SERVICE'];
-// Même échelle de couleurs que les autres écrans de veille
 const ETAT_TON = { EN_SERVICE: 'succes', EN_PANNE: 'danger', EN_REPARATION: 'info', HORS_SERVICE: 'orange' };
 const RISQUE_TON = { CRITIQUE: 'danger', ELEVE: 'orange', MODERE: 'attention', FAIBLE: 'succes' };
 const DISPO_TON = { bon: 'succes', moyen: 'attention', critique: 'danger', inconnu: 'neutre' };
 
-/* ---------- Utils ---------- */
 function formatDateTime(iso, loc = locale()) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -73,7 +68,6 @@ function joursDepuis(iso) {
   return Math.max(0, Math.floor((Date.now() - d.getTime()) / (1000 * 60 * 60 * 24)));
 }
 
-/* ---------- Icônes ---------- */
 const IconRefresh = () => (
   <RefreshCw size={15} aria-hidden="true" />
 );
@@ -105,9 +99,6 @@ const IconDownload = () => (
 const IconClock = () => (
   <Clock size={13} aria-hidden="true" />
 );
-const IconHistory = () => (
-  <History size={13} aria-hidden="true" />
-);
 const IconSettings = () => (
   <Settings size={15} aria-hidden="true" />
 );
@@ -120,7 +111,6 @@ const IconQr = () => (
 const IconClose = () => (<X size={14} aria-hidden="true" />);
 const IconArrowRight = () => (<ArrowRight size={13} aria-hidden="true" />);
 
-/* Cartes d'indicateurs (style des tableaux de bord) : icône et couleur par état. */
 const ETAT_STAT = {
   EN_SERVICE: { Icone: CircleCheck, ton: 'vert' },
   EN_PANNE: { Icone: CircleX, ton: 'rouge' },
@@ -128,7 +118,6 @@ const ETAT_STAT = {
   HORS_SERVICE: { Icone: CirclePause, ton: 'orange' },
 };
 
-/* Page au style des tableaux de bord (bons, réclamations, parc) ; dans une fenêtre, l'ancien cadre compact. */
 function Cadre({ isModal, actions, pastilles, children }) {
   if (isModal) {
     return (
@@ -161,7 +150,6 @@ const ETAT_ICONS = {
   HORS_SERVICE: IconPause,
 };
 
-/* ---------- Export PDF ---------- */
 export function exporterHistoriquePDF(equipement, historique) {
   const doc = new jsPDF();
   const marginX = 14;
@@ -237,13 +225,10 @@ export function exporterHistoriquePDF(equipement, historique) {
   doc.save(nomFichier);
 }
 
-/* ---------- Composant ---------- */
-/* Page « Équipements » : tableau commun (PageListe). La fenêtre des bons garde l'ancienne vue compacte. */
 export default function EtatEquipement({ isModal = false }) {
   return isModal ? <EtatEquipementCompact isModal /> : <EquipementsVues />;
 }
 
-/* Trois vues : la liste (tableau), l'arborescence des lieux (?vue=arbre) et les paramètres préventifs (?vue=preventif) */
 function EquipementsVues() {
   const [params, setParams] = useSearchParams();
   const vue = ['arbre', 'preventif'].includes(params.get('vue')) ? params.get('vue') : 'liste';
@@ -252,20 +237,20 @@ function EquipementsVues() {
     if (v === 'liste') n.delete('vue'); else n.set('vue', v);
     return n;
   }, { replace: true });
+  const vues = (
+    <Onglets actif={vue} onChanger={changer} ariaLabel={t('Vues')}
+      onglets={[
+        { cle: 'liste', label: t('Liste'), icone: List },
+        { cle: 'arbre', label: t('Arborescence'), icone: Network },
+        { cle: 'preventif', label: t('Paramètres préventifs'), icone: Settings },
+      ]} />
+  );
+  if (vue === 'liste') return <ListeEquipements vues={vues} />;
   return (
     <>
-      <div className="leq-vues">
-        <Onglets actif={vue} onChanger={changer} ariaLabel={t('Vues')}
-          onglets={[
-            { cle: 'liste', label: t('Liste'), icone: List },
-            { cle: 'arbre', label: t('Arborescence'), icone: Network },
-            { cle: 'preventif', label: t('Paramètres préventifs'), icone: Settings },
-          ]} />
-      </div>
+      <div className="leq-vues">{vues}</div>
       {vue === 'arbre' && <main className="cl-page eq-theme arb-page"><Arborescence /></main>}
-      {/* Page à part (et non une fenêtre) : ses formulaires s'ouvrent sans fenêtre dans une fenêtre */}
       {vue === 'preventif' && <main className="cl-page eq-theme leq-preventif"><EquipementMaintenanceTypesSettings /></main>}
-      {vue === 'liste' && <ListeEquipements />}
     </>
   );
 }
@@ -279,11 +264,9 @@ function EtatEquipementCompact({ isModal = false }) {
   const [message, setMessage] = useState(null);
   const [filtreEtat, setFiltreEtat] = useState('TOUS');
   const [recherche, setRecherche] = useState('');
-  // Adresse IP des équipements (fiche équipement → « Connexion réseau ») : filtre Avec / Sans IP
   const [connexions, setConnexions] = useState({});
   const [filtreIp, setFiltreIp] = useState('TOUS');
   const [filtreFamille, setFiltreFamille] = useState('');
-  // Pagination de la liste (taille choisie gardée dans ce navigateur)
   const [page, setPage] = useState(0);
   const [taillePage, setTaillePage] = useState(() => {
     try { return Number(localStorage.getItem('gmao.equipements.taillePage.v2')) || 10; } catch { return 10; }
@@ -291,7 +274,7 @@ function EtatEquipementCompact({ isModal = false }) {
   const changerTaillePage = (n) => {
     setTaillePage(n);
     setPage(0);
-    try { localStorage.setItem('gmao.equipements.taillePage.v2', String(n)); } catch { /* stockage indisponible */ }
+    try { localStorage.setItem('gmao.equipements.taillePage.v2', String(n)); } catch {}
   };
   const [equipementOuvert, setEquipementOuvert] = useState(null);
   const [historique, setHistorique] = useState([]);
@@ -448,8 +431,6 @@ function EtatEquipementCompact({ isModal = false }) {
 
   const fermerScanner = useCallback(() => setScanner(false), []);
 
-  // Recherche insensible à la casse et aux accents, sur le nom et le n° de l'équipement ;
-  // plusieurs mots : chacun doit être présent (« moniteur rea » trouve « Moniteur réanimation »).
   const sansAccents = (v) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const motsRecherche = sansAccents(recherche).split(/\s+/).filter(Boolean);
   const correspond = (e) => {
@@ -458,7 +439,6 @@ function EtatEquipementCompact({ isModal = false }) {
     return motsRecherche.every((m) => texte.includes(m.replace(/^#/, '')));
   };
 
-  // Un seul état par équipement (au cas où le serveur en renverrait deux pour le même)
   const etatsUniques = useMemo(() => {
     const parId = new Map();
     etats.forEach((e) => {
@@ -470,10 +450,8 @@ function EtatEquipementCompact({ isModal = false }) {
   }, [etats]);
 
   const aUneIp = (e) => !!connexions[e.lotArticleImmobilistationId];
-  // Hors ligne : déclaré par la surveillance automatique (plusieurs tests ratés d'affilée)
   const estHorsLigne = (e) => !!connexions[e.lotArticleImmobilistationId]?.horsLigneDepuis;
   const nbAvecIp = etatsUniques.filter(aUneIp).length;
-  // Familles d'articles présentes dans le parc (lues dans Cubix), avec leur nombre
   const familles = useMemo(() => {
     const m = new Map();
     let sansFamille = 0;
@@ -498,7 +476,6 @@ function EtatEquipementCompact({ isModal = false }) {
       || (filtreFamille === 'AUCUNE' ? e.familleId == null : String(e.familleId) === filtreFamille))
     .filter(correspond);
 
-  // Retour à la première page quand le filtre ou la recherche change
   useEffect(() => { setPage(0); }, [filtreEtat, filtreIp, filtreFamille, recherche]);
   const nbPagesEq = Math.max(1, Math.ceil(etatsAffiches.length / taillePage));
   const pageCourante = Math.min(page, nbPagesEq - 1);
@@ -513,8 +490,6 @@ function EtatEquipementCompact({ isModal = false }) {
 
   const total = etatsUniques.length;
 
-  // Sélection de toutes les lignes visibles (impression des étiquettes)
-  // La case d'en-tête coche / décoche les équipements de la page affichée
   const tousCoches = etatsPage.length > 0 && etatsPage.every((e) => selection.has(e.lotArticleImmobilistationId));
   const basculerTout = () => setSelection((s) => {
     const n = new Map(s);

@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '../Button';
-import personnelService from '../../../services/personnelService';
+import personnelService from '../../../services/Personnelservice';
 import permisConduiteService from '../../../services/permisConduiteService';
 import {
   IdCard, X, User, Calendar, Loader2, AlertTriangle, Save, Tags, MapPin,
@@ -10,8 +10,6 @@ import './Modal.css';
 import './BonMaintenanceModal.css';
 import './PermisConduiteModal.css';
 
-// ─── Référentiel de secours (au cas où l'appel /permis-conduite/categories échoue) ───
-// Catégories du permis de conduire tunisien (ATTT / code de la route tunisien).
 const FALLBACK_CATEGORIES = [
   { code: 'A1', libelleCourt: 'A1', libelle: 'Motocyclette légère', description: 'Cylindrée ≤ 125 cm³, puissance ≤ 11 kW.' },
   { code: 'A', libelleCourt: 'A', libelle: 'Motocyclette', description: 'Toutes cylindrées, avec ou sans side-car.' },
@@ -40,7 +38,6 @@ const NAV_SECTIONS = [
   { id: 'validite', label: 'Validité', Icon: Calendar },
 ];
 
-// ─── Select avec recherche intégrée (combobox) ───
 const SearchableSelect = ({
   id,
   name,
@@ -488,7 +485,6 @@ const PermisConduiteModal = ({ isOpen, onClose, onSave, permis, isEditing }) => 
               </div>
             </div>
 
-            {/* Récapitulatif */}
             <div className="bmm-summary">
               <div className="bmm-summary-row">
                 <span className="bmm-summary-label">Conducteur</span>
@@ -525,7 +521,6 @@ const PermisConduiteModal = ({ isOpen, onClose, onSave, permis, isEditing }) => 
     <div className="modal-overlay" onClick={onClose}>
       <div className="bmm-modal bmm-modal--sm" onClick={(e) => e.stopPropagation()}>
 
-        {/* HEADER */}
         <div className="bmm-header">
           <div className="bmm-header-left">
             <div className="bmm-header-icon-wrap">
@@ -545,10 +540,8 @@ const PermisConduiteModal = ({ isOpen, onClose, onSave, permis, isEditing }) => 
           </div>
         </div>
 
-        {/* LAYOUT SPLIT : NAV + CONTENU */}
         <form className="bmm-layout" onSubmit={handleSubmit}>
 
-          {/* NAVIGATION LATÉRALE */}
           <aside className="bmm-nav">
             <div className="bmm-nav-title">Sections</div>
             <nav className="bmm-nav-list">
@@ -579,7 +572,6 @@ const PermisConduiteModal = ({ isOpen, onClose, onSave, permis, isEditing }) => 
             </nav>
           </aside>
 
-          {/* CONTENU */}
           <div className="bmm-content">
             {renderContent()}
 
@@ -592,7 +584,6 @@ const PermisConduiteModal = ({ isOpen, onClose, onSave, permis, isEditing }) => 
           </div>
         </form>
 
-        {/* FOOTER */}
         <div className="bmm-footer">
           <div className="bmm-footer-left">
             <span className="bmm-footer-step">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_PAGES, NAV_SECTIONS, trouverPage } from '../../constants/navigation';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -11,12 +11,10 @@ import { t, locale, SelecteurLangue } from '../../i18n';
 import { History, X, Bell, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Search, Sparkles } from 'lucide-react';
 import AssistantQuestions from '../ui/AssistantQuestions/AssistantQuestions';
 import './Layout.css';
-// Logo importé (et non « ../src/assets/… ») : chemin juste aussi dans la version construite pour la production
 import logoSoftSys from '../../assets/logo_SoftSys.png';
 import '../ui/BadgeStatut/statuts-harmonises.css';
 
 const NB_RECENTS = 5;
-// Minuscules sans accents, pour chercher « reclamation » comme « Réclamation »
 const normaliser = (texte) => String(texte || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const cleRecents = (user) => `gmao-pages-recentes-${user?.id ?? user?.userId ?? user?.login ?? 'anonyme'}`;
 function lireRecents(cle) {
@@ -29,18 +27,15 @@ export default function Layout({ children }) {
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [activePopup, setActivePopup] = useState(null);
   const [notifDropOpen, setNotifDropOpen] = useState(false);
-  // Notifications dans le store Redux (src/store/notificationsSlice.js) : lisibles depuis n'importe quel écran
   const dispatch = useAppDispatch();
   const notifications = useAppSelector(selectNotifications);
   const notifCount = useAppSelector(selectNotifCount);
   const notifLoading = useAppSelector(selectNotifChargement);
   const [assistantOuvert, setAssistantOuvert] = useState(false);
   const fermerAssistant = useCallback(() => setAssistantOuvert(false), []);
-  // Barre « Demander à l'IA » au centre de l'en-tête : la question tapée part dès l'ouverture du panneau
   const [questionIa, setQuestionIa] = useState('');
   const [questionEnvoyee, setQuestionEnvoyee] = useState(null);
   const questionLue = useCallback(() => setQuestionEnvoyee(null), []);
-  // Ouverture demandée par une page (ex. fiche équipement → « Demander à l'IA »)
   useEffect(() => {
     const ouvrirAssistant = () => setAssistantOuvert(true);
     window.addEventListener('gmao:assistant', ouvrirAssistant);
@@ -66,29 +61,25 @@ export default function Layout({ children }) {
 
   const currentPath = location.pathname;
 
-  // Page du menu ouverte (tient compte des paramètres comme ?vue=…)
   const pageActive = trouverPage(currentPath, location.search);
   const activeNavItem = pageActive?.parent;
   const activeChild = pageActive && !pageActive.racine ? pageActive : null;
 
-  /* ── Pages récentes (propres à l'utilisateur, gardées dans ce navigateur) ── */
   const cle = cleRecents(user);
   const [recents, setRecents] = useState(() => ({ cle, liste: lireRecents(cle) }));
   let listeRecents = recents.cle === cle ? recents.liste : lireRecents(cle);
   if (pageActive && pageActive.path !== '/' && (recents.cle !== cle || listeRecents[0] !== pageActive.path)) {
-    // Mise à jour pendant le rendu (pas d'effet) : la page ouverte passe en tête
     listeRecents = [pageActive.path, ...listeRecents.filter((p) => p !== pageActive.path)].slice(0, NB_RECENTS);
     setRecents({ cle, liste: listeRecents });
   }
   useEffect(() => {
-    try { localStorage.setItem(recents.cle, JSON.stringify(recents.liste)); } catch { /* stockage indisponible */ }
+    try { localStorage.setItem(recents.cle, JSON.stringify(recents.liste)); } catch {}
   }, [recents]);
   const pagesRecentes = listeRecents
     .map((p) => NAV_PAGES.find((page) => page.path === p))
     .filter((page) => page && page !== pageActive)
     .slice(0, 4);
 
-  /* ── Fenêtre d'un groupe (menu réduit) : placée à côté de son icône, toujours entière à l'écran ── */
   const popupRef = useRef(null);
   useLayoutEffect(() => {
     const el = popupRef.current;
@@ -98,14 +89,13 @@ export default function Layout({ children }) {
       if (!bouton) return;
       const marge = 12;
       const b = bouton.getBoundingClientRect();
-      const aDroite = b.left > window.innerWidth / 2; // menu collé au bord droit : fenêtre à gauche de l'icône
+      const aDroite = b.left > window.innerWidth / 2;
       el.style.position = 'fixed';
       el.style.maxHeight = `${window.innerHeight - 2 * marge}px`;
       el.style.overflowY = 'auto';
       if (aDroite) { el.style.left = 'auto'; el.style.right = `${window.innerWidth - b.left + 8}px`; }
       else { el.style.right = 'auto'; el.style.left = `${b.right + 8}px`; }
       const h = el.offsetHeight;
-      // En face de l'icône, remontée si elle dépasse le bas de l'écran
       el.style.top = `${Math.max(marge, Math.min(b.top, window.innerHeight - marge - h))}px`;
     };
     placer();
@@ -119,7 +109,6 @@ export default function Layout({ children }) {
     };
   }, [activePopup, sidebarOpen]);
 
-  /* ── Recherche dans le menu ── */
   const [recherche, setRecherche] = useState('');
   const champRecherche = useRef(null);
   const resultats = useMemo(() => {
@@ -135,7 +124,6 @@ export default function Layout({ children }) {
     setActivePopup(null);
     navigate(page.path);
   };
-  // Ctrl+K (ou ⌘K) : ouvrir le menu et chercher une page
   useEffect(() => {
     const surTouche = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -154,7 +142,6 @@ export default function Layout({ children }) {
     }
   }, [activeNavItem, sidebarOpen]);
 
-  // Compteur de notifications : toutes les 60 s, seulement quand l'onglet est visible (et au retour sur l'onglet)
   useEffect(() => {
     const charger = () => dispatch(chargerCompteur());
     charger();
@@ -209,9 +196,7 @@ export default function Layout({ children }) {
   return (
     <div className="app-shell">
 
-      {/* ── SIDEBAR ── */}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : 'sidebar--closed'}`}>
-        {/* Logo / Toggle */}
         <div className="sidebar__header">
           {sidebarOpen ? (
             <>
@@ -229,7 +214,6 @@ export default function Layout({ children }) {
           )}
         </div>
 
-        {/* Search */}
         {sidebarOpen && (
           <div className="sidebar__search">
             <Search strokeWidth={2} aria-hidden="true" />
@@ -254,7 +238,6 @@ export default function Layout({ children }) {
           </div>
         )}
 
-        {/* Nav */}
         <nav className="sidebar__nav">
           {sidebarOpen && recherche.trim() ? (
             <div className="menu-recherche">
@@ -314,7 +297,6 @@ export default function Layout({ children }) {
                 {item.badge && !sidebarOpen && <span className="nav-item__badge-dot" />}
               </button>
 
-              {/* Popup (collapsed) — scroll si > 6 enfants */}
               {!sidebarOpen && activePopup === item.id && (
                 <div className="nav-popup" ref={popupRef}>
                   <span className="nav-popup__title">{t(item.label)}</span>
@@ -350,7 +332,6 @@ export default function Layout({ children }) {
                 </div>
               )}
 
-              {/* Submenu (expanded) — 6 items max visibles, puis ascenseur */}
               {sidebarOpen && item.children && (
                 <div
                   className={`submenu ${openSubmenu === item.id ? 'submenu--open' : ''}`}
@@ -379,7 +360,6 @@ export default function Layout({ children }) {
           </>)}
         </nav>
 
-        {/* Logout */}
         <div className="sidebar__footer">
           <button className={`nav-item nav-item--logout ${!sidebarOpen ? 'nav-item--icon-only' : ''}`} onClick={handleLogout}>
             <span className="nav-item__icon">
@@ -407,7 +387,6 @@ export default function Layout({ children }) {
 
             {activeNavItem && currentPath !== '/' && (
               <>
-                {/* Groupe « Accueil » : déjà la racine du fil d'Ariane, on ne le répète pas */}
                 {activeNavItem.id !== 'dashboard' && (
                   <>
                     <ChevronRight strokeWidth={2} className="rtl-miroir" aria-hidden="true" />
@@ -438,7 +417,6 @@ export default function Layout({ children }) {
         </form>
 
         <div className="navbar__right">
-          {/* Petits écrans : la barre est masquée, l'icône ouvre le panneau */}
           <button type="button" className="navbar__icon-btn navbar__icon-btn--ia" onClick={() => setAssistantOuvert(true)}
             title={t('Demander à l’IA')} aria-label={t('Demander à l’IA')}>
             <Sparkles strokeWidth={2} aria-hidden="true" />
@@ -505,7 +483,6 @@ export default function Layout({ children }) {
                   <p className="user-dropdown__name">{user?.login || t('Utilisateur')}</p>
                   <p className="user-dropdown__email">{user?.admin ? t('Administrateur') : t('Utilisateur')}</p>
                 </div>
-                {/* Choix de la langue, accessible depuis toutes les pages */}
                 <div className="user-dropdown__langue">
                   <span className="user-dropdown__langue-titre">{t('Langue')}</span>
                   <SelecteurLangue className="layout-langue" />

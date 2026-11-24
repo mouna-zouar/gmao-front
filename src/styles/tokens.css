@@ -1,21 +1,7 @@
-/*
- * Couleurs et polices de l'application — SOURCE UNIQUE.
- *
- * Couche 1 (palette) : toutes les couleurs utilisées, nommées --g-<famille>-<niveau>.
- *   Les valeurs sont EXACTEMENT celles qui étaient écrites en dur dans les CSS : les remplacer
- *   par ces variables n'a rien changé à l'affichage.
- * Couche 2 (rôles) : --g-marque, --g-texte, --g-bordure, --g-succes… à utiliser dans le code neuf.
- *   Pour changer le thème plus tard (mode sombre, autre client), on change surtout cette couche.
- *
- * Règle : plus de couleur en dur (#xxxxxx) dans un CSS — utiliser une variable d'ici.
- */
-
 :root {
-  /* ── Base ── */
   --g-blanc: #ffffff;
   --g-noir: #000000;
 
-  /* ── Marque (turquoise GMAO) ── */
   --g-brand-25: #f3fcfd;
   --g-brand-50: #e9f8fa;
   --g-brand-75: #e3f3f5;
@@ -30,7 +16,6 @@
   --g-brand-800: #045a64;
   --g-brand-900: #054e57;
 
-  /* ── Encre (pages détail : réclamation, bon, mission) ── */
   --g-ink-25: #f2f6f6;
   --g-ink-50: #e8eef0;
   --g-ink-100: #d7e3e5;
@@ -39,19 +24,16 @@
   --g-ink-650: #45636a;
   --g-ink-900: #12303a;
 
-  /* ── Bleu Parc auto ── */
   --g-parc-400: #5ba8c9;
   --g-parc-500: #287da8;
   --g-parc-600: #1b648f;
 
-  /* ── Bleu nuit (tableaux de bord) ── */
   --g-navy-700: #2e3f5a;
   --g-navy-750: #2a3a52;
   --g-navy-800: #263450;
   --g-navy-850: #223047;
   --g-navy-900: #1e2a3d;
 
-  /* ── États (pages détail) ── */
   --g-alerte-50: #fde8e9;
   --g-alerte-500: #d9434b;
   --g-alerte-700: #b8323a;
@@ -63,11 +45,9 @@
   --g-info-50: #e6eefb;
   --g-info-600: #2c5fb8;
 
-  /* ── Fonds très clairs ── */
   --g-fond-25: #fafbfc;
   --g-fond-30: #fafbfd;
 
-  /* ── Palette standard (mêmes valeurs que Tailwind CSS v3) ── */
   --g-slate-50: #f8fafc;
   --g-slate-100: #f1f5f9;
   --g-slate-200: #e2e8f0;
@@ -239,7 +219,6 @@
   --g-rose-800: #9f1239;
   --g-rose-900: #881337;
 
-  /* ── Rôles (à utiliser dans le code neuf) ── */
   --g-marque: var(--g-brand-500);
   --g-marque-fonce: var(--g-brand-600);
   --g-marque-tres-fonce: var(--g-brand-750);
@@ -267,35 +246,26 @@
   --g-info-fond: var(--g-blue-50);
   --g-info-texte: var(--g-blue-700);
 
-  /* ── Polices ── */
   --g-police: 'Inter', system-ui, -apple-system, sans-serif;
   --g-police-arabe: 'IBM Plex Sans Arabic', system-ui, sans-serif;
   --g-police-titre: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
   --g-police-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
-  /* ══════════════════════════════════════════════════════════════════
-   * Fondations du design (lot 0) — échelles communes à tous les modules.
-   * Rien ne change à l'écran tant qu'un composant ne les utilise pas :
-   * les composants communs (boutons, champs, tableaux, cartes, modales) passeront dessus au lot 2.
-   * Préfixe --g- pour ne pas croiser les variables locales des pages (--radius, --shadow-sm…).
-   * ══════════════════════════════════════════════════════════════════ */
 
-  /* ── Texte : 7 tailles (au lieu de 107) ── */
-  --g-texte-xs: 0.75rem;    /* 12 px — étiquettes, aides, badges */
-  --g-texte-sm: 0.8125rem;  /* 13 px — tableaux, champs, boutons */
-  --g-texte-md: 0.875rem;   /* 14 px — texte courant */
-  --g-texte-lg: 1rem;       /* 16 px — titres de carte */
-  --g-texte-xl: 1.125rem;   /* 18 px — titres de section, de fenêtre */
-  --g-texte-2xl: 1.375rem;  /* 22 px — titre de page */
-  --g-texte-3xl: 1.75rem;   /* 28 px — chiffres clés des tableaux de bord */
+  --g-texte-xs: 0.75rem;
+  --g-texte-sm: 0.8125rem;
+  --g-texte-md: 0.875rem;
+  --g-texte-lg: 1rem;
+  --g-texte-xl: 1.125rem;
+  --g-texte-2xl: 1.375rem;
+  --g-texte-3xl: 1.75rem;
   --g-graisse-normale: 400;
   --g-graisse-moyenne: 500;
   --g-graisse-forte: 600;
   --g-graisse-titre: 700;
   --g-interligne-serre: 1.25;
   --g-interligne: 1.5;
-  --g-lettrage-majuscules: 0.06em; /* petits titres en MAJUSCULES */
+  --g-lettrage-majuscules: 0.06em;
 
-  /* ── Espacements : pas de 4 px ── */
   --g-espace-1: 4px;
   --g-espace-2: 8px;
   --g-espace-3: 12px;
@@ -305,51 +275,43 @@
   --g-espace-8: 32px;
   --g-espace-10: 40px;
 
-  /* ── Arrondis : 3 niveaux (au lieu de 8) + pastille ── */
-  --g-rayon-sm: 6px;      /* badges, petites puces, cases */
-  --g-rayon-md: 8px;      /* boutons, champs, menus */
-  --g-rayon-lg: 12px;     /* cartes, fenêtres, tableaux */
+  --g-rayon-sm: 6px;
+  --g-rayon-md: 8px;
+  --g-rayon-lg: 12px;
   --g-rayon-pastille: 999px;
 
-  /* ── Hauteurs des contrôles (boutons, champs, listes alignés) ── */
   --g-hauteur-sm: 32px;
   --g-hauteur-md: 38px;
   --g-hauteur-lg: 44px;
-  --g-hauteur-ligne: 44px; /* ligne de tableau */
+  --g-hauteur-ligne: 44px;
 
-  /* ── Ombres : 4 niveaux (au lieu de 376 variantes) ── */
-  --g-ombre-xs: 0 1px 2px rgba(15, 23, 42, 0.05);                                          /* champs, boutons secondaires */
-  --g-ombre-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);       /* cartes */
-  --g-ombre-md: 0 6px 16px -4px rgba(15, 23, 42, 0.10), 0 2px 4px -2px rgba(15, 23, 42, 0.06); /* menus, info-bulles */
-  --g-ombre-lg: 0 24px 48px -12px rgba(15, 23, 42, 0.25);                                  /* fenêtres */
-  --g-ombre-marque: 0 6px 16px -6px rgba(7, 148, 164, 0.55);                                /* bouton principal */
+  --g-ombre-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --g-ombre-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --g-ombre-md: 0 6px 16px -4px rgba(15, 23, 42, 0.10), 0 2px 4px -2px rgba(15, 23, 42, 0.06);
+  --g-ombre-lg: 0 24px 48px -12px rgba(15, 23, 42, 0.25);
+  --g-ombre-marque: 0 6px 16px -6px rgba(7, 148, 164, 0.55);
 
-  /* ── Focus clavier : un seul anneau partout ── */
   --g-anneau: 0 0 0 3px rgba(7, 148, 164, 0.22);
   --g-anneau-danger: 0 0 0 3px rgba(220, 38, 38, 0.18);
   --g-contour-focus: 2px solid var(--g-brand-500);
 
-  /* ── Mouvements : courts et doux ── */
-  --g-duree-rapide: 120ms;  /* survol, couleur */
-  --g-duree: 180ms;         /* ouverture de menu, de carte */
-  --g-duree-lente: 260ms;   /* fenêtre, panneau latéral */
-  --g-courbe: cubic-bezier(0.2, 0, 0, 1);          /* sortie douce */
+  --g-duree-rapide: 120ms;
+  --g-duree: 180ms;
+  --g-duree-lente: 260ms;
+  --g-courbe: cubic-bezier(0.2, 0, 0, 1);
   --g-courbe-entree: cubic-bezier(0.32, 0.72, 0, 1);
 
-  /* ── Superpositions ── */
   --g-z-menu: 40;
   --g-z-entete: 50;
   --g-z-fenetre: 1000;
   --g-z-notification: 1100;
   --g-voile: rgba(15, 23, 42, 0.45);
 
-  /* ── Surfaces des tableaux ── */
   --g-ligne-survol: var(--g-slate-50);
   --g-ligne-selection: var(--g-brand-50);
   --g-entete-tableau: var(--g-slate-50);
 }
 
-/* Animations coupées quand le système demande « réduire les animations » (accessibilité) */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --g-duree-rapide: 0ms;

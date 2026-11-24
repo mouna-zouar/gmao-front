@@ -1,4 +1,3 @@
-/* Choix de l'équipement : recherche serveur + scanner (QR / code-barre) */
 .cheq {
   --cheq-accent: var(--g-brand-500);
   --cheq-accent-deep: var(--g-brand-800);
@@ -37,7 +36,6 @@
 .cheq-icone { flex-shrink: 0; color: var(--g-slate-400); }
 .cheq-champ.is-open .cheq-icone { color: var(--cheq-accent); }
 
-/* les styles des formulaires (input { … }) ne doivent pas déborder ici */
 .cheq .cheq-input {
   flex: 1;
   min-width: 0;
@@ -168,7 +166,6 @@
   .cheq-scanner { padding: 0 11px; }
 }
 
-/* Filtre « famille » en haut de la liste */
 .cheq-filtre {
   display: flex;
   align-items: center;
@@ -198,7 +195,6 @@
 .cheq .cheq-menu .cheq-filtre select:focus { outline: none; border-color: var(--g-marque, #0e7490); box-shadow: 0 0 0 3px var(--g-marque-clair, rgba(14,116,144,.15)); }
 .cheq-filtre-note { flex-basis: 100%; color: var(--g-texte-discret, #94a3b8); }
 
-/* Filtre « équipements du service » (en tête de la liste) */
 .cheq-service { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--g-slate-100, #f1f5f9); }
 .cheq-service-btn {
   display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 10px; border: 1px solid var(--g-slate-300, #cbd5e1);
@@ -210,5 +206,4 @@
 .cheq-service-tous { min-height: 28px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; color: var(--g-slate-500, #64748b); font-family: inherit; font-size: 0.76rem; font-weight: 600; cursor: pointer; }
 .cheq-service-tous:hover { background: var(--g-slate-100, #f1f5f9); color: var(--g-slate-800, #1e293b); }
 
-/* Dans une fenêtre courte (ex. étape « Équipement ») : la fenêtre grandit pour que la liste ouverte ne soit pas coupée */
 .cm-modale__corps:has(.cheq-menu) { min-height: 470px; }

@@ -37,10 +37,6 @@ import EspaceTableau from './EspaceTableau';
 import { COLONNES_KANBAN, construireTravaux, refBon, versDate } from './espacePlanning';
 import './EspacePersonnel.css';
 
-/* ------------------------------------------------------------------ */
-/*  Référentiels d'états                                               */
-/* ------------------------------------------------------------------ */
-
 const ETAT_LABELS = {
   bons: { 1: 'Nouveau', 2: 'Suspendu', 3: 'En cours', 4: 'Effectué', 10: 'Annulé' },
   reclamations: {
@@ -51,12 +47,10 @@ const ETAT_LABELS = {
     2: 'Clôturée',
     4: 'Annulée',
   },
-  // Valeurs réelles de BonMaintenanceTache.etat (1 Nouveau … 10 Annulé)
   taches: TACHE_ETAT_LABELS,
   interventions: INTERVENANT_ETAT_LABELS,
 };
 
-// Mêmes tons que partout dans la GMAO (constants/statuts.js) : Annulé et Rejetée en gris
 const ETAT_TONS = {
   bons: { 1: 'info', 2: 'attention', 3: 'action', 4: 'ok', 10: 'neutre' },
   reclamations: { 0: 'info', 1: 'action', 2: 'ok', 3: 'attention', 4: 'neutre' },
@@ -64,10 +58,8 @@ const ETAT_TONS = {
   interventions: { 0: 'info', 1: 'action', 2: 'ok', 10: 'neutre' },
 };
 
-// Types de la pastille commune (BadgeStatut) pour les bons et les réclamations
 const TYPE_BADGE = { bons: 'bon', reclamations: 'reclamation' };
 
-// Étapes du suivi des demandes qui ne comptent plus comme « en cours »
 const DEMANDES_TERMINEES = ['REPAREE', 'REFUSEE', 'ANNULEE', 'ANNULEE_DEMANDEUR'];
 
 const ACTIVE_STATES = {
@@ -84,10 +76,6 @@ const etatLabel = (type, value) => {
 
 const etatTon = (type, value) => ETAT_TONS[type]?.[value] ?? 'neutre';
 
-/* ------------------------------------------------------------------ */
-/*  Rôles sur un bon (renvoyés par /espace-personnel/{id}/bons-roles)  */
-/* ------------------------------------------------------------------ */
-
 const ROLES = {
   INTERVENANT: { label: 'Intervenant', icon: HardHat, ton: 'action' },
   DIAGNOSTIQUEUR: { label: 'Diagnostic', icon: Stethoscope, ton: 'attention' },
@@ -97,7 +85,6 @@ const ROLES = {
   DEMANDEUR: { label: 'Demandeur', icon: UserRound, ton: 'neutre' },
 };
 
-// Filtres du tableau des bons : « Créés / demandés » regroupe les deux rôles administratifs
 const FILTRES_ROLE = [
   { id: 'tous', label: 'Tous', roles: null },
   { id: 'intervenant', label: 'Intervenant', roles: ['INTERVENANT'] },
@@ -109,7 +96,6 @@ const FILTRES_ROLE = [
 
 const aRole = (ligne, roles) => !roles || roles.some((r) => ligne.roles.includes(r));
 
-// Ancien endpoint (sans rôles) : on reconstitue créateur / demandeur pour rester compatible
 const versLigneBon = (bon, personnelId) => ({
   ...bon,
   roles: [
@@ -122,7 +108,6 @@ const versLigneBon = (bon, personnelId) => ({
   remiseEnService: null,
 });
 
-// Nouveau format : { bon, roles, intervention, controle, remiseEnService } → une ligne « à plat »
 const aplatir = (m) => ({
   ...(m.bon ?? {}),
   roles: m.roles ?? [],
@@ -131,10 +116,6 @@ const aplatir = (m) => ({
   controle: m.controle ?? null,
   remiseEnService: m.remiseEnService ?? null,
 });
-
-/* ------------------------------------------------------------------ */
-/*  Utilitaires                                                        */
-/* ------------------------------------------------------------------ */
 
 const dateLabel = (value) => {
   if (!value) return '—';
@@ -154,7 +135,6 @@ const dateHeureLabel = (value) => {
 
 const valueLabel = (value) => {
   if (value === null || value === undefined || value === '') return '—';
-  // Date ISO venue du backend (2026-10-13T09:00:00) : affichée comme une date
   if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) return dateHeureLabel(value);
   if (typeof value === 'boolean') return value ? t('Oui') : t('Non');
   if (typeof value === 'object') return JSON.stringify(value);
@@ -173,7 +153,6 @@ const salutation = () => {
   return t('Bonsoir');
 };
 
-// Résumé court de la participation la plus « terrain » (affiché dans le tableau)
 function resumeParticipation(ligne) {
   if (ligne.intervention) {
     return {
@@ -206,10 +185,6 @@ function resumeParticipation(ligne) {
   return null;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Composants atomiques                                               */
-/* ------------------------------------------------------------------ */
-
 function StatusPill({ ton = 'neutre', children }) {
   return <span className={`ep-pill ep-ton--${ton}`}>{children}</span>;
 }
@@ -232,10 +207,6 @@ function RolePills({ roles }) {
     </span>
   );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Modale de détails                                                  */
-/* ------------------------------------------------------------------ */
 
 const MODAL_CONFIG = {
   bons: {
@@ -272,7 +243,7 @@ const MODAL_CONFIG = {
     eyebrow: 'Tâche',
     icon: ClipboardList,
     primaryKey: 'designation',
-    referenceKey: null, // pas d'identifiant technique affiché
+    referenceKey: null,
     dateKey: 'dateDebut',
     etatKey: 'etat',
     fields: [
@@ -304,15 +275,11 @@ const MODAL_CONFIG = {
   }
 };
 
-// Clés techniques du bon à ne pas afficher dans « autres informations »
-// Libellés de l'urgence (codes du backend)
 const NIVEAUX_URGENCE = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée', 4: 'Urgente' };
 
 const CLES_MASQUEES = new Set(['id', 'n', 'etat', 'createdAt', 'updatedAt', 'roles', 'intervention', 'diagnostic', 'controle', 'remiseEnService']);
-// Identifiants techniques (id, personnelId, lotArticleImmobilistationId…) : jamais affichés
 const estIdentifiant = (cle) => cle === 'id' || /Ids?$/.test(cle);
 
-// Noms lisibles à la place des identifiants (équipement, prestataire, service)
 const nomPrestataire = (p) => (p ? (p.raisonSociale || [p.prenom, p.nom].filter(Boolean).join(' ') || null) : null);
 const enrichirPourAffichage = (item, type) => {
   if (!item || type !== 'bons') return item;
@@ -430,17 +397,12 @@ function Participation({ item }) {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Aperçu d'un bon : en-tête, avancement, infos par thème, mes tâches   */
-/* ------------------------------------------------------------------ */
-// Parcours d'un bon : Nouveau (1) → En cours (3) → Effectué (4) ; Suspendu (2) et Annulé (10) à part
 const PARCOURS_BON = [
   { etat: 1, label: 'Créé' },
   { etat: 3, label: 'En cours' },
   { etat: 4, label: 'Effectué' },
 ];
 
-/** Barre d'avancement pleine largeur : Créé → En cours → Effectué (Suspendu / Annulé signalés). */
 function AvancementBon({ etat }) {
   const rang = etat === 4 ? 2 : etat === 3 || etat === 2 ? 1 : 0;
   const annule = etat === 10;
@@ -468,7 +430,6 @@ function AvancementBon({ etat }) {
   );
 }
 
-/** Petite carte d'informations (seules les lignes renseignées sont affichées). */
 function InfosBloc({ titre, icone: Icone, lignes }) {
   const visibles = lignes.filter((l) => l && l[1] != null && l[1] !== '' && l[1] !== '—');
   if (!visibles.length) return null;
@@ -496,7 +457,6 @@ function ApercuBon({ bon: brut, taches = [], nonLus = 0, onClose, onOuvrirBon, o
   const mesTaches = taches.filter((x) => String(x.bonMaintenanceId) === String(b.id));
   const urgence = NIVEAUX_URGENCE[b.urgence];
   const etatImmo = ETAT_IMMOBILISATION_OPTIONS.find((o) => Number(o.value) === Number(b.etatImmoABM))?.label;
-  // Une seule personne : le demandeur s'il est connu, sinon le créateur du bon
   const personne = b.personnelDemandantNom
     ? [t('Demandeur'), b.personnelDemandantNom]
     : [t('Créé par'), b.personnelCreationNom];
@@ -505,7 +465,6 @@ function ApercuBon({ bon: brut, taches = [], nonLus = 0, onClose, onOuvrirBon, o
   return (
     <div className="ep-modal-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <section className={`epa ep-ton--${tonEtat}`} role="dialog" aria-modal="true" aria-labelledby="epa-titre">
-        {/* ------- En-tête ------- */}
         <header className="epa-entete">
           <div className="epa-entete-ligne">
             <span className="epa-icone" aria-hidden="true"><Wrench size={20} /></span>
@@ -529,7 +488,6 @@ function ApercuBon({ bon: brut, taches = [], nonLus = 0, onClose, onOuvrirBon, o
           <AvancementBon etat={b.etat} />
         </header>
 
-        {/* ------- Corps : à gauche le travail, à droite les infos ------- */}
         <div className="epa-corps">
           <div className="epa-principal">
             <section className="epa-section">
@@ -584,7 +542,6 @@ function ApercuBon({ bon: brut, taches = [], nonLus = 0, onClose, onOuvrirBon, o
           </aside>
         </div>
 
-        {/* ------- Actions ------- */}
         <footer className="epa-pied">
           <button type="button" className="ep-btn ep-btn--ghost" onClick={onClose}>{t('Fermer')}</button>
           <span className="epa-espace" />
@@ -749,11 +706,6 @@ function DetailModalGenerique({ item: itemBrut, type, onClose, onOuvrirBon, onOu
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  Présentation des bons : tableau (tri, recherche, filtres de rôle)   */
-/* ------------------------------------------------------------------ */
-
-// Ordre de tri « État » : en cours, à démarrer, suspendus, puis effectués et annulés
 const RANG_ETAT_BON = { 3: 0, 1: 1, 2: 2, 4: 3, 10: 4 };
 
 function TableauBons({ bons, nonLusChat, onApercu, onOuvrir, onDiscuter, outils }) {
@@ -821,18 +773,12 @@ const initialesDe = (nom) => {
   return ((mots[0][0] || '') + (mots.length > 1 ? mots[mots.length - 1][0] : '')).toUpperCase();
 };
 
-/* ------------------------------------------------------------------ */
-/*  Page principale                                                    */
-/* ------------------------------------------------------------------ */
-
 export default function EspacePersonnel() {
   const user = authService.getCurrentUser();
 
   const personnelId =
     user?.personnelId ?? user?.personnel?.id ?? user?.userId;
 
-  // Nom de l'utilisateur connecté : userNom vient du login (fiche Personnel de Cubix),
-  // sinon prénom + nom, sinon l'identifiant de connexion.
   const displayName =
     user?.userNom ||
     [user?.prenom, user?.nom].filter(Boolean).join(' ') ||
@@ -841,18 +787,14 @@ export default function EspacePersonnel() {
     user?.email ||
     '';
 
-  // ?onglet=demandes (lien des notifications « Votre demande … ») ouvre directement l'onglet voulu
   const [searchParams] = useSearchParams();
   const ongletUrl = searchParams.get('onglet');
-  // « Aujourd'hui » (tableau de bord) par défaut
   const [activeTab, setActiveTab] = useState(ongletUrl || 'aujourdhui');
-  // Compteur : « Signaler une panne » depuis Aujourd'hui ouvre le formulaire dans Mes demandes
   const [demandeSignalement, setDemandeSignalement] = useState(0);
   useEffect(() => { if (ongletUrl) setActiveTab(ongletUrl); }, [ongletUrl, searchParams]);
   const [filtreRole, setFiltreRole] = useState('tous');
   const [data, setData] = useState({ bons: [], taches: [], reclamations: [], demandes: [], formations: [] });
   const [chargementFormations, setChargementFormations] = useState(true);
-  // Mes formations (onglet « Formations »), sans bloquer la page si indisponible
   useEffect(() => {
     if (personnelId == null || personnelId === '') { setChargementFormations(false); return; }
     formationService.duPersonnel(personnelId)
@@ -861,17 +803,13 @@ export default function EspacePersonnel() {
       .finally(() => setChargementFormations(false));
   }, [personnelId]);
   const [nonLusChat, setNonLusChat] = useState({});
-  // Bon dont on ouvre directement la conversation (clic sur la pastille de messages non lus)
   const [chatInitial, setChatInitial] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
-  // Bon ouvert en pleine page (même écran de détail que dans « Bons de maintenance »)
   const [bonOuvert, setBonOuvert] = useState(null);
-  // Réclamation ouverte en pleine page (même écran de détail que dans « Réclamations »)
   const [reclamationOuverte, setReclamationOuverte] = useState(null);
-  // Kanban : tâches en cours d'enregistrement et message en bas d'écran (avec « Annuler »)
   const [tachesEnCours, setTachesEnCours] = useState(() => new Set());
   const [toast, setToast] = useState(null);
   const minuterieToast = useRef(null);
@@ -889,8 +827,6 @@ export default function EspacePersonnel() {
     setError('');
 
     try {
-      // Bons avec rôles (intervenant, contrôle, remise en service…) ; repli sur l'ancien
-      // endpoint si le backend n'est pas encore à jour.
       const chargerBons = espacePersonnelService.getMesBonsAvecRoles(personnelId)
         .then((liste) => (Array.isArray(liste) ? liste.map(aplatir) : []))
         .catch(() => espacePersonnelService.getMesBons(personnelId)
@@ -907,12 +843,10 @@ export default function EspacePersonnel() {
         taches: Array.isArray(taches) ? taches : []
       }));
 
-      // Suivi de mes demandes (compteur de l'onglet), sans bloquer la page si indisponible
       suiviDemandeService.getMesDemandes(personnelId)
         .then((demandes) => setData((d) => ({ ...d, demandes })))
         .catch(() => {});
 
-      // Messages non lus du chat de chaque bon (sans bloquer la page si indisponible)
       chatBonService.getNonLus(bons.map((b) => b.id))
         .then(setNonLusChat)
         .catch(() => setNonLusChat({}));
@@ -952,7 +886,6 @@ export default function EspacePersonnel() {
     setReclamationOuverte(id);
   };
 
-  // ---------- Travaux à faire (calendrier, « À surveiller ») ----------
   const travaux = useMemo(() => construireTravaux(data), [data]);
   const bonsParId = useMemo(() => new Map(data.bons.map((b) => [b.id, b])), [data.bons]);
 
@@ -974,12 +907,11 @@ export default function EspacePersonnel() {
     taches: d.taches.map((x) => (x.id === id ? { ...x, ...maj } : x)),
   })), []);
 
-  // ---------- Kanban : changement d'état d'une tâche (glisser-déposer ou menu) ----------
   const deplacerTache = useCallback(async (tache, nouvelEtat, { annulable = true } = {}) => {
     const ancienEtat = tache.etat;
     if (ancienEtat === nouvelEtat || tachesEnCours.has(tache.id)) return;
 
-    remplacerTache(tache.id, { etat: nouvelEtat }); // affichage immédiat
+    remplacerTache(tache.id, { etat: nouvelEtat });
     setTachesEnCours((s) => new Set(s).add(tache.id));
     const libelle = (etat) => t(COLONNES_KANBAN.find((c) => c.etat === etat)?.label || String(etat));
 
@@ -988,7 +920,6 @@ export default function EspacePersonnel() {
       if (maj) remplacerTache(tache.id, maj);
       afficherToast({
         texte: t('« {nom} » → {etat}', { nom: tache.designation || t('Tâche sans nom'), etat: libelle(nouvelEtat) }),
-        // « Annuler » remet l'ancien état (sans proposer d'annuler l'annulation)
         annuler: annulable ? { tache: { ...tache, ...(maj || {}), etat: nouvelEtat }, etat: ancienEtat } : null,
       });
     } catch (err) {
@@ -1053,7 +984,6 @@ export default function EspacePersonnel() {
     setActiveTab('discussions');
   };
 
-  // Compteurs par rôle pour les filtres du tableau des bons
   const compteRoles = useMemo(() => {
     const c = {};
     FILTRES_ROLE.forEach((f) => { c[f.id] = data.bons.filter((b) => aRole(b, f.roles)).length; });
@@ -1066,9 +996,7 @@ export default function EspacePersonnel() {
   }, [data.bons, filtreRole]);
 
 
-  const currentTab = tabs.find((tab) => tab.id === activeTab) ?? tabs[0];
 
-  // Réclamation ouverte : écran de détail complet, avec retour à l'espace (rechargé au retour)
   if (reclamationOuverte != null) {
     return (
       <EspaceReclamation
@@ -1079,7 +1007,6 @@ export default function EspacePersonnel() {
     );
   }
 
-  // Bon ouvert : on affiche l'écran de détail complet, avec retour à l'espace (rechargé au retour)
   if (bonOuvert) {
     return (
       <BonMaintenanceDetails
@@ -1090,7 +1017,6 @@ export default function EspacePersonnel() {
   }
 
 
-  // Phrase de synthèse du bandeau : ce qui demande de l'attention aujourd'hui
   const tachesAFaire = data.taches.filter((x) => ACTIVE_STATES.taches.includes(x.etat)).length;
   const enRetard = travaux.filter((tr) => tr.statut?.niveau === 'retard').length;
   const syntheses = [
@@ -1142,13 +1068,11 @@ export default function EspacePersonnel() {
       ))}
     </div>
   );
-  // Le calendrier à droite n'accompagne que les bons (les tâches et discussions prennent toute la largeur)
   const avecCote = activeTab === 'bons';
 
   return (
     <main className="ep-page ep-theme ep-calme ep2 ep3">
       <div className="ep3-cadre">
-        {/* ------- EN-TÊTE : salutation + actualiser ------- */}
         <header className="ep3-entete">
           <span className="ep-avatar ep2-avatar" aria-hidden="true">{initialesDe(displayName)}</span>
           <div className="ep3-entete-texte">
@@ -1178,7 +1102,6 @@ export default function EspacePersonnel() {
           </button>
         </header>
 
-        {/* ------- ONGLETS ------- */}
         <nav className="ep3-onglets" role="tablist" aria-label={t('Mon espace')}>
           <button type="button" role="tab" aria-selected={estAujourdhui}
             className={`ep3-onglet ${estAujourdhui ? 'is-actif' : ''}`} onClick={() => aller('aujourdhui')}>
@@ -1214,7 +1137,6 @@ export default function EspacePersonnel() {
           })}
         </nav>
 
-        {/* ------- CONTENU (toute la largeur) ------- */}
         <section className="ep2-contenu ep3-contenu">
           {!estAujourdhui && <p className="ep3-aide">{aideOnglet}</p>}
 
@@ -1299,7 +1221,6 @@ export default function EspacePersonnel() {
           ) : null}
         </div>
 
-        {/* ------- À DROITE : échéances (seulement avec les bons) ------- */}
         {avecCote && (
           <aside className="ep-cote" aria-label={t('Mon planning')}>
             <ASurveiller travaux={travaux} onOuvrir={ouvrirTravail} />
@@ -1347,19 +1268,6 @@ export default function EspacePersonnel() {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Onglet Mes demandes (réclamations)   (ancien fichier EspaceReclamation.jsx)
-// ═════════════════════════════════════════════════════════════
-/**
- * Réclamation ouverte en pleine page depuis Mon espace (même écran que dans « Réclamations »),
- * avec les mêmes actions : modifier, valider, rejeter, créer / associer un bon, ouvrir le bon lié.
- * « Retour » ramène à Mon espace.
- *
- * Props :
- *   reclamationId : réclamation à afficher
- *   onBack()      : retour à Mon espace (qui se recharge)
- *   onOuvrirBon(bon) : ouvre le bon lié dans Mon espace
- */
 function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -1391,10 +1299,8 @@ function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
     await recharger();
   };
 
-  // Cycle de vie (affecter, prendre en charge, résoudre, clôturer, rouvrir, annuler)
   const actionsRec = useActionsReclamation(() => recharger());
 
-  /** Crée le bon (avec ses éléments) puis le lie à la réclamation, comme dans « Réclamations ». */
   const creerBon = async (payload, children) => {
     const result = await bonMaintenanceFullService.createFull(payload, children || {});
     const bon = result.bonMaintenance;
@@ -1465,14 +1371,6 @@ function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════
-// Onglet Discussions   (ancien fichier Espacediscussions.jsx)
-// ═════════════════════════════════════════════════════════════
-/*
- * Discussions de Mon espace : à gauche, le chat de chaque bon sur lequel je travaille
- * (dernier message, non-lus) ; à droite, la conversation choisie, en direct.
- */
-
 const ACTUALISATION_MS = 20000;
 
 const heureOuDate = (v) => {
@@ -1493,7 +1391,6 @@ function EspaceDiscussions({ bons, personnelId, bonInitial, onOuvrirBon, onNonLu
   const ids = useMemo(() => bons.map((b) => b.id).filter((id) => id != null), [bons]);
   const cleIds = ids.join(',');
 
-  // Dernier message et non-lus de chaque bon ; rafraîchi toutes les 20 s quand la page est visible
   const charger = useCallback(() => {
     if (!cleIds) return;
     chatBonService.getResumes(cleIds.split(',').map(Number))
@@ -1512,12 +1409,10 @@ function EspaceDiscussions({ bons, personnelId, bonInitial, onOuvrirBon, onNonLu
     return () => clearInterval(minuterie);
   }, [charger]);
 
-  // Total des non-lus, pour la carte « Discussions » et le tableau des bons
   useEffect(() => {
     onNonLusChange?.(Object.fromEntries(Object.values(resumes).map((r) => [r.bonMaintenanceId, r.nonLus])));
   }, [resumes, onNonLusChange]);
 
-  // Conversations : d'abord celles qui ont des non-lus, puis par dernier message, puis les bons sans message
   const conversations = useMemo(() => {
     const filtre = recherche.trim().toLowerCase();
     return bons
@@ -1536,7 +1431,6 @@ function EspaceDiscussions({ bons, personnelId, bonInitial, onOuvrirBon, onNonLu
 
   const bonChoisi = bons.find((b) => b.id === choisi) || null;
 
-  // Conversation ouverte : ses messages sont lus, et son aperçu suit le dernier message
   const surNonLus = useCallback((n) => {
     if (choisi == null) return;
     setResumes((r) => (r[choisi] && r[choisi].nonLus !== n ? { ...r, [choisi]: { ...r[choisi], nonLus: n } } : r));
@@ -1561,7 +1455,6 @@ function EspaceDiscussions({ bons, personnelId, bonInitial, onOuvrirBon, onNonLu
 
   return (
     <div className={`ep-discussions ${bonChoisi ? 'a-conversation' : ''}`}>
-      {/* ---- Liste des conversations ---- */}
       <aside className="ep-disc-liste" aria-label={t('Conversations')}>
         <label className="ep-disc-recherche">
           <Search size={15} aria-hidden="true" />
@@ -1613,7 +1506,6 @@ function EspaceDiscussions({ bons, personnelId, bonInitial, onOuvrirBon, onNonLu
         </ul>
       </aside>
 
-      {/* ---- Conversation ---- */}
       <section className="ep-disc-conversation" aria-label={t('Conversation')}>
         {bonChoisi ? (
           <>

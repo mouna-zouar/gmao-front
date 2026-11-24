@@ -4,7 +4,6 @@ import { RESULTATS_FORMATION, STATUTS_FORMATION, TYPES_FORMATION, libelleCibles,
 import { t, locale } from '../../../i18n';
 import './Formations.css';
 
-/* « Mon espace » : formations du technicien connecté, avec son résultat. liste : [{ formation, resultat }] */
 export default function MesFormations({ liste = [], chargement = false }) {
   if (chargement) return <div className="ep-empty"><span>{t('Chargement…')}</span></div>;
   if (!liste.length) {

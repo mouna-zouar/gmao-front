@@ -8,14 +8,6 @@ import { t } from '../../../../i18n';
 import './Emplacements.css';
 import { commePage, obtenirEmplacements } from '../../../../store/referentiels';
 
-/*
- * Écran pilote de la bibliothèque commune (src/components/commun) :
- * la page entière = une description de colonnes + une description de champs.
- * Liste : PageListe (recherche, tri, colonnes réglables, export, impression, double-clic, pagination).
- * Fenêtre : ModaleFormulaire (création et modification, validation, envoi).
- */
-
-/* Colonnes du tableau (valeur : tri, recherche, export ; rendu : affichage) */
 const COLONNES = [
   {
     cle: 'nom', label: 'Nom', valeur: (e) => e.nom,
@@ -35,7 +27,6 @@ const COLONNES = [
   { cle: 'ville', label: 'Ville', valeur: (e) => e.villeNom || e.ville?.nom || '', visible: false },
 ];
 
-/* Champs du formulaire (affichage + validation + conversion pour le serveur) */
 const CHAMPS = [
   { nom: 'nom', label: 'Nom', type: 'texte', icone: Home, placeholder: 'Ex : Siège Tunis', longueurMax: 150, largeur: 'pleine', autoFocus: true },
   { nom: 'adresse', label: 'Adresse', type: 'texte', icone: Navigation, placeholder: 'Ex : 12 Avenue Habib Bourguiba, Tunis', longueurMax: 255, largeur: 'pleine' },

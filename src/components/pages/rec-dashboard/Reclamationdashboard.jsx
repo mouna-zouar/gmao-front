@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import reclamationService from '../../../services/Reclamationservice';
-import { t, tp, locale } from '../../../i18n';
-import './ReclamationDashboard.css';
+import { t, locale } from '../../../i18n';
+import './Reclamationdashboard.css';
 import IndicateursReclamations from './IndicateursReclamations';
 import { CircleAlert, CircleCheck, Clock, FileText, GripVertical, RefreshCw, TriangleAlert, X } from 'lucide-react';
 import { ICONES_MODULES } from '../../../constants/modules';
@@ -17,7 +17,6 @@ const MOIS_LABELS = {
 const STATS_STORAGE_KEY = 'reclamation-dashboard.cards.order.v1';
 const CHARTS_STORAGE_KEY = 'reclamation-dashboard.charts.order.v1';
 
-// Mois court : libellés maison en français, noms du calendrier local sinon (جانفي / Jan…)
 function formatMoisLabel(cle) {
   const [aaaa, mm] = cle.split('-');
   if (locale() === 'fr-FR') return MOIS_LABELS[mm] || cle;
@@ -33,7 +32,6 @@ function formatDate(iso) {
   return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-/* ─── Icônes SVG réutilisables ─── */
 const ICONS = {
   total: <FileText size={22} strokeWidth={2} aria-hidden="true" />,
   ouverte: <CircleAlert size={22} strokeWidth={2} aria-hidden="true" />,
@@ -46,7 +44,6 @@ const ICONS = {
   grip: <GripVertical size={14} strokeWidth={2} aria-hidden="true" />,
 };
 
-/* ─── Définition des cartes de stats (ordre par défaut) ─── */
 const CARD_DEFS = [
   { id: 'total',    label: 'Total réclamations',         field: 'totalReclamations',          colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.total, featured: true, lien: '/reclamations?vue=toutes' },
   { id: 'ouverte',  label: 'Nouvelles',                   field: 'ouvertes',                   colorClass: 'reclamation-dashboard-stat--ouverte',  icon: ICONS.ouverte, lien: '/reclamations?etat=0' },
@@ -58,13 +55,11 @@ const CARD_DEFS = [
   { id: 'delai',    label: 'Délai moyen résolution',      field: 'delaiMoyenResolutionJours',  colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.delai },
 ];
 
-/* ─── Définition des cartes de graphiques (ordre par défaut) ─── */
 const CHART_DEFS = [
   { id: 'mois',   label: 'Réclamations par mois' },
   { id: 'niveau', label: 'Répartition par niveau' },
 ];
 
-/* ─── Helpers localStorage ─── */
 function loadOrder(storageKey, defaults) {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -81,10 +76,9 @@ function loadOrder(storageKey, defaults) {
 }
 
 function saveOrder(storageKey, order) {
-  try { localStorage.setItem(storageKey, JSON.stringify(order)); } catch { /* ignore */ }
+  try { localStorage.setItem(storageKey, JSON.stringify(order)); } catch {}
 }
 
-/* ─── Carte de stat draggable ─── */
 function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, onOuvrir }) {
   const displayValue = def.id === 'delai' && value != null
     ? t('{n} j', { n: Number(value).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
@@ -116,7 +110,6 @@ function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, on
   );
 }
 
-/* ─── Wrapper draggable pour les graphiques ─── */
 function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, children }) {
   return (
     <div
@@ -141,12 +134,10 @@ export default function ReclamationDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Ordre des cartes de stats
   const [order, setOrder] = useState(() => loadOrder(STATS_STORAGE_KEY, CARD_DEFS.map((c) => c.id)));
   const [draggedId, setDraggedId] = useState(null);
   const [dragOverId, setDragOverId] = useState(null);
 
-  // Ordre des cartes de graphiques
   const [chartOrder, setChartOrder] = useState(() => loadOrder(CHARTS_STORAGE_KEY, CHART_DEFS.map((c) => c.id)));
   const [draggedChartId, setDraggedChartId] = useState(null);
   const [dragOverChartId, setDragOverChartId] = useState(null);
@@ -171,11 +162,10 @@ export default function ReclamationDashboard() {
   useEffect(() => { saveOrder(STATS_STORAGE_KEY, order); }, [order]);
   useEffect(() => { saveOrder(CHARTS_STORAGE_KEY, chartOrder); }, [chartOrder]);
 
-  /* ─── Drag & drop : cartes de stats ─── */
   const handleDragStart = (id) => (e) => {
     setDraggedId(id);
     e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', `stat:${id}`); } catch { /* ignore */ }
+    try { e.dataTransfer.setData('text/plain', `stat:${id}`); } catch {}
   };
 
   const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
@@ -200,11 +190,10 @@ export default function ReclamationDashboard() {
     setDragOverId(null);
   };
 
-  /* ─── Drag & drop : cartes de graphiques ─── */
   const handleChartDragStart = (id) => (e) => {
     setDraggedChartId(id);
     e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', `chart:${id}`); } catch { /* ignore */ }
+    try { e.dataTransfer.setData('text/plain', `chart:${id}`); } catch {}
   };
 
   const handleChartDragEnter = (id) => () => {
@@ -263,7 +252,6 @@ export default function ReclamationDashboard() {
   const totalCriticite = criticiteEntries.reduce((s, [, v]) => s + v, 0);
   const totalUrgence = urgenceEntries.reduce((s, [, v]) => s + v, 0);
 
-  /* ─── Rendu de chaque graphique ─── */
   const renderChart = (id) => {
     if (id === 'mois') {
       return (
@@ -347,7 +335,6 @@ export default function ReclamationDashboard() {
 
   return (
     <div className="reclamation-dashboard-container">
-      {/* Header */}
       <div className="reclamation-dashboard-header">
         <div className="reclamation-dashboard-header-icon-wrap">
           <ICONES_MODULES.tableauDeBord size={22} strokeWidth={2} aria-hidden="true" />
@@ -367,13 +354,12 @@ export default function ReclamationDashboard() {
         </button>
       </div>
 
-      {/* Cartes de stats (drag & drop) */}
       <div className="reclamation-dashboard-stats-grid">
         {order.map((id) => {
           const def = cardsById[id];
           if (!def) return null;
           const rawValue = data[def.field];
-          if (rawValue == null || Number(rawValue) === 0) return null; // valeur à 0 : carte masquée
+          if (rawValue == null || Number(rawValue) === 0) return null;
           return (
             <StatCard
               key={id}
@@ -391,10 +377,8 @@ export default function ReclamationDashboard() {
         })}
       </div>
 
-      {/* Indicateurs de performance (30 j vs 30 j précédents, délais, conversion, classements) */}
       <IndicateursReclamations />
 
-      {/* Graphiques (drag & drop) — la grille s'adapte à l'ordre */}
       <div className={`reclamation-dashboard-charts-row ${chartOrder[0] === 'niveau' ? 'is-swapped' : ''}`}>
         {chartOrder.map((id) => (
           <DraggableChart
@@ -411,7 +395,6 @@ export default function ReclamationDashboard() {
         ))}
       </div>
 
-      {/* Réclamations récentes */}
       <div className="reclamation-dashboard-recent-card">
         <div className="reclamation-dashboard-chart-head">
           <h3>{t("Réclamations récentes")}</h3>

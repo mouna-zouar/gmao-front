@@ -15,9 +15,6 @@ export function carburantTypeLabel(type) {
   return CARBURANT_TYPE_LABELS[type] ?? '—';
 }
 
-// Unité de quantité à afficher selon le type de carburant : un véhicule Électrique
-// se recharge en kWh, pas en litres — le champ sous-jacent reste numérique générique
-// ("litres" côté modèle/DTO), seul le libellé affiché change.
 export function uniteQuantiteCarburant(type) {
   return Number(type) === CARBURANT_TYPE_ELECTRIQUE ? 'kWh' : 'L';
 }

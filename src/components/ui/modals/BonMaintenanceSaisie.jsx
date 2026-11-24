@@ -3,30 +3,21 @@ import {
   AlertCircle, AlertTriangle, Check, ClipboardList, Loader2, MessageSquare, Package, Plus, Sparkles, Trash2, UserPlus, Users,
 } from 'lucide-react';
 import ListeRecherche from '../../commun/ListeRecherche';
-import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationService';
+import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../services/lotArticleService';
-import pieceLigneService from '../../../services/pieceLigneService';
+import pieceLigneService from '../../../services/PieceLigneService';
 import diagnosticAssistantService from '../../../services/Diagnosticassistantservice';
 import repartitionInterventionsService from '../../../services/repartitionInterventionsService';
 import { optionsTypeEntretien } from '../../../constants/FicheIntervention';
 import { t, locale } from '../../../i18n';
-
-/*
- * Morceaux de la fenêtre « Bon de maintenance » (champs personnalisés de ModaleFormulaire) :
- * type d'entretien, stock de l'équipement, assistant diagnostic, intervenants, tâches, commentaires.
- * Les listes (intervenants, tâches, commentaires) sont gardées dans les valeurs du formulaire
- * et envoyées à la création comme « enfants » du bon.
- */
 
 export const nomPrestataire = (p) => p?.raisonSociale || `${p?.nom ?? ''} ${p?.prenom ?? ''}`.trim() || (p ? t('Prestataire #{id}', { id: p.id }) : '—');
 export const nomPersonnel = (p) => `${p?.nom || ''} ${p?.prenom || ''}`.trim() + (p?.matricule ? ` (${p.matricule})` : '');
 const aideMatricule = (p) => (p.matricule ? t('Matricule : {m}', { m: p.matricule }) : null);
 const aideCode = (p) => (p.code ? t('Code : {c}', { c: p.code }) : null);
 const nouvelId = () => Date.now() + Math.random();
-/** « Entrée » dans une ligne d'ajout n'envoie pas la fenêtre (ni ne passe à l'étape suivante). */
 const sansEntree = (e) => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.preventDefault(); };
 
-/** Type d'entretien : les cases de la fiche d'intervention ENR-MMT 10, avec leur explication. */
 export function ChoixTypeEntretien({ valeur, changer }) {
   return (
     <div className="cf-choix" role="radiogroup" aria-label={t("Type d'entretien")}>
@@ -44,7 +35,6 @@ export function ChoixTypeEntretien({ valeur, changer }) {
   );
 }
 
-/** Quantité en stock du lot de l'équipement choisi (alerte si épuisé). */
 export function StockEquipement({ equipementId }) {
   const [etat, setEtat] = useState({ chargement: false, qte: null });
   useEffect(() => {
@@ -65,7 +55,6 @@ export function StockEquipement({ equipementId }) {
 
 const ORIGINES = { meme_equipement: 'Même équipement', meme_type_equipement: "Même type d'équipement" };
 
-/** Assistant diagnostic : cas similaires de l'historique ; « Utiliser » remplit cause, effet et remède. */
 export function AssistantDiagnostic({ valeurs, changerChamp }) {
   const [suggestions, setSuggestions] = useState([]);
   const [appliquees, setAppliquees] = useState(new Set());
@@ -132,8 +121,6 @@ export function AssistantDiagnostic({ valeurs, changerChamp }) {
   );
 }
 
-/* ───────── Listes d'éléments ajoutés avant l'enregistrement ───────── */
-
 function Elements({ elements, icone: Icone, vide, rendu, onRetirer }) {
   if (!elements.length) {
     return <div className="cf-elements-vide"><Icone size={26} strokeWidth={1.6} aria-hidden="true" /><span>{vide}</span></div>;
@@ -154,7 +141,6 @@ function Elements({ elements, icone: Icone, vide, rendu, onRetirer }) {
 
 const INTERVENANT_VIDE = { personnelId: '', sousTraitantId: '', dateDebutIntervention: '', dateFinIntervention: '', nbrHeure: '', coutUnitaire: '', forfait: '', commentaire: '' };
 
-/** Intervenants (techniciens internes ou sous-traitants), avec les suggestions « Qui affecter ? ». */
 export function ListeIntervenants({ valeur = [], changer, valeurs, changerChamp, techniciens, personnels, prestataires, chargement }) {
   const [form, setForm] = useState(INTERVENANT_VIDE);
   const [message, setMessage] = useState(null);
@@ -185,8 +171,6 @@ export function ListeIntervenants({ valeur = [], changer, valeurs, changerChamp,
     const retire = valeur.find((i) => i._id === id);
     const reste = valeur.filter((i) => i._id !== id);
     changer(reste);
-    // Comme dans Cubix : un article ne se commande qu'auprès d'un sous-traitant du bon.
-    // Sous-traitant retiré du bon → retiré aussi des tâches qui l'utilisaient.
     const st = retire?.sousTraitantId;
     if (st && !reste.some((i) => String(i.sousTraitantId) === String(st))) {
       changerChamp('taches', (valeurs.taches || []).map((x) => (String(x.sousTraitantId) === String(st) ? { ...x, sousTraitantId: '' } : x)));
@@ -245,7 +229,6 @@ export function ListeIntervenants({ valeur = [], changer, valeurs, changerChamp,
         <label className="cf-ajout__champ"><span>{t('Fin')}</span><input type="datetime-local" value={form.dateFinIntervention} onChange={(e) => maj('dateFinIntervention', e.target.value)} /></label>
         <label className="cf-ajout__champ cf-ajout__champ--etroit"><span>{t('Nb heures')}</span><input type="number" min="0" value={form.nbrHeure} onChange={(e) => maj('nbrHeure', e.target.value)} /></label>
         {form.sousTraitantId ? (
-          // Sous-traitant : prix forfaitaire de la prestation, comme dans Cubix
           <label className="cf-ajout__champ cf-ajout__champ--etroit"><span>{t('Forfait (DT)')}</span><input type="number" min="0" step="0.001" value={form.forfait} onChange={(e) => maj('forfait', e.target.value)} /></label>
         ) : (
           <label className="cf-ajout__champ cf-ajout__champ--etroit"><span>{t('Coût unitaire')}</span><input type="number" min="0" value={form.coutUnitaire} onChange={(e) => maj('coutUnitaire', e.target.value)} /></label>
@@ -273,14 +256,12 @@ export function ListeIntervenants({ valeur = [], changer, valeurs, changerChamp,
 
 const TACHE_VIDE = { designation: '', ordre: '', dateDebut: '', dateFin: '', prestataireArticlesId: '', qte: '', sousTraitantId: '' };
 
-/** Tâches prévues ; l'article d'une tâche se commande auprès d'un sous-traitant déjà ajouté au bon. */
 export function ListeTaches({ valeur = [], changer, intervenants = [], articles, prestataires, chargement }) {
   const [form, setForm] = useState(TACHE_VIDE);
   const [message, setMessage] = useState(null);
   const [stock, setStock] = useState({ chargement: false, qte: null });
   const maj = (k, v) => { setForm((f) => ({ ...f, [k]: v })); setMessage(null); };
 
-  // Sous-traitants ajoutés à l'étape « Intervenants » : seuls choix possibles pour l'article d'une tâche
   const sousTraitants = prestataires.filter((p) => intervenants.some((i) => i.sousTraitantId !== '' && String(i.sousTraitantId) === String(p.id)));
 
   useEffect(() => {
@@ -354,7 +335,6 @@ export function ListeTaches({ valeur = [], changer, intervenants = [], articles,
   );
 }
 
-/** Commentaires ajoutés au bon à sa création (Entrée pour ajouter). */
 export function ListeCommentaires({ valeur = [], changer }) {
   const [texte, setTexte] = useState('');
   const ajouter = () => {

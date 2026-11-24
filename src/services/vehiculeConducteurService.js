@@ -59,11 +59,6 @@ const vehiculeConducteurService = {
     return data;
   },
 
-  /**
-   * Vérifie si un conducteur est habilité (permis valide de catégorie compatible)
-   * à conduire un véhicule donné, sans créer d'affectation. Utilisé pour
-   * prévenir avant soumission du formulaire d'affectation.
-   */
   async verifierEligibilite(personnelId, vehiculeId) {
     const { data } = await api.get('/vehicule-conducteur/eligibilite', {
       params: { personnelId, vehiculeId }

@@ -2,17 +2,11 @@ import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } fr
 import { useNavigate } from 'react-router-dom';
 import planningService from '../../../services/planningService';
 import Pagination from '../../commun/Pagination';
-import './PlanningBonMaintenance.css';
+import './Planningbonmaintenance.css';
 import { t, locale } from '../../../i18n';
 import {
   CalendarDays, ChevronLeft, ChevronRight, ClipboardList, ListChecks, LoaderCircle, Maximize2, Search, Users, X, ZoomIn, ZoomOut,
 } from 'lucide-react';
-
-/*
- * Planning des bons — frise de type Gantt.
- * Une ligne par événement (bon, intervenant ou tâche), une barre sur ses jours, colorée par état,
- * et un trait vertical pour aujourd'hui. Clic sur une ligne : ouvre le bon.
- */
 
 const MODES = [
   { value: 'BON_MAINTENANCE', label: 'Bons de maintenance', icone: ClipboardList },
@@ -36,12 +30,10 @@ const DUREES = [
 ];
 
 const JOUR = 24 * 3600 * 1000;
-/* Zoom : multiple de la largeur « ajustée » (toute la période visible sans défilement) */
 const ZOOMS = [1, 1.5, 2, 3, 4, 6, 8];
-/* Largeur approximative d'un libellé (0,74 rem, gras) pour décider s'il tient dans la barre */
 const debutJour = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
 const ajouterJours = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
-const debutSemaine = (d) => { const x = debutJour(d); const j = (x.getDay() + 6) % 7; return ajouterJours(x, -j); }; // lundi
+const debutSemaine = (d) => { const x = debutJour(d); const j = (x.getDay() + 6) % 7; return ajouterJours(x, -j); };
 const cleJour = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const fmt = (d, o) => d.toLocaleDateString(locale(), o);
 const majuscule = (s) => s.charAt(0).toLocaleUpperCase(locale()) + s.slice(1);
@@ -100,13 +92,12 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
   }, [mode, debut, fin]);
   useEffect(() => { charger(); }, [charger]);
 
-  // Lignes : bornées à la période, triées par début
   const lignes = useMemo(() => evenements
     .map((ev) => {
       const d = ev.dateDebut ? new Date(ev.dateDebut) : null;
       if (!d || Number.isNaN(d.getTime())) return null;
       let f = ev.dateFin ? new Date(ev.dateFin) : null;
-      if (!f || Number.isNaN(f.getTime()) || f <= d) f = new Date(debutJour(d).getTime() + JOUR); // un jour par défaut
+      if (!f || Number.isNaN(f.getTime()) || f <= d) f = new Date(debutJour(d).getTime() + JOUR);
       return { ...ev, d, f };
     })
     .filter((ev) => ev && ev.f > debut && ev.d < fin)
@@ -123,7 +114,6 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
     return lignes.filter((l) => !etatsMasques.has(l.etat) && (!q || (l.titre || `#${l.id}`).toLocaleLowerCase(locale()).includes(q)));
   }, [lignes, etatsMasques, recherche]);
 
-  // Pagination : 10 lignes par page par défaut ; retour à la première page quand la liste change
   useEffect(() => { setPage(0); }, [mode, debut, recherche, etatsMasques]);
   const nbPages = Math.max(1, Math.ceil(visibles.length / taille));
   const pageCourante = Math.min(page, nbPages - 1);
@@ -146,7 +136,6 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
     else navigate(`/bons-maintenance?id=${ev.bonMaintenanceId}`);
   };
 
-  // Géométrie : colonne des noms + piste (largeur imposée par le zoom, sinon ajustée)
   const nomPx = largeur && largeur < 900 ? 200 : 320;
   const ajustePx = largeur ? Math.max(0, largeur - nomPx - 2) / nb : 0;
   const jourPx = ajustePx * ZOOMS[zoom];
@@ -158,7 +147,6 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
   const posAujourdhui = maintenant >= debut && maintenant < fin ? pos(maintenant) : null;
   const aujourdhuiCle = cleJour(maintenant);
 
-  // Après un zoom : garder aujourd'hui (ou le début) au centre de la vue
   useEffect(() => {
     const el = refGantt.current;
     if (!el || !largeur) return;
@@ -178,7 +166,6 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
 
   return (
     <div className="pg-page">
-      {/* Barre haute : modes + période */}
       <div className="pg-haut">
         <nav className="pg-onglets" role="tablist" aria-label={t('Vue par')}>
           {MODES.map((m) => {
@@ -208,7 +195,6 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
         </div>
       </div>
 
-      {/* Navigation + filtres */}
       <div className="pg-outils">
         <div className="pg-nav">
           <button type="button" className="pg-icone" onClick={() => deplacer(-1)} aria-label={t('Précédent')} title={t('Précédent')}>
@@ -240,7 +226,6 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
 
       {erreur && <div className="pg-erreur">{erreur}</div>}
 
-      {/* Frise */}
       <div className="pg-gantt" ref={refGantt}
         style={{ '--nb-jours': nb, '--pg-nom': `${nomPx}px`, '--pg-largeur': `${nomPx + pistePx}px` }}>
         <div className="pg-gantt__tete">
@@ -268,7 +253,6 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
             const e = ETAT[l.etat] || ETAT[1];
             const g = pos(l.d); const dr = pos(l.f);
             const coupeG = l.d < debut; const coupeD = l.f > fin;
-            // Au moins une journée de large, sans dépasser la fin de la période : le libellé reste dans la barre
             const w = Math.min(Math.max(dr - g, 100 / nb), 100 - g);
             const texte = l.titre || `#${l.id}`;
             const bulle = `${l.titre || `#${l.id}`}\n${t(e.label)} · ${dureeTexte(l)}\n${dateCourte(l.d)} → ${dateCourte(l.f)}`;

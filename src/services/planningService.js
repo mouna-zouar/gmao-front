@@ -30,7 +30,7 @@ async findConfig() {
         dayClick: true,
       };
     }
-    throw error; // pour les autres erreurs, on les relance
+    throw error;
   }
 },
 
@@ -72,6 +72,27 @@ async findConfig() {
         dateDebut: toIsoLocalDateTime(dateDebut),
         dateFin: toIsoLocalDateTime(dateFin),
       },
+    });
+    return data;
+  },
+
+  async equipe(dateDebut, dateFin) {
+    const { data } = await api.get('/planning/equipe', {
+      params: { dateDebut: toIsoLocalDateTime(dateDebut), dateFin: toIsoLocalDateTime(dateFin) },
+    });
+    return data;
+  },
+
+  async deplacer(intervenantId, personnelId, personnelNom, debut) {
+    const { data } = await api.put(`/planning/equipe/interventions/${intervenantId}`, {
+      personnelId, personnelNom, debut: toIsoLocalDateTime(debut),
+    });
+    return data;
+  },
+
+  async affecter(bonId, personnelId, personnelNom, debut, heures) {
+    const { data } = await api.post('/planning/equipe/affecter', {
+      bonId, personnelId, personnelNom, debut: toIsoLocalDateTime(debut), heures,
     });
     return data;
   },

@@ -1,5 +1,3 @@
-// Onglets Diagnostic / Tâches / Intervenants / Contrôle / Remise en service
-// Affichage en tableau → clic sur une ligne → page de détail (en-tête + infos + cadre à onglets)
 import { useEffect, useState } from 'react';
 import {
   Plus,
@@ -8,7 +6,7 @@ import {
   Users,
   FileCheck,
   RotateCw,
-  Inbox,
+  
   Loader2,
   Package,
   Building2,
@@ -17,7 +15,7 @@ import {
   Activity,
   Euro,
   Clock,
-  Gauge,
+  
   MessageSquare,
   CheckCircle,
   XCircle,
@@ -56,7 +54,6 @@ import bonMaintenanceServiceSimple from '../../../services/Bonmaintenanceservice
 import parametreService from '../../../services/parametreService';
 import lotArticleService from '../../../services/lotArticleService';
 import pieceLigneService from '../../../services/PieceLigneService';
-import Button from '../../ui/Button';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 
 import {
@@ -84,9 +81,6 @@ import { t, tp } from '../../../i18n';
 import { Modale } from '../../commun';
 import { TempsPasse, totalTemps, formatTemps, tempsPasse, useMaintenant, TACHE_EN_COURS, INTERVENANT_EN_COURS } from './BmdCommun';
 
-// ------------------------------------------------------------
-// Constantes d'affichage
-// ------------------------------------------------------------
 const GRAVITE_TONE = { 1: 'blue', 2: 'amber', 3: 'red' };
 const TACHE_ETAT_TONE = { 1: 'blue', 2: 'amber', 3: 'teal', 4: 'green', 10: 'slate' };
 const INTERVENANT_ETAT_TONE = { 0: 'blue', 1: 'teal', 2: 'green', 10: 'slate' };
@@ -114,7 +108,6 @@ const PanelHeader = ({ titre, count, extra, showForm, onToggle, labelAjout, acti
       <span className="bmd-panel-count">{count}</span>
       {extra}
     </div>
-    {/* Formulaire ouvert : pas de second « Annuler » en haut, celui du bas du formulaire suffit */}
     {!showForm && (
       <div className="bmd-panel-actions">
         {actions}
@@ -126,7 +119,6 @@ const PanelHeader = ({ titre, count, extra, showForm, onToggle, labelAjout, acti
   </div>
 );
 
-// Fiche équipement réutilisée dans plusieurs détails
 const FicheEquipement = ({ immo, id }) => (
   immo ? (
     <BmdFieldGrid
@@ -144,19 +136,12 @@ const FicheEquipement = ({ immo, id }) => (
   )
 );
 
-// ============================================================
-// ONGLET DIAGNOSTIC
-// ============================================================
 const emptyDiagnosticForm = {
   personnelId: '', observations: '',
   lotArticleImmobilistationId: '', bonMaintenancePieceImmoId: '',
   causeProbable: '', gravite: '', dureeEstimeeHeures: '',
 };
 
-// ============================================================
-// Équipement du bon, affiché en lecture seule dans les formulaires des sous-onglets
-// (diagnostic, contrôle, remise en service, tâches, intervenants)
-// ============================================================
 function EquipementDuBon({ id, immobilisations }) {
   const [liste, setListe] = useState(immobilisations || null);
   useEffect(() => {
@@ -213,7 +198,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
     setEditingId(null);
   };
 
-  // Modification : le formulaire s'ouvre au-dessus du tableau, pré-rempli
   const startEdit = (d) => {
     setForm({
       personnelId: d.personnelId ?? '',
@@ -242,7 +226,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   };
 
   useEffect(() => { load(); }, [bonMaintenanceId]);
-  // Ouverture directe du formulaire (bouton « À faire maintenant »)
   useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -270,12 +253,11 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   }, [form.lotArticleImmobilistationId]);
 
   useEffect(() => {
-    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
+    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
     obtenirEquipements().then(setImmobilisations).catch(console.error);
     bonMaintenancePieceImmoService.findByBonMaintenanceId(bonMaintenanceId).then((data) => setPiecesImmo(data ?? [])).catch(console.error);
   }, [bonMaintenanceId]);
 
-  /** Le technicien du diagnostic est affecté au bon : ajouté aux intervenants s'il n'y est pas déjà. */
   const affecterTechnicien = async (personnelId, personnelNom) => {
     if (!personnelId) return;
     try {
@@ -306,7 +288,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
       };
       const idModifie = editingId;
       if (idModifie) {
-        // Le serveur remplace tout l'enregistrement : on repart de l'existant (date, champs non affichés)
         const existant = diagnostics.find((x) => x.id === idModifie) || {};
         if (!payload.personnelNom && payload.personnelId === existant.personnelId) payload.personnelNom = existant.personnelNom ?? null;
         await bonMaintenanceDiagnosticService.update(idModifie, { ...existant, ...payload });
@@ -370,9 +351,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
     />
   );
 
-  // ---------- DÉTAIL ----------
   const selected = diagnostics.find((d) => d.id === selectedId);
-  // Détail : affiché dans une fenêtre, au-dessus du tableau
   const detailJsx = selected ? (() => {
     const d = selected;
     const immo = findImmo(d.lotArticleImmobilistationId);
@@ -423,7 +402,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   })() : null;
 
 
-  // ---------- TABLEAU ----------
   const colonnes = [
     { key: 'date', label: t("Date"), render: (d) => <span className="bmd-cell-nowrap">{formatDateTime(d.dateDiagnostic)}</span> },
     { key: 'tech', label: t("Technicien"), render: (d) => <span className="bmd-cell-main">{d.personnelNom}</span> },
@@ -574,9 +552,6 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   );
 }
 
-// ============================================================
-// ONGLET TÂCHES
-// ============================================================
 const emptyTacheForm = {
   designation: '', nom: '', ordre: '', etat: '1',
   dateDebut: '', dateFin: '',
@@ -597,17 +572,13 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
   const [editingId, setEditingId] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
-  // Temps passé : rafraîchi toutes les 30 s tant qu'une tâche est en cours
   const maintenantT = useMaintenant(taches.some((x) => tempsPasse(x, TACHE_EN_COURS)?.enCours));
   const tempsTotalTaches = totalTemps(taches, TACHE_EN_COURS, maintenantT);
 
   const [tacheQteDisponible, setTacheQteDisponible] = useState(null);
-  // Gamme d'intervention : crée toutes les tâches d'un coup
   const [choixGamme, setChoixGamme] = useState(false);
   const [messageGamme, setMessageGamme] = useState(null);
   const [checkingTacheQte, setCheckingTacheQte] = useState(false);
-  // Famille de l'équipement sans pièces de dépôt (paramètre « Familles sans pièces de dépôt », ex. logiciels) :
-  // l'article et la quantité ne sont pas affichés
   const [sansDepot, setSansDepot] = useState(false);
   useEffect(() => {
     let annule = false;
@@ -627,7 +598,6 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
     return () => { annule = true; };
   }, [bonMaintenanceId]);
 
-  // Tâches dont l'article manque encore : à demander (demande de fourniture) et/ou à commander
   const [manques, setManques] = useState({ demander: new Set(), commander: new Set() });
   const chargerManques = () => api.get('/bon-maintenance/besoins-pieces', { params: { ids: bonMaintenanceId } })
     .then(({ data }) => {
@@ -636,7 +606,6 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
     })
     .catch(() => setManques({ demander: new Set(), commander: new Set() }));
   useEffect(() => {
-    // Une demande ou une commande créée ailleurs (bouton Demander / Commander) éteint la barre rouge
     const surEcriture = () => chargerManques();
     window.addEventListener('gmao:ecriture', surEcriture);
     return () => window.removeEventListener('gmao:ecriture', surEcriture);
@@ -668,7 +637,6 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
   useEffect(() => { if (autoOpenForm) setShowForm(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    // Articles du prestataire de catégorie 15 (id = prestataireArticlesId)
     obtenirArticles().then(setArticles).catch(console.error);
     obtenirPrestataires().then(setPrestataires).catch(console.error);
     bonMaintenanceIntervenantService.getByBonMaintenance(bonMaintenanceId)
@@ -696,8 +664,6 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
     setShowForm(false);
   };
 
-  // Comme dans Cubix : le sous-traitant d'une tâche est choisi parmi les sous-traitants du bon
-  // (onglet « Intervenants »). La valeur déjà enregistrée reste affichée même si elle n'y est plus.
   const sousTraitantsDuBon = prestataires.filter((p) =>
     intervenants.some((i) => i.sousTraitantId != null && String(i.sousTraitantId) === String(p.id))
     || (form.sousTraitantId !== '' && String(form.sousTraitantId) === String(p.id)));
@@ -719,14 +685,13 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
       qte: tache.qte ?? '',
     });
     setEditingId(tache.id);
-    setSelectedId(null); // retour à la liste, formulaire de modification ouvert au-dessus du tableau
+    setSelectedId(null);
     setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.designation.trim()) return;
-    // Article et quantité seulement si la tâche a besoin d'un article
     const avecArticle = !sansDepot && form.besoinArticle === 'true';
     if (avecArticle) warnIfQuantiteInvalide(articles, form.prestataireArticlesId, form.qte, 'quantité');
 
@@ -756,7 +721,7 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
       }
       resetForm();
       await load();
-      if (idModifie) setSelectedId(idModifie); // on revient sur le détail de la tâche modifiée
+      if (idModifie) setSelectedId(idModifie);
     } catch (err) {
       console.error(err);
       alert(editingId ? 'Échec de la modification de la tâche.' : "Échec de l'ajout de la tâche.");
@@ -804,9 +769,7 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
     />
   );
 
-  // ---------- DÉTAIL ----------
   const selected = taches.find((tache) => tache.id === selectedId);
-  // Détail : affiché dans une fenêtre, au-dessus du tableau
   const detailJsx = selected ? (() => {
     const tache = selected;
     const intervenant = findIntervenant(tache.intervenantId);
@@ -889,7 +852,6 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
   })() : null;
 
 
-  // ---------- TABLEAU ----------
   const tachesTriees = [...taches].sort((a, b) => (a.ordre ?? 0) - (b.ordre ?? 0));
 
   const colonnes = [
@@ -1145,9 +1107,6 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
   );
 }
 
-// ============================================================
-// ONGLET INTERVENANTS
-// ============================================================
 const emptyIntervenantForm = {
   personnelId: '', sousTraitantId: '', etat: '0',
   dateDebutIntervention: '', dateFinIntervention: '',
@@ -1174,7 +1133,6 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
   const [loadingHistoId, setLoadingHistoId] = useState(null);
   const [savingEtatId, setSavingEtatId] = useState(null);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
-  // Temps passé : rafraîchi toutes les 30 s tant qu'un intervenant est en cours
   const maintenantI = useMaintenant(intervenants.some((x) => tempsPasse(x, INTERVENANT_EN_COURS)?.enCours));
   const tempsTotalIntervenants = totalTemps(intervenants, INTERVENANT_EN_COURS, maintenantI);
 
@@ -1195,7 +1153,7 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
 
   useEffect(() => {
     if (!showForm) return;
-    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
+    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
     obtenirPrestataires().then(setPrestataires).catch(console.error);
   }, [showForm]);
 
@@ -1218,7 +1176,6 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
     setForm(emptyIntervenantForm);
   };
 
-  // Modification : le formulaire s'ouvre au-dessus du tableau, pré-rempli
   const startEdit = (i) => {
     setForm({
       personnelId: i.personnelId ?? '',
@@ -1266,7 +1223,6 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
       };
       const idModifie = editingId;
       const existant = idModifie ? (intervenants.find((x) => x.id === idModifie) || {}) : null;
-      // Sans changement de personne, on garde le nom déjà enregistré (listes chargées en arrière-plan)
       if (existant && !payload.intervenantNom) payload.intervenantNom = existant.intervenantNom ?? null;
       const resultat = idModifie
         ? await bonMaintenanceIntervenantService.update(idModifie, { ...existant, ...payload })
@@ -1300,7 +1256,7 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
           await bonMaintenanceIntervenantService.remove(id);
           setIntervenants((prev) => prev.filter((i) => i.id !== id));
           setSelectedId(null);
-          onBonMaybeChanged?.(); // le bon peut avoir été clôturé automatiquement
+          onBonMaybeChanged?.();
         } catch (err) {
           console.error(err);
           alert(t("Échec de la suppression."));
@@ -1309,7 +1265,6 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
     });
   };
 
-  // Le backend remplace toute l'entité à l'update : on renvoie l'objet complet avec le nouvel état.
   const handleChangeEtat = async (intervenant, nouvelEtat) => {
     const etat = Number(nouvelEtat);
     if (etat === intervenant.etat) return;
@@ -1317,7 +1272,6 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
     try {
       const updated = await bonMaintenanceIntervenantService.update(intervenant.id, { ...intervenant, etat });
       setIntervenants((prev) => prev.map((i) => (i.id === intervenant.id ? { ...i, ...updated } : i)));
-      // Animation avant le rafraîchissement : si le bon se clôture, son animation suivra
       if (etat === 2) onCelebrer?.('intervenant-termine', nomIntervenantAffiche(intervenant));
       onBonMaybeChanged?.();
       await chargerHistorique(intervenant.id);
@@ -1344,9 +1298,7 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
     />
   );
 
-  // ---------- DÉTAIL ----------
   const selected = intervenants.find((i) => i.id === selectedId);
-  // Détail : affiché dans une fenêtre, au-dessus du tableau
   const detailJsx = selected ? (() => {
     const i = selected;
     const historique = historiqueParIntervenant[i.id] ?? [];
@@ -1447,7 +1399,6 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
   })() : null;
 
 
-  // ---------- TABLEAU ----------
   const colonnes = [
     { key: 'nom', label: t("Intervenant"), render: (i) => <span className="bmd-cell-main">{nomIntervenantAffiche(i)}</span> },
     { key: 'type', label: t("Type"), render: (i) => typeIntervenant(i) },
@@ -1611,9 +1562,6 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
   );
 }
 
-// ============================================================
-// ONGLET CONTRÔLE
-// ============================================================
 const emptyControleForm = {
   personnelId: '', typeControle: '', resultat: '', valeurMesuree: '', valeurAttendue: '',
   conforme: '', observations: '', lotArticleImmobilistationId: '',
@@ -1653,7 +1601,6 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
     setEditingId(null);
   };
 
-  // Modification : le formulaire s'ouvre au-dessus du tableau, pré-rempli
   const startEdit = (c) => {
     setForm({
       personnelId: c.personnelId ?? '',
@@ -1686,7 +1633,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
   useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error); // service maintenance (63)
+    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
     obtenirEquipements().then(setImmobilisations).catch(console.error);
   }, []);
 
@@ -1762,12 +1709,9 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
     />
   );
 
-  // ---------- DÉTAIL ----------
   const selected = controles.find((c) => c.id === selectedId);
-  // Détail : affiché dans une fenêtre, au-dessus du tableau
   const detailJsx = selected ? (() => {
     const c = selected;
-    const aDesMesures = c.valeurMesuree != null || c.valeurAttendue != null;
     let ecart = null;
     if (c.valeurMesuree != null && c.valeurAttendue != null) {
       const diff = Number(c.valeurMesuree) - Number(c.valeurAttendue);
@@ -1823,7 +1767,6 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
   })() : null;
 
 
-  // ---------- TABLEAU ----------
   const colonnes = [
     { key: 'date', label: t("Date"), render: (c) => <span className="bmd-cell-nowrap">{formatDateTime(c.dateControle)}</span> },
     { key: 'type', label: t("Type"), render: (c) => <span className="bmd-cell-main">{c.typeControle || t("Contrôle")}</span> },
@@ -1952,15 +1895,11 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
   );
 }
 
-// ============================================================
-// ONGLET REMISE EN SERVICE
-// ============================================================
 const emptyRemiseForm = {
   lotArticleImmobilistationId: '', conforme: '', observations: '',
   etatAvant: '', etatApres: '',
 };
 
-/** Personne connectée : { id, nom } (demande et « Autorisé par » de la remise en service). */
 function utilisateurConnecte() {
   const u = authService.getCurrentUser();
   const id = u?.personnelId ?? u?.personnel?.id ?? u?.userId ?? null;
@@ -1981,8 +1920,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   const [editingId, setEditingId] = useState(null);
   const [demandeEnCours, setDemandeEnCours] = useState(false);
   const { confirmModal, setConfirmModal, close: closeConfirmModal } = useConfirmModal();
-  // La remise en service n'est possible qu'après le contrôle de l'équipement (onglet Contrôle)
-  const [controles, setControles] = useState(null); // null = en cours de lecture
+  const [controles, setControles] = useState(null);
   const chargerControles = () => bonMaintenanceControleEquipementService.getByBonMaintenance(bonMaintenanceId)
     .then((l) => setControles([...(l ?? [])].sort((x, y) => String(y.dateControle || '').localeCompare(String(x.dateControle || '')))))
     .catch(() => setControles([]));
@@ -1996,7 +1934,6 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   const dernierControleNonConforme = controleFait && controles[0].conforme === false;
   const messageServeur = (err) => err?.response?.data?.message || err?.response?.data?.error || null;
 
-  // Demande en attente : une ligne sans décision (conforme vide) ; la décision vient la compléter
   const demande = decisions.find((d) => d.conforme == null) || null;
   const dejaAutorisee = decisions.some((d) => d.conforme === true);
 
@@ -2034,7 +1971,6 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
     setEditingId(null);
   };
 
-  // Modification : le formulaire s'ouvre au-dessus du tableau, pré-rempli
   const startEdit = (d) => {
     setForm({
       lotArticleImmobilistationId: d.lotArticleImmobilistationId != null ? String(d.lotArticleImmobilistationId) : '',
@@ -2083,7 +2019,6 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
     }
     setSaving(true);
     try {
-      // « Autorisé par » : la personne connectée
       const moi = utilisateurConnecte();
       const payload = {
         bonMaintenanceId,
@@ -2112,7 +2047,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
       } else {
         onCelebrer?.(autorisee ? 'remise-autorisee' : 'remise-refusee', immo?.designation || null);
       }
-      onBonMaybeChanged?.(); // une remise en service conforme peut déclencher la clôture automatique
+      onBonMaybeChanged?.();
     } catch (err) {
       console.error(err);
       alert(messageServeur(err) || (editingId ? t("Échec de la modification de la décision.") : t("Échec de l'enregistrement de la décision.")));
@@ -2160,9 +2095,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
     />
   );
 
-  // ---------- DÉTAIL ----------
   const selected = decisions.find((d) => d.id === selectedId);
-  // Détail : affiché dans une fenêtre, au-dessus du tableau
   const detailJsx = selected ? (() => {
     const d = selected;
     return (
@@ -2219,7 +2152,6 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   })() : null;
 
 
-  // ---------- TABLEAU ----------
   const colonnes = [
     { key: 'date', label: t("Date"), render: (d) => <span className="bmd-cell-nowrap">{formatDateTime(d.date)}</span> },
     { key: 'decision', label: t("Décision"), render: (d) => pillDecision(d.conforme) },

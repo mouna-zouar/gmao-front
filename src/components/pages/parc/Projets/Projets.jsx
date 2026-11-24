@@ -7,8 +7,6 @@ import { ModaleFormulaire, PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './Projets.css';
 
-/* Projets : page liste et fenêtre de la bibliothèque commune (src/components/commun). */
-
 const ETATS = [
   { value: 0, label: 'Planifié', classe: 'planned', Icone: Hourglass },
   { value: 1, label: 'En cours', classe: 'running', Icone: Activity },

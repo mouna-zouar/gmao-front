@@ -42,7 +42,6 @@
   --slate-100: var(--g-slate-100);
   --slate-50: var(--g-slate-50);
 
-  /* Alias compatibilité JSX existant */
   --primary: var(--teal-600);
   --primary-dark: var(--teal-700);
   --primary-light: var(--teal-50);
@@ -69,9 +68,6 @@
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ============================================================
-   CONTAINER
-   ============================================================ */
 .reclamations-container {
   padding: 24px;
   margin: 0 auto;
@@ -88,9 +84,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ============================================================
-   HEADER — carte blanche style FicheEmploye
-   ============================================================ */
 .reclamations-header-card {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -116,7 +109,6 @@
   gap: 14px;
 }
 
-/* ⭐ Icône header en teal (alignée FicheEmploye) */
 .reclamations-header-icon {
   display: flex;
   align-items: center;
@@ -145,7 +137,6 @@
   font-weight: 500;
 }
 
-/* ⭐ Badge total en teal (aligné badge-depot de FicheEmploye) */
 .reclamations-badge-total {
   background: var(--teal-50);
   color: var(--teal-700);
@@ -158,9 +149,6 @@
   text-transform: uppercase;
 }
 
-/* ============================================================
-   ACTIONS BAR — carte blanche style FicheEmploye
-   ============================================================ */
 .reclamations-actions-bar {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -239,9 +227,6 @@
   margin: 4px 8px;
 }
 
-/* ============================================================
-   FILTRES — fond slate-50 style FicheEmploye
-   ============================================================ */
 .reclamations-filter-panel {
   display: flex;
   background: var(--slate-50);
@@ -377,9 +362,6 @@
 .reclamations-export-btn.print { background: var(--teal-600); }
 .reclamations-export-btn.stats { background: var(--cyan-600); }
 
-/* ============================================================
-   TABLE — style modern-table
-   ============================================================ */
 .reclamations-table-wrap {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -456,9 +438,6 @@
   font-weight: 600;
 }
 
-/* ============================================================
-   LIGNES
-   ============================================================ */
 .reclamations-row {
   cursor: pointer;
   transition: var(--transition);
@@ -476,9 +455,6 @@
   box-shadow: inset 4px 0 0 var(--teal-600);
 }
 
-/* ============================================================
-   BADGES ÉTAT
-   ============================================================ */
 .reclamations-badge {
   display: inline-flex;
   align-items: center;
@@ -523,9 +499,6 @@
   border-color: var(--slate-200);
 }
 
-/* ============================================================
-   PAGINATION
-   ============================================================ */
 .reclamations-pagination {
   display: flex;
   align-items: center;
@@ -587,9 +560,6 @@
   cursor: not-allowed;
 }
 
-/* ============================================================
-   MODAL REJET (intégré)
-   ============================================================ */
 .rejet-modal .confirm-modal-container {
   max-width: 460px;
 }
@@ -614,9 +584,6 @@
   box-shadow: 0 0 0 3px rgba(7, 148, 164, 0.12);
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
 @media (max-width: 768px) {
   .reclamations-container {
     padding: 16px;
@@ -719,9 +686,6 @@
   }
 }
 
-/* ============================================================
-   TRI DES COLONNES + BOUTON PARAMÈTRES
-   ============================================================ */
 .reclamations-th-sortable {
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -749,7 +713,6 @@
 .reclamations-th-sortable:hover .reclamations-sort-icon,
 .reclamations-sort-icon.active { color: var(--teal-600); }
 
-/* Icône d'en-tête = bouton « paramètres des colonnes » */
 .reclamations-header-icon-btn {
   cursor: pointer;
   font: inherit;
@@ -771,10 +734,6 @@
   outline-offset: 2px;
 }
 
-/* ============================================================
-   HARMONISATION — barre d'actions, filtres et tableau
-   identiques aux autres listes (Bons de maintenance, Parc)
-   ============================================================ */
 .reclamations-actions-bar {
   gap: 8px;
   padding: 12px 18px;
@@ -793,7 +752,6 @@
 .reclamations-action-btn:disabled,
 .reclamations-action-btn.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
 
-/* Ajouter — teal plein (bouton principal) */
 .reclamations-action-btn.ajouter {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -836,7 +794,6 @@
   padding: 8px 4px;
 }
 
-/* Filtres */
 .reclamations-filter-panel { gap: 12px; }
 .reclamations-filter-group { min-width: 220px; }
 .reclamations-filter-reset {
@@ -857,7 +814,6 @@
 }
 .reclamations-export-btn:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: none; }
 
-/* Tableau */
 .reclamations-table-wrap:hover { box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02); }
 .reclamations-table th { user-select: none; }
 .reclamations-table td { position: relative; }
@@ -874,13 +830,7 @@
 .reclamations-date-cell { display: inline-flex; align-items: center; gap: 6px; color: var(--slate-500); }
 .reclamations-date-cell svg { color: var(--slate-400); }
 
-/* Statistiques en pastilles dans l'en-tête (composant commun PastillesStats) */
 .reclamations-header-card { flex-wrap: wrap; }
-
-/* ═════════════════════════════════════════════════════════════
-   ReclamationsStats   (ancien fichier ReclamationsStats.css)
-   ═════════════════════════════════════════════════════════════ */
-/* Statistiques par état des réclamations (même présentation que « Bons de maintenance ») */
 
 .reclamations-header-stats {
   display: flex;
@@ -990,7 +940,6 @@
   .reclamations-stat-count { font-size: 1rem; }
 }
 
-/* ─── Boutons des listes : seuls « Ajouter » et « Supprimer » gardent leur couleur, les autres sont neutres ─── */
 .reclamations-action-btn.modifier, .reclamations-action-btn.details, .reclamations-action-btn.associer, .reclamations-action-btn.creer-bon, .reclamations-action-btn.valider, .reclamations-action-btn.rejeter { color: var(--g-slate-700); background: transparent; }
 .reclamations-action-btn.modifier:hover:not(:disabled), .reclamations-action-btn.details:hover:not(:disabled), .reclamations-action-btn.associer:hover:not(:disabled), .reclamations-action-btn.creer-bon:hover:not(:disabled), .reclamations-action-btn.valider:hover:not(:disabled), .reclamations-action-btn.rejeter:hover:not(:disabled) {
   background: var(--g-slate-100);
@@ -998,7 +947,6 @@
   color: var(--g-slate-900);
 }
 
-/* ===== En-tête sur une ligne : titre · vues de la liste (3 au plus + « Plus ») ===== */
 .reclamations-header-card { flex-wrap: nowrap; padding: 12px 16px; gap: 12px; }
 .reclamations-header-card .reclamations-header-title-box { flex-shrink: 0; }
 .reclamations-header-card .reclamations-header-subtitle { display: none; }
@@ -1013,7 +961,6 @@
   .reclamations-header-card .reclamations-header-vues { flex-basis: 100%; justify-content: flex-start; }
 }
 
-/* ===== Cycle de vie (modèle IBM Maximo) : Affecter + menu « Changer l'état » ===== */
 .reclamations-action-btn.affecter, .reclamations-action-btn.cycle { color: var(--g-slate-700); background: transparent; }
 .reclamations-action-btn.affecter:hover:not(:disabled), .reclamations-action-btn.cycle:hover:not(:disabled), .reclamations-action-btn.cycle.is-ouvert {
   background: var(--g-slate-100);
@@ -1043,9 +990,7 @@
 .reclamations-non-affectee { color: var(--g-orange-600, #c2410c); font-size: 0.82rem; font-weight: 600; }
 
 
-/* Bouton « Remise en service » du bon lié */
 .reclamations-action-btn.remise { color: var(--g-slate-700); background: transparent; }
 .reclamations-action-btn.remise:hover:not(:disabled) { background: var(--g-emerald-50, #ecfdf5); border-color: var(--g-emerald-200, #a7f3d0); color: var(--g-emerald-700); }
 
-/* Le champ de recherche se rétrécit au lieu de passer sous le filtre voisin */
 .reclamations-filter-input-wrap input { min-width: 0; width: 100%; }

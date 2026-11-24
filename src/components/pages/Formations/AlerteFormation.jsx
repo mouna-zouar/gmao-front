@@ -5,11 +5,6 @@ import { RESULTATS_FORMATION, STATUTS_FORMATION } from './formationLibelles';
 import { t } from '../../../i18n';
 import './Formations.css';
 
-/*
- * Sous le choix d'un technicien : est-il formé sur cet équipement (ou sa famille) ?
- * Équipement donné directement (lotArticleImmobilistationId) ou par le bon (bonMaintenanceId).
- * Rien n'est affiché si l'équipement n'a pas de famille connue ou si la vérification échoue.
- */
 export default function AlerteFormation({ personnelId, bonMaintenanceId, lotArticleImmobilistationId }) {
   const [res, setRes] = useState(null);
   const cle = personnelId && (bonMaintenanceId || lotArticleImmobilistationId) ? `${personnelId}|${bonMaintenanceId}|${lotArticleImmobilistationId}` : '';
@@ -34,7 +29,6 @@ export default function AlerteFormation({ personnelId, bonMaintenanceId, lotArti
       </p>
     );
   }
-  // Inscrit à une formation sur cet équipement, mais pas encore validée (formation « Réalisée » + résultat « Réussi »)
   const enAttente = res.enAttente ?? [];
   if (enAttente.length) {
     return (

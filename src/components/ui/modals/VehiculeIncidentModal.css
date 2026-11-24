@@ -1,6 +1,6 @@
 
 .vim-modal {
-  width: 960px; /* sans le panneau « Aperçu live » */
+  width: 960px;
   max-width: 96vw;
   max-height: 94vh;
   display: flex;
@@ -44,7 +44,6 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* ═══════════ HEADER — teal foncé uni ═══════════ */
 .vim-header {
   position: relative;
   display: flex;
@@ -135,7 +134,6 @@
   z-index: 1;
 }
 
-/* Stats dans le header */
 .vim-header-stats {
   display: flex;
   gap: 8px;
@@ -202,7 +200,6 @@
   transform: rotate(90deg);
 }
 
-/* ═══════════ LAYOUT SPLIT — 3 COLONNES ═══════════ */
 .vim-layout {
   flex: 1;
   display: flex;
@@ -215,7 +212,6 @@
   grid-template-columns: 200px 1fr 340px;
 }
 
-/* ═══════════ NAVIGATION LATÉRALE ═══════════ */
 .vim-nav {
   flex-shrink: 0;
   background: var(--g-slate-50);
@@ -270,14 +266,12 @@
   width: 100%;
 }
 
-/* Hover → teal clair uni */
 .vim-nav-item:hover {
   background: var(--g-brand-50);
   border-color: var(--g-brand-100);
   color: var(--g-brand-500);
 }
 
-/* Item actif → teal uni */
 .vim-nav-item.active {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -329,7 +323,6 @@
   color: var(--g-blanc);
 }
 
-/* ═══════════ CONTENU ═══════════ */
 .vim-content {
   flex: 1;
   overflow-y: scroll;
@@ -358,7 +351,6 @@
   border-color: var(--g-brand-50);
 }
 
-/* ═══════════ PANE ═══════════ */
 .vim-content-pane {
   animation: vimSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -383,7 +375,6 @@
   color: var(--g-slate-500);
 }
 
-/* ═══════════ RECHERCHE ═══════════ */
 .vim-search {
   display: flex;
   align-items: center;
@@ -416,7 +407,6 @@
   font-weight: 500;
 }
 
-/* ═══════════ CARDS VÉHICULE ═══════════ */
 .vim-vehicules-loading,
 .vim-vehicules-empty {
   display: flex;
@@ -456,7 +446,6 @@
 
 .vim-vehicule-shine { display: none; }
 
-/* Hover → teal clair uni */
 .vim-vehicule-card:hover {
   border-color: var(--g-brand-200);
   background: var(--g-brand-50);
@@ -464,7 +453,6 @@
   box-shadow: 0 4px 14px -6px rgba(7, 148, 164, 0.25);
 }
 
-/* Sélectionné → teal clair uni */
 .vim-vehicule-card.selected {
   border-color: var(--g-brand-500);
   background: var(--g-brand-50);
@@ -484,7 +472,6 @@
   transition: all 0.2s ease;
 }
 
-/* Icône quand sélectionné → teal plein */
 .vim-vehicule-card.selected .vim-vehicule-icon {
   background: var(--g-brand-500);
   color: var(--g-blanc);
@@ -517,7 +504,6 @@
   font-weight: 600;
 }
 
-/* Check → teal plein */
 .vim-vehicule-check {
   position: absolute;
   top: 10px;
@@ -534,7 +520,6 @@
   animation: vimPop 0.3s ease;
 }
 
-/* ═══════════ TUILES TYPE ═══════════ */
 .vim-type-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -617,7 +602,6 @@
 .vim-type-card.type-slate.active .vim-type-icon { background: var(--g-slate-500); color: var(--g-blanc); transform: scale(1.06) rotate(-3deg); }
 .vim-type-card.type-slate.active .vim-type-label { color: var(--g-slate-600); }
 
-/* ═══════════ CHIPS ═══════════ */
 .vim-chips {
   display: flex;
   flex-wrap: wrap;
@@ -666,7 +650,6 @@
 .vim-chip-btn.chip-red    { color: var(--g-red-800); border-color: var(--g-red-200); }
 .vim-chip-btn.chip-red.active    { background: var(--g-red-100); border-color: var(--g-red-300); color: var(--g-red-800); }
 
-/* ═══════════ WORKFLOW ═══════════ */
 .vim-workflow {
   display: flex;
   align-items: center;
@@ -762,7 +745,6 @@
 
 .vim-workflow-step.active .vim-workflow-label { color: var(--g-slate-900); font-weight: 800; }
 
-/* ═══════════ GRID & CHAMPS ═══════════ */
 .vim-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -886,9 +868,6 @@
   gap: 4px;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   APERÇU (colonne droite)
-   ═══════════════════════════════════════════════════════════ */
 .vim-preview-wrap {
   background: var(--g-slate-50);
   border-left: 1.5px solid var(--g-slate-200);
@@ -919,7 +898,6 @@
   border-bottom: 1.5px dashed var(--g-brand-100);
 }
 
-/* Icône preview → teal plein */
 .vim-preview-head-icon {
   display: flex;
   align-items: center;
@@ -980,7 +958,6 @@
   gap: 12px;
 }
 
-/* Icône véhicule preview → teal plein */
 .vim-preview-vehicule-icon {
   display: flex;
   align-items: center;
@@ -1034,7 +1011,6 @@
 .vim-preview-tag.tag-green  { background: var(--g-green-100); color: var(--g-green-800); }
 .vim-preview-tag.tag-slate  { background: var(--g-slate-100); color: var(--g-slate-600); }
 
-/* Workflow aperçu vertical */
 .vim-preview-workflow {
   display: flex;
   flex-direction: column;
@@ -1068,7 +1044,6 @@
   transition: background 0.3s ease;
 }
 
-/* Connecteur rempli → teal */
 .vim-preview-step-connector.filled {
   background: var(--g-brand-500);
 }
@@ -1088,7 +1063,6 @@
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Étape active → teal clair uni */
 .vim-preview-step.active .vim-preview-step-dot {
   background: var(--g-brand-50);
   color: var(--g-brand-500);
@@ -1161,7 +1135,6 @@
   margin-top: 1px;
 }
 
-/* Récapitulatif financier */
 .vim-preview-summary {
   background: var(--g-blanc);
   border: 1.5px dashed var(--g-brand-100);
@@ -1217,7 +1190,6 @@
   font-family: 'Courier New', monospace;
 }
 
-/* ═══════════ ERREUR INLINE (dans le contenu) ═══════════ */
 .vim-error-inline {
   display: flex;
   align-items: center;
@@ -1233,7 +1205,6 @@
   animation: vimPop 0.3s ease;
 }
 
-/* ═══════════ FOOTER ═══════════ */
 .vim-footer {
   display: flex;
   align-items: center;
@@ -1282,9 +1253,6 @@
   gap: 8px;
 }
 
-/* ═══════════ RESPONSIVE ═══════════ */
-
-/* Tablette large : on enlève l'aperçu */
 @media (max-width: 1100px) {
   .vim-layout--with-preview {
     grid-template-columns: 200px 1fr;
@@ -1292,7 +1260,6 @@
   .vim-preview-wrap { display: none; }
 }
 
-/* Tablette : nav horizontale */
 @media (max-width: 900px) {
   .vim-modal { width: 100%; }
 
@@ -1344,7 +1311,6 @@
   .vim-header-stats { display: none; }
 }
 
-/* Mobile */
 @media (max-width: 620px) {
   .vim-header {
     padding: 16px 18px;
@@ -1388,7 +1354,6 @@
   .vim-footer-right > button { flex: 1; }
 }
 
-/* ═══════════ SEARCHABLE SELECT (combobox) ═══════════ */
 .vim-searchable {
   position: relative;
   width: 100%;
@@ -1410,7 +1375,6 @@
   border-color: var(--g-brand-200);
 }
 
-/* Focus / open → teal */
 .vim-searchable-input-wrap.is-open,
 .vim-searchable-input-wrap:focus-within {
   border-color: var(--g-brand-500);
@@ -1567,13 +1531,11 @@
   text-overflow: ellipsis;
 }
 
-/* Hover option → teal clair uni */
 .vim-searchable-option:hover:not(:disabled) {
   background: var(--g-brand-50);
   color: var(--g-brand-500);
 }
 
-/* Option sélectionnée → teal clair uni */
 .vim-searchable-option.is-selected {
   background: var(--g-brand-50);
   color: var(--g-brand-500);

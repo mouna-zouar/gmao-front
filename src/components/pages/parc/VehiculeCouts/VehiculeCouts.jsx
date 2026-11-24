@@ -3,23 +3,15 @@ import {
   Wallet, Car, Plus, Download, Printer, AlertTriangle, Loader2, Info,
   ArrowUp, ArrowDown, ArrowUpDown, ChevronRight,
 } from 'lucide-react';
-import vehiculeCoutService from '../../../../services/vehiculeCoutService';
+import vehiculeCoutService from '../../../../services/Vehiculecoutservice';
 import VehiculeCoutDetail from './VehiculeCoutDetail';
 import VehiculeFraisModal from '../../../ui/modals/VehiculeFraisModal';
-import { BarreRepartition, MiniBarre, ChoixPeriode } from './CoutGraphiques';
+import { BarreRepartition, MiniBarre, ChoixPeriode } from './Coutgraphiques';
 import { POSTES, montantPoste, formatDT, bornesPeriode } from '../../../../constants/Coutlibelles';
 import { t, locale } from '../../../../i18n';
 import { imprimerListe } from '../../../../utils/imprimerListe';
 import '../VehiculeIncident/VehiculeIncidents.css';
 import './VehiculeCouts.css';
-
-/*
- * Coût total par véhicule sur une période : carburant, entretien, incidents, amendes payées
- * par l'établissement et frais fixes (assurance, vignette, visite technique), avec le coût
- * au kilomètre. Un clic sur un véhicule ouvre son détail (mois par mois, dépenses, frais).
- * isModal : affichée dans la fenêtre « Coût par véhicule » de la page Véhicules (le titre est
- * alors porté par la fenêtre).
- */
 
 const COLONNES = [
   { cle: 'vehicule', libelle: 'Véhicule' },
@@ -44,7 +36,6 @@ export default function VehiculeCouts({ isModal = false }) {
   const [ouvert, setOuvert] = useState(null);
   const [nouveauFrais, setNouveauFrais] = useState(false);
 
-  // Chargement à chaque changement de période (ou après une saisie de frais)
   useEffect(() => {
     if (!persoValide) return undefined;
     let actif = true;
@@ -90,7 +81,6 @@ export default function VehiculeCouts({ isModal = false }) {
   const plusCher = vehicules.reduce((m, v) => (!m || v.postes.total > m.postes.total ? v : m), null);
   const totaux = donnees?.totaux;
 
-  // ─── Export / impression ───
   const tableau = () => {
     const entetes = ['Véhicule', 'Km parcourus', ...POSTES.map((p) => p.libelle), 'Coût total', 'Coût / km'].map((e) => t(e));
     const lignes = triees.map((v) => [
@@ -126,7 +116,6 @@ export default function VehiculeCouts({ isModal = false }) {
 
   return (
     <div className={`vin-container vco-page ${isModal ? 'vco-page--modale' : ''}`}>
-      {/* EN-TÊTE (dans la fenêtre de la page Véhicules, seul le choix de période reste) */}
       <div className={`vin-header-card ${isModal ? 'vco-entete-modale' : ''}`}>
         {!isModal && (
           <div className="vin-header-left">
@@ -142,7 +131,6 @@ export default function VehiculeCouts({ isModal = false }) {
 
       {erreur && <div className="vin-error-banner" role="alert"><AlertTriangle size={18} strokeWidth={2.5} /><span>{erreur}</span></div>}
 
-      {/* CHIFFRES CLÉS + RÉPARTITION */}
       <div className="vco-synthese">
         <div className="vco-chiffres">
           <div className="vco-chiffre vco-chiffre--principal">
@@ -165,7 +153,6 @@ export default function VehiculeCouts({ isModal = false }) {
         <BarreRepartition postes={totaux} titre={t('Où va l’argent')} />
       </div>
 
-      {/* ACTIONS */}
       <div className="vin-actions-bar">
         <button type="button" className="vin-action-btn ajouter" onClick={() => setNouveauFrais(true)}>
           <Plus size={18} strokeWidth={2.5} /><span>{t('Ajouter un frais')}</span>
@@ -177,7 +164,6 @@ export default function VehiculeCouts({ isModal = false }) {
         </div>
       </div>
 
-      {/* TABLEAU */}
       <div className="vin-table-wrap">
         <table className="vin-table vco-table">
           <thead>

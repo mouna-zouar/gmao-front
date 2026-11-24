@@ -7,18 +7,12 @@ import {
   Loader2,
   MoveRight,
   CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
+  
+  
 } from 'lucide-react';
 import { t, tp, locale, estRTL } from '../../../i18n';
 import { COLONNES_KANBAN, comparerEcheances, refBon, statutEcheance, versDate } from './espacePlanning';
 import Pagination from '../../commun/Pagination';
-
-/*
- * Mes tâches en tableau kanban : une colonne par état, on glisse une carte vers une autre
- * colonne pour changer l'état de la tâche. Sur écran tactile ou au clavier, le menu
- * « Déplacer vers… » de chaque carte fait la même chose.
- */
 
 const TERMINEES = [4, 10];
 const ETAT_EFFECTUE = 4;
@@ -31,7 +25,6 @@ const dateCourte = (v) => {
 
 function CarteTache({ tache, bon, enCours, glissee, onDragStart, onDragEnd, onDeplacer, onApercu, onOuvrirBon }) {
   const echeance = tache.dateFin || tache.dateDebut;
-  // Une tâche terminée ou annulée n'est plus « en retard »
   const statut = TERMINEES.includes(tache.etat) ? null : statutEcheance(echeance);
   const debut = dateCourte(tache.dateDebut);
   const fin = dateCourte(tache.dateFin);
@@ -110,7 +103,6 @@ export default function EspaceKanban({ taches, bonsParId, enCours, onDeplacer, o
   const [glisseeId, setGlisseeId] = useState(null);
   const [survol, setSurvol] = useState(null);
   const [afficherAnnulees, setAfficherAnnulees] = useState(false);
-  // Page courante par état de colonne : { [etat]: numero }
   const [pages, setPages] = useState({});
 
   const pageDe = (etat) => pages[etat] ?? 0;
@@ -212,7 +204,6 @@ export default function EspaceKanban({ taches, bonsParId, enCours, onDeplacer, o
                 )}
                 {cartes.length > 0 && cible && <p className="ep-kcolonne-depot">{t('Déposez ici')}</p>}
 
-                {/* Pagination de la colonne (4 cartes par page) */}
                 <Pagination compact page={pageCourante} nbPages={nbPages} onPage={(n) => changerPage(col.etat, n)} masquerSiUnePage />
               </div>
             </section>

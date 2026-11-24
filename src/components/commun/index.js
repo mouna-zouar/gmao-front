@@ -1,9 +1,3 @@
-/*
- * Bibliothèque de composants communs de la GMAO.
- * Voir LISEZMOI.md dans ce dossier pour les exemples.
- *
- *   import { Modale, ModaleFormulaire, PageListe, Stat, Carte } from '../../commun';
- */
 export { default as Modale } from './Modale';
 export { default as ModaleFormulaire } from './ModaleFormulaire';
 export { default as Formulaire, Champ } from './Formulaire';

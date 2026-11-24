@@ -4,13 +4,6 @@ import {
 import { t } from '../../../i18n';
 import { MiniCalendrier } from './EspaceAgenda';
 
-/*
- * Vue « Aujourd'hui » de Mon espace : un tableau de bord personnel.
- *   - indicateurs cliquables (ouvrent la bonne rubrique)
- *   - « À faire maintenant » : les travaux triés par urgence (retard, aujourd'hui, bientôt)
- *   - actions rapides et calendrier des échéances
- */
-
 const NIVEAUX = {
   retard: { libelle: 'En retard', ton: 'alerte' },
   aujourdhui: { libelle: "Aujourd'hui", ton: 'attention' },
@@ -58,7 +51,6 @@ export default function EspaceAujourdhui({
 
   return (
     <div className="ep2-aujourdhui">
-      {/* ------- Indicateurs ------- */}
       <div className="ep2-kpis">
         <Indicateur icone={Wrench} valeur={compteurs.bons} libelle={t('Bons en cours')} ton="brand" onClick={() => onAller('bons')} />
         <Indicateur icone={ClipboardList} valeur={compteurs.taches} libelle={t('Tâches à faire')} ton="info" onClick={() => onAller('taches')} />
@@ -72,7 +64,6 @@ export default function EspaceAujourdhui({
       </div>
 
       <div className="ep2-grille">
-        {/* ------- À faire maintenant ------- */}
         <section className="ep2-carte ep2-carte--afaire" aria-label={t('À faire maintenant')}>
           <header className="ep2-carte-entete">
             <h2><Sparkles size={17} aria-hidden="true" /> {t('À faire maintenant')}</h2>
@@ -102,7 +93,6 @@ export default function EspaceAujourdhui({
           )}
         </section>
 
-        {/* ------- Colonne de droite : actions rapides + calendrier ------- */}
         <div className="ep2-colonne">
           <section className="ep2-carte ep2-actions" aria-label={t('Actions rapides')}>
             <header className="ep2-carte-entete"><h2>{t('Signaler une panne')}</h2></header>

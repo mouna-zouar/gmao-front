@@ -1,14 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import prestataireService from '../services/prestataireService';
 
-/*
- * Prestataires / fournisseurs (liste de référence partagée, en lecture seule dans la GMAO).
- * Chargés une seule fois puis gardés dans le store.
- *   dispatch(chargerPrestataires())                 → la liste (depuis le store si déjà chargée)
- *   dispatch(chargerPrestataires({ forcer: true })) → recharge depuis le serveur
- *   Hors composant : obtenirPrestataires() de store/referentiels.js
- */
-
 const TAILLE = 1000;
 let enVol = null;
 
@@ -23,7 +15,7 @@ export const chargerPrestataires = createAsyncThunk('prestataires/charger', asyn
 
 const prestatairesSlice = createSlice({
   name: 'prestataires',
-  initialState: { liste: [], statut: 'vide', erreur: null }, // statut : vide | chargement | pret | erreur
+  initialState: { liste: [], statut: 'vide', erreur: null },
   reducers: {
     viderPrestataires(state) { state.liste = []; state.statut = 'vide'; state.erreur = null; },
   },

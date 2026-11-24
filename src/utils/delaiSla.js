@@ -1,12 +1,5 @@
 import { t } from '../i18n';
 
-/*
- * Délai SLA d'un bon, à partir du SlaBonDTO renvoyé par /api/sla.
- * Tant que l'intervention n'a pas démarré, on suit le délai de RÉPONSE ;
- * ensuite, celui de RÉSOLUTION (jusqu'à la clôture).
- * Les seuils dépendent de la priorité, calculée automatiquement côté serveur.
- */
-
 const HEURE = 3600 * 1000;
 
 function duree(ms) {
@@ -16,9 +9,6 @@ function duree(ms) {
   return t('{n} j', { n: Math.round(h / 24) });
 }
 
-/**
- * @returns {null | { phase: string, texte: string, ton: 'ok'|'proche'|'retard', echeance: number, titre: string }}
- */
 export function delaiSla(sla, maintenant = Date.now()) {
   if (!sla || sla.statutResolution === 'NON_APPLICABLE') return null;
 

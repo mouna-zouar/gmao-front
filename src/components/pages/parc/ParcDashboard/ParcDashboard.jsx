@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import parcDashboardService from '../../../../services/parcDashboardService';
-import { t, tp, locale } from '../../../../i18n';
+import { t, locale } from '../../../../i18n';
 import './ParcDashboard.css';
 import IndicateursParc from './IndicateursParc';
 import { CalendarCheck, Car, CircleCheck, Fuel, Gauge, RefreshCw, Route, TriangleAlert } from 'lucide-react';
@@ -98,7 +98,6 @@ export default function ParcDashboard() {
 
   return (
     <div className="parcdash-container">
-      {/* HEADER */}
       <div className="parcdash-header">
         <div className="parcdash-header-icon-wrap">{ICONS.total}</div>
         <div className="parcdash-header-text">
@@ -115,7 +114,6 @@ export default function ParcDashboard() {
         <div className="parcdash-error-banner">{error}</div>
       )}
 
-      {/* CARTES KPI — une carte à 0 n'est pas affichée */}
       <div className="parcdash-stats-grid">
         {Number(totalVehicules) ? (
           <div className="parcdash-stat-card parcdash-stat--featured">
@@ -214,10 +212,8 @@ export default function ParcDashboard() {
         ) : null}
       </div>
 
-      {/* INDICATEURS DE PERFORMANCE (30 j vs 30 j précédents, coûts, classements) */}
       <IndicateursParc />
 
-      {/* RÉPARTITIONS */}
       <div className="parcdash-panels-row">
         <div className="parcdash-panel">
           <h3>{t("Répartition par état")}</h3>
@@ -260,7 +256,6 @@ export default function ParcDashboard() {
         </div>
       </div>
 
-      {/* ALERTES DOCUMENTS */}
       <div className="parcdash-panel parcdash-panel--full">
         <h3>{t("Alertes documents obligatoires (expirés ou sous 30 jours)")}</h3>
         {alertes.length === 0 ? (

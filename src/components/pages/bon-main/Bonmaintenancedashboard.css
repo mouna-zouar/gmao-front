@@ -1,7 +1,6 @@
 
 
 .bon-maintenance-dashboard-container {
-  /* Palette TEAL (alignée FicheEmploye) */
   --teal-900: var(--g-brand-900);
   --teal-800: var(--g-brand-700);
   --teal-700: var(--g-brand-600);
@@ -50,7 +49,6 @@
   --slate-100: var(--g-slate-100);
   --slate-50: var(--g-slate-50);
 
-  /* Alias internes */
   --bm-surface: var(--g-blanc);
   --bm-bg: var(--slate-50);
   --bm-bg-soft: var(--slate-50);
@@ -91,7 +89,6 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ── États de chargement / erreur ── */
 .bon-maintenance-dashboard-loading,
 .bon-maintenance-dashboard-error {
   text-align: center;
@@ -126,7 +123,6 @@
   font-weight: 600;
 }
 
-/* ═══════════════════ HEADER ═══════════════════ */
 .bon-maintenance-dashboard-header {
   position: relative;
   overflow: hidden;
@@ -204,7 +200,6 @@
   transform: translateY(-1px);
 }
 
-/* ═══════════════════ GRILLE STATS ═══════════════════ */
 .bon-maintenance-dashboard-stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -235,7 +230,6 @@
 }
 .bon-maintenance-dashboard-stat-card:active { cursor: grabbing; }
 
-/* Poignée drag */
 .bon-maintenance-dashboard-stat-drag-handle {
   position: absolute;
   top: 8px;
@@ -258,7 +252,6 @@
   color: var(--slate-700);
 }
 
-/* Icône */
 .bon-maintenance-dashboard-stat-icon {
   display: inline-flex;
   align-items: center;
@@ -269,7 +262,6 @@
   flex-shrink: 0;
 }
 
-/* Contenu */
 .bon-maintenance-dashboard-stat-body { min-width: 0; }
 .bon-maintenance-dashboard-stat-value {
   font-size: 1.65rem;
@@ -288,7 +280,6 @@
   letter-spacing: 0.005em;
 }
 
-/* Couleurs icônes */
 .bon-maintenance-dashboard-stat--neutral  .bon-maintenance-dashboard-stat-icon { background: var(--slate-100); color: var(--slate-700); }
 .bon-maintenance-dashboard-stat--nouveau  .bon-maintenance-dashboard-stat-icon { background: var(--g-blue-100); color: var(--g-blue-700); }
 .bon-maintenance-dashboard-stat--encours  .bon-maintenance-dashboard-stat-icon { background: var(--green-100); color: var(--g-emerald-700); }
@@ -296,7 +287,6 @@
 .bon-maintenance-dashboard-stat--effectue .bon-maintenance-dashboard-stat-icon { background: var(--teal-50);   color: var(--teal-700); }
 .bon-maintenance-dashboard-stat--alerte   .bon-maintenance-dashboard-stat-icon { background: var(--red-100);   color: var(--g-red-700); }
 
-/* ═══ Carte Featured (Total) ═══ */
 .bon-maintenance-dashboard-stat-card--featured {
   background: var(--g-blanc);
   border: 1px solid var(--slate-200);
@@ -321,7 +311,6 @@
   .bon-maintenance-dashboard-stat-card--featured { grid-column: span 2; }
 }
 
-/* États drag */
 .bon-maintenance-dashboard-stat-card.is-dragging {
   opacity: 0.4;
   cursor: grabbing;
@@ -333,7 +322,6 @@
   box-shadow: var(--bm-ring);
 }
 
-/* ═══════════════════ GRAPHIQUES ═══════════════════ */
 .bon-maintenance-dashboard-charts-row {
   display: grid;
   grid-template-columns: 1.4fr 1fr;
@@ -380,7 +368,6 @@
   border: 1px solid var(--teal-100);
 }
 
-/* Bar chart vertical */
 .bon-maintenance-dashboard-bar-chart {
   display: flex;
   align-items: flex-end;
@@ -422,7 +409,6 @@
   white-space: nowrap;
 }
 
-/* Barres horizontales */
 .bon-maintenance-dashboard-niveau-section + .bon-maintenance-dashboard-niveau-section {
   margin-top: 20px;
   padding-top: 16px;
@@ -476,7 +462,6 @@
   transition: width 0.3s var(--bm-ease);
 }
 
-/* Barres — palette sobre */
 .bon-maintenance-dashboard-hbar-fill--etat1  { background: linear-gradient(90deg, var(--g-blue-400), var(--g-blue-600)); }
 .bon-maintenance-dashboard-hbar-fill--etat2  { background: linear-gradient(90deg, var(--g-amber-300), var(--g-amber-500)); }
 .bon-maintenance-dashboard-hbar-fill--etat3  { background: linear-gradient(90deg, var(--g-emerald-400), var(--g-emerald-500)); }
@@ -495,7 +480,6 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* ═══════════════════ TABLEAU RÉCENT ═══════════════════ */
 .bon-maintenance-dashboard-empty {
   color: var(--slate-400);
   font-style: italic;
@@ -547,7 +531,6 @@
   white-space: nowrap;
 }
 
-/* Badges — sobres */
 .bon-maintenance-dashboard-niveau-badge {
   display: inline-flex;
   align-items: center;
@@ -583,7 +566,6 @@
 .bon-maintenance-dashboard-etat-badge--4  { background: var(--teal-100);  color: var(--teal-800);  border-color: var(--teal-200); }
 .bon-maintenance-dashboard-etat-badge--10 { background: var(--red-100);   color: var(--g-red-700);          border-color: var(--g-red-300); }
 
-/* ═══════════════════ GRAPHIQUES DRAGGABLES ═══════════════════ */
 .bon-maintenance-dashboard-chart-drag-wrap {
   position: relative;
   cursor: grab;
@@ -628,7 +610,6 @@
 }
 .bon-maintenance-dashboard-chart-drag-wrap .bon-maintenance-dashboard-chart-head { padding-right: 32px; }
 
-/* ═══════════════════ RESPONSIVE ═══════════════════ */
 @media (max-width: 768px) {
   .bon-maintenance-dashboard-container { padding: 16px; gap: 16px; }
   .bon-maintenance-dashboard-header { padding: 16px 18px; flex-wrap: wrap; }
@@ -661,7 +642,6 @@
   .bon-maintenance-dashboard-stat-label { font-size: 0.7rem; }
 }
 
-/* ═══════════════════ ACCESSIBILITÉ ═══════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .bon-maintenance-dashboard-container,
   .bon-maintenance-dashboard-stat-card,
@@ -674,7 +654,6 @@
   }
 }
 
-/* ═══════════════════ MODE SOMBRE ═══════════════════ */
 @media (prefers-color-scheme: dark) {
   .bon-maintenance-dashboard-container {
     background: #1a2433;
@@ -721,7 +700,6 @@
     color: var(--teal-400);
   }
 }
-/* Carte cliquable : ouvre la liste filtrée sur cet état */
 .bon-maintenance-dashboard-stat-card.est-cliquable { cursor: pointer; }
 .bon-maintenance-dashboard-stat-card.est-cliquable:hover { border-color: var(--g-brand-200); box-shadow: 0 8px 20px -12px rgba(15, 23, 42, .3); }
 .bon-maintenance-dashboard-stat-card.est-cliquable:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(7, 148, 164, .3); }

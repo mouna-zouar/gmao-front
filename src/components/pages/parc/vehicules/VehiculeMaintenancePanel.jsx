@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   Gauge, AlertTriangle, Clock, CheckCircle2, RefreshCw, ExternalLink, Wrench,
-  ShieldCheck, Activity, History, Calendar, TrendingUp, FileText, CircleDot,
+  ShieldCheck, Activity, History, TrendingUp, FileText, CircleDot,
   Package, ChevronDown, ChevronUp, User,
 } from 'lucide-react';
 import vehiculeMaintenanceService, {
@@ -37,7 +37,6 @@ const ringColor = (statut) => {
   }
 };
 
-/** Anneau SVG de progression (allégé) */
 const ProgressRing = ({ percent, color, size = 72, thickness = 5, children }) => {
   const safePct = Math.max(0, Math.min(100, percent));
   const radius = (size - thickness) / 2;
@@ -71,7 +70,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
   const [error, setError] = useState(null);
   const [bonModalOpen, setBonModalOpen] = useState(false);
   const [flash, setFlash] = useState(null);
-  const [histOpen, setHistOpen] = useState(true); // ← état du bloc historique
+  const [histOpen, setHistOpen] = useState(true);
 
   const load = useCallback(async () => {
     if (!vehicule?.id) return;
@@ -95,7 +94,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
 
   useEffect(() => {
     setFlash(null);
-    setHistOpen(true); // réinitialise l'ouverture au changement de véhicule
+    setHistOpen(true);
   }, [vehicule?.id]);
 
   const enRetard = statuts.filter((s) => s.statut === 'EN_RETARD');
@@ -114,7 +113,6 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
   return (
     <section className="vmp-panel">
 
-      {/* ═══════════════ HEADER ═══════════════ */}
       <header className="vmp-header">
         <div className="vmp-header-left">
           <Wrench size={20} />
@@ -137,7 +135,6 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
         </div>
       </header>
 
-      {/* ═══════════════ KPI ═══════════════ */}
       {statuts.length > 0 && (
         <div className="vmp-kpis">
           <div className="vmp-kpi kpi-ok">
@@ -163,7 +160,6 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
         </div>
       )}
 
-      {/* ═══════════════ ALERTES ═══════════════ */}
       {flash && (
         <div className="vmp-alert success">
           <CheckCircle2 size={16} />
@@ -194,7 +190,6 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
         </div>
       )}
 
-      {/* ═══════════════ SECTION : SITUATION PAR OPÉRATION ═══════════════ */}
       <div className="vmp-section">
         <div className="vmp-section-head">
           <Activity size={14} />
@@ -266,9 +261,7 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
         )}
       </div>
 
-      {/* ═══════════════ SECTION : HISTORIQUE — BLOC REPLIABLE ═══════════════ */}
       <div className="vmp-section">
-        {/* En-tête cliquable qui ouvre/ferme tout le bloc */}
         <button
           type="button"
           className="vmp-section-head vmp-section-head--clickable"
@@ -283,7 +276,6 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
           </span>
         </button>
 
-        {/* Contenu repliable */}
         {histOpen && (
           <div className="vmp-hist-reveal">
             {declenchements.length === 0 && (
@@ -300,7 +292,6 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
 
                   return (
                     <article key={d.id} className="vmp-hist-card">
-                      {/* Bloc date */}
                       <div className="vmp-hist-date">
                         <span className="vmp-hist-day">
                           {d.dateDeclenchement
@@ -319,7 +310,6 @@ export default function VehiculeMaintenancePanel({ vehicule, onOpenBon, onBonCre
                         </span>
                       </div>
 
-                      {/* Contenu */}
                       <div className="vmp-hist-body">
                         <div className="vmp-hist-head">
                           <h4 className="vmp-hist-title">

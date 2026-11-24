@@ -6,10 +6,6 @@ import { t } from '../../../i18n';
 
 const nomEquipement = (e) => e.designation || e.libelle || e.code || `#${e.id}`;
 
-/*
- * Choix de plusieurs équipements à la fois : recherche + famille, liste à cocher,
- * « Tout cocher » pour prendre d'un coup tous les équipements affichés.
- */
 function ChoixEquipements({ id, deja, basculer, ajouterTous }) {
   const [texte, setTexte] = useState('');
   const [famille, setFamille] = useState('');
@@ -67,10 +63,6 @@ function ChoixEquipements({ id, deja, basculer, ajouterTous }) {
   );
 }
 
-/*
- * Choix multiple d'une formation : familles d'équipements ou équipements visés.
- * valeur : [{ id, nom }]. mode 'famille' (liste chargée par chargerOptions) ou 'equipement' (recherche dans le parc).
- */
 export default function ChampCibles({ id, valeur, changer, mode = 'famille', chargerOptions }) {
   const liste = Array.isArray(valeur) ? valeur : [];
   const [options, setOptions] = useState([]);

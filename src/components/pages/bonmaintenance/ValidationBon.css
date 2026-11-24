@@ -1,0 +1,28 @@
+.vbn-bandeau { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; padding: 10px 14px;
+  border-radius: 12px; border: 1px solid var(--g-amber-200, #fde68a); background: var(--g-amber-50, #fffbeb); color: var(--g-amber-800, #92400e); }
+.vbn-bandeau--valide { border-color: var(--g-emerald-200, #a7f3d0); background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-800, #065f46); }
+.vbn-bandeau--refuse { border-color: var(--g-red-200, #fecaca); background: var(--g-red-50, #fef2f2); color: var(--g-red-800, #991b1b); }
+.vbn-icone { display: inline-flex; width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.7); flex: none; }
+.vbn-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 240px; font-size: 0.84rem; }
+.vbn-texte strong { font-size: 0.9rem; }
+.vbn-motif { font-style: italic; overflow-wrap: anywhere; }
+.vbn-actions { display: flex; gap: 8px; margin-inline-start: auto; }
+.vbn-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 9px; border: 1px solid transparent;
+  font: inherit; font-size: 0.84rem; font-weight: 700; cursor: pointer; }
+.vbn-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.vbn-actions--compact .vbn-btn { height: 32px; }
+.vbn-btn--valider { background: var(--g-emerald-600, #059669); color: #fff; }
+.vbn-btn--valider:hover { background: var(--g-emerald-700, #047857); }
+.vbn-btn--refuser { background: #fff; border-color: var(--g-red-200, #fecaca); color: var(--g-red-700, #b91c1c); }
+.vbn-btn--refuser:hover { background: var(--g-red-50, #fef2f2); }
+.vbn-erreur { color: var(--g-red-700, #b91c1c); font-size: 0.82rem; }
+.vbn-vide { margin: 0; font-size: 0.85rem; color: var(--g-slate-500, #64748b); }
+.vbn-case { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; font-weight: 600; color: var(--g-slate-700, #334155); }
+.vbn-membres { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; padding: 0; }
+.vbn-membres li { display: inline-flex; align-items: center; gap: 4px; padding: 3px 4px 3px 10px; border-radius: 999px;
+  background: var(--g-marque-clair, #e9f8fa); border: 1px solid var(--g-brand-100, #c8eef2); color: var(--g-marque-tres-fonce, #05606b);
+  font-size: 0.8rem; font-weight: 600; }
+.vbn-membres button { width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
+.cm-voile:has(> .vbn-modale) { z-index: 10050; }

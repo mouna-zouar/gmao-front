@@ -12,8 +12,8 @@ import {
   Filter,
   FileSpreadsheet,
   Printer,
-  ChevronLeft,
-  ChevronRight,
+  
+  
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
@@ -32,17 +32,16 @@ import {
   MapPin,
 } from 'lucide-react';
 import FiltreLieu, { useCarteLieux, useFiltreLieu } from '../../ui/FiltreLieu/FiltreLieu';
-import { useActionsReclamation, actionsPossibles, estAffectee, nomGroupe, nomTechnicien } from './ReclamationActions';
+import { useActionsReclamation, actionsPossibles, estAffectee, reclamationVerrouillee, nomGroupe, nomTechnicien } from './ReclamationActions';
 import { ICONES_MODULES } from '../../../constants/modules';
 import reclamationService from '../../../services/Reclamationservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import lectureService from '../../../services/lectureService';
-import ReclamationDetails from './ReclamationDetails';
-// ⚠️ Adapte ce chemin au dossier où se trouve BonMaintenanceDetails.jsx
-import BonMaintenanceDetails from '../BonMaintenance/BonMaintenanceDetails';
+import ReclamationDetails from './Reclamationdetails';
+import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
 import AssociateBonMaintenanceModal from '../../ui/modals/AssociateBonMaintenanceModal';
-import BonMaintenanceModal from '../../ui/modals/BonMaintenanceModal';
-import bonMaintenanceFullService from '../../../services/bonMaintenanceFullService';
+import BonMaintenanceModal from '../../ui/modals/Bonmaintenancemodal';
+import bonMaintenanceFullService from '../../../services/Bonmaintenancefullservice';
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
@@ -51,7 +50,7 @@ import { Modale } from '../../commun';
 import { RemiseEnServiceTab } from '../bonmaintenance/Bmdsousonglets';
 import { t, tp, locale } from '../../../i18n';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
-import { STATUTS, TONS, optionsStatut } from '../../../constants/statuts';
+import { STATUTS, optionsStatut } from '../../../constants/statuts';
 import { imprimerListe } from '../../../utils/imprimerListe';
 import VuesListe from '../../ui/Listes/VuesListe';
 import CartesListe from '../../ui/Listes/CartesListe';
@@ -66,10 +65,8 @@ import {
   AnnonceCopie, BoutonFiltresColonnes, BoutonMenuColonne, BoutonTri, ChampFiltre, choixColonnes, filtrerParColonnes, useFiltresColonnes,
 } from '../../commun/TableauColonnes';
 
-// Barre de statistiques : un compteur par état, mêmes couleurs et icônes que les pastilles
 const ETATS_STATS = optionsStatut('reclamation');
 
-// Libellés, couleurs et icônes des états : registre commun (constants/statuts.js)
 const ETAT_LABELS = Object.fromEntries(Object.entries(STATUTS.reclamation).map(([k, v]) => [k, v.libelle]));
 
 const NIVEAU_LABELS = {
@@ -98,7 +95,6 @@ function personnelLabel(r) {
   return nomTechnicien(r);
 }
 
-/* Colonnes paramétrables (affichage + recherche) */
 const RECLAMATION_COLUMNS_DEFAULT = [
   { key: 'num',         label: 'Numéro',            visible: true, searchable: true  },
   { key: 'description', label: 'Description',       visible: true, searchable: true  },
@@ -127,7 +123,6 @@ function getColumnSearchValue(r, key) {
   }
 }
 
-/* Colonnes pour la recherche par colonne et la copie (texte affiché) */
 const COLONNES_TEXTE = RECLAMATION_COLUMNS_DEFAULT.map((c) => ({
   cle: c.key,
   label: c.label,
@@ -136,7 +131,6 @@ const COLONNES_TEXTE = RECLAMATION_COLUMNS_DEFAULT.map((c) => ({
 }));
 const COLONNE_TEXTE = Object.fromEntries(COLONNES_TEXTE.map((c) => [c.cle, c]));
 
-/* Valeurs utilisées pour le tri */
 const SORTABLE_COLUMNS = {
   num:         (r) => r.num || '',
   description: (r) => r.description || '',
@@ -158,16 +152,13 @@ export default function Reclamations() {
   const [searchTerm, setSearchTerm] = useState('');
   const fc = useFiltresColonnes('reclamations');
   const [etatFilter, setEtatFilter] = useState('all');
-  // Lieu de l'arborescence (avec ses sous-lieux) : lieu de la réclamation, sinon celui de son équipement
   const [lieuFilter, setLieuFilter] = useState('');
   const carteLieux = useCarteLieux();
   const dansLieu = useFiltreLieu(carteLieux, lieuFilter);
 
-  // ✅ Tri par défaut : date la plus récente en premier
   const [sortColumn, setSortColumn] = useState('date');
   const [sortDirection, setSortDirection] = useState('desc');
 
-  // Vues de la liste (« Affectées à moi », « Urgentes de mon service »…) et vues enregistrées
   const [moi] = useState(contexteUtilisateur);
   const [vueId, setVueId] = useVueActive('reclamations', moi.cle, 'toutes');
   const vuesListe = useMemo(() => vuesReclamations(moi), [moi]);
@@ -188,24 +179,22 @@ export default function Reclamations() {
   const pageSize = 10;
 
   const [selectedReclamation, setSelectedReclamation] = useState(null);
-  // Remise en service du bon lié à la réclamation (fenêtre)
   const [remiseReclamation, setRemiseReclamation] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsData, setDetailsData] = useState(null);
-  // Bon lié à la réclamation sélectionnée (la liste ne le donne pas) : { reclamationId, bon }
   const [bonLie, setBonLie] = useState(null);
   useEffect(() => {
     const id = selectedReclamation?.id;
     if (!id) { setBonLie(null); return undefined; }
-    if (detailsOpen) return undefined; // page de détail : le bon lié arrive avec le détail
+    if (detailsOpen) return undefined;
     if (selectedReclamation.bonMaintenanceId) { setBonLie({ reclamationId: id, bon: { id: selectedReclamation.bonMaintenanceId } }); return undefined; }
     let annule = false;
     reclamationBonMaintenanceService.getBonMaintenancesByReclamation(id)
       .then((bons) => { if (!annule) setBonLie({ reclamationId: id, bon: (bons ?? [])[0] || null }); })
       .catch((e) => { console.error('[GMAO réclamations] Bon lié :', e); if (!annule) setBonLie({ reclamationId: id, bon: null }); });
     return () => { annule = true; };
-  }, [selectedReclamation?.id, selectedReclamation?.bonMaintenanceId, detailsOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedReclamation?.id, selectedReclamation?.bonMaintenanceId, detailsOpen]);
   const bonDeLaSelection = bonLie && bonLie.reclamationId === selectedReclamation?.id ? bonLie.bon : null;
   const [modalOpen, setModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -225,13 +214,6 @@ export default function Reclamations() {
     onConfirm: null,
   });
 
-
-  // Statistiques par état (comme dans « Bons de maintenance »), calculées sur toutes les réclamations
-  const etatStats = useMemo(() => {
-    const stats = {};
-    reclamations.forEach((r) => { stats[r.etat] = (stats[r.etat] || 0) + 1; });
-    return stats;
-  }, [reclamations]);
 
   const load = async () => {
     setLoading(true);
@@ -300,13 +282,6 @@ export default function Reclamations() {
     setCurrentPage(Math.min(Math.max(1, page), totalPages));
   };
 
-  const paginationRange = useMemo(() => {
-    const range = [];
-    for (let i = 1; i <= totalPages; i += 1) {
-      range.push(i);
-    }
-    return range;
-  }, [totalPages]);
 
   const handleSort = (column) => {
     if (sortColumn === column) {
@@ -339,7 +314,6 @@ export default function Reclamations() {
 
   const visibleColumns = columnSettings.filter((c) => c.visible);
 
-  // Pré-remplissage du bon à partir de la réclamation sélectionnée
   const bonInitialValues = useMemo(() => {
     if (!selectedReclamation) return null;
     const r = selectedReclamation;
@@ -350,6 +324,12 @@ export default function Reclamations() {
       lotArticleImmobilistationId: r.lotArticleImmobilistationId ?? '',
       serviceId: r.serviceId ?? '',
       serviceNom: r.serviceNom || r.service?.description || '',
+      intervenants: [r.personnelAffecteId, ...(r.groupePersonnels || []).map((m) => m.id)]
+        .filter((id, i, l) => id != null && l.findIndex((x) => String(x) === String(id)) === i)
+        .map((id, i) => ({
+          _id: Date.now() + i, personnelId: String(id), sousTraitantId: '', dateDebutIntervention: '', dateFinIntervention: '',
+          nbrHeure: '', coutUnitaire: '', forfait: '', commentaire: '',
+        })),
     };
   }, [selectedReclamation]);
 
@@ -381,7 +361,6 @@ export default function Reclamations() {
         </td>
       ),
     },
-    // Lu / non lu par le technicien affecté ; le temps d'attente ne compte que pour une réclamation à traiter
     lecture: {
       cell: (r) => (
         <td key="lecture">
@@ -423,10 +402,6 @@ export default function Reclamations() {
     setCreateBonOpen(true);
   };
 
-  /**
-   * Crée le bon de maintenance (avec ses enfants éventuels) puis le lie
-   * automatiquement à la réclamation sélectionnée.
-   */
   const handleCreateBon = async (payload, children) => {
     if (!selectedReclamation) return;
     const result = await bonMaintenanceFullService.createFull(payload, children || {});
@@ -453,7 +428,6 @@ export default function Reclamations() {
       setDetailsData(null);
     }
     try {
-      // Un seul appel (détail + historique + équipement + « lu ») ; ancien serveur : détail seul
       let data;
       try {
         const r = await lectureService.resumeReclamation(id);
@@ -463,7 +437,6 @@ export default function Reclamations() {
         data = await reclamationService.getWithBonMaintenance(id);
       }
       setDetailsData(data);
-      // Garde la sélection à jour (les actions Valider / Rejeter / Modifier s'appuient dessus)
       const rec = data?.reclamation ?? data;
       if (rec?.id) setSelectedReclamation(rec);
     } catch (err) {
@@ -482,11 +455,9 @@ export default function Reclamations() {
     await rechargerDetails(reclamation.id);
   };
 
-  // Lien direct /reclamations?id=12 (QR code d'une fiche, notification)
   const [parametres, setParametres] = useSearchParams();
   const idLien = Number(parametres.get('id')) || null;
 
-  // Lien depuis un tableau de bord : /reclamations?etat=1 ou ?vue=non-affectees — applique le filtre puis nettoie l'adresse
   const etatLien = parametres.get('etat');
   const vueLien = parametres.get('vue');
   useEffect(() => {
@@ -509,15 +480,12 @@ export default function Reclamations() {
     if (parametres.has('id')) setParametres({}, { replace: true });
   };
 
-  // Ouvre la réclamation du lien direct
   useEffect(() => {
     if (idLien) openDetails({ id: idLien });
-    // openDetails est recréée à chaque rendu : on ne réagit qu'au changement d'identifiant
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idLien]);
 
 
-  // Après une action : sur la page de détail on la rafraîchit, sur la liste on désélectionne
   const apresAction = async () => {
     await load();
     if (detailsOpen && selectedReclamation) {
@@ -528,11 +496,10 @@ export default function Reclamations() {
   };
 
   const handleSave = async (payload) => {
-    let saved;
     if (selectedReclamation) {
-      saved = await reclamationService.update(selectedReclamation.id, payload);
+      await reclamationService.update(selectedReclamation.id, payload);
     } else {
-      saved = await reclamationService.create(payload);
+      const saved = await reclamationService.create(payload);
       setReclamationCreee(saved || {});
     }
 
@@ -568,16 +535,13 @@ export default function Reclamations() {
     });
   };
 
-  /* ── Sélection multiple (cases à cocher) pour supprimer plusieurs réclamations d'un coup ── */
   const [coches, setCoches] = useState(() => new Set());
   const [derniereCoche, setDerniereCoche] = useState(null);
-  // On ne garde que les réclamations encore présentes (après suppression, rechargement…)
   const cochesValides = useMemo(() => reclamations.filter((r) => coches.has(r.id)).map((r) => r.id), [reclamations, coches]);
   const basculerCoche = (rec, index, plage) => {
     setCoches((prev) => {
       const suite = new Set(prev);
       const cocher = !prev.has(rec.id);
-      // Maj+clic : coche (ou décoche) toute la plage depuis la dernière case cliquée
       if (plage && derniereCoche != null) {
         const [a, b] = [Math.min(derniereCoche, index), Math.max(derniereCoche, index)];
         paginatedReclamations.slice(a, b + 1).forEach((x) => (cocher ? suite.add(x.id) : suite.delete(x.id)));
@@ -597,7 +561,6 @@ export default function Reclamations() {
   const toutCocher = () => setCoches(new Set(filteredReclamations.map((r) => r.id)));
   const viderCoches = () => { setCoches(new Set()); setDerniereCoche(null); };
 
-  // Confirmation puis suppression ; en cas d'échec partiel, « Réessayer » ne reprend que les restantes
   const demanderSuppression = (ids, erreur = null) => {
     const apercu = reclamations.filter((r) => ids.includes(r.id)).slice(0, 5).map((r) => r.num || `#${r.id}`).join(', ');
     setConfirmModal({
@@ -623,7 +586,7 @@ export default function Reclamations() {
             setDetailsOpen(false);
             setDetailsData(null);
           }
-          setCoches(new Set(echecs)); // les réclamations non supprimées restent cochées
+          setCoches(new Set(echecs));
           if (echecs.length === 0) {
             closeConfirmModal();
           } else {
@@ -645,9 +608,7 @@ export default function Reclamations() {
     demanderSuppression(cochesValides);
   };
 
-  // Cycle de vie (Maximo) : affecter, prendre en charge, résoudre, clôturer, rouvrir, annuler
   const actionsRec = useActionsReclamation(async (resultat, nom) => {
-    // Sur la liste, la prise en charge ouvre directement la page de la réclamation (le bon vient d'être créé)
     if (nom === 'prendre' && !detailsOpen && resultat?.id) {
       await load();
       await openDetails(resultat);
@@ -658,7 +619,6 @@ export default function Reclamations() {
   const possibles = actionsPossibles(selectedReclamation);
   const lancerAction = (nom) => actionsRec.lancer(nom, selectedReclamation);
 
-  // Données du tableau filtré, partagées par l'export CSV et l'impression
   const donneesTableau = () => {
     const entetes = ['Numéro', 'Description', 'Criticité', 'Urgence', 'Groupe', 'Technicien', 'Date', 'État'].map((e) => t(e));
     const lignes = filteredReclamations.map((r) => [
@@ -692,7 +652,6 @@ export default function Reclamations() {
     URL.revokeObjectURL(url);
   };
 
-  // Impression : document mis en page (en-tête, filtres, tableau, pages numérotées)
   const handleImprimerListe = () => {
     const { entetes, lignes } = donneesTableau();
     imprimerListe({
@@ -709,7 +668,6 @@ export default function Reclamations() {
   };
 
 
-  // Un bon ouvert depuis la page de détail s'affiche en plein écran, avec retour vers la réclamation
   if (bonOuvert) {
     return (
       <BonMaintenanceDetails
@@ -757,7 +715,6 @@ export default function Reclamations() {
             </p>
           </div>
         </div>
-        {/* VUES de la liste (3 au plus, les autres dans « Plus »), à la place des statistiques par état */}
         <div className="reclamations-header-vues">
           <VuesListe
             liste="reclamations"
@@ -780,8 +737,9 @@ export default function Reclamations() {
         </button>
 
         <button
-          className={`reclamations-action-btn modifier ${!selectedReclamation ? 'disabled' : ''}`}
-          disabled={!selectedReclamation}
+          className={`reclamations-action-btn modifier ${!selectedReclamation || reclamationVerrouillee(selectedReclamation) ? 'disabled' : ''}`}
+          disabled={!selectedReclamation || reclamationVerrouillee(selectedReclamation)}
+          title={reclamationVerrouillee(selectedReclamation) ? t('Cette réclamation est résolue ou clôturée : elle ne peut plus être modifiée.') : undefined}
           onClick={openEdit}
         >
           <Edit size={18} />
@@ -814,8 +772,8 @@ export default function Reclamations() {
         />
 
         <button
-          className={`reclamations-action-btn associer ${!selectedReclamation ? 'disabled' : ''}`}
-          disabled={!selectedReclamation}
+          className={`reclamations-action-btn associer ${!selectedReclamation || reclamationVerrouillee(selectedReclamation) ? 'disabled' : ''}`}
+          disabled={!selectedReclamation || reclamationVerrouillee(selectedReclamation)}
           onClick={openAssociate}
           title={t("Lier un bon de maintenance existant (vaut prise en charge)")}
         >
@@ -836,8 +794,9 @@ export default function Reclamations() {
         <div className="reclamations-actions-divider" />
 
         <button
-          className={`reclamations-action-btn supprimer ${(!selectedReclamation || isDeleting) ? 'disabled' : ''}`}
-          disabled={!selectedReclamation || isDeleting}
+          className={`reclamations-action-btn supprimer ${(!selectedReclamation || isDeleting || reclamationVerrouillee(selectedReclamation)) ? 'disabled' : ''}`}
+          disabled={!selectedReclamation || isDeleting || reclamationVerrouillee(selectedReclamation)}
+          title={reclamationVerrouillee(selectedReclamation) ? t('Cette réclamation est résolue ou clôturée : elle ne peut plus être modifiée.') : undefined}
           onClick={handleDelete}
         >
           <Trash2 size={18} />
@@ -921,7 +880,6 @@ export default function Reclamations() {
 
       {error && <div className="reclamations-error-banner">{error}</div>}
 
-      {/* SÉLECTION MULTIPLE */}
       <SelectionMultiple
         nombre={cochesValides.length}
         total={filteredReclamations.length}
@@ -1008,7 +966,6 @@ export default function Reclamations() {
         </table>
       </div>
 
-      {/* CARTES (téléphone) */}
       <CartesListe
         lignes={loading ? [] : paginatedReclamations.map((r) => ({
           id: r.id,
@@ -1112,7 +1069,6 @@ export default function Reclamations() {
   );
 }
 
-/* Menu « Cycle de vie » : les changements d'état possibles pour la réclamation sélectionnée */
 const ELEMENTS_CYCLE = [
   { cle: 'prendre', label: 'Prendre en charge', aide: 'Passe « En cours » et crée le bon de maintenance', icone: PlayCircle },
   { cle: 'resoudre', label: 'Marquer résolue', aide: 'Le problème est réglé, en attente de clôture', icone: CheckCircle2 },

@@ -14,7 +14,7 @@ import reclamationBonMaintenanceService from '../../../services/Reclamationbonma
 import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import { t, locale } from '../../../i18n';
 import Modale from '../../commun/Modale';
-import './AssociateBonMaintenanceModal.css';
+import './Associatebonmaintenancemodal.css';
 
 const BON_ETAT = {
   1: { texte: 'Nouveau', ton: 'info' },
@@ -90,7 +90,6 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
     setJusteAjouteId(null);
   }, [isOpen, reclamation]);
 
-  // Focus sur la recherche à l'ouverture (Échap et clic à côté : gérés par la fenêtre commune)
   useEffect(() => {
     if (!isOpen) return undefined;
     const tache = setTimeout(() => rechercheRef.current?.focus(), 120);
@@ -99,7 +98,6 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
 
   const linkedIds = useMemo(() => new Set(linkedBons.map((b) => b.id)), [linkedBons]);
 
-  // Bons proposés : on retire ceux déjà liés, on filtre, et on met en tête ceux du même équipement
   const proposes = useMemo(() => {
     const f = FILTRES.find((x) => x.key === filtre) ?? FILTRES[0];
     const terme = recherche.trim().toLowerCase();
@@ -186,7 +184,6 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
       pied={pied}
     >
         <div className="asb-corps">
-          {/* ===== Déjà associés ===== */}
           <section className="asb-section" aria-labelledby="asb-lies">
             <h3 id="asb-lies">
               {t("Déjà associés")}
@@ -245,7 +242,6 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
             )}
           </section>
 
-          {/* ===== Choisir un bon ===== */}
           <section className="asb-section" aria-labelledby="asb-choisir">
             <h3 id="asb-choisir">{t("Choisir un bon à associer")}</h3>
 

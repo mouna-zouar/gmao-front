@@ -2,14 +2,14 @@ import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import {
   Plus,
   Pencil,
-  Trash2,
+  
   X,
   Save,
   AlertTriangle,
   RotateCcw,
   Loader2,
   Inbox,
-  Gauge,
+  
   BellRing,
   Flag,
   Calculator,
@@ -22,7 +22,7 @@ import {
   Pause,
 } from 'lucide-react';
 import vehiculeMaintenanceService from '../../../../services/vehiculeMaintenanceService';
-import { t, tp, locale } from '../../../../i18n';
+import { t, locale } from '../../../../i18n';
 import './VehiculeMaintenanceTypesSettings.css';
 
 const emptyForm = {
@@ -35,7 +35,6 @@ const emptyForm = {
   actif: true,
 };
 
-// Formatage dans la langue courante (l'app est remontée à chaque changement de langue)
 const nf = { format: (v) => new Intl.NumberFormat(locale()).format(v) };
 
 const URGENCE = {

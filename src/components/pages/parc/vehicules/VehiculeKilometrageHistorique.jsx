@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import {
-  History, ChevronLeft, ChevronRight, Gauge, Calendar, Activity,
-  TrendingUp, Inbox, FileText, Link2, ArrowUpRight, ArrowRight,
+  Gauge, Calendar, Activity,
+  TrendingUp, Inbox, FileText, 
   RefreshCw, Milestone,
 } from 'lucide-react';
 import vehiculeService from '../../../../services/vehiculeService';
@@ -97,19 +97,7 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
 
   if (!vehiculeId) return null;
 
-  const goPrev = () => {
-    if (page === 0 || loading) return;
-    const p = page - 1;
-    setPage(p);
-    load(p);
-  };
 
-  const goNext = () => {
-    if (page >= totalPages - 1 || loading) return;
-    const p = page + 1;
-    setPage(p);
-    load(p);
-  };
 
   return (
     <section className="vkh-panel">
@@ -155,7 +143,6 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
         </div>
       )}
 
-      {/* ═══════════════ ERREUR ═══════════════ */}
       {error && (
         <div className="vkh-alert error">
           <Activity size={16} />
@@ -163,7 +150,6 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
         </div>
       )}
 
-      {/* ═══════════════ LISTE — cartes empilées ═══════════════ */}
       <div className="vkh-section">
         <div className="vkh-section-head">
           <Activity size={14} />
@@ -187,7 +173,6 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
 
               return (
                 <article key={r.id} className="vkh-hist-card">
-                  {/* Bloc date */}
                   <div className="vkh-hist-date">
                     <span className="vkh-hist-day">
                       {d ? d.toLocaleDateString(locale(), { day: '2-digit' }) : '—'}
@@ -200,7 +185,6 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
                     </span>
                   </div>
 
-                  {/* Contenu */}
                   <div className="vkh-hist-body">
                     <div className="vkh-hist-head">
                       <h4 className="vkh-hist-title">
@@ -257,7 +241,6 @@ export default function VehiculeKilometrageHistorique({ vehiculeId }) {
         )}
       </div>
 
-      {/* ═══════════════ PAGINATION BAS ═══════════════ */}
       <Pagination page={page} taille={10} total={totalElements} nbPages={totalPages} onPage={(p) => { setPage(p); load(p); }} desactive={loading} masquerSiUnePage />
     </section>
   );

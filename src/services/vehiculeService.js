@@ -67,19 +67,11 @@ const vehiculeService = {
     return data;
   },
 
-  /** Changement rapide d'état (cycle de vie) du véhicule. */
   async changeEtat(id, etat) {
     const { data } = await api.patch(`/vehicule/${id}/etat`, { etat });
     return data;
   },
 
-  /**
-   * PATCH /api/vehicule/{id}/kilometrage
-   *
-   * Passe par la même logique centralisée que les missions et les bons
-   * carburant : un relevé inférieur au kilométrage actuel renvoie un 409
-   * (err.response.data.message contient le détail à afficher).
-   */
   async actualiserKilometrage(id, kilometrage, motif = null) {
     const { data } = await api.patch(`/vehicule/${id}/kilometrage`, {
       kilometrage,
@@ -88,13 +80,11 @@ const vehiculeService = {
     return data;
   },
 
-    /** État courant du compteur, lu depuis la table dédiée. */
   async getCompteur(id) {
     const { data } = await api.get(`/vehicule/${id}/kilometrage`);
     return data;
   },
 
-  /** Historique paginé des relevés kilométriques (mission, carburant, saisie...). */
   async getHistoriqueKilometrage(id, page = 0, size = 20) {
     const { data } = await api.get(`/vehicule/${id}/kilometrage/historique`, {
       params: { page, size },
