@@ -1,7 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, Check, ChevronDown, ChevronRight, Edit, Inbox, Loader2, Search, Timer, Trash2, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Edit,
+  Inbox,
+  Loader2,
+  Search,
+  Timer,
+  Trash2,
+  X,
+  Plus,
+  Building2,
+} from 'lucide-react';
 import { locale, t } from '../../../i18n';
+import { obtenirEquipements } from '../../../store/referentiels';
 
 export const INTERVENANT_ETAT_LABELS = {
   0: 'Nouveau',
@@ -800,5 +815,79 @@ export function TempsPasse({ objet, etatEnCours, maintenant, vide = '—' }) {
     >
       <Timer size={13} aria-hidden="true" /> {formatTemps(tp.secondes)}{tp.estime ? ' *' : ''}
     </span>
+  );
+}
+
+export const nomPersonnel = (p) => (p ? `${p.nom || ''} ${p.prenom || ''}`.trim() : null);
+
+export function dureeEntre(debut, fin) {
+  if (!debut || !fin) return null;
+  const h = (new Date(fin) - new Date(debut)) / 3600000;
+  if (isNaN(h) || h < 0) return null;
+  return h < 48 ? `${h.toFixed(1)} h` : `${(h / 24).toFixed(1)} j`;
+}
+
+export function useConfirmModal() {
+  const [confirmModal, setConfirmModal] = useState({ show: false, title: '', message: '', onConfirm: null });
+  const close = () => setConfirmModal((prev) => ({ ...prev, show: false }));
+  return { confirmModal, setConfirmModal, close };
+}
+
+export const PanelHeader = ({ titre, count, extra, showForm, onToggle, labelAjout, actions }) => (
+  <div className="bmd-panel-header">
+    <div className="bmd-panel-title">
+      <h3>{t(titre)}</h3>
+      <span className="bmd-panel-count">{count}</span>
+      {extra}
+    </div>
+    {!showForm && (
+      <div className="bmd-panel-actions">
+        {actions}
+        <button type="button" className="bmd-add-btn" onClick={onToggle}>
+          <Plus size={16} /> {t(labelAjout)}
+        </button>
+      </div>
+    )}
+  </div>
+);
+
+export const FicheEquipement = ({ immo, id }) => (
+  immo ? (
+    <BmdFieldGrid
+      fields={[
+        { label: t("Désignation"), value: immo.designation },
+        { label: t("Code"), value: immo.code },
+        { label: t("Marque"), value: immo.marque },
+        { label: t("Modèle"), value: immo.modele },
+        { label: t("N° pièce"), value: immo.numPiece },
+        { label: t("Code-barre"), value: immo.codeBarre },
+      ]}
+    />
+  ) : (
+    <TexteOuVide vide={id != null ? t('Immobilisation #{id} (détails non chargés).', { id }) : t("Aucune immobilisation liée.")} />
+  )
+);
+
+export function EquipementDuBon({ id, immobilisations }) {
+  const [liste, setListe] = useState(immobilisations || null);
+  useEffect(() => {
+    if (immobilisations?.length) { setListe(immobilisations); return; }
+    let annule = false;
+    obtenirEquipements().then((l) => { if (!annule) setListe(l || []); }).catch(() => { if (!annule) setListe([]); });
+    return () => { annule = true; };
+  }, [immobilisations]);
+  if (id == null || id === '') return null;
+  const immo = (liste || []).find((i) => String(i.id) === String(id));
+  return (
+    <div className="bmd-equipement-bon" role="note">
+      <span className="bmd-equipement-bon__icone" aria-hidden="true"><Building2 size={16} /></span>
+      <span className="bmd-equipement-bon__texte">
+        <small>{t("Équipement du bon")}</small>
+        <strong>{immo?.designation || (liste ? t('Équipement #{id}', { id }) : t('Chargement…'))}</strong>
+        {immo && [immo.code, immo.marque, immo.modele].filter(Boolean).length > 0 && (
+          <em>{[immo.code, immo.marque, immo.modele].filter(Boolean).join(' · ')}</em>
+        )}
+      </span>
+    </div>
   );
 }

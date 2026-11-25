@@ -2,12 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import SpotlightCard from '../../ui/Spotlightcard';
 import './Dashboard.css';
-import { NAV_ITEMS } from '../../../constants/navigation';
+import { NAV_ITEMS, filtrerItems } from '../../../constants/navigation';
+import { useDroits } from '../../../constants/privileges';
 import dashboardBg from '../../../assets/dashboard-bg.jpg';
 import { t, locale } from '../../../i18n';
 
 export default function Dashboard() {
-  const modules = NAV_ITEMS.filter((item) => item.id !== 'dashboard');
+  const aDroit = useDroits();
+  const modules = filtrerItems(NAV_ITEMS.filter((item) => item.id !== 'dashboard'), aDroit);
 
   return (
     <div className="dashboard-wrapper">

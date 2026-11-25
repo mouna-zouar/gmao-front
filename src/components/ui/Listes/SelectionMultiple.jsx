@@ -39,10 +39,12 @@ export default function SelectionMultiple({ nombre, total, libelle, onToutSelect
         {t('Désélectionner')}
       </button>
       <span className="selection-barre__espace" />
-      <button type="button" className="selection-barre__supprimer" onClick={onSupprimer} disabled={suppressionEnCours}>
-        <Trash2 size={16} aria-hidden="true" />
-        {suppressionEnCours ? t('Suppression...') : t('Supprimer la sélection')}
-      </button>
+      {onSupprimer && (
+        <button type="button" className="selection-barre__supprimer" onClick={onSupprimer} disabled={suppressionEnCours}>
+          <Trash2 size={16} aria-hidden="true" />
+          {suppressionEnCours ? t('Suppression...') : t('Supprimer la sélection')}
+        </button>
+      )}
     </div>
   );
 }

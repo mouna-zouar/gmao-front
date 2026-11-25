@@ -1,6 +1,8 @@
 import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { NAV_PAGES, NAV_SECTIONS, trouverPage } from '../../constants/navigation';
+import { pagesDe, sectionsPermises, trouverPage } from '../../constants/navigation';
+import { droitPage, useDroits } from '../../constants/privileges';
+import AccesRefuse from '../pages/Introuvable/AccesRefuse';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   chargerCompteur, chargerNotifications, marquerLue, marquerToutesLues, viderNotifications,
@@ -52,6 +54,9 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const aDroit = useDroits();
+  const sections = useMemo(() => sectionsPermises(aDroit), [aDroit]);
+  const pagesPermises = useMemo(() => pagesDe(sections), [sections]);
 
   const handleLogout = () => {
     dispatch(viderNotifications());
@@ -76,7 +81,7 @@ export default function Layout({ children }) {
     try { localStorage.setItem(recents.cle, JSON.stringify(recents.liste)); } catch {}
   }, [recents]);
   const pagesRecentes = listeRecents
-    .map((p) => NAV_PAGES.find((page) => page.path === p))
+    .map((p) => pagesPermises.find((page) => page.path === p))
     .filter((page) => page && page !== pageActive)
     .slice(0, 4);
 
@@ -114,11 +119,11 @@ export default function Layout({ children }) {
   const resultats = useMemo(() => {
     const mots = normaliser(recherche).split(/\s+/).filter(Boolean);
     if (mots.length === 0) return [];
-    return NAV_PAGES.filter((page) => {
+    return pagesPermises.filter((page) => {
       const texte = normaliser([t(page.label), page.label, t(page.parent.label), page.parent.label, page.motsCles].join(' '));
       return mots.every((m) => texte.includes(m));
     });
-  }, [recherche]);
+  }, [recherche, pagesPermises]);
   const ouvrirPage = (page) => {
     setRecherche('');
     setActivePopup(null);
@@ -269,7 +274,7 @@ export default function Layout({ children }) {
               ))}
             </div>
           )}
-          {NAV_SECTIONS.map((section) => (
+          {sections.map((section) => (
           <div key={section.id} className={`sidebar__section sidebar__section--${section.id}`}>
           {sidebarOpen ? (
             <span className={`sidebar__section-label sidebar__section-label--${section.id}`}>{t(section.label)}</span>
@@ -500,7 +505,7 @@ export default function Layout({ children }) {
       </header>
 
       <main className={`main-content ${sidebarOpen ? 'main-content--shifted' : ''}`} onClick={() => setActivePopup(null)}>
-        {children}
+        {aDroit(droitPage(currentPath)) ? children : <AccesRefuse />}
       </main>
 
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}

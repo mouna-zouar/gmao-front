@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DROITS, useDroits } from '../../../constants/privileges';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight, CircleCheck, CirclePause, CircleX, Gauge, LoaderCircle, Printer, QrCode, RefreshCw, Settings, Wrench, X,
@@ -37,6 +38,9 @@ const joursDepuis = (iso) => {
 const parId = (liste) => Object.fromEntries((liste ?? []).map((x) => [x.lotArticleImmobilistationId, x]));
 
 export default function ListeEquipements({ onPreventifs, vues }) {
+  const aDroit = useDroits();
+  const peutEtiquettes = aDroit(DROITS.EQUIPEMENT_ETIQUETTES);
+  const peutModifier = aDroit(DROITS.EQUIPEMENT_MODIFIER);
   const navigate = useNavigate();
   const [etats, setEtats] = useState([]);
   const [dispos, setDispos] = useState({});
@@ -244,7 +248,7 @@ export default function ListeEquipements({ onPreventifs, vues }) {
         return (
           <span className="leq-criticite" onClick={(ev) => ev.stopPropagation()} onDoubleClick={(ev) => ev.stopPropagation()}>
             <span className="leq-criticite__point" style={{ background: criticiteHex(e.criticite) }} aria-hidden="true" />
-            <select value={e.criticite || CRITICITE_DEFAUT} disabled={enregistrement === id} onChange={(ev) => changerCriticite(id, ev.target.value)}
+            <select value={e.criticite || CRITICITE_DEFAUT} disabled={!peutModifier || enregistrement === id} onChange={(ev) => changerCriticite(id, ev.target.value)}
               aria-label={t('Criticité de {nom}', { nom: e.cibleNom || `#${id}` })}>
               {CRITICITE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t(o.label)}</option>)}
             </select>
@@ -255,7 +259,8 @@ export default function ListeEquipements({ onPreventifs, vues }) {
     {
       cle: 'bon', label: 'Dernier bon', filtre: 'texte', visible: false, valeur: (e) => e.bonMaintenanceReferenceNum || '',
     },
-  ], [etiquettes, connexions, dispos, risques, enregistrement, serviceDe, nomsServices]); // eslint-disable-line react-hooks/exhaustive-deps
+  ], [etiquettes, connexions, dispos, risques, enregistrement, serviceDe, nomsServices, peutModifier]); // eslint-disable-line react-hooks/exhaustive-deps
+  const colonnesPermises = peutEtiquettes ? colonnes : colonnes.filter((c) => c.cle !== 'etiquette');
 
 
   return (
@@ -265,7 +270,7 @@ export default function ListeEquipements({ onPreventifs, vues }) {
       icone={Gauge}
       titre={t('Équipements')}
       sansEntete
-      colonnes={colonnes}
+      colonnes={colonnesPermises}
       lignes={lignes}
       cleLigne="lotArticleImmobilistationId"
       chargement={chargement}
@@ -274,14 +279,14 @@ export default function ListeEquipements({ onPreventifs, vues }) {
       actions={[
         { label: t('Fiche'), icone: ArrowRight, classe: 'cl-action--principal', besoinSelection: true, onClick: (e) => navigate(`/equipement/${e.lotArticleImmobilistationId}`) },
         { label: t('Scanner un QR code'), icone: QrCode, classe: 'cl-action--teal', onClick: () => setScanner(true) },
-        {
+        ...(!peutEtiquettes ? [] : [{
           label: etiquettes.size ? tp('étiquette à imprimer', etiquettes.size) : t('Imprimer les étiquettes'),
           icone: impression ? LoaderCircle : Printer, classe: 'cl-action--bleu', desactive: !etiquettes.size || impression,
           aide: etiquettes.size ? undefined : t('Cochez des équipements dans la colonne « Étiquette »'), onClick: imprimer,
-        },
+        }]),
         ...(etiquettes.size ? [{ label: t('Vider les étiquettes'), icone: X, classe: 'cl-action--gris', onClick: () => setEtiquettes(new Map()) }] : []),
-        ...(onPreventifs ? [{ label: t('Paramètres préventifs'), icone: Settings, classe: 'cl-action--violet', onClick: onPreventifs }] : []),
-        { label: recalcul ? t('Recalcul en cours') : t('Recalculer tout'), icone: recalcul ? LoaderCircle : RefreshCw, classe: 'cl-action--orange', desactive: recalcul, onClick: recalculerTout },
+        ...(onPreventifs && aDroit(DROITS.EQUIPEMENT_PREVENTIF) ? [{ label: t('Paramètres préventifs'), icone: Settings, classe: 'cl-action--violet', onClick: onPreventifs }] : []),
+        ...(peutModifier ? [{ label: recalcul ? t('Recalcul en cours') : t('Recalculer tout'), icone: recalcul ? LoaderCircle : RefreshCw, classe: 'cl-action--orange', desactive: recalcul, onClick: recalculerTout }] : []),
       ]}
       filtres={(
         <>

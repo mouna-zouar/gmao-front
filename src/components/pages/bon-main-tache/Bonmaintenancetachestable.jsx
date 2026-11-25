@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { DROITS, useDroits } from '../../../constants/privileges';
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
 import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
@@ -53,6 +54,7 @@ function formatDateTime(iso) {
 }
 
 export default function BonMaintenanceTachesKanban() {
+  const peutChanger = useDroits()(DROITS.TACHE_ETAT);
   const [taches, setTaches] = useState([]);
   const [bonsParId, setBonsParId] = useState({});
   const [loading, setLoading] = useState(true);
@@ -162,6 +164,7 @@ export default function BonMaintenanceTachesKanban() {
 
   const handleDrop = (e, etat) => {
     e.preventDefault();
+    if (!peutChanger) return;
     const id = Number(e.dataTransfer.getData('text/plain')) || draggingId;
     const tache = taches.find((tache_) => tache_.id === id);
     setDraggingId(null);
@@ -219,7 +222,7 @@ export default function BonMaintenanceTachesKanban() {
     <select
       className="bmk-card-move"
       value={tache.etat}
-      disabled={savingId === tache.id}
+      disabled={!peutChanger || savingId === tache.id}
       onChange={(e) => deplacerTache(tache, Number(e.target.value))}
       aria-label={t('Changer l\'état de « {nom} »', { nom: tache.designation || '' })}
     >
@@ -345,7 +348,7 @@ export default function BonMaintenanceTachesKanban() {
                         <article
                           key={tache.id}
                           className={`bmk-card ${draggingId === tache.id ? 'is-dragging' : ''} ${savingId === tache.id ? 'is-saving' : ''}`}
-                          draggable={savingId !== tache.id}
+                          draggable={peutChanger && savingId !== tache.id}
                           onDragStart={(e) => handleDragStart(e, tache)}
                           onDragEnd={handleDragEnd}
                         >

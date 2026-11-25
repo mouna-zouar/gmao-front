@@ -1,26 +1,5 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
-import {
-  ListOrdered,
-  Plus,
-  Pencil,
-  X,
-  Save,
-  AlertTriangle,
-  RotateCcw,
-  Loader2,
-  Inbox,
-  BellRing,
-  Flag,
-  Calculator,
-  CheckCircle2,
-  Search,
-  ArrowUpDown,
-  CircleSlash,
-  Activity,
-  TrendingUp,
-  Pause,
-  Boxes,
-} from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { CalendarClock, Loader2, Pause, RefreshCw, RotateCcw, Search, X } from 'lucide-react';
 import equipementMaintenanceService from '../../../services/equipementMaintenanceService';
 import { commePage, obtenirEquipements } from '../../../store/referentiels';
 import { t, locale } from '../../../i18n';
@@ -28,24 +7,57 @@ import { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 import gammeService from '../../../services/gammeService';
 import { dureeLisible } from '../gammes/Gammes';
 import { cheminLieu, lieuxAplatis } from '../../../services/lieuxCache';
-import '../parc/vehicules/VehiculeMaintenanceTypesSettings.css';
-import '../bonmaintenance/Bonmaintenancedetails.css';
+import { Badge, ConfirmModal, ModaleFormulaire, PageListe } from '../../commun';
+import serviceService from '../../../services/Serviceservice';
+import FiltreFamilleArbre, { filtrerParFamille } from './FiltreFamilleArbre';
 import './Equipementmaintenancetypessettings.css';
 
 const normaliser = (v) => String(v ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const nf = (v) => new Intl.NumberFormat(locale()).format(v);
 
-function SelectionEquipements({ id, valeurs, onChange, options, loading = false, disabled = false }) {
+const URGENCES = {
+  1: { label: 'Faible', ton: 'vert' },
+  2: { label: 'Normale', ton: 'bleu' },
+  3: { label: 'Haute', ton: 'orange' },
+  4: { label: 'Critique', ton: 'rouge' },
+};
+const BASES_RECALCUL = { 0: 'Date réelle', 1: 'Échéance théorique' };
+
+const idsEquipements = (tache) => (tache.lotArticleImmobilistationIds?.length
+  ? tache.lotArticleImmobilistationIds
+  : (tache.lotArticleImmobilistationId != null ? [tache.lotArticleImmobilistationId] : []));
+
+function SelectionEquipements({ id, valeurs, onChange, options, services = {}, loading = false, disabled = false }) {
   const [recherche, setRecherche] = useState('');
+  const [famille, setFamille] = useState(null);
+  const [service, setService] = useState('');
+  const pourFamilles = useMemo(() => options.map((o) => ({
+    lotArticleImmobilistationId: o.id, familleId: o.articleFamilleId ?? null, familleNom: o.articleFamilleNom || '',
+  })), [options]);
+  const listeServices = useMemo(() => {
+    const m = new Map();
+    let sans = 0;
+    options.forEach((o) => {
+      if (o.serviceId == null) { sans += 1; return; }
+      const cle = String(o.serviceId);
+      const f = m.get(cle) || { id: cle, nom: services[cle] || t('Service #{id}', { id: cle }), n: 0 };
+      f.n += 1;
+      m.set(cle, f);
+    });
+    return { liste: [...m.values()].sort((a, b) => a.nom.localeCompare(b.nom, locale())), sans };
+  }, [options, services]);
   const choisis = useMemo(() => new Set(valeurs.map(String)), [valeurs]);
   const parId = useMemo(() => new Map(options.map((o) => [String(o.id), o])), [options]);
   const nom = (cle) => parId.get(cle)?.designation || t('Équipement #{id}', { id: cle });
 
   const visibles = useMemo(() => {
     const q = normaliser(recherche.trim());
-    if (!q) return options;
-    return options.filter((o) => [o.designation, o.numPiece, o.codeBarre, o.marque, o.modele]
-      .some((v) => normaliser(v).includes(q)));
-  }, [options, recherche]);
+    return options
+      .filter((o) => filtrerParFamille(famille, { lotArticleImmobilistationId: o.id, familleId: o.articleFamilleId ?? null }))
+      .filter((o) => !service || (service === 'AUCUN' ? o.serviceId == null : String(o.serviceId) === service))
+      .filter((o) => !q || [o.designation, o.numPiece, o.codeBarre, o.marque, o.modele].some((v) => normaliser(v).includes(q)));
+  }, [options, recherche, famille, service]);
+  const filtre = Boolean(recherche.trim() || famille || service);
 
   const basculer = (cle) => {
     const suivant = new Set(choisis);
@@ -58,7 +70,7 @@ function SelectionEquipements({ id, valeurs, onChange, options, loading = false,
     <div className={`emt-multi ${disabled ? 'is-disabled' : ''}`}>
       <div className="emt-multi__choisis" aria-live="polite">
         {choisis.size === 0 ? (
-          <span className="emt-multi__aucun">{t('Aucun équipement choisi : le type s’applique à tous les équipements.')}</span>
+          <span className="emt-multi__aucun">{t('Tous les équipements')}</span>
         ) : (
           [...choisis].map((cle) => (
             <span key={cle} className="emt-multi__puce">
@@ -72,6 +84,14 @@ function SelectionEquipements({ id, valeurs, onChange, options, loading = false,
       </div>
 
       <div className="emt-multi__barre">
+        <FiltreFamilleArbre equipements={pourFamilles} valeur={famille} onChange={setFamille} />
+        <select className="emt-multi__service" value={service} onChange={(e) => setService(e.target.value)} disabled={disabled} aria-label={t('Service')}>
+          <option value="">{t('Tous les services')} ({options.length})</option>
+          {listeServices.liste.map((x) => <option key={x.id} value={x.id}>{x.nom} ({x.n})</option>)}
+          {listeServices.sans > 0 && <option value="AUCUN">{t('Sans service')} ({listeServices.sans})</option>}
+        </select>
+      </div>
+      <div className="emt-multi__barre">
         <div className="emt-multi__recherche">
           <Search size={14} aria-hidden="true" />
           <input
@@ -84,7 +104,7 @@ function SelectionEquipements({ id, valeurs, onChange, options, loading = false,
           />
         </div>
         <button type="button" className="emt-multi__action" onClick={toutCocher} disabled={disabled || visibles.length === 0}>
-          {recherche.trim() ? t('Cocher les {n} résultats', { n: visibles.length }) : t('Tout cocher')}
+          {filtre ? t('Cocher les {n} résultats', { n: visibles.length }) : t('Tout cocher')}
         </button>
         <button type="button" className="emt-multi__action" onClick={() => onChange([])} disabled={disabled || choisis.size === 0}>
           {t('Tout décocher')}
@@ -93,7 +113,7 @@ function SelectionEquipements({ id, valeurs, onChange, options, loading = false,
 
       <ul className="emt-multi__liste" role="group" aria-label={t('Équipements')}>
         {loading ? (
-          <li className="emt-multi__vide"><Loader2 size={14} className="mtp-spin" /> {t('Chargement…')}</li>
+          <li className="emt-multi__vide"><Loader2 size={14} className="cf-tourne" /> {t('Chargement…')}</li>
         ) : visibles.length === 0 ? (
           <li className="emt-multi__vide">{t('Aucun équipement ne correspond')}</li>
         ) : (
@@ -118,1044 +138,247 @@ function SelectionEquipements({ id, valeurs, onChange, options, loading = false,
   );
 }
 
-const emptyForm = {
-  code: '',
-  libelle: '',
-  intervalleJours: '',
-  seuilAlerteJours: '',
-  urgenceBon: '',
-  baseRecalcul: 0,
-  actif: true,
-  lieuId: '',
-  gammeId: '',
-  lotArticleImmobilistationIds: [],
-};
-
-const nf = { format: (v) => new Intl.NumberFormat(locale()).format(v) };
-
-const URGENCE = {
-  1: { label: 'Faible',   tone: 'green'  },
-  2: { label: 'Normale',  tone: 'blue'   },
-  3: { label: 'Haute',    tone: 'orange' },
-  4: { label: 'Critique', tone: 'red'    },
-};
-
-const SORTS = [
-  { value: 'code',            label: 'Code (A→Z)' },
-  { value: 'libelle',         label: 'Libellé (A→Z)' },
-  { value: 'intervalleJours', label: 'Intervalle ↑' },
-  { value: 'urgenceBon',      label: 'Urgence ↑' },
-];
-
-export default function EquipementMaintenanceTypesSettings() {
+export default function EquipementMaintenanceTypesSettings({ vues, integre = false }) {
   const [types, setTypes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState(null);
+  const [vue, setVue] = useState('tous');
+  const [selection, setSelection] = useState(null);
+  const [fenetre, setFenetre] = useState({ ouverte: false, objet: null });
+  const [aDesactiver, setADesactiver] = useState(null);
+  const [enCours, setEnCours] = useState(false);
 
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [form, setForm] = useState(emptyForm);
-  const [saving, setSaving] = useState(false);
-  const [formError, setFormError] = useState(null);
-  const [pendingId, setPendingId] = useState(null);
-  const [confirmId, setConfirmId] = useState(null);
-
-  const [query, setQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('code');
-
-  const [immobilisations, setImmobilisations] = useState([]);
-  const carteLieux = useCarteLieux();
+  const [equipements, setEquipements] = useState([]);
+  const [chargementEquipements, setChargementEquipements] = useState(true);
   const [gammes, setGammes] = useState([]);
-  useEffect(() => { gammeService.lister().then(setGammes).catch(() => setGammes([])); }, []);
-  const gammesParOrigine = useMemo(() => {
-    const m = new Map();
-    gammes.forEach((g) => {
-      const k = g.gammeOrigineId ?? g.id;
-      const d = m.get(k);
-      const rang = (x) => (x.statut === 'VALIDEE' ? 2 : x.statut === 'BROUILLON' ? 1 : 0) * 1000 + (x.version || 0);
-      if (!d || rang(g) > rang(d)) m.set(k, g);
-    });
-    return m;
-  }, [gammes]);
-  const gammeDe = (id) => {
-    if (id == null || id === '') return null;
-    const g = gammes.find((x) => String(x.id) === String(id));
-    return g ? (gammesParOrigine.get(g.gammeOrigineId ?? g.id) || g) : null;
-  };
-  const gammesChoix = useMemo(() => [...gammesParOrigine.values()].filter((g) => g.statut === 'VALIDEE')
-    .sort((a, b) => a.code.localeCompare(b.code)), [gammesParOrigine]);
-  const lieuxChoix = useMemo(() => lieuxAplatis(carteLieux), [carteLieux]);
-  const [loadingImmobilisations, setLoadingImmobilisations] = useState(true);
+  const [services, setServices] = useState({});
+  const carteLieux = useCarteLieux();
 
-  const codeInputRef = useRef(null);
-
-  const immobilisationsMap = useMemo(
-    () => new Map(immobilisations.map((i) => [String(i.id), i])),
-    [immobilisations],
-  );
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  const charger = useCallback(async () => {
+    setChargement(true);
+    setErreur(null);
     try {
       const data = await equipementMaintenanceService.getTypes();
       setTypes(Array.isArray(data) ? data : []);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Impossible de charger les échéances.');
+      setErreur(err?.response?.data?.message || t('Impossible de charger les échéances.'));
     } finally {
-      setLoading(false);
+      setChargement(false);
     }
   }, []);
 
+  useEffect(() => { charger(); }, [charger]);
+  useEffect(() => { gammeService.lister().then(setGammes).catch(() => setGammes([])); }, []);
   useEffect(() => {
-    load();
-  }, [load]);
-
+    serviceService.getAll(0, 500).then((d) => d?.content ?? d ?? [])
+      .then((l) => setServices(Object.fromEntries(l.map((x) => [String(x.id), x.description || x.code || t('Service #{id}', { id: x.id })]))))
+      .catch(() => setServices({}));
+  }, []);
   useEffect(() => {
-    let active = true;
+    let actif = true;
     obtenirEquipements().then(commePage)
       .then((page) => {
-        if (!active) return;
         const data = page?.content ?? page?.data ?? page ?? [];
-        setImmobilisations(Array.isArray(data) ? data : []);
+        if (actif) setEquipements(Array.isArray(data) ? data : []);
       })
-      .catch((err) => {
-        console.error('Erreur chargement des équipements :', err);
-        if (active) setImmobilisations([]);
-      })
-      .finally(() => {
-        if (active) setLoadingImmobilisations(false);
-      });
-    return () => { active = false; };
+      .catch(() => { if (actif) setEquipements([]); })
+      .finally(() => { if (actif) setChargementEquipements(false); });
+    return () => { actif = false; };
   }, []);
 
-  const openCreate = () => {
-    setEditingId(null);
-    setForm(emptyForm);
-    setFormError(null);
-    setFormOpen(true);
-  };
-
-  const openEdit = (tache) => {
-    setEditingId(tache.id);
-    setForm({
-      code: tache.code ?? '',
-      libelle: tache.libelle ?? '',
-      intervalleJours: tache.intervalleJours ?? '',
-      seuilAlerteJours: tache.seuilAlerteJours ?? '',
-      urgenceBon: tache.urgenceBon ?? '',
-      baseRecalcul: tache.baseRecalcul ?? 0,
-      actif: tache.actif ?? true,
-      lieuId: tache.lieuId != null ? String(tache.lieuId) : '',
-      gammeId: tache.gammeId != null ? String(tache.gammeId) : '',
-      lotArticleImmobilistationIds: (tache.lotArticleImmobilistationIds?.length
-        ? tache.lotArticleImmobilistationIds
-        : (tache.lotArticleImmobilistationId != null ? [tache.lotArticleImmobilistationId] : [])).map(String),
+  const gammesParOrigine = useMemo(() => {
+    const m = new Map();
+    const rang = (x) => (x.statut === 'VALIDEE' ? 2 : x.statut === 'BROUILLON' ? 1 : 0) * 1000 + (x.version || 0);
+    gammes.forEach((g) => {
+      const k = g.gammeOrigineId ?? g.id;
+      const d = m.get(k);
+      if (!d || rang(g) > rang(d)) m.set(k, g);
     });
-    setFormError(null);
-    setFormOpen(true);
+    return m;
+  }, [gammes]);
+  const gammeDe = useCallback((id) => {
+    if (id == null || id === '') return null;
+    const g = gammes.find((x) => String(x.id) === String(id));
+    return g ? (gammesParOrigine.get(g.gammeOrigineId ?? g.id) || g) : null;
+  }, [gammes, gammesParOrigine]);
+  const gammesChoix = useMemo(() => [...gammesParOrigine.values()].filter((g) => g.statut === 'VALIDEE')
+    .sort((a, b) => a.code.localeCompare(b.code)), [gammesParOrigine]);
+  const lieuxChoix = useMemo(() => lieuxAplatis(carteLieux), [carteLieux]);
+  const nomsEquipements = useMemo(() => new Map(equipements.map((e) => [String(e.id), e.designation])), [equipements]);
+
+  const libelleGamme = (g) => `${g.code} v${g.version} · ${g.etapes?.length ?? 0} ${t('étapes')} · ${dureeLisible(g.dureeTotaleMinutes)}`;
+  const portee = (l) => {
+    const ids = idsEquipements(l);
+    if (ids.length === 0 && l.lieuId != null) return cheminLieu(carteLieux, l.lieuId) || t('Lieu #{id}', { id: l.lieuId });
+    if (ids.length === 0) return t('Tous les équipements');
+    if (ids.length === 1) return nomsEquipements.get(String(ids[0])) || t('Équipement #{id}', { id: ids[0] });
+    return t('{n} équipements', { n: ids.length });
+  };
+  const gammeTexte = (l) => {
+    if (l.gammeId == null) return '';
+    const g = gammeDe(l.gammeId);
+    return g ? libelleGamme(g) : t('Gamme #{id}', { id: l.gammeId });
   };
 
-  const closeForm = useCallback(() => {
-    if (saving) return;
-    setFormOpen(false);
-    setEditingId(null);
-    setFormError(null);
-  }, [saving]);
+  const actifs = types.filter((x) => x.actif).length;
+  const lignes = vue === 'actifs' ? types.filter((x) => x.actif) : vue === 'desactives' ? types.filter((x) => !x.actif) : types;
 
-  useEffect(() => {
-    if (!formOpen) return;
+  const colonnes = [
+    { cle: 'code', label: 'Code', valeur: (l) => l.code || '', rendu: (l) => <code className="emt-code">{l.code}</code> },
+    { cle: 'libelle', label: 'Libellé', valeur: (l) => l.libelle || '', rendu: (l) => <strong dir="auto">{l.libelle}</strong> },
+    {
+      cle: 'intervalleJours', label: 'Intervalle', alignement: 'droite', valeur: (l) => Number(l.intervalleJours) || 0,
+      texte: (l) => t('{n} j', { n: nf(Number(l.intervalleJours) || 0) }),
+      rendu: (l) => t('{n} j', { n: nf(Number(l.intervalleJours) || 0) }),
+    },
+    {
+      cle: 'seuilAlerteJours', label: 'Pré-alerte', alignement: 'droite', valeur: (l) => (l.seuilAlerteJours ?? -1),
+      texte: (l) => (l.seuilAlerteJours != null ? t('{n} j', { n: nf(l.seuilAlerteJours) }) : ''),
+      rendu: (l) => (l.seuilAlerteJours != null ? t('{n} j', { n: nf(l.seuilAlerteJours) }) : '—'),
+    },
+    {
+      cle: 'urgenceBon', label: 'Urgence', filtre: 'liste', valeur: (l) => (URGENCES[l.urgenceBon] ? t(URGENCES[l.urgenceBon].label) : ''),
+      rendu: (l) => (URGENCES[l.urgenceBon] ? <Badge ton={URGENCES[l.urgenceBon].ton}>{`${l.urgenceBon} · ${t(URGENCES[l.urgenceBon].label)}`}</Badge> : '—'),
+    },
+    { cle: 'baseRecalcul', label: 'Recalcul', filtre: 'liste', valeur: (l) => t(BASES_RECALCUL[l.baseRecalcul === 1 ? 1 : 0]) },
+    { cle: 'portee', label: 'Portée', valeur: (l) => portee(l) },
+    { cle: 'gamme', label: 'Gamme', valeur: (l) => gammeTexte(l), rendu: (l) => gammeTexte(l) || '—' },
+    {
+      cle: 'actif', label: 'État', filtre: 'liste', valeur: (l) => (l.actif ? t('Actif') : t('Désactivé')),
+      rendu: (l) => <Badge ton={l.actif ? 'vert' : 'gris'}>{l.actif ? t('Actif') : t('Désactivé')}</Badge>,
+    },
+  ];
 
-    const onKey = (e) => {
-      if (e.key === 'Escape') closeForm();
-    };
-    document.addEventListener('keydown', onKey);
+  const champs = useMemo(() => [
+    { nom: 'code', label: 'Code', type: 'texte', requis: true, longueurMax: 50, section: 'identification', desactive: Boolean(fenetre.objet), transformer: (v) => String(v ?? '').trim().toUpperCase() },
+    { nom: 'libelle', label: 'Libellé', type: 'texte', requis: true, longueurMax: 255, section: 'identification' },
+    { nom: 'intervalleJours', label: 'Intervalle', unite: 'jours', type: 'nombre', requis: true, min: 1, section: 'periodicite' },
+    { nom: 'seuilAlerteJours', label: "Marge d'alerte", unite: 'jours', type: 'nombre', min: 0, section: 'periodicite' },
+    {
+      nom: 'urgenceBon', label: 'Urgence du bon', type: 'liste', optionVide: '—', section: 'periodicite',
+      options: Object.entries(URGENCES).map(([value, u]) => ({ value, label: `${value} · ${t(u.label)}` })),
+    },
+    {
+      nom: 'baseRecalcul', label: 'Base de recalcul', type: 'liste', requis: true, defaut: '0', section: 'periodicite',
+      options: [{ value: '0', label: t("Date réelle de l'intervention") }, { value: '1', label: t('Échéance théorique') }],
+    },
+    {
+      nom: 'gammeId', label: 'Gamme', type: 'liste', optionVide: 'Aucune', largeur: 'pleine', section: 'periodicite',
+      options: (() => {
+        const actuelle = gammeDe(fenetre.objet?.gammeId);
+        const liste = actuelle && !gammesChoix.some((g) => g.id === actuelle.id) ? [actuelle, ...gammesChoix] : gammesChoix;
+        return liste.map((g) => ({ value: String(g.id), label: `${libelleGamme(g)} · ${g.libelle}` }));
+      })(),
+    },
+    {
+      nom: 'lieuId', label: 'Lieu', type: 'liste', optionVide: 'Tous les lieux', largeur: 'pleine', section: 'cible',
+      options: lieuxChoix.map((l) => ({ value: String(l.id), label: `${'\u00A0\u00A0'.repeat(l.niveau)}${l.nom}` })),
+    },
+    {
+      nom: 'lotArticleImmobilistationIds', label: 'Équipements', type: 'personnalise', defaut: [], largeur: 'pleine', section: 'cible',
+      rendu: ({ valeur, changer, id }) => (
+        <SelectionEquipements id={id} valeurs={Array.isArray(valeur) ? valeur : []} onChange={changer}
+          options={equipements} services={services} loading={chargementEquipements} />
+      ),
+      transformer: (v) => (Array.isArray(v) ? v : []).map(Number),
+    },
+  ], [fenetre.objet, gammeDe, gammesChoix, lieuxChoix, equipements, services, chargementEquipements]);
 
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+  const ouvrir = (tache) => setFenetre({
+    ouverte: true,
+    objet: tache ? {
+      ...tache,
+      baseRecalcul: tache.baseRecalcul === 1 ? 1 : 0,
+      gammeId: gammeDe(tache.gammeId)?.id ?? tache.gammeId,
+      lotArticleImmobilistationIds: idsEquipements(tache).map(String),
+    } : null,
+  });
 
-    const tache = setTimeout(() => codeInputRef.current?.focus(), 60);
-
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prevOverflow;
-      clearTimeout(tache);
-    };
-  }, [formOpen, closeForm]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
-  };
-
-  const handleSave = async () => {
-    if (!form.code.trim() || !form.libelle.trim()) {
-      setFormError('Le code et le libellé sont obligatoires.');
-      return;
-    }
-    if (!form.intervalleJours || Number(form.intervalleJours) <= 0) {
-      setFormError("L'intervalle en jours doit être strictement positif.");
-      return;
-    }
-    if (form.urgenceBon !== '' && ![1, 2, 3, 4].includes(Number(form.urgenceBon))) {
-      setFormError("L'urgence du bon doit être comprise entre 1 et 4.");
-      return;
-    }
-
-    setSaving(true);
-    setFormError(null);
+  const basculer = async (tache) => {
+    setEnCours(true);
+    setErreur(null);
     try {
-      const payload = {
-        code: form.code.trim().toUpperCase(),
-        libelle: form.libelle.trim(),
-        intervalleJours: Number(form.intervalleJours),
-        seuilAlerteJours: form.seuilAlerteJours === '' ? null : Number(form.seuilAlerteJours),
-        urgenceBon: form.urgenceBon === '' ? null : Number(form.urgenceBon),
-        baseRecalcul: Number(form.baseRecalcul),
-        actif: form.actif,
-        lieuId: form.lieuId === '' ? null : Number(form.lieuId),
-        gammeId: form.gammeId === '' ? null : Number(form.gammeId),
-        lotArticleImmobilistationIds: form.lotArticleImmobilistationIds.map(Number),
-      };
-
-      if (editingId) {
-        await equipementMaintenanceService.updateType(editingId, payload);
-      } else {
-        await equipementMaintenanceService.createType(payload);
-      }
-
-      setFormOpen(false);
-      setEditingId(null);
-      await load();
+      if (tache.actif) await equipementMaintenanceService.removeType(tache.id);
+      else await equipementMaintenanceService.updateType(tache.id, { ...tache, actif: true });
+      setSelection(null);
+      await charger();
     } catch (err) {
-      setFormError(err?.response?.data?.message || "Échec de l'enregistrement.");
+      setErreur(err?.response?.data?.message || t('Échec de la mise à jour.'));
     } finally {
-      setSaving(false);
+      setEnCours(false);
+      setADesactiver(null);
     }
   };
 
-  const submitForm = (e) => {
-    e.preventDefault();
-    if (!saving) handleSave();
-  };
-
-  const doToggle = async (tache) => {
-    setPendingId(tache.id);
-    setError(null);
-    try {
-      if (tache.actif) {
-        await equipementMaintenanceService.removeType(tache.id);
-      } else {
-        await equipementMaintenanceService.updateType(tache.id, { ...tache, actif: true });
-      }
-      await load();
-    } catch (err) {
-      setError(err?.response?.data?.message || 'Échec de la mise à jour.');
-    } finally {
-      setPendingId(null);
-      setConfirmId(null);
-    }
-  };
-
-  const handleToggleActif = (tache) => {
-    if (tache.actif) {
-      setConfirmId(tache.id);
-    } else {
-      doToggle(tache);
-    }
-  };
-
-  const stats = useMemo(() => {
-    const total = types.length;
-    const actifs = types.filter((tache) => tache.actif).length;
-    const avgIntervalle = total
-      ? Math.round(types.reduce((s, tache) => s + (Number(tache.intervalleJours) || 0), 0) / total)
-      : 0;
-    return { total, actifs, inactifs: total - actifs, avgIntervalle };
-  }, [types]);
-
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const list = types.filter((tache) => {
-      if (statusFilter === 'active' && !tache.actif) return false;
-      if (statusFilter === 'inactive' && tache.actif) return false;
-      if (!q) return true;
-      return (
-        (tache.code || '').toLowerCase().includes(q) ||
-        (tache.libelle || '').toLowerCase().includes(q)
-      );
-    });
-
-    list.sort((a, b) => {
-      switch (sortBy) {
-        case 'libelle':
-          return (a.libelle || '').localeCompare(b.libelle || '');
-        case 'intervalleJours':
-          return (Number(a.intervalleJours) || 0) - (Number(b.intervalleJours) || 0);
-        case 'urgenceBon':
-          return (a.urgenceBon ?? 99) - (b.urgenceBon ?? 99);
-        default:
-          return (a.code || '').localeCompare(b.code || '');
-      }
-    });
-    return list;
-  }, [types, query, statusFilter, sortBy]);
-
-  const hasActiveFilters = query.trim() !== '' || statusFilter !== 'all';
-  const resetFilters = () => {
-    setQuery('');
-    setStatusFilter('all');
-  };
-
-  const preview = useMemo(() => {
-    const interval = Number(form.intervalleJours);
-    if (!interval || interval <= 0) return null;
-
-    const rawMargin = form.seuilAlerteJours === '' ? 0 : Number(form.seuilAlerteJours);
-    const margin = Math.min(Math.max(rawMargin || 0, 0), interval);
-
-    return {
-      interval,
-      margin,
-      alertAt: interval - margin,
-      alertPct: (margin / interval) * 100,
-    };
-  }, [form.intervalleJours, form.seuilAlerteJours]);
+  const desactiverSel = selection?.actif !== false;
 
   return (
-    <section className="mtp-panel mtp-panel--equipement" aria-labelledby="mtp-panel-title">
-      <header className="mtp-panel__head">
-        <div>
-          <h3 id="mtp-panel-title" className="mtp-panel__title">
-            {t("Maintenance préventive des équipements médicaux")}
-          </h3>
-          <p className="mtp-panel__lead">
-            {t("Échéances réglementaires (calibration, contrôle qualité...) — aucune valeur imposée par défaut.")}
-          </p>
-        </div>
-        <button type="button" className="mtp-panel__add" onClick={openCreate}>
-          <Plus size={16} /> {t("Nouveau type")}
-        </button>
-      </header>
-
-      <div className="mtp-kpis" role="list">
-        <div className="mtp-kpi" role="listitem">
-          <span className="mtp-kpi__icon mtp-kpi__icon--total" aria-hidden="true">
-            <Activity size={15} />
-          </span>
-          <div className="mtp-kpi__body">
-            <span className="mtp-kpi__value">{stats.total}</span>
-            <span className="mtp-kpi__label">{t("Types")}</span>
-          </div>
-        </div>
-        <div className="mtp-kpi" role="listitem">
-          <span className="mtp-kpi__icon mtp-kpi__icon--on" aria-hidden="true">
-            <CheckCircle2 size={15} />
-          </span>
-          <div className="mtp-kpi__body">
-            <span className="mtp-kpi__value">{stats.actifs}</span>
-            <span className="mtp-kpi__label">{t("Actifs")}</span>
-          </div>
-        </div>
-        <div className="mtp-kpi" role="listitem">
-          <span className="mtp-kpi__icon mtp-kpi__icon--off" aria-hidden="true">
-            <CircleSlash size={15} />
-          </span>
-          <div className="mtp-kpi__body">
-            <span className="mtp-kpi__value">{stats.inactifs}</span>
-            <span className="mtp-kpi__label">{t("Désactivés")}</span>
-          </div>
-        </div>
-        <div className="mtp-kpi" role="listitem">
-          <span className="mtp-kpi__icon mtp-kpi__icon--avg" aria-hidden="true">
-            <TrendingUp size={15} />
-          </span>
-          <div className="mtp-kpi__body">
-            <span className="mtp-kpi__value">
-              {stats.avgIntervalle ? nf.format(stats.avgIntervalle) : '—'}
-            </span>
-            <span className="mtp-kpi__label">{t("jours moyen")}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="mtp-toolbar">
-        <div className="mtp-search">
-          <Search size={15} className="mtp-search__icon" aria-hidden="true" />
-          <input
-            type="search"
-            className="mtp-search__input"
-            placeholder={t("Rechercher un code ou un libellé…")}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            aria-label={t("Rechercher")}
-          />
-          {query && (
-            <button
-              type="button"
-              className="mtp-search__clear"
-              onClick={() => setQuery('')}
-              aria-label={t("Effacer la recherche")}
-            >
-              <X size={13} />
-            </button>
-          )}
-        </div>
-
-        <div className="mtp-chips" role="group" aria-label={t("Filtrer par statut")}>
-          {[
-            { v: 'all',      label: t("Tous"),       count: stats.total },
-            { v: 'active',   label: t("Actifs"),     count: stats.actifs },
-            { v: 'inactive', label: t("Désactivés"), count: stats.inactifs },
-          ].map((opt) => (
-            <button
-              key={opt.v}
-              type="button"
-              className={`mtp-chip${statusFilter === opt.v ? ' mtp-chip--active' : ''}`}
-              onClick={() => setStatusFilter(opt.v)}
-              aria-pressed={statusFilter === opt.v}
-            >
-              {t(opt.label)}
-              <span className="mtp-chip__count">{opt.count}</span>
-            </button>
-          ))}
-        </div>
-
-        <label className="mtp-sort">
-          <ArrowUpDown size={14} aria-hidden="true" />
-          <select
-            className="mtp-sort__select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            aria-label={t("Trier")}
-          >
-            {SORTS.map((s) => (
-              <option key={s.value} value={s.value}>{t(s.label)}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      {error && (
-        <div className="mtp-alert" role="alert">
-          <AlertTriangle size={16} /> {error}
-        </div>
+    <PageListe
+      titre={t('Maintenance préventive')}
+      sansEntete
+      classe={integre ? 'emt-page--integree' : undefined}
+      finActions={vues}
+      filtres={(
+        <select value={vue} onChange={(e) => { setVue(e.target.value); setSelection(null); }} aria-label={t('Vue')}>
+          <option value="tous">{`${t('Tous')} (${types.length})`}</option>
+          <option value="actifs">{`${t('Actifs')} (${actifs})`}</option>
+          <option value="desactives">{`${t('Désactivés')} (${types.length - actifs})`}</option>
+        </select>
       )}
-
-      <div className="mtp-cards" role="list">
-        {loading && (
-          <div className="mtp-cards__state mtp-cards__state--loading">
-            <Loader2 size={22} className="mtp-spin" />
-            <span>{t("Chargement des échéances…")}</span>
-          </div>
-        )}
-
-        {!loading && types.length === 0 && (
-          <div className="mtp-cards__state mtp-cards__state--empty">
-            <Inbox size={32} strokeWidth={1.5} />
-            <p className="mtp-cards__state-title">{t("Aucun type de maintenance")}</p>
-            <p className="mtp-cards__state-text">
-              {t("Cliquez sur « Nouveau type » pour créer votre première échéance (ex. Calibration tous les 365 jours).")}
-            </p>
-            <button
-              type="button"
-              className="mtp-btn mtp-btn--primary mtp-btn--sm"
-              onClick={openCreate}
-            >
-              <Plus size={14} /> {t("Créer le premier type")}
-            </button>
-          </div>
-        )}
-
-        {!loading && types.length > 0 && filtered.length === 0 && (
-          <div className="mtp-cards__state mtp-cards__state--empty">
-            <Search size={28} strokeWidth={1.5} />
-            <p className="mtp-cards__state-title">{t("Aucun résultat")}</p>
-            <p className="mtp-cards__state-text">
-              {t("Aucun type ne correspond aux critères sélectionnés.")}
-            </p>
-            {hasActiveFilters && (
-              <button
-                type="button"
-                className="mtp-btn mtp-btn--ghost mtp-btn--sm"
-                onClick={resetFilters}
-              >
-                <RotateCcw size={13} /> {t("Réinitialiser les filtres")}
-              </button>
-            )}
-          </div>
-        )}
-
-        {!loading &&
-          filtered.map((tache) => {
-            const isPending = pendingId === tache.id;
-            const isConfirm = confirmId === tache.id;
-
-            const interval = Number(tache.intervalleJours) || 0;
-            const margin = Number(tache.seuilAlerteJours) || 0;
-            const alertAt = Math.max(0, interval - margin);
-            const alertPct = interval > 0 ? Math.min(100, (margin / interval) * 100) : 0;
-            const urgency = tache.urgenceBon ? URGENCE[tache.urgenceBon] : null;
-
-            return (
-              <article
-                key={tache.id}
-                role="listitem"
-                className={[
-                  'mtp-card',
-                  !tache.actif && 'mtp-card--inactive',
-                  isPending && 'mtp-card--pending',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-              >
-                <header className="mtp-card__head">
-                  <code className="mtp-card__code">{tache.code}</code>
-                  <span
-                    className={`mtp-status ${tache.actif ? 'mtp-status--on' : 'mtp-status--off'}`}
-                  >
-                    {tache.actif ? t("Actif") : t("Désactivé")}
-                  </span>
-                </header>
-
-                <h4 className="mtp-card__title">{tache.libelle}</h4>
-
-                <div className="mtp-card__gauge">
-                  <div className="mtp-card__gauge-head">
-                    <span className="mtp-card__gauge-value">
-                      {nf.format(interval)} <em>{t("jours")}</em>
-                    </span>
-                    {margin > 0 && (
-                      <span className="mtp-card__gauge-hint">
-                        {t("alerte dès")} {nf.format(alertAt)} {t("j")}
-                      </span>
-                    )}
-                  </div>
-                  <div
-                    className="mtp-card__gauge-track"
-                    role="img"
-                    aria-label={
-                      margin > 0
-                        ? t('Échéance à {n} jours, alerte dès {a} jours', { n: nf.format(interval), a: nf.format(alertAt) })
-                        : t('Échéance à {n} jours, sans pré-alerte', { n: nf.format(interval) })
-                    }
-                  >
-                    <span className="mtp-card__gauge-ok" />
-                    {margin > 0 && (
-                      <span
-                        className="mtp-card__gauge-alert"
-                        style={{ width: `${alertPct}%` }}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                <dl className="mtp-card__metrics">
-                  <div className="mtp-card__metric">
-                    <dt>
-                      <BellRing size={12} /> {t("Pré-alerte")}
-                    </dt>
-                    <dd>
-                      {tache.seuilAlerteJours != null
-                        ? t('{n} j', { n: nf.format(margin) })
-                        : <span className="mtp-card__muted">—</span>}
-                    </dd>
-                  </div>
-
-                  <div className="mtp-card__metric">
-                    <dt>
-                      <Flag size={12} /> {t("Urgence")}
-                    </dt>
-                    <dd>
-                      {urgency ? (
-                        <span className={`mtp-urgency mtp-urgency--${tache.urgenceBon}`}>
-                          {tache.urgenceBon} · {t(urgency.label)}
-                        </span>
-                      ) : (
-                        <span className="mtp-card__muted">—</span>
-                      )}
-                    </dd>
-                  </div>
-
-                  <div className="mtp-card__metric">
-                    <dt>
-                      <Calculator size={12} /> {t("Recalcul")}
-                    </dt>
-                    <dd>
-                      <span className="mtp-card__tag">
-                        {tache.baseRecalcul === 1 ? t("Échéance théorique") : t("Date réelle")}
-                      </span>
-                    </dd>
-                  </div>
-
-                  <div className="mtp-card__metric">
-                    <dt>
-                      <Boxes size={12} /> {t("Portée")}
-                    </dt>
-                    <dd>
-                      {(() => {
-                        const ids = tache.lotArticleImmobilistationIds?.length
-                          ? tache.lotArticleImmobilistationIds
-                          : (tache.lotArticleImmobilistationId != null ? [tache.lotArticleImmobilistationId] : []);
-                        if (ids.length === 0 && tache.lieuId != null) {
-                          return <span className="mtp-card__tag" title={cheminLieu(carteLieux, tache.lieuId)}>{cheminLieu(carteLieux, tache.lieuId) || t('Lieu #{id}', { id: tache.lieuId })}</span>;
-                        }
-                        if (ids.length === 0) return <span className="mtp-card__muted">{t("Tous les équipements")}</span>;
-                        const noms = ids.map((i) => immobilisationsMap.get(String(i))?.designation || t('Équipement #{id}', { id: i }));
-                        return (
-                          <span className="mtp-card__tag" title={noms.join('\n')}>
-                            {ids.length === 1 ? noms[0] : t('{n} équipements', { n: ids.length })}
-                          </span>
-                        );
-                      })()}
-                    </dd>
-                  </div>
-
-                  {tache.gammeId != null && (() => {
-                    const g = gammeDe(tache.gammeId);
-                    return (
-                      <div className="mtp-card__metric">
-                        <dt><ListOrdered size={12} /> {t("Gamme")}</dt>
-                        <dd>
-                          <span className="mtp-card__tag" title={g ? `${g.code} · ${g.libelle}` : ''}>
-                            {g ? `${g.code} v${g.version} · ${g.etapes?.length ?? 0} ${t('étapes')} · ${dureeLisible(g.dureeTotaleMinutes)}` : t('Gamme #{id}', { id: tache.gammeId })}
-                          </span>
-                        </dd>
-                      </div>
-                    );
-                  })()}
-                </dl>
-
-                <footer className="mtp-card__foot">
-                  <button
-                    type="button"
-                    className="mtp-card__btn mtp-card__btn--edit"
-                    onClick={() => openEdit(tache)}
-                    disabled={isPending || isConfirm}
-                  >
-                    <Pencil size={14} /> {t("Modifier")}
-                  </button>
-
-                  {isConfirm ? (
-                    <div className="mtp-confirm" role="group" aria-label={t("Confirmer la désactivation")}>
-                      <span className="mtp-confirm__label">{t("Désactiver ?")}</span>
-                      <button
-                        type="button"
-                        className="mtp-confirm__btn mtp-confirm__btn--yes"
-                        onClick={() => doToggle(tache)}
-                        aria-label={t("Confirmer la désactivation")}
-                      >
-                        <CheckCircle2 size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        className="mtp-confirm__btn mtp-confirm__btn--no"
-                        onClick={() => setConfirmId(null)}
-                        aria-label={t("Annuler")}
-                      >
-                        <X size={14} />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleToggleActif(tache)}
-                      className={`mtp-card__btn ${
-                        tache.actif ? 'mtp-card__btn--danger' : 'mtp-card__btn--restore'
-                      }`}
-                      disabled={isPending}
-                    >
-                      {isPending ? (
-                        <>
-                          <Loader2 size={14} className="mtp-spin" /> {t("Traitement…")}
-                        </>
-                      ) : tache.actif ? (
-                        <>
-                          <Pause size={14} /> {t("Désactiver")}
-                        </>
-                      ) : (
-                        <>
-                          <RotateCcw size={14} /> {t("Réactiver")}
-                        </>
-                      )}
-                    </button>
-                  )}
-                </footer>
-              </article>
-            );
-          })}
-      </div>
-
-      {formOpen && (
-        <div
-          className="mtp-backdrop"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="mtp-dialog-title"
-          onClick={closeForm}
-        >
-          <div className="mtp-dialog" onClick={(e) => e.stopPropagation()}>
-            <aside className="mtp-dialog__aside" aria-label={t("Aperçu de l'échéance")}>
-              <div className="mtp-dialog__aside-head">
-                <span className="mtp-dialog__icon" aria-hidden="true">
-                  {editingId ? <Pencil size={16} strokeWidth={2.4} /> : <Plus size={16} strokeWidth={2.4} />}
-                </span>
-                <span className="mtp-dialog__badge">
-                  {form.code.trim().toUpperCase() || 'CODE'}
-                </span>
-              </div>
-
-              <p className="mtp-dialog__aside-title">
-                {form.libelle.trim() || t("Libellé du type")}
-              </p>
-
-              <div className="mtp-gauge">
-                {preview ? (
-                  <>
-                    <p className="mtp-gauge__value">
-                      {nf.format(preview.interval)}
-                      <span className="mtp-gauge__unit">{t("jours")}</span>
-                    </p>
-
-                    <div
-                      className="mtp-gauge__track"
-                      role="img"
-                      aria-label={
-                        preview.margin > 0
-                          ? t('Échéance à {n} jours, alerte dès {a} jours', { n: nf.format(preview.interval), a: nf.format(preview.alertAt) })
-                          : t('Échéance à {n} jours, sans pré-alerte', { n: nf.format(preview.interval) })
-                      }
-                    >
-                      <span className="mtp-gauge__ok" />
-                      {preview.margin > 0 && (
-                        <span
-                          className="mtp-gauge__alert"
-                          style={{ width: `${preview.alertPct}%` }}
-                        />
-                      )}
-                    </div>
-
-                    <ul className="mtp-gauge__legend">
-                      <li className="mtp-gauge__legend-item mtp-gauge__legend-item--ok">
-                        {t("Période normale")}
-                        <span className="mtp-gauge__legend-range">
-                          0 – {nf.format(preview.alertAt)} {t("j")}
-                        </span>
-                      </li>
-                      {preview.margin > 0 && (
-                        <li className="mtp-gauge__legend-item mtp-gauge__legend-item--alert">
-                          {t("Zone d'alerte")}
-                          <span className="mtp-gauge__legend-range">
-                            {nf.format(preview.alertAt)} – {nf.format(preview.interval)} {t("j")}
-                          </span>
-                        </li>
-                      )}
-                      <li className="mtp-gauge__legend-item mtp-gauge__legend-item--due">
-                        {t("Échéance")}
-                        <span className="mtp-gauge__legend-range">
-                          {nf.format(preview.interval)} {t("j")}
-                        </span>
-                      </li>
-                    </ul>
-                  </>
-                ) : (
-                  <p className="mtp-gauge__placeholder">
-                    {t("Saisissez un intervalle pour visualiser le cycle de maintenance.")}
-                  </p>
-                )}
-              </div>
-
-              <dl className="mtp-recap">
-                <div className="mtp-recap__row">
-                  <dt>{t("Urgence du bon")}</dt>
-                  <dd>
-                    {form.urgenceBon !== '' ? (
-                      <span className={`mtp-urgency mtp-urgency--${form.urgenceBon}`}>
-                        {form.urgenceBon}
-                      </span>
-                    ) : (t("Non définie"))}
-                  </dd>
-                </div>
-                <div className="mtp-recap__row">
-                  <dt>{t("Recalcul")}</dt>
-                  <dd>{Number(form.baseRecalcul) === 1 ? t("Échéance théorique") : t("Date réelle")}</dd>
-                </div>
-                <div className="mtp-recap__row">
-                  <dt>{t("Statut")}</dt>
-                  <dd>{form.actif ? t("Actif") : t("Désactivé")}</dd>
-                </div>
-              </dl>
-            </aside>
-
-            <div className="mtp-dialog__main">
-              <header className="mtp-dialog__header">
-                <div>
-                  <h4 id="mtp-dialog-title" className="mtp-dialog__heading">
-                    {editingId ? t("Modifier le type de maintenance") : t("Nouveau type de maintenance")}
-                  </h4>
-                  <p className="mtp-dialog__subtitle">
-                    {editingId
-                      ? t("Ajustez les paramètres de l'échéance réglementaire")
-                      : t("Définissez une nouvelle périodicité réglementaire")}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="mtp-dialog__close"
-                  onClick={closeForm}
-                  aria-label={t("Fermer")}
-                  disabled={saving}
-                >
-                  <X size={16} />
-                </button>
-              </header>
-
-              <form className="mtp-dialog__form" onSubmit={submitForm}>
-                <div className="mtp-dialog__body">
-                  <section className="mtp-group" aria-labelledby="mtp-group-id">
-                    <div>
-                      <h5 id="mtp-group-id" className="mtp-group__title">{t("Identification")}</h5>
-                      <p className="mtp-group__desc">{t("Code unique et libellé utilisateur")}</p>
-                    </div>
-
-                    <div className="mtp-grid">
-                      <label className="mtp-field">
-                        <span className="mtp-field__label">{t("Code technique *")}</span>
-                        <input
-                          ref={codeInputRef}
-                          className="mtp-field__input"
-                          name="code"
-                          value={form.code}
-                          onChange={handleChange}
-                          placeholder="CALIBRATION"
-                          disabled={!!editingId || saving}
-                          autoComplete="off"
-                        />
-                        <small className="mtp-field__hint">
-                          {editingId
-                            ? t("Le code n'est pas modifiable après création.")
-                            : t("Ex. CALIBRATION, CONTROLE_QUALITE, VERIF_SECURITE")}
-                        </small>
-                      </label>
-
-                      <label className="mtp-field">
-                        <span className="mtp-field__label">{t("Libellé *")}</span>
-                        <input
-                          className="mtp-field__input"
-                          name="libelle"
-                          value={form.libelle}
-                          onChange={handleChange}
-                          placeholder={t("Calibration annuelle")}
-                          disabled={saving}
-                          autoComplete="off"
-                        />
-                        <small className="mtp-field__hint">{t("Nom affiché aux utilisateurs")}</small>
-                      </label>
-                    </div>
-                  </section>
-
-                  <section className="mtp-group" aria-labelledby="mtp-group-seuils">
-                    <div>
-                      <h5 id="mtp-group-seuils" className="mtp-group__title">{t("Périodicité")}</h5>
-                      <p className="mtp-group__desc">
-                        {t("Intervalle de déclenchement et marge de pré-alerte")}
-                      </p>
-                    </div>
-
-                    <div className="mtp-grid">
-                      <label className="mtp-field">
-                        <span className="mtp-field__label">{t("Intervalle *")}</span>
-                        <div className="mtp-field__affix">
-                          <input
-                            className="mtp-field__input mtp-field__input--suffixed"
-                            type="number"
-                            min="1"
-                            name="intervalleJours"
-                            value={form.intervalleJours}
-                            onChange={handleChange}
-                            placeholder="365"
-                            disabled={saving}
-                          />
-                          <span className="mtp-field__suffix">{t("jours")}</span>
-                        </div>
-                        <small className="mtp-field__hint">{t("Durée entre deux interventions")}</small>
-                      </label>
-
-                      <label className="mtp-field">
-                        <span className="mtp-field__label">{t("Marge d'alerte")}</span>
-                        <div className="mtp-field__affix">
-                          <input
-                            className="mtp-field__input mtp-field__input--suffixed"
-                            type="number"
-                            min="0"
-                            name="seuilAlerteJours"
-                            value={form.seuilAlerteJours}
-                            onChange={handleChange}
-                            placeholder="30"
-                            disabled={saving}
-                          />
-                          <span className="mtp-field__suffix">{t("jours")}</span>
-                        </div>
-                        <small className="mtp-field__hint">
-                          {t("Prévient l'utilisateur avant l'échéance")}
-                        </small>
-                      </label>
-                    </div>
-                  </section>
-
-                  <section className="mtp-group" aria-labelledby="mtp-group-cible">
-                    <div>
-                      <h5 id="mtp-group-cible" className="mtp-group__title">{t("Équipements ciblés")}</h5>
-                      <p className="mtp-group__desc">
-                        {t("Cochez un ou plusieurs équipements : le déclenchement automatique ne créera des bons que pour eux. Sans aucun équipement coché, le type s'applique à tous les équipements (ou à toute la catégorie).")}
-                      </p>
-                    </div>
-
-                    <div className="mtp-field">
-                      <label className="mtp-field__label" htmlFor="emt-lieu">{t("Lieu")}</label>
-                      <select id="emt-lieu" className="mtp-field__input mtp-field__input--select" value={form.lieuId} disabled={saving}
-                        onChange={(e) => setForm((prev) => ({ ...prev, lieuId: e.target.value }))}>
-                        <option value="">{t("Tous les lieux")}</option>
-                        {lieuxChoix.map((l) => (
-                          <option key={l.id} value={String(l.id)}>{'\u00A0\u00A0'.repeat(l.niveau)}{l.nom}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="mtp-field">
-                      <label className="mtp-field__label" htmlFor="emt-lot-immob">{t("Lots d'immobilisation")}</label>
-                      <SelectionEquipements
-                        id="emt-lot-immob"
-                        valeurs={form.lotArticleImmobilistationIds}
-                        onChange={(ids) => setForm((prev) => ({ ...prev, lotArticleImmobilistationIds: ids }))}
-                        options={immobilisations}
-                        loading={loadingImmobilisations}
-                        disabled={saving}
-                      />
-                    </div>
-                  </section>
-
-                  <section className="mtp-group" aria-labelledby="mtp-group-avance">
-                    <div>
-                      <h5 id="mtp-group-avance" className="mtp-group__title">{t("Paramètres avancés")}</h5>
-                      <p className="mtp-group__desc">{t("Bon de maintenance et cycle de recalcul")}</p>
-                    </div>
-
-                    <label className="mtp-field">
-                      <span className="mtp-field__label">{t("Gamme")}</span>
-                      <select className="mtp-field__input mtp-field__input--select" name="gammeId"
-                        value={gammeDe(form.gammeId) ? String(gammeDe(form.gammeId).id) : form.gammeId}
-                        onChange={handleChange} disabled={saving}>
-                        <option value="">{t("Aucune")}</option>
-                        {(() => {
-                          const actuelle = gammeDe(form.gammeId);
-                          const liste = actuelle && !gammesChoix.some((g) => g.id === actuelle.id) ? [actuelle, ...gammesChoix] : gammesChoix;
-                          return liste.map((g) => (
-                            <option key={g.id} value={String(g.id)}>
-                              {g.code} v{g.version} · {g.libelle} · {g.etapes?.length ?? 0} {t('étapes')} · {dureeLisible(g.dureeTotaleMinutes)}
-                            </option>
-                          ));
-                        })()}
-                      </select>
-                    </label>
-
-                    <div className="mtp-grid">
-                      <label className="mtp-field">
-                        <span className="mtp-field__label">{t("Urgence du bon")}</span>
-                        <input
-                          className="mtp-field__input"
-                          type="number"
-                          min="1"
-                          max="4"
-                          name="urgenceBon"
-                          value={form.urgenceBon}
-                          onChange={handleChange}
-                          placeholder={t("1 à 4")}
-                          disabled={saving}
-                        />
-                        <small className="mtp-field__hint">
-                          {t("Niveau 1 (faible) à 4 (critique)")}
-                        </small>
-                      </label>
-
-                      <label className="mtp-field">
-                        <span className="mtp-field__label">{t("Base de recalcul")}</span>
-                        <select
-                          className="mtp-field__input mtp-field__input--select"
-                          name="baseRecalcul"
-                          value={form.baseRecalcul}
-                          onChange={handleChange}
-                          disabled={saving}
-                        >
-                          <option value={0}>{t("Date réelle de l'intervention")}</option>
-                          <option value={1}>{t("Échéance théorique")}</option>
-                        </select>
-                        <small className="mtp-field__hint">
-                          {t("Référence pour calculer la prochaine échéance")}
-                        </small>
-                      </label>
-                    </div>
-
-                    <label className="mtp-switch">
-                      <input
-                        className="mtp-switch__input"
-                        type="checkbox"
-                        role="switch"
-                        name="actif"
-                        checked={form.actif}
-                        onChange={handleChange}
-                        disabled={saving}
-                      />
-                      <span className="mtp-switch__knob" aria-hidden="true" />
-                      <span className="mtp-switch__text">
-                        <span className="mtp-switch__title">{t("Type actif")}</span>
-                        <small className="mtp-switch__desc">
-                          {t("Contrôlé automatiquement chaque jour par le planificateur")}
-                        </small>
-                      </span>
-                    </label>
-                  </section>
-
-                  {formError && (
-                    <div className="mtp-alert mtp-alert--inline" role="alert">
-                      <AlertTriangle size={16} />
-                      <span>{formError}</span>
-                    </div>
-                  )}
-                </div>
-
-                <footer className="mtp-dialog__footer">
-                  <span className="mtp-dialog__hint">
-                    <kbd className="mtp-kbd">{t("Échap")}</kbd> {t("pour annuler")}
-                  </span>
-
-                  <div className="mtp-dialog__buttons">
-                    <button
-                      type="button"
-                      className="mtp-btn mtp-btn--ghost"
-                      onClick={closeForm}
-                      disabled={saving}
-                    >
-                      {t("Annuler")}
-                    </button>
-                    <button type="submit" className="mtp-btn mtp-btn--primary" disabled={saving}>
-                      {saving ? (
-                        <><Loader2 size={15} className="mtp-spin" /> {t("Enregistrement…")}</>
-                      ) : (
-                        <>
-                          <Save size={15} />
-                          {editingId ? t("Enregistrer les modifications") : t("Créer le type")}
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </footer>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-    </section>
+      colonnes={colonnes}
+      lignes={lignes}
+      chargement={chargement}
+      erreur={erreur}
+      selection={selection}
+      onSelection={setSelection}
+      onAjouter={() => ouvrir(null)}
+      libelleAjouter={t('Nouveau type')}
+      onModifier={ouvrir}
+      actions={[
+        {
+          label: desactiverSel ? t('Désactiver') : t('Réactiver'), icone: desactiverSel ? Pause : RotateCcw,
+          classe: desactiverSel ? 'cl-action--supprimer' : 'cl-action--teal', besoinSelection: true, desactive: enCours,
+          onClick: (l) => (l.actif ? setADesactiver(l) : basculer(l)),
+        },
+        { label: t('Actualiser'), icone: RefreshCw, classe: 'cl-action--gris', desactive: chargement, onClick: charger },
+      ]}
+      recherchePlaceholder={t('Code, libellé, gamme...')}
+      cleStockage="maintenance-preventive-types"
+      nomExport="maintenance-preventive-types"
+      triInitial={{ cle: 'code', sens: 'asc' }}
+      vide={{ aucun: t('Aucun type de maintenance.'), aucunFiltre: t('Aucun élément ne correspond à ces filtres.') }}
+    >
+      <ModaleFormulaire
+        ouvert={fenetre.ouverte}
+        onFermer={() => setFenetre((f) => ({ ...f, ouverte: false }))}
+        icone={CalendarClock}
+        surtitres={{ creation: t('Maintenance préventive'), modification: t('Maintenance préventive') }}
+        titres={{ creation: t('Nouveau type de maintenance'), modification: t('Modifier le type de maintenance') }}
+        sections={[
+          { cle: 'identification', label: t('Identification') },
+          { cle: 'periodicite', label: t('Périodicité') },
+          { cle: 'cible', label: t('Équipements ciblés') },
+        ]}
+        champs={champs}
+        objet={fenetre.objet}
+        taille="lg"
+        onEnregistrer={async (payload) => {
+          const corps = { ...payload, actif: fenetre.objet ? fenetre.objet.actif !== false : true };
+          if (fenetre.objet) await equipementMaintenanceService.updateType(fenetre.objet.id, corps);
+          else await equipementMaintenanceService.createType(corps);
+          await charger();
+        }}
+      />
+      <ConfirmModal
+        show={Boolean(aDesactiver)}
+        onClose={() => setADesactiver(null)}
+        onConfirm={() => basculer(aDesactiver)}
+        type="danger"
+        title={t('Désactiver le type')}
+        message={aDesactiver ? t('Désactiver « {nom} » ?', { nom: aDesactiver.libelle || aDesactiver.code }) : ''}
+        confirmText={t('Désactiver')}
+        cancelText={t('Annuler')}
+      />
+    </PageListe>
   );
 }

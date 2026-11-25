@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { DROITS, useDroits } from '../../../../constants/privileges';
 import {
   CheckCircle2, Bookmark, Navigation, Wrench, Ban, XCircle, Tag, Loader2,
   AlertTriangle, Settings, Truck, ShieldCheck, HardHat, AlertOctagon,
@@ -67,6 +68,8 @@ const VEHICULE_COLUMNS_DEFAULT = [
 ];
 
 export default function VehiculesPage() {
+  const aDroit = useDroits();
+  const peutModifier = aDroit(DROITS.VEHICULE_MODIFIER);
   const [vehicules, setVehicules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -533,8 +536,8 @@ export default function VehiculesPage() {
     const TABS = [
       { key: 'infos',       label: t("Informations générales"), icon: Info },
       { key: 'maintenance', label: t("Maintenance préventive"), icon: Wrench },
-      { key: 'historique',  label: t("Historique du compteur"), icon: HistoryIcon },
-      { key: 'cout',        label: t("Coût"), icon: Wallet },
+      ...(aDroit(DROITS.VEHICULE_COMPTEURS) ? [{ key: 'historique', label: t("Historique du compteur"), icon: HistoryIcon }] : []),
+      ...(aDroit(DROITS.VEHICULE_AMORTISSEMENT) ? [{ key: 'cout', label: t("Coût"), icon: Wallet }] : []),
     ];
 
     return (
@@ -556,6 +559,7 @@ export default function VehiculesPage() {
                 </button>
 
                 <div className="vd-hero-actions">
+                  {peutModifier && (
                   <button
                     type="button"
                     className="vd-hero-btn"
@@ -564,6 +568,7 @@ export default function VehiculesPage() {
                     <FileText size={16} strokeWidth={2.4} />
                     {t("Modifier")}
                   </button>
+                  )}
                   <button
                     type="button"
                     className="vd-hero-btn"
@@ -851,10 +856,12 @@ export default function VehiculesPage() {
       <CoutsParcResume version={coutsVersion} onOuvrir={() => setCoutsOpen(true)} />
 
       <div className="vehicules-actions-bar">
+        {peutModifier && (
         <button className="vehicules-action-btn ajouter" onClick={openCreate}>
           <span className="vehicules-action-icon">+</span>
           <span>{t("Ajouter")}</span>
         </button>
+        )}
 
         <button
           className={`vehicules-action-btn details ${!selectedVehicule ? 'disabled' : ''}`}
@@ -869,6 +876,7 @@ export default function VehiculesPage() {
           <span>{t("Détails")}</span>
         </button>
 
+        {peutModifier && (
         <button
           className={`vehicules-action-btn modifier ${!selectedVehicule ? 'disabled' : ''}`}
           disabled={!selectedVehicule}
@@ -877,7 +885,9 @@ export default function VehiculesPage() {
           <SquarePen size={18} strokeWidth={2} aria-hidden="true" />
           <span>{t("Modifier")}</span>
         </button>
+        )}
 
+        {peutModifier && (
         <button
           className={`vehicules-action-btn supprimer ${(!selectedVehicule || isDeleting) ? 'disabled' : ''}`}
           disabled={!selectedVehicule || isDeleting}
@@ -886,8 +896,9 @@ export default function VehiculesPage() {
           <Trash2 size={18} strokeWidth={2} aria-hidden="true" />
           <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
+        )}
 
-        {selectedVehicule && (
+        {peutModifier && selectedVehicule && (
           <>
             <span className="vehicules-actions-sep" aria-hidden="true" />
             {nextEtats.length === 0 ? (
@@ -963,6 +974,7 @@ export default function VehiculesPage() {
           {t("Réinitialiser")}
         </button>
 
+        {peutModifier && (
         <button
           type="button"
           className="vp-settings-btn"
@@ -971,6 +983,7 @@ export default function VehiculesPage() {
         >
           <Settings size={16} /> {t("Paramètres maintenance")}
         </button>
+        )}
 
 
         <div className="vehicules-export-stack">

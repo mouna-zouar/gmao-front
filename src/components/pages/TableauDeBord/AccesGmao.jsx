@@ -1,7 +1,8 @@
 import { cloneElement, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BellRing, ChevronDown, ChevronRight, Search, ShieldOff, Waypoints, X, Zap } from 'lucide-react';
-import { NAV_SECTIONS } from '../../../constants/navigation';
+import { NAV_SECTIONS, filtrerItems } from '../../../constants/navigation';
+import { useDroits } from '../../../constants/privileges';
 import { ICONES_MODULES as M } from '../../../constants/modules';
 import { t } from '../../../i18n';
 import './AccesGmao.css';
@@ -31,9 +32,9 @@ const EXCLUS = new Set(['dashboard']);
 
 const sansAccents = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-function modulesGmao() {
+function modulesGmao(aDroit) {
   const gmao = NAV_SECTIONS.find((s) => s.id === 'gmao')?.items || [];
-  return [...gmao.filter((m) => !EXCLUS.has(m.id)), ANALYSES].map((m) => ({
+  return filtrerItems([...gmao.filter((m) => !EXCLUS.has(m.id)), ANALYSES], aDroit).map((m) => ({
     ...m,
     pages: m.children?.length ? m.children : [],
   }));
@@ -48,7 +49,8 @@ export default function AccesGmao({ compteurs = {} }) {
   const [recherche, setRecherche] = useState('');
   const [ouvert, setOuvert] = useState(lireOuvert);
   useEffect(() => { try { localStorage.setItem(CLE_OUVERT, ouvert ? '1' : '0'); } catch {} }, [ouvert]);
-  const modules = useMemo(modulesGmao, []);
+  const aDroit = useDroits();
+  const modules = useMemo(() => modulesGmao(aDroit), [aDroit]);
 
   const mots = sansAccents(recherche).split(/\s+/).filter(Boolean);
   const trouve = (texte) => mots.every((x) => sansAccents(texte).includes(x));

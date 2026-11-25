@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { connecter, deconnecter, selectUtilisateur } from '../store/authSlice';
+import { aDroitPour } from './privileges';
 
 export function AuthProvider({ children }) {
   return children;
@@ -34,7 +35,7 @@ export function useAuth() {
 
 export function useDroit(code) {
   const user = useSelector(selectUtilisateur);
-  return (user?.privileges ?? []).includes(code);
+  return aDroitPour(user, code);
 }
 
 export default null;

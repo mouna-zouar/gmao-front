@@ -41,6 +41,7 @@ import { cheminLieu, lieuDeLigne } from '../../../services/lieuxCache';
 import reclamationService from '../../../services/Reclamationservice';
 import lectureService from '../../../services/lectureService';
 import EtatLecture from '../../commun/EtatLecture';
+import { DROITS, DROITS_ACTIONS_RECLAMATION, useDroits } from '../../../constants/privileges';
 import { ETAT_REC, actionsPossibles, estAffectee, membresGroupe, reclamationVerrouillee, nomTechnicien, TYPES_HISTORIQUE } from './ReclamationActions';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import { t, tp, locale } from '../../../i18n';
@@ -267,6 +268,7 @@ export default function ReclamationDetails({
   libelleRetour,
 }) {
   const { reclamation, bons } = normaliser(data);
+  const aDroit = useDroits();
   const resume = data?.__resume ?? null;
   const [equipement, setEquipement] = useState(null);
   const carteLieux = useCarteLieux();
@@ -349,8 +351,10 @@ export default function ReclamationDetails({
   const etatClair = ETAT_EN_CLAIR[reclamation.etat] || { texte: t("Inconnu"), ton: 'neutre' };
   const etapes = construireParcours(reclamation, bons);
   const progression = reclamation.etat === ETAT.CLOTUREE ? 1 : Math.min(indexEtape(reclamation), ETAPES_DEF.length - 1) / (ETAPES_DEF.length - 1);
-  const possibles = onAction ? actionsPossibles(reclamation) : {};
-  const action = prochaineAction(reclamation, bons);
+  const possibles = onAction ? actionsPossibles(reclamation, aDroit) : {};
+  const permis = (b) => (b && aDroit(DROITS_ACTIONS_RECLAMATION[b.action]) ? b : null);
+  const actionBrute = prochaineAction(reclamation, bons);
+  const action = actionBrute && { ...actionBrute, bouton: permis(actionBrute.bouton), secondaire: permis(actionBrute.secondaire) };
   const ActionIcon = action?.icon;
 
   const personnel = nomTechnicien(reclamation) || null;
@@ -639,7 +643,7 @@ export default function ReclamationDetails({
               <UserCheck size={16} /> <span>{estAffectee(reclamation) ? t("Réaffecter") : t("Affecter")}</span>
             </button>
           )}
-          {!verrouillee && (
+          {!verrouillee && aDroit(DROITS.RECLAMATION_AJOUTER) && (
             <button type="button" className="bmz-btn" onClick={onModifier} title={t("Modifier")}>
               <Edit size={16} /> <span>{t("Modifier")}</span>
             </button>

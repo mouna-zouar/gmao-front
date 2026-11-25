@@ -1,16 +1,49 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { DROITS, DROITS_ACTIONS_BON, useDroits } from '../../../constants/privileges';
 import { useSearchParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
-import { Plus, Edit, Eye, PackageSearch, ShoppingCart, Trash2, Play, RotateCcw, Pause, CheckCircle, XCircle, FileSpreadsheet, Printer, Search, Filter, RefreshCw, AlertCircle, Calendar, Building2, Loader2, Info, AlertTriangle, Ban, Gauge, ArrowUp, ArrowDown, ArrowUpDown, AlarmClock, TriangleAlert, RadioTower, Timer, ArrowUpRight, Wrench, ChevronDown, LayoutGrid, MapPin, ClipboardCheck } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Eye,
+  PackageSearch,
+  ShoppingCart,
+  Trash2,
+  Play,
+  RotateCcw,
+  Pause,
+  CheckCircle,
+  XCircle,
+  FileSpreadsheet,
+  Printer,
+  Search,
+  Filter,
+  RefreshCw,
+  AlertCircle,
+  Calendar,
+  Building2,
+  Loader2,
+  Info,
+  AlertTriangle,
+  Ban,
+  Gauge,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  AlarmClock,
+  TriangleAlert,
+  RadioTower,
+  Timer,
+  MapPin,
+  ClipboardCheck,
+} from 'lucide-react';
 import { FenetreValidateurs, BoutonsDecision } from './ValidationBon';
 import FiltreLieu, { useCarteLieux, useFiltreLieu } from '../../ui/FiltreLieu/FiltreLieu';
 import { ICONES_MODULES } from '../../../constants/modules';
-
 import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import bonMaintenanceFullService from '../../../services/Bonmaintenancefullservice';
 import bonMaintenancePieceService from '../../../services/Bonmaintenancepieceservice';
 import { prioriteLabel, prioriteRang, prioriteColor } from '../../../constants/Priorite';
-
 import BonMaintenanceModal from '../../ui/modals/Bonmaintenancemodal';
 import BonMaintenanceDetails from './Bonmaintenancedetails';
 import FicheBonMaintenance from '../Fichebonmaintenance/Fichebonmaintenance';
@@ -18,7 +51,6 @@ import ListeDocumentsAchat from './ListeDocumentsAchat';
 import PieceEditor from '../../ui/PieceEditor/PieceEditor';
 import PageModal from '../../ui/modals/PageModal';
 import Button from '../../ui/Button';
-
 import Anomalies from '../Anomalies/Anomalies';
 import BlocagesImmobilisation from '../Blocagesimmobilisation/Blocagesimmobilisation';
 import EquipementsEtEtat from '../Equipements/Equipementsetetat';
@@ -27,12 +59,9 @@ import AlertesMachines from '../AlertesMachines/AlertesMachines';
 import alerteMachineService from '../../../services/alerteMachineService';
 import slaService from '../../../services/slaService';
 import { delaiSla } from '../../../utils/delaiSla';
-
-
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
-
-import { t, tp, locale } from '../../../i18n';
+import { t, tp } from '../../../i18n';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import { STATUTS, TONS } from '../../../constants/statuts';
 import { imprimerListe } from '../../../utils/imprimerListe';
@@ -49,8 +78,25 @@ import Pagination from '../../commun/Pagination';
 import EtatLecture, { ResumeLecture } from '../../commun/EtatLecture';
 import LignesChargement from '../../commun/LignesChargement';
 import {
-  AnnonceCopie, BoutonFiltresColonnes, BoutonMenuColonne, BoutonTri, ChampFiltre, choixColonnes, filtrerParColonnes, useFiltresColonnes,
+  AnnonceCopie,
+  BoutonFiltresColonnes,
+  BoutonMenuColonne,
+  BoutonTri,
+  ChampFiltre,
+  choixColonnes,
+  filtrerParColonnes,
+  useFiltresColonnes,
 } from '../../commun/TableauColonnes';
+import {
+  etatLabel,
+  niveauLabel,
+  formatDate,
+  EXCEL_ALL_FIELDS,
+  EXCEL_COLUMNS_OPTIONS,
+  collectDynamicFields,
+} from './exportBons';
+import { MenuAchatsBons, MenuOutilsBons } from './MenusBons';
+import { SlaRetards } from './SlaRetards';
 
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
 
@@ -70,10 +116,10 @@ const TRANSITIONS = {
 };
 
 const ACTION_LABELS = { demarrer: 'Démarrer', reprendre: 'Reprendre', suspendre: 'Suspendre', effectuer: 'Effectuer', annuler: 'Annuler' };
-const ACTION_CLASSES = { demarrer: 'bons-action-btn demarrer', reprendre: 'bons-action-btn reprendre', suspendre: 'bons-action-btn suspendre', effectuer: 'bons-action-btn effectuer', annuler: 'bons-action-btn annuler' };
-const ACTION_ICONS = { demarrer: Play, reprendre: RotateCcw, suspendre: Pause, effectuer: CheckCircle, annuler: XCircle };
 
-const ETAT_LABELS = Object.fromEntries(Object.entries(STATUTS.bon).map(([k, v]) => [k, v.libelle]));
+const ACTION_CLASSES = { demarrer: 'bons-action-btn demarrer', reprendre: 'bons-action-btn reprendre', suspendre: 'bons-action-btn suspendre', effectuer: 'bons-action-btn effectuer', annuler: 'bons-action-btn annuler' };
+
+const ACTION_ICONS = { demarrer: Play, reprendre: RotateCcw, suspendre: Pause, effectuer: CheckCircle, annuler: XCircle };
 
 const ETAT_FILTER_OPTIONS = [
   { value: 'all', label: 'Tous les états', icon: Filter },
@@ -81,8 +127,6 @@ const ETAT_FILTER_OPTIONS = [
     value: String(e), label: TRANSITIONS[e].label, icon: TRANSITIONS[e].icon, color: TRANSITIONS[e].color,
   })),
 ];
-
-const NIVEAU_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
 
 const ETAT_IMMOBILISATION_OPTIONS = [
   { value: '', label: "Ne pas changer l'état" },
@@ -108,18 +152,6 @@ function demandeEtatClass(etat) {
   return DEMANDE_ETAT_MAP[etat]?.cls || '';
 }
 
-
-function etatLabel(etat) { return etat == null ? '—' : ETAT_LABELS[etat] ?? t('État {n}', { n: etat }); }
-function niveauLabel(niveau) { return niveau == null ? '—' : NIVEAU_LABELS[niveau] ?? t('Niveau {n}', { n: niveau }); }
-
-function formatDate(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-
 function getAvailableActions(bon) {
   if (!bon) return [];
   const tache = TRANSITIONS[bon.etat];
@@ -136,11 +168,14 @@ function getEtatCount(bons, etatValue) {
   return bons.filter((b) => b.etat === etatValue).length;
 }
 
-
 let lotBesoins = null;
+
 const besoinsConnus = new Map();
+
 if (typeof window !== 'undefined') window.addEventListener('gmao:ecriture', () => besoinsConnus.clear());
+
 const besoinsEnCours = new Map();
+
 function besoinsPieces(bonId) {
   const connu = besoinsConnus.get(bonId);
   if (connu && Date.now() < connu.jusqua) return Promise.resolve(connu.valeur);
@@ -184,7 +219,6 @@ async function computeBonMaintenanceNeeds(bonId) {
   }
 }
 
-
 const SORTABLE_COLUMNS = {
   num: (b) => b.num || '',
   titre: (b) => b.titre || '',
@@ -213,88 +247,6 @@ const BON_COLUMNS_DEFAULT = [
   { key: 'lecture',     label: 'Lu',          visible: true, searchable: false },
 ];
 
-const EXCEL_ALL_FIELDS = [
-  { key: 'id',                          label: 'ID',                        extract: (b) => b.id ?? '' },
-  { key: 'num',                         label: 'Numéro',                    extract: (b) => b.num || '' },
-  { key: 'titre',                       label: 'Titre',                     extract: (b) => b.titre || '' },
-  { key: 'description',                 label: 'Description',               extract: (b) => b.description || '' },
-
-  { key: 'etat',                        label: 'État',                      extract: (b) => etatLabel(b.etat) },
-  { key: 'urgence',                     label: 'Urgence',                   extract: (b) => niveauLabel(b.urgence) },
-  { key: 'priorite',                    label: 'Priorité (code)',           extract: (b) => b.priorite ?? '' },
-  { key: 'prioriteLabel',               label: 'Priorité (libellé)',        extract: (b) => prioriteLabel(b.priorite) },
-
-  { key: 'date',                        label: 'Date',                      extract: (b) => formatDate(b.date) },
-  { key: 'dateCreation',                label: 'Date de création',          extract: (b) => formatDate(b.dateCreation) },
-  { key: 'dateDebut',                   label: 'Date de début',             extract: (b) => formatDate(b.dateDebut) },
-  { key: 'dateFin',                     label: 'Date de fin',               extract: (b) => formatDate(b.dateFin) },
-  { key: 'dateCloture',                 label: 'Date de clôture',           extract: (b) => formatDate(b.dateCloture) },
-
-  { key: 'prestataireId',               label: 'Prestataire ID',            extract: (b) => b.prestataireId ?? b.prestataire?.id ?? '' },
-  { key: 'prestataireNom',              label: 'Prestataire',               extract: (b) => b.prestataire?.raisonSociale || b.prestataire?.nom || '' },
-  { key: 'prestataireCode',             label: 'Code prestataire',          extract: (b) => b.prestataire?.code || '' },
-
-  { key: 'sousTraitantId',              label: 'Sous-traitant ID',          extract: (b) => b.sousTraitantId ?? '' },
-  { key: 'sousTraitant',                label: 'Sous-traitant',             extract: (b) => b.sousTraitant || '' },
-
-  { key: 'serviceId',                   label: 'Service ID',                extract: (b) => b.serviceId ?? b.service?.id ?? '' },
-  { key: 'serviceNom',                  label: 'Service',                   extract: (b) => b.serviceNom || b.service?.description || b.service?.label || '' },
-
-  { key: 'depotId',                     label: 'Dépôt ID',                  extract: (b) => b.depotId ?? b.depot?.id ?? '' },
-  { key: 'depotNom',                    label: 'Dépôt',                     extract: (b) => b.depotNom || b.depot?.codeDepots || b.depot?.libelle || '' },
-
-  { key: 'lotArticleImmobilistationId', label: 'Immobilisation ID',         extract: (b) => b.lotArticleImmobilistationId ?? '' },
-
-  { key: 'personnelId',                 label: 'Personnel ID',              extract: (b) => b.personnelId ?? '' },
-  { key: 'personnelNom',                label: 'Personnel',                 extract: (b) => b.personnelNom || (b.personnel ? `${b.personnel.nom || ''} ${b.personnel.prenom || ''}`.trim() : '') },
-
-  { key: 'personnelCreationNom',        label: 'Créé par',                  extract: (b) => b.personnelCreationNom || '' },
-  { key: 'personnelModificationNom',    label: 'Modifié par',               extract: (b) => b.personnelModificationNom || '' },
-
-  { key: 'motifSuspension',             label: 'Motif suspension',          extract: (b) => b.motifSuspension || '' },
-  { key: 'observations',                label: 'Observations',              extract: (b) => b.observations || '' },
-  { key: 'commentaire',                 label: 'Commentaire',               extract: (b) => b.commentaire || '' },
-
-  { key: 'slaReponse',                  label: 'SLA réponse',               extract: (b) => b.sla?.statutReponse || '' },
-  { key: 'slaResolution',               label: 'SLA résolution',            extract: (b) => b.sla?.statutResolution || '' },
-  { key: 'coutTotal',                   label: 'Coût total',                extract: (b) => b.cout?.coutTotal ?? '' },
-];
-
-const EXCEL_COLUMNS_OPTIONS = EXCEL_ALL_FIELDS.map(({ key, label }) => ({ key, label }));
-
-function collectDynamicFields(bons) {
-  const knownKeys = new Set(EXCEL_ALL_FIELDS.map((f) => f.key));
-  const skipKeys = new Set([
-    'prestataire', 'service', 'depot', 'clinique', 'cliniqueId', 'cliniqueNom', 'personnel',
-    'sla', 'cout', 'rcaAnalyses', 'commentaires', 'intervenants',
-    'taches', 'diagnostics', 'controles', 'remisesEnService',
-    'documents', 'historique', 'reclamations', 'pieces', 'lignes',
-  ]);
-
-  const dynamicKeys = new Set();
-
-  bons.forEach((b) => {
-    Object.keys(b || {}).forEach((k) => {
-      if (knownKeys.has(k) || skipKeys.has(k)) return;
-      const v = b[k];
-      if (v === null || v === undefined) return;
-      if (typeof v === 'object') return;
-      dynamicKeys.add(k);
-    });
-  });
-
-  return Array.from(dynamicKeys).map((k) => ({
-    key: k,
-    label: k.charAt(0).toUpperCase() + k.slice(1),
-    extract: (b) => {
-      const v = b[k];
-      if (v === null || v === undefined) return '';
-      if (typeof v === 'boolean') return v ? t("Oui") : t("Non");
-      return String(v);
-    },
-  }));
-}
-
 function getColumnSearchValue(b, key) {
   switch (key) {
     case 'num':         return b.num || '';
@@ -320,9 +272,11 @@ const COLONNES_TEXTE = BON_COLUMNS_DEFAULT.map((c) => ({
     return t(getColumnSearchValue(b, c.key));
   },
 }));
+
 const COLONNE_TEXTE = Object.fromEntries(COLONNES_TEXTE.map((c) => [c.cle, c]));
 
 export default function BonsMaintenance() {
+  const aDroit = useDroits();
 
   const [bons, setBons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1191,22 +1145,27 @@ export default function BonsMaintenance() {
 
 
       <div className="bons-actions-bar">
-        <button className="bons-action-btn ajouter" onClick={openCreate}>
-          <Plus size={18} />
-          <span>{t("Ajouter")}</span>
-        </button>
+        {aDroit(DROITS.BON_AJOUTER_MODIFIER) && (
+          <>
+            <button className="bons-action-btn ajouter" onClick={openCreate}>
+              <Plus size={18} />
+              <span>{t("Ajouter")}</span>
+            </button>
 
-        <button className={`bons-action-btn modifier ${!selectedBon || bonFige ? 'disabled' : ''}`} disabled={!selectedBon || bonFige} onClick={openEdit}
-          title={raisonFige}>
-          <Edit size={18} />
-          <span>{t("Modifier")}</span>
-        </button>
+            <button className={`bons-action-btn modifier ${!selectedBon || bonFige ? 'disabled' : ''}`} disabled={!selectedBon || bonFige} onClick={openEdit}
+              title={raisonFige}>
+              <Edit size={18} />
+              <span>{t("Modifier")}</span>
+            </button>
+          </>
+        )}
 
         <button className={`bons-action-btn details ${!selectedBon ? 'disabled' : ''}`} disabled={!selectedBon} onClick={() => setViewMode('details')}>
           <Eye size={18} />
           <span>{t("Détails")}</span>
         </button>
 
+        {aDroit(DROITS.BON_ARTICLES) && (
         <MenuAchatsBons
           actif={!!selectedBon}
           allume={!bonFige && (demanderAllume || commanderAllume)}
@@ -1217,18 +1176,21 @@ export default function BonsMaintenance() {
             { cle: 'commandes', icone: ShoppingCart, label: t('Commandes'), actif: true, onClick: openCommandes },
           ]}
         />
+        )}
 
+        {aDroit(DROITS.BON_AJOUTER_MODIFIER) && (
         <button className={`bons-action-btn supprimer ${!selectedBon || isDeleting || bonFige ? 'disabled' : ''}`} disabled={!selectedBon || isDeleting || bonFige} onClick={handleDelete}
           title={raisonFige}>
           <Trash2 size={18} />
           <span>{isDeleting ? t("Suppression...") : t("Supprimer")}</span>
         </button>
+        )}
 
         <div className="bons-actions-divider" />
 
         {selectedBon && !isTerminalState(selectedBon) && (
           <>
-            {getAvailableActions(selectedBon).map((action) => {
+            {getAvailableActions(selectedBon).filter((action) => aDroit(DROITS_ACTIONS_BON[action])).map((action) => {
               const Icon = ACTION_ICONS[action];
               return (
                 <button
@@ -2021,253 +1983,6 @@ export default function BonsMaintenance() {
         <AlertesMachines isModal />
       </PageModal>
       {validateursOpen && <FenetreValidateurs onClose={() => setValidateursOpen(false)} />}
-    </div>
-  );
-}
-
-const formatDateSla = (iso) => {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-};
-
-const heuresDeRetard = (echeance, maintenant) => {
-  if (!echeance) return 0;
-  const d = new Date(echeance);
-  if (Number.isNaN(d.getTime())) return 0;
-  return Math.max(0, (maintenant - d.getTime()) / 3600000);
-};
-
-const formatRetard = (heures) => {
-  if (heures < 1) return t('< 1 h');
-  if (heures < 24) return t('{n} h', { n: Math.floor(heures) });
-  const j = Math.floor(heures / 24);
-  const h = Math.floor(heures % 24);
-  return h ? t('{j} j {h} h', { j, h }) : t('{j} j', { j });
-};
-
-const FILTRES = [
-  { id: 'tous', label: 'Tous' },
-  { id: 'reponse', label: 'Réponse en retard' },
-  { id: 'resolution', label: 'Résolution en retard' },
-];
-
-function SlaRetards({ bons, chargement, erreur, onRecharger, onOuvrir }) {
-  const [filtre, setFiltre] = useState('tous');
-  const [recherche, setRecherche] = useState('');
-  const [maintenant] = useState(() => Date.now());
-
-  const lignes = useMemo(() => (bons || []).map((b) => {
-    const reponse = b.statutReponse === 'DEPASSE';
-    const resolution = b.statutResolution === 'DEPASSE';
-    const retard = Math.max(
-      reponse ? heuresDeRetard(b.echeanceReponse, maintenant) : 0,
-      resolution ? heuresDeRetard(b.echeanceResolution, maintenant) : 0,
-    );
-    return { ...b, reponse, resolution, retard };
-  }).sort((a, b) => b.retard - a.retard), [bons, maintenant]);
-
-  const comptes = useMemo(() => ({
-    tous: lignes.length,
-    reponse: lignes.filter((l) => l.reponse).length,
-    resolution: lignes.filter((l) => l.resolution).length,
-  }), [lignes]);
-
-  const visibles = useMemo(() => {
-    const terme = recherche.trim().toLowerCase();
-    return lignes.filter((l) => (filtre === 'tous' || l[filtre])
-      && (!terme || `${l.num ?? ''} ${l.titre ?? ''}`.toLowerCase().includes(terme)));
-  }, [lignes, filtre, recherche]);
-
-  return (
-    <div className="sla-retards">
-      <div className="sla-retards__resume">
-        <div className="sla-retards__chiffre sla-retards__chiffre--alerte">
-          <AlarmClock size={20} aria-hidden="true" />
-          <strong>{chargement && !bons ? '…' : comptes.tous}</strong>
-          <span>{t('bons en retard SLA')}</span>
-        </div>
-        <div className="sla-retards__chiffre">
-          <Timer size={18} aria-hidden="true" />
-          <strong>{comptes.reponse}</strong>
-          <span>{t('réponse en retard')}</span>
-        </div>
-        <div className="sla-retards__chiffre">
-          <Wrench size={18} aria-hidden="true" />
-          <strong>{comptes.resolution}</strong>
-          <span>{t('résolution en retard')}</span>
-        </div>
-        <button type="button" className="sla-retards__recharger" onClick={onRecharger} disabled={chargement}>
-          <RefreshCw size={15} className={chargement ? 'sla-retards__spin' : ''} aria-hidden="true" />
-          {t('Actualiser')}
-        </button>
-      </div>
-
-      <div className="sla-retards__outils">
-        <div className="sla-retards__filtres" role="group" aria-label={t('Filtrer les retards')}>
-          {FILTRES.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              className={`sla-retards__filtre ${filtre === f.id ? 'is-actif' : ''}`}
-              aria-pressed={filtre === f.id}
-              onClick={() => setFiltre(f.id)}
-            >
-              {t(f.label)} <span>{comptes[f.id]}</span>
-            </button>
-          ))}
-        </div>
-        <label className="sla-retards__recherche">
-          <Search size={15} aria-hidden="true" />
-          <input
-            type="search"
-            value={recherche}
-            onChange={(e) => setRecherche(e.target.value)}
-            placeholder={t('N° ou titre du bon…')}
-            aria-label={t('Rechercher un bon')}
-          />
-        </label>
-      </div>
-
-      {erreur && <div className="sla-retards__erreur">{erreur}</div>}
-
-      <div className="sla-retards__table-wrap">
-        <table className="sla-retards__table">
-          <thead>
-            <tr>
-              <th>{t('N°')}</th>
-              <th>{t('Titre')}</th>
-              <th>{t('Priorité')}</th>
-              <th>{t('Délai dépassé')}</th>
-              <th>{t('Échéance réponse')}</th>
-              <th>{t('Échéance résolution')}</th>
-              <th>{t('Retard')}</th>
-              <th>{t('État')}</th>
-              <th aria-label={t('Ouvrir')} />
-            </tr>
-          </thead>
-          <tbody>
-            {chargement && !bons ? (
-              <tr><td colSpan={9} className="sla-retards__vide"><Loader2 size={20} className="sla-retards__spin" /> {t('Chargement...')}</td></tr>
-            ) : visibles.length === 0 ? (
-              <tr><td colSpan={9} className="sla-retards__vide">
-                {lignes.length === 0 ? t('Aucun bon en retard SLA. Tous les délais sont respectés.') : t('Aucun bon ne correspond à ces filtres.')}
-              </td></tr>
-            ) : visibles.map((l) => (
-              <tr key={l.bonMaintenanceId} className="sla-retards__ligne" onClick={() => onOuvrir(l)} title={t('Ouvrir le bon')}>
-                <td className="sla-retards__num">{l.num || `#${l.bonMaintenanceId}`}</td>
-                <td className="sla-retards__titre">{l.titre || '—'}</td>
-                <td>{l.priorite ? <span className={`sla-retards__prio sla-retards__prio--${l.priorite}`}>{l.priorite} · {t(prioriteLabel(l.priorite))}</span> : '—'}</td>
-                <td>
-                  <span className="sla-retards__types">
-                    {l.reponse && <span className="sla-retards__type">{t('Réponse')}</span>}
-                    {l.resolution && <span className="sla-retards__type sla-retards__type--resolution">{t('Résolution')}</span>}
-                  </span>
-                </td>
-                <td className={l.reponse ? 'sla-retards__depasse' : ''}>{formatDateSla(l.echeanceReponse)}</td>
-                <td className={l.resolution ? 'sla-retards__depasse' : ''}>{formatDateSla(l.echeanceResolution)}</td>
-                <td><strong className="sla-retards__retard">{formatRetard(l.retard)}</strong></td>
-                <td><BadgeStatut type="bon" valeur={l.etat} taille="petit" /></td>
-                <td>
-                  <button
-                    type="button"
-                    className="sla-retards__ouvrir"
-                    onClick={(e) => { e.stopPropagation(); onOuvrir(l); }}
-                    aria-label={t('Ouvrir le bon {num}', { num: l.num || l.bonMaintenanceId })}
-                  >
-                    <ArrowUpRight size={16} aria-hidden="true" />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-function MenuAchatsBons({ actif, allume, elements }) {
-  const [ouvert, setOuvert] = useState(false);
-  const zone = useRef(null);
-  useEffect(() => {
-    if (!ouvert) return undefined;
-    const fermerDehors = (e) => { if (zone.current && !zone.current.contains(e.target)) setOuvert(false); };
-    const fermerEchap = (e) => { if (e.key === 'Escape') setOuvert(false); };
-    document.addEventListener('mousedown', fermerDehors);
-    document.addEventListener('keydown', fermerEchap);
-    return () => { document.removeEventListener('mousedown', fermerDehors); document.removeEventListener('keydown', fermerEchap); };
-  }, [ouvert]);
-  useEffect(() => { if (!actif) setOuvert(false); }, [actif]);
-  return (
-    <div className="bons-achats" ref={zone}>
-      <button type="button" className={`bons-action-btn achats ${!actif ? 'disabled' : ''} ${allume ? 'allume' : ''} ${ouvert ? 'is-ouvert' : ''}`}
-        disabled={!actif} aria-haspopup="menu" aria-expanded={ouvert} onClick={() => setOuvert((o) => !o)}>
-        <ShoppingCart size={18} />
-        <span>{t('Achats')}</span>
-        {allume && <span className="bons-achats__point" aria-hidden="true" />}
-        <ChevronDown size={15} className="bons-outils__chevron" aria-hidden="true" />
-      </button>
-      {ouvert && (
-        <div className="bons-outils__menu bons-achats__menu" role="menu">
-          {elements.map((el) => {
-            const Icone = el.icone;
-            return (
-              <button key={el.cle} type="button" role="menuitem" disabled={!el.actif}
-                className={`bons-outils__item ${el.allume ? 'is-allume' : ''}`}
-                onClick={() => { setOuvert(false); el.onClick(); }}>
-                <span className="bons-outils__icone"><Icone size={17} aria-hidden="true" /></span>
-                <span className="bons-outils__textes"><strong>{el.label}</strong></span>
-                {el.allume && <span className="bons-achats__point" aria-hidden="true" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function MenuOutilsBons({ elements, nbAlertesMachines }) {
-  const [ouvert, setOuvert] = useState(false);
-  const zone = useRef(null);
-  useEffect(() => {
-    if (!ouvert) return undefined;
-    const fermerDehors = (e) => { if (zone.current && !zone.current.contains(e.target)) setOuvert(false); };
-    const fermerEchap = (e) => { if (e.key === 'Escape') setOuvert(false); };
-    document.addEventListener('mousedown', fermerDehors);
-    document.addEventListener('keydown', fermerEchap);
-    return () => { document.removeEventListener('mousedown', fermerDehors); document.removeEventListener('keydown', fermerEchap); };
-  }, [ouvert]);
-  const badge = (n) => (n > 99 ? '99+' : n);
-  return (
-    <div className="bons-outils" ref={zone}>
-      <button type="button" className={`bons-outils__bouton ${ouvert ? 'is-ouvert' : ''}`} aria-haspopup="menu" aria-expanded={ouvert}
-        onClick={() => setOuvert((o) => !o)}>
-        <LayoutGrid size={17} aria-hidden="true" />
-        <span>{t('Outils')}</span>
-        {nbAlertesMachines > 0 && <span className="bons-toggle-badge" aria-label={t('{n} éléments à traiter', { n: nbAlertesMachines })}>{badge(nbAlertesMachines)}</span>}
-        <ChevronDown size={15} className="bons-outils__chevron" aria-hidden="true" />
-      </button>
-      {ouvert && (
-        <div className="bons-outils__menu" role="menu">
-          {elements.map((el) => {
-            const Icone = el.icone;
-            return (
-              <button key={el.cle} type="button" role="menuitem" className="bons-outils__item"
-                onClick={() => { setOuvert(false); el.onClick(); }}>
-                <span className="bons-outils__icone"><Icone size={17} aria-hidden="true" /></span>
-                <span className="bons-outils__textes">
-                  <strong>{el.label}</strong>
-                  {el.aide && <small>{el.aide}</small>}
-                </span>
-                {el.badge > 0 && <span className="bons-toggle-badge">{badge(el.badge)}</span>}
-              </button>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

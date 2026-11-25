@@ -4368,6 +4368,12 @@ const en = {
   "Accueil": "Home",
   "Aucun technicien affecté cette semaine.": "No technician assigned this week.",
   "Affecter à": "Assign to",
+  "Aucun type de maintenance.": "No maintenance type.",
+  "Code, libellé, gamme...": "Code, label, procedure...",
+  "Désactiver le type": "Deactivate the type",
+  "Désactiver « {nom} » ?": "Deactivate “{nom}”?",
+  "Accès refusé": "Access denied",
+  "Vous n’avez pas le droit d’ouvrir cette page.": "You are not allowed to open this page.",
 };
 
 export default en;

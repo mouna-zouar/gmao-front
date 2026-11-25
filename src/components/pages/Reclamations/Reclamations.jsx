@@ -32,6 +32,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import FiltreLieu, { useCarteLieux, useFiltreLieu } from '../../ui/FiltreLieu/FiltreLieu';
+import { DROITS, useDroits } from '../../../constants/privileges';
 import { useActionsReclamation, actionsPossibles, estAffectee, reclamationVerrouillee, nomGroupe, nomTechnicien } from './ReclamationActions';
 import { ICONES_MODULES } from '../../../constants/modules';
 import reclamationService from '../../../services/Reclamationservice';
@@ -47,7 +48,7 @@ import ConfirmModal from '../../ui/modals/ConfirmModal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
 import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import { Modale } from '../../commun';
-import { RemiseEnServiceTab } from '../bonmaintenance/Bmdsousonglets';
+import { RemiseEnServiceTab } from '../bonmaintenance/onglets/RemiseEnServiceTab';
 import { t, tp, locale } from '../../../i18n';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import { STATUTS, optionsStatut } from '../../../constants/statuts';
@@ -616,7 +617,9 @@ export default function Reclamations() {
     }
     await apresAction();
   });
-  const possibles = actionsPossibles(selectedReclamation);
+  const aDroit = useDroits();
+  const peutSaisir = aDroit(DROITS.RECLAMATION_AJOUTER);
+  const possibles = actionsPossibles(selectedReclamation, aDroit);
   const lancerAction = (nom) => actionsRec.lancer(nom, selectedReclamation);
 
   const donneesTableau = () => {
@@ -731,11 +734,14 @@ export default function Reclamations() {
       </div>
 
       <div className="reclamations-actions-bar">
+        {peutSaisir && (
         <button className="reclamations-action-btn ajouter" onClick={openCreate}>
           <Plus size={18} />
           <span>{t("Ajouter")}</span>
         </button>
+        )}
 
+        {peutSaisir && (
         <button
           className={`reclamations-action-btn modifier ${!selectedReclamation || reclamationVerrouillee(selectedReclamation) ? 'disabled' : ''}`}
           disabled={!selectedReclamation || reclamationVerrouillee(selectedReclamation)}
@@ -745,6 +751,7 @@ export default function Reclamations() {
           <Edit size={18} />
           <span>{t("Modifier")}</span>
         </button>
+        )}
 
         <button
           className={`reclamations-action-btn details ${!selectedReclamation ? 'disabled' : ''}`}
@@ -755,6 +762,7 @@ export default function Reclamations() {
           <span>{t("Détails")}</span>
         </button>
 
+        {aDroit(DROITS.RECLAMATION_AFFECTER) && (
         <button
           className={`reclamations-action-btn affecter ${!possibles.affecter ? 'disabled' : ''}`}
           disabled={!possibles.affecter}
@@ -764,6 +772,7 @@ export default function Reclamations() {
           <UserCheck size={18} />
           <span>{estAffectee(selectedReclamation) ? t("Réaffecter") : t("Affecter")}</span>
         </button>
+        )}
 
         <MenuCycle
           possibles={possibles}
@@ -771,6 +780,7 @@ export default function Reclamations() {
           onChoisir={lancerAction}
         />
 
+        {aDroit(DROITS.BON_AJOUTER_MODIFIER) && (
         <button
           className={`reclamations-action-btn associer ${!selectedReclamation || reclamationVerrouillee(selectedReclamation) ? 'disabled' : ''}`}
           disabled={!selectedReclamation || reclamationVerrouillee(selectedReclamation)}
@@ -780,6 +790,7 @@ export default function Reclamations() {
           <Link size={18} />
           <span>{t("Associer")}</span>
         </button>
+        )}
 
         <button
           className={`reclamations-action-btn remise ${!bonDeLaSelection ? 'disabled' : ''}`}
@@ -793,6 +804,7 @@ export default function Reclamations() {
 
         <div className="reclamations-actions-divider" />
 
+        {peutSaisir && (
         <button
           className={`reclamations-action-btn supprimer ${(!selectedReclamation || isDeleting || reclamationVerrouillee(selectedReclamation)) ? 'disabled' : ''}`}
           disabled={!selectedReclamation || isDeleting || reclamationVerrouillee(selectedReclamation)}
@@ -802,6 +814,7 @@ export default function Reclamations() {
           <Trash2 size={18} />
           <span>{t("Supprimer")}</span>
         </button>
+        )}
 
         {!selectedReclamation && (
           <span className="reclamations-no-selection-message">
@@ -886,7 +899,7 @@ export default function Reclamations() {
         libelle={(n) => t('Réclamations sélectionnées : {n}', { n })}
         onToutSelectionner={toutCocher}
         onVider={viderCoches}
-        onSupprimer={handleDeleteSelection}
+        onSupprimer={peutSaisir ? handleDeleteSelection : undefined}
         suppressionEnCours={isDeleting}
       />
 

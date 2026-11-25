@@ -583,7 +583,7 @@ export default function ParametresSysteme() {
             </div>
           )}
           <div className="ps-carte ps-carte--libre">
-            <EquipementMaintenanceTypesSettings />
+            <EquipementMaintenanceTypesSettings integre />
           </div>
           <div className="ps-carte">
             <ReglesConditionnellesVue />

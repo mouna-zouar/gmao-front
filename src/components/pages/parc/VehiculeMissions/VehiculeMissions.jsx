@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DROITS, useDroits } from '../../../../constants/privileges';
 import { AlertTriangle, Car, CheckCircle2, Clock, ExternalLink, Eye, Loader2, MapPin, Navigation, Play, User, XCircle } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
@@ -31,6 +32,11 @@ const nomPersonne = (p) => (p ? `${p.nom || ''} ${p.prenom || ''}`.trim() : '');
 const km = (n) => t('{n} km', { n: Number(n).toLocaleString(locale()) });
 
 export default function VehiculeMissions() {
+  const aDroit = useDroits();
+  const peutModifier = aDroit(DROITS.MISSION_MODIFIER);
+  const peutTracer = aDroit(DROITS.TRACAGE);
+  const peutDemarrer = aDroit(DROITS.MISSION_EN_COURS);
+  const peutTerminer = aDroit(DROITS.MISSION_EFFECTUER);
   const [missions, setMissions] = useState([]);
   const [vehicules, setVehicules] = useState({});
   const [personnels, setPersonnels] = useState({});
@@ -185,12 +191,12 @@ export default function VehiculeMissions() {
   const actions = [
     { label: t('Détails'), icone: Eye, classe: 'cl-action--teal', besoinSelection: true,
       aide: t('Voir tous les détails de la mission, avec ses bons de carburant et ses amendes'), onClick: (m) => setDetailsId(m.id) },
-    { label: t('Traçage'), icone: Navigation, classe: 'cl-action--teal', besoinSelection: true,
-      aide: t('Ouvrir le traçage et les détails de la mission'), onClick: () => setTracageOuvert(true) },
-    { label: t('Démarrer'), icone: Play, classe: 'cl-action--bleu', besoinSelection: true, desactive: s?.etat !== 0,
-      aide: t('Démarrer la mission sélectionnée'), onClick: demarrer },
-    { label: t('Terminer'), icone: CheckCircle2, classe: 'cl-action--violet', besoinSelection: true, desactive: s?.etat !== 1,
-      aide: t('Terminer la mission sélectionnée'), onClick: () => setTerminerOuvert(true) },
+    ...(peutTracer ? [{ label: t('Traçage'), icone: Navigation, classe: 'cl-action--teal', besoinSelection: true,
+      aide: t('Ouvrir le traçage et les détails de la mission'), onClick: () => setTracageOuvert(true) }] : []),
+    ...(peutDemarrer ? [{ label: t('Démarrer'), icone: Play, classe: 'cl-action--bleu', besoinSelection: true, desactive: s?.etat !== 0,
+      aide: t('Démarrer la mission sélectionnée'), onClick: demarrer }] : []),
+    ...(peutTerminer ? [{ label: t('Terminer'), icone: CheckCircle2, classe: 'cl-action--violet', besoinSelection: true, desactive: s?.etat !== 1,
+      aide: t('Terminer la mission sélectionnée'), onClick: () => setTerminerOuvert(true) }] : []),
   ];
 
   const missionDetails = detailsId != null ? (missions.find((m) => m.id === detailsId) ?? null) : null;
@@ -207,10 +213,10 @@ export default function VehiculeMissions() {
           destination={missionDetails ? emplacements[missionDetails.destinationId] : null}
           version={detailsVersion}
           onBack={() => setDetailsId(null)}
-          onModifier={depuisDetails(() => setFenetre(true))}
-          onDemarrer={depuisDetails(demarrer)}
-          onTerminer={depuisDetails(() => setTerminerOuvert(true))}
-          onTracage={depuisDetails(() => setTracageOuvert(true))}
+          onModifier={peutModifier ? depuisDetails(() => setFenetre(true)) : undefined}
+          onDemarrer={peutDemarrer ? depuisDetails(demarrer) : undefined}
+          onTerminer={peutTerminer ? depuisDetails(() => setTerminerOuvert(true)) : undefined}
+          onTracage={peutTracer ? depuisDetails(() => setTracageOuvert(true)) : undefined}
         />
       ) : (
         <PageListe
@@ -239,11 +245,11 @@ export default function VehiculeMissions() {
           )}
           colonnesExport={colonnesExport}
           filtresImpression={[{ label: t('État'), valeur: filtreEtat !== 'all' ? etatLabel(Number(filtreEtat)) : '' }]}
-          onAjouter={() => { setSelection(null); setFenetre(true); }}
+          onAjouter={aDroit(DROITS.MISSION_DEMANDER) ? () => { setSelection(null); setFenetre(true); } : undefined}
           libelleAjouter={t('Nouvelle mission')}
-          onModifier={(m) => { setSelection(m); setFenetre(true); }}
+          onModifier={peutModifier ? (m) => { setSelection(m); setFenetre(true); } : undefined}
           onOuvrir={(m) => { setSelection(m); setDetailsId(m.id); }}
-          onSupprimer={async (m) => { await vehiculeMissionService.remove(m.id); setSelection(null); await charger(); }}
+          onSupprimer={aDroit(DROITS.MISSION_ANNULER) ? async (m) => { await vehiculeMissionService.remove(m.id); setSelection(null); await charger(); } : undefined}
           messageSuppression={(m) => t('Supprimer la mission « {num} » ? Cette action est irréversible.', { num: m.num || m.numero || m.id })}
           cleStockage="vehicule-missions"
           nomExport="vehicule-missions"

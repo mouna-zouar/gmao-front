@@ -9,17 +9,18 @@ import SearchableSelect from '../../commun/ListeRecherche';
 import Modale from '../../commun/Modale';
 import Onglets from '../../commun/Onglets';
 import { t } from '../../../i18n';
+import { DROITS_ACTIONS_RECLAMATION } from '../../../constants/privileges';
 import './ReclamationActions.css';
 
 export const ETAT_REC = { NOUVEAU: 0, EN_COURS: 1, CLOTUREE: 2, RESOLUE: 3, ANNULEE: 4, EN_FILE: 5 };
 
 export const reclamationVerrouillee = (r) => [ETAT_REC.RESOLUE, ETAT_REC.CLOTUREE, ETAT_REC.ANNULEE].includes(Number(r?.etat));
 
-export function actionsPossibles(reclamation) {
+export function actionsPossibles(reclamation, aDroit = () => true) {
   if (!reclamation) return {};
   const e = reclamation.etat ?? ETAT_REC.NOUVEAU;
   const active = e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE || e === ETAT_REC.EN_COURS;
-  return {
+  const possibles = {
     affecter: !reclamationVerrouillee(reclamation),
     prendre: e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE,
     resoudre: active,
@@ -27,6 +28,7 @@ export function actionsPossibles(reclamation) {
     rouvrir: e === ETAT_REC.RESOLUE,
     annuler: e === ETAT_REC.NOUVEAU || e === ETAT_REC.EN_FILE,
   };
+  return Object.fromEntries(Object.entries(possibles).map(([cle, oui]) => [cle, oui && aDroit(DROITS_ACTIONS_RECLAMATION[cle])]));
 }
 
 export const membresGroupe = (r) => (Array.isArray(r?.groupePersonnels) ? r.groupePersonnels : []);

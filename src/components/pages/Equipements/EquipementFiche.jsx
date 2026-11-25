@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { DROITS, useDroits } from '../../../constants/privileges';
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Activity, AlertTriangle, ArrowLeft, Boxes, CalendarClock, ChevronRight, Coins, Download, FileText, History,
-  Image as IconeImage, Info, Loader2, LogIn, Network, Paperclip, Printer, QrCode, ShieldCheck, Sparkles, Timer, Trash2, Upload, Wrench, X,
+  Image as IconeImage, Info, Loader2, LogIn, Network, Paperclip, Printer, QrCode, ShieldCheck, Sparkles, Trash2, Upload, Wrench, X,
 } from 'lucide-react';
 import equipementService from '../../../services/equipementService';
 import reclamationService from '../../../services/Reclamationservice';
@@ -11,7 +12,7 @@ import authService from '../../../services/Authservice';
 import serviceService from '../../../services/Serviceservice';
 import etatEquipementService from '../../../services/Etatequipementservice';
 import { exporterHistoriquePDF } from '../Etatequipement/Etatequipement';
-import { Badge, Onglets, Stat } from '../../commun';
+import { Badge, Onglets } from '../../commun';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
 import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
@@ -24,7 +25,7 @@ import {
   CATEGORIES_DOCUMENT, CRITICITES, ETATS_BON, ETATS_EQUIPEMENT, ETATS_RECLAMATION,
   dateCourte, duree, garantieEnClair, montant, taille,
 } from './equipementLibelles';
-import { t, tp, locale } from '../../../i18n';
+import { t, tp } from '../../../i18n';
 import './Equipements.css';
 import './EquipementFiche.css';
 import { useAppDispatch } from '../../../store/hooks';
@@ -88,7 +89,7 @@ function ModaleEtiquette({ identite, onClose }) {
   );
 }
 
-function Documents({ equipementId, documents, onChange }) {
+function Documents({ equipementId, documents, onChange, peutModifier = true }) {
   const [ouvert, setOuvert] = useState(false);
   const [fichier, setFichier] = useState(null);
   const [titre, setTitre] = useState('');
@@ -130,7 +131,7 @@ function Documents({ equipementId, documents, onChange }) {
     <Bloc
       titre={t('Documents')}
       icone={Paperclip}
-      action={!ouvert && (
+      action={!ouvert && peutModifier && (
         <button type="button" className="eq-lien" onClick={() => setOuvert(true)}>
           <Upload size={15} /> {t('Ajouter')}
         </button>
@@ -189,7 +190,7 @@ function Documents({ equipementId, documents, onChange }) {
                     <button type="button" className="eq-lien eq-lien--alerte" onClick={() => supprimer(d.id)}>{t('Supprimer')}</button>
                     <button type="button" className="eq-lien" onClick={() => setASupprimer(null)}>{t('Annuler')}</button>
                   </span>
-                ) : (
+                ) : peutModifier && (
                   <button type="button" className="eq-ico" onClick={() => setASupprimer(d.id)} aria-label={t('Supprimer « {nom} »', { nom: d.titre })}>
                     <Trash2 size={16} />
                   </button>
@@ -235,6 +236,8 @@ export default function EquipementFiche() {
   const [position, setPosition] = useState(null);
   const [maintenant] = useState(() => Date.now());
   const connecte = !!(authService.getCurrentUser() && authService.getSessionId());
+  const aDroit = useDroits();
+  const peutModifier = connecte && aDroit(DROITS.EQUIPEMENT_MODIFIER);
   const onglet = params.get('onglet') || 'infos';
   const changerOnglet = (cle) => setParams((p) => { const n = new URLSearchParams(p); n.set('onglet', cle); return n; }, { replace: true });
 
@@ -313,20 +316,16 @@ export default function EquipementFiche() {
     );
   }
 
-  const { identite, etat, garantie, disponibilite: dispo, couts, pannes, reclamations, preventif, documents } = fiche;
+  const { identite, etat, garantie, pannes, reclamations, preventif, documents } = fiche;
   const etatDef = ETATS_EQUIPEMENT[etat?.etatActuel];
   const critDef = CRITICITES[etat?.criticite];
   const garantieTxt = garantieEnClair(garantie);
-  const dispoConnue = dispo && ((dispo.dureeDisponibleHeures || 0) + (dispo.dureeIndisponibleHeures || 0)) > 0;
   const age = identite.dateExploitation
     ? Math.floor((maintenant - new Date(identite.dateExploitation).getTime()) / (365.25 * 24 * 3600 * 1000))
     : null;
   const garantiePct = garantie?.debut && garantie?.fin
     ? Math.min(100, Math.max(0, ((maintenant - new Date(garantie.debut)) / (new Date(garantie.fin) - new Date(garantie.debut))) * 100))
     : null;
-  const nf = (v) => new Intl.NumberFormat(locale(), { maximumFractionDigits: 1 }).format(v);
-  const taux = dispoConnue ? dispo.tauxDisponibilitePct : null;
-  const coutAlerte = couts?.pourcentagePrixAchat != null && couts.pourcentagePrixAchat >= 50;
   const preventifEnRetard = preventif.filter((p) => p.joursRestants != null && p.joursRestants < 0).length;
   const reclamationsOuvertes = reclamations.filter((r) => [0, 1, 5].includes(r.etat)).length;
 
@@ -335,10 +334,8 @@ export default function EquipementFiche() {
     { cle: 'pannes', label: t('Pannes'), icone: Wrench, n: pannes.length },
     { cle: 'reclamations', label: t('Réclamations'), icone: AlertTriangle, n: reclamations.length, ton: reclamationsOuvertes ? 'rouge' : undefined },
     { cle: 'preventif', label: t('Préventif'), icone: CalendarClock, n: preventif.length, ton: preventifEnRetard ? 'rouge' : undefined },
-    ...(connecte ? [
-      { cle: 'etats', label: t('États'), icone: History },
-      { cle: 'supervision', label: t('Réseau, agent et conditionnelle'), icone: Network },
-    ] : []),
+    ...(connecte ? [{ cle: 'etats', label: t('États'), icone: History }] : []),
+    ...(peutModifier ? [{ cle: 'supervision', label: t('Réseau, agent et conditionnelle'), icone: Network }] : []),
     { cle: 'documents', label: t('Documents'), icone: Paperclip, n: documents.length },
   ];
   const ongletActif = onglets.some((o) => o.cle === onglet) ? onglet : 'infos';
@@ -380,9 +377,11 @@ export default function EquipementFiche() {
           <button type="button" className="cl-action" onClick={retour}>
             <ArrowLeft size={18} className="rtl-miroir" /> <span>{t('Retour')}</span>
           </button>
-          <button type="button" className="cl-action cl-action--teal" onClick={() => setEtiquette(true)}>
-            <QrCode size={18} /> <span>{t('Étiquette QR')}</span>
-          </button>
+          {(!connecte || aDroit(DROITS.EQUIPEMENT_ETIQUETTES)) && (
+            <button type="button" className="cl-action cl-action--teal" onClick={() => setEtiquette(true)}>
+              <QrCode size={18} /> <span>{t('Étiquette QR')}</span>
+            </button>
+          )}
           {connecte && (
             <button type="button" className="cl-action cl-action--violet" onClick={demanderIa}>
               <Sparkles size={18} /> <span>{t('Demander à l’IA')}</span>
@@ -404,16 +403,6 @@ export default function EquipementFiche() {
         <p className="eq-avertissement">{t('La liste des équipements est injoignable : marque, modèle, garantie et prix d’achat ne sont pas affichés.')}</p>
       )}
 
-      <section className="eqf-stats" aria-label={t('Indicateurs')}>
-        <Stat icone={Activity} ton={taux == null ? 'neutre' : taux >= 95 ? 'vert' : taux >= 80 ? 'ambre' : 'rouge'}
-          valeur={taux == null ? '—' : `${nf(taux)} %`} label={t('Disponibilité sur 12 mois')}
-          sous={dispoConnue ? tp('panne', dispo.nbPannes) : t('Pas encore de données')} />
-        <Stat icone={Timer} ton="bleu" valeur={duree(dispo?.mtbfHeures)} label={t('Temps moyen entre pannes')} sous="MTBF" />
-        <Stat icone={Wrench} ton="violet" valeur={duree(dispo?.mttrHeures)} label={t('Temps moyen de réparation')} sous="MTTR" />
-        <Stat icone={Coins} ton={coutAlerte ? 'rouge' : 'ambre'} valeur={montant(couts?.total)} label={t('Coût des réparations')}
-          sous={couts?.pourcentagePrixAchat != null ? t('{n} % du prix d’achat', { n: nf(couts.pourcentagePrixAchat) }) : tp('bon de maintenance', pannes.length)} />
-      </section>
-
       <Onglets onglets={onglets} actif={ongletActif} onChanger={changerOnglet} ariaLabel={t('Rubriques de la fiche')} />
 
       <div className="eqf-contenu" role="tabpanel">
@@ -431,7 +420,7 @@ export default function EquipementFiche() {
               </dl>
             </Bloc>
             <Bloc titre={t('Position')} icone={Network}>
-              <PositionEquipement equipementId={identite.id} peutModifier={connecte} onChange={setPosition} />
+              <PositionEquipement equipementId={identite.id} peutModifier={peutModifier} onChange={setPosition} />
             </Bloc>
             <Bloc titre={t('Achat et garantie')} icone={Coins}>
               <dl className="eqf-lignes">
@@ -600,7 +589,7 @@ export default function EquipementFiche() {
           </div>
         )}
 
-        {ongletActif === 'documents' && <Documents equipementId={identite.id} documents={documents} onChange={charger} />}
+        {ongletActif === 'documents' && <Documents equipementId={identite.id} documents={documents} onChange={charger} peutModifier={peutModifier} />}
       </div>
 
       {etiquette && <ModaleEtiquette identite={identite} onClose={fermerEtiquette} />}

@@ -1,4 +1,5 @@
 import { ICONES_MODULES as M } from './modules';
+import { droitPage } from './privileges';
 
 
 const grand = (Icone) => <Icone className="nav-icon-svg" strokeWidth={1.75} aria-hidden="true" />;
@@ -73,8 +74,8 @@ const ALL_ITEMS = [
             { label: 'Équipements', path: '/equipements', icon: petit(M.equipements), motsCles: 'parc immobilisations état en service en panne hors service famille matériel cubix' },
             { label: 'Plan de renouvellement', path: '/renouvellement', icon: petit(M.renouvellement), motsCles: 'remplacement investissement budget fin de vie vétusté amortissement maximo' },
             { label: 'Supervision', path: '/supervision', icon: petit(M.supervision), motsCles: 'temps réel capteurs sondes réseau en ligne hors ligne agents alertes machines' },
-            { label: 'Métrologie', path: '/metrologie', icon: petit(M.metrologie), motsCles: 'étalonnage vérification contrôle qualité sécurité électrique certificat échéance' },
-            { label: 'Matériovigilance', path: '/materiovigilance', icon: petit(M.materiovigilance), motsCles: 'incident dispositif médical déclaration autorité vigilance' },
+           // { label: 'Métrologie', path: '/metrologie', icon: petit(M.metrologie), motsCles: 'étalonnage vérification contrôle qualité sécurité électrique certificat échéance' },
+          //  { label: 'Matériovigilance', path: '/materiovigilance', icon: petit(M.materiovigilance), motsCles: 'incident dispositif médical déclaration autorité vigilance' },
         ],
     },
 
@@ -93,10 +94,10 @@ const ALL_ITEMS = [
         icon: grand(M.parametres),
         children: [
             { label: 'Paramètres système', path: '/parametres-systeme', icon: petit(M.parametresSysteme) },
-            { label: 'Tables de paramétrage', path: '/tables-parametrage', icon: petit(M.tablesParametrage), motsCles: 'listes valeurs' },
-            { label: 'Référentiel des tâches', path: '/taches', icon: petit(M.referentielTaches), motsCles: 'tâches types' },
+          //  { label: 'Tables de paramétrage', path: '/tables-parametrage', icon: petit(M.tablesParametrage), motsCles: 'listes valeurs' },
+          //  { label: 'Référentiel des tâches', path: '/taches', icon: petit(M.referentielTaches), motsCles: 'tâches types' },
             { label: 'Gammes d’intervention', path: '/gammes', icon: petit(M.gammes), motsCles: 'gammes procédures modèles job plans' },
-            { label: 'Compteurs', path: '/referentiels/compteurs', icon: petit(M.compteurs), motsCles: 'référentiel' },
+          //  { label: 'Compteurs', path: '/referentiels/compteurs', icon: petit(M.compteurs), motsCles: 'référentiel' },
         ],
     },
 
@@ -160,6 +161,25 @@ export const NAV_SECTIONS = [
 ];
 
 export const NAV_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
+
+export function filtrerItems(items, aDroit) {
+    return items
+        .map((item) => (item.children ? { ...item, children: item.children.filter((c) => aDroit(droitPage(c.path))) } : item))
+        .filter((item) => (item.children ? item.children.length > 0 : aDroit(droitPage(item.path))))
+        .map((item) => (item.children && !aDroit(droitPage(item.path)) ? { ...item, path: item.children[0].path } : item));
+}
+
+export function sectionsPermises(aDroit) {
+    return NAV_SECTIONS
+        .map((section) => ({ ...section, items: filtrerItems(section.items, aDroit) }))
+        .filter((section) => section.items.length > 0);
+}
+
+export const pagesDe = (sections) => sections.flatMap((section) => section.items).flatMap((item) =>
+    item.children
+        ? item.children.map((c) => ({ ...c, parent: item }))
+        : [{ path: item.path, label: item.label, icon: item.icon, motsCles: item.motsCles, parent: item, racine: true }],
+);
 
 export const NAV_PAGES = NAV_ITEMS.flatMap((item) =>
     item.children

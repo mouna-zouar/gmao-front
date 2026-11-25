@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { DROITS, useDroits } from '../../../constants/privileges';
 import jsPDF from 'jspdf';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import equipementService from '../../../services/equipementService';
@@ -231,7 +232,9 @@ export default function EtatEquipement({ isModal = false }) {
 
 function EquipementsVues() {
   const [params, setParams] = useSearchParams();
-  const vue = ['arbre', 'preventif'].includes(params.get('vue')) ? params.get('vue') : 'liste';
+  const aDroit = useDroits();
+  const permises = [aDroit(DROITS.EQUIPEMENT_LIEUX) && 'arbre', aDroit(DROITS.EQUIPEMENT_PREVENTIF) && 'preventif'].filter(Boolean);
+  const vue = permises.includes(params.get('vue')) ? params.get('vue') : 'liste';
   const changer = (v) => setParams((p) => {
     const n = new URLSearchParams(p);
     if (v === 'liste') n.delete('vue'); else n.set('vue', v);
@@ -241,22 +244,23 @@ function EquipementsVues() {
     <Onglets actif={vue} onChanger={changer} ariaLabel={t('Vues')}
       onglets={[
         { cle: 'liste', label: t('Liste'), icone: List },
-        { cle: 'arbre', label: t('Arborescence'), icone: Network },
-        { cle: 'preventif', label: t('Paramètres préventifs'), icone: Settings },
+        ...(permises.includes('arbre') ? [{ cle: 'arbre', label: t('Arborescence'), icone: Network }] : []),
+        ...(permises.includes('preventif') ? [{ cle: 'preventif', label: t('Paramètres préventifs'), icone: Settings }] : []),
       ]} />
   );
   if (vue === 'liste') return <ListeEquipements vues={vues} />;
+  if (vue === 'preventif') return <EquipementMaintenanceTypesSettings vues={vues} />;
   return (
     <>
       <div className="leq-vues">{vues}</div>
-      {vue === 'arbre' && <main className="cl-page eq-theme arb-page"><Arborescence /></main>}
-      {vue === 'preventif' && <main className="cl-page eq-theme leq-preventif"><EquipementMaintenanceTypesSettings /></main>}
+      <main className="cl-page eq-theme arb-page"><Arborescence /></main>
     </>
   );
 }
 
 function EtatEquipementCompact({ isModal = false }) {
   const navigate = useNavigate();
+  const peutPreventif = useDroits()(DROITS.EQUIPEMENT_PREVENTIF);
   const [etats, setEtats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -528,15 +532,17 @@ function EtatEquipementCompact({ isModal = false }) {
       ) : null}
       actions={(
         <>
-          <button type="button" className="vl-btn" onClick={() => setSettingsOpen((v) => !v)}>
-            <IconSettings />
-            <span>{settingsOpen ? t("Fermer les paramètres") : t("Paramètres préventifs")}</span>
-          </button>
+          {peutPreventif && (
+            <button type="button" className="vl-btn" onClick={() => setSettingsOpen((v) => !v)}>
+              <IconSettings />
+              <span>{settingsOpen ? t("Fermer les paramètres") : t("Paramètres préventifs")}</span>
+            </button>
+          )}
           {boutonRecalcul}
         </>
       )}
     >
-      {!isModal && settingsOpen && (
+      {!isModal && settingsOpen && peutPreventif && (
         <section>
           <EquipementMaintenanceTypesSettings />
         </section>

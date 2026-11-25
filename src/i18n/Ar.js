@@ -4367,6 +4367,12 @@ const ar = {
   "Accueil": "الرئيسية",
   "Aucun technicien affecté cette semaine.": "لا يوجد فني مكلَّف هذا الأسبوع.",
   "Affecter à": "إسناد إلى",
+  "Aucun type de maintenance.": "لا يوجد نوع صيانة.",
+  "Code, libellé, gamme...": "الرمز، التسمية، الإجراء...",
+  "Désactiver le type": "تعطيل النوع",
+  "Désactiver « {nom} » ?": "تعطيل « {nom} »؟",
+  "Accès refusé": "الدخول مرفوض",
+  "Vous n’avez pas le droit d’ouvrir cette page.": "ليس لديك الحق في فتح هذه الصفحة.",
 };
 
 export default ar;

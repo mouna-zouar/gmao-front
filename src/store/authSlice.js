@@ -38,7 +38,7 @@ export const { deconnecter, rechargerSession } = authSlice.actions;
 export const selectUtilisateur = (s) => s.auth.user;
 export const selectEstConnecte = (s) => Boolean(s.auth.user);
 export const selectPrivileges = (s) => s.auth.user?.privileges ?? [];
-export const selectADroit = (code) => (s) => (s.auth.user?.privileges ?? []).includes(code);
+export const selectADroit = (code) => (s) => !code || Boolean(s.auth.user?.admin) || (s.auth.user?.privileges ?? []).includes(code);
 export const selectEstAdmin = (s) => Boolean(s.auth.user?.admin);
 
 export default authSlice.reducer;

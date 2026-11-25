@@ -206,12 +206,16 @@ export default function VehiculeMissionDetails({
           <ArrowLeft size={18} className="vmd-retour" /> {t('Toutes les missions')}
         </button>
         <div className="rcx-barre-droite">
-          <button type="button" className="rcx-btn rcx-btn--clair" onClick={onModifier}>
-            <Edit size={17} /> {t('Modifier')}
-          </button>
-          <button type="button" className="rcx-btn rcx-btn--clair" onClick={onTracage}>
-            <Navigation size={17} /> {t('Traçage')}
-          </button>
+          {onModifier && (
+            <button type="button" className="rcx-btn rcx-btn--clair" onClick={onModifier}>
+              <Edit size={17} /> {t('Modifier')}
+            </button>
+          )}
+          {onTracage && (
+            <button type="button" className="rcx-btn rcx-btn--clair" onClick={onTracage}>
+              <Navigation size={17} /> {t('Traçage')}
+            </button>
+          )}
           <button type="button" className="rcx-btn rcx-btn--clair" onClick={imprimer} disabled={chargement}>
             <Printer size={17} /> {t('Imprimer la fiche')}
           </button>
@@ -276,7 +280,7 @@ export default function VehiculeMissionDetails({
                 <p className="rcx-maintenant-sur">{mission.etat <= 1 ? t('À faire maintenant') : t('Situation')}</p>
                 <h2 className="rcx-maintenant-titre">{t(action.titre)}</h2>
                 <p className="rcx-maintenant-texte">{t(action.texte)}</p>
-                {action.bouton && (
+                {action.bouton && ({ demarrer: onDemarrer, terminer: onTerminer })[action.bouton.action] && (
                   <div className="rcx-maintenant-actions">
                     <button type="button" className="rcx-btn rcx-btn--principal" onClick={() => executer(action.bouton)}>
                       {t(action.bouton.label)}
@@ -292,9 +296,11 @@ export default function VehiculeMissionDetails({
           <section className="rcx-bons" aria-label={t('Bons de carburant')}>
             <div className="rcx-bons-entete">
               <h2><Fuel size={19} className="vmd-icone-titre" /> {t('Bons de carburant')} <span className="vmd-compte">{bons.length}</span></h2>
-              <button type="button" className="rcx-btn rcx-btn--fantome" onClick={onModifier}>
-                <Edit size={16} /> {t('Gérer les pleins')}
-              </button>
+              {onModifier && (
+                <button type="button" className="rcx-btn rcx-btn--fantome" onClick={onModifier}>
+                  <Edit size={16} /> {t('Gérer les pleins')}
+                </button>
+              )}
             </div>
             {chargement ? (
               <div className="rcx-vide"><p><Loader2 size={18} className="rcx-tourne" /> {t('Chargement...')}</p></div>
@@ -337,9 +343,11 @@ export default function VehiculeMissionDetails({
           <section className="rcx-bons" aria-label={t('Amendes')}>
             <div className="rcx-bons-entete">
               <h2><Receipt size={19} className="vmd-icone-titre" /> {t('Amendes')} <span className="vmd-compte">{amendes.length}</span></h2>
-              <button type="button" className="rcx-btn rcx-btn--fantome" onClick={onModifier}>
-                <Edit size={16} /> {t('Gérer les amendes')}
-              </button>
+              {onModifier && (
+                <button type="button" className="rcx-btn rcx-btn--fantome" onClick={onModifier}>
+                  <Edit size={16} /> {t('Gérer les amendes')}
+                </button>
+              )}
             </div>
             {chargement ? (
               <div className="rcx-vide"><p><Loader2 size={18} className="rcx-tourne" /> {t('Chargement...')}</p></div>
