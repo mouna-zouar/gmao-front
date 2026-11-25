@@ -1,5 +1,4 @@
 .vr-vide { display: flex; align-items: center; gap: 8px; margin: 0; padding: 14px; border: 1px dashed #e2e8f0; border-radius: 10px; color: #64748b; font-size: 0.86rem; }
-.vr-lien { padding: 0; border: 0; background: none; font: inherit; font-weight: 700; color: var(--g-brand-600, #067d8b); cursor: pointer; text-decoration: underline; }
 .vr-famille { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; font-size: 0.82rem; font-weight: 700; color: #475569; }
 .vr-famille span { padding: 2px 9px; border-radius: 999px; background: #f1f5f9; color: #334155; font-variant-numeric: tabular-nums; }
 .vr-liste { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; counter-reset: vr; }
@@ -13,6 +12,5 @@
 .vr-btn { padding: 6px 11px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font: inherit; font-size: 0.8rem; font-weight: 700; color: #475569; cursor: pointer; }
 .vr-btn:hover { border-color: #94a3b8; }
 .vr-btn.is-choisi { border-color: var(--g-brand-500, #0794a4); background: var(--g-brand-500, #0794a4); color: #fff; }
-.vr-btn.is-choisi.is-na { border-color: #94a3b8; background: #94a3b8; }
 @media (max-width: 640px) { .vr-point { flex-wrap: wrap; } .vr-choix { width: 100%; justify-content: flex-end; } }
 

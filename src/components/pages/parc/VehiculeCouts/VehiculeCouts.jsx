@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { exporterExcel } from '../../../../utils/exportExcel';
 import {
   Wallet, Car, Plus, Download, Printer, AlertTriangle, Loader2, Info,
   ArrowUp, ArrowDown, ArrowUpDown, ChevronRight,
@@ -92,17 +93,9 @@ export default function VehiculeCouts({ isModal = false }) {
     ]);
     return { entetes, lignes };
   };
-  const exporterCsv = () => {
+  const exporterTableur = () => {
     const { entetes, lignes } = tableau();
-    const csv = [entetes, ...lignes].map((l) => l.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(';')).join('\r\n');
-    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `cout-vehicules-${debut}-${fin}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    exporterExcel({ fichier: `cout-vehicules-${debut}-${fin}`, entetes, lignes, feuille: t('Coûts') });
   };
   const imprimer = () => {
     const { entetes, lignes } = tableau();
@@ -159,7 +152,7 @@ export default function VehiculeCouts({ isModal = false }) {
         </button>
         <span className="vco-astuce"><Info size={14} aria-hidden="true" /> {t('Assurance, vignette, visite technique : saisissez-les pour un coût complet.')}</span>
         <div className="vin-export-stack vco-exports">
-          <button type="button" className="vin-export-btn excel" onClick={exporterCsv} title={t('Export CSV')} aria-label={t('Export CSV')} disabled={!vehicules.length}><Download size={16} strokeWidth={2.5} /></button>
+          <button type="button" className="vin-export-btn excel" onClick={exporterTableur} title={t('Exporter en Excel')} aria-label={t('Exporter en Excel')} disabled={!vehicules.length}><Download size={16} strokeWidth={2.5} /></button>
           <button type="button" className="vin-export-btn print" onClick={imprimer} title={t('Imprimer')} aria-label={t('Imprimer')} disabled={!vehicules.length}><Printer size={16} strokeWidth={2.5} /></button>
         </div>
       </div>

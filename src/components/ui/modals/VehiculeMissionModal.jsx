@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Button from '../Button';
 import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../store/referentiels';
 import personnelService from '../../../services/Personnelservice';
@@ -40,7 +40,6 @@ import {
   
   ShieldCheck,
   ShieldAlert,
-  ChevronDown,
   Check,
   Fuel,
   Plus,
@@ -49,6 +48,7 @@ import {
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeMissionModal.css';
+import SearchableSelect from '../../commun/ListeRecherche';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -135,161 +135,6 @@ function toNumOrNull(value) {
   const number = Number(value);
   return Number.isNaN(number) ? null : number;
 }
-
-const SearchableSelect = ({
-  id,
-  name,
-  value,
-  onChange,
-  options,
-  getValue = (o) => o.id,
-  getLabel = (o) => o.label ?? o.nom ?? String(o),
-  isOptionDisabled = () => false,
-  getOptionHint = () => null,
-  placeholder = 'Sélectionner...',
-  emptyMessage = 'Aucun résultat',
-  disabled = false,
-  loading = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const containerRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const selected = options.find((o) => String(getValue(o)) === String(value));
-  const selectedLabel = selected ? getLabel(selected) : '';
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-        setSearch('');
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-        setSearch('');
-        inputRef.current?.blur();
-      }
-    };
-    if (isOpen) document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
-
-  const handleFocus = () => {
-    if (disabled) return;
-    setIsOpen(true);
-    setSearch(selectedLabel);
-    setTimeout(() => inputRef.current?.select(), 0);
-  };
-
-  const handleInputChange = (e) => {
-    setSearch(e.target.value);
-    if (!isOpen) setIsOpen(true);
-  };
-
-  const handleSelect = (opt) => {
-    if (isOptionDisabled(opt)) return;
-    onChange({ target: { name, value: String(getValue(opt)) } });
-    setIsOpen(false);
-    setSearch('');
-    inputRef.current?.blur();
-  };
-
-  const handleClear = (e) => {
-    e.stopPropagation();
-    onChange({ target: { name, value: '' } });
-    setSearch('');
-    inputRef.current?.focus();
-  };
-
-  const term = search.trim().toLowerCase();
-  const isSelectedLabel = selected && term === selectedLabel.toLowerCase();
-  const filtered = (!term || isSelectedLabel)
-    ? options
-    : options.filter((o) => getLabel(o).toLowerCase().includes(term));
-
-  const displayValue = isOpen ? search : selectedLabel;
-
-  return (
-    <div className="bmm-searchable" ref={containerRef}>
-      <div className={`bmm-searchable-input-wrap ${isOpen ? 'is-open' : ''}`}>
-        <Search size={15} strokeWidth={2.3} className="bmm-searchable-icon" />
-
-        <input
-          ref={inputRef}
-          id={id}
-          type="text"
-          className="bmm-searchable-input"
-          value={displayValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          placeholder={loading ? t('Chargement...') : (selected ? '' : t(placeholder))}
-          disabled={disabled || loading}
-          autoComplete="off"
-        />
-
-        {(selected || search) && !disabled && !loading && (
-          <button
-            type="button"
-            className="bmm-searchable-clear-inline"
-            onClick={handleClear}
-            aria-label={t('Effacer')}
-            tabIndex={-1}
-          >
-            <X size={13} strokeWidth={2.5} />
-          </button>
-        )}
-
-        <ChevronDown
-          size={15}
-          strokeWidth={2.3}
-          className={`bmm-searchable-chevron ${isOpen ? 'rotated' : ''}`}
-        />
-      </div>
-
-      {isOpen && (
-        <div className="bmm-searchable-menu">
-          <div className="bmm-searchable-options">
-            {filtered.length === 0 ? (
-              <div className="bmm-searchable-empty">{t(emptyMessage)}</div>
-            ) : (
-              filtered.map((o) => {
-                const val = String(getValue(o));
-                const isSelected = val === String(value);
-                const optDisabled = isOptionDisabled(o);
-                const hint = getOptionHint(o);
-                return (
-                  <button
-                    key={val}
-                    type="button"
-                    className={`bmm-searchable-option ${isSelected ? 'is-selected' : ''} ${optDisabled ? 'is-disabled' : ''}`}
-                    onClick={() => handleSelect(o)}
-                    disabled={optDisabled}
-                  >
-                    <span className="bmm-searchable-option-main">
-                      <span className="bmm-searchable-option-label">{getLabel(o)}</span>
-                      {hint && (
-                        <span className="bmm-searchable-option-hint">{hint}</span>
-                      )}
-                    </span>
-                    {isSelected && <Check size={14} strokeWidth={2.5} />}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEditing }) => {
   const [loading, setLoading] = useState(false);

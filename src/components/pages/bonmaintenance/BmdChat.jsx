@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
-  AlertCircle, ArrowDown, Loader2, LogIn, Lock, MessageCircle, RefreshCw, SendHorizontal, UserX,
+  AlertCircle, ArrowDown, Check, CheckCheck, Loader2, LogIn, Lock, MessageCircle, RefreshCw, SendHorizontal, UserX,
 } from 'lucide-react';
 import chatBonService, { typeErreurChat } from '../../../services/chatBonService';
 import authService from '../../../services/Authservice';
@@ -8,6 +8,7 @@ import { t, tp, locale } from '../../../i18n';
 import './BmdChat.css';
 
 const LONGUEUR_MAX = 2000;
+const TAILLE_PAGE = 15;
 const ECART_GROUPE_MS = 5 * 60 * 1000;
 
 const ROLES_CHAT = {
@@ -67,6 +68,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
   const [plusAnciens, setPlusAnciens] = useState(false);
   const [chargementAnciens, setChargementAnciens] = useState(false);
   const [enLigne, setEnLigne] = useState(() => new Set());
+  const [lectures, setLectures] = useState({});
   const [connecte, setConnecte] = useState(null);
   const [texte, setTexte] = useState('');
   const [enAttente, setEnAttente] = useState([]);
@@ -102,6 +104,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
         setMoi(conv.moiPersonnelId);
         setMessages(conv.messages || []);
         setPlusAnciens(!!conv.plusAnciens);
+        setLectures(Object.fromEntries((conv.lectures || []).map((l) => [l.personnelId, l.dernierMessageLuId || 0])));
         setEnLigne(new Set((conv.participants || []).filter((p) => p.enLigne).map((p) => p.personnelId)));
         dernierLuEnvoye.current = conv.dernierMessageLuId || 0;
         const premierNonLu = (conv.messages || []).find(
@@ -113,6 +116,11 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
         fermerFlux = service.ouvrirFlux(bonId, {
           onMessage: (m) => setMessages((prev) => fusionner(prev, [m])),
           onPresence: (ids) => setEnLigne(new Set(ids || [])),
+          onLu: (l) => {
+            if (!l?.personnelId) return;
+            setLectures((prev) => ((prev[l.personnelId] || 0) >= (l.dernierMessageLuId || 0)
+              ? prev : { ...prev, [l.personnelId]: l.dernierMessageLuId }));
+          },
           onConnecte: () => {
             setConnecte(true);
             if (dernierIdRef.current) {
@@ -196,7 +204,7 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
       const anciens = await service.getMessagesAvant(bonId, messages[0].id);
       hauteurAvantAnciens.current = listeRef.current?.scrollHeight ?? null;
       setMessages((prev) => fusionner(prev, anciens));
-      setPlusAnciens(anciens.length >= 50);
+      setPlusAnciens(anciens.length >= TAILLE_PAGE);
     } catch {
     } finally {
       setChargementAnciens(false);
@@ -264,6 +272,11 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
   }, [messages, separateurId]);
 
   const nbEnLigne = participants.filter((p) => enLigne.has(p.personnelId)).length;
+
+  const autres = participants.filter((p) => p.personnelId !== moi);
+  const lecteursDe = (m) => autres.filter((p) => (lectures[p.personnelId] || 0) >= m.id);
+  const nomCourt = (p) => (p.nom || t('Personnel #{id}', { id: p.personnelId })).split(/\s+/)[0];
+  const dernierDeMoi = [...messages].reverse().find((m) => m.personnelId === moi);
 
   if (statut === 'chargement') {
     return (
@@ -407,8 +420,31 @@ export default function BmdChat({ bonId, onNonLusChange, onDernierMessage, servi
                   )}
                   <div className="bch-bulle">
                     <p dir="auto">{m.contenu}</p>
-                    <time dateTime={m.dateEnvoi} title={el.date?.toLocaleString(locale())}>{heure(el.date)}</time>
+                    <time dateTime={m.dateEnvoi} title={el.date?.toLocaleString(locale())}>
+                      {heure(el.date)}
+                      {deMoi && (() => {
+                        const lecteurs = lecteursDe(m);
+                        const tous = autres.length > 0 && lecteurs.length === autres.length;
+                        const Icone = lecteurs.length ? CheckCheck : Check;
+                        return (
+                          <Icone size={14} className={`bch-coche ${tous ? 'bch-coche--lu' : ''}`}
+                            aria-label={lecteurs.length ? t('Lu') : t('Envoyé')}
+                            title={lecteurs.length ? t('Lu par {noms}', { noms: lecteurs.map((p) => p.nom || `#${p.personnelId}`).join(', ') }) : t('Envoyé')} />
+                        );
+                      })()}
+                    </time>
                   </div>
+                  {deMoi && m === dernierDeMoi && (() => {
+                    const lecteurs = lecteursDe(m);
+                    if (!lecteurs.length) return <span className="bch-statut">{t('Envoyé')}</span>;
+                    if (autres.length > 0 && lecteurs.length === autres.length && autres.length > 1) return <span className="bch-statut bch-statut--lu">{t('Lu par tous')}</span>;
+                    const noms = lecteurs.slice(0, 2).map(nomCourt).join(', ');
+                    return (
+                      <span className="bch-statut bch-statut--lu" title={lecteurs.map((p) => p.nom).join(', ')}>
+                        {lecteurs.length > 2 ? t('Lu par {noms} et {n} autres', { noms, n: lecteurs.length - 2 }) : t('Lu par {noms}', { noms })}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
             );

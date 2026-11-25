@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Button from '../Button';
 import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../store/referentiels';
 import personnelService from '../../../services/Personnelservice';
@@ -12,11 +12,12 @@ import { CARBURANT_TYPE_OPTIONS, carburantTypeLabel } from '../../../constants/c
 import {
   X, Car, User, Calendar, Check, Loader2,
   AlertTriangle, Save, Search, Route, FileText,
-  ChevronDown, ShieldCheck, ShieldAlert,
+  ShieldCheck, ShieldAlert,
   Fuel, Plus, Trash2,
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeReservationModal.css';
+import SearchableSelect from '../../commun/ListeRecherche';
 
 const ETAT_OPTIONS = [
   { value: 0, label: 'En attente', color: 'amber' },
@@ -91,172 +92,6 @@ function projetLabel(p) {
   if (p.code && p.nom) return `${p.code} — ${p.nom}`;
   return p.nom || p.code || t('Projet #{id}', { id: p.id });
 }
-
-const SearchableSelect = ({
-  id,
-  name,
-  value,
-  onChange,
-  options,
-  getValue = (o) => o.id,
-  getLabel = (o) => o.label ?? o.nom ?? String(o),
-  getOptionHint = () => null,
-  placeholder = 'Sélectionner...',
-  emptyMessage = 'Aucun résultat',
-  allowEmpty = false,
-  emptyOptionLabel = '— Aucun —',
-  disabled = false,
-  loading = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const containerRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const selected = options.find((o) => String(getValue(o)) === String(value));
-  const selectedLabel = selected ? getLabel(selected) : '';
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-        setSearch('');
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-        setSearch('');
-        inputRef.current?.blur();
-      }
-    };
-    if (isOpen) document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
-
-  const handleFocus = () => {
-    if (disabled) return;
-    setIsOpen(true);
-    setSearch(selectedLabel);
-    setTimeout(() => inputRef.current?.select(), 0);
-  };
-
-  const handleInputChange = (e) => {
-    setSearch(e.target.value);
-    if (!isOpen) setIsOpen(true);
-  };
-
-  const handleSelect = (opt) => {
-    onChange({ target: { name, value: String(getValue(opt)) } });
-    setIsOpen(false);
-    setSearch('');
-    inputRef.current?.blur();
-  };
-
-  const handleClear = (e) => {
-    e.stopPropagation();
-    onChange({ target: { name, value: '' } });
-    setSearch('');
-    inputRef.current?.focus();
-  };
-
-  const term = search.trim().toLowerCase();
-  const isSelectedLabel = selected && term === selectedLabel.toLowerCase();
-  const filtered = (!term || isSelectedLabel)
-    ? options
-    : options.filter((o) => getLabel(o).toLowerCase().includes(term));
-
-  const displayValue = isOpen ? search : selectedLabel;
-
-  return (
-    <div className="vrm-searchable" ref={containerRef}>
-      <div className={`vrm-searchable-input-wrap ${isOpen ? 'is-open' : ''}`}>
-        <Search size={15} strokeWidth={2.3} className="vrm-searchable-icon" />
-
-        <input
-          ref={inputRef}
-          id={id}
-          type="text"
-          className="vrm-searchable-input"
-          value={displayValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          placeholder={loading ? t('Chargement...') : (selected ? '' : t(placeholder))}
-          disabled={disabled || loading}
-          autoComplete="off"
-        />
-
-        {(selected || search) && !disabled && !loading && (
-          <button
-            type="button"
-            className="vrm-searchable-clear-inline"
-            onClick={handleClear}
-            aria-label={t('Effacer')}
-            tabIndex={-1}
-          >
-            <X size={13} strokeWidth={2.5} />
-          </button>
-        )}
-
-        <ChevronDown
-          size={15}
-          strokeWidth={2.3}
-          className={`vrm-searchable-chevron ${isOpen ? 'rotated' : ''}`}
-        />
-      </div>
-
-      {isOpen && (
-        <div className="vrm-searchable-menu">
-          <div className="vrm-searchable-options">
-            {allowEmpty && !term && (
-              <button
-                type="button"
-                className={`vrm-searchable-option ${!value ? 'is-selected' : ''}`}
-                onClick={() => handleSelect({ id: '' })}
-              >
-                <span className="vrm-searchable-option-main">
-                  <span className="vrm-searchable-option-label">{t(emptyOptionLabel)}</span>
-                </span>
-                {!value && <Check size={14} strokeWidth={3} />}
-              </button>
-            )}
-
-            {filtered.length === 0 && (!allowEmpty || term) ? (
-              <div className="vrm-searchable-empty">{t(emptyMessage)}</div>
-            ) : (
-              filtered.map((o) => {
-                const val = String(getValue(o));
-                const isSelected = val === String(value);
-                const hint = getOptionHint(o);
-                return (
-                  <button
-                    key={val}
-                    type="button"
-                    className={`vrm-searchable-option ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => handleSelect(o)}
-                  >
-                    <span className="vrm-searchable-option-main">
-                      <span className="vrm-searchable-option-label">{getLabel(o)}</span>
-                      {hint && (
-                        <span className="vrm-searchable-option-hint">{hint}</span>
-                      )}
-                    </span>
-                    {isSelected && <Check size={14} strokeWidth={3} />}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEditing }) => {
   const [formData, setFormData] = useState(emptyForm);

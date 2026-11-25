@@ -389,3 +389,9 @@
 @media (prefers-reduced-motion: reduce) {
   .bch-direct-point { animation: none; }
 }
+
+.bch-bulle time { display: flex; align-items: center; justify-content: flex-end; gap: 3px; }
+.bch-coche { flex: none; opacity: 0.75; }
+.bch-coche--lu { opacity: 1; color: #a5f3fc; }
+.bch-statut { display: block; margin-top: 3px; font-size: 11.5px; text-align: end; color: var(--ink-faint); }
+.bch-statut--lu { color: var(--brand); font-weight: 600; }

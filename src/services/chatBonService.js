@@ -85,7 +85,7 @@ export function creerServiceChat(base) {
     return Object.fromEntries((data || []).map((d) => [d.bonMaintenanceId, d.nonLus]));
   },
 
-  ouvrirFlux(bonId, { onMessage, onPresence, onConnecte, onDeconnecte, onErreurFatale }) {
+  ouvrirFlux(bonId, { onMessage, onPresence, onLu, onConnecte, onDeconnecte, onErreurFatale }) {
     let ferme = false;
     let controleur = null;
     let delai = 1000;
@@ -105,6 +105,7 @@ export function creerServiceChat(base) {
       try { donnees = JSON.parse(lignes.join('\n')); } catch { return; }
       if (nom === 'message') onMessage?.(donnees);
       else if (nom === 'presence') onPresence?.(donnees);
+      else if (nom === 'lu') onLu?.(donnees);
     };
 
     const programmerReconnexion = () => {

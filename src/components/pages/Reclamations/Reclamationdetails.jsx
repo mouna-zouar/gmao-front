@@ -266,6 +266,7 @@ export default function ReclamationDetails({
   onAssocier,
   onOuvrirBon,
   libelleRetour,
+  ongletInitial = null,
 }) {
   const { reclamation, bons } = normaliser(data);
   const aDroit = useDroits();
@@ -273,7 +274,7 @@ export default function ReclamationDetails({
   const [equipement, setEquipement] = useState(null);
   const carteLieux = useCarteLieux();
   const [qrOuvert, setQrOuvert] = useState(false);
-  const [onglet, setOnglet] = useState('signalement');
+  const [onglet, setOnglet] = useState(ongletInitial || 'signalement');
   const [historique, setHistorique] = useState(null);
   const [lecture, setLecture] = useState(null);
   const titreRef = useRef(null);

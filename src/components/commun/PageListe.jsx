@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { exporterExcel } from '../../utils/exportExcel';
 import {
   AlertTriangle, ArrowDown, ArrowUp, ArrowUpDown, Download, Inbox, Loader2, Pencil, Plus, Printer, RotateCcw, Search, Settings2, Trash2,
 } from 'lucide-react';
@@ -108,17 +109,9 @@ export default function PageListe({
     entetes: (colonnesExport || visibles).map((c) => t(c.label)),
     lignes: filtrees.map((l) => (colonnesExport || visibles).map((c) => texte(c, l) || '—')),
   });
-  const exporterCsv = () => {
+  const exporterTableur = () => {
     const { entetes, lignes: ls } = donnees();
-    const csv = [entetes, ...ls].map((l) => l.map((x) => `"${String(x ?? '').replace(/"/g, '""')}"`).join(';')).join('\r\n');
-    const url = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${nomExport || 'liste'}-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+    exporterExcel({ fichier: nomExport || 'liste', entetes, lignes: ls, feuille: titre });
   };
   const imprimer = () => {
     const { entetes, lignes: ls } = donnees();
@@ -195,7 +188,7 @@ export default function PageListe({
           <span className="cl-compte">{filtrees.length === lignes.length ? `${lignes.length} ${t('lignes')}` : `${filtrees.length} / ${lignes.length} ${t('lignes')}`}</span>
         )}
         <div className="cl-icones">
-          <button type="button" onClick={exporterCsv} title={t('Export CSV')} aria-label={t('Export CSV')}><Download size={16} /></button>
+          <button type="button" onClick={exporterTableur} title={t('Exporter en Excel')} aria-label={t('Exporter en Excel')}><Download size={16} /></button>
           <button type="button" onClick={imprimer} title={t('Imprimer')} aria-label={t('Imprimer')}><Printer size={16} /></button>
           <button type="button" onClick={() => setReglageOuvert(true)} title={t('Paramètres des colonnes')} aria-label={t('Paramètres des colonnes')}><Settings2 size={16} /></button>
         </div>

@@ -61,10 +61,12 @@ export function Stat({ lien, icone: Icone, ton = 'neutre', valeur, total, label,
 }
 
 export function Barres({ lignes, format = nb }) {
-  const max = Math.max(1, ...lignes.map((l) => l.valeur || 0));
+  const visibles = lignes.filter((l) => Number(l.valeur) > 0);
+  if (!visibles.length) return <Vide>{t('Aucune donnée sur la période.')}</Vide>;
+  const max = Math.max(1, ...visibles.map((l) => l.valeur || 0));
   return (
     <div className="tb-hbars">
-      {lignes.map((l) => {
+      {visibles.map((l) => {
         const Balise = l.onOuvrir ? 'button' : 'div';
         return (
           <Balise key={l.cle} className="tb-hbar" {...(l.onOuvrir ? { type: 'button', onClick: l.onOuvrir, title: l.nom } : {})}>

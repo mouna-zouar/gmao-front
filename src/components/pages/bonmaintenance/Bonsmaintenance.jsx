@@ -1076,6 +1076,7 @@ export default function BonsMaintenance() {
         <BonMaintenanceDetails
           bonMaintenance={selectedBon}
           onBack={retourListe}
+          ongletInitial={parametres.get('chat') === '1' ? 'chat' : null}
         />
       </div>
     );

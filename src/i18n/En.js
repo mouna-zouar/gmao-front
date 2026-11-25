@@ -4374,6 +4374,15 @@ const en = {
   "Désactiver « {nom} » ?": "Deactivate “{nom}”?",
   "Accès refusé": "Access denied",
   "Vous n’avez pas le droit d’ouvrir cette page.": "You are not allowed to open this page.",
+  "Envoyé": "Sent",
+  "Lu par {noms}": "Read by {noms}",
+  "Lu par tous": "Read by everyone",
+  "Lu par {noms} et {n} autres": "Read by {noms} and {n} others",
+  "Lecture": "Reading",
+  "Toutes les conversations": "All conversations",
+  "Non lus": "Unread",
+  "Lus": "Read",
+  "Aucun message non lu.": "No unread message.",
 };
 
 export default en;

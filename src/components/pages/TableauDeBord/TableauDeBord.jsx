@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
-  Activity, CircleDollarSign, LayoutDashboard, LoaderCircle,
-  MessageSquareWarning, OctagonAlert, RefreshCw, Timer, Wrench,
+  Activity, CircleDollarSign, GripVertical, LayoutDashboard, LoaderCircle,
+  MessageSquareWarning, OctagonAlert, Pencil, RefreshCw, Settings2, Timer, Wrench, X,
 } from 'lucide-react';
+import { selectUtilisateur } from '../../../store/authSlice';
+import { CARTES, ICONES_CARTE, INDICATEURS, LIBELLE_LARGEUR, lireChemin, useDisposition } from './dispositionTableau';
+import ModaleCarteChiffree from './ModaleCarteChiffree';
+import GalerieCartes from './GalerieCartes';
 import tableauDeBordService from '../../../services/tableauDeBordService';
 import { Badge, Barres, Carte, Liste, Repartition, Stat, Vide } from '../../commun/TableauBord';
 import { Bulle, useLargeur } from '../Supervision/Supervision';
@@ -167,9 +172,9 @@ function GraphiqueActivite({ tranches, pas }) {
       )}
       <Bulle bulle={bulle} />
       <ul className="tb-legende">
-        {SERIES.map((s) => (
+        {SERIES.map((s) => ({ ...s, total: tranches.reduce((a, x) => a + (x[s.cle] || 0), 0) })).filter((s) => s.total > 0).map((s) => (
           <li key={s.cle}><i style={{ background: s.couleur }} />{t(s.label)}
-            <b>{nb(tranches.reduce((a, x) => a + (x[s.cle] || 0), 0))}</b></li>
+            <b>{nb(s.total)}</b></li>
         ))}
       </ul>
     </div>
@@ -196,51 +201,60 @@ function GraphiqueCouts({ parMois }) {
 const tonPreventif = (v) => (v == null ? 'gris' : v >= 60 ? 'vert' : v >= 40 ? 'ambre' : 'rouge');
 const tonDispo = (v) => (v == null ? 'gris' : v >= 95 ? 'vert' : v >= 85 ? 'ambre' : 'rouge');
 
-function IndicateursPerformance({ rapport }) {
-  const g = rapport.global;
-  const tuiles = [
-    { label: 'Bons', valeur: nb(g.nbBons), ton: 'teal' },
-    { label: 'Préventif / curatif', valeur: pct(g.partPreventifPct), ton: tonPreventif(g.partPreventifPct) },
-    { label: 'Délai d’intervention', valeur: heures(g.delaiInterventionHeures), ton: 'bleu' },
-    { label: 'Délai de résolution', valeur: heures(g.delaiResolutionHeures), ton: 'violet' },
-    { label: 'MTBF', valeur: heures(g.mtbfHeures), ton: 'teal' },
-    { label: 'MTTR', valeur: heures(g.mttrHeures), ton: 'orange' },
-    { label: 'Disponibilité', valeur: pct(g.disponibilitePct), ton: tonDispo(g.disponibilitePct) },
+const GRAPHIQUES_SERVICES = [
+  { cle: 'nbBons', titre: 'Bons par service', format: (v) => nb(v), ton: () => 'teal' },
+  { cle: 'disponibilitePct', titre: 'Disponibilité', format: (v) => pct(v), ton: tonDispo, max: 100 },
+  { cle: 'partPreventifPct', titre: 'Part de préventif', format: (v) => pct(v), ton: tonPreventif, max: 100 },
+  { cle: 'delaiInterventionHeures', titre: 'Délai d’intervention', format: (v) => heures(v), ton: () => 'bleu' },
+];
+
+function BulleService({ l }) {
+  const lignes = [
+    ['Bons', nb(l.nbBons)], ['Préventif / curatif', pct(l.partPreventifPct)], ['Délai d’intervention', heures(l.delaiInterventionHeures)],
+    ['MTBF', heures(l.mtbfHeures)], ['MTTR', heures(l.mttrHeures)], ['Disponibilité', pct(l.disponibilitePct)],
   ];
+  return (
+    <div className="tb-svc-bulle" role="tooltip">
+      <strong dir="auto">{t(l.libelle)}</strong>
+      <dl>{lignes.map(([k, v]) => <Fragment key={k}><dt>{t(k)}</dt><dd>{v}</dd></Fragment>)}</dl>
+    </div>
+  );
+}
+
+function GraphiquesServices({ services }) {
+  return (
+    <div className="tb-svc-grille">
+      {GRAPHIQUES_SERVICES.map((g) => {
+        const lignes = services.filter((l) => Number(l[g.cle]) > 0);
+        if (!lignes.length) return null;
+        const max = g.max || Math.max(...lignes.map((l) => Number(l[g.cle])));
+        return (
+          <figure key={g.cle} className="tb-svc">
+            <figcaption>{t(g.titre)}</figcaption>
+            <ul className="tb-vcols">
+              {lignes.map((l) => (
+                <li key={l.cle} className="tb-vcol" tabIndex={0}>
+                  <b className="tb-vcol-valeur">{g.format(l[g.cle])}</b>
+                  <span className="tb-vcol-piste">
+                    <span className={`tb-vcol-barre tb-gv--${g.ton(l[g.cle])}`} style={{ height: `${Math.max(3, Math.min(100, (Number(l[g.cle]) / max) * 100))}%` }} />
+                  </span>
+                  <span className="tb-vcol-nom" dir="auto" title={t(l.libelle)}>{t(l.libelle)}</span>
+                  <BulleService l={l} />
+                </li>
+              ))}
+            </ul>
+          </figure>
+        );
+      })}
+    </div>
+  );
+}
+
+function IndicateursPerformance({ rapport }) {
   const services = (rapport.lignes || []).filter((l) => l.nbBons > 0 || l.nbEquipements > 0).slice(0, 5);
   return (
     <>
-      <div className="tb-kpis">
-        {tuiles.map((k) => (
-          <div key={k.label} className={`tb-kpi tb-kpi--${k.ton}`}>
-            <b>{k.valeur}</b>
-            <span>{t(k.label)}</span>
-          </div>
-        ))}
-      </div>
-      {services.length > 0 && (
-        <table className="tb-table">
-          <thead>
-            <tr>
-              <th>{t('Service')}</th><th>{t('Bons')}</th><th>{t('Préventif / curatif')}</th>
-              <th>{t('Délai d’intervention')}</th><th>{t('MTBF')}</th><th>{t('MTTR')}</th><th>{t('Disponibilité')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {services.map((l) => (
-              <tr key={l.cle}>
-                <td dir="auto">{t(l.libelle)}</td>
-                <td className="tb-num">{nb(l.nbBons)}</td>
-                <td>{l.partPreventifPct == null ? '—' : <Badge ton={tonPreventif(l.partPreventifPct)}>{pct(l.partPreventifPct)}</Badge>}</td>
-                <td className="tb-num">{heures(l.delaiInterventionHeures)}</td>
-                <td className="tb-num">{heures(l.mtbfHeures)}</td>
-                <td className="tb-num">{heures(l.mttrHeures)}</td>
-                <td>{l.disponibilitePct == null ? '—' : <Badge ton={tonDispo(l.disponibilitePct)}>{pct(l.disponibilitePct)}</Badge>}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {services.length > 0 && <GraphiquesServices services={services} />}
     </>
   );
 }
@@ -271,8 +285,142 @@ function SlaParPriorite({ lignes }) {
   );
 }
 
+const FANTOME = '__fantome__';
+const LARGEUR_PAR_SPAN = (span) => (span <= 2 ? 'tiers' : span === 3 ? 'moitie' : span === 4 ? 'deux-tiers' : 'pleine');
+const ORDRE_LARGEURS = ['tiers', 'moitie', 'deux-tiers', 'pleine'];
+
+function PoigneeRedim({ mode, valeur, refBloc, refGrille, onApercu, onValider }) {
+  const calculer = (largeurVoulue, depart) => {
+    if (mode === 'stat') {
+      const normale = valeur === 'large' ? (depart - 10) / 2 : depart;
+      return largeurVoulue >= normale * 1.5 ? 'large' : 'normal';
+    }
+    const grille = refGrille.current;
+    const gap = 12;
+    const colonne = ((grille?.clientWidth || 1200) - 5 * gap) / 6;
+    const span = Math.max(1, Math.min(6, Math.round((largeurVoulue + gap) / (colonne + gap))));
+    return LARGEUR_PAR_SPAN(span);
+  };
+  const debut = (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const poignee = e.currentTarget;
+    poignee.setPointerCapture?.(e.pointerId);
+    const x0 = e.clientX;
+    const depart = refBloc.current?.getBoundingClientRect().width || 0;
+    let courante = valeur;
+    onApercu(valeur);
+    const bouger = (ev) => {
+      const v = calculer(depart + (ev.clientX - x0) * (document.dir === 'rtl' ? -1 : 1), depart);
+      if (v !== courante) { courante = v; onApercu(v); }
+    };
+    const fin = () => {
+      poignee.removeEventListener('pointermove', bouger);
+      poignee.removeEventListener('pointerup', fin);
+      poignee.removeEventListener('pointercancel', fin);
+      onApercu(null);
+      if (courante !== valeur) onValider(courante);
+    };
+    poignee.addEventListener('pointermove', bouger);
+    poignee.addEventListener('pointerup', fin);
+    poignee.addEventListener('pointercancel', fin);
+  };
+  const clavier = (e) => {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const plus = (e.key === 'ArrowRight') !== (document.dir === 'rtl');
+    if (mode === 'stat') { onValider(plus ? 'large' : 'normal'); return; }
+    const i = ORDRE_LARGEURS.indexOf(valeur);
+    onValider(ORDRE_LARGEURS[Math.max(0, Math.min(ORDRE_LARGEURS.length - 1, i + (plus ? 1 : -1)))]);
+  };
+  return (
+    <button type="button" className="tbd-poignee-taille" onPointerDown={debut} onKeyDown={clavier} draggable={false}
+      onDragStart={(e) => e.preventDefault()} title={t('Tirer pour agrandir ou réduire')} aria-label={t('Changer la taille')}>
+      <span aria-hidden="true" />
+    </button>
+  );
+}
+
+function Bloc({ id, index, large, edition, glisse, setGlisse, cache, setCache, setFantome, onRetirer, onModifier, onTaille, apercu, setApercu, children }) {
+  const ref = useRef(null);
+  const enRedim = apercu?.id === id;
+  const effectif = enRedim ? apercu.valeur === 'large' : large;
+  const classes = [
+    'tbd-bloc', 'tbd-bloc--stat', effectif ? 'tbd-bloc--large' : '', edition ? 'is-edition' : '',
+    cache === id ? 'is-cache' : '', glisse?.id === id ? 'is-glisse' : '', enRedim ? 'is-redim' : '',
+  ].filter(Boolean).join(' ');
+  const proprietes = edition ? {
+    draggable: !enRedim,
+    onDragStart: (e) => {
+      if (e.target.closest?.('.tbd-poignee-taille')) { e.preventDefault(); return; }
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', id);
+      setGlisse({ source: 'stat', id, large });
+      setTimeout(() => setCache(id), 0);
+    },
+    onDragEnd: () => setGlisse(null),
+    onDragOver: (e) => {
+      if (!glisse) return;
+      e.preventDefault();
+      const r = e.currentTarget.getBoundingClientRect();
+      const apres = (e.clientX > r.left + r.width / 2) !== (document.dir === 'rtl');
+      setFantome(index + (apres ? 1 : 0));
+    },
+    onClickCapture: (e) => { if (!e.target.closest('.tbd-outils, .tbd-poignee-taille')) { e.preventDefault(); e.stopPropagation(); } },
+  } : {};
+  return (
+    <div ref={ref} className={classes} {...proprietes}>
+      {edition && (
+        <div className="tbd-outils">
+          <span className="tbd-poignee" title={t('Glisser pour déplacer')}><GripVertical size={15} aria-hidden="true" /></span>
+          {onModifier && (
+            <button type="button" onClick={() => onModifier(id)} title={t('Modifier')} aria-label={t('Modifier')}><Pencil size={13} aria-hidden="true" /></button>
+          )}
+          <button type="button" onClick={() => onRetirer(id)} title={t('Retirer')} aria-label={t('Retirer')}><X size={14} aria-hidden="true" /></button>
+        </div>
+      )}
+      {children}
+      {edition && (
+        <PoigneeRedim mode="stat" valeur={large ? 'large' : 'normal'} refBloc={ref}
+          onApercu={(v) => setApercu(v ? { id, valeur: v } : null)} onValider={(v) => onTaille(id, v === 'large')} />
+      )}
+    </div>
+  );
+}
+
+function BlocCarte({ id, largeur, edition, refGrille, apercu, setApercu, onLargeur, children }) {
+  const ref = useRef(null);
+  const enRedim = apercu?.id === id;
+  const effective = enRedim ? apercu.valeur : largeur;
+  return (
+    <div ref={ref} className={`tbd-bloc tbd-l--${effective} ${edition ? 'is-edition is-fixe' : ''} ${enRedim ? 'is-redim' : ''}`}>
+      {edition && enRedim && <span className="tbd-taille-etiquette">{LIBELLE_LARGEUR[effective]}</span>}
+      {children}
+      {edition && (
+        <PoigneeRedim mode="carte" valeur={largeur} refBloc={ref} refGrille={refGrille}
+          onApercu={(v) => setApercu(v ? { id, valeur: v } : null)} onValider={(v) => onLargeur(id, v)} />
+      )}
+    </div>
+  );
+}
+
 export default function TableauDeBord() {
   const navigate = useNavigate();
+  const utilisateur = useSelector(selectUtilisateur);
+  const [disposition, actions] = useDisposition(utilisateur?.personnelId ?? utilisateur?.userId ?? utilisateur?.username);
+  const [edition, setEdition] = useState(false);
+  const [glisse, setGlisseBrut] = useState(null);
+  const [cache, setCache] = useState(null);
+  const [fantome, setFantome] = useState(null);
+  const [apercu, setApercu] = useState(null);
+  const refGrille = useRef(null);
+  const setGlisse = useCallback((v) => {
+    setGlisseBrut(v);
+    if (!v) { setFantome(null); setCache(null); }
+  }, []);
+  const [modaleCarte, setModaleCarte] = useState(null);
+
   const [jours, setJours] = useState(() => lire(CLE_PERIODE, 30, PERIODES));
   const [lieuId, setLieuId] = useState('');
   const carteLieux = useCarteLieux();
@@ -337,8 +485,196 @@ export default function TableauDeBord() {
   };
   const indispo = (cle) => <Vide>{t('Données « {n} » indisponibles pour le moment.', { n: t(PARTIES[cle]) })}</Vide>;
 
+  const statsRendus = {
+    bons: (
+      <Stat featured lien="/bons-maintenance?vue=a-traiter" icone={Wrench} ton="teal" valeur={nb(bons?.ouverts)} label={t('Bons ouverts')}
+        badge={sla ? (sla.enRetard ? <Badge ton="rouge">{t('{n} en retard', { n: sla.enRetard })}</Badge> : <Badge ton="vert">{t('Aucun retard')}</Badge>) : null}
+        sous={bons ? t('{a} créés · {b} clôturés', { a: nb(bons.creesPeriode), b: nb(bons.cloturesPeriode) }) : null} />
+    ),
+    reclamations: (
+      <Stat lien="/reclamations?vue=a-traiter" icone={MessageSquareWarning} ton={rec?.nonAffectees ? 'orange' : 'bleu'} valeur={nb(recOuvertes)} label={t('Réclamations ouvertes')}
+        badge={rec?.nonAffectees ? <Badge ton="orange">{t('{n} non affectée(s)', { n: rec.nonAffectees })}</Badge> : null}
+        sous={rec ? t('{n} reçues', { n: nb(rec.recuesPeriode) }) + (evolRec ? ` (${evolRec})` : '') : null} />
+    ),
+    arrets: (
+      <Stat lien="/equipements" icone={OctagonAlert} ton={!eq ? 'neutre' : eq.critiquesArretes ? 'rouge' : arretes ? 'orange' : 'vert'}
+        valeur={nb(arretes)} total={eq?.total} label={t('Équipements à l’arrêt')}
+        badge={eq?.critiquesArretes ? <Badge ton="rouge">{t('{n} critique(s)', { n: eq.critiquesArretes })}</Badge> : null} />
+    ),
+    disponibilite: (
+      <Stat lien="/disponibilite" icone={Activity} ton={dispo?.tauxMoyenPct == null ? 'neutre' : dispo.tauxMoyenPct >= 95 ? 'vert' : dispo.tauxMoyenPct >= 85 ? 'ambre' : 'rouge'}
+        valeur={pct(dispo?.tauxMoyenPct)} label={t('Disponibilité moyenne')}
+        sous={dispo ? t('MTTR {a} · MTBF {b}', { a: heures(dispo.mttrHeures), b: heures(dispo.mtbfHeures) }) : null} />
+    ),
+    sla: (
+      <Stat lien="/sla" icone={Timer} ton={tonTaux(sla?.respectResolutionPct) === 'gris' ? 'neutre' : tonTaux(sla?.respectResolutionPct)}
+        valeur={pct(sla?.respectResolutionPct)} label={t('Délais SLA respectés')}
+        sous={sla ? t('réponse : {p}', { p: pct(sla.respectReponsePct) }) : null} />
+    ),
+    cout: (
+      <Stat lien="/cout" icone={CircleDollarSign} ton="neutre" valeur={dt(couts?.total, true)} label={t('Coût de maintenance')}
+        sous={couts ? (evolCout ? t('{e} vs période précédente', { e: evolCout }) : t('{n} bons', { n: nb(couts.bons) })) : null} />
+    ),
+  };
+
+  disposition.persos.forEach((p) => {
+    const def = INDICATEURS.find((i) => i.cle === p.indicateur);
+    const brut = lireChemin(d, p.indicateur);
+    const format = { pct, heures, jours: (v) => (v == null ? '—' : t('{n} j', { n: nb(v, 1) })), dt: (v) => dt(v, true) }[def?.format] || nb;
+    const evol = p.comparer && def?.precedent ? evolution(brut, lireChemin(d, def.precedent)) : null;
+    statsRendus[p.id] = (
+      <Stat lien={p.lien || undefined} icone={ICONES_CARTE[p.icone]?.icone || ICONES_CARTE.nombre.icone} ton={p.ton || 'teal'}
+        valeur={format(brut)} label={p.titre || t(def?.label || '')}
+        sous={evol ? t('{e} vs période précédente', { e: evol }) : null} />
+    );
+  });
+
+  const cartesRendues = {
+    indicateurs: perf?.global ? (
+      <Carte titre={t('Indicateurs de performance')} pastille={libellePeriode}>
+        <IndicateursPerformance rapport={perf} />
+        <p className="tb-note"><Link to="/indicateurs">{t('Voir le détail par service, famille ou équipement')}</Link></p>
+      </Carte>
+    ) : null,
+    activite: (
+      <Carte titre={t('Activité de maintenance')} pastille={pas === 'MOIS' ? t('par mois') : pas === 'SEMAINE' ? t('par semaine') : t('par jour')}>
+        {d.activite ? (d.activite.some((x) => x.reclamations + x.bonsCrees + x.bonsClotures)
+          ? <GraphiqueActivite tranches={d.activite} pas={pas} />
+          : <Vide>{t('Aucune activité sur la période.')}</Vide>) : indispo('activite')}
+      </Carte>
+    ),
+    bonsOuverts: (
+      <Carte titre={t('Bons ouverts')} pastille={bons ? t('{n} au total', { n: nb(bons.ouverts) }) : null}>
+        {bons ? (
+          <>
+            <div className="tb-sous-titre">{t('Par état')}</div>
+            <Repartition label={t('Bons ouverts par état')}
+              items={ETATS_BON.map((e) => ({ ...e, valeur: bons.parEtat?.[e.cle] || 0, onOuvrir: () => navigate(`/bons-maintenance?etat=${e.cle}`) }))} />
+            <div className="tb-sous-titre">{t('Ouverts depuis')}</div>
+            <Barres lignes={ANCIENNETE.map((a, i) => ({ cle: a.label, nom: t(a.label), valeur: bons.anciennete?.[i] || 0, ton: a.ton }))} />
+            {bons.arretsObligatoires > 0 && (
+              <p className="tb-note"><Badge ton="rouge">{t('{n} arrêt(s) obligatoire(s) en cours', { n: bons.arretsObligatoires })}</Badge></p>
+            )}
+          </>
+        ) : indispo('bons')}
+      </Carte>
+    ),
+    retards: (
+      <Carte className="tb-carte--liste" titre={t('Bons en retard (SLA)')}
+        pastille={sla ? t('{n} en retard', { n: nb(sla.enRetard) }) : null} pastilleTon={sla?.enRetard ? 'rouge' : null}>
+        {sla ? (sla.retards.length ? (
+          <Liste lignes={sla.retards.map((b) => ({
+            cle: b.id, ton: PRIORITE_TON[b.priorite], badge: b.priorite || '—',
+            titre: `${b.num || `#${b.id}`} · ${b.titre || t('Sans titre')}`,
+            sous: b.echeance ? t('échéance dépassée {d}', { d: ilYa(b.echeance) }) : null,
+            onOuvrir: () => ouvrirBon(b.id),
+          }))} />
+        ) : <Vide>{t('Aucun bon en retard.')}</Vide>) : indispo('sla')}
+      </Carte>
+    ),
+    arrets: (
+      <Carte className="tb-carte--liste" titre={t('Équipements à l’arrêt')}
+        pastille={eq ? t('{n} à l’arrêt', { n: nb(arretes) }) : null} pastilleTon={eq?.critiquesArretes ? 'rouge' : null}>
+        {eq ? (eq.arretes.length ? (
+          <Liste lignes={eq.arretes.map((e) => {
+            const etat = ETATS_EQUIPEMENT.find((x) => x.cle === e.etat);
+            return {
+              cle: e.id, ton: etat?.ton, badge: t(etat?.label || e.etat),
+              titre: e.nom || `#${e.id}`,
+              sous: [
+                e.criticite ? `${e.criticite} · ${t(CRITICITES[e.criticite] || '')}` : t('Criticité non définie'),
+                e.depuis ? t('à l’arrêt {d}', { d: ilYa(e.depuis) }) : null,
+                e.bonNum ? t('bon {n}', { n: e.bonNum }) : null,
+              ].filter(Boolean).join(' · '),
+              onOuvrir: () => ouvrirEquipement(e.id),
+            };
+          })} />
+        ) : <Vide>{t('Tous les équipements fonctionnent.')}</Vide>) : indispo('equipements')}
+      </Carte>
+    ),
+    slaPriorite: (
+      <Carte titre={t('Délais SLA par priorité')} pastille={sla ? t('{n} bons', { n: nb(sla.bonsAnalyses) }) : null}>
+        {sla ? (sla.parPriorite.length ? <SlaParPriorite lignes={sla.parPriorite} /> : <Vide>{t('Aucun bon sur la période.')}</Vide>) : indispo('sla')}
+      </Carte>
+    ),
+    preventif: (
+      <Carte titre={t('Préventif et curatif')} pastille={bons?.partPreventifPct != null ? t('{p} préventif', { p: pct(bons.partPreventifPct) }) : null}>
+        {bons ? (bons.creesPeriode ? (
+          <>
+            <Repartition label={t('Bons créés par type')} items={TYPES_BON.map((x) => ({ ...x, valeur: bons.parType?.[x.cle] || 0 }))} />
+            {bons.preventifsPeriode > 0 && (
+              <p className="tb-note">{t('{a} préventif(s) sur {b} déjà effectué(s).', { a: nb(bons.preventifsEffectues), b: nb(bons.preventifsPeriode) })}</p>
+            )}
+            {Number(bons.delaiMoyenClotureHeures) > 0 && (
+              <p className="tb-note">{t('Délai moyen de clôture : {d}', { d: heures(bons.delaiMoyenClotureHeures) })}</p>
+            )}
+          </>
+        ) : <Vide>{t('Aucun bon créé sur la période.')}</Vide>) : indispo('bons')}
+      </Carte>
+    ),
+    etatEquipements: (
+      <Carte titre={t('État des équipements')} pastille={eq ? t('{n} équipements', { n: nb(eq.total) }) : null}>
+        {eq ? (
+          <>
+            <Repartition label={t('Équipements par état')}
+              items={ETATS_EQUIPEMENT.map((x) => ({ ...x, valeur: eq.parEtat?.[x.cle] || 0, onOuvrir: () => navigate('/equipements') }))} />
+            {Number(dispo?.tauxCritiquesPct) > 0 && <p className="tb-note">{t('Disponibilité des équipements critiques : {p}', { p: pct(dispo.tauxCritiquesPct) })}</p>}
+          </>
+        ) : indispo('equipements')}
+      </Carte>
+    ),
+    couts: (
+      <Carte titre={t('Coûts de maintenance par mois')} pastille={t('12 derniers mois')}>
+        {couts ? (
+          <>
+            <GraphiqueCouts parMois={couts.parMois} />
+            <ul className="tb-legende">
+              {[
+                ['total', 'Sur la période'], ['mainOeuvre', 'Main-d’œuvre'], ['pieces', 'Pièces'], ['achats', 'Achats'],
+              ].filter(([cle]) => Number(couts[cle]) > 0).map(([cle, label]) => (
+                <li key={cle}>{t(label)} <b>{dt(couts[cle], true)}</b></li>
+              ))}
+            </ul>
+          </>
+        ) : indispo('couts')}
+      </Carte>
+    ),
+    plusCouteux: (
+      <Carte titre={t('Équipements les plus coûteux')} pastille={libellePeriode}>
+        {couts ? (couts.topEquipements.length
+          ? <Barres format={(v) => dt(v, true)}
+              lignes={couts.topEquipements.map((e, i) => ({
+                cle: e.id ?? i, nom: e.nom || `#${e.id}`, valeur: e.cout, ton: 'teal',
+                sous: t('{n} bons', { n: e.bons }), onOuvrir: () => ouvrirEquipement(e.id),
+              }))} />
+          : <Vide>{t('Aucun coût sur la période.')}</Vide>) : indispo('couts')}
+      </Carte>
+    ),
+    plusAnciens: (
+      <Carte className="tb-carte--liste" titre={t('Bons ouverts depuis le plus longtemps')} pastille={bons ? t('{n} au total', { n: nb(bons.ouverts) }) : null}>
+        {bons ? (bons.plusAnciens.length ? (
+          <Liste lignes={bons.plusAnciens.map((b) => {
+            const e = ETATS_BON.find((x) => x.cle === b.etat);
+            return {
+              cle: b.id, ton: e?.ton, badge: t(e?.label || '—'),
+              titre: `${b.num || `#${b.id}`} · ${b.titre || t('Sans titre')}`,
+              sous: [b.equipement, t('ouvert {d}', { d: ilYa(b.dateCreation) })].filter(Boolean).join(' · '),
+              onOuvrir: () => ouvrirBon(b.id),
+            };
+          })} />
+        ) : <Vide>{t('Aucun bon ouvert.')}</Vide>) : indispo('bons')}
+      </Carte>
+    ),
+    performance: <PerformanceEmployes jours={jours} onOuvrirChrono={() => navigate('/bons-maintenance?chrono=1')} />,
+  };
+
+  const statsVisibles = disposition.stats.filter((id) => id !== cache);
+  const statsAvecFantome = glisse && fantome != null
+    ? [...statsVisibles.slice(0, fantome), FANTOME, ...statsVisibles.slice(fantome)]
+    : statsVisibles;
+
   return (
-    <div className="tb-container">
+    <div className={`tb-container ${edition ? 'tb-container--edition' : ''}`}>
       <div className="tb-header">
         <div className="tb-header-icone"><LayoutDashboard size={24} strokeWidth={2} aria-hidden="true" /></div>
         <div className="tb-header-texte">
@@ -352,6 +688,9 @@ export default function TableauDeBord() {
                 onClick={() => { setJours(p.cle); ecrire(CLE_PERIODE, p.cle); }}>{t(p.label)}</button>
             ))}
           </div>
+          <button type="button" className={`tb-btn ${edition ? 'is-actif' : ''}`} onClick={() => setEdition((e) => !e)} aria-pressed={edition}>
+            <Settings2 size={14} strokeWidth={2.4} aria-hidden="true" /> {t('Personnaliser')}
+          </button>
           <button type="button" className="tb-btn" onClick={() => charger(true)} disabled={chargement}>
             {chargement ? <LoaderCircle size={14} className="tb-tourne" aria-hidden="true" /> : <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />}
             {t('Rafraîchir')}
@@ -371,176 +710,54 @@ export default function TableauDeBord() {
       )}
       <AccesGmao compteurs={compteurs} />
 
+
       {!donnees && !erreur && <div className="tb-chargement">{t('Chargement…')}</div>}
+
+      {edition && donnees && (
+        <GalerieCartes disposition={disposition} actions={actions} statsRendus={statsRendus} glisse={glisse} setGlisse={setGlisse}
+          onCreer={() => setModaleCarte({ carte: null })}
+          onModifier={(id) => setModaleCarte({ carte: disposition.persos.find((p) => p.id === id) })}
+          onTerminer={() => setEdition(false)} />
+      )}
+
+      <ModaleCarteChiffree ouvert={Boolean(modaleCarte)} carte={modaleCarte?.carte} onFermer={() => setModaleCarte(null)}
+        onEnregistrer={actions.enregistrerPerso} />
 
       {donnees && (
         <>
-          <div className="tb-stats">
-            <Stat featured lien="/bons-maintenance?vue=a-traiter" icone={Wrench} ton="teal" valeur={nb(bons?.ouverts)} label={t('Bons ouverts')}
-              badge={sla ? (sla.enRetard ? <Badge ton="rouge">{t('{n} en retard', { n: sla.enRetard })}</Badge> : <Badge ton="vert">{t('Aucun retard')}</Badge>) : null}
-              sous={bons ? t('{a} créés · {b} clôturés', { a: nb(bons.creesPeriode), b: nb(bons.cloturesPeriode) }) : null} />
-            <Stat lien="/reclamations?vue=a-traiter" icone={MessageSquareWarning} ton={rec?.nonAffectees ? 'orange' : 'bleu'} valeur={nb(recOuvertes)} label={t('Réclamations ouvertes')}
-              badge={rec?.nonAffectees ? <Badge ton="orange">{t('{n} non affectée(s)', { n: rec.nonAffectees })}</Badge> : null}
-              sous={rec ? t('{n} reçues', { n: nb(rec.recuesPeriode) }) + (evolRec ? ` (${evolRec})` : '') : null} />
-            <Stat lien="/equipements" icone={OctagonAlert} ton={!eq ? 'neutre' : eq.critiquesArretes ? 'rouge' : arretes ? 'orange' : 'vert'}
-              valeur={nb(arretes)} total={eq?.total} label={t('Équipements à l’arrêt')}
-              badge={eq?.critiquesArretes ? <Badge ton="rouge">{t('{n} critique(s)', { n: eq.critiquesArretes })}</Badge> : null} />
-            <Stat lien="/disponibilite" icone={Activity} ton={dispo?.tauxMoyenPct == null ? 'neutre' : dispo.tauxMoyenPct >= 95 ? 'vert' : dispo.tauxMoyenPct >= 85 ? 'ambre' : 'rouge'}
-              valeur={pct(dispo?.tauxMoyenPct)} label={t('Disponibilité moyenne')}
-              sous={dispo ? t('MTTR {a} · MTBF {b}', { a: heures(dispo.mttrHeures), b: heures(dispo.mtbfHeures) }) : null} />
-            <Stat lien="/sla" icone={Timer} ton={tonTaux(sla?.respectResolutionPct) === 'gris' ? 'neutre' : tonTaux(sla?.respectResolutionPct)}
-              valeur={pct(sla?.respectResolutionPct)} label={t('Délais SLA respectés')}
-              sous={sla ? t('réponse : {p}', { p: pct(sla.respectReponsePct) }) : null} />
-            <Stat lien="/cout" icone={CircleDollarSign} ton="neutre" valeur={dt(couts?.total, true)} label={t('Coût de maintenance')}
-              sous={couts ? (evolCout ? t('{e} vs période précédente', { e: evolCout }) : t('{n} bons', { n: nb(couts.bons) })) : null} />
+          <div
+            className={`tb-stats tb-stats--compact ${glisse ? 'is-depot' : ''}`}
+            onDragOver={(e) => {
+              if (!glisse) return;
+              e.preventDefault();
+              if (e.target === e.currentTarget && fantome == null) setFantome(statsVisibles.length);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              if (glisse) actions.placerStat(glisse.id, fantome ?? statsVisibles.length);
+              setGlisse(null);
+            }}
+          >
+            {statsAvecFantome.map((id) => (id === FANTOME ? (
+              <div key="fantome" className={`tbd-fantome ${glisse?.large ? 'tbd-bloc--large' : ''}`} onDragOver={(e) => e.preventDefault()} />
+            ) : (
+              <Bloc key={id} id={id} index={statsVisibles.indexOf(id)} edition={edition} glisse={glisse} setGlisse={setGlisse}
+                cache={cache} setCache={setCache} setFantome={setFantome} apercu={apercu} setApercu={setApercu}
+                onRetirer={actions.retirerStat} onTaille={actions.definirTailleStat}
+                large={Boolean(disposition.tailles.stats[id])}
+                onModifier={disposition.persos.some((p) => p.id === id) ? () => setModaleCarte({ carte: disposition.persos.find((p) => p.id === id) }) : undefined}>
+                {statsRendus[id]}
+              </Bloc>
+            )))}
           </div>
 
-          {perf?.global && (
-            <div className="tb-ligne-cartes">
-              <Carte titre={t('Indicateurs de performance')} pastille={libellePeriode}>
-                <IndicateursPerformance rapport={perf} />
-                <p className="tb-note"><Link to="/indicateurs">{t('Voir le détail par service, famille ou équipement')}</Link></p>
-              </Carte>
-            </div>
-          )}
-
-          <div className="tb-ligne-cartes tb-ligne-cartes--2-1">
-            <Carte titre={t('Activité de maintenance')} pastille={pas === 'MOIS' ? t('par mois') : pas === 'SEMAINE' ? t('par semaine') : t('par jour')}>
-              {d.activite ? (d.activite.some((x) => x.reclamations + x.bonsCrees + x.bonsClotures)
-                ? <GraphiqueActivite tranches={d.activite} pas={pas} />
-                : <Vide>{t('Aucune activité sur la période.')}</Vide>) : indispo('activite')}
-            </Carte>
-            <Carte titre={t('Bons ouverts')} pastille={bons ? t('{n} au total', { n: nb(bons.ouverts) }) : null}>
-              {bons ? (
-                <>
-                  <div className="tb-sous-titre">{t('Par état')}</div>
-                  <Repartition label={t('Bons ouverts par état')}
-                    items={ETATS_BON.map((e) => ({ ...e, valeur: bons.parEtat?.[e.cle] || 0, onOuvrir: () => navigate(`/bons-maintenance?etat=${e.cle}`) }))} />
-                  <div className="tb-sous-titre">{t('Ouverts depuis')}</div>
-                  <Barres lignes={ANCIENNETE.map((a, i) => ({ cle: a.label, nom: t(a.label), valeur: bons.anciennete?.[i] || 0, ton: a.ton }))} />
-                  {bons.arretsObligatoires > 0 && (
-                    <p className="tb-note"><Badge ton="rouge">{t('{n} arrêt(s) obligatoire(s) en cours', { n: bons.arretsObligatoires })}</Badge></p>
-                  )}
-                </>
-              ) : indispo('bons')}
-            </Carte>
-          </div>
-
-          <div className="tb-ligne-cartes tb-ligne-cartes--1-1">
-            <Carte className="tb-carte--liste" titre={t('Bons en retard (SLA)')}
-              pastille={sla ? t('{n} en retard', { n: nb(sla.enRetard) }) : null} pastilleTon={sla?.enRetard ? 'rouge' : null}>
-              {sla ? (sla.retards.length ? (
-                <Liste lignes={sla.retards.map((b) => ({
-                  cle: b.id, ton: PRIORITE_TON[b.priorite], badge: b.priorite || '—',
-                  titre: `${b.num || `#${b.id}`} · ${b.titre || t('Sans titre')}`,
-                  sous: b.echeance ? t('échéance dépassée {d}', { d: ilYa(b.echeance) }) : null,
-                  onOuvrir: () => ouvrirBon(b.id),
-                }))} />
-              ) : <Vide>{t('Aucun bon en retard.')}</Vide>) : indispo('sla')}
-            </Carte>
-            <Carte className="tb-carte--liste" titre={t('Équipements à l’arrêt')}
-              pastille={eq ? t('{n} à l’arrêt', { n: nb(arretes) }) : null} pastilleTon={eq?.critiquesArretes ? 'rouge' : null}>
-              {eq ? (eq.arretes.length ? (
-                <Liste lignes={eq.arretes.map((e) => {
-                  const etat = ETATS_EQUIPEMENT.find((x) => x.cle === e.etat);
-                  return {
-                    cle: e.id, ton: etat?.ton, badge: t(etat?.label || e.etat),
-                    titre: e.nom || `#${e.id}`,
-                    sous: [
-                      e.criticite ? `${e.criticite} · ${t(CRITICITES[e.criticite] || '')}` : t('Criticité non définie'),
-                      e.depuis ? t('à l’arrêt {d}', { d: ilYa(e.depuis) }) : null,
-                      e.bonNum ? t('bon {n}', { n: e.bonNum }) : null,
-                    ].filter(Boolean).join(' · '),
-                    onOuvrir: () => ouvrirEquipement(e.id),
-                  };
-                })} />
-              ) : <Vide>{t('Tous les équipements fonctionnent.')}</Vide>) : indispo('equipements')}
-            </Carte>
-          </div>
-
-          <div className="tb-ligne-cartes tb-ligne-cartes--3">
-            <Carte titre={t('Délais SLA par priorité')} pastille={sla ? t('{n} bons', { n: nb(sla.bonsAnalyses) }) : null}>
-              {sla ? (sla.parPriorite.length ? <SlaParPriorite lignes={sla.parPriorite} /> : <Vide>{t('Aucun bon sur la période.')}</Vide>) : indispo('sla')}
-            </Carte>
-            <Carte titre={t('Préventif et curatif')} pastille={bons?.partPreventifPct != null ? t('{p} préventif', { p: pct(bons.partPreventifPct) }) : null}>
-              {bons ? (bons.creesPeriode ? (
-                <>
-                  <Repartition label={t('Bons créés par type')} items={TYPES_BON.map((x) => ({ ...x, valeur: bons.parType?.[x.cle] || 0 }))} />
-                  {bons.preventifsPeriode > 0 && (
-                    <p className="tb-note">{t('{a} préventif(s) sur {b} déjà effectué(s).', { a: nb(bons.preventifsEffectues), b: nb(bons.preventifsPeriode) })}</p>
-                  )}
-                  <p className="tb-note">{t('Délai moyen de clôture : {d}', { d: heures(bons.delaiMoyenClotureHeures) })}</p>
-                </>
-              ) : <Vide>{t('Aucun bon créé sur la période.')}</Vide>) : indispo('bons')}
-            </Carte>
-            <Carte titre={t('État des équipements')} pastille={eq ? t('{n} équipements', { n: nb(eq.total) }) : null}>
-              {eq ? (
-                <>
-                  <Repartition label={t('Équipements par état')}
-                    items={ETATS_EQUIPEMENT.map((x) => ({ ...x, valeur: eq.parEtat?.[x.cle] || 0, onOuvrir: () => navigate('/equipements') }))} />
-                  {dispo && <p className="tb-note">{t('Disponibilité des équipements critiques : {p}', { p: pct(dispo.tauxCritiquesPct) })}</p>}
-                </>
-              ) : indispo('equipements')}
-            </Carte>
-          </div>
-
-          <div className="tb-ligne-cartes tb-ligne-cartes--2-1">
-            <Carte titre={t('Coûts de maintenance par mois')} pastille={t('12 derniers mois')}>
-              {couts ? (
-                <>
-                  <GraphiqueCouts parMois={couts.parMois} />
-                  <ul className="tb-legende">
-                    <li>{t('Sur la période')} <b>{dt(couts.total, true)}</b></li>
-                    <li>{t('Main-d’œuvre')} <b>{dt(couts.mainOeuvre, true)}</b></li>
-                    <li>{t('Pièces')} <b>{dt(couts.pieces, true)}</b></li>
-                    <li>{t('Achats')} <b>{dt(couts.achats, true)}</b></li>
-                  </ul>
-                </>
-              ) : indispo('couts')}
-            </Carte>
-            <Carte titre={t('Équipements les plus coûteux')} pastille={libellePeriode}>
-              {couts ? (couts.topEquipements.length
-                ? <Barres format={(v) => dt(v, true)}
-                    lignes={couts.topEquipements.map((e, i) => ({
-                      cle: e.id ?? i, nom: e.nom || `#${e.id}`, valeur: e.cout, ton: 'teal',
-                      sous: t('{n} bons', { n: e.bons }), onOuvrir: () => ouvrirEquipement(e.id),
-                    }))} />
-                : <Vide>{t('Aucun coût sur la période.')}</Vide>) : indispo('couts')}
-            </Carte>
-          </div>
-
-          <div className="tb-ligne-cartes tb-ligne-cartes--1-1">
-            <Carte titre={t('Équipements avec le plus de pannes')} pastille={dispo ? t('{n} pannes', { n: nb(dispo.pannes) }) : null}>
-              {dispo ? (dispo.plusDePannes.length
-                ? <Barres lignes={dispo.plusDePannes.map((e) => ({
-                    cle: e.id, nom: e.nom || `#${e.id}`, valeur: e.pannes, ton: 'orange',
-                    sous: t('dispo {p}', { p: pct(e.tauxPct) }), onOuvrir: () => ouvrirEquipement(e.id),
-                  }))} />
-                : <Vide>{t('Aucune panne sur la période.')}</Vide>) : indispo('disponibilite')}
-            </Carte>
-            <Carte titre={t('Pannes les plus fréquentes')} pastille={rec ? t('{n} réclamation(s) codée(s)', { n: nb(rec.avecCodePanne) }) : null}>
-              {rec ? (rec.codesPanne.length
-                ? <Barres lignes={rec.codesPanne.map((c) => ({ cle: c.code, nom: `${c.code} · ${c.libelle}`, valeur: c.nombre, ton: 'violet' }))} />
-                : <Vide>{t('Aucune réclamation avec un code panne sur la période.')}</Vide>) : indispo('reclamations')}
-            </Carte>
-          </div>
-
-          <PerformanceEmployes jours={jours} onOuvrirChrono={() => navigate('/bons-maintenance?chrono=1')} />
-
-          <div className="tb-ligne-cartes">
-            <Carte className="tb-carte--liste" titre={t('Bons ouverts depuis le plus longtemps')} pastille={bons ? t('{n} au total', { n: nb(bons.ouverts) }) : null}>
-              {bons ? (bons.plusAnciens.length ? (
-                <Liste lignes={bons.plusAnciens.map((b) => {
-                  const e = ETATS_BON.find((x) => x.cle === b.etat);
-                  return {
-                    cle: b.id, ton: e?.ton, badge: t(e?.label || '—'),
-                    titre: `${b.num || `#${b.id}`} · ${b.titre || t('Sans titre')}`,
-                    sous: [b.equipement, t('ouvert {d}', { d: ilYa(b.dateCreation) })].filter(Boolean).join(' · '),
-                    onOuvrir: () => ouvrirBon(b.id),
-                  };
-                })} />
-              ) : <Vide>{t('Aucun bon ouvert.')}</Vide>) : indispo('bons')}
-            </Carte>
+          <div className="tbd-grille" ref={refGrille}>
+            {CARTES.map((c) => (cartesRendues[c.id] ? (
+              <BlocCarte key={c.id} id={c.id} largeur={disposition.tailles.cartes[c.id] || c.largeur} edition={edition}
+                refGrille={refGrille} apercu={apercu} setApercu={setApercu} onLargeur={actions.definirLargeur}>
+                {cartesRendues[c.id]}
+              </BlocCarte>
+            ) : null))}
           </div>
         </>
       )}

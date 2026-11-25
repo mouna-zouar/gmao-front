@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { exporterExcel } from '../../../../utils/exportExcel';
 import { DROITS, useDroits } from '../../../../constants/privileges';
 import {
   CheckCircle2, Bookmark, Navigation, Wrench, Ban, XCircle, Tag, Loader2,
@@ -357,20 +358,7 @@ export default function VehiculesPage() {
 
   const handleExportExcel = () => {
     const { entetes, lignes } = donneesTableau();
-
-    const csv = [entetes, ...lignes]
-      .map((ligne) => ligne.map((cellule) => `"${String(cellule ?? '').replace(/"/g, '""')}"`).join(';'))
-      .join('\r\n');
-
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const lien = document.createElement('a');
-    lien.href = url;
-    lien.download = `vehicules-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(lien);
-    lien.click();
-    document.body.removeChild(lien);
-    URL.revokeObjectURL(url);
+    exporterExcel({ fichier: 'vehicules', entetes, lignes, feuille: t('Véhicules') });
   };
 
   const handleImprimerListe = () => {
@@ -987,7 +975,7 @@ export default function VehiculesPage() {
 
 
         <div className="vehicules-export-stack">
-          <button className="vehicules-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>
+          <button className="vehicules-export-btn excel" title={t("Exporter en Excel")} onClick={handleExportExcel}>
             <Download size={18} strokeWidth={2.5} aria-hidden="true" />
           </button>
           <button className="vehicules-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>

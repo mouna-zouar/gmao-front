@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { exporterExcel } from '../../../utils/exportExcel';
 import { useSearchParams } from 'react-router-dom';
 import {
   
@@ -639,20 +640,7 @@ export default function Reclamations() {
 
   const handleExportExcel = () => {
     const { entetes, lignes } = donneesTableau();
-
-    const csv = [entetes, ...lignes]
-      .map((ligne) => ligne.map((cellule) => `"${String(cellule ?? '').replace(/"/g, '""')}"`).join(';'))
-      .join('\r\n');
-
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const lien = document.createElement('a');
-    lien.href = url;
-    lien.download = `reclamations-${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(lien);
-    lien.click();
-    document.body.removeChild(lien);
-    URL.revokeObjectURL(url);
+    exporterExcel({ fichier: 'reclamations', entetes, lignes, feuille: t('Réclamations') });
   };
 
   const handleImprimerListe = () => {
@@ -696,6 +684,7 @@ export default function Reclamations() {
         onCreerBon={openCreateBon}
         onAssocier={openAssociate}
         onOuvrirBon={(bon) => setBonOuvert(bon)}
+        ongletInitial={parametres.get('chat') === '1' ? 'chat' : null}
       />
     ) : (
     <div className="reclamations-container">
@@ -882,7 +871,7 @@ export default function Reclamations() {
         </div>
 
         <div className="reclamations-export-stack">
-          <button className="reclamations-export-btn excel" title={t("Exporter en Excel (CSV)")} onClick={handleExportExcel}>
+          <button className="reclamations-export-btn excel" title={t("Exporter en Excel")} onClick={handleExportExcel}>
             <FileSpreadsheet size={18} />
           </button>
           <button className="reclamations-export-btn print" title={t("Imprimer")} onClick={handleImprimerListe}>

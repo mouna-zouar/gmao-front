@@ -405,9 +405,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
 .vl-eq__ip--en_ligne .vl-eq__ip-point { background: var(--g-emerald-500); }
 .vl-eq__ip--hors_ligne .vl-eq__ip-point { background: var(--g-red-500); }
 
-.vl-alerte-recl { border-color: var(--g-emerald-200, #a7f3d0); background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-700, #047857); }
-.vl-alerte-recl:hover:not(:disabled) { border-color: var(--g-emerald-500); background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-700, #047857); }
-
 .vl-alerte-brut {
   margin: 4px 0 0;
   padding: 8px 10px;
@@ -421,55 +418,6 @@ button.vl-ligne__titre:hover { color: var(--g-marque-fonce); text-decoration: un
   white-space: pre-wrap;
   word-break: break-all;
 }
-
-.vl-pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  margin-top: 12px;
-  padding: 10px 14px;
-  border: 1px solid var(--g-bordure);
-  border-radius: 12px;
-  background: var(--g-blanc);
-  font-size: 0.8rem;
-  color: var(--g-texte-2);
-}
-.vl-pagination__info { font-variant-numeric: tabular-nums; font-weight: 600; }
-.vl-pagination__pages { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.vl-pagination__btn {
-  min-width: 32px;
-  height: 32px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--g-bordure);
-  border-radius: 8px;
-  background: var(--g-blanc);
-  color: var(--g-texte-2);
-  font: inherit;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  cursor: pointer;
-}
-.vl-pagination__btn:hover:not(:disabled):not(.is-actif) { border-color: var(--g-bordure-forte); color: var(--g-texte); background: var(--g-slate-50); }
-.vl-pagination__btn:focus-visible { outline: 2px solid var(--g-marque); outline-offset: 2px; }
-.vl-pagination__btn:disabled { opacity: 0.45; cursor: default; }
-.vl-pagination__num.is-actif { background: var(--g-marque); border-color: var(--g-marque); color: var(--g-blanc); }
-.vl-pagination__ellipse { padding: 0 4px; color: var(--g-slate-400, #94a3b8); }
-.vl-pagination__taille { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
-.vl-pagination__taille select {
-  height: 32px;
-  padding: 0 8px;
-  border: 1px solid var(--g-bordure);
-  border-radius: 8px;
-  background: var(--g-blanc);
-  color: var(--g-texte);
-  font: inherit;
-}
-[dir='rtl'] .vl-pagination__btn svg { transform: scaleX(-1); }
 
 .vl-select { position: relative; flex: 0 1 260px; min-width: 180px; }
 .vl-select select {

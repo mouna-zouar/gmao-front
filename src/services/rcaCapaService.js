@@ -6,6 +6,16 @@ const rcaCapaService = {
     return data;
   },
 
+  async modifierAnalyse(analyseRcaId, payload) {
+    const { data } = await api.put(`/rca-capa/analyses/${analyseRcaId}`, payload);
+    return data;
+  },
+
+  async getContexteEquipement(lotArticleImmobilistationId, moisPareto) {
+    const { data } = await api.get(`/rca-capa/equipement/${lotArticleImmobilistationId}/contexte`, { params: moisPareto ? { moisPareto } : {} });
+    return data;
+  },
+
   async getAnalyse(analyseRcaId) {
     const { data } = await api.get(`/rca-capa/analyses/${analyseRcaId}`);
     return data;

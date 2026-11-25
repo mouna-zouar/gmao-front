@@ -120,3 +120,16 @@
   font-size: 0.78rem;
   font-style: italic;
 }
+
+.rm-select-option.is-disabled,
+.rm-select-option:disabled { opacity: 0.45; cursor: not-allowed; background: transparent; }
+.rm-select-option.is-disabled:hover { background: transparent; color: var(--g-slate-700); }
+.rm-select .rm-select-input-wrap .rm-select-input,
+.rm-select .rm-select-input-wrap .rm-select-input:hover,
+.rm-select .rm-select-input-wrap .rm-select-input:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}

@@ -1,6 +1,6 @@
 import { cloneElement, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { BellRing, ChevronDown, ChevronRight, Search, ShieldOff, Waypoints, X, Zap } from 'lucide-react';
+import { BellRing, ChevronDown, ChevronRight, Search, ShieldOff, X, Zap } from 'lucide-react';
 import { NAV_SECTIONS, filtrerItems } from '../../../constants/navigation';
 import { useDroits } from '../../../constants/privileges';
 import { ICONES_MODULES as M } from '../../../constants/modules';
@@ -12,19 +12,16 @@ const icone = (I) => <I aria-hidden="true" />;
 const ANALYSES = {
   id: 'analyses',
   label: 'Analyses',
-  path: '/intelligence',
+  path: '/cout',
   icon: icone(M.analyse),
   children: [
-    { label: 'Intelligence', path: '/intelligence', icon: icone(M.intelligence), motsCles: 'ia recommandations' },
     { label: 'Coût', path: '/cout', icon: icone(M.cout), motsCles: 'dépenses budget' },
     { label: 'SLA', path: '/sla', icon: icone(M.sla), motsCles: 'délais retard' },
     { label: 'Disponibilité', path: '/disponibilite', icon: icone(M.disponibilite), motsCles: 'mtbf mttr' },
-    { label: 'Indicateurs de performance', path: '/indicateurs', icon: icone(M.indicateurs), motsCles: 'kpi atb préventif curatif délai mtbf mttr disponibilité export' },
     { label: 'Risque', path: '/risque', icon: icone(M.risque), motsCles: 'criticité' },
     { label: 'Anomalies', path: '/anomalies', icon: icone(Zap), motsCles: 'pic réclamations détection' },
     { label: 'Blocages', path: '/blocages-immobilisation', icon: icone(ShieldOff), motsCles: 'immobilisation arrêt' },
     { label: 'Alertes machines', path: '/alertes-machines', icon: icone(BellRing), motsCles: 'capteurs sondes' },
-    { label: 'Workflow', path: '/workflow', icon: icone(Waypoints), motsCles: 'circuit étapes' },
   ],
 };
 

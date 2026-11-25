@@ -11,6 +11,7 @@ const ListeRecherche = ({
   getValue = (o) => o.id,
   getLabel = (o) => o.label ?? o.nom ?? String(o),
   getOptionHint = () => null,
+  isOptionDisabled = () => false,
   placeholder = 'Sélectionner...',
   emptyMessage = 'Aucun résultat',
   allowEmpty = false,
@@ -62,6 +63,7 @@ const ListeRecherche = ({
   };
 
   const handleSelect = (opt) => {
+    if (isOptionDisabled(opt)) return;
     onChange({ target: { name, value: String(getValue(opt)) } });
     setIsOpen(false);
     setSearch('');
@@ -143,11 +145,13 @@ const ListeRecherche = ({
                 const val = String(getValue(o));
                 const isSelected = val === String(value);
                 const hint = getOptionHint(o);
+                const optDisabled = isOptionDisabled(o);
                 return (
                   <button
                     key={val}
                     type="button"
-                    className={`rm-select-option ${isSelected ? 'is-selected' : ''}`}
+                    className={`rm-select-option ${isSelected ? 'is-selected' : ''} ${optDisabled ? 'is-disabled' : ''}`}
+                    disabled={optDisabled}
                     onClick={() => handleSelect(o)}
                   >
                     <span className="rm-select-option-main">

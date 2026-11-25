@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ClipboardCheck, Timer, Users, Wrench } from 'lucide-react';
+import { Radio } from 'lucide-react';
 import performanceEmployesService from '../../../services/performanceEmployesService';
-import { Badge, Carte, Stat, Vide } from '../../commun/TableauBord';
+import { Badge, Carte, Vide } from '../../commun/TableauBord';
 import { formatTemps } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
@@ -23,11 +23,19 @@ const FILTRES_TACHES = [
   { cle: 'nonFinies', label: 'Tâches non finies', garder: (e) => e.nbTachesNonFinies > 0 },
 ];
 
-function BarreDuree({ secondes, max, ton }) {
+const dureeCourte = (s) => {
+  if (!s) return '—';
+  if (s < 3600) return t('{n} min', { n: Math.max(1, Math.round(s / 60)) });
+  const h = s / 3600;
+  return h < 48 ? t('{n} h', { n: nb(Math.round(h * 10) / 10) }) : t('{n} j', { n: nb(Math.round((h / 24) * 10) / 10) });
+};
+
+function Colonne({ secondes, max, ton, libelle }) {
+  if (!(secondes > 0)) return <span className="pfe-col pfe-col--vide" />;
   return (
-    <span className="pfe-temps-barre">
-      <span className="pfe-temps-piste"><span className={`pfe-piste--${ton}`} style={{ width: `${max ? (100 * secondes) / max : 0}%` }} /></span>
-      <b>{duree(secondes)}</b>
+    <span className="pfe-col">
+      <b className="pfe-col-valeur">{dureeCourte(secondes)}</b>
+      <span className={`pfe-col-barre pfe-col-barre--${ton}`} style={{ height: `${Math.max(3, (100 * secondes) / max)}%` }} aria-label={`${libelle} : ${duree(secondes)}`} />
     </span>
   );
 }
@@ -55,103 +63,78 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
     return liste;
   }, [donnees, tri, filtreTaches]);
   const nbFiltre = (f) => (donnees?.employes ?? []).filter(f.garder).length;
-  const tot = donnees?.totaux;
-  const maxInterv = Math.max(0, ...employes.map((e) => e.dureeInterventionsSecondes));
-  const maxTaches = Math.max(0, ...employes.map((e) => e.dureeTachesSecondes));
+  const maxDuree = Math.max(0, ...employes.flatMap((e) => [e.dureeInterventionsSecondes || 0, e.dureeTachesSecondes || 0]));
   const visibles = tout ? employes : employes.slice(0, NB_VISIBLES);
 
-  return (
-    <>
-      <h2 className="tb-section-titre">
-        {t('Performance des employés')}
-        <small>{t('Durée réalisée par chaque employé sur la période : interventions terminées et tâches effectuées')}</small>
-      </h2>
+  const avecEmployes = (donnees?.employes ?? []).length > 0;
 
+  return (
+    <Carte className="tb-carte--liste pfe-section" titre={t('Performance des employés')}
+      pastille={donnees ? t('{n} employé(s)', { n: employes.length }) : null}>
       {erreur && <p className="tb-message tb-message--attention">{erreur}</p>}
 
-      <div className="tb-stats">
-        <Stat icone={Users} ton="teal" valeur={nb(tot?.employes)} label={t('Employés ayant réalisé du travail')}
-          sous={onOuvrirChrono ? <button type="button" className="pfe-lien" onClick={onOuvrirChrono}>{t('Voir le chrono en direct')}</button> : null} />
-        <Stat icone={Wrench} ton="teal" valeur={nb(tot?.interventions)} label={t('Interventions réalisées')} />
-        <Stat icone={Timer} ton="teal" valeur={duree(tot?.dureeInterventionsSecondes)} label={t('Durée des interventions')}
-          sous={tot?.interventions ? t('{d} par intervention en moyenne', { d: duree(tot.dureeInterventionsSecondes / tot.interventions) }) : null} />
-        <Stat icone={ClipboardCheck} ton="violet" valeur={nb(tot?.taches)} label={t('Tâches réalisées')} />
-        <Stat icone={Timer} ton="violet" valeur={duree(tot?.dureeTachesSecondes)} label={t('Durée des tâches')}
-          sous={tot?.taches ? t('{d} par tâche en moyenne', { d: duree(tot.dureeTachesSecondes / tot.taches) }) : null} />
-        <Stat icone={Users} ton="neutre" valeur={tot?.employes ? duree(tot.dureeInterventionsSecondes / tot.employes) : '—'}
-          label={t('Durée réalisée par employé')} sous={t('interventions, en moyenne')} />
-      </div>
-
-      <Carte className="tb-carte--liste pfe-carte-tableau" titre={t('Classement des employés')}
-        pastille={donnees ? t('{n} employé(s)', { n: employes.length }) : null}>
-        {donnees && (donnees.employes ?? []).length > 0 && (
-          <div className="pfe-tri" role="group" aria-label={t('Tâches')}>
-            <span>{t('Tâches')}</span>
-            {FILTRES_TACHES.map((f) => (
-              <button key={f.cle} type="button" aria-pressed={filtreTaches === f.cle} onClick={() => { setFiltreTaches(f.cle); setTout(false); }}>
-                {t(f.label)} ({nbFiltre(f)})
-              </button>
-            ))}
+      <div className="pfe-barre-outils">
+        {avecEmployes && (
+          <div className="pfe-filtres">
+            <select value={filtreTaches} onChange={(e) => { setFiltreTaches(e.target.value); setTout(false); }} aria-label={t('Tâches')}>
+              {FILTRES_TACHES.map((f) => <option key={f.cle} value={f.cle}>{t('Tâches')} : {t(f.label)} ({nbFiltre(f)})</option>)}
+            </select>
+            <select value={tri} onChange={(e) => setTri(e.target.value)} aria-label={t('Trier par')}>
+              {TRIS.map((x) => <option key={x.cle} value={x.cle}>{t('Trier par')} : {t(x.label)}</option>)}
+            </select>
           </div>
         )}
-        {!donnees && !erreur ? <Vide>{t('Chargement…')}</Vide> : employes.length === 0 ? (
-          <Vide>{filtreTaches === 'tous' ? t('Aucune intervention ni tâche réalisée sur la période.') : t('Aucun employé ne correspond à ce filtre.')}</Vide>
-        ) : (
-          <>
-            <div className="pfe-tri" role="group" aria-label={t('Trier par')}>
-              <span>{t('Trier par')}</span>
-              {TRIS.map((x) => (
-                <button key={x.cle} type="button" aria-pressed={tri === x.cle} onClick={() => setTri(x.cle)}>{t(x.label)}</button>
-              ))}
-            </div>
-            <div className="pfe-tableau-cadre">
-              <table className="tb-table pfe-tableau">
-                <thead>
-                  <tr>
-                    <th rowSpan={2}>#</th>
-                    <th rowSpan={2}>{t('Employé')}</th>
-                    <th colSpan={3} className="pfe-groupe pfe-groupe--teal">{t('Interventions réalisées')}</th>
-                    <th colSpan={3} className="pfe-groupe pfe-groupe--violet">{t('Tâches réalisées')}</th>
-                    <th rowSpan={2} className="tb-num">{t('Non finies')}</th>
-                  </tr>
-                  <tr>
-                    <th className="tb-num">{t('Nombre')}</th>
-                    <th>{t('Durée')}</th>
-                    <th className="tb-num">{t('Moyenne')}</th>
-                    <th className="tb-num">{t('Nombre')}</th>
-                    <th>{t('Durée')}</th>
-                    <th className="tb-num">{t('Moyenne')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibles.map((e, i) => (
-                    <tr key={e.personnelId}>
-                      <td className="pfe-rang">{i + 1}</td>
-                      <td><strong className="pfe-nom">{e.nom}</strong></td>
-                      <td className="tb-num">{nb(e.nbInterventions)}</td>
-                      <td><BarreDuree secondes={e.dureeInterventionsSecondes} max={maxInterv} ton="teal" /></td>
-                      <td className="tb-num">{duree(e.dureeMoyenneInterventionSecondes)}</td>
-                      <td className="tb-num">{nb(e.nbTaches)}</td>
-                      <td><BarreDuree secondes={e.dureeTachesSecondes} max={maxTaches} ton="violet" /></td>
-                      <td className="tb-num">{duree(e.dureeMoyenneTacheSecondes)}</td>
-                      <td className="tb-num" title={t('{n} tâche(s) associée(s) au total', { n: e.nbTachesAssociees ?? 0 })}>
-                        {e.nbTachesNonFinies > 0 ? <Badge ton="ambre">{nb(e.nbTachesNonFinies)}</Badge>
-                          : e.nbTachesAssociees > 0 ? <Badge ton="vert">{t('Toutes finies')}</Badge> : <span className="cl-tiret">—</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {employes.length > NB_VISIBLES && (
-              <button type="button" className="pfe-lien pfe-voir-tout" onClick={() => setTout((v) => !v)}>
-                {tout ? t('Afficher les {n} premiers', { n: NB_VISIBLES }) : t('Afficher les {n} employés', { n: employes.length })}
-              </button>
-            )}
-            <p className="tb-note">{t('Seul le travail réalisé compte : interventions terminées et tâches effectuées pendant la période. La durée vient du chronomètre ; pour les plus anciennes, elle est calculée à partir des dates de début et de fin.')}</p>
-          </>
+        {onOuvrirChrono && (
+          <button type="button" className="pfe-lien pfe-lien--chrono" onClick={onOuvrirChrono}>
+            <Radio size={14} aria-hidden="true" /> {t('Voir le chrono en direct')}
+          </button>
         )}
-      </Carte>
-    </>
+      </div>
+
+
+      {!donnees && !erreur ? <Vide>{t('Chargement…')}</Vide> : employes.length === 0 ? (
+        <Vide>{filtreTaches === 'tous' ? t('Aucune intervention ni tâche réalisée sur la période.') : t('Aucun employé ne correspond à ce filtre.')}</Vide>
+      ) : (
+        <>
+          <ul className="pfe-legende" aria-hidden="true">
+            <li><i className="pfe-pastille pfe-pastille--teal" /> {t('Interventions')}</li>
+            <li><i className="pfe-pastille pfe-pastille--violet" /> {t('Tâches')}</li>
+          </ul>
+          <div className="pfe-histo-cadre">
+            <ol className="pfe-histo" aria-label={t('Durée réalisée par employé')}>
+              {visibles.map((e) => (
+                <li key={e.personnelId} className="pfe-groupe-col" tabIndex={0}>
+                  <span className="pfe-cols">
+                    <Colonne secondes={e.dureeInterventionsSecondes} max={maxDuree} ton="teal" libelle={t('Interventions')} />
+                    <Colonne secondes={e.dureeTachesSecondes} max={maxDuree} ton="violet" libelle={t('Tâches')} />
+                  </span>
+                  <span className="pfe-col-nom" title={e.nom}>{e.nom}</span>
+                  <span className="pfe-col-etat">
+                    {e.nbTachesNonFinies > 0 ? <span title={t('{n} tâche(s) non finie(s)', { n: nb(e.nbTachesNonFinies) })}><Badge ton="ambre">{t('{n} à finir', { n: nb(e.nbTachesNonFinies) })}</Badge></span>
+                      : e.nbTachesAssociees > 0 ? <Badge ton="vert">{t('Finies')}</Badge> : null}
+                  </span>
+                  <div className="pfe-bulle" role="tooltip">
+                    <strong>{e.nom}</strong>
+                    <dl>
+                      <dt className="pfe-bulle-titre pfe-bulle-titre--teal">{t('Interventions')}</dt>
+                      <dd>{t('{n} · {d} · moyenne {m}', { n: nb(e.nbInterventions), d: duree(e.dureeInterventionsSecondes), m: duree(e.dureeMoyenneInterventionSecondes) })}</dd>
+                      <dt className="pfe-bulle-titre pfe-bulle-titre--violet">{t('Tâches')}</dt>
+                      <dd>{t('{n} · {d} · moyenne {m}', { n: nb(e.nbTaches), d: duree(e.dureeTachesSecondes), m: duree(e.dureeMoyenneTacheSecondes) })}</dd>
+                      <dt className="pfe-bulle-titre">{t('Tâches associées')}</dt>
+                      <dd>{t('{n} dont {m} non finie(s)', { n: nb(e.nbTachesAssociees ?? 0), m: nb(e.nbTachesNonFinies ?? 0) })}</dd>
+                    </dl>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+          {employes.length > NB_VISIBLES && (
+            <button type="button" className="pfe-lien pfe-voir-tout" onClick={() => setTout((v) => !v)}>
+              {tout ? t('Afficher les {n} premiers', { n: NB_VISIBLES }) : t('Afficher les {n} employés', { n: employes.length })}
+            </button>
+          )}
+        </>
+      )}
+    </Carte>
   );
 }

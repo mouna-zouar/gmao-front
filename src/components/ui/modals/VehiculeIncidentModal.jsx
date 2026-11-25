@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
 import { commePage, obtenirVehicules } from '../../../store/referentiels';
 import personnelService from '../../../services/Personnelservice';
 import authService from '../../../services/Authservice';
 import {
-  AlertTriangle, X, Car, User, Calendar, Gauge, Coins, Loader2, Save, Check, MapPin, Link2, Search, ShieldAlert, ShieldCheck, Shield, Zap, Ban, Package, Activity, XCircle, Hourglass, AlertCircle, FileText, Hammer, ChevronDown,
+  AlertTriangle, X, Car, User, Calendar, Gauge, Coins, Loader2, Save, Check, MapPin, Link2, Search, ShieldAlert, ShieldCheck, Shield, Zap, Ban, Package, Activity, XCircle, Hourglass, AlertCircle, FileText, Hammer,
 } from 'lucide-react';
 import './Modal.css';
 import './VehiculeIncidentModal.css';
+import SearchableSelect from '../../commun/ListeRecherche';
 
 const TYPE_OPTIONS = [
   { value: 1, label: 'Accident',    Icon: AlertTriangle, color: 'red' },
@@ -63,178 +64,6 @@ function toInputDateTime(iso) {
   const pad = (n) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-
-const SearchableSelect = ({
-  id,
-  name,
-  value,
-  onChange,
-  options,
-  getValue = (o) => o.id,
-  getLabel = (o) => o.label ?? o.nom ?? String(o),
-  getOptionHint = () => null,
-  placeholder = 'Sélectionner...',
-  emptyMessage = 'Aucun résultat',
-  allowEmpty = false,
-  emptyOptionLabel = '— Aucun —',
-  disabled = false,
-  loading = false,
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
-  const containerRef = useRef(null);
-  const inputRef = useRef(null);
-
-  const selected = options.find((o) => String(getValue(o)) === String(value));
-  const selectedLabel = selected ? getLabel(selected) : '';
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
-        setIsOpen(false);
-        setSearch('');
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape') {
-        setIsOpen(false);
-        setSearch('');
-        inputRef.current?.blur();
-      }
-    };
-    if (isOpen) document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen]);
-
-  const handleFocus = () => {
-    if (disabled) return;
-    setIsOpen(true);
-    setSearch(selectedLabel);
-    setTimeout(() => inputRef.current?.select(), 0);
-  };
-
-  const handleInputChange = (e) => {
-    setSearch(e.target.value);
-    if (!isOpen) setIsOpen(true);
-  };
-
-  const handleSelect = (opt) => {
-    onChange({ target: { name, value: String(getValue(opt)) } });
-    setIsOpen(false);
-    setSearch('');
-    inputRef.current?.blur();
-  };
-
-  const handleClear = (e) => {
-    e.stopPropagation();
-    onChange({ target: { name, value: '' } });
-    setSearch('');
-    inputRef.current?.focus();
-  };
-
-  const term = search.trim().toLowerCase();
-  const isSelectedLabel = selected && term === selectedLabel.toLowerCase();
-  const filtered = (!term || isSelectedLabel)
-    ? options
-    : options.filter((o) => getLabel(o).toLowerCase().includes(term));
-
-  const displayValue = isOpen ? search : selectedLabel;
-
-  return (
-    <div className="vim-searchable" ref={containerRef}>
-      <div className={`vim-searchable-input-wrap ${isOpen ? 'is-open' : ''}`}>
-        <Search size={15} strokeWidth={2.4} className="vim-searchable-icon" />
-
-        <input
-          ref={inputRef}
-          id={id}
-          type="text"
-          className="vim-searchable-input"
-          value={displayValue}
-          onChange={handleInputChange}
-          onFocus={handleFocus}
-          placeholder={
-            loading
-              ? 'Chargement...'
-              : (selected ? '' : placeholder)
-          }
-          disabled={disabled || loading}
-          autoComplete="off"
-        />
-
-        {(selected || search) && !disabled && !loading && (
-          <button
-            type="button"
-            className="vim-searchable-clear-inline"
-            onClick={handleClear}
-            aria-label="Effacer"
-            tabIndex={-1}
-          >
-            <X size={13} strokeWidth={2.5} />
-          </button>
-        )}
-
-        <ChevronDown
-          size={15}
-          strokeWidth={2.4}
-          className={`vim-searchable-chevron ${isOpen ? 'rotated' : ''}`}
-        />
-      </div>
-
-      {isOpen && (
-        <div className="vim-searchable-menu">
-          <div className="vim-searchable-options">
-            {allowEmpty && !term && (
-              <button
-                type="button"
-                className={`vim-searchable-option ${!value ? 'is-selected' : ''}`}
-                onClick={() => handleSelect({ id: '' })}
-              >
-                <span className="vim-searchable-option-main">
-                  <span className="vim-searchable-option-label">{emptyOptionLabel}</span>
-                </span>
-                {!value && <Check size={14} strokeWidth={3} />}
-              </button>
-            )}
-
-            {filtered.length === 0 && !allowEmpty ? (
-              <div className="vim-searchable-empty">{emptyMessage}</div>
-            ) : filtered.length === 0 && allowEmpty && term ? (
-              <div className="vim-searchable-empty">{emptyMessage}</div>
-            ) : (
-              filtered.map((o) => {
-                const val = String(getValue(o));
-                const isSelected = val === String(value);
-                const hint = getOptionHint(o);
-                return (
-                  <button
-                    key={val}
-                    type="button"
-                    className={`vim-searchable-option ${isSelected ? 'is-selected' : ''}`}
-                    onClick={() => handleSelect(o)}
-                  >
-                    <span className="vim-searchable-option-main">
-                      <span className="vim-searchable-option-label">{getLabel(o)}</span>
-                      {hint && (
-                        <span className="vim-searchable-option-hint">{hint}</span>
-                      )}
-                    </span>
-                    {isSelected && <Check size={14} strokeWidth={3} />}
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing }) => {
   const [formData, setFormData] = useState(emptyForm);

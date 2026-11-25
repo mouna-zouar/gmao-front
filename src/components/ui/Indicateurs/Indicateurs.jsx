@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowDownRight, ArrowRight, ArrowUpRight, ChevronRight, FileSpreadsheet, Info, Loader2, Minus } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, ChevronRight, FileSpreadsheet, Info, Loader2, Minus } from 'lucide-react';
 import { t, locale } from '../../../i18n';
 import { formater, libelleMois, nf } from './format';
 import './Indicateurs.css';
@@ -215,15 +215,6 @@ export function CourbeTendance({ titre, sousTitre, mois, series, format = 'nombr
         </div>
       )}
     </div>
-  );
-}
-
-export function LienListe({ vers, children }) {
-  const navigate = useNavigate();
-  return (
-    <button type="button" className="ind-lien" onClick={() => navigate(vers)}>
-      {children} <ArrowRight size={14} className="rtl-miroir" aria-hidden="true" />
-    </button>
   );
 }
 

@@ -4373,6 +4373,15 @@ const ar = {
   "Désactiver « {nom} » ?": "تعطيل « {nom} »؟",
   "Accès refusé": "الدخول مرفوض",
   "Vous n’avez pas le droit d’ouvrir cette page.": "ليس لديك الحق في فتح هذه الصفحة.",
+  "Envoyé": "مُرسَلة",
+  "Lu par {noms}": "قرأها {noms}",
+  "Lu par tous": "قرأها الجميع",
+  "Lu par {noms} et {n} autres": "قرأها {noms} و{n} آخرون",
+  "Lecture": "القراءة",
+  "Toutes les conversations": "كل المحادثات",
+  "Non lus": "غير مقروءة",
+  "Lus": "مقروءة",
+  "Aucun message non lu.": "لا توجد رسائل غير مقروءة.",
 };
 
 export default ar;

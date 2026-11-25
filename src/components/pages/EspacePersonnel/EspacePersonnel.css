@@ -2541,3 +2541,17 @@ button.ep-chat-pastille:hover { filter: brightness(0.92); }
 
 .ep-page.ep2, .ep-page.ep3 { width: 100%; max-width: none; margin: 0; }
 .ep3 .ept-texte { max-width: none; }
+
+.ep-disc-filtre {
+  margin: -4px 12px 10px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1.5px solid var(--ep-line);
+  border-radius: 12px;
+  background: var(--ep-surface);
+  color: var(--ep-ink, inherit);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.ep-disc-filtre:focus { outline: none; border-color: var(--ep-brand); }

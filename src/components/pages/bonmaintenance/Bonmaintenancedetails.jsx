@@ -97,35 +97,7 @@ import { ReparationEtapes, PanneauDelais, PanneauCout, InfosReclamation } from '
 import { CommentairesTab } from './onglets/CommentairesTab';
 import { HistoriqueTab } from './onglets/HistoriqueTab';
 import { DocumentsTab } from './onglets/DocumentsTab';
-
-const METHODE_RCA_LABELS = {
-  CINQ_POURQUOI: '5 Pourquoi',
-  ISHIKAWA: 'Ishikawa',
-  PARETO: 'Pareto',
-  AUTRE: 'Autre',
-};
-
-const TYPE_ACTION_LABELS = { CORRECTIVE: 'Corrective', PREVENTIVE: 'Préventive' };
-
-const STATUT_ACTION_LABELS = {
-  A_FAIRE: 'À faire',
-  EN_COURS: 'En cours',
-  TERMINEE: 'Terminée',
-  VERIFIEE_EFFICACE: 'Vérifiée efficace',
-  VERIFIEE_INEFFICACE: 'Vérifiée inefficace',
-};
-
-const STATUT_ACTION_CLASS = {
-  A_FAIRE: 'bmd-capa-statut--afaire',
-  EN_COURS: 'bmd-capa-statut--encours',
-  TERMINEE: 'bmd-capa-statut--terminee',
-  VERIFIEE_EFFICACE: 'bmd-capa-statut--efficace',
-  VERIFIEE_INEFFICACE: 'bmd-capa-statut--inefficace',
-};
-
-function nouvelleActionVide() {
-  return { type: 'CORRECTIVE', description: '', responsable: '', dateEcheance: '' };
-}
+import { CauseRacineTab } from './onglets/CauseRacineTab';
 
 const RUBRIQUES_VERROUILLEES = new Set(['diagnostic', 'reparation', 'taches', 'intervenants', 'controle', 'remiseEnService', 'commentaires']);
 
@@ -255,14 +227,14 @@ function prechargerBon(id) {
   ]);
 }
 
-export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
+export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletInitial = null }) {
   const aDroit = useDroits();
   useMemo(() => prechargerBon(bonMaintenance?.id), [bonMaintenance?.id]);
   const [bon, setBon] = useState(bonMaintenance);
   const [loading, setLoading] = useState(!bonMaintenance);
   const [error, setError] = useState(null);
   const [tiroir, setTiroir] = useState(null);
-  const [ongletDossier, setOngletDossier] = useState({ key: 'rapport', form: false, version: 0 });
+  const [ongletDossier, setOngletDossier] = useState({ key: ongletInitial && CLES_ONGLETS.has(ongletInitial) ? ongletInitial : 'rapport', form: false, version: 0 });
   const refOnglets = useRef(null);
   const [celebrer, celebrationElement] = useCelebration();
   const [impressionEnCours, setImpressionEnCours] = useState(false);
@@ -315,16 +287,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
 
   const [rcaAnalyses, setRcaAnalyses] = useState([]);
   const [loadingRca, setLoadingRca] = useState(false);
-  const [savingRca, setSavingRca] = useState(false);
-  const [majActionId, setMajActionId] = useState(null);
-  const [rcaForm, setRcaForm] = useState({
-    probleme: '',
-    methode: 'CINQ_POURQUOI',
-    causeRacine: '',
-    analyseDetaillee: '',
-    auteur: '',
-    actions: [nouvelleActionVide()],
-  });
   const [expandedSections, setExpandedSections] = useState({
     reclamation: true,
     bon: true,
@@ -416,79 +378,6 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
   }, [bonMaintenance?.id]);
 
   useEffect(() => { chargerResume(); }, [chargerResume]);
-
-  const handleRcaFormChange = (champ, valeur) => {
-    setRcaForm((f) => ({ ...f, [champ]: valeur }));
-  };
-
-  const handleRcaActionChange = (index, champ, valeur) => {
-    setRcaForm((f) => {
-      const actions = [...f.actions];
-      actions[index] = { ...actions[index], [champ]: valeur };
-      return { ...f, actions };
-    });
-  };
-
-  const handleRcaAjouterLigneAction = () => {
-    setRcaForm((f) => ({ ...f, actions: [...f.actions, nouvelleActionVide()] }));
-  };
-
-  const handleRcaSupprimerLigneAction = (index) => {
-    setRcaForm((f) => ({ ...f, actions: f.actions.filter((_, i) => i !== index) }));
-  };
-
-  const handleRcaSubmit = async () => {
-    if (!rcaForm.probleme.trim() || !rcaForm.causeRacine.trim()) {
-      alert(t("Le problème et la cause racine sont obligatoires."));
-      return;
-    }
-    setSavingRca(true);
-    try {
-      const actionsValides = rcaForm.actions
-        .filter((a) => a.description.trim())
-        .map((a) => ({
-          type: a.type,
-          description: a.description,
-          responsable: a.responsable || null,
-          dateEcheance: a.dateEcheance ? new Date(a.dateEcheance).toISOString() : null,
-        }));
-
-      await rcaCapaService.creerAnalyse({
-        bonMaintenanceId: bon.id,
-        lotArticleImmobilistationId: bon.lotArticleImmobilistationId,
-        probleme: rcaForm.probleme,
-        methode: rcaForm.methode,
-        causeRacine: rcaForm.causeRacine,
-        analyseDetaillee: rcaForm.analyseDetaillee || null,
-        auteur: rcaForm.auteur || null,
-        actions: actionsValides,
-      });
-
-      setRcaForm({
-        probleme: '', methode: 'CINQ_POURQUOI', causeRacine: '', analyseDetaillee: '', auteur: '',
-        actions: [nouvelleActionVide()],
-      });
-      chargerRca();
-    } catch (err) {
-      console.error('Erreur création analyse RCA :', err);
-      alert(t("Impossible d'enregistrer l'analyse RCA."));
-    } finally {
-      setSavingRca(false);
-    }
-  };
-
-  const handleMajStatutAction = async (actionId, statut) => {
-    setMajActionId(actionId);
-    try {
-      await rcaCapaService.majStatutAction(actionId, { statut });
-      chargerRca();
-    } catch (err) {
-      console.error('Erreur mise à jour statut action CAPA :', err);
-      alert(t("Impossible de mettre à jour le statut de l'action."));
-    } finally {
-      setMajActionId(null);
-    }
-  };
 
   useEffect(() => {
     if (!bonMaintenance || !bonMaintenance.id) return;
@@ -835,191 +724,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack }) {
       case 'cout':
         return <PanneauCout cout={coutInfo} />;
       case 'rca':
-        return (
-          <div className="bmx-rca">
-            <div className="bmd-rca-panel">
-          {loadingRca ? (
-            <p className="bmd-sla-panel__empty">{t("Chargement...")}</p>
-          ) : rcaAnalyses.length > 0 ? (
-            rcaAnalyses.map((analyse) => (
-              <div key={analyse.id} className="bmd-rca-analyse">
-                <div className="bmd-rca-analyse__header">
-                  <span className="bmd-rca-methode-pill">{METHODE_RCA_LABELS[analyse.methode] || analyse.methode}</span>
-                  <span className="bmd-rca-analyse__meta">
-                    {analyse.auteur ? `${analyse.auteur} · ` : ''}{formatDateTime(analyse.dateAnalyse)}
-                  </span>
-                </div>
-
-                <div className="bmd-rca-analyse__champ">
-                  <span className="bmd-sla-panel__title">{t("Problème constaté")}</span>
-                  <p>{analyse.probleme}</p>
-                </div>
-                <div className="bmd-rca-analyse__champ">
-                  <span className="bmd-sla-panel__title">{t("Cause racine")}</span>
-                  <p>{analyse.causeRacine}</p>
-                </div>
-                {analyse.analyseDetaillee && (
-                  <div className="bmd-rca-analyse__champ">
-                    <span className="bmd-sla-panel__title">{t("Analyse détaillée")}</span>
-                    <p className="bmd-rca-analyse__detail">{analyse.analyseDetaillee}</p>
-                  </div>
-                )}
-
-                {analyse.actions?.length > 0 && (
-                  <div className="bmd-rca-actions">
-                    <span className="bmd-sla-panel__title">{t("Actions CAPA")}</span>
-                    <ul className="bmd-rca-actions__list">
-                      {analyse.actions.map((action) => (
-                        <li key={action.id} className={`bmd-rca-action ${action.enRetard ? 'is-retard' : ''}`}>
-                          <div className="bmd-rca-action__top">
-                            <span className="bmd-rca-type-pill">{TYPE_ACTION_LABELS[action.type] || action.type}</span>
-                            <span className="bmd-rca-action__desc">{t(action.description)}</span>
-                          </div>
-                          <div className="bmd-rca-action__bottom">
-                            <span className="bmd-rca-action__meta">
-                              {action.responsable ? `${action.responsable} · ` : ''}
-                              {action.dateEcheance ? t('Échéance {date}', { date: formatDate(action.dateEcheance) }) : t('Sans échéance')}
-                              {action.enRetard && <span className="bmd-rca-retard-tag"> {t("· En retard")}</span>}
-                            </span>
-                            <select
-                              className={`bmd-capa-statut-select ${STATUT_ACTION_CLASS[action.statut] || ''}`}
-                              value={action.statut}
-                              disabled={majActionId === action.id}
-                              onChange={(e) => handleMajStatutAction(action.id, e.target.value)}
-                            >
-                              {Object.entries(STATUT_ACTION_LABELS).map(([val, label]) => (
-                                <option key={val} value={val}>{label}</option>
-                              ))}
-                            </select>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="bmd-rca-form">
-              <p className="bmd-rca-form__intro">
-                {t("Aucune analyse RCA pour ce bon. Documenter la cause racine évite de traiter seulement le symptôme.")}
-              </p>
-
-              <label className="bmd-rca-form__label">{t("Problème constaté *")}</label>
-              <textarea
-                className="bmd-rca-form__textarea"
-                rows={2}
-                value={rcaForm.probleme}
-                onChange={(e) => handleRcaFormChange('probleme', e.target.value)}
-                placeholder={t("Ex : la pompe tombe en panne toutes les 2 semaines depuis 3 mois")}
-              />
-
-              <div className="bmd-rca-form__row">
-                <div className="bmd-rca-form__col">
-                  <label className="bmd-rca-form__label">{t("Méthode")}</label>
-                  <select
-                    className="bmd-rca-form__select"
-                    value={rcaForm.methode}
-                    onChange={(e) => handleRcaFormChange('methode', e.target.value)}
-                  >
-                    {Object.entries(METHODE_RCA_LABELS).map(([val, label]) => (
-                      <option key={val} value={val}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="bmd-rca-form__col">
-                  <label className="bmd-rca-form__label">{t("Auteur")}</label>
-                  <input
-                    type="text"
-                    className="bmd-rca-form__input"
-                    value={rcaForm.auteur}
-                    onChange={(e) => handleRcaFormChange('auteur', e.target.value)}
-                    placeholder={t("Nom de l'analyste")}
-                  />
-                </div>
-              </div>
-
-              <label className="bmd-rca-form__label">{t("Cause racine *")}</label>
-              <textarea
-                className="bmd-rca-form__textarea"
-                rows={2}
-                value={rcaForm.causeRacine}
-                onChange={(e) => handleRcaFormChange('causeRacine', e.target.value)}
-                placeholder={t("La cause profonde identifiée, pas le symptôme")}
-              />
-
-              <label className="bmd-rca-form__label">{t("Analyse détaillée (optionnel)")}</label>
-              <textarea
-                className="bmd-rca-form__textarea"
-                rows={3}
-                value={rcaForm.analyseDetaillee}
-                onChange={(e) => handleRcaFormChange('analyseDetaillee', e.target.value)}
-                placeholder={t("Les 5 pourquoi enchaînés, ou les notes du diagramme Ishikawa")}
-              />
-
-              <div className="bmd-rca-form__actions-header">
-                <span className="bmd-rca-form__label">{t("Actions CAPA")}</span>
-                <button type="button" className="bmd-rca-form__add-btn" onClick={handleRcaAjouterLigneAction}>
-                  {t("+ Ajouter une action")}
-                </button>
-              </div>
-
-              {rcaForm.actions.map((action, index) => (
-                <div key={index} className="bmd-rca-form__action-row">
-                  <select
-                    className="bmd-rca-form__select bmd-rca-form__select--type"
-                    value={action.type}
-                    onChange={(e) => handleRcaActionChange(index, 'type', e.target.value)}
-                  >
-                    {Object.entries(TYPE_ACTION_LABELS).map(([val, label]) => (
-                      <option key={val} value={val}>{label}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    className="bmd-rca-form__input bmd-rca-form__input--desc"
-                    placeholder={t("Description de l'action")}
-                    value={action.description}
-                    onChange={(e) => handleRcaActionChange(index, 'description', e.target.value)}
-                  />
-                  <input
-                    type="text"
-                    className="bmd-rca-form__input bmd-rca-form__input--resp"
-                    placeholder={t("Responsable")}
-                    value={action.responsable}
-                    onChange={(e) => handleRcaActionChange(index, 'responsable', e.target.value)}
-                  />
-                  <input
-                    type="date"
-                    className="bmd-rca-form__input bmd-rca-form__input--date"
-                    value={action.dateEcheance}
-                    onChange={(e) => handleRcaActionChange(index, 'dateEcheance', e.target.value)}
-                  />
-                  {rcaForm.actions.length > 1 && (
-                    <button
-                      type="button"
-                      className="bmd-rca-form__remove-btn"
-                      onClick={() => handleRcaSupprimerLigneAction(index)}
-                    >
-                      {t("×")}
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              <button
-                type="button"
-                className="bmd-rca-form__submit-btn"
-                onClick={handleRcaSubmit}
-                disabled={savingRca}
-              >
-                {savingRca ? t("Enregistrement...") : t("Enregistrer l'analyse RCA")}
-              </button>
-            </div>
-          )}
-        </div>
-          </div>
-        );
+        return <CauseRacineTab bon={bon} reclamations={reclamations} analyses={rcaAnalyses} loading={loadingRca} onRecharger={chargerRca} />;
       default:
         return null;
     }
