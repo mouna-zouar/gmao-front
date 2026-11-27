@@ -1,6 +1,7 @@
 import { LoaderCircle, RefreshCw, Settings2 } from 'lucide-react';
 import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 import { PERIODES } from './outilsPerso';
+import { ChargementTableau } from '../TableauBord';
 import { t, locale } from '../../../i18n';
 
 /*
@@ -44,7 +45,7 @@ export function EntetePerso({ icone: Icone, titre, etat, edition, setEdition, in
       {indisponibles.length > 0 && (
         <p className="tb-message tb-message--attention">{t('Certaines données n’ont pas pu être chargées : {l}.', { l: indisponibles.join(', ') })}</p>
       )}
-      {!donnees && !erreur && <div className="tb-chargement">{t('Chargement…')}</div>}
+      {!donnees && !erreur && <ChargementTableau />}
     </>
   );
 }

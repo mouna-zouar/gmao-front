@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, isDraft, original } from '@reduxjs/toolkit';
 import { estReinitialisation, messageErreur, versListe } from './communs';
 
 export function creerReferentiel({ nom, charger, validiteMs = 5 * 60 * 1000, invalidePar = null, transformer = versListe }) {
@@ -23,7 +23,8 @@ export function creerReferentiel({ nom, charger, validiteMs = 5 * 60 * 1000, inv
     extraReducers: (b) => {
       b.addCase(chargerListe.pending, (state) => { if (state.statut !== 'pret') state.statut = 'chargement'; state.erreur = null; })
         .addCase(chargerListe.fulfilled, (state, { payload }) => {
-          if (payload !== state.liste) { state.liste = payload; state.chargeLe = Date.now(); }
+          const actuelle = isDraft(state.liste) ? original(state.liste) : state.liste;
+          if (payload !== actuelle) { state.liste = payload; state.chargeLe = Date.now(); }
           state.statut = 'pret';
         })
         .addCase(chargerListe.rejected, (state, { error }) => {

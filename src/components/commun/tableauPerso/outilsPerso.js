@@ -246,11 +246,17 @@ const lirePeriode = (cle) => {
   } catch { return 30; }
 };
 
+/** Heure du calcul côté serveur (le serveur peut servir un résultat de quelques minutes). */
+export const dateCalcul = (d) => {
+  const t = d?.calculeLe ? Date.parse(d.calculeLe) : NaN;
+  return Number.isNaN(t) ? Date.now() : t;
+};
+
 /** Charge les données d'un tableau de bord ; rafraîchit toutes les 5 minutes si l'onglet est visible. */
-export function useTableauPerso(charge, clePeriode) {
+export function useTableauPerso(charge, clePeriode, lireCache = null) {
   const [jours, setJoursBrut] = useState(() => lirePeriode(clePeriode));
   const [lieuId, setLieuId] = useState('');
-  const [donnees, setDonnees] = useState(null);
+  const [donnees, setDonnees] = useState(() => lireCache?.(lirePeriode(clePeriode), null) ?? null);
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [majLe, setMajLe] = useState(null);
@@ -265,17 +271,20 @@ export function useTableauPerso(charge, clePeriode) {
     if (enCours.current) return;
     enCours.current = true;
     setChargement(true);
+    const enCache = recalculer ? null : lireCache?.(jours, lieuId || null);
+    if (enCache) setDonnees(enCache);
     try {
-      setDonnees(await charge(jours, recalculer, lieuId || null));
+      const d = await charge(jours, recalculer, lieuId || null);
+      setDonnees(d);
       setErreur(null);
-      setMajLe(Date.now());
+      setMajLe(dateCalcul(d));
     } catch (e) {
       setErreur(e?.response?.data?.message || t('Impossible de charger le tableau de bord. Vérifie que le serveur est lancé.'));
     } finally {
       enCours.current = false;
       setChargement(false);
     }
-  }, [charge, jours, lieuId]);
+  }, [charge, lireCache, jours, lieuId]);
 
   useEffect(() => {
     const id = setTimeout(() => charger(), 0);

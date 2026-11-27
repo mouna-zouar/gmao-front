@@ -16,6 +16,11 @@ export async function lireRequete(nom, params = {}, { forcer = false } = {}) {
   return cloner(req.selecteurs.entree(params)(store.getState()).donnees);
 }
 
+export function lireRequeteEnCache(nom, params = {}) {
+  const donnees = trouver(nom).selecteurs.entree(params)(store.getState()).donnees;
+  return donnees == null ? null : cloner(donnees);
+}
+
 export const obtenirDepots = (options) => obtenirReferentiel('depots', options);
 export const obtenirPrestataires = (options) => obtenirReferentiel('prestataires', options);
 export const obtenirArticles = (options) => obtenirReferentiel('articles', options);

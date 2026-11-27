@@ -13,8 +13,9 @@ import { ICONES_MODULES } from '../../../constants/modules';
 import { ilYa } from '../../ui/Veille/Veille';
 import { t } from '../../../i18n';
 import '../Supervision/Supervision.css';
-import { lireRequete } from '../../../store/referentiels';
+import { lireRequete, lireRequeteEnCache } from '../../../store/referentiels';
 
+const LIRE_TABLEAU_RECLAMATIONS_EN_CACHE = (jours, lieuId) => lireRequeteEnCache('tableauReclamations', { jours, lieuId });
 const CHARGER_TABLEAU_RECLAMATIONS = (jours, recalculer, lieuId) => lireRequete('tableauReclamations', { jours, lieuId }, { forcer: recalculer });
 
 /*
@@ -62,7 +63,7 @@ export default function ReclamationDashboard() {
   const utilisateur = useSelector(selectUtilisateur);
   const [disposition, actions] = useDispositionReclamations(utilisateur?.personnelId ?? utilisateur?.userId ?? utilisateur?.username);
   const [edition, setEdition] = useState(false);
-  const etat = useTableauPerso(CHARGER_TABLEAU_RECLAMATIONS, 'gmao.tableau-reclamations.periode');
+  const etat = useTableauPerso(CHARGER_TABLEAU_RECLAMATIONS, 'gmao.tableau-reclamations.periode', LIRE_TABLEAU_RECLAMATIONS_EN_CACHE);
   const { donnees, jours } = etat;
 
   const d = donnees || {};

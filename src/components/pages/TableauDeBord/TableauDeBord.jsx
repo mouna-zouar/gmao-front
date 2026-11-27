@@ -8,7 +8,7 @@ import {
 import { selectUtilisateur } from '../../../store/authSlice';
 import { PROFIL_GENERAL, useDisposition } from './dispositionTableau';
 import { ZonePerso } from '../../commun/tableauPerso/BlocsPerso';
-import { Badge, Barres, Carte, Liste, Repartition, Stat, Vide } from '../../commun/TableauBord';
+import { Badge, Barres, Carte, ChargementTableau, Liste, Repartition, Stat, Vide } from '../../commun/TableauBord';
 import { Bulle, useLargeur } from '../Supervision/Supervision';
 import { ilYa } from '../../ui/Veille/Veille';
 import PerformanceEmployes from '../PerformanceEmployes/PerformanceEmployes';
@@ -17,7 +17,8 @@ import { t, locale } from '../../../i18n';
 import '../Supervision/Supervision.css';
 import './TableauDeBord.css';
 import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
-import { lireRequete } from '../../../store/referentiels';
+import { lireRequete, lireRequeteEnCache } from '../../../store/referentiels';
+import { dateCalcul } from '../../commun/tableauPerso/outilsPerso';
 
 const SERIES = [
   { cle: 'reclamations', label: 'Réclamations reçues', couleur: '#0794a4' },
@@ -293,7 +294,7 @@ export default function TableauDeBord() {
   const [jours, setJours] = useState(() => lire(CLE_PERIODE, 30, PERIODES));
   const [lieuId, setLieuId] = useState('');
   const carteLieux = useCarteLieux();
-  const [donnees, setDonnees] = useState(null);
+  const [donnees, setDonnees] = useState(() => lireRequeteEnCache('tableauDeBord', { jours: lire(CLE_PERIODE, 30, PERIODES), lieuId: null }));
   const [chargement, setChargement] = useState(false);
   const [erreur, setErreur] = useState(null);
   const [majLe, setMajLe] = useState(null);
@@ -303,11 +304,14 @@ export default function TableauDeBord() {
     if (enCours.current) return;
     enCours.current = true;
     setChargement(true);
+    const params = { jours, lieuId: lieuId || null };
+    const enCache = recalculer ? null : lireRequeteEnCache('tableauDeBord', params);
+    if (enCache) setDonnees(enCache);
     try {
-      const d = await lireRequete('tableauDeBord', { jours, lieuId: lieuId || null }, { forcer: recalculer });
+      const d = await lireRequete('tableauDeBord', params, { forcer: recalculer });
       setDonnees(d);
       setErreur(null);
-      setMajLe(Date.now());
+      setMajLe(dateCalcul(d));
     } catch (e) {
       setErreur(e?.response?.data?.message || t('Impossible de charger le tableau de bord. Vérifie que le serveur est lancé.'));
     } finally {
@@ -563,7 +567,7 @@ export default function TableauDeBord() {
       <AccesGmao compteurs={compteurs} />
 
 
-      {!donnees && !erreur && <div className="tb-chargement">{t('Chargement…')}</div>}
+      {!donnees && !erreur && <ChargementTableau />}
 
       {donnees && (
         <ZonePerso profil={PROFIL_GENERAL} disposition={disposition} actions={actions} edition={edition} onTerminer={() => setEdition(false)}

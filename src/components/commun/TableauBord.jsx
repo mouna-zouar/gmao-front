@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { t, locale } from '../../i18n';
 import './TableauBord.css';
@@ -31,6 +32,74 @@ export function Carte({ titre, pastille, pastilleTon, className = '', children }
       </div>
       {children}
     </section>
+  );
+}
+
+const HAUTEURS = [38, 62, 45, 80, 55, 70, 34, 90, 60, 48, 74, 52];
+const LARGEURS_BARRES = [86, 64, 48, 30, 18];
+
+function Ligne({ className = '' }) {
+  return <span className={`tb-sq ${className}`} />;
+}
+
+/**
+ * Squelette d'un tableau de bord pendant le premier chargement :
+ * même grille que les cartes réelles, avec un bandeau d'avancement.
+ */
+export function ChargementTableau({ stats = 6, texte }) {
+  const [lent, setLent] = useState(false);
+  useEffect(() => {
+    const id = setTimeout(() => setLent(true), 3500);
+    return () => clearTimeout(id);
+  }, []);
+  return (
+    <div className="tb-squelette" role="status" aria-live="polite" aria-busy="true">
+      <div className="tb-sq-bandeau">
+        <span className="tb-sq-roue" aria-hidden="true" />
+        <div className="tb-sq-bandeau-texte">
+          <strong>{texte || t('Calcul des indicateurs…')}</strong>
+          <small>{lent ? t('Première ouverture : le serveur prépare les chiffres, les suivantes seront immédiates.') : t('Réclamations, bons, SLA, coûts et équipements')}</small>
+        </div>
+        <span className="tb-sq-progression" aria-hidden="true"><i /></span>
+      </div>
+
+      <div className="tb-stats tb-sq-stats" aria-hidden="true">
+        {Array.from({ length: stats }, (_, i) => (
+          <div key={i} className="tb-sq-stat" style={{ animationDelay: `${i * 60}ms` }}>
+            <div><Ligne className="tb-sq--court" /><Ligne className="tb-sq--valeur" /><Ligne className="tb-sq--moyen" /></div>
+            <Ligne className="tb-sq--icone" />
+          </div>
+        ))}
+      </div>
+
+      <div className="tb-sq-grille" aria-hidden="true">
+        <div className="tb-sq-carte tb-sq-l--deux-tiers">
+          <div className="tb-sq-tete"><Ligne className="tb-sq--titre" /><Ligne className="tb-sq--pastille" /></div>
+          <div className="tb-sq-colonnes">
+            {HAUTEURS.map((h, i) => <span key={i} className="tb-sq" style={{ height: `${h}%` }} />)}
+          </div>
+        </div>
+        <div className="tb-sq-carte tb-sq-l--tiers">
+          <div className="tb-sq-tete"><Ligne className="tb-sq--titre" /><Ligne className="tb-sq--pastille" /></div>
+          <Ligne className="tb-sq--empile" />
+          <div className="tb-sq-barres">
+            {LARGEURS_BARRES.map((l, i) => (
+              <div key={i}><Ligne className="tb-sq--libelle" /><span className="tb-sq" style={{ width: `${l}%` }} /></div>
+            ))}
+          </div>
+        </div>
+        {[0, 1].map((k) => (
+          <div key={k} className="tb-sq-carte tb-sq-l--moitie">
+            <div className="tb-sq-tete"><Ligne className="tb-sq--titre" /><Ligne className="tb-sq--pastille" /></div>
+            <div className="tb-sq-liste">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i}><Ligne className="tb-sq--badge" /><div><Ligne className="tb-sq--long" /><Ligne className="tb-sq--court" /></div></div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

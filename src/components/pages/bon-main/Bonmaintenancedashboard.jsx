@@ -13,8 +13,9 @@ import { ICONES_MODULES } from '../../../constants/modules';
 import { ilYa } from '../../ui/Veille/Veille';
 import { t } from '../../../i18n';
 import '../Supervision/Supervision.css';
-import { lireRequete } from '../../../store/referentiels';
+import { lireRequete, lireRequeteEnCache } from '../../../store/referentiels';
 
+const LIRE_TABLEAU_BONS_EN_CACHE = (jours, lieuId) => lireRequeteEnCache('tableauBons', { jours, lieuId });
 const CHARGER_TABLEAU_BONS = (jours, recalculer, lieuId) => lireRequete('tableauBons', { jours, lieuId }, { forcer: recalculer });
 
 /*
@@ -70,7 +71,7 @@ export default function BonMaintenanceDashboard() {
   const utilisateur = useSelector(selectUtilisateur);
   const [disposition, actions] = useDispositionBons(utilisateur?.personnelId ?? utilisateur?.userId ?? utilisateur?.username);
   const [edition, setEdition] = useState(false);
-  const etat = useTableauPerso(CHARGER_TABLEAU_BONS, 'gmao.tableau-bons.periode');
+  const etat = useTableauPerso(CHARGER_TABLEAU_BONS, 'gmao.tableau-bons.periode', LIRE_TABLEAU_BONS_EN_CACHE);
   const { donnees, jours } = etat;
 
   const d = donnees || {};
