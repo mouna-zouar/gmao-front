@@ -256,7 +256,7 @@ export default function ListeEquipements({ onPreventifs, vues }) {
     {
       cle: 'bon', label: 'Dernier bon', filtre: 'texte', visible: false, valeur: (e) => e.bonMaintenanceReferenceNum || '',
     },
-  ], [etiquettes, connexions, dispos, risques, enregistrement, serviceDe, nomsServices, peutModifier]); // eslint-disable-line react-hooks/exhaustive-deps
+  ], [etiquettes, connexions, dispos, risques, enregistrement, serviceDe, nomsServices, peutModifier]); 
   const colonnesPermises = peutEtiquettes ? colonnes : colonnes.filter((c) => c.cle !== 'etiquette');
 
 
