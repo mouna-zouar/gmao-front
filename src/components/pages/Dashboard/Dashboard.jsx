@@ -4,7 +4,7 @@ import SpotlightCard from '../../ui/Spotlightcard';
 import './Dashboard.css';
 import { NAV_ITEMS, filtrerItems } from '../../../constants/navigation';
 import { useDroits } from '../../../constants/privileges';
-import dashboardBg from '../../../assets/dashboard-bg.jpg';
+import dashboardBg from '../../../assets/dashboard-bg.webp';
 import { t, locale } from '../../../i18n';
 
 export default function Dashboard() {

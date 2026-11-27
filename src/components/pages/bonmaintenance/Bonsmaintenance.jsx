@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DROITS, DROITS_ACTIONS_BON, useDroits } from '../../../constants/privileges';
 import { useSearchParams } from 'react-router-dom';
-import * as XLSX from 'xlsx';
 import {
   Plus,
   Edit,
@@ -798,6 +797,7 @@ export default function BonsMaintenance() {
         })
       );
 
+      const XLSX = await import('xlsx');
       const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
 
       const colWidths = headers.map((h, idx) => {

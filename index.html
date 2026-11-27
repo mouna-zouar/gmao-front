@@ -1,12 +1,58 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image" href="/src/assets/logo_SoftSys.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0794a4" />
     <title>GMAO</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Kufi+Arabic:wght@600;700;800&display=swap" />
+    <style>
+      #ecran-chargement {
+        position: fixed; inset: 0; z-index: 99999;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+        background: radial-gradient(1200px 600px at 50% 35%, #e9f8fa 0%, #f8fafc 60%, #f1f5f9 100%);
+        font-family: Inter, 'Segoe UI', system-ui, -apple-system, sans-serif; color: #0f172a;
+        transition: opacity .35s ease, visibility .35s ease;
+      }
+      #ecran-chargement.is-fini { opacity: 0; visibility: hidden; }
+      .ec-logo {
+        position: relative; width: 76px; height: 76px; border-radius: 22px;
+        display: grid; place-items: center; background: #fff;
+        box-shadow: 0 10px 30px -12px rgba(7, 148, 164, .45), 0 0 0 1px rgba(7, 148, 164, .12);
+        animation: ec-respire 1.8s ease-in-out infinite;
+      }
+      .ec-logo img { width: 46px; height: 46px; object-fit: contain; }
+      .ec-logo::after {
+        content: ''; position: absolute; inset: -8px; border-radius: 28px;
+        border: 2px solid transparent; border-top-color: #0794a4; border-right-color: rgba(7, 148, 164, .35);
+        animation: ec-tourne 1s linear infinite;
+      }
+      .ec-titre { margin: 0; font-size: 1.15rem; font-weight: 800; letter-spacing: .02em; }
+      .ec-titre span { color: #0794a4; }
+      .ec-texte { margin: -12px 0 0; font-size: .82rem; color: #64748b; }
+      .ec-barre { width: 180px; height: 4px; border-radius: 4px; background: #e2e8f0; overflow: hidden; }
+      .ec-barre::before {
+        content: ''; display: block; width: 40%; height: 100%; border-radius: 4px;
+        background: linear-gradient(90deg, #0794a4, #3dbcc9); animation: ec-glisse 1.2s ease-in-out infinite;
+      }
+      @keyframes ec-tourne { to { transform: rotate(360deg); } }
+      @keyframes ec-respire { 50% { transform: scale(1.04); } }
+      @keyframes ec-glisse { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+      @media (prefers-reduced-motion: reduce) {
+        .ec-logo, .ec-logo::after, .ec-barre::before { animation-duration: 3s; }
+      }
+    </style>
   </head>
   <body>
+    <div id="ecran-chargement" role="status" aria-live="polite">
+      <div class="ec-logo"><img src="/src/assets/logo_SoftSys.png" alt="" /></div>
+      <p class="ec-titre">GMAO <span>SoftSys</span></p>
+      <p class="ec-texte">Chargement de l’application…</p>
+      <div class="ec-barre" aria-hidden="true"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

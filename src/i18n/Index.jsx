@@ -1,6 +1,4 @@
 import { createContext, Fragment, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import ar from './Ar';
-import en from './En';
 import './Rtl.css';
 
 export const LANGUES = {
@@ -10,7 +8,13 @@ export const LANGUES = {
 };
 
 const CLE_STOCKAGE = 'app-langue';
-const DICTIONNAIRES = { ar, en };
+const DICTIONNAIRES = {};
+const CHARGEURS = { ar: () => import('./Ar'), en: () => import('./En') };
+
+function chargerDictionnaire(code) {
+  if (code === 'fr' || DICTIONNAIRES[code] || !CHARGEURS[code]) return Promise.resolve();
+  return CHARGEURS[code]().then((m) => { DICTIONNAIRES[code] = m.default; });
+}
 
 function lireLangueStockee() {
   try {
@@ -45,7 +49,8 @@ export function t(texte, vars) {
 
 export function tPdf(texte, vars) {
   if (texte == null || typeof texte !== 'string') return texte;
-  const trad = langueCourante === 'en' && typeof en[texte] === 'string' ? en[texte] : texte;
+  const en = DICTIONNAIRES.en;
+  const trad = langueCourante === 'en' && en && typeof en[texte] === 'string' ? en[texte] : texte;
   return remplir(trad, vars);
 }
 
@@ -151,17 +156,29 @@ const LangueContext = createContext({
 export function LangueProvider({ children, langueInitiale }) {
   const [langue, setLangueState] = useState(() => {
     const l = langueInitiale && LANGUES[langueInitiale] ? langueInitiale : langueCourante;
-    langueCourante = l;
     return l;
   });
+  const [pret, setPret] = useState(() => langue === 'fr');
+
+  useEffect(() => {
+    let actif = true;
+    chargerDictionnaire(langue).catch(() => {}).finally(() => {
+      if (!actif) return;
+      langueCourante = langue;
+      setPret(true);
+    });
+    return () => { actif = false; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { appliquerAuDocument(langue); }, [langue]);
 
   const setLangue = useCallback((code) => {
     if (!LANGUES[code]) return;
-    langueCourante = code;
     try { window.localStorage.setItem(CLE_STOCKAGE, code); } catch {}
-    setLangueState(code);
+    chargerDictionnaire(code).catch(() => {}).finally(() => {
+      langueCourante = code;
+      setLangueState(code);
+    });
   }, []);
 
   const valeur = useMemo(() => ({
@@ -175,7 +192,7 @@ export function LangueProvider({ children, langueInitiale }) {
 
   return (
     <LangueContext.Provider value={valeur}>
-      <Fragment key={langue}>{children}</Fragment>
+      {pret && <Fragment key={langue}>{children}</Fragment>}
     </LangueContext.Provider>
   );
 }

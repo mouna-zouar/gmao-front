@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../constants/Authcontext';
 import logo from '../../../assets/logo_SoftSys.png';
-import dashboardBg from '../../../assets/dashboard-bg.jpg';
+import dashboardBg from '../../../assets/dashboard-bg.webp';
 import './Login.css';
 
 export default function Login() {

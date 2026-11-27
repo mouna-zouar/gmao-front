@@ -3576,7 +3576,6 @@ textarea.bmf-input { resize: vertical; min-height: 96px; line-height: 1.5; }
   .bmd-cards { grid-template-columns: 1fr; }
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&display=swap');
 
 .bmx-page {
   --ink: var(--g-ink-900);

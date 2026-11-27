@@ -9,7 +9,7 @@ import equipementService from '../../../services/equipementService';
 import bonMaintenanceRapportService from '../../../services/bonMaintenanceRapportService';
 import authService from '../../../services/Authservice';
 import etatEquipementService from '../../../services/Etatequipementservice';
-import { exporterHistoriquePDF } from '../Etatequipement/Etatequipement';
+import { exporterHistoriquePDF } from '../Etatequipement/historiquePdf';
 import { Badge, Onglets } from '../../commun';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';

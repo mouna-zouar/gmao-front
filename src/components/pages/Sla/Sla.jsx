@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import * as XLSX from 'xlsx';
 import { prioriteLabel, prioriteRang } from '../../../constants/Priorite';
 import { t, tp, locale } from '../../../i18n';
 import { ClipboardCheck, FileSpreadsheet, Inbox, LoaderCircle, RefreshCw, Search, ShieldCheck, Target, Timer, TriangleAlert } from 'lucide-react';
@@ -111,7 +110,8 @@ const IconExcel = () => (
   <FileSpreadsheet size={15} strokeWidth={2} aria-hidden="true" />
 );
 
-function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
+async function exporterExcel({ vue, periodeLabel, bornes, bilan, bons }) {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
   const dateExport = new Date().toLocaleString('fr-FR');
 
@@ -286,11 +286,11 @@ export default function Sla() {
 
   const periodeLabel = PERIODES.find((p) => p.key === periodeKey)?.label || periodeKey;
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!bons.length && !bilan) return;
     setExporting(true);
     try {
-      exporterExcel({
+      await exporterExcel({
         vue,
         periodeLabel,
         bornes: vue === 'PERIODE' ? calculerBornes(periodeKey) : null,

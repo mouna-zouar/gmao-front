@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import * as XLSX from 'xlsx';
 import { criticiteHex, criticiteLabel } from '../../../constants/Criticite';
 import { t, locale } from '../../../i18n';
 import { Activity, FileSpreadsheet, Gauge, History, Inbox, LoaderCircle, RefreshCw, Search, TrendingDown, TriangleAlert, Wrench } from 'lucide-react';
@@ -98,7 +97,8 @@ const IconExcel = () => (
   <FileSpreadsheet size={15} strokeWidth={2} aria-hidden="true" />
 );
 
-function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
+async function exporterExcel({ periodeLabel, bornes, donnees, kpis }) {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
 
   const dateDebut = new Date(bornes.dateDebut).toLocaleDateString('fr-FR');
@@ -269,11 +269,11 @@ export default function Disponibilite() {
 
   const periodeLabel = PERIODES.find((p) => p.key === periodeKey)?.label || periodeKey;
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!donnees.length) return;
     setExporting(true);
     try {
-      exporterExcel({
+      await exporterExcel({
         periodeLabel,
         bornes: calculerBornes(periodeKey),
         donnees,

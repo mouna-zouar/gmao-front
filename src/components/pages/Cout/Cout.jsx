@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import * as XLSX from 'xlsx';
 import { prioriteLabel } from '../../../constants/Priorite';
 import { CircleDollarSign, FileSpreadsheet, Inbox, LoaderCircle, Package, RefreshCw, Search, TriangleAlert, Truck, Wallet, Wrench } from 'lucide-react';
 import './Cout.css';
@@ -91,7 +90,8 @@ const IconExcel = () => (
   <FileSpreadsheet size={15} strokeWidth={2} aria-hidden="true" />
 );
 
-function exporterExcel({ periodeLabel, bilan, bons, topEquipements }) {
+async function exporterExcel({ periodeLabel, bilan, bons, topEquipements }) {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
 
   const dateExport = new Date().toLocaleString('fr-FR');
@@ -317,11 +317,11 @@ export default function Cout() {
 
   const periodeLabel = PERIODES.find((p) => p.key === periodeKey)?.label || periodeKey;
 
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     if (!bonsAffiches.length && !bilan) return;
     setExporting(true);
     try {
-      exporterExcel({
+      await exporterExcel({
         periodeLabel,
         bilan,
         bons: bonsAffiches,

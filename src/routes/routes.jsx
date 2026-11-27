@@ -1,61 +1,195 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import ChargementPage, { LimiteChargement } from './ChargementPage';
 import Dashboard from '../components/pages/Dashboard/Dashboard';
-import CompteurList from '../components/pages/Compteurs/Compteurs';
-import Formations from '../components/pages/Formations/Formations';
-import Reclamations from '../components/pages/Reclamations/Reclamations';
-import BonsMaintenance  from '../components/pages/bonmaintenance/Bonsmaintenance';
-import Referentielconsultation from '../components/pages/Referentiel/Referentielconsultation';
-import Fichebonmaintenance from '../components/pages/Fichebonmaintenance/Fichebonmaintenance';
-import Planningbonmaintenance from '../components/pages/planning/Planningbonmaintenance';
-import PlanningParIntervenant from '../components/pages/planning/PlanningParIntervenant';
-import PlanningTechnicien from '../components/pages/planning/Planningtechnicien';
-import PlanningEquipe from '../components/pages/planning/PlanningEquipe';
-import StockAlertes from '../components/pages/stock/StockAlertes';
-import IndicateursPerformance from '../components/pages/Indicateurs/IndicateursPerformance';
-import Metrologie from '../components/pages/Metrologie/Metrologie';
-import Materiovigilance from '../components/pages/Metrologie/Materiovigilance';
 import PageIntrouvable from '../components/pages/Introuvable/PageIntrouvable';
-import Maintenancetaches from '../components/pages/taches/Maintenancetaches';
-import Gammes from '../components/pages/gammes/Gammes';
-import Reclamationdashboard from '../components/pages/rec-dashboard/Reclamationdashboard';
-import Bonmaintenancedashboard from '../components/pages/bon-main/Bonmaintenancedashboard';
-import Bonmaintenancetachestable from '../components/pages/bon-main-tache/Bonmaintenancetachestable';
-import Workflow from '../components/pages/workflow/Workflow';
 import Login from '../components/pages/login/Login';
-import Anomalies from '../components/pages/Anomalies/Anomalies';
-import MaintenancePredictive from '../components/pages/MaintenancePredictive/Maintenancepredictive';
-import BlocagesImmobilisation from '../components/pages/Blocagesimmobilisation/Blocagesimmobilisation';
-import Disponibilite from '../components/pages/Disponibilite/Disponibilite';
-import Sla from '../components/pages/Sla/Sla';
-import VehiculesPage from '../components/pages/parc/vehicules/VehiculesPage';
-import VehiculeConducteurs from '../components/pages/parc/VehiculeConducteurs/VehiculeConducteurs'; 
-import PermisConduite from '../components/pages/parc/PermisConduite/PermisConduite';
-import VehiculeMissions from '../components/pages/parc/VehiculeMissions/VehiculeMissions';
-import VehiculeTracage from '../components/pages/parc/VehiculeMissions/VehiculeTracage';
-import VehiculeBonsCarburant from '../components/pages/parc/VehiculeBonsCarburant/VehiculeBonsCarburant';
-import VehiculeIncidents from '../components/pages/parc/VehiculeIncident/VehiculeIncidents';
-import VehiculeReservations from '../components/pages/parc/VehiculeReservations/VehiculeReservations';
-import Projets from '../components/pages/parc/Projets/Projets';
-import Emplacements from '../components/pages/parc/Emplacements/Emplacements';
-import ParcDashboard from '../components/pages/parc/ParcDashboard/ParcDashboard';
-import Cout from '../components/pages/Cout/Cout';
-import ParcPlanning from '../components/pages/parc/Planning/ParcPlanning';
-import Risque from '../components/pages/Risque/Risque';
-import Intelligence from '../components/pages/Intelligence/Intelligence';
-import AlertesMachines from '../components/pages/AlertesMachines/AlertesMachines';
-import Supervision from '../components/pages/Supervision/Supervision';
-import Renouvellement from '../components/pages/Renouvellement/Renouvellement';
-import TableauDeBord from '../components/pages/TableauDeBord/TableauDeBord';
-import ParametresSysteme from '../components/pages/ParametresSysteme/ParametresSysteme';
-import EspacePersonnel from '../components/pages/EspacePersonnel/EspacePersonnel';
-import EtatEquipement from '../components/pages/Etatequipement/Etatequipement';
-import EquipementFiche from '../components/pages/Equipements/EquipementFiche';
-import VehiculeAmendes from '../components/pages/parc/Vehiculeamendes/Vehiculeamendes';
-import VehiculeCouts from '../components/pages/parc/VehiculeCouts/VehiculeCouts';
 
+const IMPORTS = {
+    CompteurList: () => import('../components/pages/Compteurs/Compteurs'),
+    Formations: () => import('../components/pages/Formations/Formations'),
+    Reclamations: () => import('../components/pages/Reclamations/Reclamations'),
+    BonsMaintenance: () => import('../components/pages/bonmaintenance/Bonsmaintenance'),
+    Referentielconsultation: () => import('../components/pages/Referentiel/Referentielconsultation'),
+    Fichebonmaintenance: () => import('../components/pages/Fichebonmaintenance/Fichebonmaintenance'),
+    Planningbonmaintenance: () => import('../components/pages/planning/Planningbonmaintenance'),
+    PlanningParIntervenant: () => import('../components/pages/planning/PlanningParIntervenant'),
+    PlanningTechnicien: () => import('../components/pages/planning/Planningtechnicien'),
+    PlanningEquipe: () => import('../components/pages/planning/PlanningEquipe'),
+    StockAlertes: () => import('../components/pages/stock/StockAlertes'),
+    IndicateursPerformance: () => import('../components/pages/Indicateurs/IndicateursPerformance'),
+    Metrologie: () => import('../components/pages/Metrologie/Metrologie'),
+    Materiovigilance: () => import('../components/pages/Metrologie/Materiovigilance'),
+    Maintenancetaches: () => import('../components/pages/taches/Maintenancetaches'),
+    Gammes: () => import('../components/pages/gammes/Gammes'),
+    Reclamationdashboard: () => import('../components/pages/rec-dashboard/Reclamationdashboard'),
+    Bonmaintenancedashboard: () => import('../components/pages/bon-main/Bonmaintenancedashboard'),
+    Bonmaintenancetachestable: () => import('../components/pages/bon-main-tache/Bonmaintenancetachestable'),
+    Workflow: () => import('../components/pages/workflow/Workflow'),
+    Anomalies: () => import('../components/pages/Anomalies/Anomalies'),
+    MaintenancePredictive: () => import('../components/pages/MaintenancePredictive/Maintenancepredictive'),
+    BlocagesImmobilisation: () => import('../components/pages/Blocagesimmobilisation/Blocagesimmobilisation'),
+    Disponibilite: () => import('../components/pages/Disponibilite/Disponibilite'),
+    Sla: () => import('../components/pages/Sla/Sla'),
+    VehiculesPage: () => import('../components/pages/parc/vehicules/VehiculesPage'),
+    VehiculeConducteurs: () => import('../components/pages/parc/VehiculeConducteurs/VehiculeConducteurs'),
+    PermisConduite: () => import('../components/pages/parc/PermisConduite/PermisConduite'),
+    VehiculeMissions: () => import('../components/pages/parc/VehiculeMissions/VehiculeMissions'),
+    VehiculeTracage: () => import('../components/pages/parc/VehiculeMissions/VehiculeTracage'),
+    VehiculeBonsCarburant: () => import('../components/pages/parc/VehiculeBonsCarburant/VehiculeBonsCarburant'),
+    VehiculeIncidents: () => import('../components/pages/parc/VehiculeIncident/VehiculeIncidents'),
+    VehiculeReservations: () => import('../components/pages/parc/VehiculeReservations/VehiculeReservations'),
+    Projets: () => import('../components/pages/parc/Projets/Projets'),
+    Emplacements: () => import('../components/pages/parc/Emplacements/Emplacements'),
+    ParcDashboard: () => import('../components/pages/parc/ParcDashboard/ParcDashboard'),
+    Cout: () => import('../components/pages/Cout/Cout'),
+    ParcPlanning: () => import('../components/pages/parc/Planning/ParcPlanning'),
+    Risque: () => import('../components/pages/Risque/Risque'),
+    Intelligence: () => import('../components/pages/Intelligence/Intelligence'),
+    AlertesMachines: () => import('../components/pages/AlertesMachines/AlertesMachines'),
+    Supervision: () => import('../components/pages/Supervision/Supervision'),
+    Renouvellement: () => import('../components/pages/Renouvellement/Renouvellement'),
+    TableauDeBord: () => import('../components/pages/TableauDeBord/TableauDeBord'),
+    ParametresSysteme: () => import('../components/pages/ParametresSysteme/ParametresSysteme'),
+    EspacePersonnel: () => import('../components/pages/EspacePersonnel/EspacePersonnel'),
+    EtatEquipement: () => import('../components/pages/Etatequipement/Etatequipement'),
+    EquipementFiche: () => import('../components/pages/Equipements/EquipementFiche'),
+    VehiculeAmendes: () => import('../components/pages/parc/Vehiculeamendes/Vehiculeamendes'),
+    VehiculeCouts: () => import('../components/pages/parc/VehiculeCouts/VehiculeCouts'),
+};
 
+const CompteurList = lazy(IMPORTS.CompteurList);
+const Formations = lazy(IMPORTS.Formations);
+const Reclamations = lazy(IMPORTS.Reclamations);
+const BonsMaintenance = lazy(IMPORTS.BonsMaintenance);
+const Referentielconsultation = lazy(IMPORTS.Referentielconsultation);
+const Fichebonmaintenance = lazy(IMPORTS.Fichebonmaintenance);
+const Planningbonmaintenance = lazy(IMPORTS.Planningbonmaintenance);
+const PlanningParIntervenant = lazy(IMPORTS.PlanningParIntervenant);
+const PlanningTechnicien = lazy(IMPORTS.PlanningTechnicien);
+const PlanningEquipe = lazy(IMPORTS.PlanningEquipe);
+const StockAlertes = lazy(IMPORTS.StockAlertes);
+const IndicateursPerformance = lazy(IMPORTS.IndicateursPerformance);
+const Metrologie = lazy(IMPORTS.Metrologie);
+const Materiovigilance = lazy(IMPORTS.Materiovigilance);
+const Maintenancetaches = lazy(IMPORTS.Maintenancetaches);
+const Gammes = lazy(IMPORTS.Gammes);
+const Reclamationdashboard = lazy(IMPORTS.Reclamationdashboard);
+const Bonmaintenancedashboard = lazy(IMPORTS.Bonmaintenancedashboard);
+const Bonmaintenancetachestable = lazy(IMPORTS.Bonmaintenancetachestable);
+const Workflow = lazy(IMPORTS.Workflow);
+const Anomalies = lazy(IMPORTS.Anomalies);
+const MaintenancePredictive = lazy(IMPORTS.MaintenancePredictive);
+const BlocagesImmobilisation = lazy(IMPORTS.BlocagesImmobilisation);
+const Disponibilite = lazy(IMPORTS.Disponibilite);
+const Sla = lazy(IMPORTS.Sla);
+const VehiculesPage = lazy(IMPORTS.VehiculesPage);
+const VehiculeConducteurs = lazy(IMPORTS.VehiculeConducteurs);
+const PermisConduite = lazy(IMPORTS.PermisConduite);
+const VehiculeMissions = lazy(IMPORTS.VehiculeMissions);
+const VehiculeTracage = lazy(IMPORTS.VehiculeTracage);
+const VehiculeBonsCarburant = lazy(IMPORTS.VehiculeBonsCarburant);
+const VehiculeIncidents = lazy(IMPORTS.VehiculeIncidents);
+const VehiculeReservations = lazy(IMPORTS.VehiculeReservations);
+const Projets = lazy(IMPORTS.Projets);
+const Emplacements = lazy(IMPORTS.Emplacements);
+const ParcDashboard = lazy(IMPORTS.ParcDashboard);
+const Cout = lazy(IMPORTS.Cout);
+const ParcPlanning = lazy(IMPORTS.ParcPlanning);
+const Risque = lazy(IMPORTS.Risque);
+const Intelligence = lazy(IMPORTS.Intelligence);
+const AlertesMachines = lazy(IMPORTS.AlertesMachines);
+const Supervision = lazy(IMPORTS.Supervision);
+const Renouvellement = lazy(IMPORTS.Renouvellement);
+const TableauDeBord = lazy(IMPORTS.TableauDeBord);
+const ParametresSysteme = lazy(IMPORTS.ParametresSysteme);
+const EspacePersonnel = lazy(IMPORTS.EspacePersonnel);
+const EtatEquipement = lazy(IMPORTS.EtatEquipement);
+const EquipementFiche = lazy(IMPORTS.EquipementFiche);
+const VehiculeAmendes = lazy(IMPORTS.VehiculeAmendes);
+const VehiculeCouts = lazy(IMPORTS.VehiculeCouts);
 
+const IMPORT_PAR_CHEMIN = {
+    '/referentiels/compteurs': IMPORTS.CompteurList,
+    '/formations': IMPORTS.Formations,
+    '/reclamations': IMPORTS.Reclamations,
+    '/mon-espace': IMPORTS.EspacePersonnel,
+    '/equipements': IMPORTS.EtatEquipement,
+    '/equipement/:id': IMPORTS.EquipementFiche,
+    '/bons-maintenance': IMPORTS.BonsMaintenance,
+    '/tables-parametrage': IMPORTS.Referentielconsultation,
+    '/parametres-systeme': IMPORTS.ParametresSysteme,
+    '/fiche-bon-maintenance': IMPORTS.Fichebonmaintenance,
+    '/planning-bon-maintenance': IMPORTS.Planningbonmaintenance,
+    '/reclamation-dashboard': IMPORTS.Reclamationdashboard,
+    '/taches': IMPORTS.Maintenancetaches,
+    '/gammes': IMPORTS.Gammes,
+    '/bon-maintenance-dashboard': IMPORTS.Bonmaintenancedashboard,
+    '/bon-maintenance-taches': IMPORTS.Bonmaintenancetachestable,
+    '/workflow': IMPORTS.Workflow,
+    '/planning-par-intervenant': IMPORTS.PlanningParIntervenant,
+    '/planning-technicien': IMPORTS.PlanningTechnicien,
+    '/planning-equipe': IMPORTS.PlanningEquipe,
+    '/stock-alertes': IMPORTS.StockAlertes,
+    '/indicateurs': IMPORTS.IndicateursPerformance,
+    '/metrologie': IMPORTS.Metrologie,
+    '/materiovigilance': IMPORTS.Materiovigilance,
+    '/anomalies': IMPORTS.Anomalies,
+    '/maintenance-predictive': IMPORTS.MaintenancePredictive,
+    '/blocages-immobilisation': IMPORTS.BlocagesImmobilisation,
+    '/disponibilite': IMPORTS.Disponibilite,
+    '/sla': IMPORTS.Sla,
+    '/cout': IMPORTS.Cout,
+    '/parc-planning': IMPORTS.ParcPlanning,
+    '/intelligence': IMPORTS.Intelligence,
+    '/alertes-machines': IMPORTS.AlertesMachines,
+    '/supervision': IMPORTS.Supervision,
+    '/tableau-de-bord': IMPORTS.TableauDeBord,
+    '/renouvellement': IMPORTS.Renouvellement,
+    '/vehicules': IMPORTS.VehiculesPage,
+    '/vehicule-conducteurs': IMPORTS.VehiculeConducteurs,
+    '/permis-conduite': IMPORTS.PermisConduite,
+    '/vehicule-missions': IMPORTS.VehiculeMissions,
+    '/vehicule-tracage': IMPORTS.VehiculeTracage,
+    '/vehicule-bons-carburant': IMPORTS.VehiculeBonsCarburant,
+    '/vehicule-incidents': IMPORTS.VehiculeIncidents,
+    '/vehicule-reservations': IMPORTS.VehiculeReservations,
+    '/vehicule-amendes': IMPORTS.VehiculeAmendes,
+    '/vehicule-couts': IMPORTS.VehiculeCouts,
+    '/parc-dashboard': IMPORTS.ParcDashboard,
+    '/risque': IMPORTS.Risque,
+    '/projets': IMPORTS.Projets,
+    '/emplacements': IMPORTS.Emplacements,
+};
 
+const PAGES_FREQUENTES = ['/bons-maintenance', '/reclamations', '/mon-espace', '/tableau-de-bord', '/equipements'];
+
+const prechargees = new Set();
+function prechargerChemin(chemin) {
+    const importer = IMPORT_PAR_CHEMIN[chemin];
+    if (!importer || prechargees.has(chemin)) return;
+    prechargees.add(chemin);
+    importer().catch(() => prechargees.delete(chemin));
+}
+
+const connexionLente = () => {
+    const c = typeof navigator !== 'undefined' ? navigator.connection : null;
+    return Boolean(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || '')));
+};
+
+if (typeof window !== 'undefined' && !connexionLente()) {
+    const surLien = (e) => {
+        const lien = e.target?.closest?.('a[href]');
+        if (!lien || lien.origin !== window.location.origin) return;
+        prechargerChemin(lien.pathname);
+    };
+    document.addEventListener('pointerover', surLien, { passive: true });
+    document.addEventListener('focusin', surLien);
+    const auRepos = window.requestIdleCallback || ((f) => setTimeout(f, 2500));
+    const prechargerFrequentes = () => auRepos(() => PAGES_FREQUENTES.forEach(prechargerChemin), { timeout: 8000 });
+    if (document.readyState === 'complete') prechargerFrequentes();
+    else window.addEventListener('load', prechargerFrequentes, { once: true });
+}
 
 const VersMesDemandes = () => {
     const params = new URLSearchParams(useLocation().search);
@@ -65,6 +199,8 @@ const VersMesDemandes = () => {
 
 const AppRoutes = () => {
     return (
+        <LimiteChargement>
+        <Suspense fallback={<ChargementPage />}>
         <Routes>
             <Route path="/login" element={<Login />} />
 
@@ -127,6 +263,8 @@ const AppRoutes = () => {
             <Route path="*" element={<PageIntrouvable />} />
 
         </Routes>
+        </Suspense>
+        </LimiteChargement>
     );
 };
 

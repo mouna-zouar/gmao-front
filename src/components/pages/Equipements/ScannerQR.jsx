@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import jsQR from 'jsqr';
 import { Camera, Loader2, ScanLine, X } from 'lucide-react';
 import equipementService from '../../../services/equipementService';
 import { t } from '../../../i18n';
@@ -59,6 +58,7 @@ export default function ScannerQR({ onClose, onTrouve, titre, aide }) {
         const detecteur = 'BarcodeDetector' in window
           ? new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'ean_13'] })
           : null;
+        const jsQR = detecteur ? null : (await import('jsqr')).default;
         const canvas = canvasRef.current;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
 

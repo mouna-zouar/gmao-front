@@ -1,0 +1,38 @@
+.chargement-page {
+  position: relative; display: flex; flex-direction: column; gap: 18px; padding: 24px; min-height: 60vh;
+  opacity: 0; animation: cp-apparait 0.2s ease 0.15s forwards;
+}
+.chargement-page__barre {
+  position: fixed; top: 0; inset-inline: 0; z-index: 3000; height: 3px; overflow: hidden; background: transparent;
+}
+.chargement-page__barre::before {
+  content: ''; display: block; width: 35%; height: 100%; border-radius: 0 3px 3px 0;
+  background: linear-gradient(90deg, var(--g-brand-500, #0794a4), var(--g-brand-400, #3dbcc9));
+  box-shadow: 0 0 8px rgba(7, 148, 164, 0.5); animation: cp-glisse 1.1s ease-in-out infinite;
+}
+.chargement-page__squelette { display: flex; flex-direction: column; gap: 14px; }
+.cp-sq-ligne { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.cp-sq {
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--g-slate-200, #e2e8f0) 0%, var(--g-slate-100, #f1f5f9) 50%, var(--g-slate-200, #e2e8f0) 100%);
+  background-size: 200% 100%; animation: cp-reflet 1.3s ease-in-out infinite;
+}
+.cp-sq--titre { width: 280px; max-width: 60%; height: 34px; }
+.cp-sq--carte { height: 92px; }
+.cp-sq--bloc { height: 320px; }
+.chargement-page__texte {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin: 0;
+  font-size: 0.84rem; color: var(--g-slate-500, #64748b);
+}
+.chargement-page__icone { color: var(--g-brand-500, #0794a4); animation: cp-tourne 0.9s linear infinite; }
+.chargement-page--erreur { align-items: center; justify-content: center; color: var(--g-red-700, #b91c1c); opacity: 1; animation: none; }
+.chargement-page--erreur button {
+  height: 34px; padding: 0 14px; border: 1px solid var(--g-slate-200, #e2e8f0); border-radius: 8px;
+  background: var(--g-blanc, #fff); color: var(--g-slate-700, #334155); font: 600 0.82rem inherit; cursor: pointer;
+}
+@keyframes cp-apparait { to { opacity: 1; } }
+@keyframes cp-glisse { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+@keyframes cp-reflet { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+@keyframes cp-tourne { to { transform: rotate(360deg); } }
+@media (max-width: 760px) { .cp-sq-ligne { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) { .cp-sq, .chargement-page__barre::before { animation-duration: 3s; } }
