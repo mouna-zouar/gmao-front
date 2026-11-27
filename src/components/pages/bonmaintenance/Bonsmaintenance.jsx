@@ -44,7 +44,7 @@ import bonMaintenanceFullService from '../../../services/Bonmaintenancefullservi
 import bonMaintenancePieceService from '../../../services/Bonmaintenancepieceservice';
 import { prioriteLabel, prioriteRang, prioriteColor } from '../../../constants/Priorite';
 import BonMaintenanceModal from '../../ui/modals/Bonmaintenancemodal';
-import BonMaintenanceDetails from './Bonmaintenancedetails';
+import BonMaintenanceDetails from './BonMaintenanceDetailsDiffere';
 import FicheBonMaintenance from '../Fichebonmaintenance/Fichebonmaintenance';
 import ListeDocumentsAchat from './ListeDocumentsAchat';
 import PieceEditor from '../../ui/PieceEditor/PieceEditor';

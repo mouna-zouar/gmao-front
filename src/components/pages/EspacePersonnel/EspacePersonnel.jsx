@@ -20,7 +20,7 @@ import suiviDemandeService from '../../../services/suiviDemandeService';
 import MesDemandes from '../MesDemandes/MesDemandes';
 import '../../ui/modals/ConfirmModal.css';
 import '../Reclamations/Reclamations.css';
-import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
+import BonMaintenanceDetails from '../bonmaintenance/BonMaintenanceDetailsDiffere';
 import { t, tp, locale } from '../../../i18n';
 import EspaceKanban from './EspaceKanban';
 import MesFormations from '../Formations/MesFormations';

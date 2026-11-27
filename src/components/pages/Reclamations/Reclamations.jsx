@@ -39,7 +39,7 @@ import reclamationService from '../../../services/Reclamationservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import lectureService from '../../../services/lectureService';
 import ReclamationDetails from './Reclamationdetails';
-import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
+import BonMaintenanceDetails from '../bonmaintenance/BonMaintenanceDetailsDiffere';
 import AssociateBonMaintenanceModal from '../../ui/modals/AssociateBonMaintenanceModal';
 import BonMaintenanceModal from '../../ui/modals/Bonmaintenancemodal';
 import bonMaintenanceFullService from '../../../services/Bonmaintenancefullservice';

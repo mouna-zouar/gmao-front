@@ -776,3 +776,10 @@
   .vmb-stat--montant { grid-column: 1 / -1; }
   .vmb-saisie-grille { grid-template-columns: 1fr; }
 }
+
+.bmm-map-chargement {
+  display: flex; align-items: center; justify-content: center;
+  height: 240px; border-radius: 12px;
+  background: var(--g-slate-100, #f1f5f9); color: var(--g-slate-500, #64748b);
+  font-size: 0.85rem; font-weight: 600;
+}

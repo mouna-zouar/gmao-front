@@ -4647,3 +4647,17 @@ button.bmx-vital:hover { background: var(--paper); }
 .bmd-achat-reception td { padding: 8px; border-bottom: 1px solid #f1f5f9; color: #0f172a; }
 .bmd-achat-reception th:not(:first-child), .bmd-achat-reception td:not(:first-child) { width: 110px; }
 .bmd-achat-reception input { width: 90px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
+
+/* Rubrique en cours de téléchargement (onglets chargés à la demande) */
+.bmd-rubrique-chargement { display: flex; flex-direction: column; gap: 12px; padding: 18px 4px; }
+.bmd-rubrique-chargement span {
+  display: block; height: 14px; border-radius: 7px;
+  background: linear-gradient(90deg, var(--g-slate-100, #f1f5f9) 0%, var(--g-slate-200, #e2e8f0) 40%, var(--g-slate-100, #f1f5f9) 80%);
+  background-size: 300% 100%;
+  animation: bmdReflet 1.4s ease-in-out infinite;
+}
+.bmd-rubrique-chargement span:nth-child(1) { width: 42%; height: 18px; }
+.bmd-rubrique-chargement span:nth-child(2) { width: 88%; }
+.bmd-rubrique-chargement span:nth-child(3) { width: 66%; }
+@keyframes bmdReflet { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .bmd-rubrique-chargement span { animation: none; } }

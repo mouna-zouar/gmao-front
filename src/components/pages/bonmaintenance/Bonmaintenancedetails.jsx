@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DROITS, useDroits } from '../../../constants/privileges';
 import {
   ArrowLeft,
@@ -45,9 +45,7 @@ import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheser
 import { prioriteLabel, prioriteColor } from '../../../constants/Priorite';
 import bonMaintenanceIntervenantService from '../../../services/bonMaintenanceIntervenantService';
 import chatBonService from '../../../services/chatBonService';
-import BmdChat from './BmdChat';
 import { qrSvg, urlBon } from '../../../utils/qrCode';
-import ModaleQrCode from '../../ui/QrCode/ModaleQrCode';
 import PieceEditor from '../../ui/PieceEditor/PieceEditor';
 import bonMaintenanceHistoriqueService from '../../../services/Bonmaintenancehistoriqueservice';
 import bonMaintenanceDiagnosticService from '../../../services/Bonmaintenancediagnosticservice';
@@ -63,8 +61,6 @@ import reclamationBonMaintenanceService from '../../../services/Reclamationbonma
 import reclamationServiceComplet from '../../../services/Reclamationservice';
 import { precharger } from '../../../services/api';
 import lotArticleImmobilistationService from '../../../services/lotArticleImmobilistationCubixService';
-import Tracage3DTab from './Tracage3DTab';
-import BmdRapport from './BmdRapport';
 import { BandeauValidation, BoutonsDecision } from './ValidationBon';
 import bonMaintenanceRapportService from '../../../services/bonMaintenanceRapportService';
 import { libelleTypeEntretien, libelleSourceInformation } from '../../../constants/FicheIntervention';
@@ -83,22 +79,35 @@ import {
 import { t, tp, locale } from '../../../i18n';
 import { imprimerFiche } from '../../../utils/imprimerListe';
 import './Bonmaintenancedetails.css';
-import { DiagnosticTab } from './onglets/DiagnosticTab';
-import { TachesTab } from './onglets/TachesTab';
-import { IntervenantsTab } from './onglets/IntervenantsTab';
-import { ControleEquipementTab } from './onglets/ControleEquipementTab';
-import { RemiseEnServiceTab } from './onglets/RemiseEnServiceTab';
 import './BmdEpure.css';
-import RecapImmobilisation from './RecapImmobilisation';
 import { ETAT, ETAPES_DEF, construireParcours } from './parcoursBon';
 import { FlowTab } from './onglets/FlowTab';
 import { ReparationEtapes, PanneauDelais, PanneauCout, InfosReclamation } from './PanneauxBon';
-import { CommentairesTab } from './onglets/CommentairesTab';
-import { HistoriqueTab } from './onglets/HistoriqueTab';
-import { DocumentsTab } from './onglets/DocumentsTab';
-import { CauseRacineTab } from './onglets/CauseRacineTab';
 import { useExecuter } from '../../../store/hooks';
 import { bons as moduleBons } from '../../../store/modules/bons';
+
+function ChargementRubrique() {
+  return (
+    <div className="bmd-rubrique-chargement" role="status" aria-busy="true" aria-label={t('Chargement…')}>
+      <span /><span /><span />
+    </div>
+  );
+}
+
+const BmdChat = lazy(() => import('./BmdChat'));
+const ModaleQrCode = lazy(() => import('../../ui/QrCode/ModaleQrCode'));
+const Tracage3DTab = lazy(() => import('./Tracage3DTab'));
+const BmdRapport = lazy(() => import('./BmdRapport'));
+const RecapImmobilisation = lazy(() => import('./RecapImmobilisation'));
+const DiagnosticTab = lazy(() => import('./onglets/DiagnosticTab').then((m) => ({ default: m.DiagnosticTab })));
+const TachesTab = lazy(() => import('./onglets/TachesTab').then((m) => ({ default: m.TachesTab })));
+const IntervenantsTab = lazy(() => import('./onglets/IntervenantsTab').then((m) => ({ default: m.IntervenantsTab })));
+const ControleEquipementTab = lazy(() => import('./onglets/ControleEquipementTab').then((m) => ({ default: m.ControleEquipementTab })));
+const RemiseEnServiceTab = lazy(() => import('./onglets/RemiseEnServiceTab').then((m) => ({ default: m.RemiseEnServiceTab })));
+const CommentairesTab = lazy(() => import('./onglets/CommentairesTab').then((m) => ({ default: m.CommentairesTab })));
+const HistoriqueTab = lazy(() => import('./onglets/HistoriqueTab').then((m) => ({ default: m.HistoriqueTab })));
+const DocumentsTab = lazy(() => import('./onglets/DocumentsTab').then((m) => ({ default: m.DocumentsTab })));
+const CauseRacineTab = lazy(() => import('./onglets/CauseRacineTab').then((m) => ({ default: m.CauseRacineTab })));
 
 const RUBRIQUES_VERROUILLEES = new Set(['diagnostic', 'reparation', 'taches', 'intervenants', 'controle', 'remiseEnService', 'commentaires']);
 
@@ -664,7 +673,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
   const enLectureSeule = (cle) => (verrouille && RUBRIQUES_VERROUILLEES.has(cle))
     || (cle === 'rapport' && (annule || bon.validationStatut === 'VALIDE'));
   const contenuTiroir = () => (tiroir ? (
-    <fieldset className="bmz-verrou" disabled={enLectureSeule(tiroir.key)}>{contenuRubrique(tiroir.key, tiroir.form)}</fieldset>
+    <fieldset className="bmz-verrou" disabled={enLectureSeule(tiroir.key)}><Suspense fallback={<ChargementRubrique />}>{contenuRubrique(tiroir.key, tiroir.form)}</Suspense></fieldset>
   ) : null);
   const contenuRubrique = (cle, auto) => {
     switch (cle) {
@@ -953,7 +962,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
         </div>
         <div className="bmz-do-contenu" role="tabpanel" key={`${ongletDossier.key}-${ongletDossier.version}`}>
           <fieldset className="bmz-verrou" disabled={enLectureSeule(ongletDossier.key)}>
-            {contenuRubrique(ongletDossier.key, ongletDossier.form)}
+            <Suspense fallback={<ChargementRubrique />}>{contenuRubrique(ongletDossier.key, ongletDossier.form)}</Suspense>
           </fieldset>
         </div>
       </section>
@@ -971,6 +980,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
         <div key={`${tiroir?.key}-${tiroir?.form}`}>{contenuTiroir()}</div>
       </Tiroir>
 
+      <Suspense fallback={null}>
       {recapImmoOuvert && bon.lotArticleImmobilistationId && (
         <RecapImmobilisation lotArticleImmobilistationId={bon.lotArticleImmobilistationId} bonCourantId={bon.id} onFermer={fermerRecapImmo} />
       )}
@@ -984,6 +994,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
           onClose={fermerQr}
         />
       )}
+      </Suspense>
 
       {celebrationElement}
     </div>

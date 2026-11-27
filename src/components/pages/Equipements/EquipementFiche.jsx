@@ -13,7 +13,7 @@ import { exporterHistoriquePDF } from '../Etatequipement/historiquePdf';
 import { Badge, Onglets } from '../../commun';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
-import BonMaintenanceDetails from '../bonmaintenance/Bonmaintenancedetails';
+import BonMaintenanceDetails from '../bonmaintenance/BonMaintenanceDetailsDiffere';
 import { imprimerEtiquettes, qrSvg } from './qrEtiquettes';
 import EquipementConnexion from './EquipementConnexion';
 import EquipementLiaisonAgent from './EquipementLiaisonAgent';

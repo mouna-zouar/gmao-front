@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { lazy, Suspense, useState, useEffect, useCallback } from 'react';
 import Button from '../Button';
 import { commePage, obtenirEmplacements, obtenirPersonnels, obtenirVehicules } from '../../../store/referentiels';
 import vehiculeMissionService from '../../../services/vehiculeMissionService';
@@ -10,16 +10,6 @@ import { t, locale } from '../../../i18n';
 import vehiculeAmendeService from '../../../services/Vehiculeamendeservice';
 import authService from '../../../services/Authservice';
 import { TYPES_INFRACTION, STATUTS as STATUTS_AMENDE, ltr } from '../../../constants/Amendelibelles';
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  useMapEvents,
-  useMap,
-} from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import {
   Route,
   X,
@@ -50,13 +40,7 @@ import './VehiculeMissionModal.css';
 import SearchableSelect from '../../commun/ListeRecherche';
 import { facadeAmendes, facadeBonsCarburant } from '../../../store/facades';
 
-delete L.Icon.Default.prototype._getIconUrl;
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
+const CarteMission = lazy(() => import('./CarteMission'));
 
 const DEFAULT_CENTER = [36.8065, 10.1815];
 
@@ -100,25 +84,6 @@ const NAV_SECTIONS = [
   { id: 'amendes', label: 'Amendes', Icon: Receipt },
   { id: 'notes', label: 'Notes', Icon: FileText },
 ];
-
-function MapClickHandler({ onClick }) {
-  useMapEvents({
-    click: (e) => {
-      onClick(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
-}
-
-function MapRecenter({ center }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center) {
-      map.setView(center, 15);
-    }
-  }, [center, map]);
-  return null;
-}
 
 function toDateTimeInput(value) {
   if (!value) return '';
@@ -1019,24 +984,15 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
               </div>
 
               <div className="bmm-map">
-                <MapContainer
-                  center={mapCenter}
-                  zoom={hasMarker ? 15 : 11}
-                  style={{ width: '100%', height: '240px', borderRadius: '12px' }}
-                  scrollWheelZoom={false}
-                >
-                  <TileLayer
-                    attribution="&copy; OpenStreetMap contributors"
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                <Suspense fallback={<div className="bmm-map-chargement">{t('Chargement de la carte…')}</div>}>
+                  <CarteMission
+                    center={mapCenter}
+                    zoom={hasMarker ? 15 : 11}
+                    markerPos={markerPos}
+                    libelle={formData.localisation || t('Position sélectionnée')}
+                    onClick={handleMapClick}
                   />
-                  <MapClickHandler onClick={handleMapClick} />
-                  <MapRecenter center={mapCenter} />
-                  {markerPos && (
-                    <Marker position={markerPos}>
-                      <Popup>{formData.localisation || t('Position sélectionnée')}</Popup>
-                    </Marker>
-                  )}
-                </MapContainer>
+                </Suspense>
               </div>
 
               {hasMarker && (
