@@ -12,7 +12,7 @@ function prechargerDetailsBon() {
   importer().catch(() => { precharge = false; });
 }
 
-if (typeof window !== 'undefined') {
+if (import.meta.env.PROD && typeof window !== 'undefined') {
   const auRepos = window.requestIdleCallback || ((f) => setTimeout(f, 3000));
   auRepos(prechargerDetailsBon, { timeout: 10000 });
 }

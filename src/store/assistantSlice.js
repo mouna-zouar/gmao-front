@@ -1,6 +1,8 @@
+import { serviceDiffere } from './fabriques/serviceDiffere';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import assistantService from '../services/assistantService';
 import authService from '../services/Authservice';
+
+const assistantService = serviceDiffere(() => import('../services/assistantService'));
 
 function utilisateur() {
   const u = authService.getCurrentUser();
@@ -10,7 +12,6 @@ function utilisateur() {
     nom: u?.userNom || [u?.prenom, u?.nom].filter(Boolean).join(' ') || u?.login || null,
   };
 }
-
 
 export const CLE_CONVERSATION = 'gmao.assistant.conversation';
 

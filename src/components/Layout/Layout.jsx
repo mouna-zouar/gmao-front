@@ -1,8 +1,7 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
+import { lazy, Suspense, useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { pagesDe, sectionsPermises, trouverPage } from '../../constants/navigation';
 import { droitPage, useDroits } from '../../constants/privileges';
-import AccesRefuse from '../pages/Introuvable/AccesRefuse';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   chargerCompteur, chargerNotifications, marquerLue, marquerToutesLues, viderNotifications,
@@ -11,10 +10,13 @@ import {
 import { useAuth } from '../../constants/Authcontext';
 import { t, locale, SelecteurLangue } from '../../i18n';
 import { History, X, Bell, ChevronDown, ChevronLeft, ChevronRight, LogOut, Menu, Search, Sparkles } from 'lucide-react';
-import AssistantQuestions from '../ui/AssistantQuestions/AssistantQuestions';
 import './Layout.css';
+import './BarreIa.css';
 import logoSoftSys from '../../assets/logo_SoftSys.png';
 import '../ui/BadgeStatut/statuts-harmonises.css';
+
+const AccesRefuse = lazy(() => import('../pages/Introuvable/AccesRefuse'));
+const AssistantQuestions = lazy(() => import('../ui/AssistantQuestions/AssistantQuestions'));
 
 const NB_RECENTS = 5;
 const normaliser = (texte) => String(texte || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -34,6 +36,8 @@ export default function Layout({ children }) {
   const notifCount = useAppSelector(selectNotifCount);
   const notifLoading = useAppSelector(selectNotifChargement);
   const [assistantOuvert, setAssistantOuvert] = useState(false);
+  const [assistantCharge, setAssistantCharge] = useState(false);
+  if (assistantOuvert && !assistantCharge) setAssistantCharge(true);
   const fermerAssistant = useCallback(() => setAssistantOuvert(false), []);
   const [questionIa, setQuestionIa] = useState('');
   const [questionEnvoyee, setQuestionEnvoyee] = useState(null);
@@ -505,12 +509,16 @@ export default function Layout({ children }) {
       </header>
 
       <main className={`main-content ${sidebarOpen ? 'main-content--shifted' : ''}`} onClick={() => setActivePopup(null)}>
-        {aDroit(droitPage(currentPath)) ? children : <AccesRefuse />}
+        {aDroit(droitPage(currentPath)) ? children : <Suspense fallback={null}><AccesRefuse /></Suspense>}
       </main>
 
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
-      <AssistantQuestions ouvert={assistantOuvert} onFermer={fermerAssistant} questionInitiale={questionEnvoyee} onQuestionLue={questionLue} />
+      {assistantCharge && (
+        <Suspense fallback={null}>
+          <AssistantQuestions ouvert={assistantOuvert} onFermer={fermerAssistant} questionInitiale={questionEnvoyee} onQuestionLue={questionLue} />
+        </Suspense>
+      )}
     </div>
   );
 }

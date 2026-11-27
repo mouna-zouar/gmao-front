@@ -27,6 +27,11 @@ const slaService = {
     return data;
   },
 
+  async getVue(periode = {}) {
+    const { data } = await api.get('/vues/sla', { params: periode });
+    return data;
+  },
+
   async getBilan(periode = {}) {
     const { data } = await api.get('/sla/bilan', { params: periode });
     return data;

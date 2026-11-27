@@ -3,6 +3,7 @@ import {
 } from 'lucide-react';
 import { t } from '../../../i18n';
 import { MiniCalendrier } from './EspaceAgenda';
+import PrioritesDuJour from '../../commun/decision/PrioritesDuJour';
 
 const NIVEAUX = {
   retard: { libelle: 'En retard', ton: 'alerte' },
@@ -43,7 +44,7 @@ function LigneAFaire({ travail, onOuvrir }) {
 }
 
 export default function EspaceAujourdhui({
-  chargement, compteurs, travaux, onAller, onOuvrirTravail, onSignaler,
+  chargement, compteurs, travaux, onAller, onOuvrirTravail, onSignaler, personnelId, onOuvrirPriorite,
 }) {
   const urgents = travaux.filter((tr) => tr.statut && tr.statut.niveau !== 'plus-tard');
   const aFaire = (urgents.length ? urgents : travaux).slice(0, 7);
@@ -62,6 +63,11 @@ export default function EspaceAujourdhui({
           onClick={() => onAller('discussions')} />
         <Indicateur icone={Hourglass} valeur={compteurs.demandes} libelle={t('Demandes en cours')} ton="violet" onClick={() => onAller('demandes')} />
       </div>
+
+      {personnelId != null && personnelId !== '' && (
+        <PrioritesDuJour personnelId={personnelId} onOuvrir={onOuvrirPriorite}
+          sousTitre={t('Vos bons, vos tâches et vos réclamations, classés selon les délais, la priorité et la criticité')} />
+      )}
 
       <div className="ep2-grille">
         <section className="ep2-carte ep2-carte--afaire" aria-label={t('À faire maintenant')}>

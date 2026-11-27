@@ -11,6 +11,7 @@ import SearchableSelect from '../../commun/ListeRecherche';
 import { Badge, Modale, PageListe } from '../../commun';
 import { t, locale } from '../../../i18n';
 import './StockAlertes.css';
+import PrevisionStock from '../../commun/decision/PrevisionStock';
 
 const NIVEAUX = {
   RUPTURE: { label: 'Rupture', ton: 'rouge' },
@@ -153,6 +154,7 @@ export default function StockAlertes() {
         { label: t('Réglages'), icone: SlidersHorizontal, classe: 'cl-action--gris', onClick: () => setReglagesOuverts(true) },
         { label: t('Actualiser'), icone: RefreshCw, classe: 'cl-action--gris', desactive: chargement, onClick: () => charger(true) },
       ]}
+      avantTableau={vueCommandes ? null : <PrevisionStock onCommander={(ls) => setEditeur(ls)} />}
       recherchePlaceholder={vueCommandes ? t('Rechercher une commande...') : t('Article, code ou dépôt')}
       cleStockage={vueCommandes ? 'stock-commandes' : 'stock-alertes'}
       nomExport={vueCommandes ? 'commandes-reapprovisionnement' : 'alertes-stock'}

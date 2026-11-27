@@ -1,8 +1,10 @@
+import { serviceDiffere } from '../fabriques/serviceDiffere';
 import { creerModule } from '../fabriques/creerModule';
 import { creerRequete } from '../fabriques/creerRequete';
-import planningService from '../../services/planningService';
-import maintenanceTacheService from '../../services/maintenanceTacheService';
-import formationService from '../../services/formationService';
+
+const planningService = serviceDiffere(() => import('../../services/planningService'));
+const maintenanceTacheService = serviceDiffere(() => import('../../services/maintenanceTacheService'));
+const formationService = serviceDiffere(() => import('../../services/formationService'));
 
 const MIN = 60 * 1000;
 const PERIME_PLANNING = /^(planning|bon-maintenance)/;

@@ -1,5 +1,7 @@
+import { serviceDiffere } from './fabriques/serviceDiffere';
 import { creerReferentiel } from './fabriques/creerReferentiel';
-import lotArticleImmobilistationService from '../services/Lotarticleimmobilistationservice';
+
+const lotArticleImmobilistationService = serviceDiffere(() => import('../services/Lotarticleimmobilistationservice'));
 
 export const VALIDITE_MS = 5 * 60 * 1000;
 

@@ -245,7 +245,7 @@ const ORDRE_BARRE = ['REMPLACER', 'PLANIFIER', 'SURVEILLER', 'CONSERVER'];
 
 const moyenne = (vals) => (vals.length ? vals.reduce((a, v) => a + v, 0) / vals.length : null);
 
-function BarresAge({ lignes }) {
+function BarresAge({ lignes = [] }) {
   const [ref, w] = useLargeur();
   const actifs = lignes.filter((l) => !l.exclu && l.score.recommandation !== 'EXCLU');
   const places = actifs.filter((x) => x.ageAnnees != null && x.dureeVie > 0);

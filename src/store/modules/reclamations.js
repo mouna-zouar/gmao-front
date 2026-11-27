@@ -1,5 +1,7 @@
+import { serviceDiffere } from '../fabriques/serviceDiffere';
 import { creerModule } from '../fabriques/creerModule';
-import reclamationService from '../../services/Reclamationservice';
+
+const reclamationService = serviceDiffere(() => import('../../services/Reclamationservice'));
 
 export const PARAMS_LISTE_RECLAMATIONS = Object.freeze({ page: 0, taille: 100 });
 

@@ -469,6 +469,8 @@ export default function EspacePersonnel() {
               onAller={aller}
               onOuvrirTravail={ouvrirTravail}
               onSignaler={signaler}
+              personnelId={personnelId}
+              onOuvrirPriorite={(e) => (e.type === 'RECLAMATION' ? ouvrirReclamation(e.id) : ouvrirBon({ id: e.bonId ?? e.id }))}
             />
           ) : (
       <div className={`ep-layout ep2-layout ${avecCote ? '' : 'ep2-layout--plein'}`}>

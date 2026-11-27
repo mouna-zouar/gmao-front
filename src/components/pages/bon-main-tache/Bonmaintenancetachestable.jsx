@@ -206,7 +206,6 @@ export default function BonMaintenanceTachesKanban() {
       .map((tache) => ({ t: tache, bon: nomBon(tache) }));
     lignes.sort((a, b) => TRIS[tri.cle](a, b) * tri.sens);
     return lignes;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filteredTaches, filtreEtat, tri, bonsParId]);
 
   const entete = (cle, libelle) => (

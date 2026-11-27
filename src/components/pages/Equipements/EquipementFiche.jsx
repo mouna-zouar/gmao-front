@@ -31,6 +31,7 @@ import { choisirEquipementAssistant } from '../../../store/assistantSlice';
 import { commePage, obtenirServices } from '../../../store/referentiels';
 import { useExecuter } from '../../../store/hooks';
 import { reclamations as moduleReclamations } from '../../../store/modules/reclamations';
+import ConseilRenouvellement from '../../commun/decision/ConseilRenouvellement';
 
 function Pastille({ ton = 'neutre', children }) {
   return <span className={`eq-pastille eq-ton--${ton}`}>{children}</span>;
@@ -400,6 +401,8 @@ export default function EquipementFiche() {
           )}
         </div>
       </header>
+
+      <ConseilRenouvellement equipementId={Number(id) || null} />
 
       {!identite.complet && (
         <p className="eq-avertissement">{t('La liste des équipements est injoignable : marque, modèle, garantie et prix d’achat ne sont pas affichés.')}</p>

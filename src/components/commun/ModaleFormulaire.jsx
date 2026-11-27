@@ -37,7 +37,7 @@ export default function ModaleFormulaire({
     setConfirmation(null);
     setSection(listeSections[0].cle);
     setEtapeMax(0);
-  }, [ouvert, objet]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ouvert, objet]); 
 
   const fermer = () => { if (!envoi) onFermer(); };
 

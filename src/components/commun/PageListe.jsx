@@ -72,7 +72,7 @@ export default function PageListe({
       }
     }
     return r;
-  }, [lignes, recherche, tri, reglages, colonnes, filtresCol, choix]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lignes, recherche, tri, reglages, colonnes, filtresCol, choix]); 
 
   useEffect(() => { setPage(0); }, [recherche, tri, lignes.length, filtresCol]);
   const pageLignes = filtrees.slice(page * taille, page * taille + taille);

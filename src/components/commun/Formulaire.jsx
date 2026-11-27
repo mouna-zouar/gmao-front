@@ -27,7 +27,7 @@ function useOptions(champ, valeurs) {
       })
       .catch(() => { if (!annule) setEtat({ liste: [], chargement: false, erreur: true }); });
     return () => { annule = true; };
-  }, [cle]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cle]); 
   const brute = champ.chargerOptions ? etat.liste : statiques;
   const liste = champ.filtrerOptions ? champ.filtrerOptions(brute, valeurs) : brute;
   return { liste, chargement: champ.chargerOptions ? etat.chargement : false };
@@ -53,7 +53,7 @@ export function Champ({ champ, valeur, erreur, onChange, valeurs }) {
       const libelle = choisie ? labelOption(champ, choisie) : (valeur ? valeurs?.[champ.libelleVers] ?? '' : '');
       if ((valeurs?.[champ.libelleVers] ?? '') !== libelle) onChange(champ.libelleVers, libelle);
     }
-  }, [estListe, options.chargement, valeur, choisie]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [estListe, options.chargement, valeur, choisie]); 
 
   const id = `cf-${champ.nom}`;
   const desactive = typeof champ.desactive === 'function' ? champ.desactive(valeurs) : champ.desactive;

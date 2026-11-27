@@ -32,7 +32,7 @@ export function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
     } finally {
       setLoading(false);
     }
-  }, [reclamationId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reclamationId]); 
 
   useEffect(() => { charger(); }, [charger]);
 

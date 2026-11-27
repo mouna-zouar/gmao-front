@@ -1,5 +1,7 @@
 import store from './index';
 import { trouver } from './registre';
+import { cleParametres } from './fabriques/communs';
+import { prechargerVue } from '../services/api';
 
 const cloner = (v) => (typeof structuredClone === 'function' ? structuredClone(v) : JSON.parse(JSON.stringify(v)));
 
@@ -14,6 +16,28 @@ export async function lireRequete(nom, params = {}, { forcer = false } = {}) {
     throw erreur;
   });
   return cloner(req.selecteurs.entree(params)(store.getState()).donnees);
+}
+
+/** Vrai si la donnée du store (référentiel, module ou requête) est chargée et encore valide : inutile de la redemander. */
+export function estAJour(nom, params) {
+  const element = trouver(nom);
+  const etat = store.getState()[element.nom];
+  const frais = (chargeLe) => element.validiteMs == null || Date.now() - chargeLe < element.validiteMs;
+  if (element.type === 'requete') {
+    const entree = element.selecteurs.entree(params ?? {})(store.getState());
+    return entree.statut === 'pret' && frais(entree.chargeLe);
+  }
+  if (element.type === 'module') return etat.statut === 'pret' && etat.cle === cleParametres(params) && frais(etat.chargeLe);
+  return etat.statut === 'pret' && frais(etat.chargeLe);
+}
+
+/**
+ * Demande en un seul appel les parties d'une vue groupée qui ne sont pas déjà à jour dans le store.
+ * parties : [{ nom, url, params, store: [nomStore, paramsStore] }].
+ */
+export function prechargerParties(urlVue, parties, paramsVue = {}) {
+  const manquantes = parties.filter((p) => !p.store || !estAJour(...p.store));
+  return prechargerVue(urlVue, manquantes.map((p) => [p.nom, p.url, p.params]), paramsVue);
 }
 
 export function lireRequeteEnCache(nom, params = {}) {

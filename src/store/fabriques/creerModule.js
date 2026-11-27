@@ -142,6 +142,7 @@ export function creerModule({
   return {
     type: 'module',
     nom,
+    validiteMs,
     invalidePar,
     reducer: slice.reducer,
     actions: { charger, obtenir, creer, modifier, supprimer, ...ops, ...slice.actions },

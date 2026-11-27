@@ -1,16 +1,18 @@
+import { serviceDiffere } from '../fabriques/serviceDiffere';
 import { creerModule } from '../fabriques/creerModule';
 import { creerReferentiel } from '../fabriques/creerReferentiel';
 import { creerRequete } from '../fabriques/creerRequete';
-import etatEquipementService from '../../services/Etatequipementservice';
-import equipementMaintenanceService from '../../services/equipementMaintenanceService';
-import equipementService from '../../services/equipementService';
-import hierarchieService from '../../services/hierarchieService';
-import disponibiliteService from '../../services/Disponibiliteservice';
-import risqueService from '../../services/Risqueservice';
-import maintenanceConditionnelleService from '../../services/maintenanceConditionnelleService';
-import renouvellementService from '../../services/renouvellementService';
-import metrologieService from '../../services/metrologieService';
-import compteurService from '../../services/Compteurservice';
+
+const etatEquipementService = serviceDiffere(() => import('../../services/Etatequipementservice'));
+const equipementMaintenanceService = serviceDiffere(() => import('../../services/equipementMaintenanceService'));
+const equipementService = serviceDiffere(() => import('../../services/equipementService'));
+const hierarchieService = serviceDiffere(() => import('../../services/hierarchieService'));
+const disponibiliteService = serviceDiffere(() => import('../../services/Disponibiliteservice'));
+const risqueService = serviceDiffere(() => import('../../services/Risqueservice'));
+const maintenanceConditionnelleService = serviceDiffere(() => import('../../services/maintenanceConditionnelleService'));
+const renouvellementService = serviceDiffere(() => import('../../services/renouvellementService'));
+const metrologieService = serviceDiffere(() => import('../../services/metrologieService'));
+const compteurService = serviceDiffere(() => import('../../services/Compteurservice'));
 
 const MIN = 60 * 1000;
 const ECRITURE_PARC = /^(bon-maintenance|etat-equipement|lot-article-immobilistation|equipements|equipement-maintenance|hierarchie)/;

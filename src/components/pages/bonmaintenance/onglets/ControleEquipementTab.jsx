@@ -95,7 +95,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
   };
 
   useEffect(() => { load(); }, [bonMaintenanceId]);
-  useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (autoOpenForm) openForm(); }, []); 
 
   useEffect(() => {
     obtenirPersonnelsMaintenance().then(commePage).then((p) => setPersonnels(p.content ?? [])).catch(console.error);

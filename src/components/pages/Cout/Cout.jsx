@@ -26,6 +26,7 @@ const CHART = {
 
 function calculerBornes(periodeKey) {
   const fin = new Date();
+  fin.setSeconds(0, 0);
   const debut = new Date(fin);
   const conf = PERIODES.find((p) => p.key === periodeKey) || PERIODES[1];
   debut.setDate(debut.getDate() - conf.jours);
@@ -194,12 +195,9 @@ export default function Cout() {
     setError(null);
     try {
       const bornes = { ...calculerBornes(periodeKey), lieuId: lieuId || undefined };
-      const [listeBons, bilanData] = await Promise.all([
-        lireRequete('coutParPeriode', bornes),
-        lireRequete('coutBilan', bornes),
-      ]);
-      setBons(listeBons ?? []);
-      setBilan(bilanData);
+      const vue = await lireRequete('coutVue', bornes);
+      setBons(vue?.liste ?? []);
+      setBilan(vue?.bilan ?? null);
     } catch (err) {
       console.error('Erreur chargement coûts :', err);
       setError('Impossible de charger les données de coûts.');

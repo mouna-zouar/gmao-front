@@ -23,7 +23,7 @@ import {
 import { parametres, alertesStock, reglagesStock } from './modules/administration';
 import {
   tableauDeBord, tableauBons, tableauReclamations, supervision, slaDepassements, slaParPeriode, slaBilan,
-  coutParPeriode, coutBilan, indicateursPerformance, performanceEmployes, chronoEmployes, tableauParc,
+  coutParPeriode, coutBilan, coutVue, slaVue, reparerOuRemplacer, prioritesDuJour, prioritesPersonnel, conseilsPreventif, previsionsStock, indicateursPerformance, performanceEmployes, chronoEmployes, tableauParc,
   anomalies, blocages, actionsRcaEnRetard, alertesMachines, indicateursAlertes, agentsMachines, compteAlertesMachines,
 } from './modules/analyses';
 
@@ -44,7 +44,7 @@ export const REQUETES = {
   echeancierMetrologie, controlesMetrologie, incidentsMateriovigilance, delaisMateriovigilance,
   alertesStock, reglagesStock,
   tableauDeBord, tableauBons, tableauReclamations, supervision, slaDepassements, slaParPeriode, slaBilan,
-  coutParPeriode, coutBilan, indicateursPerformance, performanceEmployes, chronoEmployes, tableauParc,
+  coutParPeriode, coutBilan, coutVue, slaVue, reparerOuRemplacer, prioritesDuJour, prioritesPersonnel, conseilsPreventif, previsionsStock, indicateursPerformance, performanceEmployes, chronoEmployes, tableauParc,
   anomalies, blocages, actionsRcaEnRetard, alertesMachines, indicateursAlertes, agentsMachines, compteAlertesMachines,
 };
 

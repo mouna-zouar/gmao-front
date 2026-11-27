@@ -1,7 +1,9 @@
+import { serviceDiffere } from '../fabriques/serviceDiffere';
 import { creerReferentiel } from '../fabriques/creerReferentiel';
 import { creerRequete } from '../fabriques/creerRequete';
-import parametreService from '../../services/parametreService';
-import stockAlerteService from '../../services/stockAlerteService';
+
+const parametreService = serviceDiffere(() => import('../../services/parametreService'));
+const stockAlerteService = serviceDiffere(() => import('../../services/stockAlerteService'));
 
 const MIN = 60 * 1000;
 

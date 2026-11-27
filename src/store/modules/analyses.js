@@ -1,15 +1,18 @@
+import { serviceDiffere } from '../fabriques/serviceDiffere';
 import { creerRequete } from '../fabriques/creerRequete';
-import tableauDeBordService from '../../services/tableauDeBordService';
-import supervisionService from '../../services/supervisionService';
-import slaService from '../../services/slaService';
-import coutService from '../../services/coutService';
-import indicateursPerformanceService from '../../services/indicateursPerformanceService';
-import performanceEmployesService from '../../services/performanceEmployesService';
-import parcDashboardService from '../../services/parcDashboardService';
-import anomalieService from '../../services/Anomalieservice';
-import blocageImmobilisationService from '../../services/Blocageimmobilisationservice';
-import rcaCapaService from '../../services/rcaCapaService';
-import alerteMachineService from '../../services/alerteMachineService';
+
+const tableauDeBordService = serviceDiffere(() => import('../../services/tableauDeBordService'));
+const supervisionService = serviceDiffere(() => import('../../services/supervisionService'));
+const slaService = serviceDiffere(() => import('../../services/slaService'));
+const coutService = serviceDiffere(() => import('../../services/coutService'));
+const indicateursPerformanceService = serviceDiffere(() => import('../../services/indicateursPerformanceService'));
+const performanceEmployesService = serviceDiffere(() => import('../../services/performanceEmployesService'));
+const parcDashboardService = serviceDiffere(() => import('../../services/parcDashboardService'));
+const anomalieService = serviceDiffere(() => import('../../services/Anomalieservice'));
+const blocageImmobilisationService = serviceDiffere(() => import('../../services/Blocageimmobilisationservice'));
+const rcaCapaService = serviceDiffere(() => import('../../services/rcaCapaService'));
+const alerteMachineService = serviceDiffere(() => import('../../services/alerteMachineService'));
+const decisionService = serviceDiffere(() => import('../../services/decisionService'));
 
 const S = 1000;
 const MIN = 60 * S;
@@ -45,6 +48,32 @@ export const slaParPeriode = creerRequete({
 });
 export const slaBilan = creerRequete({
   nom: 'slaBilan', executer: (bornes) => slaService.getBilan(bornes), validiteMs: 2 * MIN, invalidePar: METIER,
+});
+
+export const reparerOuRemplacer = creerRequete({
+  nom: 'reparerOuRemplacer', executer: ({ id }) => decisionService.reparerOuRemplacer(id), validiteMs: 5 * MIN, invalidePar: METIER,
+});
+export const conseilsPreventif = creerRequete({
+  nom: 'conseilsPreventif', executer: () => decisionService.conseilsPreventif(), validiteMs: 10 * MIN,
+  invalidePar: /^(equipement-maintenance|bon-maintenance)/,
+});
+export const prioritesPersonnel = creerRequete({
+  nom: 'prioritesPersonnel', executer: ({ personnelId, limite = 5 }) => decisionService.prioritesPersonnel(personnelId, limite),
+  validiteMs: MIN, invalidePar: METIER,
+});
+export const previsionsStock = creerRequete({
+  nom: 'previsionsStock', executer: ({ delaiJours = 14, tout = false }) => decisionService.previsionsStock(delaiJours, tout),
+  validiteMs: 5 * MIN, invalidePar: /^(bon-maintenance|piece|stock)/,
+});
+export const prioritesDuJour = creerRequete({
+  nom: 'prioritesDuJour', executer: ({ limite = 5, personnelId = null }) => decisionService.prioritesDuJour(limite, personnelId), validiteMs: MIN, invalidePar: METIER,
+});
+
+export const coutVue = creerRequete({
+  nom: 'coutVue', executer: (bornes) => coutService.getVue(bornes), validiteMs: 2 * MIN, invalidePar: METIER,
+});
+export const slaVue = creerRequete({
+  nom: 'slaVue', executer: (bornes) => slaService.getVue(bornes), validiteMs: 2 * MIN, invalidePar: METIER,
 });
 
 export const coutParPeriode = creerRequete({

@@ -104,7 +104,7 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
     const surEcriture = () => chargerManques();
     window.addEventListener('gmao:ecriture', surEcriture);
     return () => window.removeEventListener('gmao:ecriture', surEcriture);
-  }, [bonMaintenanceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [bonMaintenanceId]); 
   const manqueTache = (tache) => {
     const id = String(tache.id);
     const d = manques.demander.has(id);
@@ -129,7 +129,7 @@ export function TachesTab({ bonMaintenanceId, defaultLotArticleImmobilistationId
   };
 
   useEffect(() => { load(); }, [bonMaintenanceId]);
-  useEffect(() => { if (autoOpenForm) setShowForm(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (autoOpenForm) setShowForm(true); }, []); 
 
   useEffect(() => {
     obtenirArticles().then(setArticles).catch(console.error);

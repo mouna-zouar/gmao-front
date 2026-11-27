@@ -17,7 +17,7 @@ export default function AlerteFormation({ personnelId, bonMaintenanceId, lotArti
       .then((r) => { if (!annule) setRes(r); })
       .catch((e) => console.error('[GMAO formations] Vérification :', e));
     return () => { annule = true; };
-  }, [cle]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cle]); 
 
   if (!res || res.forme == null) return null;
   const cible = [res.equipementNom, res.familleNom].filter(Boolean).join(' · ') || '—';

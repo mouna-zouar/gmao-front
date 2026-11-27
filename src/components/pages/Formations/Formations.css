@@ -59,6 +59,9 @@
 .fo-r { display: inline-flex; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 999px; background: var(--g-slate-100); color: var(--g-slate-700); font-size: 0.68rem; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fo-r--formation { background: var(--g-emerald-100); color: var(--g-emerald-700); }
 .fo-r--doux { color: var(--g-slate-500); background: var(--g-slate-50); }
+.fo-r--libre { background: var(--g-emerald-50, #ecfdf5); color: var(--g-emerald-700, #047857); }
+.fo-r--occupe { background: var(--g-amber-50, #fffbeb); color: var(--g-amber-700, #b45309); }
+.fo-assistant__aide { margin: -4px 0 8px; font-size: 0.72rem; color: var(--g-slate-500); }
 .fo-assistant__choisir { grid-area: bouton; display: inline-flex; align-items: center; gap: 4px; padding: 5px 12px; border-radius: 8px; border: 1px solid var(--g-brand-500); background: var(--g-blanc); color: var(--g-brand-700, #0e7490); font: 700 0.75rem var(--g-police); cursor: pointer; white-space: nowrap; }
 .fo-assistant__choisir:hover:not(:disabled) { background: var(--g-brand-500); color: var(--g-blanc); }
 .fo-assistant__choisir:disabled { border-color: transparent; background: var(--g-brand-500); color: var(--g-blanc); cursor: default; }

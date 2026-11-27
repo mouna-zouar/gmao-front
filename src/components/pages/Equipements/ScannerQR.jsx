@@ -93,7 +93,6 @@ export default function ScannerQR({ onClose, onTrouve, titre, aide }) {
       flux?.getTracks().forEach((p) => p.stop());
       document.removeEventListener('keydown', echap);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onClose]);
 
   return (

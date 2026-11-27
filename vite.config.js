@@ -18,9 +18,10 @@ export default defineConfig({
     },
   },
   server: {
+    warmup: { clientFiles: ['./src/main.jsx', './src/components/Layout/Layout.jsx', './src/components/pages/Dashboard/Dashboard.jsx'] },
     proxy: {
       '/api': {
-        target: 'http://localhost:9090', // <-- le port réel de votre Spring Boot
+        target: 'http://localhost:9090', 
         changeOrigin: true,
       },
     },

@@ -1,11 +1,13 @@
+import { serviceDiffere } from '../fabriques/serviceDiffere';
 import { creerModule } from '../fabriques/creerModule';
-import vehiculeIncidentService from '../../services/vehiculeIncidentService';
-import vehiculeMissionService from '../../services/vehiculeMissionService';
-import vehiculeReservationService from '../../services/vehiculeReservationService';
-import vehiculeBonCarburantService from '../../services/vehiculeBonCarburantService';
-import vehiculeConducteurService from '../../services/vehiculeConducteurService';
-import vehiculeAmendeService from '../../services/Vehiculeamendeservice';
-import permisConduiteService from '../../services/permisConduiteService';
+
+const vehiculeIncidentService = serviceDiffere(() => import('../../services/vehiculeIncidentService'));
+const vehiculeMissionService = serviceDiffere(() => import('../../services/vehiculeMissionService'));
+const vehiculeReservationService = serviceDiffere(() => import('../../services/vehiculeReservationService'));
+const vehiculeBonCarburantService = serviceDiffere(() => import('../../services/vehiculeBonCarburantService'));
+const vehiculeConducteurService = serviceDiffere(() => import('../../services/vehiculeConducteurService'));
+const vehiculeAmendeService = serviceDiffere(() => import('../../services/Vehiculeamendeservice'));
+const permisConduiteService = serviceDiffere(() => import('../../services/permisConduiteService'));
 
 const MIN = 60 * 1000;
 const crud = (s) => ({

@@ -86,7 +86,7 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
   };
 
   useEffect(() => { load(); }, [bonMaintenanceId]);
-  useEffect(() => { if (autoOpenForm) setShowForm(true); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (autoOpenForm) setShowForm(true); }, []); 
 
   useEffect(() => {
     if (!showForm) return;

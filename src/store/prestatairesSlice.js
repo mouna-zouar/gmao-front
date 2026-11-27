@@ -1,5 +1,7 @@
+import { serviceDiffere } from './fabriques/serviceDiffere';
 import { creerReferentiel } from './fabriques/creerReferentiel';
-import prestataireService from '../services/prestataireService';
+
+const prestataireService = serviceDiffere(() => import('../services/prestataireService'));
 
 export const prestataires = creerReferentiel({
   nom: 'prestataires',

@@ -141,7 +141,6 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     if (!toujoursValide) {
       setFormData((prev) => ({ ...prev, serviceId: '', depotId: '' }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.prestataireId, services]);
 
   const loadBon = useCallback(async () => {

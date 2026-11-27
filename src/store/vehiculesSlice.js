@@ -1,5 +1,7 @@
+import { serviceDiffere } from './fabriques/serviceDiffere';
 import { creerReferentiel } from './fabriques/creerReferentiel';
-import vehiculeService from '../services/vehiculeService';
+
+const vehiculeService = serviceDiffere(() => import('../services/vehiculeService'));
 
 export const VALIDITE_MS = 2 * 60 * 1000;
 

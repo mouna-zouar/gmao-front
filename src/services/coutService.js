@@ -11,6 +11,11 @@ const coutService = {
     return data;
   },
 
+  async getVue(periode = {}) {
+    const { data } = await api.get('/vues/cout', { params: periode });
+    return data;
+  },
+
   async getBilan(periode = {}) {
     const { data } = await api.get('/cout/bilan', { params: periode });
     return data;

@@ -269,7 +269,6 @@ export const SearchableSelect = ({
   );
 };
 
-// eslint-disable-next-line no-unused-vars
 export function BmfFormulaire({ titre, intro, onSubmit, children }) {
   return (
     <form className="bmf-form" onSubmit={onSubmit}>
@@ -283,7 +282,6 @@ export function BmfFormulaire({ titre, intro, onSubmit, children }) {
   );
 }
 
-// eslint-disable-next-line no-unused-vars
 export function BmfEtape({ numero, titre, aide, children }) {
   return (
     <fieldset className="bmf-etape bmf-etape--simple" aria-label={titre ? t(titre) : undefined}>
@@ -292,7 +290,6 @@ export function BmfEtape({ numero, titre, aide, children }) {
   );
 }
 
-// eslint-disable-next-line no-unused-vars
 export function BmfChamp({ label, aide, requis = false, large = false, alerte, info, children, htmlFor }) {
   return (
     <div className={`bmf-champ ${large ? 'is-large' : ''}`}>

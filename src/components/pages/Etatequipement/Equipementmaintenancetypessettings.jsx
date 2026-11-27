@@ -9,6 +9,7 @@ import { cheminLieu, lieuxAplatis } from '../../../services/lieuxCache';
 import { Badge, ConfirmModal, ModaleFormulaire, PageListe } from '../../commun';
 import './Equipementmaintenancetypessettings.css';
 import { SelectionEquipements } from './SelectionEquipements';
+import ConseilsPreventif from '../../commun/decision/ConseilsPreventif';
 
 const nf = (v) => new Intl.NumberFormat(locale()).format(v);
 
@@ -230,6 +231,7 @@ export default function EquipementMaintenanceTypesSettings({ vues, integre = fal
         { label: t('Actualiser'), icone: RefreshCw, classe: 'cl-action--gris', desactive: chargement, onClick: charger },
       ]}
       recherchePlaceholder={t('Code, libellé, gamme...')}
+      avantTableau={<ConseilsPreventif onModifier={(typeId) => { const type = types.find((x) => x.id === typeId); if (type) ouvrir(type); }} />}
       cleStockage="maintenance-preventive-types"
       nomExport="maintenance-preventive-types"
       triInitial={{ cle: 'code', sens: 'asc' }}

@@ -123,8 +123,11 @@ export default function AssistantQuestions({ ouvert, onFermer, questionInitiale,
     setTimeout(() => saisieRef.current?.focus(), 50);
   };
 
+  const questionTraitee = useRef(null);
   useEffect(() => {
-    if (!ouvert || !questionInitiale || enCours) return;
+    if (!questionInitiale) { questionTraitee.current = null; return; }
+    if (!ouvert || enCours || questionTraitee.current === questionInitiale) return;
+    questionTraitee.current = questionInitiale;
     onQuestionLue?.();
     envoyer(questionInitiale);
   // eslint-disable-next-line react-hooks/exhaustive-deps

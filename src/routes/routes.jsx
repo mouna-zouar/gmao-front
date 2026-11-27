@@ -2,8 +2,8 @@ import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import ChargementPage, { LimiteChargement } from './ChargementPage';
 import Dashboard from '../components/pages/Dashboard/Dashboard';
-import PageIntrouvable from '../components/pages/Introuvable/PageIntrouvable';
-import Login from '../components/pages/login/Login';
+const PageIntrouvable = lazy(() => import('../components/pages/Introuvable/PageIntrouvable'));
+const Login = lazy(() => import('../components/pages/login/Login'));
 
 const IMPORTS = {
     CompteurList: () => import('../components/pages/Compteurs/Compteurs'),
@@ -177,7 +177,7 @@ const connexionLente = () => {
     return Boolean(c && (c.saveData || /(^|-)2g$/.test(c.effectiveType || '')));
 };
 
-if (typeof window !== 'undefined' && !connexionLente()) {
+if (import.meta.env.PROD && typeof window !== 'undefined' && !connexionLente()) {
     const surLien = (e) => {
         const lien = e.target?.closest?.('a[href]');
         if (!lien || lien.origin !== window.location.origin) return;

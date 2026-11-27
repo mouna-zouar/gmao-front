@@ -1,12 +1,14 @@
+import { serviceDiffere } from './fabriques/serviceDiffere';
 import { creerReferentiel } from './fabriques/creerReferentiel';
-import personnelService from '../services/Personnelservice';
-import serviceService from '../services/Serviceservice';
-import equipementService from '../services/equipementService';
-import codePanneService from '../services/codePanneService';
-import gammeService from '../services/gammeService';
-import cliniqueService from '../services/cliniqueService';
-import calendrierService from '../services/Calendrierservice';
-import hierarchieService from '../services/hierarchieService';
+
+const personnelService = serviceDiffere(() => import('../services/Personnelservice'));
+const serviceService = serviceDiffere(() => import('../services/Serviceservice'));
+const equipementService = serviceDiffere(() => import('../services/equipementService'));
+const codePanneService = serviceDiffere(() => import('../services/codePanneService'));
+const gammeService = serviceDiffere(() => import('../services/gammeService'));
+const cliniqueService = serviceDiffere(() => import('../services/cliniqueService'));
+const calendrierService = serviceDiffere(() => import('../services/Calendrierservice'));
+const hierarchieService = serviceDiffere(() => import('../services/hierarchieService'));
 
 const MIN = 60 * 1000;
 

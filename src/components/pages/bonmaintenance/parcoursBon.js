@@ -66,7 +66,6 @@ export function construireParcours({ bon, nbDiagnostics, intervenants, controle,
   return { etapes, indexActuel, cloture };
 }
 
-// eslint-disable-next-line no-unused-vars
 function prochaineAction({ bon, parcours, intervenants }) {
   if (bon.etat === ETAT.ANNULE) {
     return {

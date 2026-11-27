@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, GraduationCap, History, ListChecks, Loader2, Sparkles, Wrench } from 'lucide-react';
+import { Check, CircleCheck, GraduationCap, History, ListChecks, Loader2, Sparkles, Timer, Wrench } from 'lucide-react';
 import formationService from '../../../services/formationService';
 import { dateFormation, nomPersonnel } from './formationLibelles';
 import { t } from '../../../i18n';
@@ -25,6 +25,7 @@ export default function AssistantIntervenants({ bonMaintenanceId, lotArticleImmo
   return (
     <section className="fo-assistant" aria-label={t('Intervenants suggérés')}>
       <h4><Sparkles size={15} aria-hidden="true" /> {t('Intervenants suggérés')}</h4>
+      <p className="fo-assistant__aide">{t('Classés selon la compétence (formations, interventions passées) et la disponibilité actuelle.')}</p>
       {suggestions == null ? (
         <p className="fo-assistant__vide"><Loader2 size={14} className="cf-tourne" /> {t('Recherche dans l’historique…')}</p>
       ) : suggestions.length === 0 ? (
@@ -43,6 +44,13 @@ export default function AssistantIntervenants({ bonMaintenanceId, lotArticleImmo
                   </span>
                 </div>
                 <div className="fo-assistant__raisons">
+                  {s.occupeMaintenant ? (
+                    <span className="fo-r fo-r--occupe"><Timer size={12} />{t('Travaille en ce moment')}</span>
+                  ) : s.interventionsOuvertes > 0 ? (
+                    <span className="fo-r fo-r--occupe"><Timer size={12} />{t('{n} intervention(s) en cours', { n: s.interventionsOuvertes })}</span>
+                  ) : s.interventionsOuvertes === 0 ? (
+                    <span className="fo-r fo-r--libre"><CircleCheck size={12} />{t('Disponible')}</span>
+                  ) : null}
                   {s.formations?.length > 0 && <span className="fo-r fo-r--formation" title={s.formations.join('\n')}><GraduationCap size={12} />{s.formations.length > 1 ? t('{n} formations', { n: s.formations.length }) : s.formations[0]}</span>}
                   {s.interventionsEquipement > 0 && <span className="fo-r"><Wrench size={12} />{t('{n} sur cet équipement', { n: s.interventionsEquipement })}</span>}
                   {s.tachesEquipement > 0 && <span className="fo-r"><ListChecks size={12} />{t('{n} tâche(s) effectuée(s)', { n: s.tachesEquipement })}</span>}

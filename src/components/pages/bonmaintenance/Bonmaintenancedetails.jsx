@@ -85,6 +85,7 @@ import { FlowTab } from './onglets/FlowTab';
 import { ReparationEtapes, PanneauDelais, PanneauCout, InfosReclamation } from './PanneauxBon';
 import { useExecuter } from '../../../store/hooks';
 import { bons as moduleBons } from '../../../store/modules/bons';
+import ConseilRenouvellement from '../../commun/decision/ConseilRenouvellement';
 
 function ChargementRubrique() {
   return (
@@ -217,7 +218,7 @@ function Tiroir({ rubrique, onClose, children }) {
   );
 }
 
-function prechargerBon(id) {
+function prechargerBon(id, lot) {
   if (!id) return null;
   const b = `/bon-maintenance/${id}`;
   return precharger(`${b}/resume`, [
@@ -234,12 +235,13 @@ function prechargerBon(id) {
     `/cout/bon/${id}`,
     `/rca-capa/bon/${id}`,
     `${b}/rapport`,
+    ...(lot ? [`/gmao-cubix/lot-article-immobilisations/${lot}`] : []),
   ]);
 }
 
 export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletInitial = null }) {
   const aDroit = useDroits();
-  useMemo(() => prechargerBon(bonMaintenance?.id), [bonMaintenance?.id]);
+  useMemo(() => prechargerBon(bonMaintenance?.id, bonMaintenance?.lotArticleImmobilistationId), [bonMaintenance?.id, bonMaintenance?.lotArticleImmobilistationId]);
   const [bon, setBon] = useState(bonMaintenance);
   const executer = useExecuter();
   const [loading, setLoading] = useState(!bonMaintenance);
@@ -859,6 +861,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
       </div>
 
       <BandeauValidation bon={bon} />
+      {bon.lotArticleImmobilistationId && <ConseilRenouvellement equipementId={bon.lotArticleImmobilistationId} />}
 
       <div className="bmz-plan">
       <div className="bmz-corps bmz-corps--sans-rapport">

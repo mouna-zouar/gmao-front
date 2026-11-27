@@ -39,6 +39,7 @@ const TAILLE_PAGE_DEFAUT = 10;
 
 function calculerBornes(periodeKey) {
   const fin = new Date();
+  fin.setSeconds(0, 0);
   const debut = new Date(fin);
   const conf = PERIODES.find((p) => p.key === periodeKey) || PERIODES[2];
   debut.setDate(debut.getDate() - conf.jours);
@@ -235,12 +236,9 @@ export default function Sla() {
         setBilan(null);
       } else {
         const bornes = calculerBornes(periodeKey);
-        const [listeBons, bilanData] = await Promise.all([
-          lireRequete('slaParPeriode', bornes),
-          lireRequete('slaBilan', bornes),
-        ]);
-        setBons(listeBons ?? []);
-        setBilan(bilanData);
+        const donnees = await lireRequete('slaVue', bornes);
+        setBons(donnees?.liste ?? []);
+        setBilan(donnees?.bilan ?? null);
       }
     } catch (err) {
       console.error('Erreur chargement SLA :', err);

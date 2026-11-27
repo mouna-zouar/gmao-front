@@ -98,6 +98,7 @@ import { SlaRetards } from './SlaRetards';
 import { useAppDispatch, useAppSelector, useExecuter } from '../../../store/hooks';
 import { bons as moduleBons, PARAMS_LISTE_BONS } from '../../../store/modules/bons';
 import { lireRequete } from '../../../store/referentiels';
+import PrioritesDuJour from '../../commun/decision/PrioritesDuJour';
 
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
 
@@ -351,7 +352,6 @@ export default function BonsMaintenance() {
     reste.delete('etat');
     reste.delete('vue');
     setParametres(reste, { replace: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [etatLien, vueLien]);
   useEffect(() => {
     if (!idLien) return;
@@ -1147,6 +1147,10 @@ export default function BonsMaintenance() {
 
       </div>
 
+      <PrioritesDuJour onOuvrir={(ligne) => {
+        setSelectedBon(bons.find((b) => b.id === ligne.id) || { id: ligne.id });
+        setViewMode('details');
+      }} />
 
       <div className="bons-actions-bar">
         {aDroit(DROITS.BON_AJOUTER_MODIFIER) && (

@@ -123,4 +123,25 @@ api.interceptors.response.use(
   }
 );
 
+/**
+ * Vue groupée : un seul appel à `urlVue` remplace plusieurs GET de la page.
+ * entrees : [[nomDansLaReponse, url, params]] ; chaque GET (url, params) lancé ensuite par la page
+ * reçoit la partie correspondante sans repasser par le réseau. Une partie absente refait l'appel d'origine.
+ */
+export function prechargerVue(urlVue, entrees, paramsVue = {}) {
+  const maintenant = Date.now();
+  const nouvelles = entrees.filter(([, url, params]) => {
+    const deja = precharges.get(`${url}|${JSON.stringify(params || {})}`);
+    return !(deja && deja.jusqua > maintenant);
+  });
+  if (!nouvelles.length) return null;
+  const jusqua = maintenant + DUREE_PRECHARGE_MS;
+  const groupe = api.get(urlVue, { params: { ...paramsVue, parties: nouvelles.map(([nom]) => nom).join(',') } })
+    .then(({ data }) => data || {}).catch(() => ({}));
+  nouvelles.forEach(([nom, url, params]) => {
+    precharges.set(`${url}|${JSON.stringify(params || {})}`, { jusqua, reponse: groupe.then((g) => g[nom] || null) });
+  });
+  return groupe;
+}
+
 export default api;

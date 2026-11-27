@@ -16,6 +16,7 @@ import { t, tp, locale } from '../../../i18n';
 import '../TableauDeBord/TableauDeBord.css';
 import './Etatequipement.css';
 import { exporterHistoriquePDF } from './historiquePdf';
+import { prechargerVueEquipements } from './vueEquipements';
 import { PastillesStats } from '../../commun';
 import { ArrowRight, ChevronDown, List, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
 import { VeillePage, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
@@ -151,6 +152,7 @@ const ETAT_ICONS = {
 };
 
 export default function EtatEquipement({ isModal = false }) {
+  useMemo(() => prechargerVueEquipements(), []);
   return isModal ? <EtatEquipementCompact isModal /> : <EquipementsVues />;
 }
 

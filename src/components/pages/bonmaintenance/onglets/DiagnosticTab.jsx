@@ -101,7 +101,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   };
 
   useEffect(() => { load(); }, [bonMaintenanceId]);
-  useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (autoOpenForm) openForm(); }, []); 
 
   useEffect(() => {
     if (!form.lotArticleImmobilistationId) {

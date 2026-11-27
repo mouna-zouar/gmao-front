@@ -1,5 +1,7 @@
+import { serviceDiffere } from './fabriques/serviceDiffere';
 import { creerReferentiel } from './fabriques/creerReferentiel';
-import depotCubixService from '../services/depotCubixService';
+
+const depotCubixService = serviceDiffere(() => import('../services/depotCubixService'));
 
 export const depots = creerReferentiel({
   nom: 'depots',

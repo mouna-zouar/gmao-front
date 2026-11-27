@@ -278,7 +278,7 @@ export default function AlertesMachines({ isModal = false }) {
       || ((y.niveauEscalade ?? 0) - (x.niveauEscalade ?? 0))
       || ((NIVEAU[y.niveau]?.rang ?? 0) - (NIVEAU[x.niveau]?.rang ?? 0))
       || String(y.derniereReception || '').localeCompare(String(x.derniereReception || ''))),
-  [alertes, filtreStatut, filtreNiveau, filtreInconnues, filtreSource, filtreEscalade, agents]); // eslint-disable-line react-hooks/exhaustive-deps
+  [alertes, filtreStatut, filtreNiveau, filtreInconnues, filtreSource, filtreEscalade, agents]); 
   useEffect(() => { setPage(0); }, [filtreStatut, filtreNiveau, filtreInconnues, filtreSource, filtreEscalade]);
   const nbPages = Math.max(1, Math.ceil(affichees.length / taille));
   const pageCourante = Math.min(page, nbPages - 1);
@@ -292,7 +292,7 @@ export default function AlertesMachines({ isModal = false }) {
     const m = new Map();
     alertes.forEach((a) => { const s = sourceAffichee(a); m.set(s, (m.get(s) || 0) + 1); });
     return [...m.entries()].sort((x, y) => y[1] - x[1]);
-  }, [alertes, agents]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [alertes, agents]); 
 
   const basculerNiveau = (n) => { setFiltreInconnues(false); setFiltreNiveau((v) => (v === n ? null : n)); };
 

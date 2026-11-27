@@ -65,7 +65,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
     const surEcriture = () => chargerControles();
     window.addEventListener('gmao:ecriture', surEcriture);
     return () => window.removeEventListener('gmao:ecriture', surEcriture);
-  }, [bonMaintenanceId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [bonMaintenanceId]); 
   const controleFait = (controles?.length ?? 0) > 0;
   const dernierControleNonConforme = controleFait && controles[0].conforme === false;
   const messageServeur = (err) => err?.response?.data?.message || err?.response?.data?.error || null;
@@ -133,7 +133,7 @@ export function RemiseEnServiceTab({ bonMaintenanceId, defaultLotArticleImmobili
   };
 
   useEffect(() => { load(); }, [bonMaintenanceId]);
-  useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (autoOpenForm) openForm(); }, []); 
 
   useEffect(() => {
     obtenirEquipements().then(setImmobilisations).catch(console.error);

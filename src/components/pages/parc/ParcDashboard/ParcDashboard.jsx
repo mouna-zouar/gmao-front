@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { prechargerVueParc } from './vueParc';
 import { t, locale } from '../../../../i18n';
 import './ParcDashboard.css';
 import IndicateursParc from './IndicateursParc';
@@ -60,6 +61,7 @@ const ICONS = {
 };
 
 export default function ParcDashboard() {
+  useMemo(() => prechargerVueParc(), []);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

@@ -1,5 +1,7 @@
+import { serviceDiffere } from './fabriques/serviceDiffere';
 import { creerReferentiel } from './fabriques/creerReferentiel';
-import emplacementService from '../services/emplacementService';
+
+const emplacementService = serviceDiffere(() => import('../services/emplacementService'));
 
 export const VALIDITE_MS = 30 * 60 * 1000;
 
