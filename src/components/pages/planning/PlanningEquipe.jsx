@@ -12,6 +12,8 @@ const HEURE_DEBUT = 8;
 const RAFRAICHISSEMENT_MS = 60000;
 const ETATS_BON = { 1: 'Nouveau', 2: 'Suspendu', 3: 'En cours', 4: 'Effectué', 10: 'Annulé' };
 const TONS_LIEU = 6;
+// Intervention terminée (2) ou bon effectué (4) : n'apparaît plus dans le planning
+const estTermine = (c) => c.type !== 'RECLAMATION' && (Number(c.etatIntervenant) === 2 || Number(c.etatBon) === 4);
 
 const pad = (n) => String(n).padStart(2, '0');
 const cleJour = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -75,6 +77,7 @@ export default function PlanningEquipe() {
     donnees.techniciens.forEach((tech) => {
       const parJour = new Map();
       (tech.creneaux || []).forEach((c) => {
+        if (estTermine(c)) return;
         const d = enDate(c.debut);
         if (!d) return;
         const k = cleJour(d);

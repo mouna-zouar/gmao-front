@@ -1,451 +1,219 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import reclamationService from '../../../services/Reclamationservice';
-import { t, locale } from '../../../i18n';
-import './Reclamationdashboard.css';
-import IndicateursReclamations from './IndicateursReclamations';
-import { CircleAlert, CircleCheck, Clock, FileText, GripVertical, RefreshCw, TriangleAlert, X } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { CircleCheck, Clock, Hourglass, Inbox, ListOrdered, MessageSquareWarning, ShieldCheck, Timer, UserX, Wrench } from 'lucide-react';
+import { selectUtilisateur } from '../../../store/authSlice';
+import tableauDeBordService from '../../../services/tableauDeBordService';
+import { Badge, Barres, Carte, Liste, Repartition, Stat, Vide } from '../../commun/TableauBord';
+import { ZonePerso } from '../../commun/tableauPerso/BlocsPerso';
+import { EntetePerso } from '../../commun/tableauPerso/PagePerso';
+import { ColonnesGroupees, CourbePerso } from '../../commun/tableauPerso/GraphiquesPerso';
+import { PERIODES, evolution, heures, joursFmt, nb, useTableauPerso } from '../../commun/tableauPerso/outilsPerso';
+import { PROFIL_RECLAMATIONS, useDispositionReclamations } from './profilReclamations';
 import { ICONES_MODULES } from '../../../constants/modules';
+import { ilYa } from '../../ui/Veille/Veille';
+import { t } from '../../../i18n';
+import '../Supervision/Supervision.css';
 
-const ETAT_LABELS = { 0: 'Nouveau', 5: 'En file', 1: 'En cours', 3: 'Résolue', 2: 'Clôturée', 4: 'Annulée' };
-const NIVEAU_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Élevée' };
-const MOIS_LABELS = {
-  '01': 'Jan', '02': 'Fév', '03': 'Mar', '04': 'Avr', '05': 'Mai', '06': 'Juin',
-  '07': 'Juil', '08': 'Août', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Déc',
-};
+/*
+ * Tableau de bord des réclamations, personnalisable par utilisateur
+ * (cartes chiffrées déplaçables, cartes créées, largeur des graphiques).
+ */
 
-const STATS_STORAGE_KEY = 'reclamation-dashboard.cards.order.v1';
-const CHARTS_STORAGE_KEY = 'reclamation-dashboard.charts.order.v1';
-
-function formatMoisLabel(cle) {
-  const [aaaa, mm] = cle.split('-');
-  if (locale() === 'fr-FR') return MOIS_LABELS[mm] || cle;
-  const d = new Date(Number(aaaa), Number(mm) - 1, 1);
-  if (isNaN(d.getTime())) return cle;
-  return new Intl.DateTimeFormat(locale(), { month: 'short' }).format(d).replace('.', '');
-}
-
-function formatDate(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric' });
-}
-
-const ICONS = {
-  total: <FileText size={22} strokeWidth={2} aria-hidden="true" />,
-  ouverte: <CircleAlert size={22} strokeWidth={2} aria-hidden="true" />,
-  encours: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
-  cloturee: <CircleCheck size={22} strokeWidth={2} aria-hidden="true" />,
-  attente: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
-  rejetee: <X size={22} strokeWidth={2} aria-hidden="true" />,
-  alerte: <TriangleAlert size={22} strokeWidth={2} aria-hidden="true" />,
-  delai: <Clock size={22} strokeWidth={2} aria-hidden="true" />,
-  grip: <GripVertical size={14} strokeWidth={2} aria-hidden="true" />,
-};
-
-const CARD_DEFS = [
-  { id: 'total',    label: 'Total réclamations',         field: 'totalReclamations',          colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.total, featured: true, lien: '/reclamations?vue=toutes' },
-  { id: 'ouverte',  label: 'Nouvelles',                   field: 'ouvertes',                   colorClass: 'reclamation-dashboard-stat--ouverte',  icon: ICONS.ouverte, lien: '/reclamations?etat=0' },
-  { id: 'enfile',   label: 'En file',                     field: 'enFile',                     colorClass: 'reclamation-dashboard-stat--attente',  icon: ICONS.attente, lien: '/reclamations?etat=5' },
-  { id: 'encours',  label: 'En cours',                    field: 'enCours',                    colorClass: 'reclamation-dashboard-stat--encours',  icon: ICONS.encours, lien: '/reclamations?etat=1' },
-  { id: 'resolue',  label: 'Résolues',                    field: 'resolues',                   colorClass: 'reclamation-dashboard-stat--cloturee', icon: ICONS.cloturee, lien: '/reclamations?etat=3' },
-  { id: 'cloturee', label: 'Clôturées',                   field: 'cloturees',                  colorClass: 'reclamation-dashboard-stat--cloturee', icon: ICONS.cloturee, lien: '/reclamations?etat=2' },
-  { id: 'alerte',   label: 'Non affectées',               field: 'nonAffectees',               colorClass: 'reclamation-dashboard-stat--alerte',   icon: ICONS.alerte, lien: '/reclamations?vue=non-affectees' },
-  { id: 'delai',    label: 'Délai moyen résolution',      field: 'delaiMoyenResolutionJours',  colorClass: 'reclamation-dashboard-stat--neutral',  icon: ICONS.delai },
+const SERIES_ACTIVITE = [
+  { cle: 'recues', label: 'Réclamations reçues', couleur: '#287da8' },
+  { cle: 'cloturees', label: 'Réclamations clôturées', couleur: '#1f9d74' },
 ];
-
-const CHART_DEFS = [
-  { id: 'mois',   label: 'Réclamations par mois' },
-  { id: 'niveau', label: 'Répartition par niveau' },
+const SERIES_RECUES_CLOTUREES = [
+  { cle: 'recues', label: 'Reçues', couleur: '#0794a4' },
+  { cle: 'cloturees', label: 'Clôturées', couleur: '#2e3f5a' },
 ];
-
-function loadOrder(storageKey, defaults) {
-  try {
-    const raw = localStorage.getItem(storageKey);
-    if (!raw) return defaults;
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return defaults;
-    const known = new Set(defaults);
-    const filtered = parsed.filter((id) => known.has(id));
-    defaults.forEach((id) => { if (!filtered.includes(id)) filtered.push(id); });
-    return filtered;
-  } catch {
-    return defaults;
-  }
-}
-
-function saveOrder(storageKey, order) {
-  try { localStorage.setItem(storageKey, JSON.stringify(order)); } catch {}
-}
-
-function StatCard({ def, value, dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, onOuvrir }) {
-  const displayValue = def.id === 'delai' && value != null
-    ? t('{n} j', { n: Number(value).toLocaleString(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }) })
-    : (value ?? '—');
-
-  return (
-    <div
-      className={`reclamation-dashboard-stat-card ${def.colorClass} ${def.featured ? 'reclamation-dashboard-stat-card--featured' : ''} ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''} ${onOuvrir ? 'est-cliquable' : ''}`}
-      onClick={onOuvrir}
-      onKeyDown={onOuvrir ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOuvrir(); } } : undefined}
-      role={onOuvrir ? 'link' : undefined}
-      tabIndex={onOuvrir ? 0 : undefined}
-      title={onOuvrir ? t('Ouvrir la liste filtrée') : undefined}
-      draggable
-      onDragStart={onDragStart}
-      onDragEnter={onDragEnter}
-      onDragOver={onDragOver}
-      onDragEnd={onDragEnd}
-    >
-      <div className="reclamation-dashboard-stat-drag-handle" title={t("Glisser pour réorganiser")} aria-hidden="true">
-        {ICONS.grip}
-      </div>
-      <div className="reclamation-dashboard-stat-icon">{def.icon}</div>
-      <div className="reclamation-dashboard-stat-body">
-        <div className="reclamation-dashboard-stat-value">{displayValue}</div>
-        <div className="reclamation-dashboard-stat-label">{t(def.label)}</div>
-      </div>
-    </div>
-  );
-}
-
-function DraggableChart({ dragging, dragOver, onDragStart, onDragEnter, onDragEnd, onDragOver, children }) {
-  return (
-    <div
-      className={`reclamation-dashboard-chart-drag-wrap ${dragging ? 'is-dragging' : ''} ${dragOver ? 'is-drag-over' : ''}`}
-      draggable
-      onDragStart={onDragStart}
-      onDragEnter={onDragEnter}
-      onDragOver={onDragOver}
-      onDragEnd={onDragEnd}
-    >
-      <div className="reclamation-dashboard-chart-drag-handle" title={t("Glisser pour échanger")} aria-hidden="true">
-        {ICONS.grip}
-      </div>
-      {children}
-    </div>
-  );
-}
+const ETATS = [
+  { cle: 0, label: 'Nouveau', ton: 'bleu' },
+  { cle: 5, label: 'En file', ton: 'violet' },
+  { cle: 1, label: 'En cours', ton: 'teal' },
+  { cle: 3, label: 'Résolue', ton: 'ambre' },
+  { cle: 2, label: 'Clôturée', ton: 'vert' },
+  { cle: 4, label: 'Annulée', ton: 'gris' },
+];
+const ETAT = Object.fromEntries(ETATS.map((e) => [e.cle, e]));
+const NIVEAUX = [
+  { cle: 3, label: 'Élevée', ton: 'rouge' },
+  { cle: 2, label: 'Moyenne', ton: 'ambre' },
+  { cle: 1, label: 'Faible', ton: 'vert' },
+];
+const ANCIENNETE = [
+  { label: 'Moins de 2 jours', ton: 'vert' },
+  { label: '2 à 7 jours', ton: 'ambre' },
+  { label: '1 à 4 semaines', ton: 'orange' },
+  { label: 'Plus d’un mois', ton: 'rouge' },
+];
+const PARTIES = { reclamations: 'réclamations', detail: 'répartitions' };
+const aDesValeurs = (objet, cles) => cles.some((c) => Number(objet?.[c]) > 0);
+const extrait = (texte, n = 70) => {
+  const s = String(texte || '').replace(/\s+/g, ' ').trim();
+  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
+};
 
 export default function ReclamationDashboard() {
   const navigate = useNavigate();
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const utilisateur = useSelector(selectUtilisateur);
+  const [disposition, actions] = useDispositionReclamations(utilisateur?.personnelId ?? utilisateur?.userId ?? utilisateur?.username);
+  const [edition, setEdition] = useState(false);
+  const etat = useTableauPerso(tableauDeBordService.reclamations, 'gmao.tableau-reclamations.periode');
+  const { donnees, jours } = etat;
 
-  const [order, setOrder] = useState(() => loadOrder(STATS_STORAGE_KEY, CARD_DEFS.map((c) => c.id)));
-  const [draggedId, setDraggedId] = useState(null);
-  const [dragOverId, setDragOverId] = useState(null);
+  const d = donnees || {};
+  const rec = d.reclamations;
+  const det = d.detail;
+  const pas = d.periode?.pas;
+  const libellePeriode = t(PERIODES.find((p) => p.cle === jours)?.label || '');
+  const indisponibles = useMemo(() => (d.indisponibles || []).map((k) => t(PARTIES[k] || k)), [d.indisponibles]);
+  const indispo = (cle) => <Vide>{t('Données « {n} » indisponibles pour le moment.', { n: t(PARTIES[cle]) })}</Vide>;
+  const ouvrir = (id) => id && navigate(`/reclamations?id=${id}`);
+  const evolRecues = det && rec ? evolution(det.recuesPeriode, rec.recuesPeriodePrecedente) : null;
+  const evolCloturees = det ? evolution(det.clotureesPeriode, det.clotureesPeriodePrecedente) : null;
 
-  const [chartOrder, setChartOrder] = useState(() => loadOrder(CHARTS_STORAGE_KEY, CHART_DEFS.map((c) => c.id)));
-  const [draggedChartId, setDraggedChartId] = useState(null);
-  const [dragOverChartId, setDragOverChartId] = useState(null);
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const dashboard = await reclamationService.getDashboard();
-        setData(dashboard);
-      } catch (err) {
-        console.error(err);
-        setError(t("Impossible de charger le dashboard. Vérifie que le serveur est bien lancé."));
-      } finally {
-        setLoading(false);
-      }
+  const ligneReclamation = (r) => {
+    const e = ETAT[r.etat];
+    return {
+      cle: r.id, ton: e?.ton, badge: t(e?.label || '—'),
+      titre: `${r.num || `#${r.id}`} · ${extrait(r.description) || t('Sans description')}`,
+      sous: [r.service, r.responsable, r.date ? t('reçue {d}', { d: ilYa(r.date) }) : null].filter(Boolean).join(' · '),
+      onOuvrir: () => ouvrir(r.id),
     };
-    load();
-  }, []);
-
-  useEffect(() => { saveOrder(STATS_STORAGE_KEY, order); }, [order]);
-  useEffect(() => { saveOrder(CHARTS_STORAGE_KEY, chartOrder); }, [chartOrder]);
-
-  const handleDragStart = (id) => (e) => {
-    setDraggedId(id);
-    e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', `stat:${id}`); } catch {}
   };
 
-  const handleDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; };
-
-  const handleDragEnter = (id) => () => {
-    if (id !== draggedId) setDragOverId(id);
+  const statsRendus = {
+    recues: (
+      <Stat featured lien="/reclamations" icone={MessageSquareWarning} ton="teal" valeur={nb(det?.recuesPeriode)} label={t('Réclamations reçues')}
+        badge={rec?.nonAffectees ? <Badge ton="orange">{t('{n} non affectée(s)', { n: rec.nonAffectees })}</Badge> : null}
+        sous={det ? (evolRecues ? t('{e} vs période précédente', { e: evolRecues }) : t('{a} reçues · {b} clôturées', { a: nb(det.recuesPeriode), b: nb(det.clotureesPeriode) })) : null} />
+    ),
+    nouvelles: (
+      <Stat lien="/reclamations?vue=a-traiter" icone={Inbox} ton="bleu" valeur={nb(rec?.ouvertes)} label={t('Nouvelles')} />
+    ),
+    enFile: (
+      <Stat lien="/reclamations?vue=a-traiter" icone={ListOrdered} ton="violet" valeur={nb(rec?.enFile)} label={t('En file')} />
+    ),
+    enCours: (
+      <Stat lien="/reclamations" icone={Wrench} ton="teal" valeur={nb(rec?.enCours)} label={t('En cours')} />
+    ),
+    aValider: (
+      <Stat lien="/reclamations" icone={ShieldCheck} ton={rec?.enAttenteValidation ? 'ambre' : 'neutre'} valeur={nb(rec?.enAttenteValidation)} label={t('En attente de validation')} />
+    ),
+    nonAffectees: (
+      <Stat lien="/reclamations?vue=a-traiter" icone={UserX} ton={rec?.nonAffectees ? 'orange' : 'vert'} valeur={nb(rec?.nonAffectees)} label={t('Non affectées')}
+        badge={rec && !rec.nonAffectees ? <Badge ton="vert">{t('Toutes affectées')}</Badge> : null} />
+    ),
+    cloturees: (
+      <Stat lien="/reclamations" icone={CircleCheck} ton="vert" valeur={nb(det?.clotureesPeriode)} label={t('Réclamations clôturées')}
+        sous={evolCloturees ? t('{e} vs période précédente', { e: evolCloturees }) : libellePeriode} />
+    ),
+    delai: (
+      <Stat icone={Timer} ton="violet" valeur={joursFmt(rec?.delaiMoyenResolutionJours)} label={t('Délai moyen de résolution')} />
+    ),
+    priseEnCharge: (
+      <Stat icone={Clock} ton="bleu" valeur={heures(det?.delaiPriseEnChargeHeures)} label={t('Délai de prise en charge')} />
+    ),
   };
 
-  const handleDragEnd = () => {
-    if (draggedId && dragOverId && draggedId !== dragOverId) {
-      setOrder((prev) => {
-        const next = [...prev];
-        const from = next.indexOf(draggedId);
-        const to = next.indexOf(dragOverId);
-        if (from === -1 || to === -1) return prev;
-        next.splice(from, 1);
-        next.splice(to, 0, draggedId);
-        return next;
-      });
-    }
-    setDraggedId(null);
-    setDragOverId(null);
-  };
-
-  const handleChartDragStart = (id) => (e) => {
-    setDraggedChartId(id);
-    e.dataTransfer.effectAllowed = 'move';
-    try { e.dataTransfer.setData('text/plain', `chart:${id}`); } catch {}
-  };
-
-  const handleChartDragEnter = (id) => () => {
-    if (id !== draggedChartId) setDragOverChartId(id);
-  };
-
-  const handleChartDragEnd = () => {
-    if (draggedChartId && dragOverChartId && draggedChartId !== dragOverChartId) {
-      setChartOrder((prev) => {
-        const next = [...prev];
-        const from = next.indexOf(draggedChartId);
-        const to = next.indexOf(dragOverChartId);
-        if (from === -1 || to === -1) return prev;
-        next.splice(from, 1);
-        next.splice(to, 0, draggedChartId);
-        return next;
-      });
-    }
-    setDraggedChartId(null);
-    setDragOverChartId(null);
-  };
-
-  const resetOrder = useCallback(() => {
-    setOrder(CARD_DEFS.map((c) => c.id));
-    setChartOrder(CHART_DEFS.map((c) => c.id));
-  }, []);
-
-  const cardsById = useMemo(() => {
-    const map = {};
-    CARD_DEFS.forEach((c) => { map[c.id] = c; });
-    return map;
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="reclamation-dashboard-container">
-        <div className="reclamation-dashboard-loading">
-          <div className="reclamation-dashboard-spinner" />
-          <p>{t("Chargement du dashboard...")}</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return <div className="reclamation-dashboard-container"><p className="reclamation-dashboard-error">{error || t("Aucune donnée disponible.")}</p></div>;
-  }
-
-  const moisEntries = Object.entries(data.parMois || {});
-  const maxMois = Math.max(1, ...moisEntries.map(([, v]) => v));
-
-  const criticiteEntries = [1, 2, 3].map((niveau) => [niveau, data.parCriticite?.[niveau] ?? 0]);
-  const urgenceEntries = [1, 2, 3].map((niveau) => [niveau, data.parUrgence?.[niveau] ?? 0]);
-  const maxNiveau = Math.max(1, ...criticiteEntries.map(([, v]) => v), ...urgenceEntries.map(([, v]) => v));
-
-  const totalCriticite = criticiteEntries.reduce((s, [, v]) => s + v, 0);
-  const totalUrgence = urgenceEntries.reduce((s, [, v]) => s + v, 0);
-
-  const renderChart = (id) => {
-    if (id === 'mois') {
-      return (
-        <div className="reclamation-dashboard-chart-card">
-          <div className="reclamation-dashboard-chart-head">
-            <h3>{t("Réclamations par mois")}</h3>
-            <span className="reclamation-dashboard-chart-sub">{t("12 derniers mois")}</span>
-          </div>
-          <div className="reclamation-dashboard-bar-chart">
-            {moisEntries.map(([cle, valeur]) => (
-              <div key={cle} className="reclamation-dashboard-bar-col">
-                <div className="reclamation-dashboard-bar-value">{valeur > 0 ? valeur : ''}</div>
-                <div
-                  className="reclamation-dashboard-bar"
-                  style={{ height: `${Math.max(4, (valeur / maxMois) * 100)}%` }}
-                  title={`${formatMoisLabel(cle)} : ${valeur}`}
-                />
-                <div className="reclamation-dashboard-bar-label">{formatMoisLabel(cle)}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    if (id === 'niveau') {
-      return (
-        <div className="reclamation-dashboard-chart-card">
-          <div className="reclamation-dashboard-chart-head">
-            <h3>{t("Répartition par niveau")}</h3>
-            <span className="reclamation-dashboard-chart-sub">{t("Criticité & urgence")}</span>
-          </div>
-
-          <div className="reclamation-dashboard-niveau-section">
-            <div className="reclamation-dashboard-niveau-title">
-              <span>{t("Criticité")}</span>
-              <span className="reclamation-dashboard-niveau-total">{totalCriticite}</span>
-            </div>
-            <div className="reclamation-dashboard-hbar-list">
-              {criticiteEntries.filter(([, valeur]) => valeur > 0).map(([niveau, valeur]) => (
-                <div key={niveau} className="reclamation-dashboard-hbar-row">
-                  <span className="reclamation-dashboard-hbar-label">{t(NIVEAU_LABELS[niveau])}</span>
-                  <div className="reclamation-dashboard-hbar-track">
-                    <div
-                      className={`reclamation-dashboard-hbar-fill reclamation-dashboard-hbar-fill--niveau${niveau}`}
-                      style={{ width: `${Math.max(2, (valeur / maxNiveau) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="reclamation-dashboard-hbar-value">{valeur}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="reclamation-dashboard-niveau-section">
-            <div className="reclamation-dashboard-niveau-title">
-              <span>{t("Urgence")}</span>
-              <span className="reclamation-dashboard-niveau-total">{totalUrgence}</span>
-            </div>
-            <div className="reclamation-dashboard-hbar-list">
-              {urgenceEntries.filter(([, valeur]) => valeur > 0).map(([niveau, valeur]) => (
-                <div key={niveau} className="reclamation-dashboard-hbar-row">
-                  <span className="reclamation-dashboard-hbar-label">{t(NIVEAU_LABELS[niveau])}</span>
-                  <div className="reclamation-dashboard-hbar-track">
-                    <div
-                      className={`reclamation-dashboard-hbar-fill reclamation-dashboard-hbar-fill--niveau${niveau}`}
-                      style={{ width: `${Math.max(2, (valeur / maxNiveau) * 100)}%` }}
-                    />
-                  </div>
-                  <span className="reclamation-dashboard-hbar-value">{valeur}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return null;
+  const cartesRendues = {
+    activite: (
+      <Carte titre={t('Réclamations reçues et clôturées')} pastille={pas === 'MOIS' ? t('par mois') : pas === 'SEMAINE' ? t('par semaine') : t('par jour')}>
+        {det ? <CourbePerso tranches={det.activite} pas={pas} series={SERIES_ACTIVITE} /> : indispo('detail')}
+      </Carte>
+    ),
+    etats: (
+      <Carte titre={t('Réclamations par état')} pastille={libellePeriode}>
+        {det ? (aDesValeurs(det.parEtatPeriode, ETATS.map((e) => e.cle)) ? (
+          <>
+            <div className="tb-sous-titre">{t('Réclamations reçues sur la période')}</div>
+            <Repartition label={t('Réclamations reçues par état')}
+              items={ETATS.map((e) => ({ ...e, valeur: det.parEtatPeriode?.[e.cle] || 0 })).filter((e) => e.valeur > 0)} />
+            {det.anciennete?.some((v) => v > 0) && (
+              <>
+                <div className="tb-sous-titre">{t('Réclamations actives depuis')}</div>
+                <Barres lignes={ANCIENNETE.map((a, i) => ({ cle: a.label, nom: t(a.label), valeur: det.anciennete[i] || 0, ton: a.ton }))} />
+              </>
+            )}
+          </>
+        ) : <Vide>{t('Aucune donnée sur la période.')}</Vide>) : indispo('detail')}
+      </Carte>
+    ),
+    plusAnciennes: (
+      <Carte className="tb-carte--liste" titre={t('Réclamations actives les plus anciennes')} pastille={det ? t('{n} actives', { n: nb(det.actives) }) : null}>
+        {det ? (det.plusAnciennes?.length
+          ? <Liste lignes={det.plusAnciennes.map(ligneReclamation)} />
+          : <Vide>{t('Aucune réclamation active.')}</Vide>) : indispo('detail')}
+      </Carte>
+    ),
+    nonAffectees: (
+      <Carte className="tb-carte--liste" titre={t('Réclamations non affectées')}
+        pastille={rec ? t('{n} à affecter', { n: nb(rec.nonAffectees) }) : null} pastilleTon={rec?.nonAffectees ? 'orange' : null}>
+        {det ? (det.nonAffectees?.length
+          ? <Liste lignes={det.nonAffectees.map(ligneReclamation)} />
+          : <Vide>{t('Toutes les réclamations actives sont affectées.')}</Vide>) : indispo('detail')}
+      </Carte>
+    ),
+    responsables: (
+      <Carte titre={t('Réclamations par responsable')} pastille={libellePeriode}>
+        {det ? (
+          <ColonnesGroupees series={SERIES_RECUES_CLOTUREES}
+            lignes={(det.parResponsable || []).map((x) => ({ cle: x.nom, nom: x.nom, recues: x.recues, cloturees: x.cloturees }))} />
+        ) : indispo('detail')}
+      </Carte>
+    ),
+    services: (
+      <Carte titre={t('Réclamations par service')} pastille={libellePeriode}>
+        {det ? (
+          <ColonnesGroupees series={SERIES_RECUES_CLOTUREES}
+            lignes={(det.parService || []).map((x) => ({ cle: x.nom, nom: x.nom, recues: x.recues, cloturees: x.cloturees }))} />
+        ) : indispo('detail')}
+      </Carte>
+    ),
+    niveaux: (
+      <Carte titre={t('Criticité et urgence')} pastille={libellePeriode}>
+        {det ? (aDesValeurs(det.parCriticite, [1, 2, 3]) || aDesValeurs(det.parUrgence, [1, 2, 3]) ? (
+          <>
+            {aDesValeurs(det.parCriticite, [1, 2, 3]) && (
+              <>
+                <div className="tb-sous-titre">{t('Criticité')}</div>
+                <Repartition label={t('Réclamations par criticité')} items={NIVEAUX.map((n) => ({ ...n, valeur: det.parCriticite?.[n.cle] || 0 })).filter((n) => n.valeur > 0)} />
+              </>
+            )}
+            {aDesValeurs(det.parUrgence, [1, 2, 3]) && (
+              <>
+                <div className="tb-sous-titre">{t('Urgence')}</div>
+                <Repartition label={t('Réclamations par urgence')} items={NIVEAUX.map((n) => ({ ...n, valeur: det.parUrgence?.[n.cle] || 0 })).filter((n) => n.valeur > 0)} />
+              </>
+            )}
+          </>
+        ) : <Vide>{t('Aucune donnée sur la période.')}</Vide>) : indispo('detail')}
+      </Carte>
+    ),
+    demandeurs: (
+      <Carte titre={t('Principaux demandeurs')} pastille={libellePeriode}>
+        {det ? <Barres lignes={(det.topDemandeurs || []).map((x) => ({ cle: x.nom, nom: x.nom, valeur: x.recues, ton: 'bleu' }))} /> : indispo('detail')}
+      </Carte>
+    ),
+    codesPanne: (
+      <Carte titre={t('Codes de panne les plus fréquents')} pastille={rec?.avecCodePanne ? t('{n} codées', { n: nb(rec.avecCodePanne) }) : libellePeriode}>
+        {rec ? (
+          <Barres lignes={(rec.codesPanne || []).map((c) => ({ cle: c.code, nom: c.libelle ? `${c.code} · ${c.libelle}` : c.code, valeur: c.nombre, ton: 'orange' }))} />
+        ) : indispo('reclamations')}
+      </Carte>
+    ),
   };
 
   return (
-    <div className="reclamation-dashboard-container">
-      <div className="reclamation-dashboard-header">
-        <div className="reclamation-dashboard-header-icon-wrap">
-          <ICONES_MODULES.tableauDeBord size={22} strokeWidth={2} aria-hidden="true" />
-        </div>
-        <div className="reclamation-dashboard-header-text">
-          <h1>{t("Tableau de Bord des Réclamations")}</h1>
-          <p>{t("Vue d'ensemble et indicateurs clés — glisse les cartes pour les réorganiser")}</p>
-        </div>
-        <button
-          type="button"
-          className="reclamation-dashboard-reset-order"
-          onClick={resetOrder}
-          title={t("Rétablir l'ordre par défaut")}
-        >
-          <RefreshCw size={14} strokeWidth={2.4} aria-hidden="true" />
-          {t("Réinitialiser l'ordre")}
-        </button>
-      </div>
-
-      <div className="reclamation-dashboard-stats-grid">
-        {order.map((id) => {
-          const def = cardsById[id];
-          if (!def) return null;
-          const rawValue = data[def.field];
-          if (rawValue == null || Number(rawValue) === 0) return null;
-          return (
-            <StatCard
-              key={id}
-              def={def}
-              value={rawValue}
-              dragging={draggedId === id}
-              dragOver={dragOverId === id}
-              onDragStart={handleDragStart(id)}
-              onDragEnter={handleDragEnter(id)}
-              onDragOver={handleDragOver}
-              onDragEnd={handleDragEnd}
-              onOuvrir={def.lien ? () => navigate(def.lien) : undefined}
-            />
-          );
-        })}
-      </div>
-
-      <IndicateursReclamations />
-
-      <div className={`reclamation-dashboard-charts-row ${chartOrder[0] === 'niveau' ? 'is-swapped' : ''}`}>
-        {chartOrder.map((id) => (
-          <DraggableChart
-            key={id}
-            dragging={draggedChartId === id}
-            dragOver={dragOverChartId === id}
-            onDragStart={handleChartDragStart(id)}
-            onDragEnter={handleChartDragEnter(id)}
-            onDragOver={handleDragOver}
-            onDragEnd={handleChartDragEnd}
-          >
-            {renderChart(id)}
-          </DraggableChart>
-        ))}
-      </div>
-
-      <div className="reclamation-dashboard-recent-card">
-        <div className="reclamation-dashboard-chart-head">
-          <h3>{t("Réclamations récentes")}</h3>
-          {data.reclamationsRecentes?.length > 0 && (
-            <span className="reclamation-dashboard-chart-sub">{t('{n} dernières', { n: data.reclamationsRecentes.length })}</span>
-          )}
-        </div>
-
-        {(!data.reclamationsRecentes || data.reclamationsRecentes.length === 0) ? (
-          <p className="reclamation-dashboard-empty">{t("Aucune réclamation pour l'instant.")}</p>
-        ) : (
-          <div className="reclamation-dashboard-table-wrap">
-            <table className="reclamation-dashboard-table">
-              <thead>
-                <tr>
-                  <th>{t("Numéro")}</th>
-                  <th>{t("Description")}</th>
-                  <th>{t("Criticité")}</th>
-                  <th>{t("Urgence")}</th>
-                  <th>{t("Date")}</th>
-                  <th>{t("État")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.reclamationsRecentes.map((r) => (
-                  <tr key={r.id}>
-                    <td style={{ fontWeight: 700 }}>{r.num || `#${r.id}`}</td>
-                    <td className="reclamation-dashboard-desc-cell">{r.description}</td>
-                    <td>
-                      <span className={`reclamation-dashboard-niveau-badge reclamation-dashboard-niveau-badge--${r.criticite}`}>
-                        {NIVEAU_LABELS[r.criticite] ? t(NIVEAU_LABELS[r.criticite]) : '—'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`reclamation-dashboard-niveau-badge reclamation-dashboard-niveau-badge--${r.urgence}`}>
-                        {NIVEAU_LABELS[r.urgence] ? t(NIVEAU_LABELS[r.urgence]) : '—'}
-                      </span>
-                    </td>
-                    <td>{formatDate(r.date)}</td>
-                    <td>
-                      <span className={`reclamation-dashboard-etat-badge reclamation-dashboard-etat-badge--${r.etat}`}>
-                        {ETAT_LABELS[r.etat] ? t(ETAT_LABELS[r.etat]) : t('État {n}', { n: r.etat })}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+    <div className={`tb-container ${edition ? 'tb-container--edition' : ''}`}>
+      <EntetePerso icone={ICONES_MODULES.reclamations || Hourglass} titre={t('Tableau de bord des réclamations')}
+        etat={etat} edition={edition} setEdition={setEdition} indisponibles={indisponibles} />
+      {donnees && (
+        <ZonePerso profil={PROFIL_RECLAMATIONS} disposition={disposition} actions={actions} edition={edition} onTerminer={() => setEdition(false)}
+          donnees={d} statsRendus={statsRendus} cartesRendues={cartesRendues} surtitre={t('Tableau de bord des réclamations')} />
+      )}
     </div>
   );
 }

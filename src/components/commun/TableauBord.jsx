@@ -6,7 +6,7 @@ import './TableauBord.css';
 
 const nb = (v, d = 0) => (v == null || Number.isNaN(Number(v)) ? '—' : Number(v).toLocaleString(locale(), { maximumFractionDigits: d }));
 
-export const PLEIN = { bleu: '#3b82f6', ambre: '#f59e0b', orange: '#f97316', vert: '#10b981', teal: '#0794a4', rouge: '#dc2626', violet: '#8b5cf6', gris: '#94a3b8' };
+export const PLEIN = { bleu: '#287da8', ambre: '#e8962e', orange: '#b8701a', vert: '#1f9d74', teal: '#0794a4', rouge: '#d9434b', violet: '#2e3f5a', gris: '#94a3b8', neutre: '#94a3b8' };
 
 export function EnteteTableau({ icone: Icone, titre, description, actions }) {
   return (

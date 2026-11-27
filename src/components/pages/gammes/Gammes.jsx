@@ -8,6 +8,7 @@ import { obtenirArticles } from '../../../store/referentiels';
 import { ICONES_MODULES } from '../../../constants/modules';
 import { Badge, Modale, PageListe } from '../../commun';
 import ListeRecherche from '../../commun/ListeRecherche';
+import ConfirmModal from '../../ui/modals/ConfirmModal';
 import { t } from '../../../i18n';
 import './Gammes.css';
 
@@ -246,9 +247,40 @@ export default function Gammes() {
       await charger();
       setMessage({ ok: true, texte });
       if (a === 'nouvelle-version' || a === 'dupliquer') setEditeur({ ouvert: true, gamme: r });
+      return true;
     } catch (err) {
       setMessage({ ok: false, texte: err?.response?.data?.message || t("L'action n'a pas pu être enregistrée.") });
+      return false;
     }
+  };
+
+  // Confirmation avant « Nouvelle version », « Dupliquer » et « Archiver »
+  const [confirmation, setConfirmation] = useState(null);
+  const [confirmationEnCours, setConfirmationEnCours] = useState(false);
+  const demander = (g, a) => {
+    const nom = `${g.code}${g.libelle ? ` · ${g.libelle}` : ''}`;
+    const defs = {
+      'nouvelle-version': {
+        type: 'info', titre: t('Créer une nouvelle version ?'), bouton: t('Créer la version'), succes: t('Nouvelle version créée.'),
+        texte: t('Une version v{v} de « {nom} » sera créée en brouillon, à partir de la version actuelle. La version v{actuelle} reste utilisée tant que la nouvelle n’est pas validée.', { v: (Number(g.version) || 1) + 1, actuelle: g.version ?? 1, nom }),
+      },
+      dupliquer: {
+        type: 'info', titre: t('Dupliquer la gamme ?'), bouton: t('Dupliquer'), succes: t('Gamme dupliquée.'),
+        texte: t('Une copie de « {nom} » sera créée en brouillon, avec ses étapes. Vous pourrez la modifier ensuite.', { nom }),
+      },
+      archiver: {
+        type: 'warning', titre: t('Archiver la gamme ?'), bouton: t('Archiver'), succes: t('Gamme archivée.'),
+        texte: t('« {nom} » ne sera plus proposée pour les nouveaux bons et plans préventifs. Elle reste visible avec le filtre « Archivées ».', { nom }),
+      },
+    };
+    setConfirmation({ g, a, ...defs[a] });
+  };
+  const confirmer = async () => {
+    if (!confirmation) return;
+    setConfirmationEnCours(true);
+    await action(confirmation.g, confirmation.a, confirmation.succes);
+    setConfirmationEnCours(false);
+    setConfirmation(null);
   };
 
   const lignes = useMemo(() => gammes.filter((g) => filtreStatut === 'TOUTES'
@@ -287,9 +319,9 @@ export default function Gammes() {
       messageSuppression={(g) => t('Supprimer le brouillon « {code} » ?', { code: g.code })}
       actions={[
         { label: t('Valider'), icone: CheckCircle2, classe: 'cl-action--teal', besoinSelection: true, onClick: (g) => action(g, 'valider', t('Gamme validée.')) },
-        { label: t('Nouvelle version'), icone: GitBranchPlus, classe: 'cl-action--bleu', besoinSelection: true, onClick: (g) => action(g, 'nouvelle-version', t('Nouvelle version créée.')) },
-        { label: t('Dupliquer'), icone: Copy, classe: 'cl-action--violet', besoinSelection: true, onClick: (g) => action(g, 'dupliquer', t('Gamme dupliquée.')) },
-        { label: t('Archiver'), icone: Archive, classe: 'cl-action--gris', besoinSelection: true, onClick: (g) => action(g, 'archiver', t('Gamme archivée.')) },
+        { label: t('Nouvelle version'), icone: GitBranchPlus, classe: 'cl-action--bleu', besoinSelection: true, onClick: (g) => demander(g, 'nouvelle-version') },
+        { label: t('Dupliquer'), icone: Copy, classe: 'cl-action--violet', besoinSelection: true, onClick: (g) => demander(g, 'dupliquer') },
+        { label: t('Archiver'), icone: Archive, classe: 'cl-action--gris', besoinSelection: true, onClick: (g) => demander(g, 'archiver') },
       ]}
       filtres={(
         <select value={filtreStatut} onChange={(e) => setFiltreStatut(e.target.value)} aria-label={t('Filtrer par statut')}>
@@ -309,6 +341,17 @@ export default function Gammes() {
       <EditeurGamme ouvert={editeur.ouvert} gamme={editeur.gamme} familles={familles} articles={articles}
         onFermer={() => setEditeur((e) => ({ ...e, ouvert: false }))}
         onEnregistre={async () => { setEditeur((e) => ({ ...e, ouvert: false })); await charger(); setMessage({ ok: true, texte: t('Gamme enregistrée.') }); }} />
+      <ConfirmModal
+        show={Boolean(confirmation)}
+        type={confirmation?.type}
+        title={confirmation?.titre}
+        message={confirmation?.texte}
+        confirmText={confirmation?.bouton}
+        cancelText={t('Annuler')}
+        confirming={confirmationEnCours}
+        onConfirm={confirmer}
+        onClose={() => { if (!confirmationEnCours) setConfirmation(null); }}
+      />
     </PageListe>
   );
 }

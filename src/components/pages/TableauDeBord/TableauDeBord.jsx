@@ -2,13 +2,12 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-  Activity, CircleDollarSign, GripVertical, LayoutDashboard, LoaderCircle,
-  MessageSquareWarning, OctagonAlert, Pencil, RefreshCw, Settings2, Timer, Wrench, X,
+  Activity, CircleDollarSign, LayoutDashboard, LoaderCircle,
+  MessageSquareWarning, OctagonAlert, RefreshCw, Settings2, Timer, Wrench,
 } from 'lucide-react';
 import { selectUtilisateur } from '../../../store/authSlice';
-import { CARTES, ICONES_CARTE, INDICATEURS, LIBELLE_LARGEUR, lireChemin, useDisposition } from './dispositionTableau';
-import ModaleCarteChiffree from './ModaleCarteChiffree';
-import GalerieCartes from './GalerieCartes';
+import { PROFIL_GENERAL, useDisposition } from './dispositionTableau';
+import { ZonePerso } from '../../commun/tableauPerso/BlocsPerso';
 import tableauDeBordService from '../../../services/tableauDeBordService';
 import { Badge, Barres, Carte, Liste, Repartition, Stat, Vide } from '../../commun/TableauBord';
 import { Bulle, useLargeur } from '../Supervision/Supervision';
@@ -22,8 +21,8 @@ import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 
 const SERIES = [
   { cle: 'reclamations', label: 'Réclamations reçues', couleur: '#0794a4' },
-  { cle: 'bonsCrees', label: 'Bons créés', couleur: '#eb6834' },
-  { cle: 'bonsClotures', label: 'Bons clôturés', couleur: '#6a5acd' },
+  { cle: 'bonsCrees', label: 'Bons créés', couleur: '#287da8' },
+  { cle: 'bonsClotures', label: 'Bons clôturés', couleur: '#2e3f5a' },
 ];
 
 
@@ -285,141 +284,11 @@ function SlaParPriorite({ lignes }) {
   );
 }
 
-const FANTOME = '__fantome__';
-const LARGEUR_PAR_SPAN = (span) => (span <= 2 ? 'tiers' : span === 3 ? 'moitie' : span === 4 ? 'deux-tiers' : 'pleine');
-const ORDRE_LARGEURS = ['tiers', 'moitie', 'deux-tiers', 'pleine'];
-
-function PoigneeRedim({ mode, valeur, refBloc, refGrille, onApercu, onValider }) {
-  const calculer = (largeurVoulue, depart) => {
-    if (mode === 'stat') {
-      const normale = valeur === 'large' ? (depart - 10) / 2 : depart;
-      return largeurVoulue >= normale * 1.5 ? 'large' : 'normal';
-    }
-    const grille = refGrille.current;
-    const gap = 12;
-    const colonne = ((grille?.clientWidth || 1200) - 5 * gap) / 6;
-    const span = Math.max(1, Math.min(6, Math.round((largeurVoulue + gap) / (colonne + gap))));
-    return LARGEUR_PAR_SPAN(span);
-  };
-  const debut = (e) => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    const poignee = e.currentTarget;
-    poignee.setPointerCapture?.(e.pointerId);
-    const x0 = e.clientX;
-    const depart = refBloc.current?.getBoundingClientRect().width || 0;
-    let courante = valeur;
-    onApercu(valeur);
-    const bouger = (ev) => {
-      const v = calculer(depart + (ev.clientX - x0) * (document.dir === 'rtl' ? -1 : 1), depart);
-      if (v !== courante) { courante = v; onApercu(v); }
-    };
-    const fin = () => {
-      poignee.removeEventListener('pointermove', bouger);
-      poignee.removeEventListener('pointerup', fin);
-      poignee.removeEventListener('pointercancel', fin);
-      onApercu(null);
-      if (courante !== valeur) onValider(courante);
-    };
-    poignee.addEventListener('pointermove', bouger);
-    poignee.addEventListener('pointerup', fin);
-    poignee.addEventListener('pointercancel', fin);
-  };
-  const clavier = (e) => {
-    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-    e.preventDefault();
-    const plus = (e.key === 'ArrowRight') !== (document.dir === 'rtl');
-    if (mode === 'stat') { onValider(plus ? 'large' : 'normal'); return; }
-    const i = ORDRE_LARGEURS.indexOf(valeur);
-    onValider(ORDRE_LARGEURS[Math.max(0, Math.min(ORDRE_LARGEURS.length - 1, i + (plus ? 1 : -1)))]);
-  };
-  return (
-    <button type="button" className="tbd-poignee-taille" onPointerDown={debut} onKeyDown={clavier} draggable={false}
-      onDragStart={(e) => e.preventDefault()} title={t('Tirer pour agrandir ou réduire')} aria-label={t('Changer la taille')}>
-      <span aria-hidden="true" />
-    </button>
-  );
-}
-
-function Bloc({ id, index, large, edition, glisse, setGlisse, cache, setCache, setFantome, onRetirer, onModifier, onTaille, apercu, setApercu, children }) {
-  const ref = useRef(null);
-  const enRedim = apercu?.id === id;
-  const effectif = enRedim ? apercu.valeur === 'large' : large;
-  const classes = [
-    'tbd-bloc', 'tbd-bloc--stat', effectif ? 'tbd-bloc--large' : '', edition ? 'is-edition' : '',
-    cache === id ? 'is-cache' : '', glisse?.id === id ? 'is-glisse' : '', enRedim ? 'is-redim' : '',
-  ].filter(Boolean).join(' ');
-  const proprietes = edition ? {
-    draggable: !enRedim,
-    onDragStart: (e) => {
-      if (e.target.closest?.('.tbd-poignee-taille')) { e.preventDefault(); return; }
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', id);
-      setGlisse({ source: 'stat', id, large });
-      setTimeout(() => setCache(id), 0);
-    },
-    onDragEnd: () => setGlisse(null),
-    onDragOver: (e) => {
-      if (!glisse) return;
-      e.preventDefault();
-      const r = e.currentTarget.getBoundingClientRect();
-      const apres = (e.clientX > r.left + r.width / 2) !== (document.dir === 'rtl');
-      setFantome(index + (apres ? 1 : 0));
-    },
-    onClickCapture: (e) => { if (!e.target.closest('.tbd-outils, .tbd-poignee-taille')) { e.preventDefault(); e.stopPropagation(); } },
-  } : {};
-  return (
-    <div ref={ref} className={classes} {...proprietes}>
-      {edition && (
-        <div className="tbd-outils">
-          <span className="tbd-poignee" title={t('Glisser pour déplacer')}><GripVertical size={15} aria-hidden="true" /></span>
-          {onModifier && (
-            <button type="button" onClick={() => onModifier(id)} title={t('Modifier')} aria-label={t('Modifier')}><Pencil size={13} aria-hidden="true" /></button>
-          )}
-          <button type="button" onClick={() => onRetirer(id)} title={t('Retirer')} aria-label={t('Retirer')}><X size={14} aria-hidden="true" /></button>
-        </div>
-      )}
-      {children}
-      {edition && (
-        <PoigneeRedim mode="stat" valeur={large ? 'large' : 'normal'} refBloc={ref}
-          onApercu={(v) => setApercu(v ? { id, valeur: v } : null)} onValider={(v) => onTaille(id, v === 'large')} />
-      )}
-    </div>
-  );
-}
-
-function BlocCarte({ id, largeur, edition, refGrille, apercu, setApercu, onLargeur, children }) {
-  const ref = useRef(null);
-  const enRedim = apercu?.id === id;
-  const effective = enRedim ? apercu.valeur : largeur;
-  return (
-    <div ref={ref} className={`tbd-bloc tbd-l--${effective} ${edition ? 'is-edition is-fixe' : ''} ${enRedim ? 'is-redim' : ''}`}>
-      {edition && enRedim && <span className="tbd-taille-etiquette">{LIBELLE_LARGEUR[effective]}</span>}
-      {children}
-      {edition && (
-        <PoigneeRedim mode="carte" valeur={largeur} refBloc={ref} refGrille={refGrille}
-          onApercu={(v) => setApercu(v ? { id, valeur: v } : null)} onValider={(v) => onLargeur(id, v)} />
-      )}
-    </div>
-  );
-}
-
 export default function TableauDeBord() {
   const navigate = useNavigate();
   const utilisateur = useSelector(selectUtilisateur);
   const [disposition, actions] = useDisposition(utilisateur?.personnelId ?? utilisateur?.userId ?? utilisateur?.username);
   const [edition, setEdition] = useState(false);
-  const [glisse, setGlisseBrut] = useState(null);
-  const [cache, setCache] = useState(null);
-  const [fantome, setFantome] = useState(null);
-  const [apercu, setApercu] = useState(null);
-  const refGrille = useRef(null);
-  const setGlisse = useCallback((v) => {
-    setGlisseBrut(v);
-    if (!v) { setFantome(null); setCache(null); }
-  }, []);
-  const [modaleCarte, setModaleCarte] = useState(null);
 
   const [jours, setJours] = useState(() => lire(CLE_PERIODE, 30, PERIODES));
   const [lieuId, setLieuId] = useState('');
@@ -516,18 +385,6 @@ export default function TableauDeBord() {
         sous={couts ? (evolCout ? t('{e} vs période précédente', { e: evolCout }) : t('{n} bons', { n: nb(couts.bons) })) : null} />
     ),
   };
-
-  disposition.persos.forEach((p) => {
-    const def = INDICATEURS.find((i) => i.cle === p.indicateur);
-    const brut = lireChemin(d, p.indicateur);
-    const format = { pct, heures, jours: (v) => (v == null ? '—' : t('{n} j', { n: nb(v, 1) })), dt: (v) => dt(v, true) }[def?.format] || nb;
-    const evol = p.comparer && def?.precedent ? evolution(brut, lireChemin(d, def.precedent)) : null;
-    statsRendus[p.id] = (
-      <Stat lien={p.lien || undefined} icone={ICONES_CARTE[p.icone]?.icone || ICONES_CARTE.nombre.icone} ton={p.ton || 'teal'}
-        valeur={format(brut)} label={p.titre || t(def?.label || '')}
-        sous={evol ? t('{e} vs période précédente', { e: evol }) : null} />
-    );
-  });
 
   const cartesRendues = {
     indicateurs: perf?.global ? (
@@ -668,11 +525,6 @@ export default function TableauDeBord() {
     performance: <PerformanceEmployes jours={jours} onOuvrirChrono={() => navigate('/bons-maintenance?chrono=1')} />,
   };
 
-  const statsVisibles = disposition.stats.filter((id) => id !== cache);
-  const statsAvecFantome = glisse && fantome != null
-    ? [...statsVisibles.slice(0, fantome), FANTOME, ...statsVisibles.slice(fantome)]
-    : statsVisibles;
-
   return (
     <div className={`tb-container ${edition ? 'tb-container--edition' : ''}`}>
       <div className="tb-header">
@@ -713,53 +565,9 @@ export default function TableauDeBord() {
 
       {!donnees && !erreur && <div className="tb-chargement">{t('Chargement…')}</div>}
 
-      {edition && donnees && (
-        <GalerieCartes disposition={disposition} actions={actions} statsRendus={statsRendus} glisse={glisse} setGlisse={setGlisse}
-          onCreer={() => setModaleCarte({ carte: null })}
-          onModifier={(id) => setModaleCarte({ carte: disposition.persos.find((p) => p.id === id) })}
-          onTerminer={() => setEdition(false)} />
-      )}
-
-      <ModaleCarteChiffree ouvert={Boolean(modaleCarte)} carte={modaleCarte?.carte} onFermer={() => setModaleCarte(null)}
-        onEnregistrer={actions.enregistrerPerso} />
-
       {donnees && (
-        <>
-          <div
-            className={`tb-stats tb-stats--compact ${glisse ? 'is-depot' : ''}`}
-            onDragOver={(e) => {
-              if (!glisse) return;
-              e.preventDefault();
-              if (e.target === e.currentTarget && fantome == null) setFantome(statsVisibles.length);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (glisse) actions.placerStat(glisse.id, fantome ?? statsVisibles.length);
-              setGlisse(null);
-            }}
-          >
-            {statsAvecFantome.map((id) => (id === FANTOME ? (
-              <div key="fantome" className={`tbd-fantome ${glisse?.large ? 'tbd-bloc--large' : ''}`} onDragOver={(e) => e.preventDefault()} />
-            ) : (
-              <Bloc key={id} id={id} index={statsVisibles.indexOf(id)} edition={edition} glisse={glisse} setGlisse={setGlisse}
-                cache={cache} setCache={setCache} setFantome={setFantome} apercu={apercu} setApercu={setApercu}
-                onRetirer={actions.retirerStat} onTaille={actions.definirTailleStat}
-                large={Boolean(disposition.tailles.stats[id])}
-                onModifier={disposition.persos.some((p) => p.id === id) ? () => setModaleCarte({ carte: disposition.persos.find((p) => p.id === id) }) : undefined}>
-                {statsRendus[id]}
-              </Bloc>
-            )))}
-          </div>
-
-          <div className="tbd-grille" ref={refGrille}>
-            {CARTES.map((c) => (cartesRendues[c.id] ? (
-              <BlocCarte key={c.id} id={c.id} largeur={disposition.tailles.cartes[c.id] || c.largeur} edition={edition}
-                refGrille={refGrille} apercu={apercu} setApercu={setApercu} onLargeur={actions.definirLargeur}>
-                {cartesRendues[c.id]}
-              </BlocCarte>
-            ) : null))}
-          </div>
-        </>
+        <ZonePerso profil={PROFIL_GENERAL} disposition={disposition} actions={actions} edition={edition} onTerminer={() => setEdition(false)}
+          donnees={d} statsRendus={statsRendus} cartesRendues={cartesRendues} />
       )}
     </div>
   );

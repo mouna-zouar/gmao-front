@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Radio } from 'lucide-react';
 import performanceEmployesService from '../../../services/performanceEmployesService';
-import { Badge, Carte, Vide } from '../../commun/TableauBord';
+import { Carte, Vide } from '../../commun/TableauBord';
 import { formatTemps } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
@@ -30,13 +30,56 @@ const dureeCourte = (s) => {
   return h < 48 ? t('{n} h', { n: nb(Math.round(h * 10) / 10) }) : t('{n} j', { n: nb(Math.round((h / 24) * 10) / 10) });
 };
 
-function Colonne({ secondes, max, ton, libelle }) {
-  if (!(secondes > 0)) return <span className="pfe-col pfe-col--vide" />;
+const initiales = (nom) => String(nom || '?').trim().split(/\s+/).slice(0, 2).map((m) => m[0]?.toUpperCase() || '').join('') || '?';
+
+function Anneau({ interventions, taches }) {
+  const total = (interventions || 0) + (taches || 0);
+  const r = 26;
+  const c = 2 * Math.PI * r;
+  const partI = total ? (interventions || 0) / total : 0;
   return (
-    <span className="pfe-col">
-      <b className="pfe-col-valeur">{dureeCourte(secondes)}</b>
-      <span className={`pfe-col-barre pfe-col-barre--${ton}`} style={{ height: `${Math.max(3, (100 * secondes) / max)}%` }} aria-label={`${libelle} : ${duree(secondes)}`} />
-    </span>
+    <svg className="pfe-anneau" viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r={r} className="pfe-anneau-fond" />
+      {total > 0 && (
+        <>
+          <circle cx="32" cy="32" r={r} className="pfe-anneau-taches" strokeDasharray={`${c} ${c}`} />
+          {partI > 0 && <circle cx="32" cy="32" r={r} className="pfe-anneau-interv" strokeDasharray={`${partI * c} ${c}`} />}
+        </>
+      )}
+      <text x="32" y="36" textAnchor="middle" className="pfe-anneau-texte">{dureeCourte(total)}</text>
+    </svg>
+  );
+}
+
+function CarteEmploye({ e, rang }) {
+  return (
+    <li className="pfe-emp">
+      <div className="pfe-emp-tete">
+        <span className="pfe-avatar" aria-hidden="true">{initiales(e.nom)}</span>
+        <span className="pfe-emp-nom" title={e.nom}>{e.nom}</span>
+        {e.nbTachesNonFinies > 0
+          ? <span className="pfe-etat pfe-etat--afinir" title={t('{n} tâche(s) à finir', { n: nb(e.nbTachesNonFinies) })}>{nb(e.nbTachesNonFinies)}</span>
+          : e.nbTachesAssociees > 0 ? <span className="pfe-etat pfe-etat--ok" title={t('Toutes ses tâches finies')}>✓</span> : null}
+        <span className="pfe-emp-rang">#{rang}</span>
+      </div>
+      <div className="pfe-emp-corps">
+        <Anneau interventions={e.dureeInterventionsSecondes} taches={e.dureeTachesSecondes} />
+        <dl className="pfe-emp-chiffres">
+          {(e.nbInterventions > 0 || e.dureeInterventionsSecondes > 0) && (
+            <div title={t('Moyenne {m}', { m: duree(e.dureeMoyenneInterventionSecondes) })}>
+              <dt><i className="pfe-point pfe-point--interv" /><b>{nb(e.nbInterventions)}</b> {t('interv.')}</dt>
+              <dd>{dureeCourte(e.dureeInterventionsSecondes)}</dd>
+            </div>
+          )}
+          {(e.nbTaches > 0 || e.dureeTachesSecondes > 0) && (
+            <div title={t('Moyenne {m}', { m: duree(e.dureeMoyenneTacheSecondes) })}>
+              <dt><i className="pfe-point pfe-point--taches" /><b>{nb(e.nbTaches)}</b> {t('tâches')}</dt>
+              <dd>{dureeCourte(e.dureeTachesSecondes)}</dd>
+            </div>
+          )}
+        </dl>
+      </div>
+    </li>
   );
 }
 
@@ -63,7 +106,6 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
     return liste;
   }, [donnees, tri, filtreTaches]);
   const nbFiltre = (f) => (donnees?.employes ?? []).filter(f.garder).length;
-  const maxDuree = Math.max(0, ...employes.flatMap((e) => [e.dureeInterventionsSecondes || 0, e.dureeTachesSecondes || 0]));
   const visibles = tout ? employes : employes.slice(0, NB_VISIBLES);
 
   const avecEmployes = (donnees?.employes ?? []).length > 0;
@@ -97,37 +139,12 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
       ) : (
         <>
           <ul className="pfe-legende" aria-hidden="true">
-            <li><i className="pfe-pastille pfe-pastille--teal" /> {t('Interventions')}</li>
-            <li><i className="pfe-pastille pfe-pastille--violet" /> {t('Tâches')}</li>
+            <li><i className="pfe-point pfe-point--interv" /> {t('Interventions')}</li>
+            <li><i className="pfe-point pfe-point--taches" /> {t('Tâches')}</li>
           </ul>
-          <div className="pfe-histo-cadre">
-            <ol className="pfe-histo" aria-label={t('Durée réalisée par employé')}>
-              {visibles.map((e) => (
-                <li key={e.personnelId} className="pfe-groupe-col" tabIndex={0}>
-                  <span className="pfe-cols">
-                    <Colonne secondes={e.dureeInterventionsSecondes} max={maxDuree} ton="teal" libelle={t('Interventions')} />
-                    <Colonne secondes={e.dureeTachesSecondes} max={maxDuree} ton="violet" libelle={t('Tâches')} />
-                  </span>
-                  <span className="pfe-col-nom" title={e.nom}>{e.nom}</span>
-                  <span className="pfe-col-etat">
-                    {e.nbTachesNonFinies > 0 ? <span title={t('{n} tâche(s) non finie(s)', { n: nb(e.nbTachesNonFinies) })}><Badge ton="ambre">{t('{n} à finir', { n: nb(e.nbTachesNonFinies) })}</Badge></span>
-                      : e.nbTachesAssociees > 0 ? <Badge ton="vert">{t('Finies')}</Badge> : null}
-                  </span>
-                  <div className="pfe-bulle" role="tooltip">
-                    <strong>{e.nom}</strong>
-                    <dl>
-                      <dt className="pfe-bulle-titre pfe-bulle-titre--teal">{t('Interventions')}</dt>
-                      <dd>{t('{n} · {d} · moyenne {m}', { n: nb(e.nbInterventions), d: duree(e.dureeInterventionsSecondes), m: duree(e.dureeMoyenneInterventionSecondes) })}</dd>
-                      <dt className="pfe-bulle-titre pfe-bulle-titre--violet">{t('Tâches')}</dt>
-                      <dd>{t('{n} · {d} · moyenne {m}', { n: nb(e.nbTaches), d: duree(e.dureeTachesSecondes), m: duree(e.dureeMoyenneTacheSecondes) })}</dd>
-                      <dt className="pfe-bulle-titre">{t('Tâches associées')}</dt>
-                      <dd>{t('{n} dont {m} non finie(s)', { n: nb(e.nbTachesAssociees ?? 0), m: nb(e.nbTachesNonFinies ?? 0) })}</dd>
-                    </dl>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
+          <ol className="pfe-emps" aria-label={t('Performance par employé')}>
+            {visibles.map((e, i) => <CarteEmploye key={e.personnelId} e={e} rang={i + 1} />)}
+          </ol>
           {employes.length > NB_VISIBLES && (
             <button type="button" className="pfe-lien pfe-voir-tout" onClick={() => setTout((v) => !v)}>
               {tout ? t('Afficher les {n} premiers', { n: NB_VISIBLES }) : t('Afficher les {n} employés', { n: employes.length })}
