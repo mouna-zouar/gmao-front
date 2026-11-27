@@ -3,8 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Activity, BellRing, Cable, Clock, Info, LoaderCircle, MonitorDot, Network, RadioTower, RefreshCw, ServerCog, TriangleAlert, Wifi, WifiOff,
 } from 'lucide-react';
-import supervisionService from '../../../services/supervisionService';
-import alerteMachineService from '../../../services/alerteMachineService';
 import PageModal from '../../ui/modals/PageModal';
 import AlertesMachines from '../AlertesMachines/AlertesMachines';
 import { libelleType } from '../Equipements/EquipementLiaisonAgent';
@@ -12,6 +10,7 @@ import { t, locale } from '../../../i18n';
 import { Pastille, ilYa } from '../../ui/Veille/Veille';
 import './Supervision.css';
 import '../TableauDeBord/TableauDeBord.css';
+import { lireRequete } from '../../../store/referentiels';
 
 const PALETTE = ['#0794a4', '#eb6834', '#6a5acd', '#eda100', '#e87ba4', '#2a78d6'];
 const NIVEAUX = [
@@ -507,7 +506,7 @@ export default function Supervision() {
   const [alertesOuvert, setAlertesOuvert] = useState(false);
   const [nbAlertes, setNbAlertes] = useState(0);
   useEffect(() => {
-    const compter = () => alerteMachineService.compterNouvelles().then(setNbAlertes).catch(() => {});
+    const compter = () => lireRequete('compteAlertesMachines').then(setNbAlertes).catch(() => {});
     compter();
     const minuterie = setInterval(() => { if (!document.hidden) compter(); }, 60 * 1000);
     return () => clearInterval(minuterie);
@@ -518,7 +517,7 @@ export default function Supervision() {
     enCours.current = true;
     setChargement(true);
     try {
-      const d = await supervisionService.tableau(heures);
+      const d = await lireRequete('supervision', { heures });
       setDonnees(d);
       setErreur(null);
       setMajLe(Date.now());

@@ -1,33 +1,23 @@
-import { useCallback, useEffect, useState } from 'react';
-import maintenanceTacheService from '../../../services/maintenanceTacheService';
+import { useState } from 'react';
+import { useExecuter, useModule } from '../../../store/hooks';
+import { tachesMaintenance } from '../../../store/modules/planification';
 import { ICONES_MODULES } from '../../../constants/modules';
 import { ModaleFormulaire, PageListe } from '../../commun';
 import { t } from '../../../i18n';
 
+const PARAMS = { page: 0, taille: 500 };
 const COLONNES = [{ cle: 'nom', label: 'Nom', valeur: (x) => x.nom }];
 const CHAMPS = [
   { nom: 'nom', label: 'Nom', type: 'texte', requis: true, longueurMax: 255, largeur: 'pleine', autoFocus: true, placeholder: 'Ex : Vérification des alarmes' },
 ];
 
 export default function MaintenanceTaches() {
-  const [taches, setTaches] = useState([]);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState(null);
   const [fenetre, setFenetre] = useState({ ouverte: false, objet: null });
-
-  const charger = useCallback(async () => {
-    setChargement(true);
-    setErreur(null);
-    try {
-      const page = await maintenanceTacheService.getAll(0, 500);
-      setTaches(page.content ?? []);
-    } catch {
-      setErreur(t('Impossible de charger les tâches. Vérifie que le serveur est bien lancé.'));
-    } finally {
-      setChargement(false);
-    }
-  }, []);
-  useEffect(() => { charger(); }, [charger]);
+  const module = useModule(tachesMaintenance, PARAMS);
+  const executer = useExecuter();
+  const taches = module.elements;
+  const chargement = module.statut === 'vide' || module.statut === 'chargement';
+  const erreur = module.statut === 'erreur' ? t('Impossible de charger les tâches. Vérifie que le serveur est bien lancé.') : null;
 
   return (
     <PageListe
@@ -42,7 +32,7 @@ export default function MaintenanceTaches() {
       onAjouter={() => setFenetre({ ouverte: true, objet: null })}
       libelleAjouter={t('Nouvelle tâche')}
       onModifier={(x) => setFenetre({ ouverte: true, objet: x })}
-      onSupprimer={async (x) => { await maintenanceTacheService.remove(x.id); await charger(); }}
+      onSupprimer={(x) => executer(tachesMaintenance.actions.supprimer(x.id))}
       messageSuppression={(x) => t('Supprimer la tâche « {nom} » ? Cette action est irréversible.', { nom: x.nom })}
       cleStockage="taches-referentiel"
       nomExport="taches-maintenance"
@@ -59,9 +49,8 @@ export default function MaintenanceTaches() {
         objet={fenetre.objet}
         taille="sm"
         onEnregistrer={async (payload, { creation }) => {
-          if (creation) await maintenanceTacheService.create(payload);
-          else await maintenanceTacheService.update(fenetre.objet.id, payload);
-          await charger();
+          if (creation) await executer(tachesMaintenance.actions.creer(payload));
+          else await executer(tachesMaintenance.actions.modifier({ id: fenetre.objet.id, donnees: payload }));
         }}
       />
     </PageListe>

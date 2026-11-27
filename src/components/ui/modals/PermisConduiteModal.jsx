@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import Button from '../Button';
-import personnelService from '../../../services/Personnelservice';
 import permisConduiteService from '../../../services/permisConduiteService';
 import {
   IdCard, X, User, Calendar, Loader2, AlertTriangle, Save, Tags, MapPin,
@@ -9,6 +8,7 @@ import './Modal.css';
 import './BonMaintenanceModal.css';
 import './PermisConduiteModal.css';
 import SearchableSelect from '../../commun/ListeRecherche';
+import { commePage, obtenirPersonnels } from '../../../store/referentiels';
 
 const FALLBACK_CATEGORIES = [
   { code: 'A1', libelleCourt: 'A1', libelle: 'Motocyclette légère', description: 'Cylindrée ≤ 125 cm³, puissance ≤ 11 kW.' },
@@ -55,7 +55,7 @@ const PermisConduiteModal = ({ isOpen, onClose, onSave, permis, isEditing }) => 
     const fetchPersonnels = async () => {
       setLoadingPersonnels(true);
       try {
-        const page = await personnelService.getAll(0, 200);
+        const page = await obtenirPersonnels().then(commePage);
         setPersonnels(page.content ?? []);
       } catch (err) {
         console.error('Erreur chargement personnel :', err);

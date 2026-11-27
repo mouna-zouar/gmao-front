@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-import coutService from '../../../services/coutService';
 import { prioriteLabel } from '../../../constants/Priorite';
 import { CircleDollarSign, FileSpreadsheet, Inbox, LoaderCircle, Package, RefreshCw, Search, TriangleAlert, Truck, Wallet, Wrench } from 'lucide-react';
 import './Cout.css';
 import Pagination from '../../commun/Pagination';
 import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
+import { lireRequete } from '../../../store/referentiels';
 
 const PERIODES = [
   { key: '30J', label: '30 jours', jours: 30 },
@@ -195,8 +195,8 @@ export default function Cout() {
     try {
       const bornes = { ...calculerBornes(periodeKey), lieuId: lieuId || undefined };
       const [listeBons, bilanData] = await Promise.all([
-        coutService.getParPeriode(bornes),
-        coutService.getBilan(bornes),
+        lireRequete('coutParPeriode', bornes),
+        lireRequete('coutBilan', bornes),
       ]);
       setBons(listeBons ?? []);
       setBilan(bilanData);

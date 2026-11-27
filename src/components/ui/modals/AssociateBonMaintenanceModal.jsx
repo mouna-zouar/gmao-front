@@ -11,10 +11,12 @@ import {
   Inbox,
 } from 'lucide-react';
 import reclamationBonMaintenanceService from '../../../services/Reclamationbonmaintenanceservice';
-import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import { t, locale } from '../../../i18n';
 import Modale from '../../commun/Modale';
 import './Associatebonmaintenancemodal.css';
+import { useStore } from 'react-redux';
+import { useExecuter } from '../../../store/hooks';
+import { bons as moduleBons, PARAMS_LISTE_BONS } from '../../../store/modules/bons';
 
 const BON_ETAT = {
   1: { texte: 'Nouveau', ton: 'info' },
@@ -47,6 +49,8 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
   const [linkedBons, setLinkedBons] = useState([]);
   const [loadingLinkedBons, setLoadingLinkedBons] = useState(false);
   const [allBons, setAllBons] = useState([]);
+  const store = useStore();
+  const executer = useExecuter();
   const [loadingAll, setLoadingAll] = useState(false);
   const [bonToLink, setBonToLink] = useState(null);
   const [linking, setLinking] = useState(false);
@@ -60,14 +64,14 @@ const AssociateBonMaintenanceModal = ({ isOpen, onClose, reclamation }) => {
   useEffect(() => {
     if (!isOpen) return;
     setLoadingAll(true);
-    bonMaintenanceService.getAll(0, 200)
-      .then((page) => setAllBons(page.content ?? []))
+    executer(moduleBons.actions.charger({ params: PARAMS_LISTE_BONS }))
+      .then(() => setAllBons([...moduleBons.selecteurs.elements(store.getState())]))
       .catch((err) => {
         console.error('Erreur chargement bons de maintenance :', err);
         setAllBons([]);
       })
       .finally(() => setLoadingAll(false));
-  }, [isOpen]);
+  }, [isOpen, executer, store]);
 
   useEffect(() => {
     if (!isOpen || !reclamation) {

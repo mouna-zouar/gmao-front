@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Cable, ChevronDown, ChevronUp, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react';
 import liaisonAgentService from '../../../services/liaisonAgentService';
-import alerteMachineService from '../../../services/alerteMachineService';
 import { t, locale } from '../../../i18n';
+import { lireRequete } from '../../../store/referentiels';
 
 export const TYPES_LIAISON = [
   { value: 'USB', label: 'USB (port COM)', aide: 'Câble USB : les messages de la machine sont lus ligne par ligne.' },
@@ -94,7 +94,7 @@ export default function EquipementLiaisonAgent({ equipementId, Bloc, Pastille })
     setChargement(true);
     Promise.all([
       liaisonAgentService.parEquipement(equipementId).catch(() => []),
-      alerteMachineService.agents().catch(() => []),
+      lireRequete('agentsMachines').catch(() => []),
     ]).then(([l, a]) => { setLiaisons(l); setAgents(a); }).finally(() => setChargement(false));
   };
   useEffect(charger, [equipementId]);

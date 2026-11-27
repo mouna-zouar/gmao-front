@@ -5,6 +5,7 @@ import codePanneService from '../../../services/codePanneService';
 import { t } from '../../../i18n';
 import { arbreFamilles, lignesArbre, basculerDansSet } from '../../../utils/arbreFamilles';
 import { messageErreur } from './parametresCommun';
+import { obtenirCodesPanne } from '../../../store/referentiels';
 
 const VIDE = { id: null, code: '', libelle: '', categorie: '', motsCles: '', familles: '', actif: true };
 
@@ -72,7 +73,7 @@ export function CodesPanneVue({ prestataireId }) {
 
   const charger = () => {
     setErreur('');
-    codePanneService.liste(true)
+    obtenirCodesPanne()
       .then(setCodes)
       .catch(() => { setCodes([]); setErreur(t('Impossible de charger les codes panne.')); });
   };

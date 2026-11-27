@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import vehiculeBonCarburantService from '../../../../services/vehiculeBonCarburantService';
-import vehiculeIncidentService from '../../../../services/vehiculeIncidentService';
-import vehiculeMissionService from '../../../../services/vehiculeMissionService';
-import vehiculeAmendeService from '../../../../services/Vehiculeamendeservice';
 import vehiculeCoutService from '../../../../services/Vehiculecoutservice';
 import { t } from '../../../../i18n';
 import {
@@ -12,6 +8,7 @@ import {
 import {
   JOUR, classement, dans, douzeMois, enMs, liste, moyenne, periodes, serieMensuelle, somme,
 } from '../../../ui/Indicateurs/calculs';
+import { facadeAmendes, facadeBonsCarburant, facadeIncidents, facadeMissions } from '../../../../store/facades';
 
 const AMENDE_A_PAYER = [0, 1];
 const NOMS_SOURCES = { carburant: 'Carburant', incidents: 'Incidents', missions: 'Missions', amendes: 'Amendes', couts: 'Coûts' };
@@ -28,10 +25,10 @@ export default function IndicateursParc() {
       .catch(() => { if (actif) setSrc((s) => ({ ...s, [cle]: null, [`${cle}Erreur`]: true })); });
     const auj = new Date();
     charger('vehicules', obtenirVehicules().then(commePage).then(liste));
-    charger('carburant', vehiculeBonCarburantService.getAll(0, 3000).then(liste));
-    charger('incidents', vehiculeIncidentService.getAll(0, 2000).then(liste));
-    charger('missions', vehiculeMissionService.getAll(0, 3000).then(liste));
-    charger('amendes', vehiculeAmendeService.getAll(0, 1000).then(liste));
+    charger('carburant', facadeBonsCarburant.getAll(0, 3000).then(liste));
+    charger('incidents', facadeIncidents.getAll(0, 2000).then(liste));
+    charger('missions', facadeMissions.getAll(0, 3000).then(liste));
+    charger('amendes', facadeAmendes.getAll(0, 1000).then(liste));
     charger('couts', vehiculeCoutService.parc(`${auj.getFullYear()}-01-01`, isoJour(auj)));
     return () => { actif = false; };
   }, []);

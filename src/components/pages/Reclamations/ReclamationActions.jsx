@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Loader2, UserCheck, XCircle, RotateCcw, CheckCircle2, X, User, Users } from 'lucide-react';
-import reclamationService from '../../../services/Reclamationservice';
-import personnelService from '../../../services/Personnelservice';
 import AlerteFormation from '../Formations/AlerteFormation';
 import AssistantIntervenants from '../Formations/AssistantIntervenants';
 import authService from '../../../services/Authservice';
@@ -11,6 +9,9 @@ import Onglets from '../../commun/Onglets';
 import { t } from '../../../i18n';
 import { DROITS_ACTIONS_RECLAMATION } from '../../../constants/privileges';
 import './ReclamationActions.css';
+import { commePage, obtenirPersonnelsMaintenance } from '../../../store/referentiels';
+import { useExecuter } from '../../../store/hooks';
+import { reclamations as moduleReclamations } from '../../../store/modules/reclamations';
 
 export const ETAT_REC = { NOUVEAU: 0, EN_COURS: 1, CLOTUREE: 2, RESOLUE: 3, ANNULEE: 4, EN_FILE: 5 };
 
@@ -69,7 +70,7 @@ function FenetreAffecter({ reclamation, onClose, onValider }) {
 
   useEffect(() => {
     let annule = false;
-    personnelService.getMaintenance(0, 200)
+    obtenirPersonnelsMaintenance().then(commePage)
       .then((p) => { if (!annule) setTechniciens(p?.content ?? []); })
       .catch(() => { if (!annule) setTechniciens([]); })
       .finally(() => { if (!annule) setChargement(false); });
@@ -277,16 +278,14 @@ export function useActionsReclamation(apresAction) {
   const [fenetre, setFenetre] = useState(null);
   const [enCours, setEnCours] = useState(false);
 
+  const lancerAction = useExecuter();
+
   const executer = async (nom, reclamation, corps = {}) => {
-    const appel = {
-      affecter: reclamationService.affecter,
-      prendre: reclamationService.prendreEnCharge,
-      resoudre: reclamationService.resoudre,
-      cloturer: reclamationService.cloturer,
-      rouvrir: reclamationService.rouvrir,
-      annuler: reclamationService.annuler,
+    const operation = {
+      affecter: 'affecter', prendre: 'prendreEnCharge', resoudre: 'resoudre',
+      cloturer: 'cloturer', rouvrir: 'rouvrir', annuler: 'annuler',
     }[nom];
-    const resultat = await appel(reclamation.id, { ...corps, ...auteur() });
+    const { resultat } = await lancerAction(moduleReclamations.actions[operation]({ id: reclamation.id, args: [{ ...corps, ...auteur() }] }));
     setFenetre(null);
     await apresAction?.(resultat, nom);
     return resultat;

@@ -6,6 +6,7 @@ import {
   VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, Pastille, Jauge,
   dateCourte, dateHeure, ilYa,
 } from '../../ui/Veille/Veille';
+import { lireRequete } from '../../../store/referentiels';
 
 const SEVERITE = {
   CRITIQUE: { label: 'Critique', ton: 'danger', rang: 3 },
@@ -42,7 +43,7 @@ export default function Anomalies({ isModal = false }) {
     setLoading(true);
     setError(null);
     try {
-      const page = await anomalieService.getAll(0, 50);
+      const page = await lireRequete('anomalies', { page: 0, taille: 50 });
       setAnomalies(page.content ?? []);
     } catch (err) {
       console.error('Erreur chargement anomalies :', err);

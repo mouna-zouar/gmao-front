@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Archive, ClipboardCheck, Loader2, Undo2, X } from 'lucide-react';
 import validationBonService from '../../../services/validationBonService';
-import personnelService from '../../../services/Personnelservice';
 import SearchableSelect from '../../commun/ListeRecherche';
 import Modale from '../../commun/Modale';
 import { t, locale } from '../../../i18n';
 import './ValidationBon.css';
+import { commePage, obtenirPersonnelsMaintenance } from '../../../store/referentiels';
 
 const dateHeure = (v) => {
   if (!v) return '';
@@ -156,7 +156,7 @@ export function FenetreValidateurs({ onClose, onEnregistre }) {
     let annule = false;
     Promise.all([
       validationBonService.reglages().catch(() => null),
-      personnelService.getMaintenance(0, 200).then((p) => p?.content ?? []).catch(() => []),
+      obtenirPersonnelsMaintenance().then(commePage).then((p) => p?.content ?? []).catch(() => []),
     ]).then(([reglages, liste]) => {
       if (annule) return;
       setR(reglages || { actif: true, validateurs: [] });

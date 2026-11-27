@@ -2,24 +2,15 @@ import { configureStore } from '@reduxjs/toolkit';
 import authReducer, { rechargerSession } from './authSlice';
 import notificationsReducer from './notificationsSlice';
 import assistantReducer, { CLE_CONVERSATION } from './assistantSlice';
-import depotsReducer from './depotsSlice';
-import prestatairesReducer from './prestatairesSlice';
-import articlesReducer from './articlesSlice';
-import vehiculesReducer, { perimerVehicules } from './vehiculesSlice';
-import equipementsReducer, { perimerEquipements } from './equipementsSlice';
-import emplacementsReducer, { perimerEmplacements } from './emplacementsSlice';
+import { TOUS } from './registre';
+import { correspond } from './fabriques/communs';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     notifications: notificationsReducer,
     assistant: assistantReducer,
-    depots: depotsReducer,
-    prestataires: prestatairesReducer,
-    articles: articlesReducer,
-    vehicules: vehiculesReducer,
-    equipements: equipementsReducer,
-    emplacements: emplacementsReducer,
+    ...Object.fromEntries(TOUS.map((e) => [e.nom, e.reducer])),
   },
   devTools: import.meta.env.DEV,
 });
@@ -38,15 +29,10 @@ if (typeof window !== 'undefined') {
   });
 }
 
-const PERIMER_SUR_ECRITURE = [
-  { motif: /^\/?vehicule/, action: perimerVehicules },
-  { motif: /^\/?(lot-article-immobilistation|equipements|etat-equipement|renouvellement\/equipements)/, action: perimerEquipements },
-  { motif: /^\/?emplacements/, action: perimerEmplacements },
-];
 if (typeof window !== 'undefined') {
   window.addEventListener('gmao:ecriture', (e) => {
     const url = e.detail?.url || '';
-    PERIMER_SUR_ECRITURE.forEach(({ motif, action }) => { if (motif.test(url)) store.dispatch(action()); });
+    TOUS.forEach((el) => { if (correspond(el.invalidePar, url)) store.dispatch(el.actions.perimer()); });
   });
 }
 

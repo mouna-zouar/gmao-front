@@ -6,6 +6,7 @@ import { ICONES_MODULES } from '../../../constants/modules';
 import { imprimerFiche } from '../../../utils/imprimerListe';
 import { t, locale } from '../../../i18n';
 import './Metrologie.css';
+import { lireRequete } from '../../../store/referentiels';
 
 const GRAVITES = {
   GRAVE: { label: 'Grave', ton: 'rouge' },
@@ -124,7 +125,7 @@ function FenetreDelais({ onFermer }) {
   const [d, setD] = useState(null);
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState(null);
-  useEffect(() => { metrologieService.delais().then(setD).catch(() => setD({ graveJours: 2, serieuseJours: 10, mineureJours: 30 })); }, []);
+  useEffect(() => { lireRequete('delaisMateriovigilance').then(setD).catch(() => setD({ graveJours: 2, serieuseJours: 10, mineureJours: 30 })); }, []);
   const enregistrer = async () => {
     setEnvoi(true);
     try {
@@ -174,7 +175,7 @@ export default function Materiovigilance() {
     setChargement(true);
     setErreur(null);
     try {
-      setIncidents(await metrologieService.incidents());
+      setIncidents(await lireRequete('incidentsMateriovigilance'));
     } catch {
       setErreur(t('Impossible de charger les incidents.'));
     } finally {

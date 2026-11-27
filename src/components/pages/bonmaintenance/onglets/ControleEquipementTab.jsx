@@ -22,8 +22,7 @@ import {
   EquipementDuBon,
 } from '../BmdCommun';
 import bonMaintenanceControleEquipementService from '../../../../services/bonMaintenanceControleEquipementService';
-import personnelService from '../../../../services/Personnelservice';
-import { obtenirEquipements } from '../../../../store/referentiels';
+import { commePage, obtenirEquipements, obtenirPersonnelsMaintenance } from '../../../../store/referentiels';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import { t } from '../../../../i18n';
 import { Modale } from '../../../commun';
@@ -99,7 +98,7 @@ export function ControleEquipementTab({ bonMaintenanceId, defaultLotArticleImmob
   useEffect(() => { if (autoOpenForm) openForm(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
+    obtenirPersonnelsMaintenance().then(commePage).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
     obtenirEquipements().then(setImmobilisations).catch(console.error);
   }, []);
 

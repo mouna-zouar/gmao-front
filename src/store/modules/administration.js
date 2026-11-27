@@ -1,0 +1,29 @@
+import { creerReferentiel } from '../fabriques/creerReferentiel';
+import { creerRequete } from '../fabriques/creerRequete';
+import parametreService from '../../services/parametreService';
+import stockAlerteService from '../../services/stockAlerteService';
+
+const MIN = 60 * 1000;
+
+export const parametres = creerReferentiel({
+  nom: 'parametres',
+  charger: () => parametreService.getAll(),
+  validiteMs: 5 * MIN,
+  invalidePar: /^parametres/,
+});
+
+export const alertesStock = creerRequete({
+  nom: 'alertesStock',
+  executer: (_params, { forcer }) => stockAlerteService.synthese(forcer),
+  validiteMs: 2 * MIN,
+  invalidePar: /^(stock|bon-maintenance|piece|demande)/,
+  maxEntrees: 1,
+});
+
+export const reglagesStock = creerRequete({
+  nom: 'reglagesStock',
+  executer: () => stockAlerteService.reglages(),
+  validiteMs: 10 * MIN,
+  invalidePar: /^stock\/alertes\/reglages/,
+  maxEntrees: 1,
+});

@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronLeft, ChevronRight, GripVertical, Inbox, LoaderCircle, Lock, MapPin, RefreshCw, Search, Users,
 } from 'lucide-react';
 import planningService from '../../../services/planningService';
+import { useRequete } from '../../../store/hooks';
 import { t, locale } from '../../../i18n';
 import './PlanningEquipe.css';
 
@@ -34,8 +35,6 @@ const niveauCharge = (h) => (h <= 0 ? 'libre' : h <= CAPACITE_JOUR * 0.75 ? 'ok'
 export default function PlanningEquipe() {
   const navigate = useNavigate();
   const [debutSemaine, setDebutSemaine] = useState(() => lundi(new Date()));
-  const [donnees, setDonnees] = useState({ techniciens: [], aPlanifier: [] });
-  const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [message, setMessage] = useState(null);
   const [recherche, setRecherche] = useState('');
@@ -48,28 +47,27 @@ export default function PlanningEquipe() {
 
   const jours = useMemo(() => Array.from({ length: 7 }, (_, i) => plusJours(debutSemaine, i)), [debutSemaine]);
 
-  const charger = useCallback(async (silencieux = false) => {
-    if (!silencieux) setChargement(true);
-    setErreur(null);
-    try {
-      const fin = plusJours(debutSemaine, 7);
-      fin.setMilliseconds(-1);
-      const d = await planningService.equipe(debutSemaine, fin);
-      setDonnees({ techniciens: d?.techniciens ?? [], aPlanifier: d?.aPlanifier ?? [] });
-    } catch (e) {
-      setErreur(e?.response?.data?.message || t('Impossible de charger le planning de l’équipe.'));
-    } finally {
-      setChargement(false);
-    }
+  const params = useMemo(() => {
+    const fin = plusJours(debutSemaine, 7);
+    fin.setMilliseconds(-1);
+    return { debut: debutSemaine.toISOString(), fin: fin.toISOString() };
   }, [debutSemaine]);
-
-  useEffect(() => { charger(); }, [charger]);
+  const requete = useRequete('planningEquipe', params);
+  const donnees = useMemo(() => ({
+    techniciens: requete.donnees?.techniciens ?? [], aPlanifier: requete.donnees?.aPlanifier ?? [],
+  }), [requete.donnees]);
+  const chargement = requete.enCours || requete.statut === 'vide';
+  const { recharger } = requete;
+  const charger = () => recharger(true);
+  useEffect(() => {
+    if (requete.erreur) setErreur(requete.erreur || t('Impossible de charger le planning de l’équipe.'));
+  }, [requete.erreur]);
   useEffect(() => {
     const minuterie = setInterval(() => {
-      if (!document.hidden && !glisseRef.current) charger(true);
+      if (!document.hidden && !glisseRef.current) recharger(true);
     }, RAFRAICHISSEMENT_MS);
     return () => clearInterval(minuterie);
-  }, [charger]);
+  }, [recharger]);
   useEffect(() => { if (!message) return undefined; const m = setTimeout(() => setMessage(null), 4000); return () => clearTimeout(m); }, [message]);
 
   const grille = useMemo(() => {
@@ -145,7 +143,7 @@ export default function PlanningEquipe() {
         await planningService.affecter(g.item.bonId, tech.personnelId, tech.nom, debut, g.item.heures);
         setMessage(t('{bon} affecté à {nom}, {jour}', { bon: g.item.bonNum, nom: tech.nom, jour: jour.toLocaleDateString(locale(), { weekday: 'long', day: 'numeric', month: 'short' }) }));
       }
-      await charger(true);
+      await charger();
     } catch (e) {
       setErreur(e?.response?.data?.message || t('Le déplacement n’a pas pu être enregistré.'));
     } finally {

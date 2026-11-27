@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-import disponibiliteService from '../../../services/Disponibiliteservice';
 import { criticiteHex, criticiteLabel } from '../../../constants/Criticite';
 import { t, locale } from '../../../i18n';
 import { Activity, FileSpreadsheet, Gauge, History, Inbox, LoaderCircle, RefreshCw, Search, TrendingDown, TriangleAlert, Wrench } from 'lucide-react';
 import './Disponibilite.css';
 import PaginationCommune from '../../commun/Pagination';
 import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
+import { lireRequete } from '../../../store/referentiels';
 
 const ETAT_LABELS = {
   EN_SERVICE: 'En service',
@@ -213,7 +213,7 @@ export default function Disponibilite() {
     setError(null);
     try {
       const bornes = { ...calculerBornes(periodeKey), lieuId: lieuId || undefined };
-      const data = await disponibiliteService.getAll(bornes);
+      const data = await lireRequete('disponibilites', bornes ?? {});
       setDonnees(data ?? []);
     } catch (err) {
       console.error('Erreur chargement disponibilité :', err);

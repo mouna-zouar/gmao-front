@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Calendar, Car, Settings2, User } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
-import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/Personnelservice';
+import { commePage, obtenirPersonnels, obtenirVehicules } from '../../../../store/referentiels';
 import VehiculeConducteurModal from '../../../ui/modals/VehiculeConducteurModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeConducteurs.css';
+import { facadeConducteurs } from '../../../../store/facades';
 
 const MODES = { 0: 'Principal', 1: 'Secondaire', 2: 'Temporaire', 3: 'Remplacement' };
 const CLASSES_MODE = { 0: 'principal', 1: 'secondary', 2: 'temporary', 3: 'replacement' };
@@ -33,7 +32,7 @@ export default function VehiculeConducteurs() {
     setErreur(null);
     try {
       const [page, veh, pers] = await Promise.all([
-        vehiculeConducteurService.getAll(0, 500), obtenirVehicules().then(commePage), personnelService.getAll(0, 500),
+        facadeConducteurs.getAll(0, 500), obtenirVehicules().then(commePage), obtenirPersonnels().then(commePage),
       ]);
       setAffectations(page.content ?? []);
       setVehicules(Object.fromEntries((veh.content ?? []).map((v) => [v.id, v])));
@@ -113,7 +112,7 @@ export default function VehiculeConducteurs() {
       onAjouter={() => setFenetre({ ouverte: true, objet: null })}
       libelleAjouter={t('Nouvelle affectation')}
       onModifier={(a) => setFenetre({ ouverte: true, objet: a })}
-      onSupprimer={async (a) => { await vehiculeConducteurService.remove(a.id); await charger(); }}
+      onSupprimer={async (a) => { await facadeConducteurs.remove(a.id); await charger(); }}
       messageSuppression={() => t('Supprimer cette affectation véhicule / conducteur ? Cette action est irréversible.')}
       cleStockage="vehicule-conducteurs"
       nomExport="affectations-conducteurs"
@@ -123,8 +122,8 @@ export default function VehiculeConducteurs() {
         isOpen={fenetre.ouverte}
         onClose={() => setFenetre((f) => ({ ...f, ouverte: false }))}
         onSave={async (payload) => {
-          if (fenetre.objet) await vehiculeConducteurService.update(fenetre.objet.id, payload);
-          else await vehiculeConducteurService.create(payload);
+          if (fenetre.objet) await facadeConducteurs.update(fenetre.objet.id, payload);
+          else await facadeConducteurs.create(payload);
           await charger();
         }}
         vehiculeConducteur={fenetre.objet}

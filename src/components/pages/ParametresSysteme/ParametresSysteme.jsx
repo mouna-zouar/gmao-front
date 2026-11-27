@@ -37,6 +37,7 @@ import { ChampValeur } from './ChampsParametre';
 import { ReglesConditionnellesVue } from './ReglesConditionnellesVue';
 import { CodesPanneVue } from './CodesPanneVue';
 import { ChecklistsReclamationVue } from './ChecklistsReclamationVue';
+import { obtenirReferentiel } from '../../../store/referentiels';
 
 function codeTache(cle) {
   const m = /^planif\.([a-z_]+)\.heure$/.exec(cle);
@@ -104,7 +105,7 @@ export default function ParametresSysteme() {
   const load = async () => {
     setLoading(true);
     try {
-      apply(await parametreService.getAll());
+      apply(await obtenirReferentiel('parametres', { forcer: true }));
     } catch (err) {
       console.error(err);
       setMessage({ type: 'error', text: t('Impossible de charger les paramètres. Vérifie que le serveur est lancé.') });

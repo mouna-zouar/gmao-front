@@ -4,10 +4,9 @@ import { Modale } from '../../commun';
 import api from '../../../services/api';
 import authService from '../../../services/Authservice';
 import bonMaintenanceCommandeService from '../../../services/Bonmaintenancecommandeservice';
-import { obtenirArticles, obtenirPrestataires } from '../../../store/referentiels';
+import { commePage, obtenirArticles, obtenirPrestataires, obtenirServices } from '../../../store/referentiels';
 import { useAppDispatch } from '../../../store/hooks';
 import { chargerDepots } from '../../../store/depotsSlice';
-import serviceService from '../../../services/Serviceservice';
 import pieceLigneService from '../../../services/PieceLigneService';
 import { t, locale } from '../../../i18n';
 import './PieceEditor.css';
@@ -96,7 +95,7 @@ export default function PieceEditor({ ouvert, type = 'DEMANDE', bonMaintenance, 
             ? bonMaintenanceCommandeService.getArticlesDisponibles(bonMaintenance.id)
             : bonMaintenanceCommandeService.getArticlesADemander(bonMaintenance.id)).catch(() => []),
           type === 'COMMANDE' ? obtenirPrestataires().catch(() => []) : Promise.resolve([]),
-          type === 'DEMANDE' ? serviceService.getAll(0, 200).then((d) => d?.content ?? d ?? []).catch(() => []) : Promise.resolve([]),
+          type === 'DEMANDE' ? obtenirServices().then(commePage).then((d) => d?.content ?? d ?? []).catch(() => []) : Promise.resolve([]),
         ]);
         if (annule) return;
         const listeDepots = Array.isArray(deps) ? deps : [];

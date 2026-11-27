@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ClipboardList, LoaderCircle, RefreshCw, Search, Timer, Users, Wrench } from 'lucide-react';
-import performanceEmployesService from '../../../services/performanceEmployesService';
 import { PastillesStats } from '../../commun';
 import { formatTemps, useMaintenant } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
+import { lireRequete } from '../../../store/referentiels';
 
 const RAFRAICHIR_MS = 60 * 1000;
 
@@ -23,7 +23,7 @@ export default function ChronoEmployes({ onOuvrirBon }) {
   const charger = useCallback(async () => {
     setChargement(true);
     try {
-      setDonnees(await performanceEmployesService.chrono());
+      setDonnees(await lireRequete('chronoEmployes'));
       setErreur(null);
     } catch {
       setErreur(t('Impossible de charger le chrono des employés. Vérifie que le serveur est bien lancé.'));

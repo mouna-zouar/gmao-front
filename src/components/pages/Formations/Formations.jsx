@@ -1,17 +1,17 @@
 import { GraduationCap, Users, Wrench } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Badge, ModaleFormulaire, PageListe } from '../../commun';
-import formationService from '../../../services/formationService';
-import equipementService from '../../../services/equipementService';
 import { ICONES_MODULES } from '../../../constants/modules';
 import ChampParticipants from './ChampParticipants';
 import ChampCibles from './ChampCibles';
 import {
   RESULTATS_FORMATION, STATUTS_FORMATION, TYPES_FORMATION, options, periodeFormation,
 } from './formationLibelles';
-import { obtenirEquipements } from '../../../store/referentiels';
+import { obtenirEquipements, obtenirFamilles } from '../../../store/referentiels';
 import { t, locale } from '../../../i18n';
 import './Formations.css';
+import { useExecuter, useModule } from '../../../store/hooks';
+import { formations as modFormations } from '../../../store/modules/planification';
 
 const SECTIONS = [
   { cle: 'general', label: 'Formation', icone: GraduationCap, description: 'Le sujet de la formation, qui la donne et quand elle a lieu.' },
@@ -33,7 +33,7 @@ const CHAMPS = [
   { nom: 'cout', label: 'Coût', type: 'montant', unite: 'DT', min: 0 },
   {
     nom: 'familles', label: 'Familles d’équipements', type: 'personnalise', section: 'cibles', largeur: 'pleine', defaut: [],
-    rendu: ({ valeur, changer, id }) => <ChampCibles id={id} mode="famille" valeur={valeur} changer={changer} chargerOptions={() => equipementService.familles()} />,
+    rendu: ({ valeur, changer, id }) => <ChampCibles id={id} mode="famille" valeur={valeur} changer={changer} chargerOptions={() => obtenirFamilles()} />,
   },
   {
     nom: 'equipements', label: 'Équipements', type: 'personnalise', section: 'cibles', largeur: 'pleine', defaut: [],
@@ -112,25 +112,13 @@ function CelluleCibles({ familles, equipements, nomFamille, nomEquipement }) {
 const nombre = (v, d = 1) => (v == null ? '' : Number(v).toLocaleString(locale(), { maximumFractionDigits: d }));
 
 export default function Formations() {
-  const [formations, setFormations] = useState([]);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState(null);
+  const moduleFormations = useModule(modFormations);
+  const executer = useExecuter();
+  const formations = moduleFormations.elements;
+  const chargement = moduleFormations.statut === 'vide' || moduleFormations.statut === 'chargement';
+  const erreur = moduleFormations.statut === 'erreur' ? t('Impossible de charger les formations.') : null;
   const [filtreTechnicien, setFiltreTechnicien] = useState('');
   const [fenetre, setFenetre] = useState({ ouverte: false, objet: null });
-
-  const charger = useCallback(async () => {
-    setChargement(true);
-    setErreur(null);
-    try {
-      setFormations(await formationService.getAll());
-    } catch (e) {
-      console.error('[GMAO formations] Chargement :', e);
-      setErreur(t('Impossible de charger les formations.'));
-    } finally {
-      setChargement(false);
-    }
-  }, []);
-  useEffect(() => { charger(); }, [charger]);
 
   const [equipementsParId, setEquipementsParId] = useState({});
   const [famillesParId, setFamillesParId] = useState({});
@@ -138,7 +126,7 @@ export default function Formations() {
     obtenirEquipements()
       .then((l) => setEquipementsParId(Object.fromEntries((l || []).map((e) => [String(e.id), e]))))
       .catch(() => {});
-    equipementService.familles()
+    obtenirFamilles()
       .then((l) => setFamillesParId(Object.fromEntries((l || []).map((f) => [String(f.id), f]))))
       .catch(() => {});
   }, []);
@@ -195,9 +183,8 @@ export default function Formations() {
   ];
 
   const enregistrer = async (payload, { creation }) => {
-    if (creation) await formationService.create(payload);
-    else await formationService.update(fenetre.objet.id, payload);
-    await charger();
+    if (creation) await executer(modFormations.actions.creer(payload));
+    else await executer(modFormations.actions.modifier({ id: fenetre.objet.id, donnees: payload }));
   };
 
   return (
@@ -219,7 +206,7 @@ export default function Formations() {
       onAjouter={() => setFenetre({ ouverte: true, objet: null })}
       libelleAjouter={t('Nouvelle formation')}
       onModifier={(f) => setFenetre({ ouverte: true, objet: f })}
-      onSupprimer={async (f) => { await formationService.remove(f.id); await charger(); }}
+      onSupprimer={(f) => executer(modFormations.actions.supprimer(f.id))}
       messageSuppression={(f) => t('Supprimer la formation « {nom} » et ses participants ? Cette action est irréversible.', { nom: f.intitule })}
       recherchePlaceholder={t('Rechercher une formation...')}
       cleStockage="formations"

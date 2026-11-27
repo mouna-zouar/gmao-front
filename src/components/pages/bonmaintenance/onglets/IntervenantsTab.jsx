@@ -35,10 +35,9 @@ import {
 } from '../BmdCommun';
 import bonMaintenanceIntervenantService from '../../../../services/bonMaintenanceIntervenantService';
 import bonMaintenanceIntervenantHistoriqueService from '../../../../services/Bonmaintenanceintervenanthistoriqueservice';
-import personnelService from '../../../../services/Personnelservice';
 import AlerteFormation from '../../Formations/AlerteFormation';
 import AssistantIntervenants from '../../Formations/AssistantIntervenants';
-import { obtenirPrestataires } from '../../../../store/referentiels';
+import { commePage, obtenirPersonnelsMaintenance, obtenirPrestataires } from '../../../../store/referentiels';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
 import { t } from '../../../../i18n';
 import { Modale } from '../../../commun';
@@ -91,7 +90,7 @@ export function IntervenantsTab({ bonMaintenanceId, defaultLotArticleImmobilista
 
   useEffect(() => {
     if (!showForm) return;
-    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
+    obtenirPersonnelsMaintenance().then(commePage).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
     obtenirPrestataires().then(setPrestataires).catch(console.error);
   }, [showForm]);
 

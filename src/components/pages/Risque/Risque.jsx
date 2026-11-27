@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import risqueService from '../../../services/Risqueservice';
 import { t, tp, locale } from '../../../i18n';
 import { Inbox, LoaderCircle, Minus, RefreshCw, Search, ShieldAlert, TrendingDown, TrendingUp, TriangleAlert } from 'lucide-react';
 import './Risque.css';
 import PaginationCommune from '../../commun/Pagination';
+import { lireRequete } from '../../../store/referentiels';
 
 const NIVEAU_LABELS = {
   CRITIQUE: 'Critique',
@@ -103,7 +103,7 @@ export default function Risque() {
     setLoading(true);
     setError(null);
     try {
-      const data = await risqueService.getRisques(limite);
+      const data = await lireRequete('risques', { limite: limite });
       setEquipements(data ?? []);
     } catch (err) {
       console.error('Erreur chargement risques :', err);

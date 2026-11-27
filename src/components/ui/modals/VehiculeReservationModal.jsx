@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import Button from '../Button';
-import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/Personnelservice';
+import { commePage, obtenirEmplacements, obtenirPersonnels, obtenirVehicules } from '../../../store/referentiels';
 import projetService from '../../../services/projetService';
 import vehiculeReservationService from '../../../services/vehiculeReservationService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
@@ -18,6 +17,7 @@ import {
 import './Modal.css';
 import './VehiculeReservationModal.css';
 import SearchableSelect from '../../commun/ListeRecherche';
+import { facadeBonsCarburant } from '../../../store/facades';
 
 const ETAT_OPTIONS = [
   { value: 0, label: 'En attente', color: 'amber' },
@@ -161,7 +161,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
     setEnregistrementBon(true);
     try {
       if (isEditing && reservation?.id) {
-        await vehiculeBonCarburantService.create({ ...bon, reservationId: reservation.id });
+        await facadeBonsCarburant.create({ ...bon, reservationId: reservation.id });
         await chargerBonsReservation();
       } else {
         setBonsAAjouter((l) => [...l, bon]);
@@ -212,7 +212,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
     const fetchPersonnels = async () => {
       setLoadingPersonnels(true);
       try {
-        const page = await personnelService.getAll(0, 300);
+        const page = await obtenirPersonnels().then(commePage);
         setPersonnels(page.content ?? []);
       } catch (err) {
         console.error(err);
@@ -410,7 +410,7 @@ const VehiculeReservationModal = ({ isOpen, onClose, onSave, reservation, isEdit
         const echecs = [];
         for (const bon of bonsAAjouter) {
           try {
-            await vehiculeBonCarburantService.create({ ...bon, reservationId });
+            await facadeBonsCarburant.create({ ...bon, reservationId });
           } catch (err) {
             console.error('Erreur création bon de carburant :', err);
             echecs.push(bon);

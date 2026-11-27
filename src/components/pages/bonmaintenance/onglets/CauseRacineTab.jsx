@@ -5,12 +5,12 @@ import Formulaire from '../../../commun/Formulaire';
 import { useFormulaire, valeursDepuis, versPayload } from '../../../commun/useFormulaire';
 import { Badge } from '../../../commun/TableauBord';
 import rcaCapaService from '../../../../services/rcaCapaService';
-import personnelService from '../../../../services/Personnelservice';
 import bonMaintenanceDiagnosticService from '../../../../services/Bonmaintenancediagnosticservice';
 import { selectUtilisateur } from '../../../../store/authSlice';
 import { formatDate, formatDateTime } from '../BmdCommun';
 import { t } from '../../../../i18n';
 import './CauseRacineTab.css';
+import { commePage, obtenirPersonnels } from '../../../../store/referentiels';
 
 const METHODE_RCA_LABELS = {
   CINQ_POURQUOI: '5 Pourquoi',
@@ -296,7 +296,7 @@ function usePersonnel() {
   const [personnes, setPersonnes] = useState([]);
   useEffect(() => {
     let annule = false;
-    personnelService.getAll(0, 500)
+    obtenirPersonnels().then(commePage)
       .then((r) => {
         if (annule) return;
         const noms = (r?.content ?? r ?? []).map(nomPersonne).filter(Boolean);

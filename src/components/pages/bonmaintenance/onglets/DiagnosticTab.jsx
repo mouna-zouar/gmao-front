@@ -25,9 +25,8 @@ import {
 import bonMaintenanceIntervenantService from '../../../../services/bonMaintenanceIntervenantService';
 import bonMaintenancePieceImmoService from '../../../../services/Bonmaintenancepieceimmoservice';
 import bonMaintenanceDiagnosticService from '../../../../services/Bonmaintenancediagnosticservice';
-import personnelService from '../../../../services/Personnelservice';
 import AlerteFormation from '../../Formations/AlerteFormation';
-import { obtenirEquipements } from '../../../../store/referentiels';
+import { commePage, obtenirEquipements, obtenirPersonnelsMaintenance } from '../../../../store/referentiels';
 import lotArticleImmobilistationService from '../../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../../services/lotArticleService';
 import ConfirmModal from '../../../ui/modals/ConfirmModal';
@@ -129,7 +128,7 @@ export function DiagnosticTab({ bonMaintenanceId, defaultLotArticleImmobilistati
   }, [form.lotArticleImmobilistationId]);
 
   useEffect(() => {
-    personnelService.getMaintenance(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
+    obtenirPersonnelsMaintenance().then(commePage).then((p) => setPersonnels(p.content ?? [])).catch(console.error);
     obtenirEquipements().then(setImmobilisations).catch(console.error);
     bonMaintenancePieceImmoService.findByBonMaintenanceId(bonMaintenanceId).then((data) => setPiecesImmo(data ?? [])).catch(console.error);
   }, [bonMaintenanceId]);

@@ -1,33 +1,17 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { creerReferentiel } from './fabriques/creerReferentiel';
 import prestataireService from '../services/prestataireService';
 
-const TAILLE = 1000;
-let enVol = null;
-
-export const chargerPrestataires = createAsyncThunk('prestataires/charger', async ({ forcer = false } = {}, { getState }) => {
-  const etat = getState().prestataires;
-  if (!forcer && etat.statut === 'pret') return etat.liste;
-  if (!enVol) enVol = prestataireService.getAll(0, TAILLE).finally(() => { enVol = null; });
-  const data = await enVol;
-  const liste = data?.content ?? data;
-  return Array.isArray(liste) ? liste : [];
+export const prestataires = creerReferentiel({
+  nom: 'prestataires',
+  charger: () => prestataireService.getAll(0, 1000),
+  validiteMs: null,
+  invalidePar: /^prestataire/,
 });
 
-const prestatairesSlice = createSlice({
-  name: 'prestataires',
-  initialState: { liste: [], statut: 'vide', erreur: null },
-  reducers: {
-    viderPrestataires(state) { state.liste = []; state.statut = 'vide'; state.erreur = null; },
-  },
-  extraReducers: (b) => {
-    b.addCase(chargerPrestataires.pending, (state) => { if (state.statut !== 'pret') state.statut = 'chargement'; state.erreur = null; })
-      .addCase(chargerPrestataires.fulfilled, (state, { payload }) => { state.liste = payload; state.statut = 'pret'; })
-      .addCase(chargerPrestataires.rejected, (state, { error }) => { if (state.statut !== 'pret') state.statut = 'erreur'; state.erreur = error?.message || 'Erreur'; });
-  },
-});
-
-export const { viderPrestataires } = prestatairesSlice.actions;
-export const selectPrestataires = (s) => s.prestataires.liste;
-export const selectPrestatairesStatut = (s) => s.prestataires.statut;
-export const selectPrestataireParId = (id) => (s) => s.prestataires.liste.find((p) => String(p.id) === String(id)) ?? null;
-export default prestatairesSlice.reducer;
+export const chargerPrestataires = prestataires.actions.charger;
+export const viderPrestataires = prestataires.actions.vider;
+export const perimerPrestataires = prestataires.actions.perimer;
+export const selectPrestataires = prestataires.selecteurs.liste;
+export const selectPrestatairesStatut = prestataires.selecteurs.statut;
+export const selectPrestataireParId = prestataires.selecteurs.parId;
+export default prestataires.reducer;

@@ -6,12 +6,12 @@ import {
   Wrench, Play, Flag, TrendingUp, Zap, Target, 
 } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../../store/referentiels';
+import { commePage, obtenirEmplacements, obtenirPersonnels, obtenirVehicules } from '../../../../store/referentiels';
 import vehiculeMissionService from '../../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../../services/vehiculeConducteurService';
-import personnelService from '../../../../services/Personnelservice';
 import { t, tp, locale } from '../../../../i18n';
 import './VehiculeTracage.css';
+import { facadeMissions } from '../../../../store/facades';
 
 const ETAT_LABELS = { 0: 'Planifiée', 1: 'En cours', 2: 'Terminée', 3: 'Annulée' };
 const ETAT_META = {
@@ -107,7 +107,7 @@ export default function VehiculeTracage({
       try {
         const [vehPage, persPage, empPage] = await Promise.all([
           obtenirVehicules().then(commePage),
-          personnelService.getAll(0, 500),
+          obtenirPersonnels().then(commePage),
           obtenirEmplacements().then(commePage).catch(() => ({ content: [] })),
         ]);
         setVehicules(vehPage.content ?? []);
@@ -229,7 +229,7 @@ export default function VehiculeTracage({
   const handleDemarrer = async () => {
     if (!derniereMission || derniereMission.etat !== 0) return;
     try {
-      await vehiculeMissionService.demarrer(derniereMission.id);
+      await facadeMissions.demarrer(derniereMission.id);
       setRefreshKey((k) => k + 1);
     } catch (err) {
       console.error(err);
@@ -241,7 +241,7 @@ export default function VehiculeTracage({
     if (!missionEnCours) return;
     const kmStr = window.prompt(t('Kilométrage à la fin :'), '');
     try {
-      await vehiculeMissionService.terminer(
+      await facadeMissions.terminer(
         missionEnCours.id,
         kmStr && kmStr !== '' ? Number(kmStr) : null,
         null

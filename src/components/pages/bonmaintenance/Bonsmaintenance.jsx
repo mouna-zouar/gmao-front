@@ -56,7 +56,6 @@ import BlocagesImmobilisation from '../Blocagesimmobilisation/Blocagesimmobilisa
 import EquipementsEtEtat from '../Equipements/Equipementsetetat';
 import ChronoEmployes from '../PerformanceEmployes/ChronoEmployes';
 import AlertesMachines from '../AlertesMachines/AlertesMachines';
-import alerteMachineService from '../../../services/alerteMachineService';
 import slaService from '../../../services/slaService';
 import { delaiSla } from '../../../utils/delaiSla';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
@@ -97,6 +96,9 @@ import {
 } from './exportBons';
 import { MenuAchatsBons, MenuOutilsBons } from './MenusBons';
 import { SlaRetards } from './SlaRetards';
+import { useAppDispatch, useAppSelector, useExecuter } from '../../../store/hooks';
+import { bons as moduleBons, PARAMS_LISTE_BONS } from '../../../store/modules/bons';
+import { lireRequete } from '../../../store/referentiels';
 
 const ETAT = { NOUVEAU: 1, SUSPENDU: 2, EN_COURS: 3, EFFECTUE: 4, ANNULE: 10 };
 
@@ -278,8 +280,11 @@ const COLONNE_TEXTE = Object.fromEntries(COLONNES_TEXTE.map((c) => [c.cle, c]));
 export default function BonsMaintenance() {
   const aDroit = useDroits();
 
-  const [bons, setBons] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const executer = useExecuter();
+  const bons = useAppSelector(moduleBons.selecteurs.elements);
+  const statutBons = useAppSelector(moduleBons.selecteurs.statut);
+  const [loading, setLoading] = useState(statutBons !== 'pret');
   const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -409,12 +414,11 @@ export default function BonsMaintenance() {
   const [excelSelectedColumns, setExcelSelectedColumns] = useState([]);
   const [exportingExcel, setExportingExcel] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
+  const load = async ({ forcer = true } = {}) => {
+    if (forcer || statutBons !== 'pret') setLoading(true);
     setError(null);
     try {
-      const page = await bonMaintenanceService.getAll(0, 200);
-      setBons(page.content ?? []);
+      await executer(moduleBons.actions.charger({ params: PARAMS_LISTE_BONS, forcer }));
     } catch (err) {
       console.error(err);
       setError(t("Impossible de charger les bons de maintenance. Vérifie que le serveur est bien lancé."));
@@ -423,12 +427,12 @@ export default function BonsMaintenance() {
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load({ forcer: false }); }, []);
 
   const [slaRetards, setSlaRetards] = useState(null);
   const [slaChargement, setSlaChargement] = useState(false);
   const [slaErreur, setSlaErreur] = useState(null);
-  const recupererSlaRetards = useCallback(() => slaService.getDepassements()
+  const recupererSlaRetards = useCallback(() => lireRequete('slaDepassements')
     .then((data) => { setSlaRetards(Array.isArray(data) ? data : []); setSlaErreur(null); })
     .catch((err) => {
       console.error('Erreur chargement dépassements SLA :', err);
@@ -469,7 +473,7 @@ export default function BonsMaintenance() {
     } catch {
       recupererSlaOuverts();
       if (avecRetards) recupererSlaRetards();
-      alerteMachineService.compterNouvelles().then(setNbAlertesMachines).catch(() => {});
+      lireRequete('compteAlertesMachines').then(setNbAlertesMachines).catch(() => {});
       if (avecMesBons) { mesBonsCharges.current = true; chargerMesBonsSepares(); }
     }
   }, [idsSla, moi.personnelId, recupererSlaOuverts, recupererSlaRetards, chargerMesBonsSepares]);
@@ -859,7 +863,7 @@ export default function BonsMaintenance() {
 
   const handleSave = async (payload, children) => {
     if (selectedBon) {
-      await bonMaintenanceService.update(selectedBon.id, payload);
+      await executer(moduleBons.actions.modifier({ id: selectedBon.id, donnees: payload }));
     } else {
       const result = await bonMaintenanceFullService.createFull(payload, children || {});
       if (result.errors.length > 0) {
@@ -892,8 +896,7 @@ export default function BonsMaintenance() {
         setConfirmModal((prev) => ({ ...prev, confirming: true, error: null }));
         setIsDeleting(true);
         try {
-          await bonMaintenanceService.remove(selectedBon.id);
-          setBons((prev) => prev.filter((b) => b.id !== selectedBon.id));
+          await executer(moduleBons.actions.supprimer(selectedBon.id));
           setSelectedBon(null);
           closeConfirmModal();
         } catch (err) {
@@ -949,10 +952,9 @@ export default function BonsMaintenance() {
         setConfirmModal((prev) => ({ ...prev, confirming: true, error: null }));
         setIsDeleting(true);
         try {
-          const resultats = await Promise.allSettled(ids.map((id) => bonMaintenanceService.remove(id)));
+          const resultats = await Promise.allSettled(ids.map((id) => executer(moduleBons.actions.supprimer(id))));
           const supprimes = ids.filter((_, i) => resultats[i].status === 'fulfilled');
           const echecs = ids.filter((_, i) => resultats[i].status === 'rejected');
-          setBons((prev) => prev.filter((b) => !supprimes.includes(b.id)));
           setSelectedBon((actuel) => (actuel && supprimes.includes(actuel.id) ? null : actuel));
           setCoches(new Set(echecs));
           if (echecs.length === 0) {
@@ -976,12 +978,13 @@ export default function BonsMaintenance() {
     demanderSuppression(cochesValides);
   };
 
+  const operation = (nom, ...args) => executer(moduleBons.actions[nom]({ id: selectedBon.id, args })).then((r) => r.element ?? r.resultat);
+
   const runTransition = async (action) => {
     if (!selectedBon || transitioning) return { ok: false, message: t("Aucun bon sélectionné.") };
     setTransitioning(true);
     try {
       const updated = await action();
-      setBons((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
       setSelectedBon(updated);
       return { ok: true };
     } catch (err) {
@@ -995,13 +998,13 @@ export default function BonsMaintenance() {
 
   const handleDemarrer = async () => {
     if (!selectedBon || transitioning) return;
-    const result = await runTransition(() => bonMaintenanceService.passerEnCours(selectedBon.id));
+    const result = await runTransition(() => operation('passerEnCours'));
     if (!result.ok) alert(result.message);
   };
 
   const handleReprendre = async () => {
     if (!selectedBon || transitioning) return;
-    const result = await runTransition(() => bonMaintenanceService.reprendre(selectedBon.id));
+    const result = await runTransition(() => operation('reprendre'));
     if (!result.ok) alert(result.message);
   };
 
@@ -1017,7 +1020,7 @@ export default function BonsMaintenance() {
       return;
     }
     setMotifModal((prev) => ({ ...prev, confirming: true, error: null }));
-    const result = await runTransition(() => bonMaintenanceService.suspendre(selectedBon.id, motif));
+    const result = await runTransition(() => operation('suspendre', motif));
     if (result.ok) {
       setMotifModal({ show: false, motif: '', error: null, confirming: false });
     } else {
@@ -1038,7 +1041,7 @@ export default function BonsMaintenance() {
     }
     const etat = saisie === '' ? null : Number(saisie);
     setEtatModal((prev) => ({ ...prev, confirming: true, error: null }));
-    const result = await runTransition(() => bonMaintenanceService.marquerEffectue(selectedBon.id, etat));
+    const result = await runTransition(() => operation('effectuer', etat));
     if (result.ok) {
       setEtatModal({ show: false, etat: '', error: null, confirming: false });
     } else {
@@ -1058,7 +1061,7 @@ export default function BonsMaintenance() {
       confirming: false,
       onConfirm: async () => {
         setConfirmModal((prev) => ({ ...prev, confirming: true, error: null }));
-        const result = await runTransition(() => bonMaintenanceService.annuler(selectedBon.id));
+        const result = await runTransition(() => operation('annuler'));
         if (result.ok) closeConfirmModal();
         else setConfirmModal((prev) => ({ ...prev, confirming: false, error: result.message }));
       },
@@ -1224,7 +1227,7 @@ export default function BonsMaintenance() {
         )}
 
         {selectedBon && selectedBon.validationStatut === 'A_VALIDER' && (
-          <BoutonsDecision bon={selectedBon} compact onMaj={(maj) => { if (maj?.id) { setBons((prev) => prev.map((b) => (b.id === maj.id ? maj : b))); setSelectedBon(maj); } setActionsRefreshKey((k) => k + 1); }} />
+          <BoutonsDecision bon={selectedBon} compact onMaj={(maj) => { if (maj?.id) { dispatch(moduleBons.actions.upsert(maj)); setSelectedBon(maj); } setActionsRefreshKey((k) => k + 1); }} />
         )}
 
         {!selectedBon && (

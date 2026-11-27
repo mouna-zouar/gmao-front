@@ -6,8 +6,6 @@ import equipementService from '../../../services/equipementService';
 import ScannerQR from '../Equipements/ScannerQR';
 import { imprimerEtiquettes } from '../Equipements/qrEtiquettes';
 import etatEquipementService from '../../../services/Etatequipementservice';
-import disponibiliteService from '../../../services/Disponibiliteservice';
-import risqueService from '../../../services/Risqueservice';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, criticiteHex } from '../../../constants/Criticite';
 import EquipementMaintenancePanel from './Equipementmaintenancepanel';
 import EquipementMaintenanceTypesSettings from './Equipementmaintenancetypessettings';
@@ -21,6 +19,7 @@ import './Etatequipement.css';
 import { PastillesStats } from '../../commun';
 import { ArrowRight, ChevronDown, List, Network, CircleCheck, CirclePause, CircleX, Clock, Download, File, Gauge, History, LoaderCircle, Printer, QrCode, RefreshCw, Search, Settings, TriangleAlert, Wrench, X } from 'lucide-react';
 import { VeillePage, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Panneau, Pastille, Jauge } from '../../ui/Veille/Veille';
+import { lireRequete, obtenirReferentiel } from '../../../store/referentiels';
 
 const RISQUE_NIVEAU_LABELS = { CRITIQUE: 'Critique', ELEVE: 'Élevé', MODERE: 'Modéré', FAIBLE: 'Faible' };
 const RISQUE_TENDANCE_LABELS = { HAUSSE: 'En hausse', BAISSE: 'En baisse', STABLE: 'Stable' };
@@ -297,7 +296,7 @@ function EtatEquipementCompact({ isModal = false }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await etatEquipementService.getAll();
+      const data = await obtenirReferentiel('etatsEquipements');
       setEtats(data ?? []);
     } catch (err) {
       console.error('Erreur chargement états équipement :', err);
@@ -310,7 +309,7 @@ function EtatEquipementCompact({ isModal = false }) {
   const chargerDisponibilites = useCallback(async () => {
     setLoadingDispo(true);
     try {
-      const data = await disponibiliteService.getAll();
+      const data = await lireRequete('disponibilites', {});
       const parId = {};
       (data ?? []).forEach((d) => { parId[d.lotArticleImmobilistationId] = d; });
       setDisponibilites(parId);
@@ -327,7 +326,7 @@ function EtatEquipementCompact({ isModal = false }) {
   const chargerRisques = useCallback(async () => {
     setLoadingRisque(true);
     try {
-      const data = await risqueService.getRisques(1000);
+      const data = await lireRequete('risques', { limite: 1000 });
       const parId = {};
       (data ?? []).forEach((r) => { parId[r.lotArticleImmobilistationId] = r; });
       setRisques(parId);
@@ -342,7 +341,7 @@ function EtatEquipementCompact({ isModal = false }) {
 
   const chargerConnexions = useCallback(async () => {
     try {
-      const data = await equipementService.listeConnexions();
+      const data = await obtenirReferentiel('connexionsEquipements');
       const parId = {};
       (data ?? []).forEach((c) => { parId[c.lotArticleImmobilistationId] = c; });
       setConnexions(parId);

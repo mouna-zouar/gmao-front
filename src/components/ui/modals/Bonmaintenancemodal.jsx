@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Brain, ClipboardList, FileText, MapPin, MessageSquare, Users, Wrench } from 'lucide-react';
 import ModaleFormulaire from '../../commun/ModaleFormulaire';
-import personnelService from '../../../services/Personnelservice';
-import { commePage, obtenirArticles, obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
+import { commePage, obtenirArticles, obtenirEquipements, obtenirPersonnels, obtenirPersonnelsMaintenance, obtenirPrestataires } from '../../../store/referentiels';
 import authService from '../../../services/Authservice';
 import parametreService from '../../../services/parametreService';
 import { SOURCES_INFORMATION } from '../../../constants/FicheIntervention';
@@ -117,11 +116,11 @@ const BonMaintenanceModal = ({ isOpen, onClose, onSave, bonMaintenance, isEditin
     let annule = false;
     setListes((l) => ({ ...l, chargement: true }));
     Promise.all([
-      personnelService.getAll(0, 200),
+      obtenirPersonnels().then(commePage),
       obtenirPrestataires(),
       obtenirEquipements().then(commePage),
       obtenirArticles(),
-      personnelService.getMaintenance(0, 200),
+      obtenirPersonnelsMaintenance().then(commePage),
     ])
       .then(([pers, prest, immo, art, tech]) => {
         if (annule) return;

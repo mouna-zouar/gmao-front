@@ -6,6 +6,7 @@ import {
   VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, Pastille, Jauge,
   dateCourte, ilYa,
 } from '../../ui/Veille/Veille';
+import { lireRequete } from '../../../store/referentiels';
 
 const STATUT = {
   NOUVELLE: { label: 'Nouveau', ton: 'info' },
@@ -35,7 +36,7 @@ export default function BlocagesImmobilisation({ isModal = false }) {
     setLoading(true);
     setError(null);
     try {
-      const page = await blocageImmobilisationService.getAll(0, 50);
+      const page = await lireRequete('blocages', { page: 0, taille: 50 });
       setBlocages(page.content ?? []);
     } catch (err) {
       console.error('Erreur chargement blocages :', err);

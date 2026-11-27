@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import planningService from '../../../services/planningService';
+import { useRequete } from '../../../store/hooks';
 import './Planningtechnicien.css';
 import { t, locale } from '../../../i18n';
 import { ChevronLeft, ChevronRight, Clock, Hash, LoaderCircle, Monitor, Search, X } from 'lucide-react';
@@ -13,6 +13,7 @@ const ETATS = {
   10: { label: 'Annulé', classe: 'annule' },
 };
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+const AUCUN = [];
 
 const pad = (n) => String(n).padStart(2, '0');
 const versInput = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -62,27 +63,16 @@ function Frise({ creneaux, plage, jour }) {
 export default function PlanningTechnicien() {
   const navigate = useNavigate();
   const [jour, setJour] = useState(() => debutJour(new Date()));
-  const [techniciens, setTechniciens] = useState([]);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [filtreStatut, setFiltreStatut] = useState('tous');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const charger = useCallback(() => {
-    setChargement(true);
-    setErreur(null);
-    planningService.findPlanningTousTechniciens(debutJour(jour), finJour(jour))
-      .then((data) => setTechniciens(data ?? []))
-      .catch((e) => {
-        console.error('Erreur chargement planning techniciens :', e);
-        setErreur(t('Impossible de charger le planning des techniciens.'));
-        setTechniciens([]);
-      })
-      .finally(() => setChargement(false));
-  }, [jour]);
-  useEffect(() => { charger(); }, [charger]);
+  const params = useMemo(() => ({ debut: debutJour(jour).toISOString(), fin: finJour(jour).toISOString() }), [jour]);
+  const requete = useRequete('planningTechniciens', params);
+  const techniciens = requete.donnees ?? AUCUN;
+  const chargement = requete.statut === 'vide' || requete.statut === 'chargement';
+  const erreur = requete.statut === 'erreur' ? t('Impossible de charger le planning des techniciens.') : null;
   useEffect(() => { setPage(1); }, [jour, recherche, filtreStatut, pageSize]);
 
   const donnees = useMemo(() => techniciens.map((tech) => ({

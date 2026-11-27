@@ -8,7 +8,6 @@ import {
 import { selectUtilisateur } from '../../../store/authSlice';
 import { PROFIL_GENERAL, useDisposition } from './dispositionTableau';
 import { ZonePerso } from '../../commun/tableauPerso/BlocsPerso';
-import tableauDeBordService from '../../../services/tableauDeBordService';
 import { Badge, Barres, Carte, Liste, Repartition, Stat, Vide } from '../../commun/TableauBord';
 import { Bulle, useLargeur } from '../Supervision/Supervision';
 import { ilYa } from '../../ui/Veille/Veille';
@@ -18,6 +17,7 @@ import { t, locale } from '../../../i18n';
 import '../Supervision/Supervision.css';
 import './TableauDeBord.css';
 import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
+import { lireRequete } from '../../../store/referentiels';
 
 const SERIES = [
   { cle: 'reclamations', label: 'Réclamations reçues', couleur: '#0794a4' },
@@ -304,7 +304,7 @@ export default function TableauDeBord() {
     enCours.current = true;
     setChargement(true);
     try {
-      const d = await tableauDeBordService.tableau(jours, recalculer, lieuId || null);
+      const d = await lireRequete('tableauDeBord', { jours, lieuId: lieuId || null }, { forcer: recalculer });
       setDonnees(d);
       setErreur(null);
       setMajLe(Date.now());

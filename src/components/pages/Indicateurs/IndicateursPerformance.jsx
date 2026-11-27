@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Activity, CalendarRange, Clock, Gauge, RefreshCw, Timer, Wrench } from 'lucide-react';
-import indicateursPerformanceService from '../../../services/indicateursPerformanceService';
 import FiltreLieu, { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
 import { Badge, PageListe } from '../../commun';
 import { t, locale } from '../../../i18n';
 import './IndicateursPerformance.css';
+import { lireRequete } from '../../../store/referentiels';
 
 const PERIODES = [
   { cle: '30', label: '30 derniers jours', jours: 30 },
@@ -58,7 +58,7 @@ export default function IndicateursPerformance() {
     setChargement(true);
     setErreur(null);
     try {
-      setRapport(await indicateursPerformanceService.rapport({ debut, fin, groupe, lieuId }));
+      setRapport(await lireRequete('indicateursPerformance', { debut, fin, groupe, lieuId }));
     } catch {
       setErreur(t('Impossible de calculer les indicateurs.'));
     } finally {

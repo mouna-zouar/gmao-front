@@ -7,6 +7,7 @@ import { ICONES_MODULES } from '../../../constants/modules';
 import { imprimerFiche } from '../../../utils/imprimerListe';
 import { t, locale } from '../../../i18n';
 import './Metrologie.css';
+import { lireRequete } from '../../../store/referentiels';
 
 export const TYPES_CONTROLE = {
   ETALONNAGE: 'Étalonnage', VERIFICATION: 'Vérification', CONTROLE_QUALITE: 'Contrôle qualité', SECURITE_ELECTRIQUE: 'Sécurité électrique',
@@ -127,7 +128,7 @@ export default function Metrologie() {
     setChargement(true);
     setErreur(null);
     try {
-      const [e, c] = await Promise.all([metrologieService.echeancier(), metrologieService.controles()]);
+      const [e, c] = await Promise.all([lireRequete('echeancierMetrologie'), lireRequete('controlesMetrologie', {})]);
       setEcheancier(e || []);
       setControles(c || []);
     } catch {

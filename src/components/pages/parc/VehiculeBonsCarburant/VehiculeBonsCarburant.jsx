@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Calendar, Car, Coins, Gauge, User } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import vehiculeBonCarburantService from '../../../../services/vehiculeBonCarburantService';
-import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/Personnelservice';
+import { commePage, obtenirPersonnels, obtenirVehicules } from '../../../../store/referentiels';
 import VehiculeBonCarburantModal from '../../../ui/modals/VehiculeBonCarburantModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeBonsCarburant.css';
+import { facadeBonsCarburant } from '../../../../store/facades';
 
 const formatDate = (iso) => {
   if (!iso) return '—';
@@ -34,7 +33,7 @@ export default function VehiculeBonsCarburant() {
     setErreur(null);
     try {
       const [page, veh, pers] = await Promise.all([
-        vehiculeBonCarburantService.getAll(0, 500), obtenirVehicules().then(commePage), personnelService.getAll(0, 500),
+        facadeBonsCarburant.getAll(0, 500), obtenirVehicules().then(commePage), obtenirPersonnels().then(commePage),
       ]);
       setBons(page.content ?? []);
       setVehicules(Object.fromEntries((veh.content ?? []).map((v) => [v.id, v])));
@@ -128,7 +127,7 @@ export default function VehiculeBonsCarburant() {
       onAjouter={() => setFenetre({ ouverte: true, objet: null })}
       libelleAjouter={t('Nouveau bon')}
       onModifier={(b) => setFenetre({ ouverte: true, objet: b })}
-      onSupprimer={async (b) => { await vehiculeBonCarburantService.remove(b.id); await charger(); }}
+      onSupprimer={async (b) => { await facadeBonsCarburant.remove(b.id); await charger(); }}
       messageSuppression={() => t('Supprimer ce bon carburant ? Cette action est irréversible.')}
       cleStockage="vehicule-bons-carburant"
       nomExport="bons-carburant"
@@ -138,8 +137,8 @@ export default function VehiculeBonsCarburant() {
         isOpen={fenetre.ouverte}
         onClose={() => setFenetre((f) => ({ ...f, ouverte: false }))}
         onSave={async (payload) => {
-          if (fenetre.objet) await vehiculeBonCarburantService.update(fenetre.objet.id, payload);
-          else await vehiculeBonCarburantService.create(payload);
+          if (fenetre.objet) await facadeBonsCarburant.update(fenetre.objet.id, payload);
+          else await facadeBonsCarburant.create(payload);
           await charger();
         }}
         bonCarburant={fenetre.objet}

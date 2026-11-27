@@ -8,8 +8,11 @@ import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import AssociateBonMaintenanceModal from '../../ui/modals/AssociateBonMaintenanceModal';
 import BonMaintenanceModal from '../../ui/modals/Bonmaintenancemodal';
 import { t } from '../../../i18n';
+import { useExecuter } from '../../../store/hooks';
+import { reclamations as moduleReclamations } from '../../../store/modules/reclamations';
 
 export function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
+  const executer = useExecuter();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [modifierOuvert, setModifierOuvert] = useState(false);
@@ -36,7 +39,7 @@ export function EspaceReclamation({ reclamationId, onBack, onOuvrirBon }) {
   const recharger = () => charger({ silencieux: true });
 
   const enregistrerModification = async (payload) => {
-    await reclamationService.update(reclamationId, payload);
+    await executer(moduleReclamations.actions.modifier({ id: reclamationId, donnees: payload }));
     await recharger();
   };
 

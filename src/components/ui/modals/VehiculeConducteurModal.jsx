@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import Button from '../Button';
-import { commePage, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/Personnelservice';
+import { commePage, obtenirPersonnels, obtenirVehicules } from '../../../store/referentiels';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
 import {
   UserCheck, X, Car, User, Calendar, Loader2,
@@ -74,7 +73,7 @@ const VehiculeConducteurModal = ({ isOpen, onClose, onSave, vehiculeConducteur, 
     const fetchPersonnels = async () => {
       setLoadingPersonnels(true);
       try {
-        const page = await personnelService.getAll(0, 200);
+        const page = await obtenirPersonnels().then(commePage);
         setPersonnels(page.content ?? []);
       } catch (err) {
         console.error('Erreur chargement personnel :', err);

@@ -16,6 +16,7 @@ import ColumnSettingsModal from '../../ui/modals/ColumnSettingsModal';
 import { Archive, Banknote, Building2, Calendar, Columns3, Database, Eye, FileText, Hospital, Search, Settings, Tag, UserCheck, Warehouse, X } from 'lucide-react';
 import './Referentielconsultation.css';
 import Pagination from '../../commun/Pagination';
+import { obtenirReferentiel } from '../../../store/referentiels';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -26,6 +27,7 @@ function formatDate(iso) {
 
 const ENTITY_CONFIG = {
   personnel: {
+    referentiel: 'personnels',
     title: 'Personnel',
     service: personnelService,
     icon: <UserCheck strokeWidth={2} aria-hidden="true" />,
@@ -39,6 +41,7 @@ const ENTITY_CONFIG = {
     ],
   },
   prestataire: {
+    referentiel: 'prestataires',
     title: 'Prestataires',
     service: prestataireService,
     icon: <Building2 strokeWidth={2} aria-hidden="true" />,
@@ -92,6 +95,7 @@ const ENTITY_CONFIG = {
     ],
   },
   calendrier: {
+    referentiel: 'calendriers',
     title: 'Calendriers',
     service: calendrierService,
     icon: <Calendar strokeWidth={2} aria-hidden="true" />,
@@ -105,6 +109,7 @@ const ENTITY_CONFIG = {
     ],
   },
   service: {
+    referentiel: 'services',
     title: 'Services',
     service: serviceService,
     icon: <Building2 strokeWidth={2} aria-hidden="true" />,
@@ -117,6 +122,7 @@ const ENTITY_CONFIG = {
     ],
   },
   clinique: {
+    referentiel: 'cliniques',
     title: 'Cliniques',
     service: cliniqueService,
     icon: <Hospital strokeWidth={2} aria-hidden="true" />,
@@ -220,8 +226,10 @@ export default function ReferentielConsultation() {
     setLoadingByType((prev) => ({ ...prev, [type]: true }));
     setErrorByType((prev) => ({ ...prev, [type]: null }));
     try {
-      const page = await cfg.service.getAll(0, FETCH_SIZE);
-      setDataByType((prev) => ({ ...prev, [type]: page.content ?? [] }));
+      const liste = cfg.referentiel
+        ? await obtenirReferentiel(cfg.referentiel)
+        : (await cfg.service.getAll(0, FETCH_SIZE)).content ?? [];
+      setDataByType((prev) => ({ ...prev, [type]: liste }));
     } catch (err) {
       console.error(`Erreur chargement ${type} :`, err);
       setErrorByType((prev) => ({ ...prev, [type]: `Impossible de charger « ${cfg.title} » depuis le serveur.` }));

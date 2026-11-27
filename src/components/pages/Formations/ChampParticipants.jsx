@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Trash2, Users } from 'lucide-react';
 import ListeRecherche from '../../commun/ListeRecherche';
-import personnelService from '../../../services/Personnelservice';
 import { Badge } from '../../commun';
 import { RESULTATS_FORMATION, nomPersonnel } from './formationLibelles';
 import { t } from '../../../i18n';
+import { commePage, obtenirPersonnelsMaintenance } from '../../../store/referentiels';
 
 export default function ChampParticipants({ id, valeur, changer }) {
   const participants = Array.isArray(valeur) ? valeur : [];
@@ -12,7 +12,7 @@ export default function ChampParticipants({ id, valeur, changer }) {
   const [chargement, setChargement] = useState(true);
 
   useEffect(() => {
-    personnelService.getMaintenance(0, 500)
+    obtenirPersonnelsMaintenance().then(commePage)
       .then((p) => setPersonnels(p?.content ?? p ?? []))
       .catch((e) => console.error('[GMAO formations] Techniciens :', e))
       .finally(() => setChargement(false));

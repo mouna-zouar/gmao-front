@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CircleCheck, Clock, Flame, LoaderCircle, RefreshCw, ShieldAlert, Sparkles, TrendingDown, TrendingUp, TriangleAlert, Minus } from 'lucide-react';
-import risqueService from '../../../services/Risqueservice';
-import anomalieService from '../../../services/Anomalieservice';
 import rcaCapaService from '../../../services/rcaCapaService';
 import { t, tp } from '../../../i18n';
 import {
   VeillePage, VeilleKpis, VeilleVide, VeilleMessage, Panneau, Pastille, Jauge,
   dateCourte, dateHeure, ilYa,
 } from '../../ui/Veille/Veille';
+import { lireRequete } from '../../../store/referentiels';
 
 const TOP_RISQUE_LIMITE = 30;
 const NB_CROISEMENTS_RCA = 20;
@@ -57,9 +56,9 @@ export default function Intelligence({ isModal = false }) {
     setPointsChauds([]);
     try {
       const [risquesData, anomaliesPage, retardData] = await Promise.all([
-        risqueService.getRisques(TOP_RISQUE_LIMITE),
-        anomalieService.getAll(0, 50),
-        rcaCapaService.getActionsEnRetard(),
+        lireRequete('risques', { limite: TOP_RISQUE_LIMITE }),
+        lireRequete('anomalies', { page: 0, taille: 50 }),
+        lireRequete('actionsRcaEnRetard'),
       ]);
       setRisques(risquesData ?? []);
       setAnomalies((anomaliesPage?.content ?? []).filter((a) => a.statut === 'NOUVELLE'));

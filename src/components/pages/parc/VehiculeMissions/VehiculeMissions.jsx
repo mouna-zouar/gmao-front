@@ -2,9 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DROITS, useDroits } from '../../../../constants/privileges';
 import { AlertTriangle, Car, CheckCircle2, Clock, ExternalLink, Eye, Loader2, MapPin, Navigation, Play, User, XCircle } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import vehiculeMissionService from '../../../../services/vehiculeMissionService';
-import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/Personnelservice';
+import { commePage, obtenirEmplacements, obtenirPersonnels, obtenirVehicules } from '../../../../store/referentiels';
 import VehiculeMissionModal from '../../../ui/modals/VehiculeMissionModal';
 import TerminerMissionModal from '../../../ui/modals/TerminerMissionModal';
 import PageModal from '../../../ui/modals/PageModal';
@@ -13,6 +11,7 @@ import VehiculeTracage from './VehiculeTracage';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeMissions.css';
+import { facadeMissions } from '../../../../store/facades';
 
 const ETAT_LABELS = { 0: 'Planifiée', 1: 'En cours', 2: 'Terminée', 3: 'Annulée' };
 const ETAT_META = {
@@ -56,9 +55,9 @@ export default function VehiculeMissions() {
     setErreur(null);
     try {
       const [page, veh, pers, empl] = await Promise.all([
-        vehiculeMissionService.getAll(0, 500),
+        facadeMissions.getAll(0, 500),
         obtenirVehicules().then(commePage),
-        personnelService.getAll(0, 500),
+        obtenirPersonnels().then(commePage),
         obtenirEmplacements().then(commePage).catch(() => ({ content: [] })),
       ]);
       const liste = page.content ?? [];
@@ -166,7 +165,7 @@ export default function VehiculeMissions() {
   const demarrer = async (m) => {
     setErreurAction('');
     try {
-      await vehiculeMissionService.demarrer(m.id);
+      await facadeMissions.demarrer(m.id);
       await charger();
       setDetailsVersion((v) => v + 1);
     } catch (err) {
@@ -174,14 +173,14 @@ export default function VehiculeMissions() {
     }
   };
   const confirmerTerminer = async (kmRetour, motif) => {
-    await vehiculeMissionService.terminer(selection.id, kmRetour, motif);
+    await facadeMissions.terminer(selection.id, kmRetour, motif);
     await charger();
     setDetailsVersion((v) => v + 1);
   };
   const enregistrer = async (payload) => {
     const enregistree = selection
-      ? await vehiculeMissionService.update(selection.id, payload)
-      : await vehiculeMissionService.create(payload);
+      ? await facadeMissions.update(selection.id, payload)
+      : await facadeMissions.create(payload);
     await charger();
     setDetailsVersion((v) => v + 1);
     return enregistree;
@@ -249,7 +248,7 @@ export default function VehiculeMissions() {
           libelleAjouter={t('Nouvelle mission')}
           onModifier={peutModifier ? (m) => { setSelection(m); setFenetre(true); } : undefined}
           onOuvrir={(m) => { setSelection(m); setDetailsId(m.id); }}
-          onSupprimer={aDroit(DROITS.MISSION_ANNULER) ? async (m) => { await vehiculeMissionService.remove(m.id); setSelection(null); await charger(); } : undefined}
+          onSupprimer={aDroit(DROITS.MISSION_ANNULER) ? async (m) => { await facadeMissions.remove(m.id); setSelection(null); await charger(); } : undefined}
           messageSuppression={(m) => t('Supprimer la mission « {num} » ? Cette action est irréversible.', { num: m.num || m.numero || m.id })}
           cleStockage="vehicule-missions"
           nomExport="vehicule-missions"

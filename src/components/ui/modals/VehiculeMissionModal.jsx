@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Button from '../Button';
-import { commePage, obtenirEmplacements, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/Personnelservice';
+import { commePage, obtenirEmplacements, obtenirPersonnels, obtenirVehicules } from '../../../store/referentiels';
 import vehiculeMissionService from '../../../services/vehiculeMissionService';
 import vehiculeConducteurService from '../../../services/vehiculeConducteurService';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
@@ -49,6 +48,7 @@ import {
 import './Modal.css';
 import './VehiculeMissionModal.css';
 import SearchableSelect from '../../commun/ListeRecherche';
+import { facadeAmendes, facadeBonsCarburant } from '../../../store/facades';
 
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -188,7 +188,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     setEnregistrementBon(true);
     try {
       if (isEditing && vehiculeMission?.id) {
-        await vehiculeBonCarburantService.create({ ...bon, missionId: vehiculeMission.id });
+        await facadeBonsCarburant.create({ ...bon, missionId: vehiculeMission.id });
         await chargerBonsMission();
       } else {
         setBonsAAjouter((l) => [...l, bon]);
@@ -281,7 +281,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     try {
       if (isEditing && vehiculeMission?.id) {
         const ctx = authService.getContexteMetier?.() ?? {};
-        await vehiculeAmendeService.create({ ...amende, missionId: vehiculeMission.id, personnelCreationId: ctx.userId ?? null });
+        await facadeAmendes.create({ ...amende, missionId: vehiculeMission.id, personnelCreationId: ctx.userId ?? null });
         await chargerAmendesMission();
       } else {
         setAmendesAAjouter((l) => [...l, amende]);
@@ -331,7 +331,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
     const fetchPersonnels = async () => {
       setLoadingPersonnels(true);
       try {
-        const response = await personnelService.getAll(0, 200);
+        const response = await obtenirPersonnels().then(commePage);
         const data = response?.content ?? response?.data ?? [];
         setPersonnels(Array.isArray(data) ? data : []);
       } catch (err) {
@@ -637,7 +637,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         const echecs = [];
         for (const bon of bonsAAjouter) {
           try {
-            await vehiculeBonCarburantService.create({ ...bon, missionId });
+            await facadeBonsCarburant.create({ ...bon, missionId });
           } catch (err) {
             console.error('Erreur création bon de carburant :', err);
             echecs.push(bon);
@@ -658,7 +658,7 @@ const VehiculeMissionModal = ({ isOpen, onClose, onSave, vehiculeMission, isEdit
         const echecsA = [];
         for (const amende of amendesAAjouter) {
           try {
-            await vehiculeAmendeService.create({ ...amende, missionId, personnelCreationId: ctxA.userId ?? null });
+            await facadeAmendes.create({ ...amende, missionId, personnelCreationId: ctxA.userId ?? null });
           } catch (err) {
             console.error('Erreur création amende :', err);
             echecsA.push(amende);

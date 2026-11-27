@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
-import { commePage, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/Personnelservice';
+import { commePage, obtenirPersonnels, obtenirVehicules } from '../../../store/referentiels';
 import authService from '../../../services/Authservice';
 import {
   AlertTriangle, X, Car, User, Calendar, Gauge, Coins, Loader2, Save, Check, MapPin, Link2, Search, ShieldAlert, ShieldCheck, Shield, Zap, Ban, Package, Activity, XCircle, Hourglass, AlertCircle, FileText, Hammer,
@@ -97,7 +96,7 @@ const VehiculeIncidentModal = ({ isOpen, onClose, onSave, incident, isEditing })
     const fetchPersonnels = async () => {
       setLoadingPersonnels(true);
       try {
-        const page = await personnelService.getAll(0, 300);
+        const page = await obtenirPersonnels().then(commePage);
         setPersonnels(page.content ?? []);
       } catch (err) {
         console.error(err);

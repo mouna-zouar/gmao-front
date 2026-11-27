@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { DROITS, useDroits } from '../../../constants/privileges';
 import bonMaintenanceTacheService from '../../../services/Bonmaintenancetacheservice';
-import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
+import { useAppSelector, useExecuter } from '../../../store/hooks';
+import { bons as moduleBons } from '../../../store/modules/bons';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import BadgeStatut from '../../ui/BadgeStatut/BadgeStatut';
 import { t, locale } from '../../../i18n';
@@ -56,7 +57,9 @@ function formatDateTime(iso) {
 export default function BonMaintenanceTachesKanban() {
   const peutChanger = useDroits()(DROITS.TACHE_ETAT);
   const [taches, setTaches] = useState([]);
-  const [bonsParId, setBonsParId] = useState({});
+  const executer = useExecuter();
+  const listeBons = useAppSelector(moduleBons.selecteurs.elements);
+  const bonsParId = useMemo(() => Object.fromEntries(listeBons.map((b) => [b.id, b])), [listeBons]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [savingId, setSavingId] = useState(null);
@@ -80,14 +83,11 @@ export default function BonMaintenanceTachesKanban() {
     let actif = true;
     Promise.all([
       bonMaintenanceTacheService.getAll(0, 500),
-      bonMaintenanceService.getAll(0, 500),
+      executer(moduleBons.actions.charger({ params: { page: 0, taille: 500 } })),
     ])
-      .then(([tachesPage, bonsPage]) => {
+      .then(([tachesPage]) => {
         if (!actif) return;
         setTaches(tachesPage.content ?? []);
-        const map = {};
-        (bonsPage.content ?? []).forEach((b) => { map[b.id] = b; });
-        setBonsParId(map);
       })
       .catch((err) => {
         console.error(err);
@@ -95,7 +95,7 @@ export default function BonMaintenanceTachesKanban() {
       })
       .finally(() => { if (actif) setLoading(false); });
     return () => { actif = false; };
-  }, []);
+  }, [executer]);
 
   const appliquerEtat = async (tache, nouvelEtat, { onError } = {}) => {
     const ancienneTache = tache;

@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import compteurService from '../../../services/Compteurservice';
+import { useState } from 'react';
+import { useExecuter, useModule } from '../../../store/hooks';
+import { compteurs as moduleCompteurs } from '../../../store/modules/equipements';
 import { ICONES_MODULES } from '../../../constants/modules';
 import { ModaleFormulaire, PageListe } from '../../commun';
 import { t } from '../../../i18n';
 
+const PARAMS = { page: 0, taille: 500 };
 const NATURES = [
   { value: 0, label: 'Temps' },
   { value: 1, label: 'Cycles' },
@@ -28,25 +30,13 @@ const CHAMPS = [
 ];
 
 export default function Compteurs() {
-  const [compteurs, setCompteurs] = useState([]);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState(null);
+  const module = useModule(moduleCompteurs, PARAMS);
+  const executer = useExecuter();
+  const compteurs = module.elements;
+  const chargement = module.statut === 'vide' || module.statut === 'chargement';
+  const erreur = module.statut === 'erreur' ? t('Impossible de charger les compteurs. Vérifie que le serveur est bien lancé.') : null;
   const [filtreNature, setFiltreNature] = useState('all');
   const [fenetre, setFenetre] = useState({ ouverte: false, objet: null });
-
-  const charger = useCallback(async () => {
-    setChargement(true);
-    setErreur(null);
-    try {
-      const page = await compteurService.getAll(0, 500);
-      setCompteurs(page.content ?? []);
-    } catch {
-      setErreur(t('Impossible de charger les compteurs. Vérifie que le serveur est bien lancé.'));
-    } finally {
-      setChargement(false);
-    }
-  }, []);
-  useEffect(() => { charger(); }, [charger]);
 
   const lignes = filtreNature === 'all' ? compteurs : compteurs.filter((c) => String(c.nature) === filtreNature);
 
@@ -69,7 +59,7 @@ export default function Compteurs() {
       onAjouter={() => setFenetre({ ouverte: true, objet: null })}
       libelleAjouter={t('Nouveau compteur')}
       onModifier={(c) => setFenetre({ ouverte: true, objet: c })}
-      onSupprimer={async (c) => { await compteurService.remove(c.id); await charger(); }}
+      onSupprimer={(c) => executer(moduleCompteurs.actions.supprimer(c.id))}
       messageSuppression={(c) => t('Supprimer le compteur « {nom} » ? Cette action est irréversible.', { nom: c.nom })}
       cleStockage="compteurs"
       nomExport="compteurs"
@@ -86,9 +76,8 @@ export default function Compteurs() {
         objet={fenetre.objet}
         taille="md"
         onEnregistrer={async (payload, { creation }) => {
-          if (creation) await compteurService.create(payload);
-          else await compteurService.update(fenetre.objet.id, payload);
-          await charger();
+          if (creation) await executer(moduleCompteurs.actions.creer(payload));
+          else await executer(moduleCompteurs.actions.modifier({ id: fenetre.objet.id, donnees: payload }));
         }}
       />
     </PageListe>

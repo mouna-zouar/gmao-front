@@ -1,17 +1,10 @@
-import hierarchieService from './hierarchieService';
-
-let promesse = null;
-let quand = 0;
+import { obtenirCarteLieux, perimerReferentiel } from '../store/referentiels';
 
 export function carteLieux() {
-  if (!promesse || Date.now() - quand > 60000) {
-    quand = Date.now();
-    promesse = Promise.resolve().then(() => hierarchieService.carte()).catch((e) => { promesse = null; throw e; });
-  }
-  return promesse;
+  return obtenirCarteLieux();
 }
 
-export function oublierCarte() { promesse = null; }
+export function oublierCarte() { perimerReferentiel('lieux'); }
 
 export function lieuxAplatis(carte) {
   const lieux = carte?.lieux ?? [];

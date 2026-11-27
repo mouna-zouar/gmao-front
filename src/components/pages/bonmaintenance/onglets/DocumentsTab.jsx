@@ -16,8 +16,7 @@ import {
 import bonMaintenanceDocumentAchatService from '../../../../services/Bonmaintenancedocumentachatservice';
 import Modale from '../../../commun/Modale';
 import prestataireService from '../../../../services/prestataireService';
-import { obtenirPrestataires } from '../../../../store/referentiels';
-import parametreService from '../../../../services/parametreService';
+import { obtenirPrestataires, obtenirReferentiel } from '../../../../store/referentiels';
 import depotCubixService from '../../../../services/depotCubixService';
 import authService from '../../../../services/Authservice';
 import { imprimerPiece } from '../../../../utils/imprimerPiece';
@@ -32,7 +31,7 @@ import { t, locale } from '../../../../i18n';
 const TYPES_PIECE = { '.COMMANDE_FOURNISSEUR': 'Commande fournisseur', '.D_Fourniture': 'Demande de fourniture' };
 
 async function enteteImpression() {
-  const params = await parametreService.getAll().catch(() => []);
+  const params = await obtenirReferentiel('parametres').catch(() => []);
   const v = (cle) => (params || []).find((p) => p.cle === cle)?.valeur?.trim() || '';
   const contexte = authService.getContexteMetier() || {};
   let presta = null;

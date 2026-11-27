@@ -13,8 +13,7 @@ import {
   Filter,
   FileSpreadsheet,
   Printer,
-  
-  
+
   ArrowUp,
   ArrowDown,
   ArrowUpDown,
@@ -66,6 +65,8 @@ import LignesChargement from '../../commun/LignesChargement';
 import {
   AnnonceCopie, BoutonFiltresColonnes, BoutonMenuColonne, BoutonTri, ChampFiltre, choixColonnes, filtrerParColonnes, useFiltresColonnes,
 } from '../../commun/TableauColonnes';
+import { useAppSelector, useExecuter } from '../../../store/hooks';
+import { reclamations as moduleReclamations, PARAMS_LISTE_RECLAMATIONS } from '../../../store/modules/reclamations';
 
 const ETATS_STATS = optionsStatut('reclamation');
 
@@ -147,7 +148,9 @@ const SORTABLE_COLUMNS = {
 };
 
 export default function Reclamations() {
-  const [reclamations, setReclamations] = useState([]);
+  const executer = useExecuter();
+  const reclamations = useAppSelector(moduleReclamations.selecteurs.elements);
+  const statutReclamations = useAppSelector(moduleReclamations.selecteurs.statut);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -216,13 +219,11 @@ export default function Reclamations() {
     onConfirm: null,
   });
 
-
-  const load = async () => {
-    setLoading(true);
+  const load = async ({ forcer = true } = {}) => {
+    if (forcer || statutReclamations !== 'pret') setLoading(true);
     setError(null);
     try {
-      const page = await reclamationService.getAll(0, 100);
-      setReclamations(page.content ?? []);
+      await executer(moduleReclamations.actions.charger({ params: PARAMS_LISTE_RECLAMATIONS, forcer }));
     } catch (err) {
       console.error(err);
       setError(t("Impossible de charger les réclamations. Vérifie que le serveur est bien lancé."));
@@ -232,7 +233,7 @@ export default function Reclamations() {
   };
 
   useEffect(() => {
-    load();
+    load({ forcer: false });
   }, []);
 
   const choixCol = useMemo(() => choixColonnes(COLONNES_TEXTE, reclamations), [reclamations]);
@@ -499,9 +500,9 @@ export default function Reclamations() {
 
   const handleSave = async (payload) => {
     if (selectedReclamation) {
-      await reclamationService.update(selectedReclamation.id, payload);
+      await executer(moduleReclamations.actions.modifier({ id: selectedReclamation.id, donnees: payload }));
     } else {
-      const saved = await reclamationService.create(payload);
+      const saved = await executer(moduleReclamations.actions.creer(payload));
       setReclamationCreee(saved || {});
     }
 
@@ -522,8 +523,7 @@ export default function Reclamations() {
         closeConfirmModal();
         setIsDeleting(true);
         try {
-          await reclamationService.remove(selectedReclamation.id);
-          setReclamations((prev) => prev.filter((r) => r.id !== selectedReclamation.id));
+          await executer(moduleReclamations.actions.supprimer(selectedReclamation.id));
           setSelectedReclamation(null);
           setDetailsOpen(false);
           setDetailsData(null);
@@ -579,10 +579,9 @@ export default function Reclamations() {
         setConfirmModal((prev) => ({ ...prev, confirming: true, error: null }));
         setIsDeleting(true);
         try {
-          const resultats = await Promise.allSettled(ids.map((id) => reclamationService.remove(id)));
+          const resultats = await Promise.allSettled(ids.map((id) => executer(moduleReclamations.actions.supprimer(id))));
           const supprimees = ids.filter((_, i) => resultats[i].status === 'fulfilled');
           const echecs = ids.filter((_, i) => resultats[i].status === 'rejected');
-          setReclamations((prev) => prev.filter((r) => !supprimees.includes(r.id)));
           if (selectedReclamation && supprimees.includes(selectedReclamation.id)) {
             setSelectedReclamation(null);
             setDetailsOpen(false);

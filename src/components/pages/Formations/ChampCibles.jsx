@@ -3,6 +3,7 @@ import { Loader2, Search, X } from 'lucide-react';
 import ListeRecherche from '../../commun/ListeRecherche';
 import equipementService from '../../../services/equipementService';
 import { t } from '../../../i18n';
+import { obtenirFamilles } from '../../../store/referentiels';
 
 const nomEquipement = (e) => e.designation || e.libelle || e.code || `#${e.id}`;
 
@@ -13,7 +14,7 @@ function ChoixEquipements({ id, deja, basculer, ajouterTous }) {
   const [resultats, setResultats] = useState(null);
 
   useEffect(() => {
-    equipementService.familles().then(setFamilles).catch((e) => console.error('[GMAO formations] Familles :', e));
+    obtenirFamilles().then(setFamilles).catch((e) => console.error('[GMAO formations] Familles :', e));
   }, []);
 
   useEffect(() => {

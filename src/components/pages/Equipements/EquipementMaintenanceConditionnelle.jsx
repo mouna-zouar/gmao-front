@@ -7,6 +7,7 @@ import { Modale } from '../../commun';
 import maintenanceConditionnelleService from '../../../services/maintenanceConditionnelleService';
 import liaisonAgentService from '../../../services/liaisonAgentService';
 import { t, locale } from '../../../i18n';
+import { lireRequete } from '../../../store/referentiels';
 
 export const MODES = [
   { value: 'SEUIL', icone: Gauge, label: 'Seuil', aide: 'La moyenne sur quelques heures dépasse une valeur (une pointe isolée ne compte pas).' },
@@ -92,7 +93,7 @@ export default function EquipementMaintenanceConditionnelle({ equipementId, Bloc
   const charger = () => {
     setChargement(true);
     Promise.all([
-      maintenanceConditionnelleService.regles(equipementId).catch(() => []),
+      lireRequete('reglesConditionnelles', { equipementId: equipementId }).catch(() => []),
       liaisonAgentService.parEquipement(equipementId).catch(() => []),
       maintenanceConditionnelleService.declenchements(equipementId).catch(() => []),
     ]).then(([r, l, h]) => {

@@ -3,8 +3,7 @@ import {
   Bell, Loader2, RefreshCw, ShoppingCart, SlidersHorizontal, X,
 } from 'lucide-react';
 import stockAlerteService from '../../../services/stockAlerteService';
-import personnelService from '../../../services/Personnelservice';
-import { obtenirPrestataires } from '../../../store/referentiels';
+import { commePage, lireRequete, obtenirPersonnelsMaintenance, obtenirPrestataires } from '../../../store/referentiels';
 import { useAppDispatch } from '../../../store/hooks';
 import { chargerDepots } from '../../../store/depotsSlice';
 import PieceEditor from '../../ui/PieceEditor/PieceEditor';
@@ -49,7 +48,7 @@ export default function StockAlertes() {
     setChargement(true);
     setErreur(null);
     try {
-      setDonnees(await stockAlerteService.synthese(forcer));
+      setDonnees(await lireRequete('alertesStock', {}, { forcer }));
     } catch {
       setErreur(t('Impossible de charger les alertes de stock.'));
     } finally {
@@ -184,8 +183,8 @@ function FenetreReglages({ onClose, onEnregistre }) {
   useEffect(() => {
     let annule = false;
     Promise.all([
-      stockAlerteService.reglages().catch(() => null),
-      personnelService.getMaintenance(0, 200).then((p) => p?.content ?? []).catch(() => []),
+      lireRequete('reglagesStock').catch(() => null),
+      obtenirPersonnelsMaintenance().then(commePage).then((p) => p?.content ?? []).catch(() => []),
     ]).then(([reglages, liste]) => {
       if (annule) return;
       setR(reglages || { actif: true, destinataires: [], approchePct: 20 });

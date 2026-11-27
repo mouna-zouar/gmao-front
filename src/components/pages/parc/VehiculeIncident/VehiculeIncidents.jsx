@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Calendar, Car, Coins, User, XCircle } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import vehiculeIncidentService from '../../../../services/vehiculeIncidentService';
-import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/Personnelservice';
+import { commePage, obtenirPersonnels, obtenirVehicules } from '../../../../store/referentiels';
 import VehiculeIncidentModal from '../../../ui/modals/VehiculeIncidentModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeIncidents.css';
+import { facadeIncidents } from '../../../../store/facades';
 
 const TYPE_LABELS = { 1: 'Accident', 2: 'Panne', 3: 'Vol', 4: 'Dégradation', 5: 'Autre' };
 const GRAVITE_LABELS = { 1: 'Faible', 2: 'Moyenne', 3: 'Grave' };
@@ -49,7 +48,7 @@ export default function VehiculeIncidents() {
     setErreur(null);
     try {
       const [page, veh, pers] = await Promise.all([
-        vehiculeIncidentService.getAll(0, 500), obtenirVehicules().then(commePage), personnelService.getAll(0, 500),
+        facadeIncidents.getAll(0, 500), obtenirVehicules().then(commePage), obtenirPersonnels().then(commePage),
       ]);
       const liste = page.content ?? [];
       setIncidents(liste);
@@ -69,7 +68,7 @@ export default function VehiculeIncidents() {
     setChangementEtat(true);
     setErreurAction('');
     try {
-      await vehiculeIncidentService.update(i.id, {
+      await facadeIncidents.update(i.id, {
         vehiculeId: i.vehiculeId,
         type: i.type,
         dateIncident: i.dateIncident,
@@ -191,7 +190,7 @@ export default function VehiculeIncidents() {
       onAjouter={() => setFenetre({ ouverte: true, objet: null })}
       libelleAjouter={t('Nouvel incident')}
       onModifier={(i) => setFenetre({ ouverte: true, objet: i })}
-      onSupprimer={async (i) => { await vehiculeIncidentService.remove(i.id); setSelection(null); await charger(); }}
+      onSupprimer={async (i) => { await facadeIncidents.remove(i.id); setSelection(null); await charger(); }}
       messageSuppression={() => t('Supprimer cet incident ? Cette action est irréversible.')}
       cleStockage="vehicule-incidents"
       nomExport="incidents-vehicules"
@@ -201,8 +200,8 @@ export default function VehiculeIncidents() {
         isOpen={fenetre.ouverte}
         onClose={() => setFenetre((f) => ({ ...f, ouverte: false }))}
         onSave={async (payload) => {
-          if (fenetre.objet) await vehiculeIncidentService.update(fenetre.objet.id, payload);
-          else await vehiculeIncidentService.create(payload);
+          if (fenetre.objet) await facadeIncidents.update(fenetre.objet.id, payload);
+          else await facadeIncidents.create(payload);
           await charger();
         }}
         incident={fenetre.objet}

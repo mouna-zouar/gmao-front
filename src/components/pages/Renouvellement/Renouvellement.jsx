@@ -16,6 +16,7 @@ import '../../commun/TableauBord.css';
 import '../Supervision/Supervision.css';
 import '../TableauDeBord/TableauDeBord.css';
 import './Renouvellement.css';
+import { lireRequete } from '../../../store/referentiels';
 
 function Panneau({ titre, aide, meta, className = '', corpsClass = '', children }) {
   return (
@@ -414,7 +415,7 @@ export default function Renouvellement() {
   const charger = useCallback(async (recalculer = false) => {
     setChargement(true);
     try {
-      const d = await renouvellementService.tableau(recalculer);
+      const d = await lireRequete('renouvellement', {}, { forcer: recalculer });
       setDonnees(d);
       setErreur(null);
     } catch (e) {

@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CalendarClock, Pause, RefreshCw, RotateCcw } from 'lucide-react';
 import equipementMaintenanceService from '../../../services/equipementMaintenanceService';
-import { commePage, obtenirEquipements } from '../../../store/referentiels';
+import { commePage, obtenirEquipements, obtenirGammes, obtenirReferentiel, obtenirServices } from '../../../store/referentiels';
 import { t, locale } from '../../../i18n';
 import { useCarteLieux } from '../../ui/FiltreLieu/FiltreLieu';
-import gammeService from '../../../services/gammeService';
 import { dureeLisible } from '../gammes/Gammes';
 import { cheminLieu, lieuxAplatis } from '../../../services/lieuxCache';
 import { Badge, ConfirmModal, ModaleFormulaire, PageListe } from '../../commun';
-import serviceService from '../../../services/Serviceservice';
 import './Equipementmaintenancetypessettings.css';
 import { SelectionEquipements } from './SelectionEquipements';
 
@@ -47,7 +45,7 @@ export default function EquipementMaintenanceTypesSettings({ vues, integre = fal
     setChargement(true);
     setErreur(null);
     try {
-      const data = await equipementMaintenanceService.getTypes();
+      const data = await obtenirReferentiel('typesMaintenanceEquipement');
       setTypes(Array.isArray(data) ? data : []);
     } catch (err) {
       setErreur(err?.response?.data?.message || t('Impossible de charger les échéances.'));
@@ -57,9 +55,9 @@ export default function EquipementMaintenanceTypesSettings({ vues, integre = fal
   }, []);
 
   useEffect(() => { charger(); }, [charger]);
-  useEffect(() => { gammeService.lister().then(setGammes).catch(() => setGammes([])); }, []);
+  useEffect(() => { obtenirGammes().then(setGammes).catch(() => setGammes([])); }, []);
   useEffect(() => {
-    serviceService.getAll(0, 500).then((d) => d?.content ?? d ?? [])
+    obtenirServices().then(commePage).then((d) => d?.content ?? d ?? [])
       .then((l) => setServices(Object.fromEntries(l.map((x) => [String(x.id), x.description || x.code || t('Service #{id}', { id: x.id })]))))
       .catch(() => setServices({}));
   }, []);

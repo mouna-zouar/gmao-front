@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Ban, Calendar, Car, CheckCircle2, Clock, Coins, Loader2, Scale, Undo2, User } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import vehiculeAmendeService from '../../../../services/Vehiculeamendeservice';
-import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/Personnelservice';
+import { commePage, obtenirPersonnels, obtenirVehicules } from '../../../../store/referentiels';
 import VehiculeAmendeModal, { PaiementAmendeModal } from '../../../ui/modals/Vehiculeamendemodal';
 import { ConfirmModal, PageListe } from '../../../commun';
 import { TYPES_INFRACTION, STATUTS, ORIGINE, ltr } from '../../../../constants/Amendelibelles';
 import { t, locale } from '../../../../i18n';
 import '../VehiculeIncident/VehiculeIncidents.css';
 import './Vehiculeamendes.css';
+import { facadeAmendes } from '../../../../store/facades';
 
 const A_PAYER = 0, CONTESTEE = 1, PAYEE = 2, ANNULEE = 3;
 const STATUT_META = {
@@ -55,9 +54,9 @@ export default function VehiculeAmendes() {
     setErreur(null);
     try {
       const [page, veh, pers] = await Promise.all([
-        vehiculeAmendeService.getAll(0, 500),
+        facadeAmendes.getAll(0, 500),
         obtenirVehicules().then(commePage),
-        personnelService.getAll(0, 500).catch(() => ({ content: [] })),
+        obtenirPersonnels().then(commePage).catch(() => ({ content: [] })),
       ]);
       const liste = page.content ?? [];
       setAmendes(liste);
@@ -207,7 +206,7 @@ export default function VehiculeAmendes() {
       setAction(false);
     }
   };
-  const changerStatut = (a, statut, succes) => executer(() => vehiculeAmendeService.changerStatut(a.id, statut), succes);
+  const changerStatut = (a, statut, succes) => executer(() => facadeAmendes.changerStatut(a.id, statut), succes);
   const annulerAmende = (a) => setConfirmation({
     show: true,
     type: 'warning',
@@ -236,7 +235,7 @@ export default function VehiculeAmendes() {
 
   const enregistrer = async (payload) => {
     const modification = formulaire === 'modifier' && s;
-    const r = modification ? await vehiculeAmendeService.update(s.id, payload) : await vehiculeAmendeService.create(payload);
+    const r = modification ? await facadeAmendes.update(s.id, payload) : await facadeAmendes.create(payload);
     setSelection(r);
     setMessage(modification ? t('Amende {num} enregistrée.', { num: r.num || '' }) : t('Amende {num} créée.', { num: r.num || '' }));
     await charger();
@@ -291,7 +290,7 @@ export default function VehiculeAmendes() {
       libelleAjouter={t('Nouvelle amende')}
       onModifier={(a) => { setSelection(a); setFormulaire('modifier'); }}
       onSupprimer={async (a) => {
-        await vehiculeAmendeService.remove(a.id);
+        await facadeAmendes.remove(a.id);
         setSelection(null);
         setMessage(t('Amende supprimée.'));
         await charger();
@@ -315,7 +314,7 @@ export default function VehiculeAmendes() {
           vehicule={vehicules[s.vehiculeId]}
           onClose={() => setPaiement(false)}
           onPayer={async (p) => {
-            const r = await vehiculeAmendeService.payer(s.id, p);
+            const r = await facadeAmendes.payer(s.id, p);
             setSelection(r);
             setMessage(t('Paiement de l’amende {num} enregistré.', { num: r.num || '' }));
             await charger();

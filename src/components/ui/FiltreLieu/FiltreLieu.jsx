@@ -1,16 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
-import { carteLieux, lieuxAplatis, lieuEtSousLieux, lieuDeLigne } from '../../../services/lieuxCache';
+import { useMemo } from 'react';
+import { lieuxAplatis, lieuEtSousLieux, lieuDeLigne } from '../../../services/lieuxCache';
+import { useReferentiel } from '../../../store/hooks';
+import { CARTE_VIDE } from '../../../store/listesReference';
 import { t } from '../../../i18n';
 import './FiltreLieu.css';
 
 export function useCarteLieux() {
-  const [carte, setCarte] = useState(null);
-  useEffect(() => {
-    let actif = true;
-    carteLieux().then((c) => { if (actif) setCarte(c); }).catch(() => { if (actif) setCarte({ lieux: [], equipements: {} }); });
-    return () => { actif = false; };
-  }, []);
-  return carte;
+  const { liste: carte, statut } = useReferentiel('lieux');
+  if (statut === 'pret') return carte;
+  return statut === 'erreur' ? CARTE_VIDE : null;
 }
 
 export function useFiltreLieu(carte, valeur, cleEquipement = 'lotArticleImmobilistationId') {

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { RefreshCw, Gauge, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import maintenanceConditionnelleService from '../../../services/maintenanceConditionnelleService';
 import { ETATS_REGLE, MODES, fmt } from '../Equipements/EquipementMaintenanceConditionnelle';
 import { t, locale } from '../../../i18n';
+import { lireRequete } from '../../../store/referentiels';
 
 export function ReglesConditionnellesVue() {
   const navigate = useNavigate();
@@ -12,7 +12,7 @@ export function ReglesConditionnellesVue() {
 
   const charger = () => {
     setErreur('');
-    maintenanceConditionnelleService.regles()
+    lireRequete('reglesConditionnelles', {})
       .then(setRegles)
       .catch(() => { setRegles([]); setErreur(t('Impossible de charger les règles.')); });
   };

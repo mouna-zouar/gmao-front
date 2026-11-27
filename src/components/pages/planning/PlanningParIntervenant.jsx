@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import planningService from '../../../services/planningService';
-import personnelService from '../../../services/Personnelservice';
 import './PlanningParIntervenant.css';
 import { t, locale } from '../../../i18n';
+import { commePage, obtenirPersonnelsMaintenance } from '../../../store/referentiels';
+import { useLireRequete, useRequete } from '../../../store/hooks';
 
 const MODE_OPTIONS = [
   { value: 'INTERVENANT', label: 'Interventions' },
@@ -59,15 +60,15 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
   const [evenements, setEvenements] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [config, setConfig] = useState(null);
+  const config = useRequete('planningConfig', {}).donnees ?? null;
+  const lireRequete = useLireRequete();
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('month');
   const [dateFilter, setDateFilter] = useState(formatDateKey(new Date()));
 
   useEffect(() => {
-    planningService.findConfig().then(setConfig).catch(() => setConfig(null));
-    personnelService.getMaintenance(0, 200)
+    obtenirPersonnelsMaintenance().then(commePage)
       .then((res) => {
         const personnels = res.content || [];
         setIntervenants(
@@ -153,7 +154,7 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
         start.setHours(0, 0, 0, 0);
         const end = new Date(calendarDays[calendarDays.length - 1].date);
         end.setHours(23, 59, 59, 0);
-        const all = await planningService.findEvenements(mode, start, end);
+        const all = await lireRequete('planningEvenements', { mode, debut: start.toISOString(), fin: end.toISOString() });
         data = all.filter(ev => 
           ev.intervenantId && String(ev.intervenantId) === String(selected.originalId)
         );
@@ -166,7 +167,7 @@ const PlanningParIntervenant = ({ onSelectBonMaintenance, onDayClick }) => {
     } finally {
       setLoading(false);
     }
-  }, [mode, calendarDays, selectedIntervenantId, intervenants]);
+  }, [mode, calendarDays, selectedIntervenantId, intervenants, lireRequete]);
 
   useEffect(() => { load(); }, [load]);
 

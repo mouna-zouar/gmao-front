@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import Button from '../Button';
-import { commePage, obtenirVehicules } from '../../../store/referentiels';
-import personnelService from '../../../services/Personnelservice';
+import { commePage, obtenirPersonnels, obtenirVehicules } from '../../../store/referentiels';
 import vehiculeBonCarburantService from '../../../services/vehiculeBonCarburantService';
 import vehiculeMissionService from '../../../services/vehiculeMissionService';
 import {
@@ -108,7 +107,7 @@ const VehiculeBonCarburantModal = ({
       setLoadingPersonnels(true);
 
       try {
-        const page = await personnelService.getAll(0, 300);
+        const page = await obtenirPersonnels().then(commePage);
         setPersonnels(page.content ?? []);
       } catch (err) {
         console.error('Erreur chargement personnel :', err);

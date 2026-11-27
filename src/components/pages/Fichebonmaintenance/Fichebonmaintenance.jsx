@@ -1,16 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
-import personnelService from '../../../services/Personnelservice';
-import { obtenirEquipements, obtenirPrestataires } from '../../../store/referentiels';
+import { commePage, obtenirEquipements, obtenirPersonnels, obtenirPrestataires, obtenirServices } from '../../../store/referentiels';
 import lotArticleImmobilistationService from '../../../services/Lotarticleimmobilistationservice';
 import lotArticleService from '../../../services/lotArticleService';
-import serviceService from '../../../services/Serviceservice';
 import prestataireDepotService from '../../../services/Prestatairedepotservice';
 import ConfirmModal from '../../ui/modals/ConfirmModal';
 import { t } from '../../../i18n';
 import { optionsTypeEntretien } from '../../../constants/FicheIntervention';
 import { ArrowLeft, Ban, Check, ChevronDown, CircleCheck, CirclePause, FileText, Play, SquarePen, Wrench, X } from 'lucide-react';
 import './Fichebonmaintenance.css';
+import { useExecuter } from '../../../store/hooks';
+import { bons as moduleBons } from '../../../store/modules/bons';
 
 const ETAT_OPTIONS = [
   { value: 1, label: 'Nouveau' },
@@ -81,6 +80,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
   const isNew = !bonMaintenanceId;
 
   const [bon, setBon] = useState(null);
+  const executer = useExecuter();
   const [formData, setFormData] = useState(emptyBonForm);
   const [isEditMode, setIsEditMode] = useState(isNew || startInEditMode);
   const [loading, setLoading] = useState(!isNew);
@@ -110,8 +110,8 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
   useEffect(() => {
     obtenirPrestataires().then(setPrestataires).catch(() => setPrestataires([]));
     obtenirEquipements().then(setImmobilisations).catch(() => setImmobilisations([]));
-    personnelService.getAll(0, 200).then((p) => setPersonnels(p.content ?? [])).catch(() => setPersonnels([]));
-    serviceService.getAll(0, 200).then((p) => setServices(p.content ?? [])).catch(() => setServices([]));
+    obtenirPersonnels().then(commePage).then((p) => setPersonnels(p.content ?? [])).catch(() => setPersonnels([]));
+    obtenirServices().then(commePage).then((p) => setServices(p.content ?? [])).catch(() => setServices([]));
     prestataireDepotService.getAll(0, 200).then((p) => setDepots(p.content ?? [])).catch(() => setDepots([]));
   }, []);
 
@@ -148,7 +148,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     if (isNew) return;
     setLoading(true);
     try {
-      const data = await bonMaintenanceService.getById(bonMaintenanceId);
+      const data = await executer(moduleBons.actions.obtenir(bonMaintenanceId));
       setBon(data);
       setFormData({
         num: data.num || '',
@@ -173,7 +173,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     } finally {
       setLoading(false);
     }
-  }, [bonMaintenanceId, isNew]);
+  }, [bonMaintenanceId, isNew, executer]);
 
   useEffect(() => { loadBon(); }, [loadBon]);
 
@@ -240,9 +240,9 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
 
       let saved;
       if (isNew) {
-        saved = await bonMaintenanceService.create(payload);
+        saved = await executer(moduleBons.actions.creer(payload));
       } else {
-        saved = await bonMaintenanceService.update(bonMaintenanceId, payload);
+        saved = await executer(moduleBons.actions.modifier({ id: bonMaintenanceId, donnees: payload }));
       }
       setBon(saved);
       setIsEditMode(false);
@@ -257,6 +257,8 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
       setIsSaving(false);
     }
   };
+
+  const operation = (nom, ...args) => executer(moduleBons.actions[nom]({ id: bonMaintenanceId, args })).then((r) => r.element ?? r.resultat);
 
   const doTransition = async (label, action) => {
     setConfirmModal({
@@ -280,8 +282,8 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     });
   };
 
-  const handlePasserEnCours = () => doTransition('Passer en cours', () => bonMaintenanceService.passerEnCours(bonMaintenanceId));
-  const handleAnnuler = () => doTransition('Annuler', () => bonMaintenanceService.annuler(bonMaintenanceId));
+  const handlePasserEnCours = () => doTransition('Passer en cours', () => operation('passerEnCours'));
+  const handleAnnuler = () => doTransition('Annuler', () => operation('annuler'));
 
   const handleMarquerEffectue = () => setEtatModal({ show: true, etat: '' });
 
@@ -290,7 +292,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
     if (saisie !== '' && Number.isNaN(Number(saisie))) return;
     const etat = saisie === '' ? null : Number(saisie);
     try {
-      const updated = await bonMaintenanceService.marquerEffectue(bonMaintenanceId, etat);
+      const updated = await operation('effectuer', etat);
       setBon(updated);
       setEtatModal({ show: false, etat: '' });
     } catch (err) {
@@ -309,7 +311,7 @@ export default function FicheBonMaintenance({ bonMaintenanceId, onClose, onBack,
   const confirmSuspendre = async () => {
     if (!motifModal.motif.trim()) return;
     try {
-      const updated = await bonMaintenanceService.suspendre(bonMaintenanceId, motifModal.motif.trim());
+      const updated = await operation('suspendre', motifModal.motif.trim());
       setBon(updated);
       setMotifModal({ show: false, motif: '' });
     } catch (err) {

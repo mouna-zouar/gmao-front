@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Radio } from 'lucide-react';
-import performanceEmployesService from '../../../services/performanceEmployesService';
 import { Carte, Vide } from '../../commun/TableauBord';
 import { formatTemps } from '../bonmaintenance/BmdCommun';
 import { t, locale } from '../../../i18n';
 import './PerformanceEmployes.css';
+import { lireRequete } from '../../../store/referentiels';
 
 const nb = (v) => (v == null || Number.isNaN(Number(v)) ? '—' : Number(v).toLocaleString(locale()));
 const duree = (s) => (s ? formatTemps(s) : '—');
@@ -93,7 +93,7 @@ export default function PerformanceEmployes({ jours, onOuvrirChrono }) {
   useEffect(() => {
     let annule = false;
     setErreur(null);
-    performanceEmployesService.performance(jours)
+    lireRequete('performanceEmployes', { jours })
       .then((d) => { if (!annule) setDonnees(d); })
       .catch(() => { if (!annule) setErreur(t('La performance des employés n’a pas pu être chargée.')); });
     return () => { annule = true; };

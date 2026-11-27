@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import parcDashboardService from '../../../../services/parcDashboardService';
 import { t, locale } from '../../../../i18n';
 import './ParcDashboard.css';
 import IndicateursParc from './IndicateursParc';
 import { CalendarCheck, Car, CircleCheck, Fuel, Gauge, RefreshCw, Route, TriangleAlert } from 'lucide-react';
+import { lireRequete } from '../../../../store/referentiels';
 
 const ETAT_LABELS = {
   0: 'Disponible',
@@ -68,7 +68,7 @@ export default function ParcDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const result = await parcDashboardService.getDashboard();
+      const result = await lireRequete('tableauParc');
       setData(result);
     } catch (err) {
       console.error('Erreur chargement dashboard parc :', err);

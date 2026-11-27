@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, Ban, Calendar, Car, CheckCheck, CheckCircle2, Flag, Hourglass, User, XCircle } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import vehiculeReservationService from '../../../../services/vehiculeReservationService';
-import { commePage, obtenirVehicules } from '../../../../store/referentiels';
-import personnelService from '../../../../services/Personnelservice';
+import { commePage, obtenirPersonnels, obtenirVehicules } from '../../../../store/referentiels';
 import VehiculeReservationModal from '../../../ui/modals/VehiculeReservationModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import './VehiculeReservations.css';
+import { facadeReservations } from '../../../../store/facades';
 
 const ETAT_LABELS = { 0: 'En attente', 1: 'Acceptée', 2: 'Refusée', 3: 'Annulée', 4: 'Terminée' };
 const ETAT_META = {
@@ -49,7 +48,7 @@ export default function VehiculeReservations() {
     setErreur(null);
     try {
       const [page, veh, pers] = await Promise.all([
-        vehiculeReservationService.getAll(0, 500), obtenirVehicules().then(commePage), personnelService.getAll(0, 500),
+        facadeReservations.getAll(0, 500), obtenirVehicules().then(commePage), obtenirPersonnels().then(commePage),
       ]);
       const liste = page.content ?? [];
       setReservations(liste);
@@ -69,7 +68,7 @@ export default function VehiculeReservations() {
     setChangementEtat(true);
     setErreurAction('');
     try {
-      await vehiculeReservationService.update(r.id, {
+      await facadeReservations.update(r.id, {
         vehiculeId: r.vehiculeId,
         personnelId: r.personnelId,
         personnelNom: r.personnelNom,
@@ -187,7 +186,7 @@ export default function VehiculeReservations() {
       onAjouter={() => setFenetre({ ouverte: true, objet: null })}
       libelleAjouter={t('Nouvelle réservation')}
       onModifier={(r) => setFenetre({ ouverte: true, objet: r })}
-      onSupprimer={async (r) => { await vehiculeReservationService.remove(r.id); setSelection(null); await charger(); }}
+      onSupprimer={async (r) => { await facadeReservations.remove(r.id); setSelection(null); await charger(); }}
       messageSuppression={() => t('Supprimer cette réservation ? Cette action est irréversible.')}
       cleStockage="vehicule-reservations"
       nomExport="reservations-vehicules"
@@ -197,8 +196,8 @@ export default function VehiculeReservations() {
         isOpen={fenetre.ouverte}
         onClose={() => setFenetre((f) => ({ ...f, ouverte: false }))}
         onSave={async (payload) => {
-          if (fenetre.objet) await vehiculeReservationService.update(fenetre.objet.id, payload);
-          else await vehiculeReservationService.create(payload);
+          if (fenetre.objet) await facadeReservations.update(fenetre.objet.id, payload);
+          else await facadeReservations.create(payload);
           await charger();
         }}
         reservation={fenetre.objet}

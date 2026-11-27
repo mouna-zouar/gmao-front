@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Calendar, CheckCircle2, Eye, User, XCircle } from 'lucide-react';
 import { ICONES_MODULES } from '../../../../constants/modules';
-import permisConduiteService from '../../../../services/permisConduiteService';
-import personnelService from '../../../../services/Personnelservice';
 import PermisConduiteModal from '../../../ui/modals/PermisConduiteModal';
 import { PageListe } from '../../../commun';
 import { t, locale } from '../../../../i18n';
 import { imprimerFiche } from '../../../../utils/imprimerListe';
 import PermisCarteDetails from './PermisCarteDetails';
 import './PermisConduite.css';
+import { commePage, obtenirPersonnels } from '../../../../store/referentiels';
+import { facadePermis } from '../../../../store/facades';
 
 const CATEGORIE_LABELS = { A1: 'A1', A: 'A', B: 'B', B_E: 'B+E', C: 'C', C_E: 'C+E', D: 'D', D_E: 'D+E', F: 'F' };
 const POIDS_LOURD = ['C', 'C_E', 'D', 'D_E'];
@@ -43,7 +43,7 @@ export default function PermisConduite() {
   const charger = useCallback(async () => {
     setErreur(null);
     try {
-      const [page, pers] = await Promise.all([permisConduiteService.getAll(0, 500), personnelService.getAll(0, 500)]);
+      const [page, pers] = await Promise.all([facadePermis.getAll(0, 500), obtenirPersonnels().then(commePage)]);
       const liste = page.content ?? [];
       setPermis(liste);
       setSelection((s) => (s ? liste.find((p) => p.id === s.id) || null : null));
@@ -189,7 +189,7 @@ export default function PermisConduite() {
       libelleAjouter={t('Nouveau permis')}
       onModifier={(p) => { setSelection(p); setFenetre(true); }}
       onOuvrir={(p) => { setSelection(p); setFiche(p); }}
-      onSupprimer={async (p) => { await permisConduiteService.remove(p.id); setSelection(null); await charger(); }}
+      onSupprimer={async (p) => { await facadePermis.remove(p.id); setSelection(null); await charger(); }}
       messageSuppression={() => t('Supprimer ce permis de conduire ? Cette action est irréversible.')}
       cleStockage="permis-conduite"
       nomExport="permis-conduite"
@@ -209,8 +209,8 @@ export default function PermisConduite() {
         isOpen={fenetre}
         onClose={() => setFenetre(false)}
         onSave={async (payload) => {
-          if (selection) await permisConduiteService.update(selection.id, payload);
-          else await permisConduiteService.create(payload);
+          if (selection) await facadePermis.update(selection.id, payload);
+          else await facadePermis.create(payload);
           await charger();
         }}
         permis={selection}

@@ -3,8 +3,7 @@ import {
   Archive, ArrowDown, ArrowUp, CheckCircle2, Copy, GitBranchPlus, Loader2, Plus, Trash2, X,
 } from 'lucide-react';
 import gammeService from '../../../services/gammeService';
-import equipementService from '../../../services/equipementService';
-import { obtenirArticles } from '../../../store/referentiels';
+import { obtenirArticles, obtenirFamilles, obtenirGammes } from '../../../store/referentiels';
 import { ICONES_MODULES } from '../../../constants/modules';
 import { Badge, Modale, PageListe } from '../../commun';
 import ListeRecherche from '../../commun/ListeRecherche';
@@ -227,7 +226,7 @@ export default function Gammes() {
     setChargement(true);
     setErreur(null);
     try {
-      setGammes(await gammeService.lister());
+      setGammes(await obtenirGammes());
     } catch {
       setErreur(t('Impossible de charger les gammes. Vérifie que le serveur est bien lancé.'));
     } finally {
@@ -236,7 +235,7 @@ export default function Gammes() {
   }, []);
   useEffect(() => { charger(); }, [charger]);
   useEffect(() => {
-    equipementService.familles().then(setFamilles).catch(() => setFamilles([]));
+    obtenirFamilles().then(setFamilles).catch(() => setFamilles([]));
     obtenirArticles().then((l) => setArticles(Array.isArray(l) ? l : (l?.content ?? []))).catch(() => setArticles([]));
   }, []);
 

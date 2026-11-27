@@ -5,7 +5,6 @@ import {
   Plus, RefreshCw, AlertCircle, Inbox, ExternalLink,
 } from 'lucide-react';
 import suiviDemandeService from '../../../services/suiviDemandeService';
-import reclamationService from '../../../services/Reclamationservice';
 import authService from '../../../services/Authservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
@@ -13,6 +12,8 @@ import { Modale } from '../../commun';
 import EspaceTableau from '../EspacePersonnel/EspaceTableau';
 import { t, locale } from '../../../i18n';
 import './MesDemandes.css';
+import { useExecuter } from '../../../store/hooks';
+import { reclamations as moduleReclamations } from '../../../store/modules/reclamations';
 
 
 
@@ -121,6 +122,7 @@ function TableauDemandes({ demandes, cible, onOuvrir, onAnnuler }) {
 }
 
 export default function MesDemandes({ integre = false, onCharge, onOuvrir, demandeSignalement = 0 } = {}) {
+  const executer = useExecuter();
   const [searchParams] = useSearchParams();
   const demandeCible = Number(searchParams.get('demande')) || null;
 
@@ -192,9 +194,10 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir, deman
     setAnnulation((a) => ({ ...a, envoi: true, erreur: null }));
     try {
       const u = authService.getCurrentUser() || {};
-      await reclamationService.annulerParDemandeur(annulation.demande.reclamationId, {
-        motif, auteurId: personnelId, auteurNom: u.userNom || u.nomPrenom || u.login || null,
-      });
+      await executer(moduleReclamations.actions.annulerParDemandeur({
+        id: annulation.demande.reclamationId,
+        args: [{ motif, auteurId: personnelId, auteurNom: u.userNom || u.nomPrenom || u.login || null }],
+      }));
       setAnnulation(null);
       await charger({ silencieux: true });
     } catch (e) {
@@ -204,7 +207,7 @@ export default function MesDemandes({ integre = false, onCharge, onOuvrir, deman
   };
 
   const enregistrer = async (payload) => {
-    const creee = await reclamationService.create(payload);
+    const creee = await executer(moduleReclamations.actions.creer(payload));
     setReclamationCreee(creee || {});
     setFiltre('en-cours');
     await charger({ silencieux: true });

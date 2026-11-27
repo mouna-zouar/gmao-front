@@ -7,11 +7,11 @@ import {
 import hierarchieService from '../../../services/hierarchieService';
 import { oublierCarte } from '../../../services/lieuxCache';
 import equipementService from '../../../services/equipementService';
-import serviceService from '../../../services/Serviceservice';
 import { Modale, ConfirmModal } from '../../commun';
 import { ETATS_EQUIPEMENT, montant } from './equipementLibelles';
 import { t, tp } from '../../../i18n';
 import './Arborescence.css';
+import { commePage, obtenirReferentiel, obtenirServices } from '../../../store/referentiels';
 
 export const TYPES_LIEU = {
   SITE: { label: 'Site', icone: Hospital },
@@ -227,7 +227,7 @@ export default function Arborescence() {
 
   const chargerArbre = useCallback(async () => {
     try {
-      const a = await hierarchieService.arbre();
+      const a = await obtenirReferentiel('arbreLieux');
       setArbre(a);
       setErreur('');
       setSelection((s) => {
@@ -242,7 +242,7 @@ export default function Arborescence() {
 
   useEffect(() => { chargerArbre(); }, [chargerArbre]);
   useEffect(() => {
-    serviceService.getAll(0, 500)
+    obtenirServices().then(commePage)
       .then((r) => {
         const liste = Array.isArray(r) ? r : (r?.content ?? []);
         setServices(liste.map((s) => ({ id: s.id, nom: s.description || s.libelle || s.nom || s.code || `#${s.id}` })));
@@ -593,7 +593,7 @@ export function PositionEquipement({ equipementId, peutModifier = true, onChange
   }, [recherche, choixParent, equipementId]);
 
   const ouvrirChoixLieu = async () => {
-    try { setLieux((await hierarchieService.arbre()).lieux); setChoixLieu(true); } catch { setErreur(t("L'arborescence est injoignable pour le moment.")); }
+    try { setLieux((await obtenirReferentiel('arbreLieux')).lieux); setChoixLieu(true); } catch { setErreur(t("L'arborescence est injoignable pour le moment.")); }
   };
   const executer = async (fn) => {
     setOccupe(true);

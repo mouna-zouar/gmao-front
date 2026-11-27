@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
-import slaService from '../../../services/slaService';
 import { prioriteLabel, prioriteRang } from '../../../constants/Priorite';
 import { t, tp, locale } from '../../../i18n';
 import { ClipboardCheck, FileSpreadsheet, Inbox, LoaderCircle, RefreshCw, Search, ShieldCheck, Target, Timer, TriangleAlert } from 'lucide-react';
 import './Sla.css';
 import PaginationCommune from '../../commun/Pagination';
+import { lireRequete } from '../../../store/referentiels';
 
 const PRIORITE_HEX = { P1: '#ef4444', P2: '#f97316', P3: '#3b82f6', P4: '#64748b' };
 
@@ -230,14 +230,14 @@ export default function Sla() {
     setError(null);
     try {
       if (vue === 'DEPASSEMENTS') {
-        const data = await slaService.getDepassements();
+        const data = await lireRequete('slaDepassements');
         setBons(data ?? []);
         setBilan(null);
       } else {
         const bornes = calculerBornes(periodeKey);
         const [listeBons, bilanData] = await Promise.all([
-          slaService.getParPeriode(bornes),
-          slaService.getBilan(bornes),
+          lireRequete('slaParPeriode', bornes),
+          lireRequete('slaBilan', bornes),
         ]);
         setBons(listeBons ?? []);
         setBilan(bilanData);

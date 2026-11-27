@@ -7,10 +7,7 @@ import {
 import { PageListe, Badge } from '../../commun';
 import equipementService from '../../../services/equipementService';
 import etatEquipementService from '../../../services/Etatequipementservice';
-import disponibiliteService from '../../../services/Disponibiliteservice';
-import risqueService from '../../../services/Risqueservice';
-import serviceService from '../../../services/Serviceservice';
-import { obtenirEquipements } from '../../../store/referentiels';
+import { commePage, lireRequete, obtenirEquipements, obtenirReferentiel, obtenirServices } from '../../../store/referentiels';
 import { CRITICITE_OPTIONS, CRITICITE_DEFAUT, CRITICITE_LABELS, criticiteHex } from '../../../constants/Criticite';
 import ScannerQR from '../Equipements/ScannerQR';
 import { imprimerEtiquettes } from '../Equipements/qrEtiquettes';
@@ -60,7 +57,7 @@ export default function ListeEquipements({ onPreventifs, vues }) {
     let annule = false;
     Promise.all([
       obtenirEquipements().catch(() => []),
-      serviceService.getAll(0, 500).then((d) => d?.content ?? d ?? []).catch(() => []),
+      obtenirServices().then(commePage).then((d) => d?.content ?? d ?? []).catch(() => []),
     ]).then(([equipements, services]) => {
       if (annule) return;
       setServiceDe(Object.fromEntries((equipements || []).filter((e) => e.serviceId != null).map((e) => [String(e.id), String(e.serviceId)])));
@@ -77,16 +74,16 @@ export default function ListeEquipements({ onPreventifs, vues }) {
     setChargement(true);
     setErreur(null);
     try {
-      setEtats((await etatEquipementService.getAll()) ?? []);
+      setEtats((await obtenirReferentiel('etatsEquipements')) ?? []);
     } catch (err) {
       console.error('[GMAO équipements] Chargement des états :', err);
       setErreur(t('Impossible de charger les états.'));
     } finally {
       setChargement(false);
     }
-    disponibiliteService.getAll().then((d) => setDispos(parId(d))).catch((e) => console.error('[GMAO équipements] Disponibilité :', e));
-    risqueService.getRisques(1000).then((d) => setRisques(parId(d))).catch((e) => console.error('[GMAO équipements] Risques :', e));
-    equipementService.listeConnexions().then((d) => setConnexions(parId(d))).catch((e) => console.error('[GMAO équipements] Adresses IP :', e));
+    lireRequete('disponibilites', {}).then((d) => setDispos(parId(d))).catch((e) => console.error('[GMAO équipements] Disponibilité :', e));
+    lireRequete('risques', { limite: 1000 }).then((d) => setRisques(parId(d))).catch((e) => console.error('[GMAO équipements] Risques :', e));
+    obtenirReferentiel('connexionsEquipements').then((d) => setConnexions(parId(d))).catch((e) => console.error('[GMAO équipements] Adresses IP :', e));
   }, []);
   useEffect(() => { charger(); }, [charger]);
 

@@ -3,12 +3,12 @@ import {
   BellOff, CheckCheck, CircleCheck, Ban, Loader2, MessageSquare, Plus, RotateCcw, Siren, X,
 } from 'lucide-react';
 import alerteMachineService from '../../../services/alerteMachineService';
-import personnelService from '../../../services/Personnelservice';
 import SearchableSelect from '../../commun/ListeRecherche';
 import Modale from '../../commun/Modale';
 import { t } from '../../../i18n';
 import { dateHeure } from '../../ui/Veille/Veille';
 import './AlerteActions.css';
+import { commePage, obtenirPersonnelsMaintenance } from '../../../store/referentiels';
 
 export const DUREES_SOURDINE = [
   { minutes: 30, label: '30 min' },
@@ -161,7 +161,7 @@ export function FenetreEscalade({ onClose, onEnregistre }) {
     let annule = false;
     Promise.all([
       alerteMachineService.escalade().catch(() => null),
-      personnelService.getMaintenance(0, 200).then((p) => p?.content ?? []).catch(() => []),
+      obtenirPersonnelsMaintenance().then(commePage).then((p) => p?.content ?? []).catch(() => []),
     ]).then(([reglages, liste]) => {
       if (annule) return;
       setR(reglages || { actif: true, delaiCritique: 15, delaiAlerte: 60, niveaux: [{ personnels: [] }] });

@@ -7,6 +7,7 @@ import lotArticleImmobilistationService from '../../../services/Lotarticleimmobi
 import ScannerQR from '../../pages/Equipements/ScannerQR';
 import { t } from '../../../i18n';
 import './ChampEquipement.css';
+import { obtenirFamilles } from '../../../store/referentiels';
 
 const memeId = (a, b) => a != null && b != null && String(a) === String(b);
 
@@ -108,7 +109,7 @@ export default function ChampEquipement({
 
   useEffect(() => {
     if (!ouvert || familles !== null) return;
-    equipementService.familles()
+    obtenirFamilles()
       .then((l) => setFamilles(Array.isArray(l) ? l : []))
       .catch(() => setFamilles([]));
   }, [ouvert, familles]);

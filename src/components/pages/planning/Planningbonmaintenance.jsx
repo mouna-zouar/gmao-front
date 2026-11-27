@@ -1,6 +1,6 @@
-import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import planningService from '../../../services/planningService';
+import { useRequete } from '../../../store/hooks';
 import Pagination from '../../commun/Pagination';
 import './Planningbonmaintenance.css';
 import { t, locale } from '../../../i18n';
@@ -30,6 +30,7 @@ const DUREES = [
 ];
 
 const JOUR = 24 * 3600 * 1000;
+const AUCUN = [];
 const ZOOMS = [1, 1.5, 2, 3, 4, 6, 8];
 const debutJour = (d) => { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; };
 const ajouterJours = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
@@ -53,9 +54,6 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
   const [mode, setMode] = useState('BON_MAINTENANCE');
   const [duree, setDuree] = useState(7);
   const [ancre, setAncre] = useState(() => new Date());
-  const [evenements, setEvenements] = useState([]);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState(null);
   const [recherche, setRecherche] = useState('');
   const [etatsMasques, setEtatsMasques] = useState(() => new Set());
   const [survol, setSurvol] = useState(null);
@@ -76,21 +74,11 @@ const PlanningBonMaintenance = ({ onSelectBonMaintenance }) => {
   const { debut, fin, nb } = useMemo(() => plage(ancre, duree), [ancre, duree]);
   const jours = useMemo(() => Array.from({ length: nb }, (_, i) => ajouterJours(debut, i)), [debut, nb]);
 
-  const charger = useCallback(async () => {
-    setChargement(true);
-    setErreur(null);
-    try {
-      const finIncluse = new Date(fin.getTime() - 1000);
-      setEvenements((await planningService.findEvenements(mode, debut, finIncluse)) ?? []);
-    } catch (e) {
-      console.error(e);
-      setErreur(t('Impossible de charger le planning. Vérifie que le serveur est bien lancé.'));
-      setEvenements([]);
-    } finally {
-      setChargement(false);
-    }
-  }, [mode, debut, fin]);
-  useEffect(() => { charger(); }, [charger]);
+  const params = useMemo(() => ({ mode, debut: debut.toISOString(), fin: new Date(fin.getTime() - 1000).toISOString() }), [mode, debut, fin]);
+  const requete = useRequete('planningEvenements', params);
+  const evenements = requete.donnees ?? AUCUN;
+  const chargement = requete.statut === 'vide' || requete.statut === 'chargement';
+  const erreur = requete.statut === 'erreur' ? t('Impossible de charger le planning. Vérifie que le serveur est bien lancé.') : null;
 
   const lignes = useMemo(() => evenements
     .map((ev) => {

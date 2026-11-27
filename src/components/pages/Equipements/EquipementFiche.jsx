@@ -6,10 +6,8 @@ import {
   Image as IconeImage, Info, Loader2, LogIn, Network, Paperclip, Printer, QrCode, ShieldCheck, Sparkles, Trash2, Upload, Wrench, X,
 } from 'lucide-react';
 import equipementService from '../../../services/equipementService';
-import reclamationService from '../../../services/Reclamationservice';
 import bonMaintenanceRapportService from '../../../services/bonMaintenanceRapportService';
 import authService from '../../../services/Authservice';
-import serviceService from '../../../services/Serviceservice';
 import etatEquipementService from '../../../services/Etatequipementservice';
 import { exporterHistoriquePDF } from '../Etatequipement/Etatequipement';
 import { Badge, Onglets } from '../../commun';
@@ -30,6 +28,9 @@ import './Equipements.css';
 import './EquipementFiche.css';
 import { useAppDispatch } from '../../../store/hooks';
 import { choisirEquipementAssistant } from '../../../store/assistantSlice';
+import { commePage, obtenirServices } from '../../../store/referentiels';
+import { useExecuter } from '../../../store/hooks';
+import { reclamations as moduleReclamations } from '../../../store/modules/reclamations';
 
 function Pastille({ ton = 'neutre', children }) {
   return <span className={`eq-pastille eq-ton--${ton}`}>{children}</span>;
@@ -216,6 +217,7 @@ function Ligne({ label, children, mono }) {
 }
 
 export default function EquipementFiche() {
+  const executer = useExecuter();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -263,7 +265,7 @@ export default function EquipementFiche() {
   const idService = fiche?.identite?.serviceId;
   useEffect(() => {
     if (idService == null || !connecte) return;
-    serviceService.getAll(0, 500)
+    obtenirServices().then(commePage)
       .then((d) => {
         const s = (d?.content ?? d ?? []).find((x) => Number(x.id) === Number(idService));
         setNomService(s ? (s.description || s.code) : null);
@@ -288,7 +290,7 @@ export default function EquipementFiche() {
   }), [idEquipement, nomEquipement]);
 
   const enregistrerReclamation = async (payload) => {
-    const creee = await reclamationService.create(payload);
+    const creee = await executer(moduleReclamations.actions.creer(payload));
     setSignaler(false);
     setReclamationCreee(creee || {});
     charger();

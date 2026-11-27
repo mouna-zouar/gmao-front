@@ -8,7 +8,6 @@ import { FenetreActionAlerte, FenetreEscalade, JournalAlerte } from './AlerteAct
 import alerteMachineService from '../../../services/alerteMachineService';
 import liaisonAgentService from '../../../services/liaisonAgentService';
 import { ETATS_LIAISON, libelleType, resumeLiaison } from '../Equipements/EquipementLiaisonAgent';
-import reclamationService from '../../../services/Reclamationservice';
 import ReclamationModal from '../../ui/modals/Reclamationmodal';
 import ReclamationCreeeModal from '../../ui/modals/ReclamationCreeeModal';
 import { t } from '../../../i18n';
@@ -16,6 +15,9 @@ import {
   VeillePage, VeilleKpis, VeilleSegments, VeilleVide, VeilleMessage, VeillePagination, Pastille,
   dateHeure, ilYa,
 } from '../../ui/Veille/Veille';
+import { useExecuter } from '../../../store/hooks';
+import { reclamations as moduleReclamations } from '../../../store/modules/reclamations';
+import { lireRequete } from '../../../store/referentiels';
 
 const NIVEAU = {
   CRITIQUE: { label: 'Critique', ton: 'danger', rang: 3 },
@@ -142,6 +144,7 @@ function valeursDepuisAlerte(a) {
 }
 
 export default function AlertesMachines({ isModal = false }) {
+  const executer = useExecuter();
   const navigate = useNavigate();
   const [alertes, setAlertes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -172,10 +175,10 @@ export default function AlertesMachines({ isModal = false }) {
     setError(null);
     try {
       const [page, listeAgents, listeLiaisons, indicateurs] = await Promise.all([
-        alerteMachineService.getAll('', 0, 300),
-        alerteMachineService.agents().catch(() => null),
+        lireRequete('alertesMachines', { statut: '', page: 0, taille: 300 }),
+        lireRequete('agentsMachines').catch(() => null),
         liaisonAgentService.liste().catch(() => []),
-        alerteMachineService.indicateurs().catch(() => null),
+        lireRequete('indicateursAlertes').catch(() => null),
       ]);
       setAlertes(page?.content ?? []);
       setIndic(indicateurs);
@@ -199,7 +202,7 @@ export default function AlertesMachines({ isModal = false }) {
     const parId = new Map((majs || []).map((m) => [m.id, m]));
     setAlertes((prev) => prev.map((a) => (parId.has(a.id) ? { ...a, ...parId.get(a.id) } : a)));
     setSelection((s) => s.filter((id) => !parId.has(id)));
-    alerteMachineService.indicateurs().then(setIndic).catch(() => {});
+    lireRequete('indicateursAlertes').then(setIndic).catch(() => {});
   };
 
   const acquitterVite = async (a) => {
@@ -217,7 +220,7 @@ export default function AlertesMachines({ isModal = false }) {
 
   const enregistrerReclamation = async (payload) => {
     const alerte = alerteReclamation;
-    const creee = await reclamationService.create(payload);
+    const creee = await executer(moduleReclamations.actions.creer(payload));
     setAlerteReclamation(null);
     const id = creee?.id ?? creee?.reclamation?.id;
     if (alerte && id) {

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { AlarmClock, CircleCheck, CircleDollarSign, FilePlus2, OctagonAlert, Timer, TrendingUp, Wrench } from 'lucide-react';
 import { selectUtilisateur } from '../../../store/authSlice';
-import tableauDeBordService from '../../../services/tableauDeBordService';
 import { Badge, Barres, Carte, Liste, Repartition, Stat, Vide } from '../../commun/TableauBord';
 import { ZonePerso } from '../../commun/tableauPerso/BlocsPerso';
 import { EntetePerso } from '../../commun/tableauPerso/PagePerso';
@@ -14,6 +13,9 @@ import { ICONES_MODULES } from '../../../constants/modules';
 import { ilYa } from '../../ui/Veille/Veille';
 import { t } from '../../../i18n';
 import '../Supervision/Supervision.css';
+import { lireRequete } from '../../../store/referentiels';
+
+const CHARGER_TABLEAU_BONS = (jours, recalculer, lieuId) => lireRequete('tableauBons', { jours, lieuId }, { forcer: recalculer });
 
 /*
  * Tableau de bord des bons de maintenance, personnalisable par utilisateur
@@ -68,7 +70,7 @@ export default function BonMaintenanceDashboard() {
   const utilisateur = useSelector(selectUtilisateur);
   const [disposition, actions] = useDispositionBons(utilisateur?.personnelId ?? utilisateur?.userId ?? utilisateur?.username);
   const [edition, setEdition] = useState(false);
-  const etat = useTableauPerso(tableauDeBordService.bons, 'gmao.tableau-bons.periode');
+  const etat = useTableauPerso(CHARGER_TABLEAU_BONS, 'gmao.tableau-bons.periode');
   const { donnees, jours } = etat;
 
   const d = donnees || {};

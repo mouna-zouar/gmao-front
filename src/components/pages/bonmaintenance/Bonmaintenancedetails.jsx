@@ -53,7 +53,6 @@ import bonMaintenanceHistoriqueService from '../../../services/Bonmaintenancehis
 import bonMaintenanceDiagnosticService from '../../../services/Bonmaintenancediagnosticservice';
 import bonMaintenanceControleEquipementService from '../../../services/bonMaintenanceControleEquipementService';
 import bonMaintenanceRemiseEnServiceService from '../../../services/bonMaintenanceRemiseEnServiceService';
-import bonMaintenanceService from '../../../services/Bonmaintenanceservice';
 import lectureService from '../../../services/lectureService';
 import EtatLecture from '../../commun/EtatLecture';
 import Modale from '../../commun/Modale';
@@ -98,6 +97,8 @@ import { CommentairesTab } from './onglets/CommentairesTab';
 import { HistoriqueTab } from './onglets/HistoriqueTab';
 import { DocumentsTab } from './onglets/DocumentsTab';
 import { CauseRacineTab } from './onglets/CauseRacineTab';
+import { useExecuter } from '../../../store/hooks';
+import { bons as moduleBons } from '../../../store/modules/bons';
 
 const RUBRIQUES_VERROUILLEES = new Set(['diagnostic', 'reparation', 'taches', 'intervenants', 'controle', 'remiseEnService', 'commentaires']);
 
@@ -231,6 +232,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
   const aDroit = useDroits();
   useMemo(() => prechargerBon(bonMaintenance?.id), [bonMaintenance?.id]);
   const [bon, setBon] = useState(bonMaintenance);
+  const executer = useExecuter();
   const [loading, setLoading] = useState(!bonMaintenance);
   const [error, setError] = useState(null);
   const [tiroir, setTiroir] = useState(null);
@@ -305,7 +307,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
     const loadBonDetails = async () => {
       setLoading(true);
       try {
-        const bonDetails = await bonMaintenanceService.getById(bonMaintenance.id);
+        const bonDetails = await executer(moduleBons.actions.obtenir(bonMaintenance.id));
         setBon(bonDetails);
       } catch (err) {
         console.error('Erreur chargement détails du bon:', err);
@@ -316,7 +318,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
       }
     };
     loadBonDetails();
-  }, [bonMaintenance]);
+  }, [bonMaintenance, executer]);
 
   const chargerSlaEtCout = useCallback(() => {
     if (!bon?.id) return;
@@ -418,7 +420,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
   const rafraichirBon = useCallback(async () => {
     if (!bonMaintenance?.id) return;
     try {
-      const bonMaj = await bonMaintenanceService.getById(bonMaintenance.id);
+      const bonMaj = await executer(moduleBons.actions.obtenir(bonMaintenance.id));
       if (etatBonRef.current !== ETAT.EFFECTUE && bonMaj?.etat === ETAT.EFFECTUE) {
         celebrer('bon-cloture', bonMaj.num || t('Bon #{id}', { id: bonMaj.id }));
       }
@@ -429,7 +431,7 @@ export default function BonMaintenanceDetails({ bonMaintenance, onBack, ongletIn
     } catch (err) {
       console.error('Erreur rafraîchissement du bon :', err);
     }
-  }, [bonMaintenance?.id, celebrer, chargerResume]);
+  }, [bonMaintenance?.id, celebrer, chargerResume, executer]);
 
   const ouvrir = (key, form = false) => {
     if (CLES_ONGLETS.has(key)) {
